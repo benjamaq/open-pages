@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Open Pages
 
-## Getting Started
+A minimal, production-ready web app for health profile sharing. Users create public health/biohacking profiles with shareable URLs to showcase their stacks, protocols, and wellness journeys.
 
-First, run the development server:
+## 🚀 Project Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**App Name:** Open Pages  
+**Domain:** TBD (considering MyStack.co, ShowMy.health, etc.)  
+**Purpose:** Public health/biohacking profile sharing platform
+
+## ✨ Core Features (4-Cut Delivery)
+
+- **Cut 1:** Profile creation + public view (`/u/[slug]`)
+- **Cut 2:** Stack items (supplements, devices, etc.)
+- **Cut 3:** Protocols (routines) + file uploads  
+- **Cut 4:** Polish + monetization hooks
+
+## 🛠 Tech Stack
+
+- **Framework:** Next.js 14 (App Router) + TypeScript
+- **Database:** Supabase (Auth, Postgres, Storage) with RLS
+- **Styling:** Tailwind CSS (clean, minimal styling)
+- **Deployment:** Vercel
+- **Icons:** Lucide React
+
+## 📊 Data Model
+
+- `profiles`: slug, display_name, bio, avatar_url, public
+- `stack_items`: name, dose, timing, brand, notes, public
+- `protocols`: name, details, frequency, public  
+- `uploads`: file_url, title, description, public
+- `user_usage`: track limits for freemium model
+
+## 🎨 Design Principles
+
+- **"Digital Granite" aesthetic:** clean, structured, premium
+- Content-first design with generous white space
+- Typography-focused, minimal colors
+- Mobile-optimized web app (no native app)
+
+## 💰 Business Model
+
+- **Freemium:** Free tier with limits, Pro tier ($9/month) unlimited
+- **Future:** Discovery platform, AI integration
+
+## 🏗 Project Structure
+
+```
+open-pages/
+├── app/
+│   ├── u/[slug]/          # Public profile pages
+│   ├── dash/              # User dashboard
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Homepage
+├── components/            # Reusable UI components
+├── lib/
+│   ├── supabase.ts        # Supabase client
+│   └── types.ts           # TypeScript types
+└── public/                # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+ 
+- npm/yarn/pnpm
+- Supabase account
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone and install dependencies:**
+   ```bash
+   git clone <your-repo>
+   cd open-pages
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Set up environment variables:**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Fill in your Supabase credentials:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Set up Supabase database:**
+   ```sql
+   -- Run the SQL schema in your Supabase SQL editor
+   -- (Schema will be provided in database/ folder)
+   ```
 
-## Deploy on Vercel
+4. **Start development server:**
+   ```bash
+   npm run dev
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+5. **Open [http://localhost:3000](http://localhost:3000)** in your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 Development Roadmap
+
+### Phase 1: Foundation ✅
+- [x] Next.js 14 setup with TypeScript
+- [x] Supabase integration
+- [x] Basic folder structure
+- [x] TypeScript types
+- [x] Environment configuration
+
+### Phase 2: Core Features (Next)
+- [ ] Authentication system
+- [ ] Profile creation/editing
+- [ ] Public profile pages
+- [ ] Stack items management
+- [ ] Basic UI components
+
+### Phase 3: Advanced Features
+- [ ] Protocols system
+- [ ] File uploads
+- [ ] User dashboard
+- [ ] Freemium limits
+
+### Phase 4: Polish & Launch
+- [ ] SEO optimization
+- [ ] Performance optimization
+- [ ] Error handling
+- [ ] Analytics integration
+
+## 🔧 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## 📚 Documentation
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Built with ❤️ for the health optimization community.
