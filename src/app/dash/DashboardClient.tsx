@@ -27,6 +27,8 @@ interface DashboardClientProps {
   counts: Counts
   todayItems: {
     supplements: any[]
+    mindfulness: any[]
+    movement: any[]
     protocols: any[]
   }
   userId: string
@@ -1172,12 +1174,8 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
 }
 
 // Row 2 — Movement Card
-const MovementCard = ({ onManage }: { onManage: () => void }) => {
+const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
-  const [movements] = useState([
-    { id: 1, name: 'Morning Walk', completed: false },
-    { id: 2, name: 'Gym Session', completed: true }
-  ])
 
   return (
     <div 
@@ -1210,28 +1208,33 @@ const MovementCard = ({ onManage }: { onManage: () => void }) => {
 
       {!collapsed && (
         <div className="px-6 pb-6">
-          <div className="space-y-3">
-            {movements.map((item) => (
-              <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                <button
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                    item.completed
-                      ? 'bg-gray-900 border-gray-900 scale-110'
-                      : 'border-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  {item.completed && (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-                <span className={`text-base font-medium ${item.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                  {item.name}
-                </span>
-              </div>
-            ))}
-          </div>
+          {items.length > 0 ? (
+            <div className="space-y-3">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                  <button
+                    className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
+                  >
+                  </button>
+                  <div className="flex-1">
+                    <span className="text-base font-medium text-gray-900">{item.name}</span>
+                    {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm mb-2" style={{ color: '#5C6370' }}>No movement activities for today</p>
+              <button
+                onClick={onManage}
+                className="text-sm font-medium hover:underline"
+                style={{ color: '#0F1115' }}
+              >
+                Add your first activity
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1239,12 +1242,8 @@ const MovementCard = ({ onManage }: { onManage: () => void }) => {
 }
 
 // Row 2 — Mindfulness Card
-const MindfulnessCard = ({ onManage }: { onManage: () => void }) => {
+const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
-  const [practices] = useState([
-    { id: 1, name: 'Morning Meditation', completed: true },
-    { id: 2, name: 'Gratitude Journal', completed: false }
-  ])
 
   return (
     <div 
@@ -1277,28 +1276,33 @@ const MindfulnessCard = ({ onManage }: { onManage: () => void }) => {
 
       {!collapsed && (
         <div className="px-6 pb-6">
-          <div className="space-y-3">
-            {practices.map((item) => (
-              <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                <button
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                    item.completed
-                      ? 'bg-gray-900 border-gray-900 scale-110'
-                      : 'border-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  {item.completed && (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-                <span className={`text-base font-medium ${item.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                  {item.name}
-                </span>
-              </div>
-            ))}
-          </div>
+          {items.length > 0 ? (
+            <div className="space-y-3">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                  <button
+                    className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
+                  >
+                  </button>
+                  <div className="flex-1">
+                    <span className="text-base font-medium text-gray-900">{item.name}</span>
+                    {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm mb-2" style={{ color: '#5C6370' }}>No mindfulness practices for today</p>
+              <button
+                onClick={onManage}
+                className="text-sm font-medium hover:underline"
+                style={{ color: '#0F1115' }}
+              >
+                Add your first practice
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1823,13 +1827,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   style={{ height: '80px', width: 'auto' }}
                 />
                 <span className="sr-only">Biostackr dashboard</span>
-              </Link>
-            </div>
-          </div>
+                </Link>
+              </div>
+              </div>
 
           {/* Row 2: Utility Toolbar */}
           <div>
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-end gap-3 py-3">
                 {/* Public Profile Button */}
                 <button
@@ -1858,12 +1862,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 </button>
 
                 {/* Journal Link */}
-                <button
+            <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
                   className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
+            >
                   Journal
-                </button>
+            </button>
 
                 {/* Settings Button */}
                 <button
@@ -2019,9 +2023,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 />
               )}
               <MovementCard
+                items={todayItems.movement}
                 onManage={() => window.location.href = '/dash/movement'}
               />
               <MindfulnessCard
+                items={todayItems.mindfulness}
                 onManage={() => window.location.href = '/dash/mindfulness'}
               />
                   </div>
@@ -2192,8 +2198,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   Total followers: {followerCount}
                         </div>
                       </div>
-                      </div>
-                    </div>
+            </div>
+          </div>
         )}
         
         {/* Quick Add Food Modal */}
@@ -2217,7 +2223,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             </div>
           </div>
         )}
-        
+
         {/* Daily Check-in Modal */}
         <DailyCheckinModal
           isOpen={showShareTodayModal}
