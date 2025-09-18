@@ -668,15 +668,15 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Mail className="w-6 h-6 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Email Notifications</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Email Setup</h2>
         </div>
 
         <div className="space-y-6">
           {/* Master Email Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-gray-900">Enable Email Notifications</h3>
-              <p className="text-sm text-gray-500">Receive email reminders for your health routine</p>
+              <h3 className="font-medium text-gray-900">Enable Email System</h3>
+              <p className="text-sm text-gray-500">Turn on email functionality (required for all email features)</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -698,7 +698,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               {userEmail}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Notifications will be sent to this email address
+              All emails will be sent to this address
             </p>
           </div>
 
@@ -730,8 +730,8 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
           {/* Daily Reminder Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-gray-900">Daily Reminder Email</h3>
-              <p className="text-sm text-gray-500">Get a daily email with your supplements, protocols, and activities</p>
+              <h3 className="font-medium text-gray-900">Daily Reminders</h3>
+              <p className="text-sm text-gray-500">Send me daily reminders with my health routine</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
