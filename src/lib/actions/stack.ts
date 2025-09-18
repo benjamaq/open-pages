@@ -48,8 +48,7 @@ export async function addStackItem(formData: {
       public: formData.public,
       frequency: formData.frequency || 'daily',
       time_preference: formData.time_preference || 'anytime',
-      schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6],
-      categories: formData.category ? [formData.category] : ['General']
+      schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6]
     })
 
   if (stackItemError) {
@@ -109,8 +108,7 @@ export async function updateStackItem(itemId: string, formData: {
       public: formData.public,
       frequency: formData.frequency || 'daily',
       time_preference: formData.time_preference || 'anytime',
-      schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6],
-      categories: formData.category ? [formData.category] : ['General']
+      schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6]
     })
     .eq('id', itemId)
 

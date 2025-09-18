@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Filter, Edit3, MoreHorizontal, Eye, EyeOff, Copy, Trash2, X } from 'lucide-react'
+import { Plus, Edit3, MoreHorizontal, Eye, EyeOff, Copy, Trash2, X } from 'lucide-react'
 import AddStackItemForm from '../../../components/AddStackItemForm'
 import EditStackItemForm from '../../../components/EditStackItemForm'
 import { updateStackItem, deleteStackItem } from '../../../lib/actions/stack'
@@ -186,50 +186,9 @@ const MovementCard = ({
 export default function MovementPageClient({ movementItems, profile }: MovementPageClientProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<MovementItem | null>(null)
-  const [filteredItems, setFilteredItems] = useState(movementItems)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filters, setFilters] = useState({
-    public: false,
-    private: false,
-    morning: false,
-    midday: false,
-    evening: false,
-    anytime: false
-  })
 
   const router = useRouter()
 
-  // Filter items based on search and filters
-  useEffect(() => {
-    let filtered = movementItems
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.notes && item.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-    }
-
-    // Public/Private filter
-    if (filters.public && !filters.private) {
-      filtered = filtered.filter(item => item.public)
-    } else if (filters.private && !filters.public) {
-      filtered = filtered.filter(item => !item.public)
-    }
-
-    // Timing filter
-    const timingFilters = ['morning', 'midday', 'evening', 'anytime'].filter(timing => 
-      filters[timing as keyof typeof filters]
-    )
-    if (timingFilters.length > 0) {
-      filtered = filtered.filter(item => 
-        item.timing && timingFilters.includes(item.timing.toLowerCase())
-      )
-    }
-
-    setFilteredItems(filtered)
-  }, [movementItems, searchTerm, filters])
 
   const handleEdit = (movement: MovementItem) => {
     setEditingItem(movement)
@@ -269,19 +228,6 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
     }
   }
 
-  const clearFilters = () => {
-    setFilters({
-      public: false,
-      private: false,
-      morning: false,
-      midday: false,
-      evening: false,
-      anytime: false
-    })
-    setSearchTerm('')
-  }
-
-  const activeFilterCount = Object.values(filters).filter(Boolean).length
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
@@ -348,44 +294,10 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
           </button>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search movement activities..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                />
-              </div>
-            </div>
-
-            {/* Filter Toggle */}
-            <div className="flex items-center space-x-3">
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Clear filters ({activeFilterCount})
-                </button>
-              )}
-              <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Movement Items Grid */}
         <div className="space-y-6">
-          {filteredItems.length === 0 ? (
+          {movementItems.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <Plus className="w-8 h-8 text-gray-400" />
@@ -405,7 +317,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredItems.map((movement) => (
+                {movementItems.map((movement) => (
                   <MovementCard
                     key={movement.id}
                     movement={movement}
@@ -416,14 +328,6 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
                   />
                 ))}
               </div>
-              
-              {filteredItems.length !== movementItems.length && (
-                <div className="mt-8 text-center">
-                  <p className="text-gray-500 text-sm">
-                    Showing {filteredItems.length} of {movementItems.length} movement activities
-                  </p>
-                </div>
-              )}
             </>
           )}
         </div>

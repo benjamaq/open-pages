@@ -95,7 +95,7 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-6 pb-4">
           <div className="flex items-center justify-between">
@@ -111,7 +111,9 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
               {error}
@@ -288,6 +290,7 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
             </div>
           </div>
         </form>
+        </div>
       </div>
     </div>
   )

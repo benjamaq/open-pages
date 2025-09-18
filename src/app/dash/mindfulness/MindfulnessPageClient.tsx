@@ -40,9 +40,9 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
       {/* Header - Brand First Design */}
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-5 sm:py-6">
-            <Link href="/dash" className="inline-flex items-center -ml-1">
+            <Link href="/dash" className="inline-flex items-center">
               <img
                 src="/BIOSTACKR LOGO.png"
                 alt="Biostackr"
@@ -56,7 +56,7 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
 
         {/* Row 2: Utility Toolbar */}
         <div>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-end gap-3 py-3">
               {/* Dashboard Button */}
               <Link 
