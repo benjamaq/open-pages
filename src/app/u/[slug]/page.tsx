@@ -349,9 +349,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       {/* Header - Brand First Design */}
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-5 sm:py-6">
-            <Link href="/" className="inline-flex items-center -ml-1">
+            <Link href="/" className="inline-flex items-center">
               <img
                 src="/BIOSTACKR LOGO.png"
                 alt="Biostackr"
@@ -365,7 +365,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
         {/* Row 2: Utility Toolbar */}
         <div>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-end gap-3 py-3">
               {isOwnProfile && (
                 <Link 
@@ -396,7 +396,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       </div>
 
       {/* Profile Header - Clean Profile Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 py-8">
           
           {/* Profile Photo - Larger */}
@@ -432,33 +432,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <p className="text-base italic" style={{ color: '#A6AFBD' }}>
                   No mission set
                 </p>
-              )}
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-3 mt-4">
-              {isOwnProfile && (
-                <Link 
-                  href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Dashboard
-                </Link>
-              )}
-              
-              {/* Share Button */}
-              <ShareButton 
-                profileSlug={profileWithData.slug}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              />
-
-              {/* Follow Button - Only show to visitors */}
-              {!isOwnProfile && (
-                <FollowButton
-                  ownerUserId={(profile as any).user_id}
-                  ownerName={(profile as any).name || 'this user'}
-                  allowsFollowing={false}
-                />
               )}
             </div>
             
