@@ -14,6 +14,7 @@ export async function addStackItem(formData: {
   time_preference?: string
   schedule_days?: number[]
   category?: string
+  itemType?: string
 }) {
   const supabase = await createClient()
   
@@ -40,6 +41,7 @@ export async function addStackItem(formData: {
     .from('stack_items')
     .insert({
       profile_id: profile.id,
+      item_type: formData.itemType || 'supplements',
       name: formData.name,
       dose: formData.dose || null,
       timing: formData.timing || null,

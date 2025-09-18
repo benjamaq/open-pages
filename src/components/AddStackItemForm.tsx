@@ -75,7 +75,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
     }
 
     try {
-      await addStackItem(formData)
+      await addStackItem({ ...formData, itemType })
       onClose()
       router.refresh()
     } catch (err) {

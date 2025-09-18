@@ -26,7 +26,7 @@ export interface UsageInfo {
 
 export async function getUserSubscription(): Promise<UserSubscription | null> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
@@ -56,7 +56,7 @@ export async function getUserSubscription(): Promise<UserSubscription | null> {
 
 export async function getUserUsage(): Promise<UsageInfo[]> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return []
@@ -105,7 +105,7 @@ export async function getUserUsage(): Promise<UsageInfo[]> {
 
 export async function checkCanAddItem(itemType: string): Promise<{ canAdd: boolean; currentCount: number; limit: number }> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { canAdd: false, currentCount: 0, limit: 0 }
@@ -171,7 +171,7 @@ export async function getPricingConfig() {
 
 export async function upgradeToProPlan() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
