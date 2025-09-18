@@ -25,12 +25,12 @@ export default async function StackPage() {
     redirect('/dash/create-profile')
   }
 
-  // Fetch stack items for this profile
-  // Temporarily showing all items until item_type column is added
+  // Fetch stack items for this profile (supplements only)
   const { data: stackItems } = await supabase
     .from('stack_items')
     .select('*')
     .eq('profile_id', profile.id)
+    .eq('item_type', 'supplements')
     .order('created_at', { ascending: false })
 
   return (

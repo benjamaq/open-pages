@@ -25,11 +25,11 @@ export default async function MovementPage() {
   }
 
   // Fetch movement items for this profile
-  // Temporarily showing all items until item_type column is added
   const { data: movementItems } = await supabase
     .from('stack_items')
     .select('*')
     .eq('profile_id', profile.id)
+    .eq('item_type', 'movement')
     .order('created_at', { ascending: false })
 
   return (

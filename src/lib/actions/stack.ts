@@ -41,6 +41,7 @@ export async function addStackItem(formData: {
     .from('stack_items')
     .insert({
       profile_id: profile.id,
+      item_type: formData.itemType || 'supplements',
       name: formData.name,
       dose: formData.dose || null,
       timing: formData.timing || null,
@@ -50,7 +51,6 @@ export async function addStackItem(formData: {
       frequency: formData.frequency || 'daily',
       time_preference: formData.time_preference || 'anytime',
       schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6]
-      // Note: item_type will be added after database migration
     })
 
   if (stackItemError) {
