@@ -676,7 +676,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-900">Enable Email System</h3>
-              <p className="text-sm text-gray-500">Turn on email functionality (required for all email features)</p>
+              <p className="text-sm text-gray-500">Master switch - must be ON to receive any emails from Biostackr</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -731,7 +731,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-900">Daily Reminders</h3>
-              <p className="text-sm text-gray-500">Send me daily reminders with my health routine</p>
+              <p className="text-sm text-gray-500">Enable daily reminder emails (requires Email System to be ON)</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
