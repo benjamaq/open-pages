@@ -1812,70 +1812,72 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   return (
     <>
       <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
-        {/* Floating Header - Brand First Design */}
-        <div className="relative">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center" style={{ height: '60px', paddingTop: '12px' }}>
-              
-              {/* Logo - Bigger and Better Positioned */}
-              <div className="flex items-center">
-                <Link href="/dash" className="hover:opacity-90 transition-opacity">
-                  <img 
-                    src="/BIOSTACKR LOGO.png" 
-                    alt="Biostackr" 
-                    className="h-16 w-auto"
-                    style={{ height: '72px', width: 'auto' }}
-                  />
-                </Link>
+        {/* Header - Brand First Design */}
+        <div className="bg-white shadow-sm">
+          {/* Row 1: Brand Only */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-5 sm:py-6">
+              <Link href="/dash" className="inline-flex items-center -ml-1">
+                <img
+                  src="/BIOSTACKR LOGO.png"
+                  alt="Biostackr"
+                  className="h-16 w-auto"
+                  style={{ height: '80px', width: 'auto' }}
+                />
+                <span className="sr-only">Biostackr dashboard</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Row 2: Utility Toolbar */}
+          <div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-end gap-3 py-3">
+                {/* Public Profile Button */}
+                <button
+                  onClick={() => window.location.href = `/u/${profile.slug}`}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Public Profile
+                </button>
+
+                {/* Copy Public Link Button */}
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(`${window.location.origin}/u/${profile.slug}`)
+                      setShowCopyToast(true)
+                      setTimeout(() => setShowCopyToast(false), 2000)
+                    } catch (err) {
+                      console.error('Failed to copy: ', err)
+                      alert('Failed to copy link. Please try again.')
+                    }
+                  }}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  title="Copy your public Biostackr link"
+                >
+                  Copy Public Link
+                </button>
+
+                {/* Journal Link */}
+                <button
+                  onClick={() => window.location.href = `/u/${profile.slug}#journal`}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Journal
+                </button>
+
+                {/* Settings Button */}
+                <button
+                  onClick={() => window.location.href = '/dash/settings'}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Settings
+                </button>
               </div>
-
-              {/* Top-Right Nav Cluster - Black Buttons */}
-              <div className="flex items-center space-x-3">
-              {/* Public Profile Button */}
-              <button
-                onClick={() => window.location.href = `/u/${profile.slug}`}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Public Profile
-              </button>
-
-              {/* Copy Public Link Button */}
-              <button
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(`${window.location.origin}/u/${profile.slug}`)
-                    setShowCopyToast(true)
-                    setTimeout(() => setShowCopyToast(false), 2000)
-                  } catch (err) {
-                    console.error('Failed to copy: ', err)
-                    alert('Failed to copy link. Please try again.')
-                  }
-                }}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                title="Copy your public Biostackr link"
-              >
-                Copy Public Link
-              </button>
-
-              {/* Journal Link */}
-              <button
-                onClick={() => window.location.href = `/u/${profile.slug}#journal`}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Journal
-              </button>
-
-              {/* Settings Button */}
-              <button
-                onClick={() => window.location.href = '/dash/settings'}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Settings
-              </button>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Dashboard Header - Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

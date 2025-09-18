@@ -108,10 +108,43 @@ export default function UploadsPageClient({ uploads, profile }: UploadsPageClien
     }
   }
 
-  return (
-    <>
-      {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+        {/* Header - Brand First Design */}
+        <div className="bg-white shadow-sm">
+          {/* Row 1: Brand Only */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-5 sm:py-6">
+              <Link href="/dash" className="inline-flex items-center -ml-1">
+                <img
+                  src="/BIOSTACKR LOGO.png"
+                  alt="Biostackr"
+                  className="h-16 w-auto"
+                  style={{ height: '80px', width: 'auto' }}
+                />
+                <span className="sr-only">Biostackr dashboard</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Row 2: Utility Toolbar */}
+          <div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-end gap-3 py-3">
+                {/* Dashboard Button */}
+                <Link 
+                  href="/dash" 
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Uploads</h1>
           <p className="text-gray-600 mt-2">
@@ -257,16 +290,18 @@ export default function UploadsPageClient({ uploads, profile }: UploadsPageClien
           </div>
         </div>
 
-      {showAddForm && (
-        <AddUploadForm onClose={() => setShowAddForm(false)} />
-      )}
+        {/* Modals */}
+        {showAddForm && (
+          <AddUploadForm onClose={() => setShowAddForm(false)} />
+        )}
 
-      {editingUpload && (
-        <EditUploadForm 
-          upload={editingUpload} 
-          onClose={() => setEditingUpload(null)} 
-        />
-      )}
-    </>
-  )
+        {editingUpload && (
+          <EditUploadForm 
+            upload={editingUpload} 
+            onClose={() => setEditingUpload(null)} 
+          />
+        )}
+        </div>
+      </div>
+    )
 }

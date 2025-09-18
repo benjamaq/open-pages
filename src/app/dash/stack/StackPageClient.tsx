@@ -35,8 +35,43 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<StackItem | null>(null)
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+        {/* Header - Brand First Design */}
+        <div className="bg-white shadow-sm">
+          {/* Row 1: Brand Only */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-5 sm:py-6">
+              <Link href="/dash" className="inline-flex items-center -ml-1">
+                <img
+                  src="/BIOSTACKR LOGO.png"
+                  alt="Biostackr"
+                  className="h-16 w-auto"
+                  style={{ height: '80px', width: 'auto' }}
+                />
+                <span className="sr-only">Biostackr dashboard</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Row 2: Utility Toolbar */}
+          <div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-end gap-3 py-3">
+                {/* Dashboard Button */}
+                <Link 
+                  href="/dash" 
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <div className="mb-6">
         <nav className="flex items-center space-x-2 text-sm">
@@ -117,6 +152,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
           onClose={() => setEditingItem(null)} 
         />
       )}
-    </div>
-  )
+        </div>
+      </div>
+    )
 }
