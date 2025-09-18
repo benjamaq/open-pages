@@ -1,0 +1,412 @@
+import { Resend } from 'resend'
+
+// Initialize Resend client lazily
+let resend: Resend | null = null
+
+function getResendClient(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is required')
+    }
+    resend = new Resend(apiKey)
+  }
+  return resend
+}
+
+export interface EmailData {
+  to: string
+  subject: string
+  html: string
+  from?: string
+}
+
+export interface DailyReminderData {
+  userName: string
+  userEmail: string
+  supplements: Array<{
+    name: string
+    dose?: string
+    timing?: string
+  }>
+  protocols: Array<{
+    name: string
+    frequency?: string
+  }>
+  movement: Array<{
+    name: string
+    duration?: string
+  }>
+  mindfulness: Array<{
+    name: string
+    duration?: string
+  }>
+  profileUrl: string
+  unsubscribeUrl: string
+}
+
+export interface MissedItemsData {
+  userName: string
+  userEmail: string
+  missedItems: Array<{
+    name: string
+    type: 'supplement' | 'protocol' | 'movement' | 'mindfulness'
+    lastCompleted?: string
+  }>
+  profileUrl: string
+  unsubscribeUrl: string
+}
+
+export async function sendEmail(data: EmailData): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const resendClient = getResendClient()
+    const result = await resendClient.emails.send({
+      from: data.from || 'Biostackr <noreply@biostackr.com>',
+      to: data.to,
+      subject: data.subject,
+      html: data.html
+    })
+
+    if (result.error) {
+      console.error('Resend error:', result.error)
+      return { success: false, error: result.error.message }
+    }
+
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    console.error('Email send error:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}
+
+export async function sendDailyReminder(data: DailyReminderData): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateDailyReminderHTML(data)
+  
+  return sendEmail({
+    to: data.userEmail,
+    subject: `Your Daily Biostackr Reminder - ${new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'short', 
+      day: 'numeric' 
+    })}`,
+    html
+  })
+}
+
+export async function sendMissedItemsReminder(data: MissedItemsData): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateMissedItemsHTML(data)
+  
+  return sendEmail({
+    to: data.userEmail,
+    subject: `Don't forget your Biostackr routine - ${data.missedItems.length} items pending`,
+    html
+  })
+}
+
+export async function sendNewFollowerNotification(ownerEmail: string, ownerName: string, totalFollowers: number): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateNewFollowerHTML({ ownerName, totalFollowers })
+  
+  return sendEmail({
+    to: ownerEmail,
+    subject: 'You have a new follower on Biostackr 🎉',
+    html
+  })
+}
+
+function generateDailyReminderHTML(data: DailyReminderData): string {
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Daily Biostackr Reminder</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 32px 24px; }
+        .greeting { font-size: 18px; margin-bottom: 24px; }
+        .section { margin-bottom: 32px; }
+        .section h2 { color: #2d3748; font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; }
+        .section-icon { width: 24px; height: 24px; margin-right: 12px; }
+        .item-list { background: #f7fafc; border-radius: 8px; padding: 16px; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .item:last-child { border-bottom: none; }
+        .item-name { font-weight: 600; color: #2d3748; }
+        .item-details { font-size: 14px; color: #718096; }
+        .cta { text-align: center; margin: 32px 0; }
+        .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        .footer a { color: #667eea; text-decoration: none; }
+        .empty-state { text-align: center; color: #718096; font-style: italic; padding: 16px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🧬 Biostackr</h1>
+          <p>Your Daily Health Reminder</p>
+        </div>
+        
+        <div class="content">
+          <div class="greeting">
+            Good morning, ${data.userName}! 👋<br>
+            Here's your health routine for <strong>${today}</strong>
+          </div>
+
+          ${data.supplements.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">💊</span>
+              Supplements (${data.supplements.length})
+            </h2>
+            <div class="item-list">
+              ${data.supplements.map(item => `
+                <div class="item">
+                  <div>
+                    <div class="item-name">${item.name}</div>
+                    ${item.dose ? `<div class="item-details">${item.dose}${item.timing ? ` • ${item.timing}` : ''}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.protocols.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">📋</span>
+              Protocols (${data.protocols.length})
+            </h2>
+            <div class="item-list">
+              ${data.protocols.map(item => `
+                <div class="item">
+                  <div>
+                    <div class="item-name">${item.name}</div>
+                    ${item.frequency ? `<div class="item-details">${item.frequency}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.movement.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">🏃‍♂️</span>
+              Movement (${data.movement.length})
+            </h2>
+            <div class="item-list">
+              ${data.movement.map(item => `
+                <div class="item">
+                  <div>
+                    <div class="item-name">${item.name}</div>
+                    ${item.duration ? `<div class="item-details">${item.duration}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.mindfulness.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">🧘‍♀️</span>
+              Mindfulness (${data.mindfulness.length})
+            </h2>
+            <div class="item-list">
+              ${data.mindfulness.map(item => `
+                <div class="item">
+                  <div>
+                    <div class="item-name">${item.name}</div>
+                    ${item.duration ? `<div class="item-details">${item.duration}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.supplements.length === 0 && data.protocols.length === 0 && data.movement.length === 0 && data.mindfulness.length === 0 ? `
+            <div class="empty-state">
+              No items scheduled for today. Visit your dashboard to add some!
+            </div>
+          ` : ''}
+
+          <div class="cta">
+            <a href="${data.profileUrl}" class="cta-button">
+              Open Dashboard →
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>
+            Sent by <strong>Biostackr</strong> • 
+            <a href="${data.unsubscribeUrl}">Unsubscribe</a>
+          </p>
+          <p style="margin-top: 16px; font-size: 12px;">
+            This email was sent to ${data.userEmail}
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function generateNewFollowerHTML({ ownerName, totalFollowers }: { ownerName: string; totalFollowers: number }): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>You have a new follower - Biostackr</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 32px 24px; }
+        .greeting { font-size: 18px; margin-bottom: 24px; }
+        .stats-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
+        .stats-number { font-size: 32px; font-weight: 700; color: #059669; margin-bottom: 8px; }
+        .stats-label { color: #065f46; font-weight: 500; }
+        .cta { text-align: center; margin: 32px 0; }
+        .cta-button { display: inline-block; background: #059669; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        .footer a { color: #059669; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 New Follower!</h1>
+          <p>Someone just followed your stack</p>
+        </div>
+        
+        <div class="content">
+          <div class="greeting">
+            Hi ${ownerName},<br><br>
+            Great news! Someone just started following your health stack on Biostackr.
+          </div>
+
+          <div class="stats-box">
+            <div class="stats-number">${totalFollowers}</div>
+            <div class="stats-label">Total Followers</div>
+          </div>
+
+          <p style="color: #4a5568; margin-bottom: 24px;">
+            Your followers will receive weekly email updates when you make changes to your public supplements, protocols, and routines. Keep sharing your health journey!
+          </p>
+
+          <div class="cta">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dash/followers" class="cta-button">
+              View Followers →
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>
+            Sent by <strong>Biostackr</strong> • 
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dash/settings">Manage Settings</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function generateMissedItemsHTML(data: MissedItemsData): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Biostackr Reminder - Items Pending</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 32px 24px; }
+        .greeting { font-size: 18px; margin-bottom: 24px; }
+        .missed-items { background: #fef5e7; border: 1px solid #f6ad55; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+        .missed-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #fed7aa; }
+        .missed-item:last-child { border-bottom: none; }
+        .item-name { font-weight: 600; color: #2d3748; }
+        .item-type { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-last { font-size: 14px; color: #718096; }
+        .cta { text-align: center; margin: 32px 0; }
+        .cta-button { display: inline-block; background: #f5576c; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        .footer a { color: #667eea; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>⏰ Gentle Reminder</h1>
+          <p>You have ${data.missedItems.length} pending items</p>
+        </div>
+        
+        <div class="content">
+          <div class="greeting">
+            Hi ${data.userName},<br>
+            Don't forget about these items in your health routine:
+          </div>
+
+          <div class="missed-items">
+            ${data.missedItems.map(item => `
+              <div class="missed-item">
+                <div>
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-type">${item.type}</div>
+                </div>
+                ${item.lastCompleted ? `<div class="item-last">Last: ${item.lastCompleted}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="cta">
+            <a href="${data.profileUrl}" class="cta-button">
+              Complete Now →
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>
+            Sent by <strong>Biostackr</strong> • 
+            <a href="${data.unsubscribeUrl}">Unsubscribe</a>
+          </p>
+          <p style="margin-top: 16px; font-size: 12px;">
+            This email was sent to ${data.userEmail}
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+export { getResendClient as default }
