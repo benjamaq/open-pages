@@ -104,48 +104,9 @@ export async function getUserUsage(): Promise<UsageInfo[]> {
 }
 
 export async function checkCanAddItem(itemType: string): Promise<{ canAdd: boolean; currentCount: number; limit: number }> {
-  try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { canAdd: false, currentCount: 0, limit: 0 }
-
-    const featureName = itemType + 's' // 'supplement' -> 'supplements'
-    
-    // Use the database function to check limit
-    const { data, error } = await supabase
-      .rpc('check_user_limit', { 
-        user_uuid: user.id, 
-        feature: featureName 
-      })
-
-    if (error) {
-      console.error('Error checking limit:', error)
-      return { canAdd: true, currentCount: 0, limit: -1 } // Default to allow if error
-    }
-
-    // Get current count and limit for display
-    const { data: countData } = await supabase
-      .rpc('get_user_usage_count', { 
-        user_uuid: user.id, 
-        feature: featureName 
-      })
-
-    const { data: limitData } = await supabase
-      .rpc('get_user_limit', { 
-        user_uuid: user.id, 
-        feature: featureName 
-      })
-
-    return {
-      canAdd: data === true,
-      currentCount: countData || 0,
-      limit: limitData || 0
-    }
-  } catch (error) {
-    console.error('Error in checkCanAddItem:', error)
-    return { canAdd: true, currentCount: 0, limit: -1 } // Default to allow if error
-  }
+  // Temporarily disable limit checking since database tables don't exist yet
+  // This allows all users to add items without restrictions
+  return { canAdd: true, currentCount: 0, limit: -1 }
 }
 
 export async function getPricingConfig() {
