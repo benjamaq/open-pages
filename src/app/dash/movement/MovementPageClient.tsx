@@ -1,0 +1,448 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Plus, Search, Filter, Edit3, MoreHorizontal, Eye, EyeOff, Copy, Trash2, X } from 'lucide-react'
+import AddStackItemForm from '../../../components/AddStackItemForm'
+import EditStackItemForm from '../../../components/EditStackItemForm'
+import { updateStackItem, deleteStackItem } from '../../../lib/actions/stack'
+
+interface MovementItem {
+  id: string
+  name: string
+  dose: string | null
+  timing: string | null
+  notes: string | null
+  public: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface MovementPageClientProps {
+  movementItems: MovementItem[]
+  profile: {
+    id: string
+    slug: string
+    display_name: string
+  }
+}
+
+const MovementCard = ({ 
+  movement, 
+  onEdit, 
+  onTogglePublic, 
+  onDuplicate, 
+  onDelete 
+}: { 
+  movement: MovementItem
+  onEdit: (movement: MovementItem) => void
+  onTogglePublic: (movement: MovementItem) => void
+  onDuplicate: (movement: MovementItem) => void
+  onDelete: (id: string) => void
+}) => {
+  const [showKebab, setShowKebab] = useState(false)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showKebab) {
+        setShowKebab(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showKebab])
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffHours / 24)
+    
+    if (diffDays > 0) return `${diffDays}d ago`
+    if (diffHours > 0) return `${diffHours}h ago`
+    return 'Just now'
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+      {/* Header Row */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate" title={movement.name}>
+            {movement.name}
+          </h3>
+        </div>
+        <button
+          onClick={() => onTogglePublic(movement)}
+          className={`ml-4 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            movement.public 
+              ? 'bg-gray-900 text-white' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {movement.public ? 'Public' : 'Private'}
+        </button>
+      </div>
+
+      {/* Body - Key Attributes */}
+      <div className="space-y-2 mb-4">
+        {movement.dose && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Duration:</span>
+            <span className="text-sm text-gray-900 font-medium">{movement.dose}</span>
+          </div>
+        )}
+        {movement.timing && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Timing:</span>
+            <span className="text-sm text-gray-900 font-medium capitalize">{movement.timing}</span>
+          </div>
+        )}
+        {movement.notes && (
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500 mb-1">Notes:</span>
+            <span className="text-sm text-gray-900 leading-relaxed">{movement.notes}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Row */}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <span className="text-xs text-gray-400">
+          Last edited: {getRelativeTime(movement.created_at)}
+        </span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onEdit(movement)}
+            className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            Edit
+          </button>
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowKebab(!showKebab)
+              }}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <MoreHorizontal className="w-4 h-4 text-gray-600" />
+            </button>
+            
+            {showKebab && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      onDuplicate(movement)
+                      setShowKebab(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Copy className="w-4 h-4 inline mr-2" />
+                    Duplicate
+                  </button>
+                  <button
+                    onClick={() => {
+                      onTogglePublic(movement)
+                      setShowKebab(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {movement.public ? (
+                      <>
+                        <EyeOff className="w-4 h-4 inline mr-2" />
+                        Make Private
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4 inline mr-2" />
+                        Make Public
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      onDelete(movement.id)
+                      setShowKebab(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 inline mr-2" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function MovementPageClient({ movementItems, profile }: MovementPageClientProps) {
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingItem, setEditingItem] = useState<MovementItem | null>(null)
+  const [filteredItems, setFilteredItems] = useState(movementItems)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState({
+    public: false,
+    private: false,
+    morning: false,
+    midday: false,
+    evening: false,
+    anytime: false
+  })
+
+  const router = useRouter()
+
+  // Filter items based on search and filters
+  useEffect(() => {
+    let filtered = movementItems
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.notes && item.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
+
+    // Public/Private filter
+    if (filters.public && !filters.private) {
+      filtered = filtered.filter(item => item.public)
+    } else if (filters.private && !filters.public) {
+      filtered = filtered.filter(item => !item.public)
+    }
+
+    // Timing filter
+    const timingFilters = ['morning', 'midday', 'evening', 'anytime'].filter(timing => 
+      filters[timing as keyof typeof filters]
+    )
+    if (timingFilters.length > 0) {
+      filtered = filtered.filter(item => 
+        item.timing && timingFilters.includes(item.timing.toLowerCase())
+      )
+    }
+
+    setFilteredItems(filtered)
+  }, [movementItems, searchTerm, filters])
+
+  const handleEdit = (movement: MovementItem) => {
+    setEditingItem(movement)
+  }
+
+  const handleTogglePublic = async (movement: MovementItem) => {
+    try {
+      await updateStackItem(movement.id, {
+        name: movement.name,
+        dose: movement.dose || '',
+        timing: movement.timing || '',
+        notes: movement.notes || '',
+        public: !movement.public,
+        category: 'General' // Default category for movement
+      })
+      router.refresh()
+    } catch (error) {
+      console.error('Error updating movement:', error)
+      alert('Failed to update movement. Please try again.')
+    }
+  }
+
+  const handleDuplicate = async (movement: MovementItem) => {
+    // This would need to be implemented in the actions
+    console.log('Duplicate movement:', movement)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this movement item?')) {
+      try {
+        await deleteStackItem(id)
+        router.refresh()
+      } catch (error) {
+        console.error('Error deleting movement:', error)
+        alert('Failed to delete movement. Please try again.')
+      }
+    }
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      public: false,
+      private: false,
+      morning: false,
+      midday: false,
+      evening: false,
+      anytime: false
+    })
+    setSearchTerm('')
+  }
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+      {/* Header - Brand First Design */}
+      <div className="bg-white shadow-sm">
+        {/* Row 1: Brand Only */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center py-5 sm:py-6">
+            <Link href="/dash" className="inline-flex items-center">
+              <img
+                src="/BIOSTACKR LOGO.png"
+                alt="Biostackr"
+                className="h-16 w-auto"
+                style={{ height: '80px', width: 'auto' }}
+              />
+              <span className="sr-only">Biostackr dashboard</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Row 2: Utility Toolbar */}
+        <div>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-end gap-3 py-3">
+              {/* Dashboard Button */}
+              <Link 
+                href="/dash" 
+                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Content */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm">
+            <Link href="/dash" className="text-gray-500 hover:text-gray-700">
+              Dashboard
+            </Link>
+            <span className="text-gray-300">&gt;</span>
+            <span className="text-gray-900 font-medium">Movement Management</span>
+          </nav>
+        </div>
+
+        {/* Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Movement Management</h1>
+            <p className="text-gray-600 mt-1">
+              Manage your movement activities and exercise routines
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Movement
+          </button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search movement activities..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                />
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            <div className="flex items-center space-x-3">
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Clear filters ({activeFilterCount})
+                </button>
+              )}
+              <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Movement Items Grid */}
+        <div className="space-y-6">
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <Plus className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No movement activities yet</h3>
+              <p className="text-gray-500 mb-6">
+                Add your first movement activity to get started with tracking your fitness routine.
+              </p>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Movement Activity
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems.map((movement) => (
+                  <MovementCard
+                    key={movement.id}
+                    movement={movement}
+                    onEdit={handleEdit}
+                    onTogglePublic={handleTogglePublic}
+                    onDuplicate={handleDuplicate}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+              
+              {filteredItems.length !== movementItems.length && (
+                <div className="mt-8 text-center">
+                  <p className="text-gray-500 text-sm">
+                    Showing {filteredItems.length} of {movementItems.length} movement activities
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Modals */}
+        {showAddForm && (
+          <AddStackItemForm 
+            onClose={() => setShowAddForm(false)} 
+            itemType="movement"
+          />
+        )}
+
+        {editingItem && (
+          <EditStackItemForm 
+            item={editingItem} 
+            onClose={() => setEditingItem(null)} 
+          />
+        )}
+      </div>
+    </div>
+  )
+}

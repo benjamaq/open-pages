@@ -1659,8 +1659,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showBatteryModal, setShowBatteryModal] = useState(false)
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showQuickAddFood, setShowQuickAddFood] = useState(false)
-  const [showQuickAddMovement, setShowQuickAddMovement] = useState(false)
-  const [showQuickAddMindfulness, setShowQuickAddMindfulness] = useState(false)
   const [isHoveringHero, setIsHoveringHero] = useState(false)
   const [displayName, setDisplayName] = useState(profile.display_name)
   const [showDisplayName, setShowDisplayName] = useState(true)
@@ -2021,10 +2019,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 />
               )}
               <MovementCard
-                onManage={() => setShowQuickAddMovement(true)}
+                onManage={() => window.location.href = '/dash/movement'}
               />
               <MindfulnessCard
-                onManage={() => setShowQuickAddMindfulness(true)}
+                onManage={() => window.location.href = '/dash/mindfulness'}
               />
                   </div>
 
@@ -2229,21 +2227,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           todayItems={todayItems}
         />
 
-        {/* Quick Add Movement Modal */}
-        {showQuickAddMovement && (
-          <AddStackItemForm
-            onClose={() => setShowQuickAddMovement(false)}
-            itemType="movement"
-          />
-        )}
-
-        {/* Quick Add Mindfulness Modal */}
-        {showQuickAddMindfulness && (
-          <AddStackItemForm
-            onClose={() => setShowQuickAddMindfulness(false)}
-            itemType="mindfulness"
-          />
-        )}
       </div>
 
       <style jsx global>{`
