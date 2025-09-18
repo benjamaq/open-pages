@@ -78,7 +78,7 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
             <Link href="/dash" className="text-gray-500 hover:text-gray-700">
               Dashboard
             </Link>
-            <span className="text-gray-300">›</span>
+            <span className="text-gray-300">&gt;</span>
             <span className="text-gray-900 font-medium">Mindfulness Management</span>
           </nav>
         </div>

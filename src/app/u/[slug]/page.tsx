@@ -397,7 +397,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
       {/* Profile Header - Clean Profile Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 py-12">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 py-8">
           
           {/* Profile Photo - Larger */}
           <div className="flex-shrink-0">

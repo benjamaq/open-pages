@@ -249,44 +249,49 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
 
 
   return (
-    <>
-      <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
-        {/* Navigation */}
-        <nav className="border-b border-gray-200" style={{ backgroundColor: '#FFFFFF' }}>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-20">
-              <div className="flex items-center">
-                <Link href="/dash" className="hover:opacity-90 transition-opacity">
-                  <img 
-                    src="/BIOSTACKR LOGO.png" 
-                    alt="Biostackr" 
-                    className="h-16 w-auto"
-                    style={{ width: '280px' }}
-                  />
-                </Link>
-              </div>
-              <div className="flex items-center space-x-4">
-                {/* Dashboard Button */}
-                <Link 
-                  href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+      {/* Header - Brand First Design */}
+      <div className="bg-white shadow-sm">
+        {/* Row 1: Brand Only */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center py-5 sm:py-6">
+            <Link href="/dash" className="inline-flex items-center -ml-1">
+              <img
+                src="/BIOSTACKR LOGO.png"
+                alt="Biostackr"
+                className="h-16 w-auto"
+                style={{ height: '80px', width: 'auto' }}
+              />
+              <span className="sr-only">Biostackr dashboard</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Row 2: Utility Toolbar */}
+        <div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-end gap-3 py-3">
+              {/* Dashboard Button */}
+              <Link 
+                href="/dash" 
+                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                Dashboard
+              </Link>
             </div>
           </div>
-        </nav>
+        </div>
+      </div>
 
-        {/* Page Content */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
           <div className="mb-6">
             <nav className="flex items-center space-x-2 text-sm">
               <Link href="/dash" className="text-gray-500 hover:text-gray-700">
                 Dashboard
               </Link>
-              <span className="text-gray-300">&gt;</span>
+              <span className="text-gray-300">›</span>
               <span className="text-gray-900 font-medium">Protocols Management</span>
             </nav>
           </div>
@@ -434,18 +439,19 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
             </div>
           )}
         </div>
+
+        {/* Modals */}
+        {showAddForm && (
+          <AddProtocolForm onClose={() => setShowAddForm(false)} />
+        )}
+
+        {editingProtocol && (
+          <EditProtocolForm 
+            protocol={editingProtocol} 
+            onClose={() => setEditingProtocol(null)} 
+          />
+        )}
       </div>
-
-      {showAddForm && (
-        <AddProtocolForm onClose={() => setShowAddForm(false)} />
-      )}
-
-      {editingProtocol && (
-        <EditProtocolForm 
-          protocol={editingProtocol} 
-          onClose={() => setEditingProtocol(null)} 
-        />
-      )}
-    </>
+    </div>
   )
 }
