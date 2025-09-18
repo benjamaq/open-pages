@@ -26,6 +26,7 @@ export default async function StackPage() {
   }
 
   // Fetch stack items for this profile
+  // Temporarily showing all items until item_type column is added
   const { data: stackItems } = await supabase
     .from('stack_items')
     .select('*')

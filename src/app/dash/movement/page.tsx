@@ -25,7 +25,7 @@ export default async function MovementPage() {
   }
 
   // Fetch movement items for this profile
-  // Note: Temporarily removing item_type filter since column doesn't exist in current schema
+  // Temporarily showing all items until item_type column is added
   const { data: movementItems } = await supabase
     .from('stack_items')
     .select('*')
