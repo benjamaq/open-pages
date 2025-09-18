@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const dayOfWeek = today.getDay()
 
   // Fetch counts and today's items for dashboard
-  const [stackItemsResult, protocolsResult, uploadsResult, todayStackItems, todayProtocols] = await Promise.all([
+  const [stackItemsResult, protocolsResult, uploadsResult, todaySupplements, todayMindfulness, todayMovement, todayProtocols] = await Promise.all([
     supabase
       .from('stack_items')
       .select('id', { count: 'exact' })
@@ -46,6 +46,19 @@ export default async function DashboardPage() {
       .from('stack_items')
       .select('*')
       .eq('profile_id', profile.id)
+      .eq('item_type', 'supplements')
+      .contains('schedule_days', [dayOfWeek]),
+    supabase
+      .from('stack_items')
+      .select('*')
+      .eq('profile_id', profile.id)
+      .eq('item_type', 'mindfulness')
+      .contains('schedule_days', [dayOfWeek]),
+    supabase
+      .from('stack_items')
+      .select('*')
+      .eq('profile_id', profile.id)
+      .eq('item_type', 'movement')
       .contains('schedule_days', [dayOfWeek]),
     supabase
       .from('protocols')
@@ -61,7 +74,9 @@ export default async function DashboardPage() {
   }
 
   const todayItems = {
-    supplements: todayStackItems.data || [],
+    supplements: todaySupplements.data || [],
+    mindfulness: todayMindfulness.data || [],
+    movement: todayMovement.data || [],
     protocols: todayProtocols.data || []
   }
 

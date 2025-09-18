@@ -37,12 +37,46 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .from('profiles')
     .select(`
       *,
-      stack_items:stack_items(*),
       protocols:protocols(*),
       uploads:uploads(*)
     `)
     .eq('slug', slug)
     .single()
+
+  // Fetch different types of stack items separately
+  let publicSupplements: any[] = []
+  let publicMindfulness: any[] = []
+  let publicMovement: any[] = []
+
+  if (profile) {
+    const [supplementsResult, mindfulnessResult, movementResult] = await Promise.all([
+      supabase
+        .from('stack_items')
+        .select('*')
+        .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'supplements')
+        .eq('public', true)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('stack_items')
+        .select('*')
+        .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'mindfulness')
+        .eq('public', true)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('stack_items')
+        .select('*')
+        .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'movement')
+        .eq('public', true)
+        .order('created_at', { ascending: false })
+    ])
+
+    publicSupplements = supplementsResult.data || []
+    publicMindfulness = mindfulnessResult.data || []
+    publicMovement = movementResult.data || []
+  }
 
   // Try to fetch journal entries separately (in case table doesn't exist yet)
   let journalEntries: any[] = []
@@ -79,75 +113,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   // Filter for public items only
-  const publicStackItems = (profile as any).stack_items?.filter((item: any) => item.public) || []
   const publicProtocols = (profile as any).protocols?.filter((protocol: any) => protocol.public) || []
   const publicUploads = (profile as any).uploads?.filter((upload: any) => upload.public) || []
   
-  // Filter stack items by type (assuming we can differentiate by some field or naming convention)
-  const publicSupplements = publicStackItems.filter((item: any) => 
-    !item.name?.toLowerCase().includes('movement') && 
-    !item.name?.toLowerCase().includes('mindfulness') &&
-    !item.name?.toLowerCase().includes('exercise') &&
-    !item.name?.toLowerCase().includes('meditation')
-  )
-  const publicMovement = publicStackItems.filter((item: any) => 
-    item.name?.toLowerCase().includes('movement') || 
-    item.name?.toLowerCase().includes('exercise') ||
-    item.name?.toLowerCase().includes('workout') ||
-    item.name?.toLowerCase().includes('run') ||
-    item.name?.toLowerCase().includes('walk')
-  )
+  // Use the separately fetched and properly filtered items
+  // publicSupplements, publicMindfulness, publicMovement are already fetched above
   
-  // Add sample movement data if none exists
-  if (publicMovement.length === 0) {
-    publicMovement.push(
-      {
-        id: 'sample-movement-1',
-        name: 'Morning Run',
-        dose: '30 minutes',
-        timing: 'Morning',
-        notes: 'Zone 2 cardio',
-        public: true
-      },
-      {
-        id: 'sample-movement-2', 
-        name: 'Strength Training',
-        dose: '45 minutes',
-        timing: 'Evening',
-        notes: 'Upper body focus',
-        public: true
-      }
-    )
-  }
+  // publicSupplements, publicMindfulness, publicMovement are already properly fetched above
   
-  const publicMindfulness = publicStackItems.filter((item: any) => 
-    item.name?.toLowerCase().includes('mindfulness') || 
-    item.name?.toLowerCase().includes('meditation') ||
-    item.name?.toLowerCase().includes('breathing') ||
-    item.name?.toLowerCase().includes('yoga')
-  )
-  
-  // Add sample mindfulness data if none exists
-  if (publicMindfulness.length === 0) {
-    publicMindfulness.push(
-      {
-        id: 'sample-mindfulness-1',
-        name: 'Morning Meditation',
-        dose: '20 minutes',
-        timing: 'Morning',
-        notes: 'Focused breathing',
-        public: true
-      },
-      {
-        id: 'sample-mindfulness-2',
-        name: 'Evening Yoga',
-        dose: '15 minutes', 
-        timing: 'Evening',
-        notes: 'Gentle stretching',
-        public: true
-      }
-    )
-  }
   
   // Use separately fetched journal entries
   const publicJournalEntries = journalEntries
