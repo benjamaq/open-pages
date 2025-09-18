@@ -25,11 +25,11 @@ export default async function MindfulnessPage() {
   }
 
   // Fetch mindfulness items for this profile
+  // Note: Temporarily removing item_type filter since column doesn't exist in current schema
   const { data: mindfulnessItems } = await supabase
     .from('stack_items')
     .select('*')
     .eq('profile_id', profile.id)
-    .eq('item_type', 'mindfulness')
     .order('created_at', { ascending: false })
 
   return (

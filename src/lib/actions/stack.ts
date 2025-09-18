@@ -58,8 +58,12 @@ export async function addStackItem(formData: {
     throw new Error(`Failed to create stack item: ${stackItemError.message}`)
   }
 
-  // Revalidate the stack page
+  // Revalidate relevant pages
   revalidatePath('/dash/stack')
+  revalidatePath('/dash/mindfulness')
+  revalidatePath('/dash/movement')
+  revalidatePath('/dash/protocols')
+  revalidatePath('/dash')
 }
 
 export async function updateStackItem(itemId: string, formData: {
