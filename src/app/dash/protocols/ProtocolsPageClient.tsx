@@ -195,7 +195,6 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
         public: !protocol.public
       })
       router.refresh()
-      setOpenMenuId(null)
     } catch (error) {
       console.error('Failed to toggle visibility:', error)
     }
@@ -206,7 +205,6 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
       try {
         await deleteProtocol(protocolId)
         router.refresh()
-        setOpenMenuId(null)
       } catch (error) {
         console.error('Failed to delete protocol:', error)
       }
