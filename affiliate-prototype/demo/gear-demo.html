@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gear Module Demo - BioStackr</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root" class="p-8 max-w-6xl mx-auto"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Gear categories
+        const gearCategories = [
+            'Wearables',
+            'Recovery', 
+            'Kitchen',
+            'Fitness',
+            'Sleep',
+            'Other'
+        ];
+
+        // Buy Button Component
+        function BuyButton({ buyLink, brand, style = 'outline', size = 'sm' }) {
+            if (!buyLink || buyLink.trim() === '') return null;
+
+            const sizeClasses = {
+                sm: 'px-3 py-1.5 text-sm',
+                md: 'px-4 py-2 text-base'
+            };
+
+            const styleClasses = {
+                outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
+                solid: 'bg-gray-900 text-white hover:bg-gray-800'
+            };
+
+            return (
+                <a
+                    href={buyLink}
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className={`
+                        inline-flex items-center gap-1 rounded-lg font-medium transition-colors
+                        ${sizeClasses[size]}
+                        ${styleClasses[style]}
+                    `}
+                >
+                    {brand ? `→ Buy at ${brand}` : '→ Buy this item'}
+                </a>
+            );
+        }
+
+        // Gear Card Component
+        function GearCard({ gear, showBuyButton = true }) {
+            return (
+                <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{gear.name}</h3>
+                            {gear.brand && (
+                                <p className="text-sm text-gray-500">{gear.brand}</p>
+                            )}
+                        </div>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            {gear.category}
+                        </span>
+                    </div>
+                    
+                    {gear.description && (
+                        <p className="text-sm text-gray-600 mt-2">{gear.description}</p>
+                    )}
+                    
+                    {showBuyButton && gear.buyLink && (
+                        <div className="mt-3">
+                            <BuyButton 
+                                buyLink={gear.buyLink}
+                                brand={gear.brand}
+                                style="outline"
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Supplement Card Component (for comparison)
+        function SupplementCard({ supplement, showBuyButton = true }) {
+            return (
+                <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 className="font-semibold text-gray-900">{supplement.name}</h3>
+                    {supplement.brand && (
+                        <p className="text-sm text-gray-500">{supplement.brand}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span>{supplement.dosage}</span>
+                        <span>•</span>
+                        <span>{supplement.timing}</span>
+                    </div>
+                    
+                    {showBuyButton && supplement.buyLink && (
+                        <div className="mt-3">
+                            <BuyButton 
+                                buyLink={supplement.buyLink}
+                                brand={supplement.brand}
+                                style="outline"
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Shop My Stack Section
+        function ShopMyStackSection({ supplements, gear, showSection = true }) {
+            const affiliateSupplements = supplements.filter(s => s.buyLink);
+            const affiliateGear = gear.filter(g => g.buyLink);
+            const totalAffiliateItems = affiliateSupplements.length + affiliateGear.length;
+
+            if (!showSection || totalAffiliateItems === 0) return null;
+
+            return (
+                <section className="mt-8 bg-white rounded-xl p-6 shadow-sm">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">🛍️ Shop My Stack</h2>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Some links are affiliate links; I may earn a commission.
+                    </p>
+
+                    <div className="space-y-6">
+                        {/* Supplements */}
+                        {affiliateSupplements.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-3">Supplements</h3>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {affiliateSupplements.map((supplement, index) => (
+                                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                            <div className="text-xs text-gray-500 mb-1">Supplement</div>
+                                            <h4 className="font-medium text-gray-900">{supplement.name}</h4>
+                                            {supplement.brand && (
+                                                <p className="text-sm text-gray-500">{supplement.brand}</p>
+                                            )}
+                                            <div className="mt-3">
+                                                <BuyButton 
+                                                    buyLink={supplement.buyLink}
+                                                    brand={supplement.brand}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Gear */}
+                        {affiliateGear.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-3">Gear</h3>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {affiliateGear.map((item, index) => (
+                                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                            <div className="text-xs text-gray-500 mb-1">{item.category}</div>
+                                            <h4 className="font-medium text-gray-900">{item.name}</h4>
+                                            {item.brand && (
+                                                <p className="text-sm text-gray-500">{item.brand}</p>
+                                            )}
+                                            <div className="mt-3">
+                                                <BuyButton 
+                                                    buyLink={item.buyLink}
+                                                    brand={item.brand}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            );
+        }
+
+        // Main Demo Component
+        function GearDemo() {
+            const [showBuyButtons, setShowBuyButtons] = useState(true);
+            const [showShopSection, setShowShopSection] = useState(true);
+            
+            const sampleSupplements = [
+                {
+                    name: 'Creatine Monohydrate',
+                    brand: 'Optimum Nutrition',
+                    dosage: '5g daily',
+                    timing: 'Post-workout',
+                    buyLink: 'https://amazon.com/dp/B08EXAMPLE1'
+                },
+                {
+                    name: 'Vitamin D3',
+                    brand: 'Thorne',
+                    dosage: '2000 IU',
+                    timing: 'Morning',
+                    buyLink: 'https://thorne.com/example'
+                }
+            ];
+
+            const sampleGear = [
+                {
+                    name: 'WHOOP 4.0',
+                    brand: 'WHOOP',
+                    category: 'Wearables',
+                    description: '24/7 health and fitness tracking with advanced recovery metrics',
+                    buyLink: 'https://join.whoop.com/affiliate'
+                },
+                {
+                    name: 'Pod 4 Ultra',
+                    brand: 'Eight Sleep',
+                    category: 'Sleep',
+                    description: 'Smart mattress with temperature control and sleep optimization',
+                    buyLink: 'https://eightsleep.com/affiliate'
+                },
+                {
+                    name: 'Amplify Sauna',
+                    brand: 'Sunlighten',
+                    category: 'Recovery',
+                    description: 'Full-spectrum infrared sauna for recovery and detox',
+                    buyLink: 'https://sunlighten.com/affiliate'
+                },
+                {
+                    name: 'Plunge All-In',
+                    brand: 'Plunge',
+                    category: 'Recovery',
+                    description: 'Cold plunge tub for cold therapy and recovery',
+                    buyLink: 'https://plunge.com/affiliate'
+                },
+                {
+                    name: 'Vitamix A3500',
+                    brand: 'Vitamix',
+                    category: 'Kitchen',
+                    description: 'High-performance blender for smoothies and meal prep',
+                    buyLink: 'https://vitamix.com/affiliate'
+                },
+                {
+                    name: 'Oura Ring Gen3',
+                    brand: 'Oura',
+                    category: 'Wearables',
+                    description: 'Sleep and recovery tracking ring',
+                    buyLink: null // No affiliate link
+                }
+            ];
+            
+            return (
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            🎧 Gear Module + Affiliate Demo
+                        </h1>
+                        <p className="text-gray-600">
+                            Complete gear module with affiliate functionality
+                        </p>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Demo Controls</h2>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    checked={showBuyButtons}
+                                    onChange={(e) => setShowBuyButtons(e.target.checked)}
+                                    className="rounded"
+                                />
+                                <span className="text-sm font-medium">Show Buy Buttons</span>
+                            </label>
+                            
+                            <label className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    checked={showShopSection}
+                                    onChange={(e) => setShowShopSection(e.target.checked)}
+                                    className="rounded"
+                                />
+                                <span className="text-sm font-medium">Show "Shop My Stack" Section</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Public Profile Preview */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Public Profile Preview</h2>
+                        
+                        <div className="bg-gray-50 p-6 rounded-lg space-y-8">
+                            {/* Supplements Section */}
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">💊 Supplements</h3>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    {sampleSupplements.map((supplement, index) => (
+                                        <SupplementCard 
+                                            key={index}
+                                            supplement={supplement}
+                                            showBuyButton={showBuyButtons}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Gear Section */}
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">🎧 Gear</h3>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {sampleGear.map((gear, index) => (
+                                        <GearCard 
+                                            key={index}
+                                            gear={gear}
+                                            showBuyButton={showBuyButtons}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Shop My Stack Section */}
+                            <ShopMyStackSection 
+                                supplements={sampleSupplements}
+                                gear={sampleGear}
+                                showSection={showShopSection}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Gear Categories Breakdown */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Gear Categories</h2>
+                        
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🏃 Wearables</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• WHOOP, Oura Ring</li>
+                                    <li>• Apple Watch, Garmin</li>
+                                    <li>• CGMs (Dexcom, FreeStyle)</li>
+                                    <li>• Heart rate monitors</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🧊 Recovery</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• Saunas (Sunlighten, Clearlight)</li>
+                                    <li>• Ice baths (Plunge, Cold Plunge)</li>
+                                    <li>• Red light therapy</li>
+                                    <li>• Compression gear</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🍳 Kitchen</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• Blenders (Vitamix, NutriBullet)</li>
+                                    <li>• Air fryers, sous vide</li>
+                                    <li>• Water filters</li>
+                                    <li>• Meal prep containers</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🏋️ Fitness</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• Home gym equipment</li>
+                                    <li>• Resistance bands</li>
+                                    <li>• Yoga mats</li>
+                                    <li>• Workout clothing</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🛏️ Sleep</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• Smart mattresses (Eight Sleep)</li>
+                                    <li>• Pillows and bedding</li>
+                                    <li>• Sleep masks, earplugs</li>
+                                    <li>• Bedroom environment</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-gray-900">🔧 Other</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                    <li>• Books and courses</li>
+                                    <li>• Apps and software</li>
+                                    <li>• Travel gear</li>
+                                    <li>• Miscellaneous tools</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Implementation Notes */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                        <h3 className="font-medium text-blue-800 mb-3">💡 Implementation Strategy</h3>
+                        <div className="space-y-2 text-sm text-blue-700">
+                            <p><strong>Two separate modules:</strong></p>
+                            <ul className="ml-4 space-y-1">
+                                <li>• Supplements module (existing) + affiliate fields</li>
+                                <li>• Gear module (new) + affiliate fields</li>
+                            </ul>
+                            
+                            <p className="mt-3"><strong>Affiliate management:</strong></p>
+                            <ul className="ml-4 space-y-1">
+                                <li>• Each module has its own Add/Edit forms</li>
+                                <li>• Affiliate fields only visible to Pro users</li>
+                                <li>• "Shop My Stack" combines both modules</li>
+                            </ul>
+                            
+                            <p className="mt-3"><strong>Database structure:</strong></p>
+                            <ul className="ml-4 space-y-1">
+                                <li>• stack_items table (supplements) + buy_link column</li>
+                                <li>• gear table (new) with brand, category, buy_link</li>
+                                <li>• Both use existing brand field for button text</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="bg-gray-900 text-gray-100 rounded-xl p-6 text-sm">
+                        <h3 className="font-semibold mb-2">Demo Stats:</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                            <div>
+                                <div className="text-gray-400">Total Supplements:</div>
+                                <div className="font-medium">{sampleSupplements.length}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400">Total Gear:</div>
+                                <div className="font-medium">{sampleGear.length}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400">Affiliate Supplements:</div>
+                                <div className="font-medium">{sampleSupplements.filter(s => s.buyLink).length}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400">Affiliate Gear:</div>
+                                <div className="font-medium">{sampleGear.filter(g => g.buyLink).length}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<GearDemo />, document.getElementById('root'));
+    </script>
+</body>
+</html>

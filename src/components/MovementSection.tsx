@@ -21,7 +21,7 @@ interface MovementSectionProps {
 export default function MovementSection({ movementItems }: MovementSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   
-  if (movementItems.length === 0) return null
+  // Always render if called, show empty state if no movement items
 
   const displayedItems = isExpanded ? movementItems : movementItems.slice(0, 6)
   const hasMore = movementItems.length > 6
@@ -51,6 +51,8 @@ export default function MovementSection({ movementItems }: MovementSectionProps)
               name={item.name}
               duration={item.dose || undefined}
               timing={item.timing || undefined}
+              frequency={item.frequency || undefined}
+              scheduleDays={item.schedule_days}
               notes={item.notes || undefined}
             />
           ))}

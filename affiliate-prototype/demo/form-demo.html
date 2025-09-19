@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Form Demo - BioStackr</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root" class="p-8 max-w-2xl mx-auto"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Validation function (copied from utils)
+        function validateAffiliateUrl(url) {
+            if (!url || url.trim() === '') {
+                return { isValid: true };
+            }
+            
+            const trimmed = url.trim();
+            
+            try {
+                const parsed = new URL(trimmed);
+                
+                if (!['http:', 'https:'].includes(parsed.protocol)) {
+                    return {
+                        isValid: false,
+                        error: 'URL must start with http:// or https://'
+                    };
+                }
+                
+                if (parsed.pathname === '/' && !parsed.search) {
+                    return {
+                        isValid: false,
+                        error: 'Please enter a complete product URL'
+                    };
+                }
+                
+                return { isValid: true };
+            } catch {
+                return {
+                    isValid: false,
+                    error: 'Please enter a valid URL (e.g., https://amazon.com/dp/...)'
+                };
+            }
+        }
+
+        // Affiliate Fields Component
+        function AffiliateFields({ buyLink, setBuyLink, isPro, error, setError }) {
+            const handleChange = (e) => {
+                const value = e.target.value;
+                setBuyLink(value);
+                
+                if (setError) {
+                    const validation = validateAffiliateUrl(value);
+                    setError(validation.isValid ? null : validation.error || null);
+                }
+            };
+
+            if (!isPro) {
+                return (
+                    <div className="mt-4 rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-600">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <span className="font-medium">💰 Affiliate Links</span>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Add buy links to earn commissions from your recommendations
+                                </p>
+                            </div>
+                            <button className="px-3 py-1 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors">
+                                Upgrade to Pro
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-3 mt-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-900">💰 Affiliate Link</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">PRO</span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <input
+                            type="url"
+                            value={buyLink}
+                            onChange={handleChange}
+                            placeholder="https://amazon.com/dp/B08... (optional)"
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all ${
+                                error ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                        />
+                        
+                        {error && (
+                            <p className="text-xs text-red-600 flex items-center gap-1">
+                                <span>⚠️</span>
+                                {error}
+                            </p>
+                        )}
+                        
+                        <p className="text-xs text-gray-500">
+                            Add your affiliate link to earn commissions when people buy this item
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Buy Button Component
+        function BuyButton({ buyLink, className = "" }) {
+            if (!buyLink || buyLink.trim() === '') {
+                return null;
+            }
+
+            return (
+                <a
+                    href={buyLink}
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium ${className}`}
+                >
+                    → Buy this item
+                </a>
+            );
+        }
+
+        // Main Demo Component
+        function AffiliateDemo() {
+            const [brand, setBrand] = useState('');
+            const [buyLink, setBuyLink] = useState('');
+            const [isPro, setIsPro] = useState(true);
+            const [error, setError] = useState(null);
+            const [formData, setFormData] = useState({
+                name: 'Creatine Monohydrate',
+                brand: 'Optimum Nutrition',
+                dosage: '5g daily',
+                timing: 'Post-workout'
+            });
+            
+            return (
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            🧪 Affiliate Form Demo
+                        </h1>
+                        <p className="text-gray-600">
+                            Test the affiliate fields component before integrating into the main app
+                        </p>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Demo Controls</h2>
+                        <label className="flex items-center gap-2">
+                            <input 
+                                type="checkbox" 
+                                checked={isPro}
+                                onChange={(e) => setIsPro(e.target.checked)}
+                                className="rounded"
+                            />
+                            <span className="text-sm font-medium">Pro User (toggle to see free user experience)</span>
+                        </label>
+                    </div>
+                    
+                    {/* Form Demo */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Add Supplement Form</h2>
+                        
+                        {/* Regular form fields */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-1">
+                                    Supplement Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-1">
+                                    Brand
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.brand}
+                                    onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    placeholder="e.g., Thorne, NOW Foods"
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-1">
+                                        Dosage
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.dosage}
+                                        onChange={(e) => setFormData({...formData, dosage: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-1">
+                                        Timing
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.timing}
+                                        onChange={(e) => setFormData({...formData, timing: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Affiliate Fields */}
+                        <AffiliateFields 
+                            brand={brand}
+                            setBrand={setBrand}
+                            buyLink={buyLink}
+                            setBuyLink={setBuyLink}
+                            isPro={isPro}
+                            error={error}
+                            setError={setError}
+                        />
+                    </div>
+
+                    {/* Preview */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Public Profile Preview</h2>
+                        
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-white p-4 rounded-lg shadow-sm">
+                                <h3 className="font-semibold text-gray-900">{formData.name}</h3>
+                                {(formData.brand || brand) && (
+                                    <p className="text-sm text-gray-500 mt-1">{formData.brand || brand}</p>
+                                )}
+                                <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                                    <span>{formData.dosage}</span>
+                                    <span>•</span>
+                                    <span>{formData.timing}</span>
+                                </div>
+                                
+                                {buyLink && isPro && (
+                                    <div className="mt-3">
+                                        <BuyButton 
+                                            buyLink={buyLink} 
+                                            brand={brand || formData.brand}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Debug Info */}
+                    <div className="bg-gray-900 text-gray-100 rounded-xl p-6 text-sm">
+                        <h3 className="font-semibold mb-2">Debug Info:</h3>
+                        <pre className="text-xs overflow-x-auto">
+                            {JSON.stringify({
+                                isPro,
+                                brand,
+                                buyLink,
+                                error,
+                                validation: validateAffiliateUrl(buyLink)
+                            }, null, 2)}
+                        </pre>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<AffiliateDemo />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -102,7 +102,7 @@ export default function EditableMission({
             className={`${className} text-gray-400 hover:text-gray-600 transition-colors`}
             aria-label="Add mission"
           >
-            Add your mission
+            Set your mission
           </button>
         )}
         

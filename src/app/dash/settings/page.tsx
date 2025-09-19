@@ -29,10 +29,10 @@ export default async function SettingsPage() {
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-5 sm:py-6">
+          <div className="flex items-center py-3 sm:py-4">
             <Link href="/dash" className="inline-flex items-center">
               <img
-                src="/BIOSTACKR LOGO.png"
+                src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
                 className="h-16 w-auto"
                 style={{ height: '80px', width: 'auto' }}
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
         {/* Row 2: Utility Toolbar */}
         <div>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-end gap-3 py-3">
+            <div className="flex items-center justify-end gap-3 py-2">
               {/* Dashboard Button */}
               <Link 
                 href="/dash" 

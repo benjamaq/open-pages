@@ -6,6 +6,8 @@ import SupplementsSection from './SupplementsSection'
 import ProtocolsSection from './ProtocolsSection'
 import MovementSection from './MovementSection'
 import MindfulnessSection from './MindfulnessSection'
+import FoodSection from './FoodSection'
+import GearSection from './GearSection'
 import FilesSection from './FilesSection'
 import SectionToggleSheet from './SectionToggleSheet'
 import { updateJournalVisibility } from '../lib/actions/profile'
@@ -27,6 +29,8 @@ interface PublicProfileClientProps {
   publicProtocols: any[]
   publicMovement: any[]
   publicMindfulness: any[]
+  publicFood: any[]
+  publicGear: any[]
   publicUploads: any[]
   publicJournalEntries: JournalEntry[]
   publicModules: PublicModules
@@ -39,6 +43,8 @@ export default function PublicProfileClient({
   publicProtocols,
   publicMovement,
   publicMindfulness,
+  publicFood,
+  publicGear,
   publicUploads,
   publicJournalEntries,
   publicModules,
@@ -95,24 +101,32 @@ export default function PublicProfileClient({
         </div>
       )}
       
-      {/* Other sections */}
-      {currentModules?.supplements && publicSupplements.length > 0 && (
+      {/* Other sections - Show if enabled, even if empty */}
+      {currentModules?.supplements && (
         <SupplementsSection supplements={publicSupplements} />
       )}
       
-      {currentModules?.protocols && publicProtocols.length > 0 && (
+      {currentModules?.protocols && (
         <ProtocolsSection protocols={publicProtocols} />
       )}
       
-      {currentModules?.movement && publicMovement.length > 0 && (
+      {currentModules?.movement && (
         <MovementSection movementItems={publicMovement} />
       )}
       
-      {currentModules?.mindfulness && publicMindfulness.length > 0 && (
+      {currentModules?.mindfulness && (
         <MindfulnessSection mindfulnessItems={publicMindfulness} />
       )}
       
-      {currentModules?.uploads && publicUploads.length > 0 && (
+      {currentModules?.food && (
+        <FoodSection foodItems={publicFood} />
+      )}
+      
+      {currentModules?.gear && (
+        <GearSection gear={publicGear} />
+      )}
+      
+      {currentModules?.uploads && (
         <FilesSection uploads={publicUploads} />
       )}
 
@@ -121,6 +135,8 @@ export default function PublicProfileClient({
        (!currentModules?.protocols || publicProtocols.length === 0) && 
        (!currentModules?.movement || publicMovement.length === 0) && 
        (!currentModules?.mindfulness || publicMindfulness.length === 0) && 
+       (!currentModules?.food || publicFood.length === 0) && 
+       (!currentModules?.gear || publicGear.length === 0) && 
        (!currentModules?.uploads || publicUploads.length === 0) && 
        (!currentModules?.journal || publicJournalEntries.length === 0) && (
         <div className="text-center py-16">

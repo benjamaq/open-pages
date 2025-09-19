@@ -235,10 +235,10 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-5 sm:py-6">
+            <div className="flex items-center py-3 sm:py-4">
             <Link href="/dash" className="inline-flex items-center">
               <img
-                src="/BIOSTACKR LOGO.png"
+                src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
                 className="h-16 w-auto"
                 style={{ height: '80px', width: 'auto' }}
@@ -251,7 +251,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
         {/* Row 2: Utility Toolbar */}
         <div>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-end gap-3 py-3">
+              <div className="flex items-center justify-end gap-3 py-2">
               {/* Dashboard Button */}
               <Link 
                 href="/dash" 
@@ -299,9 +299,6 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
         <div className="space-y-6">
           {movementItems.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <Plus className="w-8 h-8 text-gray-400" />
-              </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No movement activities yet</h3>
               <p className="text-gray-500 mb-6">
                 Add your first movement activity to get started with tracking your fitness routine.
@@ -311,7 +308,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
                 className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Movement Activity
+                Add Movement
               </button>
             </div>
           ) : (

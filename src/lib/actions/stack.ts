@@ -16,14 +16,23 @@ export async function addStackItem(formData: {
   category?: string
   itemType?: string
 }) {
+  console.log('addStackItem called with:', { 
+    itemType: formData.itemType, 
+    name: formData.name,
+    public: formData.public 
+  })
+  
   const supabase = await createClient()
   
   // Get the current user
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
   if (userError || !user) {
+    console.error('User authentication error:', userError)
     throw new Error('User not authenticated')
   }
+  
+  console.log('User authenticated:', user.id)
 
   // Get the user's profile
   const { data: profile, error: profileError } = await supabase
@@ -33,25 +42,32 @@ export async function addStackItem(formData: {
     .single()
 
   if (profileError || !profile) {
+    console.error('Profile fetch error:', profileError)
     throw new Error('Profile not found')
   }
+  
+  console.log('Profile found:', profile.id)
 
   // Create the stack item
+  const insertData = {
+    profile_id: profile.id,
+    item_type: formData.itemType || 'supplements',
+    name: formData.name,
+    dose: formData.dose || null,
+    timing: formData.timing || null,
+    brand: formData.brand || null,
+    notes: formData.notes || null,
+    public: formData.public,
+    frequency: formData.frequency || 'daily',
+    time_preference: formData.time_preference || 'anytime',
+    schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6]
+  }
+  
+  console.log('Inserting stack item:', insertData)
+  
   const { error: stackItemError } = await supabase
     .from('stack_items')
-    .insert({
-      profile_id: profile.id,
-      item_type: formData.itemType || 'supplements',
-      name: formData.name,
-      dose: formData.dose || null,
-      timing: formData.timing || null,
-      brand: formData.brand || null,
-      notes: formData.notes || null,
-      public: formData.public,
-      frequency: formData.frequency || 'daily',
-      time_preference: formData.time_preference || 'anytime',
-      schedule_days: formData.schedule_days || [0, 1, 2, 3, 4, 5, 6]
-    })
+    .insert(insertData)
 
   if (stackItemError) {
     console.error('Stack item creation error:', stackItemError)

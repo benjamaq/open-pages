@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       dailyUpdate: dailyUpdate || {
-        energy_score: 7,
+        energy_score: null,
         mood_label: null,
         wearable_sleep_score: null,
         wearable_recovery: null,

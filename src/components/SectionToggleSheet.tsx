@@ -15,13 +15,14 @@ export default function SectionToggleSheet({ currentModules, onUpdate }: Section
   const [modules, setModules] = useState(currentModules)
 
   const moduleLabels = {
+    journal: 'Show Journal',
     supplements: 'Show Supplements',
     protocols: 'Show Protocols',
     movement: 'Show Movement',
     mindfulness: 'Show Mindfulness',
     food: 'Show Food',
-    uploads: 'Show Files & Labs',
-    journal: 'Show Journal'
+    gear: 'Show Gear',
+    uploads: 'Show Files & Labs'
   }
 
   const handleToggle = (module: keyof PublicModules) => {

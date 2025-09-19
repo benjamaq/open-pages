@@ -47,9 +47,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let publicSupplements: any[] = []
   let publicMindfulness: any[] = []
   let publicMovement: any[] = []
+  let publicFood: any[] = []
+  let publicGear: any[] = []
 
   if (profile) {
-    const [supplementsResult, mindfulnessResult, movementResult] = await Promise.all([
+    const [supplementsResult, mindfulnessResult, movementResult, foodResult, gearResult] = await Promise.all([
       supabase
         .from('stack_items')
         .select('*')
@@ -70,12 +72,28 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         .eq('profile_id', (profile as any).id)
         .eq('item_type', 'movement')
         .eq('public', true)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('stack_items')
+        .select('*')
+        .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'food')
+        .eq('public', true)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('gear')
+        .select('*')
+        .eq('profile_id', (profile as any).id)
+        .eq('public', true)
+        .order('category', { ascending: true })
         .order('created_at', { ascending: false })
     ])
 
     publicSupplements = supplementsResult.data || []
     publicMindfulness = mindfulnessResult.data || []
     publicMovement = movementResult.data || []
+    publicFood = foodResult.data || []
+    publicGear = gearResult.data || []
   }
 
   // Try to fetch journal entries separately (in case table doesn't exist yet)
@@ -171,14 +189,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   // Count items for display
-  const stackItemsCount = publicStackItems.length
-  const protocolsCount = publicProtocols.length
-  const uploadsCount = publicUploads.length
+  const stackItemsCount = publicSupplements.length + publicMindfulness.length + publicMovement.length + publicFood.length + publicGear.length
+  const protocolsCount = (profile as any)?.protocols?.length || 0
+  const uploadsCount = (profile as any)?.uploads?.length || 0
 
   // Helper functions for rendering sections
 
   const renderProtocols = () => {
-    if (publicProtocols.length === 0) return null
+    // Show if module is enabled, even if empty
+    if (!publicModules.protocols) return null
 
     return (
       <section className="mb-8">
@@ -187,19 +206,25 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             Protocols ({publicProtocols.length})
           </h2>
           <div className="space-y-4">
-            {publicProtocols.map((protocol: any) => (
-              <div key={protocol.id} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 text-base">{protocol.name}</h3>
-                <div className="mt-2 space-y-1">
-                  {protocol.frequency && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>Frequency: {protocol.frequency}</p>
-                  )}
-                  {protocol.details && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>{protocol.details}</p>
-                  )}
+            {publicProtocols.length > 0 ? (
+              publicProtocols.map((protocol: any) => (
+                <div key={protocol.id} className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 text-base">{protocol.name}</h3>
+                  <div className="mt-2 space-y-1">
+                    {protocol.frequency && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>Frequency: {protocol.frequency}</p>
+                    )}
+                    {protocol.details && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>{protocol.details}</p>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No protocols shared yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -207,7 +232,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const renderMovement = () => {
-    if (publicMovement.length === 0) return null
+    // Show if module is enabled, even if empty
+    if (!publicModules.movement) return null
 
     return (
       <section className="mb-8">
@@ -216,22 +242,28 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             Movement ({publicMovement.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicMovement.map((item: any) => (
-              <div key={item.id} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
-                <div className="mt-2 space-y-1">
-                  {item.dose && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
-                  )}
-                  {item.timing && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
-                  )}
-                  {item.notes && (
-                    <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
-                  )}
+            {publicMovement.length > 0 ? (
+              publicMovement.map((item: any) => (
+                <div key={item.id} className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
+                  <div className="mt-2 space-y-1">
+                    {item.dose && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
+                    )}
+                    {item.timing && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
+                    )}
+                    {item.notes && (
+                      <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No movement activities shared yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -239,7 +271,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const renderMindfulness = () => {
-    if (publicMindfulness.length === 0) return null
+    // Show if module is enabled, even if empty
+    if (!publicModules.mindfulness) return null
 
     return (
       <section className="mb-8">
@@ -248,22 +281,28 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             Mindfulness ({publicMindfulness.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicMindfulness.map((item: any) => (
-              <div key={item.id} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
-                <div className="mt-2 space-y-1">
-                  {item.dose && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
-                  )}
-                  {item.timing && (
-                    <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
-                  )}
-                  {item.notes && (
-                    <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
-                  )}
+            {publicMindfulness.length > 0 ? (
+              publicMindfulness.map((item: any) => (
+                <div key={item.id} className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
+                  <div className="mt-2 space-y-1">
+                    {item.dose && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
+                    )}
+                    {item.timing && (
+                      <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
+                    )}
+                    {item.notes && (
+                      <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No mindfulness practices shared yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -272,7 +311,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
 
   const renderUploads = () => {
-    if (publicUploads.length === 0) return null
+    // Show if module is enabled, even if empty
+    if (!publicModules.uploads) return null
 
     const getFileIcon = (fileType: string) => {
       if (fileType.startsWith('image/')) return <ImageIcon className="w-6 h-6" />
@@ -287,30 +327,36 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             Files & Labs ({publicUploads.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicUploads.map((upload: any) => (
-              <div key={upload.id} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 text-gray-500">
-                    {getFileIcon(upload.file_type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm truncate">{upload.title}</h3>
-                    {upload.description && (
-                      <p className="text-xs mt-1" style={{ color: '#5C6370' }}>{upload.description}</p>
-                    )}
-                    <a
-                      href={upload.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-medium mt-2 inline-block hover:underline"
-                      style={{ color: '#5C6370' }}
-                    >
-                      View File
-                    </a>
+            {publicUploads.length > 0 ? (
+              publicUploads.map((upload: any) => (
+                <div key={upload.id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 text-gray-500">
+                      {getFileIcon(upload.file_type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 text-sm truncate">{upload.title}</h3>
+                      {upload.description && (
+                        <p className="text-xs mt-1" style={{ color: '#5C6370' }}>{upload.description}</p>
+                      )}
+                      <a
+                        href={upload.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium mt-2 inline-block hover:underline"
+                        style={{ color: '#5C6370' }}
+                      >
+                        View File
+                      </a>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No files shared yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -323,10 +369,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-5 sm:py-6">
+          <div className="flex items-center py-3 sm:py-4">
             <Link href="/" className="inline-flex items-center">
               <img
-                src="/BIOSTACKR LOGO.png"
+                src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
                 className="h-16 w-auto"
                 style={{ height: '80px', width: 'auto' }}
@@ -424,6 +470,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         publicProtocols={publicProtocols}
         publicMovement={publicMovement}
         publicMindfulness={publicMindfulness}
+        publicFood={publicFood}
+        publicGear={publicGear}
         publicUploads={publicUploads}
         publicJournalEntries={publicJournalEntries}
         publicModules={publicModules}

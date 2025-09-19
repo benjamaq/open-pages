@@ -1,31 +1,32 @@
-'use server'
-
-import { createClient } from '../supabase/server'
-import { revalidatePath } from 'next/cache'
+import { createClient } from '../supabase/client'
 
 export async function updateProfileAvatar(avatarUrl: string) {
-  const supabase = await createClient()
-
-  // Get the current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  console.log('updateProfileAvatar called with URL:', avatarUrl)
+  const supabase = createClient()
   
+  // Get current user
+  console.log('Getting current user...')
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
+    console.error('User authentication error:', userError)
     throw new Error('User not authenticated')
   }
+  console.log('User authenticated:', user.id)
 
-  // Update the user's profile with the new avatar URL
-  const { error: updateError } = await supabase
+  // Update profile with new avatar URL
+  console.log('Updating profile avatar_url for user:', user.id, 'with URL:', avatarUrl)
+  const { data, error } = await supabase
     .from('profiles')
     .update({ avatar_url: avatarUrl })
     .eq('user_id', user.id)
+    .select()
 
-  if (updateError) {
-    console.error('Profile avatar update error:', updateError)
-    throw new Error(`Failed to update profile avatar: ${updateError.message}`)
+  if (error) {
+    console.error('Profile update error:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
+    throw new Error(`Failed to update avatar: ${error.message}`)
   }
 
-  console.log('Profile avatar updated successfully:', avatarUrl)
-  
-  // Revalidate the dashboard page to show new avatar
-  revalidatePath('/dash')
+  console.log('Profile update successful:', data)
+  return { success: true, data }
 }

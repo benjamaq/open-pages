@@ -210,7 +210,7 @@ export default function CreateProfilePage() {
             <div className="flex items-center">
               <Link href="/" className="hover:opacity-90 transition-opacity">
                 <img 
-                  src="/BIOSTACKR LOGO.png" 
+                  src="/BIOSTACKR LOGO 2.png" 
                   alt="Biostackr" 
                   className="h-16 w-auto"
                   style={{ width: '280px' }}

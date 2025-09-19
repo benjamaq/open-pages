@@ -21,7 +21,7 @@ interface MindfulnessSectionProps {
 export default function MindfulnessSection({ mindfulnessItems }: MindfulnessSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   
-  if (mindfulnessItems.length === 0) return null
+  // Always render if called, show empty state if no mindfulness items
 
   const displayedItems = isExpanded ? mindfulnessItems : mindfulnessItems.slice(0, 6)
   const hasMore = mindfulnessItems.length > 6
@@ -51,6 +51,8 @@ export default function MindfulnessSection({ mindfulnessItems }: MindfulnessSect
               name={item.name}
               duration={item.dose || undefined}
               timing={item.timing || undefined}
+              frequency={item.frequency || undefined}
+              scheduleDays={item.schedule_days}
               notes={item.notes || undefined}
             />
           ))}

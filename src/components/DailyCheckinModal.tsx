@@ -37,6 +37,7 @@ interface DailyCheckinModalProps {
   onEnergyUpdate: (energy: number) => void
   currentEnergy: number
   todayItems: any
+  userId: string
 }
 
 // Helper functions
@@ -150,12 +151,13 @@ function ShareCardPreview({ draft }: { draft: DailyCheckinInput }) {
 }
 
 // Main Modal Component
-export default function DailyCheckinModal({ 
-  isOpen, 
-  onClose, 
-  onEnergyUpdate, 
-  currentEnergy, 
-  todayItems 
+export default function DailyCheckinModal({
+  isOpen,
+  onClose,
+  onEnergyUpdate,
+  currentEnergy,
+  todayItems,
+  userId
 }: DailyCheckinModalProps) {
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
@@ -174,7 +176,7 @@ export default function DailyCheckinModal({
 
   const loadSavedData = () => {
     // Load daily check-in data
-    const saved = localStorage.getItem('biostackr_last_daily_checkin')
+    const saved = localStorage.getItem(`biostackr_last_daily_checkin_${userId}`)
     if (saved) {
       try {
         const data = JSON.parse(saved)
@@ -242,10 +244,11 @@ export default function DailyCheckinModal({
       const today = new Date().toISOString().split('T')[0]
       
       // Save daily check-in state for dashboard
-      localStorage.setItem('biostackr_last_daily_checkin', JSON.stringify({
+      localStorage.setItem(`biostackr_last_daily_checkin_${userId}`, JSON.stringify({
         energy: draft.energy,
         mood: draft.mood,
-        date: today
+        date: today,
+        userId: userId
       }))
 
       // Save wearables data
@@ -547,7 +550,7 @@ export default function DailyCheckinModal({
                           Twitter
                         </button>
                         <button 
-                          className="rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
+                          className="rounded-md bg-blue-600 px-3 py-2 text-white text-sm hover:bg-blue-700 transition-colors"
                           onClick={() => handleShare('facebook')}
                         >
                           Facebook
@@ -559,7 +562,7 @@ export default function DailyCheckinModal({
                           Instagram
                         </button>
                         <button 
-                          className="rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
+                          className="rounded-md bg-blue-700 px-3 py-2 text-white text-sm hover:bg-blue-800 transition-colors"
                           onClick={() => handleShare('linkedin')}
                         >
                           LinkedIn
@@ -568,13 +571,13 @@ export default function DailyCheckinModal({
                       
                       <div className="flex gap-2">
                         <button 
-                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm hover:bg-zinc-50 transition-colors" 
+                          className="flex-1 rounded-md bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
                           onClick={handleDownload}
                         >
                           Download image
                         </button>
                         <button 
-                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm hover:bg-zinc-50 transition-colors" 
+                          className="flex-1 rounded-md bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
                           onClick={handleCopyLink}
                         >
                           Copy link

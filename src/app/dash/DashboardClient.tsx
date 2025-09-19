@@ -7,6 +7,8 @@ import DailyCheckinModal from '../../components/DailyCheckinModal'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
+import GearCard from '../../components/GearCard'
+import AddGearForm from '../../components/AddGearForm'
 
 interface Profile {
   id: string
@@ -30,6 +32,8 @@ interface DashboardClientProps {
     mindfulness: any[]
     movement: any[]
     protocols: any[]
+    food: any[]
+    gear: any[]
   }
   userId: string
 }
@@ -269,7 +273,7 @@ const HeaderCustomizer = ({
           <h2 className="text-xl font-bold text-gray-900">Customize Header</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -511,7 +515,7 @@ const DashboardCard = ({ children, title, onManage, collapsed = false, onToggleC
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
@@ -520,10 +524,11 @@ const DashboardCard = ({ children, title, onManage, collapsed = false, onToggleC
         {onManage && (
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage items"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         )}
       </div>
@@ -642,7 +647,7 @@ const CheckinCard = ({
 
           {/* Optional Chips */}
           <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-            🔥 7-day streak
+            🔥 0-day streak
           </div>
           <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
             ✅ {completionPercentage}% complete
@@ -810,7 +815,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
                 <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                   <button
                     onClick={() => onToggleComplete(item.id, 'supplement')}
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                       isCompleted
                         ? 'bg-gray-900 border-gray-900 scale-110'
                         : 'border-gray-300 hover:border-gray-500'
@@ -873,10 +878,11 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage supplements"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
@@ -1102,7 +1108,8 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
       className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
       style={{ 
         borderRadius: '16px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        maxHeight: collapsed ? '80px' : '400px'
       }}
     >
       {/* Header */}
@@ -1118,16 +1125,17 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage protocols"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
 
       {!collapsed && (
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 max-h-72 overflow-y-auto">
           {items.length > 0 ? (
             <div className="space-y-3">
               {items.map((item) => {
@@ -1138,7 +1146,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
                   <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                     <button
                       onClick={() => onToggleComplete(item.id, 'protocol')}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                         isCompleted
                           ? 'bg-gray-900 border-gray-900 scale-110'
                           : 'border-gray-300 hover:border-gray-500'
@@ -1182,7 +1190,8 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
       className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
       style={{ 
         borderRadius: '16px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        maxHeight: collapsed ? '80px' : '400px'
       }}
     >
       {/* Header */}
@@ -1198,22 +1207,23 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage movement"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
 
       {!collapsed && (
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 max-h-72 overflow-y-auto">
           {items.length > 0 ? (
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                   <button
-                    className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
+                    className="w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
                   >
                   </button>
                   <div className="flex-1">
@@ -1250,7 +1260,8 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
       className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
       style={{ 
         borderRadius: '16px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        maxHeight: collapsed ? '80px' : '400px'
       }}
     >
       {/* Header */}
@@ -1266,22 +1277,23 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage mindfulness"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
 
       {!collapsed && (
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 max-h-72 overflow-y-auto">
           {items.length > 0 ? (
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                   <button
-                    className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
+                    className="w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
                   >
                   </button>
                   <div className="flex-1">
@@ -1310,24 +1322,24 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
 }
 
 // Row 3 — Food Card (Full Width)
-const FoodCard = ({ onManage, onQuickAdd }: { onManage: () => void, onQuickAdd: () => void }) => {
+const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => void, onQuickAdd: () => void, foodItems?: any[] }) => {
   const [collapsed, setCollapsed] = useState(false)
 
   const mealSections = [
     {
       name: 'Morning',
       time: 'AM',
-      items: ['Oatmeal with berries', 'Green tea']
+      items: foodItems.filter(item => item.time_preference === 'morning')
     },
     {
       name: 'Midday', 
       time: 'Midday',
-      items: ['Salmon salad', 'Avocado']
+      items: foodItems.filter(item => item.time_preference === 'midday')
     },
     {
       name: 'Evening',
       time: 'PM', 
-      items: ['Grilled chicken', 'Vegetables']
+      items: foodItems.filter(item => item.time_preference === 'evening')
     }
   ]
 
@@ -1352,10 +1364,11 @@ const FoodCard = ({ onManage, onQuickAdd }: { onManage: () => void, onQuickAdd: 
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage food"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
@@ -1371,8 +1384,11 @@ const FoodCard = ({ onManage, onQuickAdd }: { onManage: () => void, onQuickAdd: 
                 </h4>
                 <div className="space-y-2">
                   {section.items.map((item, index) => (
-                    <div key={index} className="text-sm p-2 rounded-lg bg-gray-50" style={{ color: '#5C6370' }}>
-                      {item}
+                    <div key={item.id || index} className="text-sm p-2 rounded-lg bg-gray-50" style={{ color: '#5C6370' }}>
+                      <div className="font-medium">{typeof item === 'string' ? item : item.name}</div>
+                      {typeof item === 'object' && item.dose && (
+                        <div className="text-xs text-gray-400 mt-1">{item.dose}</div>
+                      )}
                     </div>
                   ))}
                   <button 
@@ -1397,10 +1413,11 @@ const UploadsCard = ({ count, onManage }: { count: number, onManage: () => void 
 
   return (
     <div 
-      className="bg-gray-50 border border-gray-100 shadow-sm transition-all duration-200"
+      className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
       style={{ 
         borderRadius: '16px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        maxHeight: collapsed ? '80px' : '400px'
       }}
     >
       {/* Header */}
@@ -1416,10 +1433,11 @@ const UploadsCard = ({ count, onManage }: { count: number, onManage: () => void 
           </button>
           <button
             onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage uploads"
           >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
           </button>
         </div>
       </div>
@@ -1484,7 +1502,7 @@ const PillarCard = ({
                 <div key={item.id} className="flex items-center space-x-3">
                   <button
                     onClick={() => onToggleComplete(item.id, type)}
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                       isCompleted
                         ? 'bg-gray-900 border-gray-900 scale-110'
                         : 'border-gray-300 hover:border-gray-500'
@@ -1611,14 +1629,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const loadDailyCheckIn = async () => {
     try {
-      // Primary: Load from localStorage (more reliable)
-      const saved = localStorage.getItem('biostackr_last_daily_checkin')
+      // Primary: Load from localStorage (user-specific and date-specific)
+      const saved = localStorage.getItem(`biostackr_last_daily_checkin_${userId}`)
       if (saved) {
         const data = JSON.parse(saved)
         const today = new Date().toISOString().split('T')[0]
         
-        // Only use if it's from today
-        if (data.date === today) {
+        // Only use if it's from today and for this user
+        if (data.date === today && data.userId === userId) {
           setDailyCheckIn({
             energy: data.energy,
             mood: data.mood
@@ -1634,10 +1652,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         const data = await response.json()
         if (data.dailyUpdate) {
           setDailyCheckIn({
-            energy: data.dailyUpdate.energy_score || 7,
+            energy: data.dailyUpdate.energy_score || 1,
             mood: data.dailyUpdate.mood_label || ''
           })
-          setEnergyLevel(data.dailyUpdate.energy_score || 7)
+          setEnergyLevel(data.dailyUpdate.energy_score || 1)
         }
       }
     } catch (error) {
@@ -1654,7 +1672,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     }))
   }
   
-  const [energyLevel, setEnergyLevel] = useState(7)
+  const [energyLevel, setEnergyLevel] = useState(1)
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [mission, setMission] = useState('')
   const [isEditingMission, setIsEditingMission] = useState(false)
@@ -1663,6 +1681,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showBatteryModal, setShowBatteryModal] = useState(false)
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showQuickAddFood, setShowQuickAddFood] = useState(false)
+  const [showAddGear, setShowAddGear] = useState(false)
   const [isHoveringHero, setIsHoveringHero] = useState(false)
   const [displayName, setDisplayName] = useState(profile.display_name)
   const [showDisplayName, setShowDisplayName] = useState(true)
@@ -1818,10 +1837,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         <div className="bg-white shadow-sm">
           {/* Row 1: Brand Only */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center py-5 sm:py-6">
+            <div className="flex items-center py-3 sm:py-4">
               <Link href="/dash" className="inline-flex items-center">
                 <img
-                  src="/BIOSTACKR LOGO.png"
+                  src="/BIOSTACKR LOGO 2.png"
                   alt="Biostackr"
                   className="h-16 w-auto"
                   style={{ height: '80px', width: 'auto' }}
@@ -1834,7 +1853,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           {/* Row 2: Utility Toolbar */}
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-end gap-3 py-3">
+              <div className="flex items-center justify-end gap-3 py-2">
                 {/* Public Profile Button */}
                 <button
                   onClick={() => window.location.href = `/u/${profile.slug}`}
@@ -1901,13 +1920,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     </span>
                   </div>
                 )}
-                {/* Edit Photo Link - Appears on Hover */}
+                {/* Edit Photo Icon - Always Visible */}
                 <button
-                  onClick={() => setShowCustomizer(true)}
-                  className="absolute -bottom-2 left-0 right-0 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ color: '#5C6370' }}
+                  onClick={() => window.location.href = '/dash/settings'}
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all hover:scale-105"
+                  title="Edit profile photo"
                 >
-                  Edit Photo
+                  <Edit2 className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
               </div>
@@ -1956,7 +1975,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <div className="flex flex-wrap items-center gap-4">
                   {/* Status Text Items */}
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
-                    🔥 7-day streak
+                    🔥 0-day streak
                       </div>
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     ✅ {completionPercentage}% complete
@@ -2003,25 +2022,21 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div className="space-y-8">
             
             {/* Row 1 — Today's Supplements (Full Width) */}
-            {todayItems.supplements.length > 0 && (
-              <SupplementsCard
-                items={todayItems.supplements}
-                onToggleComplete={handleToggleComplete}
-                completedItems={completedItems}
-                onManage={() => window.location.href = '/dash/stack'}
-              />
-            )}
+            <SupplementsCard
+              items={todayItems.supplements}
+              onToggleComplete={handleToggleComplete}
+              completedItems={completedItems}
+              onManage={() => window.location.href = '/dash/stack'}
+            />
 
             {/* Row 2 — Three Equal Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {todayItems.protocols.length > 0 && (
-                <ProtocolsCard
-                  items={todayItems.protocols}
-                  onToggleComplete={handleToggleComplete}
-                  completedItems={completedItems}
-                  onManage={() => window.location.href = '/dash/protocols'}
-                />
-              )}
+              <ProtocolsCard
+                items={todayItems.protocols}
+                onToggleComplete={handleToggleComplete}
+                completedItems={completedItems}
+                onManage={() => window.location.href = '/dash/protocols'}
+              />
               <MovementCard
                 items={todayItems.movement}
                 onManage={() => window.location.href = '/dash/movement'}
@@ -2036,15 +2051,20 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             <FoodCard
               onManage={() => window.location.href = '/dash/food'}
               onQuickAdd={() => setShowQuickAddFood(true)}
+              foodItems={todayItems.food}
+            />
+
+            {/* Row 4 — Gear (Full Width) */}
+            <GearCard
+              items={[]} // Will be populated from gear management page
+              onManage={() => window.location.href = '/dash/gear'}
             />
 
             {/* Row 4 — Uploads (Full Width, Secondary) */}
-            {counts.uploads > 0 && (
-              <UploadsCard
-                count={counts.uploads}
-                onManage={() => window.location.href = '/dash/uploads'}
-              />
-            )}
+            <UploadsCard
+              count={counts.uploads}
+              onManage={() => window.location.href = '/dash/uploads'}
+            />
 
                 </div>
               </div>
@@ -2070,7 +2090,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <h2 className="text-xl font-bold" style={{ color: '#0F1115' }}>Today's Check-in</h2>
                 <button
                   onClick={() => setShowBatteryModal(false)}
-                  className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -2210,14 +2230,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <h2 className="text-xl font-bold text-gray-900">Quick Add Food</h2>
                 <button
                   onClick={() => setShowQuickAddFood(false)}
-                  className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
 
               <AddStackItemForm 
-                onClose={() => setShowQuickAddFood(false)} 
+                onClose={() => {
+                  setShowQuickAddFood(false)
+                  window.location.reload() // Refresh to show new food items
+                }} 
                 itemType="food"
               />
             </div>
@@ -2231,7 +2254,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           onEnergyUpdate={handleEnergyUpdate}
           currentEnergy={energyLevel}
           todayItems={todayItems}
+          userId={userId}
         />
+
+        {/* Add Gear Modal */}
+        {showAddGear && (
+          <AddGearForm onClose={() => setShowAddGear(false)} />
+        )}
 
       </div>
 

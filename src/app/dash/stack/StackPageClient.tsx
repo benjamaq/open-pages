@@ -41,10 +41,10 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
         <div className="bg-white shadow-sm">
           {/* Row 1: Brand Only */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center py-5 sm:py-6">
+            <div className="flex items-center py-3 sm:py-4">
               <Link href="/dash" className="inline-flex items-center -ml-1">
                 <img
-                  src="/BIOSTACKR LOGO.png"
+                  src="/BIOSTACKR LOGO 2.png"
                   alt="Biostackr"
                   className="h-16 w-auto"
                   style={{ height: '80px', width: 'auto' }}
@@ -57,7 +57,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
           {/* Row 2: Utility Toolbar */}
           <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-end gap-3 py-3">
+              <div className="flex items-center justify-end gap-3 py-2">
                 {/* Dashboard Button */}
                 <Link 
                   href="/dash" 
@@ -108,8 +108,8 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
             {item.timing && <p className="text-sm text-gray-600">Timing: {item.timing}</p>}
             
             <div className="mt-4 flex justify-between items-center">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                item.public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                item.public ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
               }`}>
                 {item.public ? 'Public' : 'Private'}
               </span>

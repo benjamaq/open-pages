@@ -21,7 +21,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile }: PublicPro
   }, [isOwnProfile])
 
   const loadDailyCheckIn = () => {
-    const saved = localStorage.getItem('biostackr_last_daily_checkin')
+    const saved = localStorage.getItem(`biostackr_last_daily_checkin_${profile.user_id}`)
     if (saved) {
       try {
         const data = JSON.parse(saved)
@@ -50,7 +50,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile }: PublicPro
   return (
     <div className="flex flex-wrap justify-center lg:justify-start gap-2">
       <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-        Today
+        {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </div>
       
       {/* Daily Check-in Display - Combined Pill */}

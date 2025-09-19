@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Input System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 2px solid #ccc; }
+        .working { border-color: green; background: #f0fff0; }
+        .broken { border-color: red; background: #fff0f0; }
+        button { padding: 10px 15px; margin: 5px; }
+        input[type="file"] { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 File Input System Diagnosis</h1>
+    <p><strong>Test each section below. If ANY fail, it's a browser/system issue.</strong></p>
+    
+    <div class="test">
+        <h2>Test 1: Basic HTML File Input</h2>
+        <input type="file" onchange="alert('✅ Basic file input works! File: ' + (this.files[0]?.name || 'none'))">
+        <p>👆 Click above. If no file dialog opens, your browser blocks file inputs entirely.</p>
+    </div>
+    
+    <div class="test">
+        <h2>Test 2: Image-Only File Input</h2>
+        <input type="file" accept="image/*" onchange="alert('✅ Image file input works! File: ' + (this.files[0]?.name || 'none'))">
+        <p>👆 Should only allow image files.</p>
+    </div>
+    
+    <div class="test">
+        <h2>Test 3: Button-Triggered File Input</h2>
+        <input type="file" id="hiddenInput" style="display: none;" onchange="alert('✅ Hidden input works! File: ' + (this.files[0]?.name || 'none'))">
+        <button onclick="document.getElementById('hiddenInput').click()">Click to Open File Dialog</button>
+        <p>👆 Tests if programmatic file input triggering works.</p>
+    </div>
+    
+    <div class="test">
+        <h2>Test 4: JavaScript-Created File Input</h2>
+        <button onclick="testDynamicInput()">Create and Click File Input</button>
+        <p>👆 Tests if dynamically created file inputs work.</p>
+        <script>
+            function testDynamicInput() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.onchange = (e) => alert('✅ Dynamic input works! File: ' + (e.target.files[0]?.name || 'none'));
+                document.body.appendChild(input);
+                input.click();
+                setTimeout(() => document.body.removeChild(input), 1000);
+            }
+        </script>
+    </div>
+    
+    <div class="test">
+        <h2>Test 5: Security Context Check</h2>
+        <button onclick="checkSecurity()">Check Security Context</button>
+        <div id="securityInfo"></div>
+        <script>
+            function checkSecurity() {
+                const info = document.getElementById('securityInfo');
+                info.innerHTML = `
+                    <p><strong>Protocol:</strong> ${location.protocol}</p>
+                    <p><strong>Host:</strong> ${location.host}</p>
+                    <p><strong>Is Secure Context:</strong> ${window.isSecureContext}</p>
+                    <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                    <p><strong>Permissions API:</strong> ${navigator.permissions ? 'Available' : 'Not Available'}</p>
+                `;
+            }
+        </script>
+    </div>
+    
+    <div class="test">
+        <h2>Test 6: Upload API Test</h2>
+        <input type="file" id="uploadTest" accept="image/*">
+        <button onclick="testUploadAPI()">Test Upload to Your API</button>
+        <div id="uploadResult"></div>
+        <script>
+            async function testUploadAPI() {
+                const fileInput = document.getElementById('uploadTest');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert('Please select a file first');
+                    return;
+                }
+                
+                const resultDiv = document.getElementById('uploadResult');
+                resultDiv.innerHTML = 'Testing upload...';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', 'avatar');
+                
+                try {
+                    const response = await fetch('http://localhost:3009/api/upload', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.url) {
+                        resultDiv.innerHTML = `<span style="color: green;">✅ Upload successful!</span><br>URL: ${result.url}`;
+                    } else {
+                        resultDiv.innerHTML = `<span style="color: red;">❌ Upload failed:</span> ${result.error}`;
+                    }
+                    
+                } catch (error) {
+                    resultDiv.innerHTML = `<span style="color: red;">❌ Network error:</span> ${error.message}`;
+                }
+            }
+        </script>
+    </div>
+    
+    <div class="test">
+        <h2>🚨 If All Above Tests Fail:</h2>
+        <ul>
+            <li>✅ Try in <strong>incognito/private mode</strong></li>
+            <li>✅ Try a <strong>different browser</strong> (Chrome, Firefox, Safari)</li>
+            <li>✅ Check <strong>browser settings</strong> for file access restrictions</li>
+            <li>✅ Disable <strong>all browser extensions</strong></li>
+            <li>✅ Check <strong>system security settings</strong> (macOS Gatekeeper, etc.)</li>
+            <li>✅ Try on a <strong>different computer</strong></li>
+        </ul>
+    </div>
+    
+    <div class="test">
+        <h2>🎯 If Tests 1-3 Work But Your App Doesn't:</h2>
+        <ul>
+            <li>✅ It's a React/Next.js specific issue</li>
+            <li>✅ Check for Content Security Policy headers</li>
+            <li>✅ Verify 'use client' boundaries</li>
+            <li>✅ Check for iframe context</li>
+            <li>✅ Try HTTPS instead of HTTP</li>
+        </ul>
+    </div>
+</body>
+</html>

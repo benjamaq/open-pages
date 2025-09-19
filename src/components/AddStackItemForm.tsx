@@ -20,7 +20,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
     notes: '',
     public: true,
     frequency: 'daily',
-    time_preference: 'anytime',
+    time_preference: 'morning',
     schedule_days: [0, 1, 2, 3, 4, 5, 6], // All days by default
     category: 'General'
   })
@@ -79,7 +79,23 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
       onClose()
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Add stack item error:', err)
+      let errorMessage = 'An unexpected error occurred'
+      
+      if (err instanceof Error) {
+        errorMessage = err.message
+        
+        // More specific error messages
+        if (err.message.includes('not authenticated')) {
+          errorMessage = 'Please log in again to continue.'
+        } else if (err.message.includes('Profile not found')) {
+          errorMessage = 'Profile setup incomplete. Please contact support.'
+        } else if (err.message.includes('Failed to create stack item')) {
+          errorMessage = 'Unable to save item. Please check your connection and try again.'
+        }
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -130,8 +146,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
   const timeOptions = [
     { value: 'morning', label: 'Morning', icon: '🌅' },
     { value: 'midday', label: 'Midday', icon: '☀️' },
-    { value: 'evening', label: 'Evening', icon: '🌙' },
-    { value: 'anytime', label: 'Anytime', icon: '⏰' }
+    { value: 'evening', label: 'Evening', icon: '🌙' }
   ]
 
   const categoryOptions = [

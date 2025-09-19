@@ -22,7 +22,7 @@ export default function FilesSection({ uploads }: FilesSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [showAll, setShowAll] = useState(false)
 
-  if (!uploads || uploads.length === 0) return null
+  // Always render if called, show empty state if no uploads
 
   const displayUploads = showAll ? uploads : uploads.slice(0, 6)
 

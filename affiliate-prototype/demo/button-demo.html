@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Button Demo - BioStackr</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root" class="p-8 max-w-4xl mx-auto"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Buy Button Component
+        function BuyButton({ buyLink, style = 'outline', size = 'sm', className = "" }) {
+            if (!buyLink || buyLink.trim() === '') {
+                return null;
+            }
+
+            const sizeClasses = {
+                sm: 'px-3 py-1.5 text-sm',
+                md: 'px-4 py-2 text-base'
+            };
+
+            const styleClasses = {
+                outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
+                solid: 'bg-gray-900 text-white hover:bg-gray-800',
+                blue: 'bg-blue-600 text-white hover:bg-blue-700',
+                green: 'bg-green-600 text-white hover:bg-green-700'
+            };
+
+            return (
+                <a
+                    href={buyLink}
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className={`
+                        inline-flex items-center gap-1 rounded-lg font-medium transition-colors
+                        ${sizeClasses[size]}
+                        ${styleClasses[style]}
+                        ${className}
+                    `}
+                >
+                    → Buy this item
+                </a>
+            );
+        }
+
+        // Sample supplement card
+        function SupplementCard({ supplement, showBuyButton = true }) {
+            return (
+                <div className="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 className="font-semibold text-gray-900">{supplement.name}</h3>
+                    {supplement.brand && (
+                        <p className="text-sm text-gray-500 mt-1">{supplement.brand}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span>{supplement.dosage}</span>
+                        <span>•</span>
+                        <span>{supplement.timing}</span>
+                    </div>
+                    
+                    {supplement.description && (
+                        <p className="text-sm text-gray-600 mt-2">{supplement.description}</p>
+                    )}
+                    
+                    {showBuyButton && supplement.buyLink && (
+                        <div className="mt-3">
+                            <BuyButton 
+                                buyLink={supplement.buyLink}
+                                brand={supplement.brand}
+                                style={supplement.buttonStyle || 'outline'}
+                                size={supplement.buttonSize || 'sm'}
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Main Demo Component
+        function ButtonDemo() {
+            const [testUrl, setTestUrl] = useState('https://amazon.com/dp/B08EXAMPLE');
+            const [showButtons, setShowButtons] = useState(true);
+            
+            const sampleSupplements = [
+                {
+                    name: 'Creatine Monohydrate',
+                    brand: 'Optimum Nutrition',
+                    dosage: '5g daily',
+                    timing: 'Post-workout',
+                    description: 'Helps with muscle strength and power output',
+                    buyLink: testUrl,
+                    buttonStyle: 'outline'
+                },
+                {
+                    name: 'Vitamin D3',
+                    brand: 'Thorne',
+                    dosage: '2000 IU',
+                    timing: 'Morning',
+                    description: 'Essential for bone health and immune function',
+                    buyLink: testUrl,
+                    buttonStyle: 'solid'
+                },
+                {
+                    name: 'Magnesium Glycinate',
+                    brand: 'NOW Foods',
+                    dosage: '400mg',
+                    timing: 'Evening',
+                    description: 'Promotes relaxation and better sleep quality',
+                    buyLink: testUrl,
+                    buttonStyle: 'blue'
+                },
+                {
+                    name: 'Omega-3 Fish Oil',
+                    brand: 'Nordic Naturals',
+                    dosage: '1000mg',
+                    timing: 'With meals',
+                    description: 'Supports heart and brain health',
+                    buyLink: testUrl,
+                    buttonStyle: 'green'
+                }
+            ];
+            
+            return (
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            🛒 Buy Button Demo
+                        </h1>
+                        <p className="text-gray-600">
+                            Test different button styles and see how they look on supplement cards
+                        </p>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Demo Controls</h2>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Test URL (for buttons)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={testUrl}
+                                    onChange={(e) => setTestUrl(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    placeholder="https://amazon.com/dp/..."
+                                />
+                            </div>
+                            
+                            <label className="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    checked={showButtons}
+                                    onChange={(e) => setShowButtons(e.target.checked)}
+                                    className="rounded"
+                                />
+                                <span className="text-sm font-medium">Show Buy Buttons</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Button Style Examples */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Button Style Options</h2>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Outline</p>
+                                <BuyButton buyLink={testUrl} style="outline" />
+                                <BuyButton buyLink={testUrl} brand="Amazon" style="outline" />
+                            </div>
+                            
+                            <div className="text-center space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Solid</p>
+                                <BuyButton buyLink={testUrl} style="solid" />
+                                <BuyButton buyLink={testUrl} brand="Thorne" style="solid" />
+                            </div>
+                            
+                            <div className="text-center space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Blue</p>
+                                <BuyButton buyLink={testUrl} style="blue" />
+                                <BuyButton buyLink={testUrl} brand="iHerb" style="blue" />
+                            </div>
+                            
+                            <div className="text-center space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Green</p>
+                                <BuyButton buyLink={testUrl} style="green" />
+                                <BuyButton buyLink={testUrl} brand="Vitacost" style="green" />
+                            </div>
+                        </div>
+                        
+                        <div className="mt-6 pt-4 border-t">
+                            <h3 className="text-md font-medium mb-3">Size Options</h3>
+                            <div className="flex items-center gap-4">
+                                <div className="text-center space-y-2">
+                                    <p className="text-sm text-gray-600">Small</p>
+                                    <BuyButton buyLink={testUrl} size="sm" />
+                                    <BuyButton buyLink={testUrl} brand="Amazon" size="sm" />
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <p className="text-sm text-gray-600">Medium</p>
+                                    <BuyButton buyLink={testUrl} size="md" />
+                                    <BuyButton buyLink={testUrl} brand="Amazon" size="md" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Public Profile Preview */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold mb-4">Public Profile Preview</h2>
+                        
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <h3 className="font-medium text-gray-900 mb-4">Supplements</h3>
+                            
+                            <div className="grid gap-4">
+                                {sampleSupplements.map((supplement, index) => (
+                                    <SupplementCard 
+                                        key={index}
+                                        supplement={supplement}
+                                        showBuyButton={showButtons}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Compliance Note */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                        <h3 className="font-medium text-yellow-800 mb-2">🔒 Compliance Notes</h3>
+                        <ul className="text-sm text-yellow-700 space-y-1">
+                            <li>• All buttons include <code>rel="nofollow sponsored noopener"</code></li>
+                            <li>• Links open in new tab (<code>target="_blank"</code>)</li>
+                            <li>• Will need disclosure text: "Some links are affiliate links; I may earn a commission"</li>
+                            <li>• Buttons are tasteful and don't overwhelm the content</li>
+                        </ul>
+                    </div>
+
+                    {/* Debug Info */}
+                    <div className="bg-gray-900 text-gray-100 rounded-xl p-6 text-sm">
+                        <h3 className="font-semibold mb-2">Debug Info:</h3>
+                        <pre className="text-xs overflow-x-auto">
+                            {JSON.stringify({
+                                testUrl,
+                                showButtons,
+                                totalSupplements: sampleSupplements.length,
+                                supplementsWithLinks: sampleSupplements.filter(s => s.buyLink).length
+                            }, null, 2)}
+                        </pre>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<ButtonDemo />, document.getElementById('root'));
+    </script>
+</body>
+</html>

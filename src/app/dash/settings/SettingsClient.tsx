@@ -37,15 +37,17 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
   const [usage, setUsage] = useState<UsageInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [editingName, setEditingName] = useState(false)
-  const [tempName, setTempName] = useState(profile.name || '')
+  const [tempName, setTempName] = useState(profile.display_name || '')
+  const [editingBio, setEditingBio] = useState(false)
+  const [tempBio, setTempBio] = useState(profile.bio || '')
   const [isSaving, setIsSaving] = useState(false)
   const [isSendingTest, setIsSendingTest] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [allowFollowers, setAllowFollowers] = useState(profile.allow_stack_follow || false)
+  const [allowFollowers, setAllowFollowers] = useState(profile.allow_stack_follow ?? true)
   const [followerCount, setFollowerCount] = useState(0)
-  const [showPublicFollowers, setShowPublicFollowers] = useState(profile.show_public_followers || false)
+  const [showPublicFollowers, setShowPublicFollowers] = useState(profile.show_public_followers ?? true)
 
   useEffect(() => {
     loadPreferences()
@@ -71,15 +73,21 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
   }
 
   const loadFollowerSettings = () => {
-    // Load from localStorage as fallback
+    // Load from localStorage as fallback, but default to true if not set
     const savedAllowFollowers = localStorage.getItem('biostackr_allow_followers')
     if (savedAllowFollowers !== null) {
       setAllowFollowers(savedAllowFollowers === 'true')
+    } else {
+      // Default to true (allow following) if no saved preference
+      setAllowFollowers(true)
     }
 
     const savedShowPublicFollowers = localStorage.getItem('biostackr_show_public_followers')
     if (savedShowPublicFollowers !== null) {
       setShowPublicFollowers(savedShowPublicFollowers === 'true')
+    } else {
+      // Default to true (show follower count) if no saved preference
+      setShowPublicFollowers(true)
     }
   }
 
@@ -235,14 +243,20 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
   }
 
   const handleProfilePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleProfilePhotoUpload triggered')
     const file = event.target.files?.[0]
-    if (!file) return
+    console.log('Selected file:', file?.name, file?.size, file?.type)
+    
+    if (!file) {
+      console.log('No file selected')
+      return
+    }
 
     setIsUploading(true)
     setUploadProgress(0)
     setSaveMessage('')
+    console.log('Starting upload process...')
 
-    try {
       // Validate file
       if (file.size > 5 * 1024 * 1024) {
         setSaveMessage('File size must be less than 5MB')
@@ -261,69 +275,64 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       formData.append('file', file)
       formData.append('type', 'avatar')
 
-      // Upload with progress
-      const xhr = new XMLHttpRequest()
-      
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          setUploadProgress(progress)
-        }
+    try {
+      console.log('🚀 Sending request with fetch() to /api/upload')
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include' // Send cookies for auth
       })
+      
+      console.log('🎯 Fetch response received! Status:', response.status)
 
-      xhr.onload = async () => {
-        if (xhr.status === 200) {
-          const result = JSON.parse(xhr.responseText)
+      if (!response.ok) {
+        throw new Error(`Upload failed (${response.status})`)
+      }
+
+      const result = await response.json()
+      console.log('🎯 Parsed result:', result)
+
           if (result.error) {
-            setSaveMessage(`Upload failed: ${result.error}`)
-          } else if (result.url) {
+        throw new Error(`Upload failed: ${result.error}`)
+      }
+
+      if (result.url) {
+        console.log('🎯 Upload successful! URL:', result.url)
             setUploadProgress(100)
             
             // Update profile avatar
-            try {
+        console.log('Updating profile with URL:', result.url)
               const { updateProfileAvatar } = await import('../../../lib/actions/avatar')
               await updateProfileAvatar(result.url)
               
               setSaveMessage('✅ Profile photo updated successfully!')
-              setTimeout(() => setSaveMessage(''), 3000)
-              // Refresh the page to show new avatar
+        alert('✅ Profile photo updated successfully!')
+        console.log('Success! Refreshing page in 1 second...')
               setTimeout(() => window.location.reload(), 1000)
-            } catch (updateError) {
-              console.error('Failed to update profile:', updateError)
-              setSaveMessage('⚠️ Photo uploaded but failed to update profile. Please refresh the page.')
-            }
-          }
         } else {
-          setSaveMessage('❌ Upload failed. Please try again.')
-        }
-        setIsUploading(false)
-        setUploadProgress(0)
+        throw new Error('No URL returned from upload')
       }
-
-      xhr.onerror = () => {
-        setSaveMessage('❌ Upload failed. Please try again.')
-        setIsUploading(false)
-        setUploadProgress(0)
-      }
-
-      xhr.open('POST', '/api/upload')
-      xhr.send(formData)
 
     } catch (error) {
-      console.error('Profile photo upload error:', error)
-      setSaveMessage('❌ Upload failed. Please try again.')
+      console.error('🚨 Upload failed:', error)
+      const errorMsg = `❌ Upload failed: ${error.message}`
+      setSaveMessage(errorMsg)
+      alert(errorMsg)
+    } finally {
       setIsUploading(false)
       setUploadProgress(0)
+      // Reset input so same file can be selected again
+      event.target.value = ''
     }
   }
 
   const handleNameEdit = () => {
     setEditingName(true)
-    setTempName(profile.name || '')
+    setTempName(profile.display_name || '')
   }
 
   const handleNameSave = async () => {
-    if (tempName.trim() === (profile.name || '')) {
+    if (tempName.trim() === (profile.display_name || '')) {
       setEditingName(false)
       return
     }
@@ -334,14 +343,14 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name: tempName.trim() })
+        body: JSON.stringify({ display_name: tempName.trim() })
       })
 
       if (response.ok) {
         setSaveMessage('✅ Name updated successfully!')
         setTimeout(() => setSaveMessage(''), 3000)
         // Update the profile object
-        profile.name = tempName.trim()
+        profile.display_name = tempName.trim()
         setEditingName(false)
       } else {
         throw new Error('Failed to update name')
@@ -352,8 +361,53 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
     }
   }
 
+  const handleBioEdit = () => {
+    setEditingBio(true)
+    setTempBio(profile.bio || '')
+  }
+
+  const handleBioSave = async () => {
+    if (tempBio.trim() === (profile.bio || '')) {
+      setEditingBio(false)
+      return
+    }
+
+    setIsSaving(true)
+    setSaveMessage('')
+
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ bio: tempBio.trim() })
+      })
+
+      if (response.ok) {
+        setSaveMessage('✅ Mission updated successfully!')
+        setTimeout(() => setSaveMessage(''), 3000)
+        // Update the profile object
+        profile.bio = tempBio.trim()
+        setEditingBio(false)
+      } else {
+        throw new Error('Failed to update mission')
+      }
+    } catch (error) {
+      console.error('Error updating mission:', error)
+      setSaveMessage('❌ Failed to update mission. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleBioCancel = () => {
+    setTempBio(profile.bio || '')
+    setEditingBio(false)
+  }
+
   const handleNameCancel = () => {
-    setTempName(profile.name || '')
+    setTempName(profile.display_name || '')
     setEditingName(false)
   }
 
@@ -381,7 +435,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img
-                  src={profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name || 'User'}`}
+                  src={profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.display_name || 'User'}&backgroundColor=000000&textColor=ffffff`}
                   alt="Profile"
                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                 />
@@ -392,20 +446,107 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                 )}
               </div>
               <div>
-                <label className="inline-flex items-center px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 cursor-pointer disabled:opacity-50">
+                {/* Expert-recommended approach: sync file picker */}
+                <input
+                  ref={(ref) => { window.fileInputRef = ref }} // Store ref globally for debugging
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleProfilePhotoUpload}
+                  disabled={isUploading}
+                  className="sr-only" // Screen reader only - keeps in DOM
+                  id="avatar-file-input"
+                />
+                <label 
+                  htmlFor="avatar-file-input"
+                  className="inline-flex items-center px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 cursor-pointer transition-colors"
+                >
                   <Camera className="w-4 h-4 mr-2" />
                   {isUploading ? 'Uploading...' : 'Change Photo'}
+                </label>
+                
+                {/* Direct file input for testing */}
+                <div className="mt-3">
+                  <label className="block text-xs text-gray-500 mb-1">Direct Upload (if buttons fail):</label>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleProfilePhotoUpload}
                     disabled={isUploading}
-                    className="hidden"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
                   />
-                </label>
+                </div>
+                
+                {/* Synchronous test upload button */}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    console.log('Test Upload button clicked')
+                    setSaveMessage('')
+                    
+                    // Create input synchronously
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = 'image/jpeg,image/png,image/webp'
+                    input.style.position = 'absolute'
+                    input.style.left = '-9999px'
+                    document.body.appendChild(input)
+                    
+                    // Set up change handler
+                    input.onchange = (e) => {
+                      console.log('Test Upload file selected')
+                      const target = e.target as HTMLInputElement
+                      const file = target.files?.[0]
+                      
+                      if (file) {
+                        console.log('File:', file.name, file.size, file.type)
+                        const mockEvent = {
+                          target: { files: [file] }
+                        } as React.ChangeEvent<HTMLInputElement>
+                        handleProfilePhotoUpload(mockEvent)
+                      }
+                      
+                      // Clean up
+                      document.body.removeChild(input)
+                    }
+                    
+                    // Click immediately (synchronous)
+                    input.click()
+                  }}
+                  className="ml-3 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  disabled={isUploading}
+                >
+                  Test Upload
+                </button>
+                
+                {/* Keep one test button for mock file testing */}
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    console.log('Mock file test clicked')
+                    const mockFile = new File(['test image data'], 'test.jpg', { type: 'image/jpeg' })
+                    const mockEvent = {
+                      target: { files: [mockFile] }
+                    } as React.ChangeEvent<HTMLInputElement>
+                    
+                    await handleProfilePhotoUpload(mockEvent)
+                  }}
+                  className="ml-3 px-4 py-2 border border-blue-300 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+                  disabled={isUploading}
+                >
+                  Test Mock File
+                </button>
+                
                 <p className="text-xs text-gray-500 mt-1">
                   JPG, PNG or WEBP. Max 5MB.
                 </p>
+                
+                {/* Browser compatibility notice */}
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs text-yellow-800">
+                    ⚠️ <strong>Chrome users:</strong> If file picker doesn't open, try Safari or use HTTPS. 
+                    Chrome blocks file uploads on HTTP localhost for security.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -444,7 +585,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                   onClick={handleNameEdit}
                   className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer text-gray-700 flex justify-between items-center"
                 >
-                  <span>{profile.name || 'Click to set your name'}</span>
+                  <span>{profile.display_name || 'Click to set your name'}</span>
                   <Edit2 className="w-4 h-4 text-gray-400" />
                 </div>
               )}
@@ -456,6 +597,96 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
                 @{profile.slug || 'not-set'}
               </div>
+            </div>
+          </div>
+
+          {/* Mission Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mission
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              This will appear on your public profile page
+            </p>
+            {editingBio ? (
+              <div className="space-y-2">
+                <textarea
+                  value={tempBio}
+                  onChange={(e) => setTempBio(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                  placeholder="Set your daily mission or health goal..."
+                  rows={3}
+                  maxLength={200}
+                  autoFocus
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{tempBio.length}/200 characters</span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleBioSave}
+                      disabled={isSaving}
+                      className="px-3 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleBioCancel}
+                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={handleBioEdit}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer text-gray-700 min-h-[80px] flex items-start"
+              >
+                <span>{profile.bio || 'Click to set your mission...'}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Account Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <User className="w-6 h-6 text-blue-500" />
+          <h2 className="text-xl font-semibold text-gray-900">Account</h2>
+        </div>
+
+        <div className="space-y-6">
+          {/* Email Address */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+              {userEmail}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              This is your account email address
+            </p>
+          </div>
+
+          {/* Sign Out */}
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-900">Sign Out</h3>
+                <p className="text-sm text-gray-500">
+                  Sign out of your Biostackr account
+                </p>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
         </div>
@@ -536,39 +767,16 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                   <h3 className="font-medium text-gray-900">Biostackr Pro</h3>
                   <p className="text-sm text-gray-600">$9.99/month</p>
                 </div>
-                <button
-                  onClick={() => alert('Billing management coming soon!')}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                <a
+                  href="/dash/billing"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Manage Billing
-                </button>
+                </a>
               </div>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Account Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <User className="w-6 h-6 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Account</h2>
-        </div>
-
-        <div className="space-y-6">
-          {/* Email Address */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
-              {userEmail}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              This is your account email address
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Followers Section */}
@@ -584,7 +792,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
             <div>
               <h3 className="font-medium text-gray-900">Allow people to follow your stack</h3>
               <p className="text-sm text-gray-500">
-                Let others receive email updates when you change your public supplements, protocols, and routines
+                Let others receive email updates when you change your public supplements, protocols, and routines (enabled by default)
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -621,7 +829,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
             <div>
               <h3 className="font-medium text-gray-900">Show follower count on public profile</h3>
               <p className="text-sm text-gray-500">
-                Display how many people follow your stack on your public profile
+                Display how many people follow your stack on your public profile (enabled by default)
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -664,19 +872,19 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
         </div>
       </div>
 
-      {/* Email Notifications Section */}
+      {/* Email Settings Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Mail className="w-6 h-6 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Email Setup</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Email Settings</h2>
         </div>
 
         <div className="space-y-6">
           {/* Master Email Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-gray-900">Enable Email System</h3>
-              <p className="text-sm text-gray-500">Master switch - must be ON to receive any emails from Biostackr</p>
+              <h3 className="font-medium text-gray-900">Enable Emails from Biostackr</h3>
+              <p className="text-sm text-gray-500">Master switch - turn off to stop all emails from this app</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -698,9 +906,162 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               {userEmail}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              All emails will be sent to this address
+              All notifications will be sent to this address
             </p>
           </div>
+
+          {/* Daily Emails Section - Only show if email enabled */}
+          {preferences.email_enabled && (
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <Clock className="w-5 h-5 text-green-500" />
+                <h3 className="font-medium text-gray-900">Daily Emails</h3>
+      </div>
+
+              {/* Daily Email Toggle */}
+              <div className="flex items-center justify-between mb-4">
+            <div>
+                  <h4 className="font-medium text-gray-900">Send me daily emails</h4>
+                  <p className="text-sm text-gray-500">Get a daily email with your supplements, protocols, and tasks</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={preferences.daily_reminder_enabled}
+                onChange={(e) => updatePreference('daily_reminder_enabled', e.target.checked)}
+                className="sr-only peer"
+              />
+                  <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+            </label>
+          </div>
+
+              {/* Email Time & Content - Only show if daily emails enabled */}
+              {preferences.daily_reminder_enabled && (
+                <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Send Time
+              </label>
+              <input
+                type="time"
+                value={preferences.reminder_time}
+                onChange={(e) => updatePreference('reminder_time', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Timezone
+              </label>
+              <select
+                value={preferences.timezone}
+                onChange={(e) => updatePreference('timezone', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">Eastern Time</option>
+                <option value="America/Chicago">Central Time</option>
+                <option value="America/Denver">Mountain Time</option>
+                <option value="America/Los_Angeles">Pacific Time</option>
+                <option value="Europe/London">London</option>
+                <option value="Europe/Paris">Paris</option>
+                <option value="Asia/Tokyo">Tokyo</option>
+                <option value="Australia/Sydney">Sydney</option>
+              </select>
+        </div>
+      </div>
+
+                  {/* What to Include */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="font-medium text-gray-900 mb-3">What to Include</h4>
+          <p className="text-sm text-gray-600 mb-4">
+                      Choose what to include in your daily emails:
+          </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <span className="text-lg">💊</span>
+                <div>
+                            <h5 className="font-medium text-gray-900">Supplements</h5>
+                            <p className="text-xs text-gray-500">Daily supplement stack</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preferences.supplements_reminder}
+                  onChange={(e) => updatePreference('supplements_reminder', e.target.checked)}
+                  className="sr-only peer"
+                />
+                          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <span className="text-lg">📋</span>
+                <div>
+                            <h5 className="font-medium text-gray-900">Protocols</h5>
+                            <p className="text-xs text-gray-500">Health protocols</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preferences.protocols_reminder}
+                  onChange={(e) => updatePreference('protocols_reminder', e.target.checked)}
+                  className="sr-only peer"
+                />
+                          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <span className="text-lg">🏃‍♂️</span>
+                <div>
+                            <h5 className="font-medium text-gray-900">Movement</h5>
+                            <p className="text-xs text-gray-500">Exercise activities</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preferences.movement_reminder}
+                  onChange={(e) => updatePreference('movement_reminder', e.target.checked)}
+                  className="sr-only peer"
+                />
+                          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <span className="text-lg">🧘‍♀️</span>
+                <div>
+                            <h5 className="font-medium text-gray-900">Mindfulness</h5>
+                            <p className="text-xs text-gray-500">Meditation practices</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preferences.mindfulness_reminder}
+                  onChange={(e) => updatePreference('mindfulness_reminder', e.target.checked)}
+                  className="sr-only peer"
+                />
+                          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-900"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+              )}
+            </div>
+          )}
 
           {/* Test Email Button */}
           <div>
@@ -713,194 +1074,32 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               {isSendingTest ? 'Sending...' : 'Send Test Email'}
             </button>
             <p className="text-xs text-gray-500 mt-1">
-              Send a sample daily reminder to test your email setup
+              Send a test email to verify your setup is working
             </p>
           </div>
         </div>
       </div>
 
-      {/* Daily Reminders Section */}
+
+      {/* Other Email Types - Only show if emails enabled */}
+      {preferences.email_enabled && (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <Clock className="w-6 h-6 text-green-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Daily Reminders</h2>
-        </div>
-
-        <div className="space-y-6">
-          {/* Daily Reminder Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">Daily Reminders</h3>
-              <p className="text-sm text-gray-500">Enable daily reminder emails (requires Email System to be ON)</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.daily_reminder_enabled}
-                onChange={(e) => updatePreference('daily_reminder_enabled', e.target.checked)}
-                disabled={!preferences.email_enabled}
-                className="sr-only peer"
-              />
-              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
-            </label>
-          </div>
-
-          {/* Reminder Time */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reminder Time
-              </label>
-              <input
-                type="time"
-                value={preferences.reminder_time}
-                onChange={(e) => updatePreference('reminder_time', e.target.value)}
-                disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Timezone
-              </label>
-              <select
-                value={preferences.timezone}
-                onChange={(e) => updatePreference('timezone', e.target.value)}
-                disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:bg-gray-50"
-              >
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">Eastern Time</option>
-                <option value="America/Chicago">Central Time</option>
-                <option value="America/Denver">Mountain Time</option>
-                <option value="America/Los_Angeles">Pacific Time</option>
-                <option value="Europe/London">London</option>
-                <option value="Europe/Paris">Paris</option>
-                <option value="Asia/Tokyo">Tokyo</option>
-                <option value="Australia/Sydney">Sydney</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content Preferences Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <Bell className="w-6 h-6 text-purple-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Reminder Content</h2>
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 mb-4">
-            Choose what to include in your daily reminder emails:
-          </p>
-
-          {/* Content Toggles */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">💊</span>
-                <div>
-                  <h4 className="font-medium text-gray-900">Supplements</h4>
-                  <p className="text-sm text-gray-500">Your daily supplement stack</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.supplements_reminder}
-                  onChange={(e) => updatePreference('supplements_reminder', e.target.checked)}
-                  disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">📋</span>
-                <div>
-                  <h4 className="font-medium text-gray-900">Protocols</h4>
-                  <p className="text-sm text-gray-500">Your health protocols and routines</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.protocols_reminder}
-                  onChange={(e) => updatePreference('protocols_reminder', e.target.checked)}
-                  disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">🏃‍♂️</span>
-                <div>
-                  <h4 className="font-medium text-gray-900">Movement</h4>
-                  <p className="text-sm text-gray-500">Exercise and physical activities</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.movement_reminder}
-                  onChange={(e) => updatePreference('movement_reminder', e.target.checked)}
-                  disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">🧘‍♀️</span>
-                <div>
-                  <h4 className="font-medium text-gray-900">Mindfulness</h4>
-                  <p className="text-sm text-gray-500">Meditation and mindfulness practices</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.mindfulness_reminder}
-                  onChange={(e) => updatePreference('mindfulness_reminder', e.target.checked)}
-                  disabled={!preferences.email_enabled || !preferences.daily_reminder_enabled}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Options */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Additional Options</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Other Email Types</h2>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-gray-900">Missed Items Reminders</h4>
-              <p className="text-sm text-gray-500">Get reminded about items you haven't completed</p>
+                <h4 className="font-medium text-gray-900">Missed Items Follow-ups</h4>
+                <p className="text-sm text-gray-500">Get follow-up emails about items you haven't completed</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={preferences.missed_items_reminder}
                 onChange={(e) => updatePreference('missed_items_reminder', e.target.checked)}
-                disabled={!preferences.email_enabled}
                 className="sr-only peer"
               />
-              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
             </label>
           </div>
 
@@ -914,14 +1113,14 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                 type="checkbox"
                 checked={preferences.weekly_summary}
                 onChange={(e) => updatePreference('weekly_summary', e.target.checked)}
-                disabled={!preferences.email_enabled}
                 className="sr-only peer"
               />
-              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 disabled:opacity-50"></div>
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
             </label>
           </div>
         </div>
       </div>
+      )}
 
       {/* Save Button */}
       <div className="flex items-center justify-between">
@@ -941,27 +1140,6 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
         </button>
       </div>
 
-      {/* Sign Out Section - At Bottom */}
-      <div className="bg-white rounded-xl border border-red-200 shadow-sm p-6 mt-8">
-        <div className="flex items-center space-x-3 mb-4">
-          <LogOut className="w-6 h-6 text-red-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Sign Out</h2>
-        </div>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Sign out of your Biostackr account. You'll be redirected to the sign-in page.
-          </p>
-          
-          <button
-            onClick={handleSignOut}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

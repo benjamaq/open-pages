@@ -20,7 +20,7 @@ interface ProtocolsSectionProps {
 export default function ProtocolsSection({ protocols }: ProtocolsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   
-  if (protocols.length === 0) return null
+  // Always render if called, show empty state if no protocols
 
   const displayedProtocols = isExpanded ? protocols : protocols.slice(0, 9)
   const hasMore = protocols.length > 9
@@ -44,14 +44,21 @@ export default function ProtocolsSection({ protocols }: ProtocolsSectionProps) {
         </div>
 
         <Grid>
-          {displayedProtocols.map((protocol) => (
-            <ProtocolCard
-              key={protocol.id}
-              name={protocol.name}
-              frequency={protocol.frequency || undefined}
-              note={protocol.details || undefined}
-            />
-          ))}
+          {protocols.length > 0 ? (
+            displayedProtocols.map((protocol) => (
+              <ProtocolCard
+                key={protocol.id}
+                name={protocol.name}
+                frequency={protocol.frequency || undefined}
+                scheduleDays={protocol.schedule_days}
+                note={protocol.details || undefined}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-500">No protocols shared yet</p>
+            </div>
+          )}
         </Grid>
       </div>
     </section>

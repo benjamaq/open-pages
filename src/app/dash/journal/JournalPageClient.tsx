@@ -144,7 +144,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
             <div className="flex items-center">
               <Link href="/dash" className="hover:opacity-90 transition-opacity">
                 <img 
-                  src="/BIOSTACKR LOGO.png" 
+                  src="/BIOSTACKR LOGO 2.png" 
                   alt="Biostackr" 
                   className="h-16 w-auto"
                   style={{ width: '280px' }}
@@ -323,7 +323,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(entry.created_at)}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       entry.public 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-gray-100 text-gray-800'

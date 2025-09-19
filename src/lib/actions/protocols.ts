@@ -57,6 +57,8 @@ export async function updateProtocol(protocolId: string, formData: {
   name: string
   description?: string
   frequency?: string
+  time_preference?: string
+  schedule_days?: number[]
   public: boolean
 }) {
   const supabase = await createClient()
@@ -90,6 +92,8 @@ export async function updateProtocol(protocolId: string, formData: {
       name: formData.name,
       description: formData.description || null,
       frequency: formData.frequency || null,
+      time_preference: formData.time_preference || null,
+      schedule_days: formData.schedule_days || null,
       public: formData.public
     })
     .eq('id', protocolId)

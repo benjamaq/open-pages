@@ -60,11 +60,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
               .insert([
                 {
                   user_id: data.user.id,
-                  name: name.trim(),
-                  email: email,
+                  display_name: name.trim(),
                   slug: email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
+                  bio: null,
+                  avatar_url: null,
+                  public: true
                 }
               ])
 
@@ -76,14 +76,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
             console.error('Profile creation error:', profileError)
           }
 
-          // If email confirmation is disabled, user is immediately signed in
-          if (data.user.email_confirmed_at) {
-            setMessage('Account created successfully! Redirecting...')
+          // Always redirect to dashboard after successful signup
+          setMessage('Account created successfully! Redirecting...')
+          setTimeout(() => {
             router.push('/dash')
             router.refresh()
-          } else {
-            setMessage('Check your email for the confirmation link!')
-          }
+          }, 1000)
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -113,7 +111,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <div className="flex justify-center">
           <Link href="/" className="hover:opacity-90 transition-opacity">
             <img 
-              src="/BIOSTACKR LOGO.png" 
+              src="/BIOSTACKR LOGO 2.png" 
               alt="Biostackr" 
               className="h-16 w-auto"
               style={{ width: '280px' }}
