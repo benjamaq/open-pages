@@ -7,13 +7,13 @@ export default function Home() {
       <nav className="border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="hover:opacity-90 transition-opacity">
-              <img 
-                src="/BIOSTACKR LOGO 2.png" 
+              <Link href="/" className="hover:opacity-90 transition-opacity">
+                <img 
+                  src="/BIOSTACKR LOGO 2.png" 
                 alt="BioStackr" 
                 className="h-12 w-auto"
-              />
-            </Link>
+                />
+              </Link>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Product</Link>
               <Link href="#examples" className="text-gray-600 hover:text-gray-900 transition-colors">Examples</Link>
@@ -114,8 +114,8 @@ export default function Home() {
           
           <div className="space-y-6">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">One place, one plan.</h3>
@@ -124,8 +124,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Daily checklist.</h3>
@@ -134,8 +134,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Today digest.</h3>
@@ -144,8 +144,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Library.</h3>
@@ -154,8 +154,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Public profile.</h3>
@@ -164,8 +164,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-green-600 font-bold text-sm">✓</span>
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Optional sharing.</h3>
@@ -205,7 +205,7 @@ export default function Home() {
                   <p className="text-gray-600">Ice bath tonight (3 min)</p>
                 </div>
                 <div className="border-t pt-3 text-center">
-                  <span className="text-green-600 font-medium">Tap to check off as you go → ✅</span>
+                  <span className="text-gray-900 font-medium">Tap to check off as you go → ✅</span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4 text-center">
@@ -221,7 +221,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">👥</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Public Profiles</h3>
@@ -231,7 +231,7 @@ export default function Home() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📋</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Stack Management</h3>
@@ -250,7 +250,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="text-center">
+        <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🎧</span>
               </div>
@@ -312,7 +312,7 @@ export default function Home() {
       </section>
 
       {/* For Coaches & Creators */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-16 bg-gradient-to-r from-gray-800 to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Built for coaches & creators</h2>
           <div className="grid md:grid-cols-2 gap-8 text-white/90">
@@ -329,7 +329,7 @@ export default function Home() {
           </div>
           <Link 
             href="#pricing" 
-            className="inline-block mt-8 bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            className="inline-block mt-8 bg-white text-gray-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
           >
             See Creator features →
           </Link>
@@ -343,11 +343,11 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
             <p className="text-xl text-gray-600">Start free, upgrade when you're ready to unlock your full potential.</p>
           </div>
-
+          
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Free Plan */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <div className="text-center">
+          <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900">Free</h3>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-gray-900">$0</span>
@@ -358,19 +358,19 @@ export default function Home() {
               <div className="mt-8">
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">10 supplements</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">3 protocols</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">5 file uploads</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Public profile</span>
                   </li>
                 </ul>
@@ -386,9 +386,9 @@ export default function Home() {
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-500 p-8 relative">
+            <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
                   Most Popular
                 </span>
               </div>
@@ -406,19 +406,19 @@ export default function Home() {
               <div className="mt-8">
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Everything in Free</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Unlimited everything</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Featured Current Plan</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Priority support</span>
                   </li>
                 </ul>
@@ -431,11 +431,11 @@ export default function Home() {
                   Upgrade to Pro
                 </Link>
               </div>
-            </div>
-
+          </div>
+          
             {/* Creator Plan */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <div className="text-center">
+          <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
                   <span>Creator</span>
                   <span className="text-purple-500">🎨</span>
@@ -449,19 +449,19 @@ export default function Home() {
               <div className="mt-8">
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Everything in Pro</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Affiliate links & buy buttons</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Shop My Gear page</span>
                   </li>
                   <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Custom branding</span>
                   </li>
                 </ul>

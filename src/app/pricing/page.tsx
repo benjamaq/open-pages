@@ -3,36 +3,30 @@
 import Link from 'next/link'
 
 const freeFeatures = [
-  '10 supplements',
-  '3 protocols',
+  'Up to 10 supplements',
+  'Up to 3 protocols',
   '2 movement items',
   '2 mindfulness items',
-  '5 file uploads (10MB)',
-  'Public profile',
-  'Daily check-ins',
-  'Basic analytics'
+  '5 library files (10 MB each)',
+  'Public profile with followers',
+  'Daily Check-in & basic analytics'
 ]
 
 const proFeatures = [
-  'Everything in Free, plus:',
-  'Unlimited supplements',
-  'Unlimited protocols',
-  'Unlimited movement items',
-  'Unlimited mindfulness items',
-  'Unlimited library files',
-  'Featured Current Plan',
+  'Everything in Free',
+  'Unlimited supplements, protocols, movement, mindfulness, gear & files',
+  'Featured Current Plan on public profile',
   'Priority support',
   'Advanced analytics'
 ]
 
 const creatorFeatures = [
-  'Everything in Pro, plus:',
-  'Affiliate links & buy buttons',
-  'Custom logo upload',
+  'Everything in Pro',
+  'Affiliate links & buy buttons on supplements and gear',
   'Shop My Gear page',
-  'Copy stack analytics',
-  'Creator support',
-  'Custom branding'
+  'Custom branding (logo & colors)',
+  'Audience analytics (followers, clicks)',
+  'Creator support'
 ]
 
 export default function PricingPage() {
@@ -63,11 +57,25 @@ export default function PricingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Simple, transparent pricing
+            Choose your plan. Build your stack.
           </h1>
           <p className="mt-4 text-xl text-gray-600">
-            Start free, upgrade when you're ready to unlock your full potential.
+            Start free. Go unlimited when you're ready.
           </p>
+          <p className="mt-2 text-sm text-gray-500">
+            14-day Pro trial included • Cancel anytime • Your data stays yours
+          </p>
+        </div>
+
+        {/* All Plans Include Strip */}
+        <div className="mt-8 bg-gray-50 rounded-lg p-6 max-w-4xl mx-auto">
+          <h3 className="text-center font-semibold text-gray-900 mb-4">All plans include:</h3>
+          <div className="grid md:grid-cols-4 gap-4 text-center text-sm text-gray-600">
+            <div>Today checklist & reminders</div>
+            <div>Daily Check-in & Journal</div>
+            <div>Public profile with Follow this stack</div>
+            <div>Privacy controls for every module</div>
+          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -84,7 +92,6 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <h3 className="font-semibold text-gray-900 mb-4">What's included:</h3>
               <ul className="space-y-3">
                 {freeFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
@@ -126,7 +133,6 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <h3 className="font-semibold text-gray-900 mb-4">Everything in Free, plus:</h3>
               <ul className="space-y-3">
                 {proFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
@@ -145,7 +151,7 @@ export default function PricingPage() {
                 Upgrade to Pro
               </button>
               <p className="text-xs text-gray-500 text-center mt-2">
-                Cancel anytime. No long-term contracts.
+                14-day trial included • Save with annual
               </p>
             </div>
           </div>
@@ -165,7 +171,6 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <h3 className="font-semibold text-gray-900 mb-4">Everything in Pro, plus:</h3>
               <ul className="space-y-3">
                 {creatorFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
@@ -184,7 +189,7 @@ export default function PricingPage() {
                 Upgrade to Creator
               </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
-                Perfect for monetizing your influence
+                Turn your stack into a shareable business hub
               </p>
             </div>
           </div>
@@ -198,26 +203,18 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">
-                Can I change my plan anytime?
+                Can I change plans anytime?
               </h3>
               <p className="text-gray-600">
-                Yes! You can upgrade to Pro or Creator anytime, and downgrade at the end of your billing cycle.
+                Yes. Upgrade or downgrade at any time; changes apply at the end of your billing cycle.
               </p>
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">
-                What happens to my data if I downgrade?
+                What happens after my trial?
               </h3>
               <p className="text-gray-600">
-                Your data is always safe. If you exceed free limits, you'll just need to remove some items to add new ones.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                What's the difference between Pro and Creator?
-              </h3>
-              <p className="text-gray-600">
-                Creator includes affiliate links, custom branding, and Shop My Gear page—perfect for coaches and influencers.
+                You keep everything you created. On Free, you can use your stack with sensible limits; upgrade for unlimited.
               </p>
             </div>
             <div>
@@ -225,10 +222,34 @@ export default function PricingPage() {
                 Do you offer yearly pricing?
               </h3>
               <p className="text-gray-600">
-                Yes! Annual subscribers get 2 months free (Pro: $99.90/year, Creator: $199.90/year).
+                Yes—save 2 months with annual: Pro $99.90/yr, Creator $199.90/yr.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                What's the difference between Pro and Creator?
+              </h3>
+              <p className="text-gray-600">
+                Creator includes affiliate links & buy buttons, Shop My Gear, custom branding, and creator-focused analytics.
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Footer Microcopy */}
+        <div className="mt-16 text-center text-sm text-gray-500 max-w-2xl mx-auto">
+          <p className="mb-2">
+            <strong>No lock-in:</strong> downgrade anytime; your data stays safe.
+          </p>
+          <p className="mb-2">
+            <strong>Fair limits:</strong> after trial, Free limits what you can add/activate—upgrade for unlimited.
+          </p>
+          <p className="mb-2">
+            <strong>Taxes:</strong> prices exclude VAT/GST where applicable.
+          </p>
+          <p>
+            Need details? <Link href="/pricing" className="text-gray-900 hover:underline">View detailed limits →</Link>
+          </p>
         </div>
       </div>
     </div>

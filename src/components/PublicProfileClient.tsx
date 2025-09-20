@@ -143,10 +143,6 @@ export default function PublicProfileClient({
         <GearSection gear={publicGear} />
       )}
 
-      {/* Empty State - If no visible content */}
-      {(!currentModules?.supplements || publicSupplements.length === 0) && 
-       (!currentModules?.protocols || publicProtocols.length === 0) && 
-       (!currentModules?.movement || publicMovement.length === 0) && 
     </div>
   )
 }
