@@ -10,7 +10,7 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
       'Wearables': '⌚',
-      'Recovery': '🧊',
+      'Recovery': '🛁',
       'Kitchen': '🍳',
       'Fitness': '🏋️',
       'Sleep': '🛏️',
@@ -94,8 +94,8 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl">🎧</span>
               </div>
-              <h4 className="text-sm font-medium text-gray-900 mb-1">Build your gear module</h4>
-              <p className="text-xs text-gray-500 mb-4">Add the equipment you use - wearables, recovery tools, kitchen gear. This module showcases what's in your health stack.</p>
+              <h4 className="text-base font-semibold text-gray-900 mb-2">Add your gear here</h4>
+              <p className="text-sm text-gray-500 mb-4">Wearables, recovery tools, kitchen equipment, all the cool stuff that supports our journey —keep notes, links models and share it with your people</p>
               <button
                 onClick={onManage}
                 className="inline-flex items-center text-xs text-gray-600 hover:text-gray-900 font-medium"

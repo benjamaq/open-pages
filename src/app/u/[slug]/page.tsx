@@ -2,12 +2,16 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/server'
 import { FileText, Image as ImageIcon, File, Edit2 } from 'lucide-react'
+import { headers } from 'next/headers'
 import ShareButton from '../../../components/ShareButton'
 import SupplementsSection from '../../../components/SupplementsSection'
 import JournalSection from '../../../components/JournalSection'
-import PublicProfileClient from '../../../components/PublicProfileClient'
+import PublicProfileClientWrapper from '../../../components/PublicProfileClientWrapper'
 import FollowButton from '../../../components/FollowButton'
+import StickyNavigation from '../../../components/StickyNavigation'
 import PublicProfileHeader from '../../../components/PublicProfileHeader'
+import ProfileActionButtons from '../../../components/ProfileActionButtons'
+import { getPublicLibraryItems } from '../../../lib/actions/library'
 
 interface ProfilePageProps {
   params: Promise<{
@@ -15,21 +19,39 @@ interface ProfilePageProps {
   }>
 }
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
+export default async function ProfilePage({ params, searchParams }: { 
+  params: Promise<{ slug: string }>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { slug } = await params
+  const search = await searchParams
   const supabase = await createClient()
+  
+  // Check for force public view parameter
+  const forcePublicView = search?.public === 'true'
 
   // Check if user is authenticated and get their profile
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use a fresh supabase client to avoid cached sessions
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
   let currentUserProfile: { slug: string } | null = null
   
-  if (user) {
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('slug')
-      .eq('user_id', user.id)
-      .single()
-    currentUserProfile = userProfile as { slug: string } | null
+  // Only proceed if we have a valid user and no error
+  if (user && !userError) {
+    try {
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('slug')
+        .eq('user_id', user.id)
+        .single()
+      
+      // Only set if we successfully got the profile
+      if (!profileError && userProfile) {
+        currentUserProfile = userProfile as { slug: string }
+      }
+    } catch (err) {
+      console.log('Profile fetch error:', err)
+      currentUserProfile = null
+    }
   }
 
   // Fetch profile data from Supabase
@@ -47,11 +69,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let publicSupplements: any[] = []
   let publicMindfulness: any[] = []
   let publicMovement: any[] = []
-  let publicFood: any[] = []
   let publicGear: any[] = []
 
   if (profile) {
-    const [supplementsResult, mindfulnessResult, movementResult, foodResult, gearResult] = await Promise.all([
+    const [supplementsResult, mindfulnessResult, movementResult, gearResult] = await Promise.all([
       supabase
         .from('stack_items')
         .select('*')
@@ -74,13 +95,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         .eq('public', true)
         .order('created_at', { ascending: false }),
       supabase
-        .from('stack_items')
-        .select('*')
-        .eq('profile_id', (profile as any).id)
-        .eq('item_type', 'food')
-        .eq('public', true)
-        .order('created_at', { ascending: false }),
-      supabase
         .from('gear')
         .select('*')
         .eq('profile_id', (profile as any).id)
@@ -92,7 +106,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     publicSupplements = supplementsResult.data || []
     publicMindfulness = mindfulnessResult.data || []
     publicMovement = movementResult.data || []
-    publicFood = foodResult.data || []
     publicGear = gearResult.data || []
   }
 
@@ -111,13 +124,47 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     journalEntries = []
   }
 
+  // Fetch public library items
+  let publicLibraryItems: any[] = []
+  
+  if (profile) {
+    try {
+      publicLibraryItems = await getPublicLibraryItems((profile as any).id)
+    } catch (error) {
+      console.error('Failed to fetch library items:', error)
+      publicLibraryItems = []
+    }
+  }
+
 
   if (profileError || !profile) {
     notFound()
   }
 
   // Check if current user is viewing their own profile
-  const isOwnProfile = !!(currentUserProfile && currentUserProfile.slug === slug)
+  // More robust check with explicit conditions, but allow override for public view
+  const isOwnProfile = forcePublicView ? false : !!(
+    currentUserProfile && 
+    currentUserProfile.slug && 
+    currentUserProfile.slug === slug &&
+    user &&
+    !userError
+  )
+  
+  // Debug logging
+  console.log('Public Profile Debug (Server):', {
+    slug,
+    user: user ? { id: user.id, email: user.email } : null,
+    userError: userError?.message,
+    currentUserProfile,
+    isOwnProfile,
+    comparison: {
+      currentSlug: currentUserProfile?.slug,
+      targetSlug: slug,
+      matches: currentUserProfile?.slug === slug
+    },
+    timestamp: new Date().toISOString()
+  })
 
   // Get public modules visibility settings
   const publicModules = (profile as any).public_modules || {
@@ -125,8 +172,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     protocols: true,
     movement: true,
     mindfulness: true,
-    food: true,
-    uploads: true,
+    gear: true,
+    library: true,
     journal: true
   }
 
@@ -189,7 +236,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   // Count items for display
-  const stackItemsCount = publicSupplements.length + publicMindfulness.length + publicMovement.length + publicFood.length + publicGear.length
+  const stackItemsCount = publicSupplements.length + publicMindfulness.length + publicMovement.length + publicGear.length
   const protocolsCount = (profile as any)?.protocols?.length || 0
   const uploadsCount = (profile as any)?.uploads?.length || 0
 
@@ -385,7 +432,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         {/* Row 2: Utility Toolbar */}
         <div>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-end gap-3 py-3">
+            <div className="flex items-center justify-between py-2">
+              {/* Discrete URL Display */}
+              <div className="text-xs text-gray-400 font-mono">
+                biostackr.io
+              </div>
+              
+              <div className="flex items-center gap-3">
               {isOwnProfile && (
                 <Link 
                   href="/dash" 
@@ -394,12 +447,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   Dashboard
                 </Link>
               )}
-              
-              {/* Share Button */}
-              <ShareButton 
-                profileSlug={profileWithData.slug}
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              />
 
               {/* Follow Button - Only show to visitors */}
               {!isOwnProfile && (
@@ -409,6 +456,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   allowsFollowing={false}
                 />
               )}
+              </div>
             </div>
           </div>
         </div>
@@ -416,80 +464,113 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
       {/* Profile Header - Clean Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 py-8">
-          
-          {/* Profile Photo - Larger */}
-          <div className="flex-shrink-0">
-            {profileWithData.avatar_url ? (
-              <img 
-                src={profileWithData.avatar_url} 
-                alt={profileWithData.display_name}
-                className="w-32 h-32 object-cover rounded-2xl border border-gray-200"
-              />
-            ) : (
-              <div className="w-32 h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">
-                  {profileWithData.display_name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
+        {/* Health Stack Heading - Centered and Prominent */}
+        <div className="text-center py-6 pb-8">
+          <h2 className="text-3xl font-bold text-gray-900">
+            My Health & Wellness Stack
+          </h2>
+        </div>
+      </div>
 
-          {/* Profile Info */}
-          <div className="flex-1 text-center lg:text-left">
-            <div className="mb-2">
-              <h1 className="text-xl font-bold" style={{ color: '#0F1115' }}>
-                {profileWithData.display_name || 'Anonymous Stackr'}
-              </h1>
-            </div>
-            <div className="mb-4">
-              {profileWithData.bio ? (
-                <p className="text-base" style={{ color: '#5C6370' }}>
-                  {profileWithData.bio}
-                </p>
+      {/* Profile content with exact module alignment */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
+          <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+            {/* Profile Photo */}
+            <div className="flex-shrink-0">
+              {profileWithData.avatar_url ? (
+                <img 
+                  src={profileWithData.avatar_url} 
+                  alt={profileWithData.display_name}
+                  className="w-32 h-32 object-cover rounded-2xl border border-gray-200"
+                />
               ) : (
-                <p className="text-base italic" style={{ color: '#A6AFBD' }}>
-                  No mission set
-                </p>
+                <div className="w-32 h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {profileWithData.display_name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               )}
             </div>
-            
-            {/* Daily Check-in Chips */}
-            <PublicProfileHeader 
-              profile={profileWithData}
-              isOwnProfile={isOwnProfile}
-            />
+
+            {/* Profile Content */}
+            <div className="flex-1 lg:flex lg:items-start lg:justify-between lg:gap-8">
+              {/* Left: Core Identity */}
+              <div className="flex-1 text-center lg:text-left">
+                {/* Name and Buttons Row - Level with Photo Top */}
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
+                  <h1 className="text-3xl font-bold mb-3 lg:mb-0" style={{ color: '#0F1115' }}>
+                    {profileWithData.display_name || 'Anonymous Stackr'}
+                  </h1>
+                  
+                  {/* Action Buttons - Same Level as Name */}
+                  <ProfileActionButtons 
+                    isOwnProfile={isOwnProfile} 
+                    profileName={profileWithData.display_name || 'this user'}
+                  />
+                </div>
+                
+                {/* Mission */}
+                <div className="mb-4">
+                  {profileWithData.bio ? (
+                    <p className="text-base" style={{ color: '#5C6370' }}>
+                      {profileWithData.bio}
+                    </p>
+                  ) : (
+                    <p className="text-base italic" style={{ color: '#A6AFBD' }}>
+                      No mission set
+                    </p>
+                  )}
+                </div>
+                
+                {/* Core Status Pills - Clean Row */}
+                <PublicProfileHeader 
+                  profile={profileWithData}
+                  isOwnProfile={isOwnProfile}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content - Modular Sections */}
-      <PublicProfileClient
+      {/* Main Content */}
+      <PublicProfileClientWrapper
         profile={profile}
         publicSupplements={publicSupplements}
         publicProtocols={publicProtocols}
         publicMovement={publicMovement}
         publicMindfulness={publicMindfulness}
-        publicFood={publicFood}
         publicGear={publicGear}
         publicUploads={publicUploads}
+        publicLibraryItems={publicLibraryItems}
         publicJournalEntries={publicJournalEntries}
+        publicShopGearItems={[]}
         publicModules={publicModules}
         isOwnProfile={isOwnProfile}
       />
 
       {/* Footer - Biostackr Branding */}
-      <footer className="border-t border-gray-200 bg-white">
+      <footer className="border-t border-gray-200 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <p className="text-sm" style={{ color: '#A6AFBD' }}>
-              Powered by{' '}
-              <Link href="/" className="font-medium hover:underline" style={{ color: '#5C6370' }}>
-                Biostackr
-              </Link>
-              {' '}• Share your health journey
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <img
+                src="/BIOSTACKR LOGO 2.png"
+                alt="BioStackr"
+                className="h-8 w-auto"
+              />
+            </div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Create your own health stack
             </p>
-            <p className="text-xs mt-2" style={{ color: '#A6AFBD' }}>
+            <Link 
+              href="/" 
+              className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+            >
+              Get Started on BioStackr
+            </Link>
+            <p className="text-xs mt-3 text-gray-500">
               biostackr.com/u/{profileWithData.slug}
             </p>
           </div>

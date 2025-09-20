@@ -186,8 +186,8 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                   >
-                    <option value="current">Currently using</option>
-                    <option value="past">Previously used</option>
+                    <option value="current">Current</option>
+                    <option value="past">Past</option>
                   </select>
                   <p className="text-xs text-gray-500">Track gear you're using now vs. gear you've used before</p>
                 </div>

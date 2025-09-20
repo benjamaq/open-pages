@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { addStackItem } from '../lib/actions/stack'
 import { useRouter } from 'next/navigation'
-import { checkCanAddItem } from '../lib/actions/subscriptions'
+import { checkItemLimit } from '../lib/actions/trial-limits'
 import UpgradeModal from './UpgradeModal'
 
 interface AddStackItemFormProps {
@@ -35,16 +35,21 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
   useEffect(() => {
     const checkLimits = async () => {
       try {
-        const itemTypeForCheck = itemType === 'supplements' ? 'supplement' : 
-                               itemType === 'movement' ? 'movement' :
-                               itemType === 'mindfulness' ? 'mindfulness' :
-                               itemType === 'food' ? 'food' : 'supplement'
-        
-        const result = await checkCanAddItem(itemTypeForCheck)
-        setLimitInfo(result)
-        
-        if (!result.canAdd) {
-          setShowUpgradeModal(true)
+        // Only check supplements and protocols for limits
+        if (itemType === 'supplements') {
+          const result = await checkItemLimit('supplements')
+          setLimitInfo({
+            canAdd: result.allowed,
+            currentCount: result.currentCount,
+            limit: result.limit
+          })
+          
+          if (!result.allowed) {
+            setShowUpgradeModal(true)
+          }
+        } else {
+          // For movement, mindfulness, etc., allow unlimited
+          setLimitInfo({ canAdd: true, currentCount: 0, limit: -1 })
         }
       } catch (error) {
         console.error('Error checking limits:', error)

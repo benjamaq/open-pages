@@ -12,6 +12,7 @@ interface GearItem {
   category: string
   description: string | null
   buy_link: string | null
+  status: string
   public: boolean
 }
 

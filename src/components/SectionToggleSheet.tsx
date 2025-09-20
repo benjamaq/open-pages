@@ -20,9 +20,8 @@ export default function SectionToggleSheet({ currentModules, onUpdate }: Section
     protocols: 'Show Protocols',
     movement: 'Show Movement',
     mindfulness: 'Show Mindfulness',
-    food: 'Show Food',
-    gear: 'Show Gear',
-    uploads: 'Show Files & Labs'
+    library: 'Show Library',
+    gear: 'Show Gear'
   }
 
   const handleToggle = (module: keyof PublicModules) => {
@@ -57,14 +56,14 @@ export default function SectionToggleSheet({ currentModules, onUpdate }: Section
         className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
         <Settings className="w-4 h-4" />
-        Customize modules
+        Customize module visibility
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Customize modules</h2>
+              <h2 className="text-lg font-semibold">Customize module visibility</h2>
               <button
                 onClick={handleCancel}
                 className="text-gray-400 hover:text-gray-600 text-xl"

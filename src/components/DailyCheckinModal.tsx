@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Download, Copy } from 'lucide-react'
 
 // Types
-export type WearableSource = 'WHOOP' | 'Oura' | 'Apple Health' | 'Garmin' | 'None'
+export type WearableSource = 'WHOOP' | 'Oura' | 'Apple Health' | 'Garmin' | 'Fitbit' | 'Polar' | 'Suunto' | 'Coros' | 'Amazfit' | 'Samsung Health' | 'Google Fit' | 'Strava' | 'MyFitnessPal' | 'Cronometer' | 'Eight Sleep' | 'Other' | 'None'
 
 export type MoodPreset = 
   | 'f—ing broken' | 'Running on fumes' | 'Under-slept' | 'Wired & tired' | 'Tired but trying'
@@ -21,6 +21,7 @@ export interface DailyCheckinInput {
   moodComment?: string
   wearable?: {
     source: WearableSource
+    customName?: string // For when source is 'Other'
     sleepScore?: number
     recoveryScore?: number
   } | null
@@ -38,6 +39,7 @@ interface DailyCheckinModalProps {
   currentEnergy: number
   todayItems: any
   userId: string
+  profileSlug?: string
 }
 
 // Helper functions
@@ -96,7 +98,11 @@ function ShareCardPreview({ draft }: { draft: DailyCheckinInput }) {
       {/* Wearables */}
       {showWear && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-600">
-          <span className="font-medium">{draft.wearable!.source}</span>
+          <span className="font-medium">
+            {draft.wearable!.source === 'Other' && draft.wearable!.customName 
+              ? draft.wearable!.customName 
+              : draft.wearable!.source}
+          </span>
           {isNum(draft.wearable!.sleepScore) && <span>Sleep {draft.wearable!.sleepScore}</span>}
           {isNum(draft.wearable!.recoveryScore) && <span>Recovery {draft.wearable!.recoveryScore}</span>}
         </div>
@@ -157,12 +163,13 @@ export default function DailyCheckinModal({
   onEnergyUpdate,
   currentEnergy,
   todayItems,
-  userId
+  userId,
+  profileSlug
 }: DailyCheckinModalProps) {
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
     energy: currentEnergy,
-    publicUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/u/your-profile`
+    publicUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/daily/${new Date().toISOString().split('T')[0]}`
   })
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -303,8 +310,41 @@ export default function DailyCheckinModal({
   }
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(draft.publicUrl)
-    setMessage('✅ Link copied to clipboard!')
+    // Generate the same share text as social media
+    const routineParts = []
+    
+    // Supplements - just count
+    if (draft.supplementsCount && draft.supplementsCount > 0) {
+      routineParts.push(`${draft.supplementsCount} supplements`)
+    }
+    
+    // Protocols - actual names
+    if (draft.protocols && draft.protocols.length > 0) {
+      routineParts.push(draft.protocols.join(', '))
+    }
+    
+    // Movement - actual activities
+    if (draft.movement && draft.movement.length > 0) {
+      routineParts.push(draft.movement.join(', '))
+    }
+    
+    // Mindfulness - actual practices
+    if (draft.mindfulness && draft.mindfulness.length > 0) {
+      routineParts.push(draft.mindfulness.join(', '))
+    }
+
+    const shareText = `Energy ${draft.energy}/10${draft.mood ? ` • ${draft.mood}` : ''}${routineParts.length > 0 ? `\nToday: ${routineParts.join(' • ')}` : ''}`
+    
+    // Get the current user's profile URL using current window location
+    const baseUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}`
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const profileUrl = profileSlug ? `${baseUrl}/u/${profileSlug}?public=true` : `${baseUrl}/dash`
+    
+    const fullShareText = `${shareText}\n\n${profileUrl}`
+    
+    await navigator.clipboard.writeText(fullShareText)
+    setMessage('✅ Daily check-in copied to clipboard!')
     setTimeout(() => setMessage(''), 2000)
   }
 
@@ -332,7 +372,12 @@ export default function DailyCheckinModal({
     }
 
     const shareText = `Energy ${draft.energy}/10${draft.mood ? ` • ${draft.mood}` : ''}${routineParts.length > 0 ? `\nToday: ${routineParts.join(' • ')}` : ''}`
-    const shareUrl = draft.publicUrl
+    
+    // Use current window location for social sharing too
+    const baseUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}`
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const shareUrl = profileSlug ? `${baseUrl}/u/${profileSlug}?public=true` : `${baseUrl}/dash`
     
     switch (platform) {
       case 'twitter':
@@ -491,7 +536,38 @@ export default function DailyCheckinModal({
                             <option>Oura</option>
                             <option>Apple Health</option>
                             <option>Garmin</option>
+                            <option>Fitbit</option>
+                            <option>Polar</option>
+                            <option>Suunto</option>
+                            <option>Coros</option>
+                            <option>Amazfit</option>
+                            <option>Samsung Health</option>
+                            <option>Google Fit</option>
+                            <option>Strava</option>
+                            <option>MyFitnessPal</option>
+                            <option>Cronometer</option>
+                            <option>Eight Sleep</option>
+                            <option>Other</option>
                           </select>
+                          
+                          {/* Custom wearable name input - only show when "Other" is selected */}
+                          {draft.wearable?.source === 'Other' && (
+                            <input
+                              type="text"
+                              placeholder="Enter wearable name..."
+                              value={draft.wearable?.customName ?? ''}
+                              onChange={(e) => setDraft(d => ({
+                                ...d,
+                                wearable: { 
+                                  ...(d.wearable ?? { source: 'Other' as WearableSource }), 
+                                  customName: e.target.value 
+                                }
+                              }))}
+                              className="rounded-md border border-zinc-300 bg-white p-2 text-sm"
+                              maxLength={30}
+                            />
+                          )}
+                          
                           <input
                             type="number"
                             placeholder="Sleep"
@@ -544,7 +620,7 @@ export default function DailyCheckinModal({
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <button 
-                          className="rounded-md bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
+                          className="rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
                           onClick={() => handleShare('twitter')}
                         >
                           Twitter
@@ -571,13 +647,13 @@ export default function DailyCheckinModal({
                       
                       <div className="flex gap-2">
                         <button 
-                          className="flex-1 rounded-md bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
+                          className="flex-1 rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
                           onClick={handleDownload}
                         >
                           Download image
                         </button>
                         <button 
-                          className="flex-1 rounded-md bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
+                          className="flex-1 rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
                           onClick={handleCopyLink}
                         >
                           Copy link

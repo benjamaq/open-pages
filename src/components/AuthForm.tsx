@@ -76,10 +76,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
             console.error('Profile creation error:', profileError)
           }
 
-          // Always redirect to dashboard after successful signup
+          // Redirect to welcome page for new users to see pricing options
           setMessage('Account created successfully! Redirecting...')
           setTimeout(() => {
-            router.push('/dash')
+            router.push('/welcome')
             router.refresh()
           }, 1000)
         }

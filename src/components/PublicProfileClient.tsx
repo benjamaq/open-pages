@@ -6,12 +6,14 @@ import SupplementsSection from './SupplementsSection'
 import ProtocolsSection from './ProtocolsSection'
 import MovementSection from './MovementSection'
 import MindfulnessSection from './MindfulnessSection'
-import FoodSection from './FoodSection'
 import GearSection from './GearSection'
-import FilesSection from './FilesSection'
+import PublicLibrarySection from './PublicLibrarySection'
+import PublicShopMyGearSection from './PublicShopMyGearSection'
 import SectionToggleSheet from './SectionToggleSheet'
+import OverviewSection from './OverviewSection'
 import { updateJournalVisibility } from '../lib/actions/profile'
 import { type PublicModules } from '../lib/actions/public-modules'
+import { LibraryItem } from '../lib/actions/library'
 
 interface JournalEntry {
   id: string
@@ -29,10 +31,11 @@ interface PublicProfileClientProps {
   publicProtocols: any[]
   publicMovement: any[]
   publicMindfulness: any[]
-  publicFood: any[]
   publicGear: any[]
   publicUploads: any[]
+  publicLibraryItems: LibraryItem[]
   publicJournalEntries: JournalEntry[]
+  publicShopGearItems: any[]
   publicModules: PublicModules
   isOwnProfile: boolean
 }
@@ -43,10 +46,11 @@ export default function PublicProfileClient({
   publicProtocols,
   publicMovement,
   publicMindfulness,
-  publicFood,
   publicGear,
   publicUploads,
+  publicLibraryItems,
   publicJournalEntries,
+  publicShopGearItems,
   publicModules,
   isOwnProfile
 }: PublicProfileClientProps) {
@@ -56,8 +60,9 @@ export default function PublicProfileClient({
     protocols: true,
     movement: true,
     mindfulness: true,
-    food: true,
+    gear: true,
     uploads: true,
+    library: true,
     journal: true
   })
 
@@ -77,16 +82,16 @@ export default function PublicProfileClient({
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      
       {/* Customization Controls (Owner Only) */}
       {isOwnProfile && (
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-3">
           <SectionToggleSheet 
             currentModules={currentModules}
             onUpdate={handleModulesUpdate}
           />
         </div>
       )}
-
 
       {/* Journal section */}
       {(currentModules?.journal && (publicJournalEntries.length > 0 || isOwnProfile)) && (
@@ -118,41 +123,30 @@ export default function PublicProfileClient({
         <MindfulnessSection mindfulnessItems={publicMindfulness} />
       )}
       
-      {currentModules?.food && (
-        <FoodSection foodItems={publicFood} />
+      
+      {currentModules?.library && (
+        <PublicLibrarySection 
+          libraryItems={publicLibraryItems} 
+          profileSlug={profile.slug}
+        />
+      )}
+
+      {/* Shop My Gear Section (Creator Tier Only) */}
+      {profile.tier === 'creator' && publicShopGearItems.length > 0 && (
+        <PublicShopMyGearSection 
+          items={publicShopGearItems}
+          isOwner={isOwnProfile}
+        />
       )}
       
       {currentModules?.gear && (
         <GearSection gear={publicGear} />
-      )}
-      
-      {currentModules?.uploads && (
-        <FilesSection uploads={publicUploads} />
       )}
 
       {/* Empty State - If no visible content */}
       {(!currentModules?.supplements || publicSupplements.length === 0) && 
        (!currentModules?.protocols || publicProtocols.length === 0) && 
        (!currentModules?.movement || publicMovement.length === 0) && 
-       (!currentModules?.mindfulness || publicMindfulness.length === 0) && 
-       (!currentModules?.food || publicFood.length === 0) && 
-       (!currentModules?.gear || publicGear.length === 0) && 
-       (!currentModules?.uploads || publicUploads.length === 0) && 
-       (!currentModules?.journal || publicJournalEntries.length === 0) && (
-        <div className="text-center py-16">
-          <div className="max-w-md mx-auto">
-            <h3 className="text-lg font-medium mb-2" style={{ color: '#0F1115' }}>
-              {isOwnProfile ? 'Customize Your Profile' : 'Profile Coming Soon'}
-            </h3>
-            <p className="text-sm" style={{ color: '#5C6370' }}>
-              {isOwnProfile 
-                ? 'Add content to your sections or enable them in the customization panel above.'
-                : 'This profile is being set up. Check back soon!'
-              }
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

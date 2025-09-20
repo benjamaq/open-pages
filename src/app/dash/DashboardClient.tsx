@@ -9,6 +9,14 @@ import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
 import GearCard from '../../components/GearCard'
 import AddGearForm from '../../components/AddGearForm'
+import LibrarySection from '../../components/LibrarySection'
+import ShopMyGearSection from '../../components/ShopMyGearSection'
+import CustomBrandingSection from '../../components/CustomBrandingSection'
+import TierManagement from '../../components/TierManagement'
+import TrialNotification from '../../components/TrialNotification'
+import TrialStatusBadge from '../../components/TrialStatusBadge'
+import LimitChecker from '../../components/LimitChecker'
+import DashboardHeaderEditor from '../../components/DashboardHeaderEditor'
 
 interface Profile {
   id: string
@@ -16,6 +24,9 @@ interface Profile {
   display_name: string
   bio: string | null
   avatar_url: string | null
+  tier?: 'free' | 'pro' | 'creator'
+  custom_logo_url?: string
+  custom_branding_enabled?: boolean
 }
 
 interface Counts {
@@ -869,6 +880,33 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
       <div className="flex items-center justify-between p-6 pb-4">
         <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
         <div className="flex items-center space-x-2">
+          {categoryFilteredItems.length > 0 && (
+            <button
+              onClick={() => {
+                const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
+                const allCompleted = allSupplementIds.every(id => completedItems.has(id))
+                
+                if (allCompleted) {
+                  // Uncheck all
+                  allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
+                } else {
+                  // Check all
+                  allSupplementIds.forEach(id => {
+                    if (!completedItems.has(id)) {
+                      onToggleComplete(id.replace('supplement-', ''), 'supplement')
+                    }
+                  })
+                }
+              }}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+              aria-label="Check all supplements"
+            >
+              <span className="text-xs">
+                {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? '↶' : '✓'}
+              </span>
+              <span>{categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
+            </button>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -1084,8 +1122,8 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm mb-1" style={{ color: '#5C6370' }}>No supplements scheduled for today</p>
-              <p className="text-xs" style={{ color: '#A6AFBD' }}>Add supplements to get started</p>
+              <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add your supplements in here</p>
+              <p className="text-sm" style={{ color: '#5C6370' }}>We'll keep them in order and remind you when to take them.</p>
             </div>
           )}
         </div>
@@ -1116,6 +1154,33 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
       <div className="flex items-center justify-between p-6 pb-4">
         <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Protocols</h2>
         <div className="flex items-center space-x-2">
+          {items.length > 0 && (
+            <button
+              onClick={() => {
+                const allProtocolIds = items.map(item => `protocol-${item.id}`)
+                const allCompleted = allProtocolIds.every(id => completedItems.has(id))
+                
+                if (allCompleted) {
+                  // Uncheck all
+                  allProtocolIds.forEach(id => onToggleComplete(id.replace('protocol-', ''), 'protocol'))
+                } else {
+                  // Check all
+                  allProtocolIds.forEach(id => {
+                    if (!completedItems.has(id)) {
+                      onToggleComplete(id.replace('protocol-', ''), 'protocol')
+                    }
+                  })
+                }
+              }}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+              aria-label="Check all protocols"
+            >
+              <span className="text-xs">
+                {items.every(item => completedItems.has(`protocol-${item.id}`)) ? '↶' : '✓'}
+              </span>
+              <span>{items.every(item => completedItems.has(`protocol-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
+            </button>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -1170,9 +1235,11 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
               })}
             </div>
           ) : (
-            <div className="text-center py-6">
-              <p className="text-sm mb-1" style={{ color: '#5C6370' }}>No protocols for today</p>
-              <p className="text-xs" style={{ color: '#A6AFBD' }}>Add ice bath, sauna, breathwork...</p>
+            <div className="text-center py-8">
+              <div className="flex flex-col items-center justify-center h-20">
+                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add all your protocols here</p>
+                <p className="text-sm" style={{ color: '#5C6370' }}>Sauna, cold, red light, sleep routine—anything you do regularly.</p>
+              </div>
             </div>
           )}
         </div>
@@ -1234,15 +1301,11 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
               ))}
             </div>
           ) : (
-            <div className="text-center py-6">
-              <p className="text-sm mb-2" style={{ color: '#5C6370' }}>No movement activities for today</p>
-              <button
-                onClick={onManage}
-                className="text-sm font-medium hover:underline"
-                style={{ color: '#0F1115' }}
-              >
-                Add your first activity
-              </button>
+            <div className="text-center py-8">
+              <div className="flex flex-col items-center justify-center h-20">
+                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add your movement here</p>
+                <p className="text-sm" style={{ color: '#5C6370' }}>Gym, run, walk, yoga, surfing, climbing volcanoes—whatever keeps you moving.</p>
+              </div>
             </div>
           )}
         </div>
@@ -1304,15 +1367,11 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
               ))}
             </div>
           ) : (
-            <div className="text-center py-6">
-              <p className="text-sm mb-2" style={{ color: '#5C6370' }}>No mindfulness practices for today</p>
-              <button
-                onClick={onManage}
-                className="text-sm font-medium hover:underline"
-                style={{ color: '#0F1115' }}
-              >
-                Add your first practice
-              </button>
+            <div className="text-center py-8">
+              <div className="flex flex-col items-center justify-center h-20">
+                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add a mindfulness practice</p>
+                <p className="text-sm" style={{ color: '#5C6370' }}>Meditation, breathwork, journaling—keep the habit simple and we'll help you with consistency.</p>
+              </div>
             </div>
           )}
         </div>
@@ -1407,54 +1466,6 @@ const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => vo
   )
 }
 
-// Row 4 — Uploads Card (Full Width, Secondary)
-const UploadsCard = ({ count, onManage }: { count: number, onManage: () => void }) => {
-  const [collapsed, setCollapsed] = useState(false)
-
-  return (
-    <div 
-      className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
-      style={{ 
-        borderRadius: '16px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        maxHeight: collapsed ? '80px' : '400px'
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Files & Labs</h2>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
-          <button
-            onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage uploads"
-          >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
-          </button>
-        </div>
-      </div>
-
-      {!collapsed && (
-        <div className="px-6 pb-6">
-          <div className="text-center py-6">
-            <p className="text-sm mb-1" style={{ color: '#5C6370' }}>
-              {count > 0 ? `${count} files uploaded` : 'No files uploaded yet'}
-            </p>
-            <p className="text-xs" style={{ color: '#A6AFBD' }}>Upload labs, scans, photos, notes...</p>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 const PillarCard = ({ 
   title, 
@@ -1692,6 +1703,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [newFollowerCount, setNewFollowerCount] = useState(0)
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
+  const [libraryCollapsed, setLibraryCollapsed] = useState(false)
+  const [showHeaderEditor, setShowHeaderEditor] = useState(false)
+  const [profileMission, setProfileMission] = useState(profile.bio || '')
   
   const [headerPrefs, setHeaderPrefs] = useState<HeaderPrefs>({
     bg_type: 'preset', // Start with a preset background
@@ -1819,6 +1833,33 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     // TODO: Persist to backend
   }
 
+  const handleProfileUpdate = async (updates: {
+    name?: string
+    mission?: string
+    avatarUrl?: string | null
+  }) => {
+    try {
+      // Import the server action
+      const { updateDashboardProfile } = await import('../../lib/actions/dashboard-profile')
+      
+      await updateDashboardProfile(updates)
+      
+      // Update local state
+      if (updates.name !== undefined) {
+        setDisplayName(updates.name)
+      }
+      if (updates.mission !== undefined) {
+        setProfileMission(updates.mission)
+      }
+      
+      // Refresh the page to get updated data
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      alert('Failed to update profile. Please try again.')
+    }
+  }
+
   // Calculate completion stats for chips
   const totalTodayItems = todayItems.supplements.length + todayItems.protocols.length
   const completedTodayItems = Array.from(completedItems).length
@@ -1920,11 +1961,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     </span>
                   </div>
                 )}
-                {/* Edit Photo Icon - Always Visible */}
+                {/* Edit Profile Icon - Opens unified editor */}
                 <button
-                  onClick={() => window.location.href = '/dash/settings'}
+                  onClick={() => setShowHeaderEditor(true)}
                   className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all hover:scale-105"
-                  title="Edit profile photo"
+                  title="Edit profile"
                 >
                   <Edit2 className="w-4 h-4 text-gray-600" />
                 </button>
@@ -1935,44 +1976,50 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             <div className="flex-1 flex flex-col justify-between">
               
               {/* Top: Display Name + Mission */}
-                      <div className="space-y-2">
-                {/* Display Name - Enhanced Inline Editable */}
-                <EditableName
-                  name={displayName}
-                  isOwnProfile={true}
-                  className="text-xl font-bold"
-                  showNamePublic={showDisplayName}
-                  onUpdate={async (newName, showPublic) => {
-                    setDisplayName(newName)
-                    setShowDisplayName(showPublic)
-                    // TODO: Persist to backend
-                  }}
-                />
+              <div className="space-y-3">
+                {/* Clickable Profile Area */}
+                <button
+                  onClick={() => setShowHeaderEditor(true)}
+                  className="text-left group"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <h1 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
+                      {displayName}
+                    </h1>
+                    <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                  </div>
+                  <p className="text-base text-gray-600 group-hover:text-gray-700 transition-colors">
+                    {profileMission || 'Add your mission statement...'}
+                  </p>
+                </button>
 
                 {/* Daily Check-in Results */}
                 {dailyCheckIn ? (
-                          <button
+                  <button
                     onClick={() => setShowShareTodayModal(true)}
                     className="text-left text-base text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
-                          >
+                  >
                     <span className="font-medium">Energy {dailyCheckIn.energy}/10</span>
                     {dailyCheckIn.mood && (
                       <span className="text-gray-500"> • {dailyCheckIn.mood}</span>
                     )}
-                          </button>
+                  </button>
                 ) : (
-                          <button
+                  <button
                     onClick={() => setShowShareTodayModal(true)}
                     className="text-left text-base text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
-                          >
+                  >
                     Complete your daily check-in
-                          </button>
+                  </button>
                 )}
-                        </div>
+              </div>
 
               {/* Bottom: Badge Row - Inline */}
               <div className="mt-6">
                 <div className="flex flex-wrap items-center gap-4">
+                  {/* Trial Status Badge */}
+                  <TrialStatusBadge userId={userId} currentTier={profile.tier || 'free'} />
+                  
                   {/* Status Text Items */}
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     🔥 0-day streak
@@ -2014,6 +2061,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 
         {/* Main Content - Modular Cards */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          {/* Trial Notifications */}
+          <TrialNotification userId={userId} currentTier={profile.tier || 'free'} />
+          <LimitChecker userId={userId} currentTier={profile.tier || 'free'} />
+          
           {/* Date Label - Subtle, above first module */}
           <div className="text-sm text-gray-400 mb-2">
             {getFormattedDate()}
@@ -2047,24 +2098,48 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               />
                   </div>
 
-            {/* Row 3 — Food (Full Width) */}
-            <FoodCard
-              onManage={() => window.location.href = '/dash/food'}
-              onQuickAdd={() => setShowQuickAddFood(true)}
-              foodItems={todayItems.food}
+
+            {/* Row 4 — Library (Full Width) */}
+            <LibrarySection
+              onManage={() => window.location.href = '/dash/library'}
+              collapsed={libraryCollapsed}
+              onToggleCollapse={() => setLibraryCollapsed(!libraryCollapsed)}
             />
 
-            {/* Row 4 — Gear (Full Width) */}
+            {/* Row 5 — Gear (Full Width) */}
             <GearCard
-              items={[]} // Will be populated from gear management page
+              items={todayItems.gear}
               onManage={() => window.location.href = '/dash/gear'}
             />
 
-            {/* Row 4 — Uploads (Full Width, Secondary) */}
-            <UploadsCard
-              count={counts.uploads}
-              onManage={() => window.location.href = '/dash/uploads'}
-            />
+            {/* Row 6 — Creator Tier Modules */}
+            {profile.tier === 'creator' && (
+              <div className="space-y-8">
+                {/* Shop My Gear (Creator Only) */}
+                <ShopMyGearSection
+                  profileId={profile.id}
+                  userTier={profile.tier || 'free'}
+                  isOwner={true}
+                  initialItems={[]}
+                />
+
+                {/* Custom Branding (Creator Only) */}
+                <CustomBrandingSection
+                  userTier={profile.tier || 'free'}
+                  isOwner={true}
+                  initialBranding={{
+                    custom_logo_url: profile.custom_logo_url,
+                    custom_branding_enabled: profile.custom_branding_enabled || false
+                  }}
+                />
+
+                {/* Tier Management */}
+                <TierManagement
+                  currentTier={profile.tier || 'free'}
+                  isOwner={true}
+                />
+              </div>
+            )}
 
                 </div>
               </div>
@@ -2255,12 +2330,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           currentEnergy={energyLevel}
           todayItems={todayItems}
           userId={userId}
+          profileSlug={profile.slug}
         />
 
         {/* Add Gear Modal */}
         {showAddGear && (
           <AddGearForm onClose={() => setShowAddGear(false)} />
         )}
+
+        {/* Dashboard Header Editor */}
+        <DashboardHeaderEditor
+          isOpen={showHeaderEditor}
+          onClose={() => setShowHeaderEditor(false)}
+          currentName={displayName}
+          currentMission={profileMission}
+          currentAvatarUrl={profile.avatar_url}
+          onUpdate={handleProfileUpdate}
+        />
 
       </div>
 

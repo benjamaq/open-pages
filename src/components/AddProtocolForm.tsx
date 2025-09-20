@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { addProtocol } from '../lib/actions/protocols'
 import { useRouter } from 'next/navigation'
+import { checkItemLimit } from '../lib/actions/trial-limits'
 
 interface AddProtocolFormProps {
   onClose: () => void
@@ -20,10 +21,33 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [limitCheck, setLimitCheck] = useState({ allowed: true, reason: '', currentCount: 0, limit: 0, isInTrial: false })
   const router = useRouter()
+
+  // Check limits on mount
+  useEffect(() => {
+    const checkLimits = async () => {
+      try {
+        const result = await checkItemLimit('protocols')
+        setLimitCheck(result)
+      } catch (error) {
+        console.error('Error checking protocol limits:', error)
+        setLimitCheck({ allowed: true, reason: '', currentCount: 0, limit: 0, isInTrial: false })
+      }
+    }
+
+    checkLimits()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check limits before submitting
+    if (!limitCheck.allowed) {
+      setError(limitCheck.reason || 'You have reached the limit for protocols.')
+      return
+    }
+    
     setIsLoading(true)
     setError(null)
 
@@ -109,6 +133,28 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
               </svg>
             </button>
           </div>
+          
+          {/* Limit Warning */}
+          {!limitCheck.allowed && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <div className="w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-yellow-800 font-medium">
+                    Free tier limit reached
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    You have {limitCheck.currentCount}/{limitCheck.limit} protocols. 
+                    {limitCheck.isInTrial ? ' Your trial allows unlimited additions.' : ' Upgrade to Pro for unlimited protocols.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Content */}

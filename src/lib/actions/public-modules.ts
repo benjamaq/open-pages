@@ -8,9 +8,8 @@ export interface PublicModules {
   protocols?: boolean
   movement?: boolean
   mindfulness?: boolean
-  food?: boolean
   gear?: boolean
-  uploads?: boolean
+  library?: boolean
   journal?: boolean
 }
 
@@ -56,9 +55,8 @@ export async function updatePublicModules(modules: PublicModules) {
     protocols: true,
     movement: true,
     mindfulness: true,
-    food: true,
     gear: true,
-    uploads: true,
+    library: true,
     journal: true
   }
 
@@ -113,9 +111,8 @@ export async function getPublicModules(profileId: string): Promise<PublicModules
       protocols: true,
       movement: true,
       mindfulness: true,
-      food: true,
       gear: true,
-      uploads: true,
+      library: true,
       journal: true
     }
   }
@@ -125,9 +122,8 @@ export async function getPublicModules(profileId: string): Promise<PublicModules
     protocols: true,
     movement: true,
     mindfulness: true,
-    food: true,
     gear: true,
-    uploads: true,
+    library: true,
     journal: true
   }
 }

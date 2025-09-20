@@ -8,33 +8,46 @@ const freeFeatures = [
   '2 movement items',
   '2 mindfulness items',
   '5 file uploads (10MB)',
-  'Unlimited journal entries',
-  'Daily reminder emails',
+  'Public profile',
+  'Daily check-ins',
   'Basic analytics'
 ]
 
 const proFeatures = [
+  'Everything in Free, plus:',
   'Unlimited supplements',
   'Unlimited protocols',
   'Unlimited movement items',
   'Unlimited mindfulness items',
-  '100 file uploads (1GB)',
-  'Unlimited followers',
-  'Weekly digest emails',
-  'Advanced analytics & trends',
+  'Unlimited library files',
+  'Featured Current Plan',
   'Priority support',
-  'Advanced privacy controls'
+  'Advanced analytics'
+]
+
+const creatorFeatures = [
+  'Everything in Pro, plus:',
+  'Affiliate links & buy buttons',
+  'Custom logo upload',
+  'Shop My Gear page',
+  'Copy stack analytics',
+  'Creator support',
+  'Custom branding'
 ]
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <Link href="/dash" className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-gray-900">Biostackr</span>
+              <img 
+                src="/BIOSTACKR LOGO 2.png" 
+                alt="BioStackr" 
+                className="h-12 w-auto"
+              />
             </Link>
             <Link 
               href="/dash"
@@ -58,7 +71,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="mt-16 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="mt-16 grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Plan */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <div className="text-center">
@@ -84,18 +97,18 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link
-                href="/dash"
+                href="/auth/signup"
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Current Plan
+                Get started
               </Link>
             </div>
           </div>
 
           {/* Pro Plan */}
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-green-500 p-8 relative">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+              <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
                 Most Popular
               </span>
             </div>
@@ -103,7 +116,7 @@ export default function PricingPage() {
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
                 <span>Pro</span>
-                <span className="text-yellow-500">⚡</span>
+                <span className="text-gray-600">⚡</span>
               </h2>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">$9.99</span>
@@ -136,6 +149,45 @@ export default function PricingPage() {
               </p>
             </div>
           </div>
+
+          {/* Creator Plan */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
+                <span>Creator</span>
+                <span className="text-gray-600">🎨</span>
+              </h2>
+              <div className="mt-4">
+                <span className="text-4xl font-bold text-gray-900">$29.95</span>
+                <span className="text-gray-600">/month</span>
+              </div>
+              <p className="mt-2 text-gray-600">For coaches & creators</p>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="font-semibold text-gray-900 mb-4">Everything in Pro, plus:</h3>
+              <ul className="space-y-3">
+                {creatorFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8">
+              <Link 
+                href="/pricing"
+                className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+              >
+                Upgrade to Creator
+              </Link>
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Perfect for monetizing your influence
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* FAQ */}
@@ -149,7 +201,7 @@ export default function PricingPage() {
                 Can I change my plan anytime?
               </h3>
               <p className="text-gray-600">
-                Yes! You can upgrade to Pro anytime, and downgrade at the end of your billing cycle.
+                Yes! You can upgrade to Pro or Creator anytime, and downgrade at the end of your billing cycle.
               </p>
             </div>
             <div>
@@ -162,10 +214,10 @@ export default function PricingPage() {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">
-                Is there a free trial for Pro?
+                What's the difference between Pro and Creator?
               </h3>
               <p className="text-gray-600">
-                The free plan is generous enough to try most features. Pro adds unlimited capacity and advanced features.
+                Creator includes affiliate links, custom branding, and Shop My Gear page—perfect for coaches and influencers.
               </p>
             </div>
             <div>
@@ -173,7 +225,7 @@ export default function PricingPage() {
                 Do you offer yearly pricing?
               </h3>
               <p className="text-gray-600">
-                Yes! Annual subscribers get 2 months free ($99.90/year vs $119.88 monthly).
+                Yes! Annual subscribers get 2 months free (Pro: $99.90/year, Creator: $199.90/year).
               </p>
             </div>
           </div>

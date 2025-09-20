@@ -32,9 +32,40 @@ export default function AuthButton() {
   }, [supabase.auth])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    try {
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+      }
+      
+      // Aggressively clear all storage and cookies
+      if (typeof window !== 'undefined') {
+        // Clear storage
+        window.localStorage.clear()
+        window.sessionStorage.clear()
+        
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Clear Supabase specific storage
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('supabase') || key.includes('sb-')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+      
+      // Force navigation to home and reload
+      window.location.href = '/'
+      
+    } catch (err) {
+      console.error('Sign out error:', err)
+      // Even if there's an error, try to clear everything
+      window.location.href = '/'
+    }
   }
 
   if (loading) {

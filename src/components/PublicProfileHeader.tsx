@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Edit2 } from 'lucide-react'
+import UnifiedHeaderEditor from './UnifiedHeaderEditor'
 
 interface PublicProfileHeaderProps {
   profile: any
@@ -9,6 +11,8 @@ interface PublicProfileHeaderProps {
 
 export default function PublicProfileHeader({ profile, isOwnProfile }: PublicProfileHeaderProps) {
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
+  const [showHeaderEditor, setShowHeaderEditor] = useState(false)
+  const [currentProfile, setCurrentProfile] = useState(profile)
 
   useEffect(() => {
     if (isOwnProfile) {
@@ -47,22 +51,113 @@ export default function PublicProfileHeader({ profile, isOwnProfile }: PublicPro
     return "Full"
   }
 
+  const handleHeaderSave = async (data: {
+    displayName: string
+    mission: string | null
+    eatingStyle: string
+  }) => {
+    const { updateUnifiedHeader } = await import('../lib/actions/unified-header')
+    try {
+      await updateUnifiedHeader(data)
+      setCurrentProfile(prev => ({
+        ...prev,
+        display_name: data.displayName,
+        bio: data.mission,
+        nutrition_signature: {
+          eating_style: data.eatingStyle,
+          enabled: !!data.eatingStyle
+        }
+      }))
+    } catch (error) {
+      console.error('Failed to save header data:', error)
+      throw error
+    }
+  }
+
+  const getEatingStyle = () => {
+    const signature = currentProfile.nutrition_signature as any
+    return signature?.eating_style || ''
+  }
+
+  const getEatingStyleConfig = (style: string) => {
+    const EATING_STYLES = [
+      { value: '', label: 'Not specified', icon: '', color: '' },
+      { value: 'Mediterranean', label: 'Mediterranean', icon: '🐟', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+      { value: 'Keto', label: 'Keto', icon: '🥑', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+      { value: 'Carnivore', label: 'Carnivore', icon: '🥩', color: 'bg-red-100 text-red-800 border-red-200' },
+      { value: 'Plant-based', label: 'Plant-based', icon: '🌱', color: 'bg-green-100 text-green-800 border-green-200' },
+      { value: 'Paleo', label: 'Paleo', icon: '🦴', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+      { value: 'Whole foods', label: 'Whole foods', icon: '🥕', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+      { value: 'High-protein', label: 'High-protein', icon: '💪', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+      { value: 'Low-carb', label: 'Low-carb', icon: '🚫', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+      { value: 'Intermittent fasting', label: 'Intermittent fasting focused', icon: '⏰', color: 'bg-purple-100 text-purple-800 border-purple-200' }
+    ]
+    return EATING_STYLES.find(s => s.value === style) || EATING_STYLES[0]
+  }
+
+  const eatingStyle = getEatingStyle()
+  const styleConfig = getEatingStyleConfig(eatingStyle)
+
   return (
-    <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-      <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-        {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+    <>
+      <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+        {/* Date Pill - Smaller */}
+        <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
+          {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </div>
+        
+        {/* Daily Check-in Display - Smaller */}
+        {dailyCheckIn ? (
+          <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
+            🔋 {dailyCheckIn.energy}/10{dailyCheckIn.mood && ` • ${dailyCheckIn.mood}`}
+          </div>
+        ) : (
+          <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
+            🔋 7/10 • Dialed in
+          </div>
+        )}
+
+        {/* Eating Style Pill - Smaller */}
+        {(eatingStyle || isOwnProfile) && (
+          <button
+            onClick={isOwnProfile ? () => setShowHeaderEditor(true) : undefined}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+              eatingStyle && styleConfig.color ? 
+                `${styleConfig.color} ${isOwnProfile ? 'hover:opacity-80' : ''}` :
+                `bg-gray-100 text-gray-600 border-gray-200 ${isOwnProfile ? 'hover:bg-gray-200' : ''}`
+            } ${isOwnProfile ? 'cursor-pointer' : 'cursor-default'}`}
+          >
+            <span className="flex items-center gap-1.5">
+              {styleConfig.icon && <span className="text-sm">{styleConfig.icon}</span>}
+              <span>{eatingStyle ? `My eating style is ${eatingStyle}` : 'Add eating style'}</span>
+            </span>
+          </button>
+        )}
+
+        {/* Edit Button for Owner */}
+        {isOwnProfile && (
+          <button
+            onClick={() => setShowHeaderEditor(true)}
+            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-200"
+          >
+            <Edit2 className="w-4 h-4 text-gray-600" />
+          </button>
+        )}
       </div>
-      
-      {/* Daily Check-in Display - Combined Pill */}
-      {dailyCheckIn ? (
-        <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-          🔋 {dailyCheckIn.energy}/10{dailyCheckIn.mood && ` • ${dailyCheckIn.mood}`}
-        </div>
-      ) : (
-        <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-          🔋 7/10
-        </div>
+
+      {/* Unified Header Editor */}
+      {showHeaderEditor && (
+        <UnifiedHeaderEditor
+          isOpen={showHeaderEditor}
+          onClose={() => setShowHeaderEditor(false)}
+          initialData={{
+            displayName: currentProfile.display_name || '',
+            mission: currentProfile.bio,
+            eatingStyle: eatingStyle
+          }}
+          onSave={handleHeaderSave}
+        />
       )}
-    </div>
+    </>
   )
 }

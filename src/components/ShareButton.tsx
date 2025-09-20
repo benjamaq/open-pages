@@ -12,12 +12,20 @@ export default function ShareButton({ profileSlug, className = "" }: ShareButton
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(`https://biostackr.com/u/${profileSlug}`)
+      // Use production domain for sharing, localhost for development
+      const baseUrl = typeof window !== 'undefined' && window.location.host.includes('localhost')
+        ? `${window.location.protocol}//${window.location.host}`
+        : 'https://biostackr.com'
+      
+      await navigator.clipboard.writeText(`${baseUrl}/u/${profileSlug}?public=true`)
       setShowToast(true)
       setTimeout(() => setShowToast(false), 2000)
     } catch (err) {
       // Fallback for older browsers
-      alert('Link copied!')
+      const baseUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.host}`
+        : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      alert(`Link: ${baseUrl}/u/${profileSlug}?public=true`)
     }
   }
 
@@ -28,7 +36,7 @@ export default function ShareButton({ profileSlug, className = "" }: ShareButton
         className={className}
         title="Copy your public Biostackr link"
       >
-        Copy Public Link
+        Share Profile
       </button>
       
       {/* Toast Notification */}

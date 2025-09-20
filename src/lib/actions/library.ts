@@ -66,93 +66,128 @@ async function getCurrentProfile() {
 
 // Create a new library item
 export async function createLibraryItem(data: LibraryItemFormData): Promise<LibraryItem> {
-  const supabase = await createClient()
-  const profile = await getCurrentProfile()
+  try {
+    const supabase = await createClient()
+    const profile = await getCurrentProfile()
 
-  // If this is a featured training plan, unfeatured any existing ones
-  if (data.category === 'training_plan' && data.is_featured) {
-    await supabase
+    // If this is a featured training plan, unfeatured any existing ones
+    if (data.category === 'training_plan' && data.is_featured) {
+      try {
+        await supabase
+          .from('library_items')
+          .update({ is_featured: false })
+          .eq('profile_id', profile.id)
+          .eq('category', 'training_plan')
+          .eq('is_featured', true)
+      } catch (updateError) {
+        console.warn('Could not unfeatured existing training plans:', updateError)
+      }
+    }
+
+    const { data: item, error } = await supabase
       .from('library_items')
-      .update({ is_featured: false })
-      .eq('profile_id', profile.id)
-      .eq('category', 'training_plan')
-      .eq('is_featured', true)
-  }
+      .insert([{
+        profile_id: profile.id,
+        title: data.title.trim(),
+        category: data.category,
+        date: data.date,
+        provider: data.provider?.trim() || null,
+        summary_public: data.summary_public?.trim() || null,
+        notes_private: data.notes_private?.trim() || null,
+        tags: data.tags || null,
+        file_url: data.file_url,
+        file_type: data.file_type,
+        file_size: data.file_size || null,
+        thumbnail_url: data.thumbnail_url || null,
+        is_public: data.is_public || false,
+        allow_download: data.allow_download || false,
+        is_featured: data.is_featured || false
+      }])
+      .select()
+      .single()
 
-  const { data: item, error } = await supabase
-    .from('library_items')
-    .insert([{
-      profile_id: profile.id,
-      title: data.title.trim(),
-      category: data.category,
-      date: data.date,
-      provider: data.provider?.trim() || null,
-      summary_public: data.summary_public?.trim() || null,
-      notes_private: data.notes_private?.trim() || null,
-      tags: data.tags || null,
-      file_url: data.file_url,
-      file_type: data.file_type,
-      file_size: data.file_size || null,
-      thumbnail_url: data.thumbnail_url || null,
-      is_public: data.is_public || false,
-      allow_download: data.allow_download || false,
-      is_featured: data.is_featured || false
-    }])
-    .select()
-    .single()
+    if (error) {
+      console.error('Failed to create library item:', error)
+      if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+        throw new Error('Library feature not available yet. Please contact support to enable the library module.')
+      }
+      throw new Error(`Failed to create library item: ${error.message}`)
+    }
 
-  if (error) {
-    console.error('Failed to create library item:', error)
+    // Revalidate relevant paths
+    revalidatePath('/dash/library')
+    revalidatePath('/dash')
+    if (profile.slug) {
+      revalidatePath(`/u/${profile.slug}`)
+    }
+
+    return item as LibraryItem
+  } catch (error) {
+    console.error('Error in createLibraryItem:', error)
+    if (error instanceof Error) {
+      throw error
+    }
     throw new Error('Failed to create library item')
   }
-
-  // Revalidate relevant paths
-  revalidatePath('/dash/library')
-  revalidatePath('/dash')
-  if (profile.slug) {
-    revalidatePath(`/u/${profile.slug}`)
-  }
-
-  return item as LibraryItem
 }
 
 // Get user's library items
 export async function getUserLibraryItems(): Promise<LibraryItem[]> {
-  const supabase = await createClient()
-  const profile = await getCurrentProfile()
+  try {
+    const supabase = await createClient()
+    const profile = await getCurrentProfile()
 
-  const { data: items, error } = await supabase
-    .from('library_items')
-    .select('*')
-    .eq('profile_id', profile.id)
-    .order('created_at', { ascending: false })
+    const { data: items, error } = await supabase
+      .from('library_items')
+      .select('*')
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Failed to fetch library items:', error)
-    throw new Error('Failed to fetch library items')
+    if (error) {
+      console.error('Failed to fetch library items:', error)
+      // If table doesn't exist, return empty array instead of throwing
+      if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+        console.warn('Library items table does not exist yet. Please run the database migration.')
+        return []
+      }
+      throw new Error('Failed to fetch library items')
+    }
+
+    return items as LibraryItem[]
+  } catch (error) {
+    console.error('Error in getUserLibraryItems:', error)
+    return []
   }
-
-  return items as LibraryItem[]
 }
 
 // Get public library items for a profile
 export async function getPublicLibraryItems(profileId: string): Promise<LibraryItem[]> {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: items, error } = await supabase
-    .from('library_items')
-    .select('*')
-    .eq('profile_id', profileId)
-    .eq('is_public', true)
-    .order('is_featured', { ascending: false }) // Featured items first
-    .order('created_at', { ascending: false })
+    const { data: items, error } = await supabase
+      .from('library_items')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('is_public', true)
+      .order('is_featured', { ascending: false }) // Featured items first
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Failed to fetch public library items:', error)
+    if (error) {
+      console.error('Failed to fetch public library items:', error)
+      // If table doesn't exist, return empty array instead of throwing
+      if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+        console.warn('Library items table does not exist yet. Please run the database migration.')
+        return []
+      }
+      return []
+    }
+
+    return items as LibraryItem[]
+  } catch (error) {
+    console.error('Error in getPublicLibraryItems:', error)
     return []
   }
-
-  return items as LibraryItem[]
 }
 
 // Get a single library item (public or owned)
