@@ -88,7 +88,7 @@ export default function PricingPage() {
               <ul className="space-y-3">
                 {freeFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">{feature}</span>
                   </li>
                 ))}
@@ -130,7 +130,7 @@ export default function PricingPage() {
               <ul className="space-y-3">
                 {proFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">{feature}</span>
                   </li>
                 ))}
@@ -169,7 +169,7 @@ export default function PricingPage() {
               <ul className="space-y-3">
                 {creatorFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">{feature}</span>
                   </li>
                 ))}
