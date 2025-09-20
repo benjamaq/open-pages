@@ -40,154 +40,226 @@ export default function ExamplesPage() {
         {/* Example Profiles Grid */}
         <div className="mt-16 grid lg:grid-cols-3 gap-8">
           {/* Example 1: Biohacker */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🧬</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">The Biohacker</h3>
-              <p className="text-gray-600">Alex Chen - 32 supplements, 8 protocols</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Morning Stack (6am):</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Creatine Monohydrate 5g</li>
-                  <li>• Omega-3 EPA/DHA 2000mg</li>
-                  <li>• Magnesium Glycinate 400mg</li>
-                  <li>• Vitamin D3 5000 IU</li>
-                  <li>• B-Complex</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Protocols:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Cold plunge (3 min, 3x/week)</li>
-                  <li>• Red light therapy (20 min daily)</li>
-                  <li>• Sauna (15 min, 4x/week)</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Movement:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Weight training (4x/week)</li>
-                  <li>• Zone 2 cardio (3x/week)</li>
-                  <li>• Daily walks (10k steps)</li>
-                </ul>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            {/* Profile Header */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">AC</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Alex Chen</h3>
+                  <p className="text-sm text-gray-600">@alex-chen-biohacker</p>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <span className="text-xs text-gray-500">32 supplements</span>
+                    <span className="text-xs text-gray-500">8 protocols</span>
+                    <span className="text-xs text-gray-500">5 followers</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            {/* Profile Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Morning Stack (6am)</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Creatine Monohydrate</span>
+                    <span className="text-xs text-gray-500">5g</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Omega-3 EPA/DHA</span>
+                    <span className="text-xs text-gray-500">2000mg</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Magnesium Glycinate</span>
+                    <span className="text-xs text-gray-500">400mg</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Today's Protocols</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Cold plunge</span>
+                    <span className="text-xs text-gray-500">3 min</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Red light therapy</span>
+                    <span className="text-xs text-gray-500">20 min</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Progress today</span>
+                  <span className="text-xs font-medium text-gray-700">68% complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div className="bg-gray-900 h-1.5 rounded-full" style={{width: '68%'}}></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 pb-6">
               <Link 
                 href="/u/alex-chen-example?public=true" 
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors"
+                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors text-sm"
               >
-                View Full Stack
+                View Full Profile
               </Link>
             </div>
           </div>
 
           {/* Example 2: Coach */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💪</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">The Coach</h3>
-              <p className="text-gray-600">Sarah Martinez - 15 supplements, 6 protocols</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Performance Stack:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Whey Protein (post-workout)</li>
-                  <li>• Creatine HCL 3g</li>
-                  <li>• Beta-Alanine 3g</li>
-                  <li>• Citrulline Malate 6g</li>
-                  <li>• Ashwagandha 600mg</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Recovery Protocols:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Ice baths (2x/week)</li>
-                  <li>• Normatec compression</li>
-                  <li>• Sleep optimization routine</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Training:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Powerlifting (5x/week)</li>
-                  <li>• Mobility work (daily)</li>
-                  <li>• Conditioning (2x/week)</li>
-                </ul>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            {/* Profile Header */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">SM</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Sarah Martinez</h3>
+                  <p className="text-sm text-gray-600">@sarah-martinez-coach</p>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <span className="text-xs text-gray-500">15 supplements</span>
+                    <span className="text-xs text-gray-500">6 protocols</span>
+                    <span className="text-xs text-gray-500">23 followers</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            {/* Profile Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Performance Stack</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Whey Protein</span>
+                    <span className="text-xs text-gray-500">post-workout</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Creatine HCL</span>
+                    <span className="text-xs text-gray-500">3g</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Beta-Alanine</span>
+                    <span className="text-xs text-gray-500">3g</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Recovery Protocols</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Ice baths</span>
+                    <span className="text-xs text-gray-500">2x/week</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Normatec compression</span>
+                    <span className="text-xs text-gray-500">daily</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Progress today</span>
+                  <span className="text-xs font-medium text-gray-700">92% complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div className="bg-blue-600 h-1.5 rounded-full" style={{width: '92%'}}></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 pb-6">
               <Link 
                 href="/u/sarah-martinez-example?public=true" 
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors"
+                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors text-sm"
               >
-                View Full Stack
+                View Full Profile
               </Link>
             </div>
           </div>
 
           {/* Example 3: Creator */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎨</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">The Creator</h3>
-              <p className="text-gray-600">Marcus Johnson - 20 supplements, 5 protocols</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Cognitive Stack:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Lion's Mane 1000mg</li>
-                  <li>• Rhodiola Rosea 400mg</li>
-                  <li>• L-Theanine 200mg</li>
-                  <li>• Alpha-GPC 300mg</li>
-                  <li>• Bacopa Monnieri 300mg</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Wellness Protocols:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Meditation (20 min daily)</li>
-                  <li>• Breathwork (10 min daily)</li>
-                  <li>• Digital sunset routine</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Movement:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Yoga (daily)</li>
-                  <li>• Strength training (3x/week)</li>
-                  <li>• Nature walks (weekends)</li>
-                </ul>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            {/* Profile Header */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">MJ</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Marcus Johnson</h3>
+                  <p className="text-sm text-gray-600">@marcus-johnson-creator</p>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <span className="text-xs text-gray-500">20 supplements</span>
+                    <span className="text-xs text-gray-500">5 protocols</span>
+                    <span className="text-xs text-gray-500">156 followers</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            {/* Profile Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Cognitive Stack</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Lion's Mane</span>
+                    <span className="text-xs text-gray-500">1000mg</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Rhodiola Rosea</span>
+                    <span className="text-xs text-gray-500">400mg</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">L-Theanine</span>
+                    <span className="text-xs text-gray-500">200mg</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm">Wellness Protocols</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Meditation</span>
+                    <span className="text-xs text-gray-500">20 min daily</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">Breathwork</span>
+                    <span className="text-xs text-gray-500">10 min daily</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Progress today</span>
+                  <span className="text-xs font-medium text-gray-700">45% complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div className="bg-purple-600 h-1.5 rounded-full" style={{width: '45%'}}></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 pb-6">
               <Link 
                 href="/u/marcus-johnson-example?public=true" 
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors"
+                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg text-center block hover:bg-gray-800 transition-colors text-sm"
               >
-                View Full Stack
+                View Full Profile
               </Link>
             </div>
           </div>

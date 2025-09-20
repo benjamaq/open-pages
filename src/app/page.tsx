@@ -39,6 +39,18 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* Creator Badge */}
+      <div className="bg-gray-900 text-white py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center">
+            <span className="text-sm">🎨</span>
+            <Link href="#creators" className="ml-2 text-sm font-medium hover:underline">
+              Creator? Turn your stack into a business →
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="pt-16 pb-20 lg:pt-20 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -171,75 +183,92 @@ export default function Home() {
             {/* Today's Digest */}
             <div className="mt-12 lg:mt-0">
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Today's digest</h3>
-                <div className="space-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">2:00 pm</span>
-                    <span className="font-medium">Gym (Pull day)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">5:00 pm</span>
-                    <span className="font-medium">Mindfulness (Breathwork, 10 min)</span>
-                  </div>
-                  
-                  <div className="border-t pt-3">
-                    <p className="font-medium text-gray-900 mb-2">Today's Supplements:</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Morning (8:00 AM)</span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                <h3 className="font-semibold text-gray-900 mb-6">Today's digest</h3>
+                
+                {/* Supplements Section */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Supplements</h4>
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Morning</span>
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">3 items</span>
                       </div>
-                      <div className="pl-4 space-y-1 text-gray-600">
+                      <div className="space-y-1 text-sm text-gray-600">
                         <p>• EPA 1000 mg</p>
                         <p>• Magnesium Glycinate 360 mg</p>
                         <p>• Folate 800 mcg</p>
                       </div>
-                      
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="text-gray-600">Midday (12:00 PM)</span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">2 items</span>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Midday</span>
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">2 items</span>
                       </div>
-                      <div className="pl-4 space-y-1 text-gray-600">
+                      <div className="space-y-1 text-sm text-gray-600">
                         <p>• Vitamin D3 5000 IU</p>
                         <p>• B-Complex</p>
                       </div>
-                      
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="text-gray-600">Evening (8:00 PM)</span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Evening</span>
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">3 items</span>
                       </div>
-                      <div className="pl-4 space-y-1 text-gray-600">
+                      <div className="space-y-1 text-sm text-gray-600">
                         <p>• Zinc 15 mg</p>
                         <p>• Melatonin 3 mg</p>
                         <p>• Probiotics</p>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="border-t pt-3">
-                    <p className="font-medium text-gray-900 mb-2">Today's Protocols:</p>
-                    <div className="space-y-2 text-gray-600">
-                      <p>• Ice bath tonight (3 min, 8:30 PM)</p>
-                      <p>• Red light therapy (20 min, 9:00 PM)</p>
-                      <p>• Sleep optimization routine (9:30 PM)</p>
+                </div>
+                
+                {/* Protocols Section */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Protocols</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Ice bath</span>
+                      <span className="text-xs text-gray-500">8:30 PM • 3 min</span>
                     </div>
-                  </div>
-                  
-                  <div className="border-t pt-3">
-                    <p className="font-medium text-gray-900 mb-2">Movement & Mindfulness:</p>
-                    <div className="space-y-2 text-gray-600">
-                      <p>• Morning walk (7:30 AM) - 6,000 steps</p>
-                      <p>• Gym session (2:00 PM) - Pull day</p>
-                      <p>• Breathwork (5:00 PM) - 10 min Wim Hof</p>
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Red light therapy</span>
+                      <span className="text-xs text-gray-500">9:00 PM • 20 min</span>
                     </div>
-                  </div>
-                  
-                  <div className="border-t pt-3 text-center">
-                    <span className="text-gray-900 font-medium">Tap to check off as you go → ✅</span>
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Sleep routine</span>
+                      <span className="text-xs text-gray-500">9:30 PM</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-4 text-center">
-                  (Delivered via mobile PWA push or email; adjustable in Settings.)
+                
+                {/* Movement Section */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Movement & Mindfulness</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Morning walk</span>
+                      <span className="text-xs text-gray-500">7:30 AM • 6,000 steps</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Gym session</span>
+                      <span className="text-xs text-gray-500">2:00 PM • Pull day</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-700">Breathwork</span>
+                      <span className="text-xs text-gray-500">5:00 PM • 10 min</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 text-center">
+                  <span className="text-gray-900 font-medium text-sm">Tap to check off as you go → ✅</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Delivered via mobile PWA push or email
                 </p>
               </div>
             </div>
@@ -354,7 +383,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Create your stack</h3>
-                <p className="text-gray-600">Add supplements, protocols, movement, mindfulness, gear.</p>
+                <p className="text-lg text-gray-600">Add supplements, protocols, movement, mindfulness, gear.</p>
               </div>
             </div>
 
@@ -364,7 +393,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Check in daily</h3>
-                <p className="text-gray-600">Quick mood/energy; check off your routine.</p>
+                <p className="text-lg text-gray-600">Quick mood/energy; check off your routine.</p>
               </div>
             </div>
 
@@ -374,7 +403,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Share when ready</h3>
-                <p className="text-gray-600">Publish your page so others can Follow or Copy your stack.</p>
+                <p className="text-lg text-gray-600">Publish your page so others can Follow or Copy your stack.</p>
               </div>
             </div>
           </div>
