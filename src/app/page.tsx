@@ -44,11 +44,10 @@ export default function Home() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
             <div className="lg:col-span-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Build your health stack.<br />
-                <span className="text-gray-600">Share what works.</span>
+                Build your stack. Share what works.
               </h1>
               <p className="mt-6 text-xl text-gray-600 leading-relaxed">
-                Create a clean, professional profile for your biohacking routine. Track supplements, protocols, movement, mindfulness—and share a beautiful public page people can follow or copy.
+                Less chaos, more consistency. One place for your supplements, protocols, movement, mindfulness, gear and labs—with a clear Today list so it actually gets done. When you're ready, publish a beautiful profile people can follow.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <Link 
@@ -78,30 +77,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why People Switch */}
+      {/* A day with BioStackr */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">Why people switch</h2>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">A day with BioStackr</h2>
           
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {/* Spreadsheets Problem */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200">
-              <h3 className="text-xl font-semibold text-red-600 mb-4">Spreadsheets aren't it.</h3>
-              <ul className="text-left space-y-3 text-gray-600">
-                <li>• Many people can't (or won't) use them</li>
-                <li>• They're ugly, time-consuming, and easy to break</li>
-                <li>• Not a joy to update—so they get abandoned</li>
-              </ul>
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">7:00am</span>
+                <div>
+                  <p className="text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
+                </div>
+              </div>
             </div>
 
-            {/* Too Many Parts Problem */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200">
-              <h3 className="text-xl font-semibold text-red-600 mb-4">Too many moving parts.</h3>
-              <ul className="text-left space-y-3 text-gray-600">
-                <li>• 20+ supplements, doses, and timing windows</li>
-                <li>• Gym, movement, mindfulness, recovery protocols</li>
-                <li>• Lab PDFs, training plans—scattered in email</li>
-              </ul>
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">9:00am</span>
+                <div>
+                  <p className="text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">Mid-morning</span>
+                <div>
+                  <p className="text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">2:00pm</span>
+                <div>
+                  <p className="text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">All day</span>
+                <div>
+                  <p className="text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -110,7 +134,7 @@ export default function Home() {
       {/* The BioStackr Way */}
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">The BioStackr way</h2>
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">What's inside</h2>
           
           <div className="space-y-6">
             <div className="flex items-start gap-4">
@@ -118,8 +142,8 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">One place, one plan.</h3>
-                <p className="text-gray-600">Your stack, your files, your gear—organized and searchable.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Supplements</h3>
+                <p className="text-gray-600">Doses & timing (morning / midday / evening) with daily check-offs.</p>
               </div>
             </div>
 
@@ -128,8 +152,8 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Daily checklist.</h3>
-                <p className="text-gray-600">Morning/Midday/Evening supplements, movement, mindfulness, protocols—check off as you go.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Protocols</h3>
+                <p className="text-gray-600">Sauna, cold, red light, sleep routine—schedule and track.</p>
               </div>
             </div>
 
@@ -138,8 +162,8 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Today digest.</h3>
-                <p className="text-gray-600">Get a morning summary with what's on deck (push/email/PWA).</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Movement</h3>
+                <p className="text-gray-600">Gym, run, yoga—simple plans and adherence.</p>
               </div>
             </div>
 
@@ -148,8 +172,8 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Library.</h3>
-                <p className="text-gray-600">Keep labs, doctor notes, and training plans in one place; feature your Current Plan.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Mindfulness</h3>
+                <p className="text-gray-600">Meditation, breathwork, journaling—keep the habit consistent.</p>
               </div>
             </div>
 
@@ -158,8 +182,8 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Public profile.</h3>
-                <p className="text-gray-600">Share a clean link; people can Follow this stack or Copy this stack.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Library</h3>
+                <p className="text-gray-600">Labs, doctor notes, training plans & PDFs. Pin a Current Plan to feature on your public page.</p>
               </div>
             </div>
 
@@ -168,11 +192,35 @@ export default function Home() {
                 <span className="text-gray-900 font-bold text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Optional sharing.</h3>
-                <p className="text-gray-600">Post a daily check-in card to socials—only if you want to.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Gear</h3>
+                <p className="text-gray-600">Wearables & recovery tools; keep notes and links.</p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Follow or keep it private */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Follow or keep it private</h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Visitors can follow your stack and get an email when you change something.
+          </p>
+          <p className="text-gray-600">
+            Every module is toggleable—share everything, nothing, or just a few pieces.<br />
+            <span className="text-sm text-gray-500">(On your public page, the button reads "Follow this stack.")</span>
+          </p>
+        </div>
+      </section>
+
+      {/* Your Health Hub */}
+      <section className="py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Your Health Hub</h2>
+          <p className="text-xl text-gray-600">
+            One source of truth for your routine and records—stack, schedules, files, and gear—organized, searchable, and always up to date.
+          </p>
         </div>
       </section>
 
@@ -314,19 +362,10 @@ export default function Home() {
       {/* For Coaches & Creators */}
       <section className="py-16 bg-gradient-to-r from-gray-800 to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Built for coaches & creators</h2>
-          <div className="grid md:grid-cols-2 gap-8 text-white/90">
-            <div>
-              <p>• Link-in-bio profile people can follow or copy</p>
-              <p>• Feature your Current Plan and gear</p>
-              <p>• Optional affiliate links (with disclosure) on the Creator plan</p>
-            </div>
-            <div>
-              <p>• Post updates once—everyone sees the latest version</p>
-              <p>• Analytics on follows and engagement</p>
-              <p>• Creator support & profile enhancements</p>
-            </div>
-          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">For coaches & creators</h2>
+          <p className="text-xl text-white/90 mb-8">
+            Add affiliate links directly to your supplements and gear. You also get a Shop My Gear page and custom branding on your public profile. Post updates once—clients and followers always see the latest.
+          </p>
           <Link 
             href="#pricing" 
             className="inline-block mt-8 bg-white text-gray-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
@@ -488,12 +527,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Why this beats spreadsheets */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Why this beats spreadsheets</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Too many moving parts.</h3>
+              <p className="text-gray-600">Supplements, timing windows, workouts, mindfulness, protocols… it's a lot to juggle.</p>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Files everywhere.</h3>
+              <p className="text-gray-600">Labs and plans buried in email and folders.</p>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">No clear today.</h3>
+              <p className="text-gray-600">BioStackr gives you one list, reminders, and progress—so it actually sticks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-16 bg-gray-900 text-white text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">Ready to stop wrestling spreadsheets?</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to make it effortless?</h2>
           <p className="text-xl text-gray-300 mb-8">
-            Create your stack in minutes and share a link people can follow or copy.
+            Create your stack in minutes and share a link people can follow—only if you want.
           </p>
           <Link 
             href="/auth/signup" 

@@ -9,7 +9,7 @@ const freeFeatures = [
   '2 mindfulness items',
   '5 library files (10 MB each)',
   'Public profile with followers',
-  'Daily Check-in & basic analytics'
+  'Daily Check-in & progress tracking'
 ]
 
 const proFeatures = [
@@ -17,7 +17,7 @@ const proFeatures = [
   'Unlimited supplements, protocols, movement, mindfulness, gear & files',
   'Featured Current Plan on public profile',
   'Priority support',
-  'Advanced analytics'
+  'Enhanced progress tracking'
 ]
 
 const creatorFeatures = [
@@ -25,7 +25,7 @@ const creatorFeatures = [
   'Affiliate links & buy buttons on supplements and gear',
   'Shop My Gear page',
   'Custom branding (logo & colors)',
-  'Audience analytics (followers, clicks)',
+  'Audience insights (followers, clicks)',
   'Creator support'
 ]
 
@@ -67,16 +67,6 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* All Plans Include Strip */}
-        <div className="mt-8 bg-gray-50 rounded-lg p-6 max-w-4xl mx-auto">
-          <h3 className="text-center font-semibold text-gray-900 mb-4">All plans include:</h3>
-          <div className="grid md:grid-cols-4 gap-4 text-center text-sm text-gray-600">
-            <div>Today checklist & reminders</div>
-            <div>Daily Check-in & Journal</div>
-            <div>Public profile with Follow this stack</div>
-            <div>Privacy controls for every module</div>
-          </div>
-        </div>
 
         {/* Pricing Cards */}
         <div className="mt-16 grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -116,7 +106,7 @@ export default function PricingPage() {
           <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
+                BioStacker Recommends
               </span>
             </div>
 
