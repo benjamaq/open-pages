@@ -16,8 +16,9 @@ export default function Home() {
               </Link>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Product</Link>
-              <Link href="#examples" className="text-gray-600 hover:text-gray-900 transition-colors">Examples</Link>
+              <Link href="/examples" className="text-gray-600 hover:text-gray-900 transition-colors">Examples</Link>
               <Link href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
+              <Link href="#creators" className="text-gray-600 hover:text-gray-900 transition-colors">Creators?</Link>
               <Link href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -57,10 +58,10 @@ export default function Home() {
                   Create your stack
                 </Link>
                 <Link 
-                  href="/u/benjamaq-550507?public=true" 
+                  href="/examples" 
                   className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-50 transition-colors text-center"
                 >
-                  View example profile
+                  See examples of stacks
                 </Link>
               </div>
             </div>
@@ -87,7 +88,7 @@ export default function Home() {
               <div className="flex items-start gap-4">
                 <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">7:00am</span>
                 <div>
-                  <p className="text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
+                  <p className="text-lg text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
                 </div>
               </div>
             </div>
@@ -96,7 +97,7 @@ export default function Home() {
               <div className="flex items-start gap-4">
                 <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">9:00am</span>
                 <div>
-                  <p className="text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
+                  <p className="text-lg text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
                 </div>
               </div>
             </div>
@@ -105,7 +106,7 @@ export default function Home() {
               <div className="flex items-start gap-4">
                 <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">Mid-morning</span>
                 <div>
-                  <p className="text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
+                  <p className="text-lg text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
                 </div>
               </div>
             </div>
@@ -114,7 +115,7 @@ export default function Home() {
               <div className="flex items-start gap-4">
                 <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">2:00pm</span>
                 <div>
-                  <p className="text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
+                  <p className="text-lg text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
                 </div>
               </div>
             </div>
@@ -123,7 +124,7 @@ export default function Home() {
               <div className="flex items-start gap-4">
                 <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">All day</span>
                 <div>
-                  <p className="text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
+                  <p className="text-lg text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
                 </div>
               </div>
             </div>
@@ -204,10 +205,10 @@ export default function Home() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Follow or keep it private</h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-lg text-gray-600 mb-8">
             Visitors can follow your stack and get an email when you change something.
           </p>
-          <p className="text-gray-600">
+          <p className="text-lg text-gray-600">
             Every module is toggleable—share everything, nothing, or just a few pieces.<br />
             <span className="text-sm text-gray-500">(On your public page, the button reads "Follow this stack.")</span>
           </p>
@@ -218,7 +219,7 @@ export default function Home() {
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Your Health Hub</h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-lg text-gray-600">
             One source of truth for your routine and records—stack, schedules, files, and gear—organized, searchable, and always up to date.
           </p>
         </div>
@@ -235,7 +236,7 @@ export default function Home() {
           <div className="max-w-md mx-auto">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Good morning!</h3>
-              <div className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">2:00 pm</span>
                   <span className="font-medium">Gym (Pull day)</span>
@@ -244,14 +245,59 @@ export default function Home() {
                   <span className="text-gray-600">5:00 pm</span>
                   <span className="font-medium">Mindfulness (Breathwork, 10 min)</span>
                 </div>
+                
                 <div className="border-t pt-3">
-                  <p className="font-medium text-gray-900 mb-2">Supplements (AM):</p>
-                  <p className="text-gray-600">EPA 1000 mg, Magnesium Glycinate 360 mg, Folate 800 mcg</p>
+                  <p className="font-medium text-gray-900 mb-2">Today's Supplements:</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Morning (8:00 AM)</span>
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                    </div>
+                    <div className="pl-4 space-y-1 text-gray-600">
+                      <p>• EPA 1000 mg</p>
+                      <p>• Magnesium Glycinate 360 mg</p>
+                      <p>• Folate 800 mcg</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-gray-600">Midday (12:00 PM)</span>
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">2 items</span>
+                    </div>
+                    <div className="pl-4 space-y-1 text-gray-600">
+                      <p>• Vitamin D3 5000 IU</p>
+                      <p>• B-Complex</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-gray-600">Evening (8:00 PM)</span>
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                    </div>
+                    <div className="pl-4 space-y-1 text-gray-600">
+                      <p>• Zinc 15 mg</p>
+                      <p>• Melatonin 3 mg</p>
+                      <p>• Probiotics</p>
+                    </div>
+                  </div>
                 </div>
+                
                 <div className="border-t pt-3">
-                  <p className="font-medium text-gray-900 mb-2">Protocol:</p>
-                  <p className="text-gray-600">Ice bath tonight (3 min)</p>
+                  <p className="font-medium text-gray-900 mb-2">Today's Protocols:</p>
+                  <div className="space-y-2 text-gray-600">
+                    <p>• Ice bath tonight (3 min, 8:30 PM)</p>
+                    <p>• Red light therapy (20 min, 9:00 PM)</p>
+                    <p>• Sleep optimization routine (9:30 PM)</p>
+                  </div>
                 </div>
+                
+                <div className="border-t pt-3">
+                  <p className="font-medium text-gray-900 mb-2">Movement & Mindfulness:</p>
+                  <div className="space-y-2 text-gray-600">
+                    <p>• Morning walk (7:30 AM) - 6,000 steps</p>
+                    <p>• Gym session (2:00 PM) - Pull day</p>
+                    <p>• Breathwork (5:00 PM) - 10 min Wim Hof</p>
+                  </div>
+                </div>
+                
                 <div className="border-t pt-3 text-center">
                   <span className="text-gray-900 font-medium">Tap to check off as you go → ✅</span>
                 </div>
@@ -360,12 +406,50 @@ export default function Home() {
       </section>
 
       {/* For Coaches & Creators */}
-      <section className="py-16 bg-gradient-to-r from-gray-800 to-gray-900">
+      <section id="creators" className="py-16 bg-gradient-to-r from-gray-800 to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">For coaches & creators</h2>
-          <p className="text-xl text-white/90 mb-8">
-            Add affiliate links directly to your supplements and gear. You also get a Shop My Gear page and custom branding on your public profile. Post updates once—clients and followers always see the latest.
+          <p className="text-lg text-white/90 mb-8">
+            Turn your expertise into income with affiliate links, custom branding, and monetization tools.
           </p>
+          
+          <div className="grid md:grid-cols-2 gap-8 text-white/90 mb-8">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white mb-4">Monetization Features</h3>
+              <div className="space-y-3 text-left">
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Affiliate links & buy buttons on supplements and gear</span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Shop My Gear page with featured products</span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Audience insights (followers, clicks, engagement)</span>
+                </div>
+          </div>
+        </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-white mb-4">Branding & Customization</h3>
+              <div className="space-y-3 text-left">
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Custom branding (logo & colors) on your public profile</span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Professional profile that builds trust with followers</span>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 text-white mt-0.5 flex-shrink-0">✓</span>
+                  <span>Creator support & profile enhancements</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <Link 
             href="#pricing" 
             className="inline-block mt-8 bg-white text-gray-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
@@ -381,8 +465,8 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
             <p className="text-xl text-gray-600">Start free, upgrade when you're ready to unlock your full potential.</p>
-          </div>
-          
+        </div>
+
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Free Plan */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -535,17 +619,17 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Too many moving parts.</h3>
-              <p className="text-gray-600">Supplements, timing windows, workouts, mindfulness, protocols… it's a lot to juggle.</p>
+              <p className="text-lg text-gray-600">Supplements, timing windows, workouts, mindfulness, protocols… it's a lot to juggle.</p>
             </div>
 
             <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Files everywhere.</h3>
-              <p className="text-gray-600">Labs and plans buried in email and folders.</p>
-            </div>
-
-            <div className="text-center">
+              <p className="text-lg text-gray-600">Labs and plans buried in email and folders.</p>
+          </div>
+          
+          <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">No clear today.</h3>
-              <p className="text-gray-600">BioStackr gives you one list, reminders, and progress—so it actually sticks.</p>
+              <p className="text-lg text-gray-600">BioStackr gives you one list, reminders, and progress—so it actually sticks.</p>
             </div>
           </div>
         </div>
