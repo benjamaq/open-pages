@@ -494,22 +494,34 @@ export default function Home() {
                 <p className="mt-2 text-gray-600">Perfect for getting started</p>
               </div>
               <div className="mt-8">
-                <ul className="space-y-3 text-sm">
+                <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">10 supplements</span>
+                    <span className="text-gray-700">Up to 10 supplements</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">3 protocols</span>
+                    <span className="text-gray-700">Up to 3 protocols</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">5 file uploads</span>
+                    <span className="text-gray-700">2 movement items</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Public profile</span>
+                    <span className="text-gray-700">2 mindfulness items</span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">5 library files (10 MB each)</span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">Public profile with followers</span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">Daily Check-in & progress tracking</span>
                   </li>
                 </ul>
               </div>
@@ -542,32 +554,39 @@ export default function Home() {
                 <p className="mt-2 text-gray-600">For serious health optimizers</p>
               </div>
               <div className="mt-8">
-                <ul className="space-y-3 text-sm">
+                <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Everything in Free</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Unlimited everything</span>
+                    <span className="text-gray-700">Unlimited supplements, protocols, movement, mindfulness, gear & files</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Featured Current Plan</span>
+                    <span className="text-gray-700">Featured Current Plan on public profile</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Priority support</span>
                   </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">Enhanced progress tracking</span>
+                  </li>
                 </ul>
               </div>
               <div className="mt-8">
-                <Link 
-                  href="/pricing"
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+                <button
+                  onClick={() => alert('Stripe integration coming soon! For now, this is a demo.')}
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                 >
                   Upgrade to Pro
-                </Link>
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  14-day trial included • Save with annual
+                </p>
               </div>
           </div>
           
@@ -585,14 +604,14 @@ export default function Home() {
                 <p className="mt-2 text-gray-600">For coaches & creators</p>
               </div>
               <div className="mt-8">
-                <ul className="space-y-3 text-sm">
+                <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
                     <span className="text-gray-700">Everything in Pro</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Affiliate links & buy buttons</span>
+                    <span className="text-gray-700">Affiliate links & buy buttons on supplements and gear</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
@@ -600,29 +619,32 @@ export default function Home() {
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Custom branding</span>
+                    <span className="text-gray-700">Custom branding (logo & colors)</span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">Audience insights (followers, clicks)</span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-700">Creator support</span>
                   </li>
                 </ul>
               </div>
               <div className="mt-8">
-                <Link 
-                  href="/pricing"
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+                <button
+                  onClick={() => alert('Stripe integration coming soon! For now, this is a demo.')}
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                 >
                   Upgrade to Creator
-                </Link>
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Turn your stack into a shareable business hub
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="text-center mt-12">
-            <Link 
-              href="/pricing" 
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              View detailed pricing →
-            </Link>
-          </div>
         </div>
       </section>
 
