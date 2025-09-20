@@ -46,7 +46,7 @@ export default function Home() {
             <div className="lg:col-span-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Build your stack. Share what works.
-              </h1>
+          </h1>
               <p className="mt-6 text-xl text-gray-600 leading-relaxed">
                 Less chaos, more consistency. One place for your supplements, protocols, movement, mindfulness, gear and labs—with a clear Today list so it actually gets done. When you're ready, publish a beautiful profile people can follow.
               </p>
@@ -66,11 +66,47 @@ export default function Home() {
               </div>
             </div>
             <div className="mt-12 lg:mt-0 lg:col-span-6">
-              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
-                <p className="text-sm text-gray-500 mb-4">Screenshot placeholder</p>
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="font-medium text-gray-900">Benjamin's Health Stack</p>
-                  <p className="text-sm text-gray-600 mt-1">Energy 8/10 • Mediterranean • 19 supplements</p>
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="ml-4 text-sm text-gray-600">BioStackr Dashboard</div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900">Today's Progress</span>
+                      <span className="text-sm text-gray-600">68% Complete</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-gray-900 h-2 rounded-full" style={{width: '68%'}}></div>
+                    </div>
+                    <div className="space-y-3 pt-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                        <span className="text-sm text-gray-900">Morning supplements (3/3)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                        <span className="text-sm text-gray-900">Gym session - Pull day</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                        <span className="text-sm text-gray-900">Evening supplements (0/3)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                        <span className="text-sm text-gray-900">Ice bath protocol</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -80,52 +116,131 @@ export default function Home() {
 
       {/* A day with BioStackr */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">A day with BioStackr</h2>
           
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <div className="flex items-start gap-4">
-                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">7:00am</span>
-                <div>
-                  <p className="text-lg text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
+          <div className="lg:grid lg:grid-cols-2 lg:gap-12">
+            {/* Timeline */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">7:00am</span>
+                  <div>
+                    <p className="text-lg text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">9:00am</span>
+                  <div>
+                    <p className="text-lg text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">Mid-morning</span>
+                  <div>
+                    <p className="text-lg text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">2:00pm</span>
+                  <div>
+                    <p className="text-lg text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">All day</span>
+                  <div>
+                    <p className="text-lg text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <div className="flex items-start gap-4">
-                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">9:00am</span>
-                <div>
-                  <p className="text-lg text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
+            {/* Today's Digest */}
+            <div className="mt-12 lg:mt-0">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Today's digest</h3>
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">2:00 pm</span>
+                    <span className="font-medium">Gym (Pull day)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">5:00 pm</span>
+                    <span className="font-medium">Mindfulness (Breathwork, 10 min)</span>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <p className="font-medium text-gray-900 mb-2">Today's Supplements:</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Morning (8:00 AM)</span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                      </div>
+                      <div className="pl-4 space-y-1 text-gray-600">
+                        <p>• EPA 1000 mg</p>
+                        <p>• Magnesium Glycinate 360 mg</p>
+                        <p>• Folate 800 mcg</p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-gray-600">Midday (12:00 PM)</span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">2 items</span>
+                      </div>
+                      <div className="pl-4 space-y-1 text-gray-600">
+                        <p>• Vitamin D3 5000 IU</p>
+                        <p>• B-Complex</p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-gray-600">Evening (8:00 PM)</span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
+                      </div>
+                      <div className="pl-4 space-y-1 text-gray-600">
+                        <p>• Zinc 15 mg</p>
+                        <p>• Melatonin 3 mg</p>
+                        <p>• Probiotics</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <p className="font-medium text-gray-900 mb-2">Today's Protocols:</p>
+                    <div className="space-y-2 text-gray-600">
+                      <p>• Ice bath tonight (3 min, 8:30 PM)</p>
+                      <p>• Red light therapy (20 min, 9:00 PM)</p>
+                      <p>• Sleep optimization routine (9:30 PM)</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <p className="font-medium text-gray-900 mb-2">Movement & Mindfulness:</p>
+                    <div className="space-y-2 text-gray-600">
+                      <p>• Morning walk (7:30 AM) - 6,000 steps</p>
+                      <p>• Gym session (2:00 PM) - Pull day</p>
+                      <p>• Breathwork (5:00 PM) - 10 min Wim Hof</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-3 text-center">
+                    <span className="text-gray-900 font-medium">Tap to check off as you go → ✅</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <div className="flex items-start gap-4">
-                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">Mid-morning</span>
-                <div>
-                  <p className="text-lg text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <div className="flex items-start gap-4">
-                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">2:00pm</span>
-                <div>
-                  <p className="text-lg text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <div className="flex items-start gap-4">
-                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">All day</span>
-                <div>
-                  <p className="text-lg text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
-                </div>
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  (Delivered via mobile PWA push or email; adjustable in Settings.)
+                </p>
               </div>
             </div>
           </div>
@@ -144,7 +259,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Supplements</h3>
-                <p className="text-gray-600">Doses & timing (morning / midday / evening) with daily check-offs.</p>
+                <p className="text-lg text-gray-600">Doses & timing (morning / midday / evening) with daily check-offs.</p>
               </div>
             </div>
 
@@ -154,7 +269,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Protocols</h3>
-                <p className="text-gray-600">Sauna, cold, red light, sleep routine—schedule and track.</p>
+                <p className="text-lg text-gray-600">Sauna, cold, red light, sleep routine—schedule and track.</p>
               </div>
             </div>
 
@@ -164,7 +279,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Movement</h3>
-                <p className="text-gray-600">Gym, run, yoga—simple plans and adherence.</p>
+                <p className="text-lg text-gray-600">Gym, run, yoga—simple plans and adherence.</p>
               </div>
             </div>
 
@@ -174,7 +289,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Mindfulness</h3>
-                <p className="text-gray-600">Meditation, breathwork, journaling—keep the habit consistent.</p>
+                <p className="text-lg text-gray-600">Meditation, breathwork, journaling—keep the habit consistent.</p>
               </div>
             </div>
 
@@ -184,7 +299,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Library</h3>
-                <p className="text-gray-600">Labs, doctor notes, training plans & PDFs. Pin a Current Plan to feature on your public page.</p>
+                <p className="text-lg text-gray-600">Labs, doctor notes, training plans & PDFs. Pin a Current Plan to feature on your public page.</p>
               </div>
             </div>
 
@@ -194,7 +309,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Gear</h3>
-                <p className="text-gray-600">Wearables & recovery tools; keep notes and links.</p>
+                <p className="text-lg text-gray-600">Wearables & recovery tools; keep notes and links.</p>
               </div>
             </div>
           </div>
@@ -225,137 +340,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* "Today" Digest Example */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">"Today" digest</h2>
-            <p className="text-xl text-gray-600">Concrete example</p>
-          </div>
-          
-          <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Good morning!</h3>
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">2:00 pm</span>
-                  <span className="font-medium">Gym (Pull day)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">5:00 pm</span>
-                  <span className="font-medium">Mindfulness (Breathwork, 10 min)</span>
-                </div>
-                
-                <div className="border-t pt-3">
-                  <p className="font-medium text-gray-900 mb-2">Today's Supplements:</p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Morning (8:00 AM)</span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
-                    </div>
-                    <div className="pl-4 space-y-1 text-gray-600">
-                      <p>• EPA 1000 mg</p>
-                      <p>• Magnesium Glycinate 360 mg</p>
-                      <p>• Folate 800 mcg</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-gray-600">Midday (12:00 PM)</span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">2 items</span>
-                    </div>
-                    <div className="pl-4 space-y-1 text-gray-600">
-                      <p>• Vitamin D3 5000 IU</p>
-                      <p>• B-Complex</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-gray-600">Evening (8:00 PM)</span>
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">3 items</span>
-                    </div>
-                    <div className="pl-4 space-y-1 text-gray-600">
-                      <p>• Zinc 15 mg</p>
-                      <p>• Melatonin 3 mg</p>
-                      <p>• Probiotics</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-3">
-                  <p className="font-medium text-gray-900 mb-2">Today's Protocols:</p>
-                  <div className="space-y-2 text-gray-600">
-                    <p>• Ice bath tonight (3 min, 8:30 PM)</p>
-                    <p>• Red light therapy (20 min, 9:00 PM)</p>
-                    <p>• Sleep optimization routine (9:30 PM)</p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-3">
-                  <p className="font-medium text-gray-900 mb-2">Movement & Mindfulness:</p>
-                  <div className="space-y-2 text-gray-600">
-                    <p>• Morning walk (7:30 AM) - 6,000 steps</p>
-                    <p>• Gym session (2:00 PM) - Pull day</p>
-                    <p>• Breathwork (5:00 PM) - 10 min Wim Hof</p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-3 text-center">
-                  <span className="text-gray-900 font-medium">Tap to check off as you go → ✅</span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                (Delivered via mobile PWA push or email; adjustable in Settings.)
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Feature Grid */}
-      <section id="features" className="py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">👥</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Public Profiles</h3>
-              <p className="text-gray-600 text-sm">
-                A clean URL that showcases your stack, plan, and gear. People can follow or copy.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📋</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Stack Management</h3>
-              <p className="text-gray-600 text-sm">
-                Doses, schedules, brands, and adherence—Morning/Midday/Evening with one-tap checkoffs.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📚</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Library & Files</h3>
-              <p className="text-gray-600 text-sm">
-                Upload labs, doctor notes, training plans, PDFs. Pin a Current Plan to your public page.
-              </p>
-            </div>
-
-        <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎧</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Gear Module</h3>
-              <p className="text-gray-600 text-sm">
-                Wearables and recovery tools, notes, and (on Creator) optional buy links with disclosure.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* How It Works */}
       <section className="py-16 bg-gray-50">
@@ -463,8 +448,9 @@ export default function Home() {
       <section id="pricing" className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
-            <p className="text-xl text-gray-600">Start free, upgrade when you're ready to unlock your full potential.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose your plan. Build your stack.</h2>
+            <p className="text-xl text-gray-600">Start free. Go unlimited when you're ready.</p>
+            <p className="text-sm text-gray-500 mt-2">14-day Pro trial included • Cancel anytime • Your data stays yours</p>
         </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -512,13 +498,13 @@ export default function Home() {
             <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Most Popular
+                  BioStacker Recommends
                 </span>
               </div>
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
                   <span>Pro</span>
-                  <span className="text-yellow-500">⚡</span>
+                  <span className="text-gray-600">⚡</span>
                 </h3>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-gray-900">$9.99</span>
@@ -561,7 +547,7 @@ export default function Home() {
           <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
                   <span>Creator</span>
-                  <span className="text-purple-500">🎨</span>
+                  <span className="text-gray-600">🎨</span>
                 </h3>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-gray-900">$29.95</span>
