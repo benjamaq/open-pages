@@ -139,15 +139,6 @@ export default function ShopMyGearSection({ profileId, userTier, isOwner, initia
 
       {!collapsed && (
         <div className="space-y-4">
-          {/* Add Item Button */}
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-gray-400 transition-colors flex items-center justify-center gap-2 text-gray-600"
-          >
-            <Plus className="w-5 h-5" />
-            Add gear item to shop
-          </button>
-
           {/* Items List */}
           <div className="space-y-3">
             {items.map((item) => (

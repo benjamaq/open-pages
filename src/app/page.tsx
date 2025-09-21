@@ -11,16 +11,15 @@ export default function Home() {
                 <img 
                   src="/BIOSTACKR LOGO 2.png" 
                 alt="BioStackr" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
                 />
               </Link>
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Product</Link>
               <Link href="/examples" className="text-gray-600 hover:text-gray-900 transition-colors">Examples</Link>
               <Link href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
-              <Link href="#creators" className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-medium hover:from-purple-600 hover:to-purple-700 transition-colors">
-                <span>🎨</span>
-                <span>Creator?</span>
+              <Link href="/pricing/creator" className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium hover:from-purple-600 hover:to-purple-700 transition-colors">
+                <span>⭐</span>
+                <span>Creators</span>
               </Link>
               <Link href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
             </div>
@@ -78,36 +77,129 @@ export default function Home() {
                     <div className="ml-4 text-sm text-gray-600">BioStackr Dashboard</div>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-900">Today's Progress</span>
-                      <span className="text-sm text-gray-600">68% Complete</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gray-900 h-2 rounded-full" style={{width: '68%'}}></div>
-                    </div>
-                    <div className="space-y-3 pt-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
+                <div className="p-6 space-y-6">
+                  {/* Dashboard Navigation */}
+                  <div className="flex space-x-4 border-b border-gray-100 pb-4 overflow-x-auto">
+                    <span className="text-sm font-medium text-gray-900 border-b-2 border-gray-900 pb-2 whitespace-nowrap">Supplements</span>
+                    <span className="text-sm text-gray-500 hover:text-gray-700 pb-2 whitespace-nowrap">Protocols</span>
+                    <span className="text-sm text-gray-500 hover:text-gray-700 pb-2 whitespace-nowrap">Movement</span>
+                    <span className="text-sm text-gray-500 hover:text-gray-700 pb-2 whitespace-nowrap">Mindfulness</span>
+                    <span className="text-sm text-gray-500 hover:text-gray-700 pb-2 whitespace-nowrap">Library</span>
+                    <span className="text-sm text-gray-500 hover:text-gray-700 pb-2 whitespace-nowrap">Gear</span>
+                  </div>
+                  
+                  {/* Supplements Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Morning Stack</h4>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">7:00 AM</span>
+                      </div>
+                      <div className="space-y-2 text-xs text-gray-600">
+                        <div className="flex justify-between">
+                          <span>Vitamin D3</span>
+                          <span>5000 IU</span>
                         </div>
-                        <span className="text-sm text-gray-900">Morning supplements (3/3)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
+                        <div className="flex justify-between">
+                          <span>Omega-3</span>
+                          <span>1000mg</span>
                         </div>
-                        <span className="text-sm text-gray-900">Gym session - Pull day</span>
+                        <div className="flex justify-between">
+                          <span>Magnesium</span>
+                          <span>400mg</span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-                        <span className="text-sm text-gray-900">Evening supplements (0/3)</span>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Evening Stack</h4>
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">9:00 PM</span>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-                        <span className="text-sm text-gray-900">Ice bath protocol</span>
+                      <div className="space-y-2 text-xs text-gray-600">
+                        <div className="flex justify-between">
+                          <span>Zinc</span>
+                          <span>15mg</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Melatonin</span>
+                          <span>3mg</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Probiotics</span>
+                          <span>50B CFU</span>
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Recovery Protocol</h4>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Daily</span>
+                      </div>
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <p>• Ice bath (3 min)</p>
+                        <p>• Red light therapy</p>
+                        <p>• Sleep optimization</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Movement & Mind</h4>
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Active</span>
+                      </div>
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <p>• Gym (Push day)</p>
+                        <p>• Morning walk</p>
+                        <p>• Breathwork (10 min)</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Library Files</h4>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">4 docs</span>
+                      </div>
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <p>📄 Lab Results Q3 2024</p>
+                        <p>📋 Training Plan - Hypertrophy</p>
+                        <p>🩺 Doctor's Report</p>
+                        <p>📊 Sleep Study Results</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Gear & Tools</h4>
+                        <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">8 items</span>
+                      </div>
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <p>⌚ Oura Ring Gen 3</p>
+                        <p>🥶 Ice Bath Tub</p>
+                        <p>💡 Red Light Panel</p>
+                        <p>🏋️ Resistance Bands</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-gray-900">12</div>
+                      <div className="text-xs text-gray-500">Supplements</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-gray-900">4</div>
+                      <div className="text-xs text-gray-500">Protocols</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-gray-900">8</div>
+                      <div className="text-xs text-gray-500">Gear Items</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-gray-900">15</div>
+                      <div className="text-xs text-gray-500">Library Files</div>
                     </div>
                   </div>
                 </div>
@@ -129,7 +221,7 @@ export default function Home() {
                 <div className="flex items-start gap-4">
                   <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">7:00am</span>
                   <div>
-                    <p className="text-lg text-gray-900">Your daily reminder email lands: today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
+                    <p className="text-lg text-gray-900"><strong>Your daily reminder email arrives:</strong> today's supplements, gym at 2, breathwork at 5, tonight's protocol—simple and clear.</p>
                   </div>
                 </div>
               </div>
@@ -138,7 +230,7 @@ export default function Home() {
                 <div className="flex items-start gap-4">
                   <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">9:00am</span>
                   <div>
-                    <p className="text-lg text-gray-900">Daily Check-in: set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
+                    <p className="text-lg text-gray-900"><strong>Daily Check-in completed:</strong> set your energy & mood, pull in sleep and recovery from wearables (optional), add a note. We generate a clean share card—post directly to your socials, or save it for later. Your profile updates automatically.</p>
                   </div>
                 </div>
               </div>
@@ -147,7 +239,7 @@ export default function Home() {
                 <div className="flex items-start gap-4">
                   <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">Mid-morning</span>
                   <div>
-                    <p className="text-lg text-gray-900">New supplement arrived? Add it to your stack in seconds—name, dose, timing, brand.</p>
+                    <p className="text-lg text-gray-900"><strong>New supplement arrived:</strong> add it to your stack in seconds—name, dose, timing, brand.</p>
                   </div>
                 </div>
               </div>
@@ -156,7 +248,7 @@ export default function Home() {
                 <div className="flex items-start gap-4">
                   <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">2:00pm</span>
                   <div>
-                    <p className="text-lg text-gray-900">Gym reminder. Meeting a friend? Share your stack link so they can see what you're doing.</p>
+                    <p className="text-lg text-gray-900"><strong>Gym reminder pops up:</strong> meeting a friend? Share your stack link so they can see what you're doing.</p>
                   </div>
                 </div>
               </div>
@@ -165,7 +257,7 @@ export default function Home() {
                 <div className="flex items-start gap-4">
                   <span className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full">All day</span>
                   <div>
-                    <p className="text-lg text-gray-900">Check things off. Watch progress climb (12% → 42% → 100%). Feels good.</p>
+                    <p className="text-lg text-gray-900">Check things off throughout the day and watch progress climb (12% → 42% → 100%).</p>
                   </div>
                 </div>
               </div>
@@ -293,7 +385,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Protocols</h3>
-              <p className="text-gray-600 leading-relaxed">Sauna, cold therapy, red light, sleep routines—schedule, track, and optimize your recovery.</p>
+              <p className="text-gray-600 leading-relaxed">Sauna, red light, sleep routines, peptides, breathwork—whatever your protocol, schedule, track, and optimize your recovery.</p>
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
@@ -303,7 +395,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Movement</h3>
-              <p className="text-gray-600 leading-relaxed">Gym sessions, runs, yoga—create simple plans and maintain consistent adherence.</p>
+              <p className="text-gray-600 leading-relaxed">Running, surfing, yoga, strength training—create simple plans and maintain consistent adherence.</p>
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
@@ -323,13 +415,15 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Library</h3>
-              <p className="text-gray-600 leading-relaxed">Lab results, doctor notes, training plans & PDFs. Pin your Current Plan to feature on your public page.</p>
+              <p className="text-gray-600 leading-relaxed">Store your labs, training plans, doctor's notes, and important PDFs. Pin your Current Plan to feature on your public page.</p>
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl flex items-center justify-center mb-6">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  <rect x="6" y="6" width="12" height="12" rx="4" strokeWidth="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 2v4m6-4v4M9 18v4m6-4v4" />
+                  <circle cx="12" cy="12" r="2" strokeWidth="1.5" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Gear</h3>
@@ -370,18 +464,6 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Granular Privacy</h3>
                   <p className="text-gray-600 leading-relaxed">Every module is toggleable—share everything, nothing, or just selected pieces. Complete control over your data.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Build Community</h3>
-                  <p className="text-gray-600 leading-relaxed">Your public profile features a "Follow this stack" button, making it easy for others to learn from your approach.</p>
                 </div>
               </div>
             </div>
@@ -452,7 +534,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Searchable</h3>
-              <p className="text-gray-600 leading-relaxed">Instantly find any supplement, protocol, or document with powerful search across your entire health library.</p>
+              <p className="text-gray-600 leading-relaxed">Quickly search within each module to find specific supplements, protocols, or documents you've added.</p>
             </div>
 
             <div className="text-center">
@@ -461,8 +543,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Always Updated</h3>
-              <p className="text-gray-600 leading-relaxed">Real-time sync across all devices—your stack evolves with you, accessible anywhere, anytime.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Always Accessible</h3>
+              <p className="text-gray-600 leading-relaxed">Web-based platform accessible from any device—your health stack is always at your fingertips when you need it.</p>
             </div>
           </div>
         </div>
@@ -479,35 +561,23 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center relative">
+            <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl mx-auto mb-6 shadow-lg">
                 1
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Build Your Stack</h3>
-                <p className="text-gray-600 leading-relaxed">Add supplements, protocols, movement routines, mindfulness practices, and gear. Organize everything with precise timing and dosages.</p>
-              </div>
-              {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-8 -right-4 text-gray-300">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <p className="text-gray-600 leading-relaxed">Add supplements, protocols, movement routines, mindfulness practices, gear, and library files. Organize everything with precise timing and dosages.</p>
               </div>
             </div>
 
-            <div className="text-center relative">
+            <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl mx-auto mb-6 shadow-lg">
                 2
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Track Daily</h3>
                 <p className="text-gray-600 leading-relaxed">Quick daily check-ins for mood and energy. Check off your routine items and watch your consistency scores climb.</p>
-              </div>
-              {/* Arrow for desktop */}
-              <div className="hidden md:block absolute top-8 -right-4 text-gray-300">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
               </div>
             </div>
 
@@ -547,7 +617,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-              <span className="text-2xl">🎨</span>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               <span className="text-white/90 font-medium">Creator Features</span>
             </div>
             <h2 className="text-4xl font-bold text-white mb-4">For coaches & creators</h2>
@@ -587,7 +659,7 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-white/90 leading-relaxed">Comprehensive audience insights and engagement analytics</span>
+                  <span className="text-white/90 leading-relaxed">Follower tracking and engagement metrics</span>
                 </div>
               </div>
             </div>
@@ -622,7 +694,7 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-white/90 leading-relaxed">Dedicated creator support and profile optimization</span>
+                  <span className="text-white/90 leading-relaxed">Priority support and creator resources</span>
                 </div>
               </div>
             </div>
@@ -630,10 +702,10 @@ export default function Home() {
 
           <div className="text-center">
             <Link 
-              href="#pricing" 
+              href="/pricing/creator" 
               className="inline-flex items-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
             >
-              <span>Explore Creator Features</span>
+              <span>Start as Creator</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -749,7 +821,7 @@ export default function Home() {
                   href="/upgrade/pro"
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
                 >
-                  Upgrade to Pro
+                  Get Started with Pro
                 </Link>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   14-day trial included • Save with annual
@@ -800,7 +872,7 @@ export default function Home() {
                   href="/upgrade/creator"
                   className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
                 >
-                  Upgrade to Creator
+                  Get Started with Creator
                 </Link>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Turn your stack into a shareable business hub
@@ -898,7 +970,9 @@ export default function Home() {
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+          <div className="absolute top-0 left-0 w-full h-full opacity-20" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
         </div>
         
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -952,12 +1026,9 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 href="/auth/signup" 
-                className="inline-flex items-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
-                <span>Start Your Free Trial</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                Create your stack
               </Link>
               <Link 
                 href="/examples" 

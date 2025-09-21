@@ -282,17 +282,15 @@ export default function LibrarySection({
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="w-6 h-6 text-gray-400" />
+                <div className="flex flex-col items-center justify-center h-24">
+                  <button
+                    onClick={() => setShowUploadForm(true)}
+                    className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                  >
+                    Add Library Item
+                  </button>
+                  <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Lab results, training plans, doctor's notes—keep all your health records organized.</p>
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 mb-2">Build your health library, keep all your health records in one place, easily searchable and shareable too.</h4>
-                <button
-                  onClick={() => setShowUploadForm(true)}
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload First Document</span>
-                </button>
               </div>
             )}
           </div>

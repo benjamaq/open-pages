@@ -97,7 +97,7 @@ export default function PricingPage() {
                 href="/auth/signup"
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Get started
+                Get Started
               </Link>
             </div>
           </div>
@@ -134,14 +134,14 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <button
-                onClick={() => alert('Stripe integration coming soon! For now, this is a demo.')}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+              <Link
+                href="/auth/signup"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Upgrade to Pro
-              </button>
+                Get Started
+              </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
-                14-day trial included • Save with annual
+                14-day Pro trial included • Save with annual
               </p>
             </div>
           </div>
@@ -173,10 +173,10 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link 
-                href="/pricing"
+                href="/pricing/creator"
                 className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Upgrade to Creator
+                Get Started with Creator
               </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
                 Turn your stack into a shareable business hub

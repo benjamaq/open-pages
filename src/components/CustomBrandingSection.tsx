@@ -224,14 +224,6 @@ export default function CustomBrandingSection({
             </div>
           )}
 
-          {/* Creator Tier Info */}
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-            <h4 className="text-sm font-medium text-purple-900 mb-2">Creator Tier Feature</h4>
-            <p className="text-xs text-purple-700">
-              Custom branding is available exclusively to Creator tier subscribers. 
-              This allows you to maintain your own brand identity while leveraging BioStackr's platform.
-            </p>
-          </div>
         </div>
       )}
     </div>

@@ -33,18 +33,19 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
         <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>My Gear</h2>
         <div className="flex items-center space-x-2">
           <button
+            onClick={onManage}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            aria-label="Manage gear"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Manage</span>
+          </button>
+          <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
-          <button
-            onClick={onManage}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Manage gear"
-          >
-            <Plus className="w-4 h-4" style={{ color: '#5C6370' }} />
           </button>
         </div>
       </div>
@@ -91,20 +92,15 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl">🎧</span>
+              <div className="flex flex-col items-center justify-center h-24">
+                <button
+                  onClick={onManage}
+                  className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                >
+                  Add Gear
+                </button>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Wearables, recovery tools, kitchen equipment—track what supports your health journey.</p>
               </div>
-              <h4 className="text-base font-semibold text-gray-900 mb-2">Add your gear here</h4>
-              <p className="text-sm text-gray-500 mb-4">Wearables, recovery tools, kitchen equipment, all the cool stuff that supports our journey —keep notes, links models and share it with your people</p>
-              <button
-                onClick={onManage}
-                className="inline-flex items-center text-xs text-gray-600 hover:text-gray-900 font-medium"
-              >
-                Build gear module
-                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
             </div>
           )}
         </div>

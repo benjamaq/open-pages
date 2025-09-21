@@ -14,6 +14,7 @@ import {
   type UserSubscription,
   type UsageInfo
 } from '../../../lib/actions/subscriptions'
+import BackgroundColorPicker from '../../../components/BackgroundColorPicker'
 
 interface SettingsClientProps {
   profile: any
@@ -464,77 +465,6 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                   {isUploading ? 'Uploading...' : 'Change Photo'}
                 </label>
                 
-                {/* Direct file input for testing */}
-                <div className="mt-3">
-                  <label className="block text-xs text-gray-500 mb-1">Direct Upload (if buttons fail):</label>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleProfilePhotoUpload}
-                    disabled={isUploading}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-                  />
-                </div>
-                
-                {/* Synchronous test upload button */}
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log('Test Upload button clicked')
-                    setSaveMessage('')
-                    
-                    // Create input synchronously
-                    const input = document.createElement('input')
-                    input.type = 'file'
-                    input.accept = 'image/jpeg,image/png,image/webp'
-                    input.style.position = 'absolute'
-                    input.style.left = '-9999px'
-                    document.body.appendChild(input)
-                    
-                    // Set up change handler
-                    input.onchange = (e) => {
-                      console.log('Test Upload file selected')
-                      const target = e.target as HTMLInputElement
-                      const file = target.files?.[0]
-                      
-                      if (file) {
-                        console.log('File:', file.name, file.size, file.type)
-                        const mockEvent = {
-                          target: { files: [file] }
-                        } as React.ChangeEvent<HTMLInputElement>
-                        handleProfilePhotoUpload(mockEvent)
-                      }
-                      
-                      // Clean up
-                      document.body.removeChild(input)
-                    }
-                    
-                    // Click immediately (synchronous)
-                    input.click()
-                  }}
-                  className="ml-3 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                  disabled={isUploading}
-                >
-                  Test Upload
-                </button>
-                
-                {/* Keep one test button for mock file testing */}
-                <button 
-                  type="button"
-                  onClick={async () => {
-                    console.log('Mock file test clicked')
-                    const mockFile = new File(['test image data'], 'test.jpg', { type: 'image/jpeg' })
-                    const mockEvent = {
-                      target: { files: [mockFile] }
-                    } as React.ChangeEvent<HTMLInputElement>
-                    
-                    await handleProfilePhotoUpload(mockEvent)
-                  }}
-                  className="ml-3 px-4 py-2 border border-blue-300 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
-                  disabled={isUploading}
-                >
-                  Test Mock File
-                </button>
                 
                 <p className="text-xs text-gray-500 mt-1">
                   JPG, PNG or WEBP. Max 5MB.
@@ -650,6 +580,67 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
         </div>
       </div>
 
+      {/* Custom Branding Section (Creator Only) */}
+      {profile.tier === 'creator' && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm">🎨</span>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Custom Branding</h2>
+          </div>
+          <div className="space-y-6">
+            {/* Background Color */}
+            <div>
+              <BackgroundColorPicker 
+                userTier={profile.tier || 'creator'}
+                initialColor={profile.custom_background_color || '#FFFFFF'}
+                isOwner={true}
+              />
+            </div>
+            
+            {/* Custom Logo */}
+            <div>
+              <h3 className="font-medium text-gray-900 mb-4">Custom Logo</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload your own logo to replace the BioStackr branding on your public profile.
+              </p>
+              
+              {profile.custom_logo_url && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={profile.custom_logo_url}
+                      alt="Custom logo"
+                      className="h-10 w-auto"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Current Logo</p>
+                      <p className="text-xs text-gray-500">This appears on your public profile</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Upload className="w-5 h-5 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
+                <p className="text-xs text-gray-500 mb-4">PNG, JPG, or SVG up to 5MB</p>
+                <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                  Choose File
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                💡 <strong>Note:</strong> Custom branding settings can also be found at the bottom of your dashboard.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Account Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
@@ -695,14 +686,24 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       {/* Subscription Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
-          {subscription?.plan_type === 'pro' ? (
+          {subscription?.plan_type === 'creator' ? (
+            <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm">⭐</span>
+            </div>
+          ) : subscription?.plan_type === 'pro' ? (
             <Crown className="w-6 h-6 text-yellow-500" />
           ) : (
             <Zap className="w-6 h-6 text-green-500" />
           )}
           <h2 className="text-xl font-semibold text-gray-900">
-            {subscription?.plan_type === 'pro' ? 'Biostackr Pro' : 'Subscription'}
+            {subscription?.plan_type === 'creator' ? 'Biostackr Creator' : 
+             subscription?.plan_type === 'pro' ? 'Biostackr Pro' : 'Subscription'}
           </h2>
+          {subscription?.plan_type === 'creator' && (
+            <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+              ⭐ CREATOR
+            </span>
+          )}
           {subscription?.plan_type === 'pro' && (
             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
               PRO
@@ -742,6 +743,37 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                   Upgrade to Pro - $9.99/month
                 </a>
                 <span className="text-xs text-gray-500">Cancel anytime</span>
+              </div>
+            </div>
+          </div>
+        ) : subscription?.plan_type === 'creator' ? (
+          <div className="space-y-4">
+            <div className="bg-purple-50 rounded-lg p-4">
+              <h3 className="font-medium text-purple-900 mb-2">Creator Features Active</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm text-purple-800">
+                <div>⭐ Everything in Pro</div>
+                <div>⭐ Custom branding</div>
+                <div>⭐ Background colors</div>
+                <div>⭐ Affiliate links</div>
+                <div>⭐ Creator dashboard</div>
+                <div>⭐ Public profile</div>
+                <div>⭐ Follower management</div>
+                <div>⭐ Priority support</div>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-medium text-gray-900">Biostackr Creator</h3>
+                  <p className="text-sm text-gray-600">$19.99/month</p>
+                </div>
+                <a
+                  href="/dash/billing"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Manage Billing
+                </a>
               </div>
             </div>
           </div>

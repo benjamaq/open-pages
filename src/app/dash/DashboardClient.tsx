@@ -11,7 +11,6 @@ import GearCard from '../../components/GearCard'
 import AddGearForm from '../../components/AddGearForm'
 import LibrarySection from '../../components/LibrarySection'
 import ShopMyGearSection from '../../components/ShopMyGearSection'
-import CustomBrandingSection from '../../components/CustomBrandingSection'
 import TierManagement from '../../components/TierManagement'
 import TrialNotification from '../../components/TrialNotification'
 import TrialStatusBadge from '../../components/TrialStatusBadge'
@@ -1122,8 +1121,15 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add your supplements in here</p>
-              <p className="text-sm" style={{ color: '#5C6370' }}>We'll keep them in order and remind you when to take them.</p>
+              <div className="flex flex-col items-center justify-center h-24">
+                <button
+                  onClick={onManage}
+                  className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                >
+                  Add Supplement
+                </button>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Vitamins, minerals, nootropics—organize by timing and dosage.</p>
+              </div>
             </div>
           )}
         </div>
@@ -1152,7 +1158,10 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Protocols</h2>
+        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          Today's<br />
+          Protocols
+        </h2>
         <div className="flex items-center space-x-2">
           {items.length > 0 && (
             <button
@@ -1182,19 +1191,19 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
             </button>
           )}
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
-          <button
             onClick={onManage}
             className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage protocols"
           >
             <Plus className="w-3 h-3" />
             <span>Manage</span>
+          </button>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
         </div>
       </div>
@@ -1236,9 +1245,14 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="flex flex-col items-center justify-center h-20">
-                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add all your protocols here</p>
-                <p className="text-sm" style={{ color: '#5C6370' }}>Sauna, cold, red light, sleep routine—anything you do regularly.</p>
+              <div className="flex flex-col items-center justify-center h-24">
+                <button
+                  onClick={onManage}
+                  className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                >
+                  Add Protocol
+                </button>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Sauna, cold, red light, sleep routine—anything you do regularly.</p>
               </div>
             </div>
           )}
@@ -1263,15 +1277,11 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Movement</h2>
+        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          Today's<br />
+          Movement
+        </h2>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
           <button
             onClick={onManage}
             className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
@@ -1279,6 +1289,13 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
           >
             <Plus className="w-3 h-3" />
             <span>Manage</span>
+          </button>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
         </div>
       </div>
@@ -1302,9 +1319,14 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="flex flex-col items-center justify-center h-20">
-                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add your movement here</p>
-                <p className="text-sm" style={{ color: '#5C6370' }}>Gym, run, walk, yoga, surfing, climbing volcanoes—whatever keeps you moving.</p>
+              <div className="flex flex-col items-center justify-center h-24">
+                <button
+                  onClick={onManage}
+                  className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                >
+                  Add Movement
+                </button>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Gym, run, walk, yoga, surfing—whatever keeps you moving.</p>
               </div>
             </div>
           )}
@@ -1329,15 +1351,11 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Mindfulness</h2>
+        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          Today's<br />
+          Mindfulness
+        </h2>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
           <button
             onClick={onManage}
             className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
@@ -1345,6 +1363,13 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
           >
             <Plus className="w-3 h-3" />
             <span>Manage</span>
+          </button>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
         </div>
       </div>
@@ -1368,9 +1393,14 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="flex flex-col items-center justify-center h-20">
-                <p className="text-base font-semibold mb-2" style={{ color: '#0F1115' }}>Add a mindfulness practice</p>
-                <p className="text-sm" style={{ color: '#5C6370' }}>Meditation, breathwork, journaling—keep the habit simple and we'll help you with consistency.</p>
+              <div className="flex flex-col items-center justify-center h-24">
+                <button
+                  onClick={onManage}
+                  className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
+                >
+                  Add Mindfulness
+                </button>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathwork, journaling—keep habits simple for consistency.</p>
               </div>
             </div>
           )}
@@ -1883,8 +1913,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <img
                   src="/BIOSTACKR LOGO 2.png"
                   alt="Biostackr"
-                  className="h-16 w-auto"
-                  style={{ height: '80px', width: 'auto' }}
+                  className="h-12 w-auto"
                 />
                 <span className="sr-only">Biostackr dashboard</span>
                 </Link>
@@ -1961,14 +1990,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     </span>
                   </div>
                 )}
-                {/* Edit Profile Icon - Opens unified editor */}
-                <button
-                  onClick={() => setShowHeaderEditor(true)}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all hover:scale-105"
-                  title="Edit profile"
-                >
-                  <Edit2 className="w-4 h-4 text-gray-600" />
-                </button>
               </div>
               </div>
 
@@ -1994,7 +2015,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 </button>
 
                 {/* Daily Check-in Results */}
-                {dailyCheckIn ? (
+                {dailyCheckIn && (
                   <button
                     onClick={() => setShowShareTodayModal(true)}
                     className="text-left text-base text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
@@ -2003,13 +2024,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     {dailyCheckIn.mood && (
                       <span className="text-gray-500"> • {dailyCheckIn.mood}</span>
                     )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowShareTodayModal(true)}
-                    className="text-left text-base text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
-                  >
-                    Complete your daily check-in
                   </button>
                 )}
               </div>
@@ -2123,15 +2137,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   initialItems={[]}
                 />
 
-                {/* Custom Branding (Creator Only) */}
-                <CustomBrandingSection
-                  userTier={profile.tier || 'free'}
-                  isOwner={true}
-                  initialBranding={{
-                    custom_logo_url: profile.custom_logo_url,
-                    custom_branding_enabled: profile.custom_branding_enabled || false
-                  }}
-                />
 
                 {/* Tier Management */}
                 <TierManagement
@@ -2143,6 +2148,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
                 </div>
               </div>
+
+        {/* Powered by BioStackr */}
+        <div className="mt-16 text-center py-8 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <span>Powered by</span>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <img 
+                src="/BIOSTACKR LOGO 2.png" 
+                alt="BioStackr" 
+                className="h-6 w-auto"
+              />
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Building your health optimization platform
+          </p>
+        </div>
 
         {/* Header Customizer */}
         <HeaderCustomizer
@@ -2235,7 +2257,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     </div>
                     
                 {/* Slider */}
-                    <div className="px-4">
+                    <div className="px-2">
                       <input
                         type="range"
                         min="1"

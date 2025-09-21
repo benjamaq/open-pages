@@ -1,0 +1,53 @@
+import Stripe from 'stripe'
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not set')
+}
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-08-27.basil',
+  typescript: true,
+})
+
+// Stripe product configuration
+export const STRIPE_CONFIG = {
+  products: {
+    pro: {
+      monthly: {
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
+        amount: 999, // $9.99
+      },
+      yearly: {
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID!,
+        amount: 9990, // $99.90 (save 2 months)
+      },
+    },
+    creator: {
+      monthly: {
+        priceId: process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID!,
+        amount: 2995, // $29.95
+      },
+      yearly: {
+        priceId: process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID!,
+        amount: 19990, // $199.90 (save 2 months)
+      },
+    },
+  },
+  // Promo codes
+  promoCodes: {
+    redditGo: process.env.STRIPE_REDDIT_GO_PROMO_CODE_ID, // 6 months free Pro
+  },
+} as const
+
+export type PlanType = 'pro' | 'creator'
+export type BillingPeriod = 'monthly' | 'yearly'
+
+// Helper function to get price ID
+export function getPriceId(plan: PlanType, period: BillingPeriod): string {
+  return STRIPE_CONFIG.products[plan][period].priceId
+}
+
+// Helper function to get amount
+export function getAmount(plan: PlanType, period: BillingPeriod): number {
+  return STRIPE_CONFIG.products[plan][period].amount
+}
