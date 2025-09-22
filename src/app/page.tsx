@@ -780,8 +780,8 @@ export default function Home() {
             {/* Pro Plan */}
             <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                <span className="bg-gray-900 text-white px-6 py-2 rounded-full text-sm font-medium">
-                  BioStacker Recommends
+                <span className="bg-gray-900 text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                  Recommended
                 </span>
               </div>
               <div className="text-center">

@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createClient } from '../../lib/supabase/client'
 
 const freeFeatures = [
   'Up to 10 supplements',
@@ -30,6 +32,34 @@ const creatorFeatures = [
 ]
 
 export default function PricingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+      setLoading(false)
+    }
+    checkAuth()
+  }, [])
+
+  const getCtaText = (plan: string) => {
+    if (loading) return 'Loading...'
+    if (isLoggedIn) {
+      return plan === 'free' ? 'Continue with Free' : `Upgrade to ${plan}`
+    }
+    return 'Get Started'
+  }
+
+  const getCtaHref = (plan: string) => {
+    if (isLoggedIn) {
+      return plan === 'free' ? '/dash' : `/upgrade/${plan.toLowerCase()}`
+    }
+    return '/auth/signup'
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -94,10 +124,10 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link
-                href="/auth/signup"
+                href={getCtaHref('free')}
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Get Started
+                {getCtaText('free')}
               </Link>
             </div>
           </div>
@@ -105,8 +135,8 @@ export default function PricingPage() {
           {/* Pro Plan */}
           <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
-                BioStacker Recommends
+              <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium whitespace-nowrap">
+                Recommended
               </span>
             </div>
 
@@ -135,10 +165,10 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link
-                href="/auth/signup"
+                href={getCtaHref('pro')}
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Get Started
+                {getCtaText('pro')}
               </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
                 14-day Pro trial included • Save with annual
@@ -173,10 +203,10 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link 
-                href="/pricing/creator"
+                href={getCtaHref('creator')}
                 className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
-                Get Started with Creator
+                {getCtaText('creator')}
               </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
                 Turn your stack into a shareable business hub
