@@ -60,6 +60,7 @@ export default function PricingPage() {
     return '/auth/signup'
   }
 
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}

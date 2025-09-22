@@ -148,7 +148,7 @@ export default function UpgradeProPage() {
               disabled={loading}
               className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg"
             >
-              {loading ? 'Processing...' : promoCode ? 'Start Free Trial' : `Upgrade to Pro - $${billingPeriod === 'monthly' ? '9.99' : '99.90'}`}
+              {loading ? 'Processing...' : promoCode ? 'Start Free Trial' : `Upgrade to Pro - $${billingPeriod === 'monthly' ? '9.99' : '99'}`}
             </button>
 
             <div className="text-center mt-4 space-y-2">
