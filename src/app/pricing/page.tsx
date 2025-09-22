@@ -95,7 +95,7 @@ export default function PricingPage() {
             <div className="mt-8">
               <Link
                 href="/auth/signup"
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
                 Get Started
               </Link>
