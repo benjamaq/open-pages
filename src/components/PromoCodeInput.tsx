@@ -108,9 +108,6 @@ export default function PromoCodeInput({ onPromoApplied, onPromoRemoved }: Promo
         <p className="text-xs text-red-600">{error}</p>
       )}
       
-      <div className="text-xs text-gray-500">
-        <p>Have a promo code? Try "redditgo" for 6 months free Pro!</p>
-      </div>
     </div>
   )
 }

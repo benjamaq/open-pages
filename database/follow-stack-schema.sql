@@ -4,7 +4,11 @@
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS allow_stack_follow BOOLEAN NOT NULL DEFAULT false;
 
--- 2) Followers (signed-in or email-only) with double opt-in
+-- 2) Owners can show follower count on public profile
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS show_public_followers BOOLEAN NOT NULL DEFAULT true;
+
+-- 3) Followers (signed-in or email-only) with double opt-in
 CREATE TABLE IF NOT EXISTS stack_followers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
@@ -16,14 +20,14 @@ CREATE TABLE IF NOT EXISTS stack_followers (
   UNIQUE (owner_user_id, COALESCE(follower_user_id::text, follower_email))
 );
 
--- 3) Per-follower email cadence
+-- 4) Per-follower email cadence
 CREATE TABLE IF NOT EXISTS email_prefs (
   follower_id UUID PRIMARY KEY REFERENCES stack_followers(id) ON DELETE CASCADE,
   cadence TEXT NOT NULL CHECK (cadence IN ('off','daily','weekly')) DEFAULT 'weekly',
   last_digest_sent_at TIMESTAMPTZ           -- for guardrails/rate-limits
 );
 
--- 4) Change log for digest generation
+-- 5) Change log for digest generation
 CREATE TABLE IF NOT EXISTS stack_change_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
@@ -35,7 +39,7 @@ CREATE TABLE IF NOT EXISTS stack_change_log (
   changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 5) Email suppression log to prevent dupes within a window
+-- 6) Email suppression log to prevent dupes within a window
 CREATE TABLE IF NOT EXISTS email_suppression (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   follower_id UUID NOT NULL REFERENCES stack_followers(id) ON DELETE CASCADE,

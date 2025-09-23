@@ -121,6 +121,10 @@ export async function handleUpgradeRedirect(plan: PlanType, period: BillingPerio
     redirect(url)
   } catch (error) {
     console.error('Error handling upgrade redirect:', error)
+    // Don't redirect to pricing page for NEXT_REDIRECT errors (normal redirects)
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error // Re-throw to let the redirect happen
+    }
     redirect('/pricing?error=checkout_failed')
   }
 }

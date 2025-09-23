@@ -240,8 +240,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
               <img
                 src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
-                className="h-16 w-auto"
-                style={{ height: '80px', width: 'auto' }}
+                className="h-14 w-auto"
               />
               <span className="sr-only">Biostackr dashboard</span>
             </Link>
@@ -296,37 +295,39 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
 
 
         {/* Movement Items Grid */}
-        <div className="space-y-6">
-          {movementItems.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No movement activities yet</h3>
-              <p className="text-gray-500 mb-6">
-                Add your first movement activity to get started with tracking your fitness routine.
-              </p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Movement
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {movementItems.map((movement) => (
-                  <MovementCard
-                    key={movement.id}
-                    movement={movement}
-                    onEdit={handleEdit}
-                    onTogglePublic={handleTogglePublic}
-                    onDuplicate={handleDuplicate}
-                    onDelete={handleDelete}
-                  />
-                ))}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="space-y-6">
+            {movementItems.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No movement activities yet</h3>
+                <p className="text-gray-500 mb-6">
+                  Add your first movement activity to get started with tracking your fitness routine.
+                </p>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Movement
+                </button>
               </div>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {movementItems.map((movement) => (
+                    <MovementCard
+                      key={movement.id}
+                      movement={movement}
+                      onEdit={handleEdit}
+                      onTogglePublic={handleTogglePublic}
+                      onDuplicate={handleDuplicate}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Modals */}

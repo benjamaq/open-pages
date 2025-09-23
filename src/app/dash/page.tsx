@@ -1,6 +1,24 @@
 import { createClient } from '../../lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardClient from './DashboardClient'
+import type { Metadata } from 'next'
+
+// Add cache-busting metadata for Safari
+export const metadata: Metadata = {
+  title: 'Dashboard - BioStackr',
+  description: 'Your health and wellness dashboard',
+  other: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Last-Modified': new Date().toUTCString(),
+    'ETag': `"${Date.now()}"`
+  }
+}
+
+// Force dynamic rendering for Safari
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -46,12 +64,27 @@ export default async function DashboardPage() {
     profile = newProfile
   }
 
+  // Get user's tier information from user_usage table
+  const { data: usageData, error: usageError } = await supabase
+    .from('user_usage')
+    .select('tier, is_in_trial, trial_ended_at')
+    .eq('user_id', user.id)
+    .single()
+
+  // Add tier information to profile
+  const profileWithTier = {
+    ...profile,
+    tier: usageData?.tier || 'free',
+    isInTrial: usageData?.is_in_trial || false,
+    trialEndedAt: usageData?.trial_ended_at
+  }
+
   // Get today's day of week (0 = Sunday, 1 = Monday, etc.)
   const today = new Date()
   const dayOfWeek = today.getDay()
 
   // Fetch counts and today's items for dashboard
-  const [stackItemsResult, protocolsResult, uploadsResult, todaySupplements, todayMindfulness, todayMovement, todayProtocols, todayFood, userGear] = await Promise.all([
+  const [stackItemsResult, protocolsResult, uploadsResult, followersResult, todaySupplements, todayMindfulness, todayMovement, todayProtocols, todayFood, userGear] = await Promise.all([
     supabase
       .from('stack_items')
       .select('id', { count: 'exact' })
@@ -64,6 +97,11 @@ export default async function DashboardPage() {
       .from('uploads')
       .select('id', { count: 'exact' })
       .eq('profile_id', profile.id),
+    supabase
+      .from('stack_followers')
+      .select('id, created_at')
+      .eq('owner_user_id', user.id)
+      .not('verified_at', 'is', null),
     supabase
       .from('stack_items')
       .select('*')
@@ -103,7 +141,8 @@ export default async function DashboardPage() {
   const counts = {
     stackItems: stackItemsResult.count || 0,
     protocols: protocolsResult.count || 0,
-    uploads: uploadsResult.count || 0
+    uploads: uploadsResult.count || 0,
+    followers: followersResult.data?.length || 0
   }
 
   const todayItems = {
@@ -116,6 +155,6 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardClient profile={profile} counts={counts} todayItems={todayItems} userId={user.id} />
+    <DashboardClient profile={profileWithTier} counts={counts} todayItems={todayItems} userId={user.id} />
   )
 }

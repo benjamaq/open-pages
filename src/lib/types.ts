@@ -12,6 +12,9 @@ export interface Database {
           bio: string | null
           avatar_url: string | null
           public: boolean
+          referral_code: string | null
+          referral_source: string | null
+          referred_by: string | null
           created_at: string
           updated_at: string
         }
@@ -23,6 +26,9 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           public?: boolean
+          referral_code?: string | null
+          referral_source?: string | null
+          referred_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -34,6 +40,9 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           public?: boolean
+          referral_code?: string | null
+          referral_source?: string | null
+          referred_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -148,6 +157,9 @@ export interface Database {
           stack_items_limit: number
           protocols_limit: number
           uploads_limit: number
+          is_in_trial: boolean
+          trial_started_at: string | null
+          trial_ended_at: string | null
           created_at: string
           updated_at: string
         }
@@ -158,6 +170,9 @@ export interface Database {
           stack_items_limit?: number
           protocols_limit?: number
           uploads_limit?: number
+          is_in_trial?: boolean
+          trial_started_at?: string | null
+          trial_ended_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -168,6 +183,9 @@ export interface Database {
           stack_items_limit?: number
           protocols_limit?: number
           uploads_limit?: number
+          is_in_trial?: boolean
+          trial_started_at?: string | null
+          trial_ended_at?: string | null
           created_at?: string
           updated_at?: string
         }

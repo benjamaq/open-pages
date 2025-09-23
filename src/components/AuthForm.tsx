@@ -13,6 +13,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -53,7 +54,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else if (data.user) {
-          // Create profile with name
+          // Create profile with name and referral code
           try {
             const { error: profileError } = await supabase
               .from('profiles')
@@ -61,6 +62,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 {
                   user_id: data.user.id,
                   display_name: name.trim(),
+                  referral_code: referralCode.trim() || null,
+                  referral_source: referralCode.trim() === 'redditgo' ? 'reddit' : null,
                   slug: email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
                   bio: null,
                   avatar_url: null,
@@ -77,7 +80,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
           }
 
           // Redirect to dashboard for new users
-          setMessage('Account created successfully! Redirecting...')
+          const successMessage = referralCode.trim() === 'redditgo' 
+            ? 'Account created successfully! Welcome from Reddit! 🎉 Redirecting...'
+            : 'Account created successfully! Redirecting...'
+          setMessage(successMessage)
           setTimeout(() => {
             router.push('/dash')
             router.refresh()
@@ -113,7 +119,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <img 
               src="/BIOSTACKR LOGO 2.png" 
               alt="Biostackr" 
-              className="h-16 w-auto"
+              className="h-14 w-auto"
               style={{ width: '280px' }}
             />
           </Link>
@@ -159,6 +165,28 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     placeholder="Enter your full name"
                   />
                 </div>
+              </div>
+            )}
+
+            {isSignUp && (
+              <div>
+                <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
+                  Referral Code <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="referralCode"
+                    name="referralCode"
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                    placeholder="Enter referral code (e.g., redditgo)"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Got a referral code? Enter it here to get special benefits!
+                </p>
               </div>
             )}
 

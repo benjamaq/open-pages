@@ -4,20 +4,9 @@ import { useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 
 // Row 4 — Gear Card (Full Width)
-export default function GearCard({ items = [], onManage }: { items?: any[]; onManage: () => void }) {
+export default function GearCard({ items = [], onAdd, onManage }: { items?: any[]; onAdd: () => void; onManage: () => void }) {
   const [collapsed, setCollapsed] = useState(false)
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      'Wearables': '⌚',
-      'Recovery': '🛁',
-      'Kitchen': '🍳',
-      'Fitness': '🏋️',
-      'Sleep': '🛏️',
-      'Other': '🔧'
-    }
-    return icons[category] || '🔧'
-  }
 
   return (
     <div 
@@ -30,15 +19,26 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>My Gear</h2>
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>My Gear</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            {items.length}
+          </span>
+        </div>
         <div className="flex items-center space-x-2">
           <button
+            onClick={onAdd}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Add gear"
+          >
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
             onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage gear"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            Manage
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -56,7 +56,6 @@ export default function GearCard({ items = [], onManage }: { items?: any[]; onMa
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                  <span className="text-lg">{getCategoryIcon(item.category)}</span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">

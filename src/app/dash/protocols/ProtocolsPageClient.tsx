@@ -258,8 +258,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
                   <img 
                     src="/BIOSTACKR LOGO 2.png" 
                     alt="Biostackr" 
-                    className="h-16 w-auto"
-                    style={{ width: '280px' }}
+                    className="h-14 w-auto"
                   />
                 </Link>
               </div>
@@ -409,9 +408,6 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-gray-400" />
-              </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Protocols yet</h3>
               <p className="text-gray-600 mb-6">Add your first protocol to build your wellness routine.</p>
               <button

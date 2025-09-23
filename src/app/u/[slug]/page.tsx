@@ -12,11 +12,64 @@ import StickyNavigation from '../../../components/StickyNavigation'
 import PublicProfileHeader from '../../../components/PublicProfileHeader'
 import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
+import type { Metadata } from 'next'
 
 interface ProfilePageProps {
   params: Promise<{
     slug: string
   }>
+}
+
+// Generate metadata for social sharing
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = await createClient()
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name, bio, avatar_url, public')
+    .eq('slug', slug)
+    .single()
+
+  if (!profile || !(profile as any).public) {
+    return {
+      title: 'Profile Not Found',
+      description: 'This profile is not available or does not exist.'
+    }
+  }
+
+  const profileData = profile as any
+  const title = `${profileData.display_name}'s Health Stack`
+  const description = profileData.bio || `Check out ${profileData.display_name}'s health and wellness journey, including their supplement stack, protocols, and daily routines.`
+  const image = profileData.avatar_url || '/og-default.png'
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/u/${slug}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'BioStackr',
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${profileData.display_name}'s profile picture`,
+        },
+      ],
+      locale: 'en_US',
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
+  }
 }
 
 export default async function ProfilePage({ params, searchParams }: { 
@@ -27,8 +80,6 @@ export default async function ProfilePage({ params, searchParams }: {
   const search = await searchParams
   const supabase = await createClient()
   
-  // Check for force public view parameter
-  const forcePublicView = search?.public === 'true'
 
   // Check if user is authenticated and get their profile
   // Use a fresh supabase client to avoid cached sessions
@@ -64,6 +115,34 @@ export default async function ProfilePage({ params, searchParams }: {
     `)
     .eq('slug', slug)
     .single()
+
+  // Debug: Log profile data to see what fields are available
+  if (profile) {
+    console.log('🔍 Profile data for', slug, ':', {
+      user_id: (profile as any).user_id,
+      display_name: (profile as any).display_name,
+      allow_stack_follow: (profile as any).allow_stack_follow,
+      allFields: Object.keys(profile)
+    })
+  }
+
+
+  // Fetch follower count if profile allows it
+  let followerCount = 0
+  if (profile && (profile as any).show_public_followers) {
+    try {
+      const { data: followersData } = await supabase
+        .from('stack_followers')
+        .select('id', { count: 'exact' })
+        .eq('owner_user_id', (profile as any).user_id)
+        .not('verified_at', 'is', null)
+      
+      followerCount = followersData?.length || 0
+    } catch (error) {
+      console.warn('Failed to fetch follower count:', error)
+      followerCount = 0
+    }
+  }
 
   // Fetch different types of stack items separately
   let publicSupplements: any[] = []
@@ -141,9 +220,21 @@ export default async function ProfilePage({ params, searchParams }: {
     notFound()
   }
 
-  // Check if current user is viewing their own profile
-  // More robust check with explicit conditions, but allow override for public view
-  const isOwnProfile = forcePublicView ? false : !!(
+  // Check if this is a shared public link (clean view) or app view (with edit capabilities)
+  const isSharedPublicLink = search?.public === 'true'
+  
+  // Debug logging
+  console.log('Public Profile Debug:', {
+    slug,
+    searchParams: search,
+    isSharedPublicLink,
+    publicParam: search?.public
+  })
+  
+  // Show owner interface only if:
+  // 1. User is viewing their own profile AND
+  // 2. It's NOT a shared public link (no ?public=true parameter)
+  const isOwnProfile = !isSharedPublicLink && !!(
     currentUserProfile && 
     currentUserProfile.slug && 
     currentUserProfile.slug === slug &&
@@ -421,8 +512,7 @@ export default async function ProfilePage({ params, searchParams }: {
               <img
                 src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
-                className="h-16 w-auto"
-                style={{ height: '80px', width: 'auto' }}
+                className="h-14 w-auto"
               />
               <span className="sr-only">Biostackr</span>
             </Link>
@@ -439,21 +529,29 @@ export default async function ProfilePage({ params, searchParams }: {
               </div>
               
               <div className="flex items-center gap-3">
+              {/* Show Copy Link + Dashboard buttons only for profile owners in app view (not shared links) */}
               {isOwnProfile && (
-                <Link 
-                  href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <ProfileActionButtons
+                    isOwnProfile={true}
+                    profileName={profileWithData.display_name || 'this user'}
+                    profileSlug={profileWithData.slug}
+                  />
+                  <Link 
+                    href="/dash" 
+                    className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                </>
               )}
 
-              {/* Follow Button - Only show to visitors */}
+              {/* Follow Button - Only show to visitors or in shared public links */}
               {!isOwnProfile && (
                 <FollowButton
                   ownerUserId={(profile as any).user_id}
-                  ownerName={(profile as any).name || 'this user'}
-                  allowsFollowing={false}
+                  ownerName={(profile as any).display_name || 'this user'}
+                  allowsFollowing={(profile as any).allow_stack_follow ?? false}
                 />
               )}
               </div>
@@ -467,8 +565,11 @@ export default async function ProfilePage({ params, searchParams }: {
         {/* Health Stack Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
           <h2 className="text-3xl font-bold text-gray-900">
-            My Health & Wellness Stack
+            My Health Stack
           </h2>
+          <p className="text-sm text-gray-400 mt-2">
+            Everything I use & track..supplements, protocols, movement, mindfulness, gear & labs
+          </p>
         </div>
       </div>
 
@@ -503,11 +604,6 @@ export default async function ProfilePage({ params, searchParams }: {
                     {profileWithData.display_name || 'Anonymous Stackr'}
                   </h1>
                   
-                  {/* Action Buttons - Same Level as Name */}
-                  <ProfileActionButtons 
-                    isOwnProfile={isOwnProfile} 
-                    profileName={profileWithData.display_name || 'this user'}
-                  />
                 </div>
                 
                 {/* Mission */}
@@ -527,6 +623,8 @@ export default async function ProfilePage({ params, searchParams }: {
                 <PublicProfileHeader 
                   profile={profileWithData}
                   isOwnProfile={isOwnProfile}
+                  followerCount={followerCount}
+                  showFollowerCount={(profile as any).show_public_followers ?? true}
                 />
               </div>
             </div>
@@ -558,7 +656,7 @@ export default async function ProfilePage({ params, searchParams }: {
               <img
                 src="/BIOSTACKR LOGO 2.png"
                 alt="BioStackr"
-                className="h-8 w-auto"
+                className="h-6 w-auto"
               />
             </div>
             <p className="text-sm font-medium text-gray-700 mb-2">

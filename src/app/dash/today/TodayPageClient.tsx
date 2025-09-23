@@ -204,8 +204,7 @@ export default function TodayPageClient({
                 <img 
                   src="/BIOSTACKR LOGO 2.png" 
                   alt="Biostackr" 
-                  className="h-16 w-auto"
-                  style={{ width: '280px' }}
+                  className="h-14 w-auto"
                 />
               </Link>
             </div>

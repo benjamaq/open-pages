@@ -15,7 +15,10 @@ export default function UpgradeCreatorPage() {
       await handleUpgradeRedirect('creator', billingPeriod)
     } catch (error) {
       console.error('Upgrade error:', error)
-      alert('Something went wrong. Please try again.')
+      // Don't show error for redirects (NEXT_REDIRECT is normal)
+      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+        alert('Something went wrong. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -32,7 +35,7 @@ export default function UpgradeCreatorPage() {
                 <img 
                   src="/BIOSTACKR LOGO 2.png" 
                   alt="BioStackr" 
-                  className="h-12 w-auto"
+                  className="h-14 w-auto"
                 />
               </Link>
               <Link 

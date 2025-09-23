@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { addGear } from '../lib/actions/gear'
+import { getUserTier } from '../lib/actions/subscriptions'
 import { useRouter } from 'next/navigation'
 
 interface AddGearFormProps {
@@ -21,14 +22,22 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isPro, setIsPro] = useState(false) // TODO: Get from user profile
+  const [userTier, setUserTier] = useState<'free' | 'pro' | 'creator'>('free')
   const router = useRouter()
 
-  // TODO: Check if user is Pro
+  // Check user's tier
   useEffect(() => {
-    // For now, default to true for testing
-    // In real app, check user's subscription status
-    setIsPro(true)
+    const checkUserTier = async () => {
+      try {
+        const tier = await getUserTier()
+        setUserTier(tier)
+      } catch (error) {
+        console.error('Error fetching user tier:', error)
+        setUserTier('free')
+      }
+    }
+    
+    checkUserTier()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,12 +218,12 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
               </div>
             </div>
 
-            {/* Affiliate Section (Pro Only) */}
-            {isPro ? (
+            {/* Affiliate Section (Creator Only) */}
+            {userTier === 'creator' ? (
               <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-gray-900">💰 Affiliate Link</span>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">PRO</span>
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">CREATOR</span>
                 </div>
                 
                 <div className="space-y-2">
@@ -246,9 +255,13 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
                   </div>
                   <button 
                     type="button"
+                    onClick={() => {
+                      onClose() // Close the gear form first
+                      window.location.href = '/upgrade/creator' // Navigate to creator upgrade page
+                    }}
                     className="px-3 py-1 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
                   >
-                    Upgrade to Pro
+                    Upgrade to Creator
                   </button>
                 </div>
               </div>

@@ -96,7 +96,7 @@ export default function CreatorSignUpPage() {
               <img 
                 src="/BIOSTACKR LOGO 2.png" 
                 alt="BioStackr" 
-                className="h-16 w-auto"
+                className="h-14 w-auto"
               />
             </Link>
             <Link 

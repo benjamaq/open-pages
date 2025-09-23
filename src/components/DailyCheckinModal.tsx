@@ -69,8 +69,8 @@ function toMoodSentence(mood: string) {
   return map[mood] ?? `Feeling ${mood.toLowerCase()}.`
 }
 
-// Share Card Preview Component
-function ShareCardPreview({ draft }: { draft: DailyCheckinInput }) {
+// Legacy Share Card Preview Component (kept for backward compatibility)
+function LegacyShareCardPreview({ draft }: { draft: DailyCheckinInput }) {
   const showSupp = (draft.supplementsCount ?? 0) > 0
   const showProt = (draft.protocols?.length ?? 0) > 0
   const showMind = (draft.mindfulness?.length ?? 0) > 0
@@ -180,6 +180,7 @@ export default function DailyCheckinModal({
       loadSavedData()
     }
   }, [isOpen])
+
 
   const loadSavedData = () => {
     // Load daily check-in data
@@ -305,8 +306,127 @@ export default function DailyCheckinModal({
   }
 
   const handleDownload = () => {
-    setMessage('📥 Image download coming soon!')
-    setTimeout(() => setMessage(''), 2000)
+    // Generate a beautiful image for sharing
+    const { shareText, checkinShareUrl } = generateShareContent()
+    
+    // Create a canvas element to generate the image
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) {
+      setMessage('❌ Image generation failed')
+      setTimeout(() => setMessage(''), 3000)
+      return
+    }
+    
+    // Set canvas size (Instagram/Facebook optimal)
+    canvas.width = 1080
+    canvas.height = 1080
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+    gradient.addColorStop(0, '#f8f9fa')
+    gradient.addColorStop(1, '#e9ecef')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // Add BioStackr branding
+    ctx.fillStyle = '#0F1115'
+    ctx.font = 'bold 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('BioStackr', canvas.width / 2, 120)
+    
+    // Add date
+    ctx.fillStyle = '#6B7280'
+    ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.fillText(new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }), canvas.width / 2, 180)
+    
+    // Add energy level (large and prominent)
+    ctx.fillStyle = '#16A34A'
+    ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.fillText(`${draft.energy}/10`, canvas.width / 2, 320)
+    
+    // Add "Energy" label
+    ctx.fillStyle = '#0F1115'
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.fillText('Energy', canvas.width / 2, 380)
+    
+    // Add mood if present
+    if (draft.mood) {
+      ctx.fillStyle = '#6B7280'
+      ctx.font = '28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(draft.mood, canvas.width / 2, 440)
+    }
+    
+    // Add routine summary
+    let yPos = 520
+    const routineParts = []
+    
+    if (draft.supplementsCount && draft.supplementsCount > 0) {
+      routineParts.push(`💊 ${draft.supplementsCount} supplements`)
+    }
+    if (draft.protocols && draft.protocols.length > 0) {
+      routineParts.push(`🧪 ${draft.protocols.join(', ')}`)
+    }
+    if (draft.movement && draft.movement.length > 0) {
+      routineParts.push(`🏃 ${draft.movement.join(', ')}`)
+    }
+    if (draft.mindfulness && draft.mindfulness.length > 0) {
+      routineParts.push(`🧘 ${draft.mindfulness.join(', ')}`)
+    }
+    
+    if (routineParts.length > 0) {
+      ctx.fillStyle = '#0F1115'
+      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText('Today\'s Routine:', canvas.width / 2, yPos)
+      yPos += 50
+      
+      routineParts.forEach(part => {
+        ctx.fillStyle = '#374151'
+        ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ctx.fillText(part, canvas.width / 2, yPos)
+        yPos += 40
+      })
+    }
+    
+    // Add note if present
+    if (draft.moodComment) {
+      yPos += 20
+      ctx.fillStyle = '#6B7280'
+      ctx.font = 'italic 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(`"${draft.moodComment}"`, canvas.width / 2, yPos)
+    }
+    
+    // Add footer
+    yPos = canvas.height - 80
+    ctx.fillStyle = '#9CA3AF'
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.fillText('Powered by BioStackr', canvas.width / 2, yPos)
+    
+    // Convert canvas to blob and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `biostackr-checkin-${draft.dateISO}.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        
+        setMessage('✅ Image downloaded! Share this beautiful image instead of text.')
+        setTimeout(() => setMessage(''), 4000)
+      } else {
+        setMessage('❌ Image generation failed')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    }, 'image/png')
   }
 
   const handleCopyLink = async () => {
@@ -339,16 +459,32 @@ export default function DailyCheckinModal({
     const baseUrl = typeof window !== 'undefined' 
       ? `${window.location.protocol}//${window.location.host}`
       : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const profileUrl = profileSlug ? `${baseUrl}/u/${profileSlug}?public=true` : `${baseUrl}/dash`
     
-    const fullShareText = `${shareText}\n\n${profileUrl}`
+    // Create a dedicated sharing URL with check-in data
+    const checkinDate = draft.dateISO
+    const shareParams = new URLSearchParams({
+      energy: draft.energy.toString(),
+      mood: draft.mood || '',
+      supplements: draft.supplementsCount?.toString() || '0',
+      protocols: draft.protocols?.join(',') || '',
+      movement: draft.movement?.join(',') || '',
+      mindfulness: draft.mindfulness?.join(',') || '',
+      note: draft.moodComment || ''
+    })
+    
+    const checkinShareUrl = profileSlug 
+      ? `${baseUrl}/share/checkin/${profileSlug}/${checkinDate}?${shareParams.toString()}`
+      : `${baseUrl}/u/${profileSlug}?public=true`
+    
+    const fullShareText = `${shareText}\n\n${checkinShareUrl}`
     
     await navigator.clipboard.writeText(fullShareText)
     setMessage('✅ Daily check-in copied to clipboard!')
     setTimeout(() => setMessage(''), 2000)
   }
 
-  const handleShare = async (platform: string) => {
+  // Generate share text and URL - extracted to be reusable
+  const generateShareContent = () => {
     const routineParts = []
     
     // Supplements - just count
@@ -377,22 +513,100 @@ export default function DailyCheckinModal({
     const baseUrl = typeof window !== 'undefined' 
       ? `${window.location.protocol}//${window.location.host}`
       : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const shareUrl = profileSlug ? `${baseUrl}/u/${profileSlug}?public=true` : `${baseUrl}/dash`
+    
+    // Create a dedicated sharing URL with check-in data
+    const checkinDate = draft.dateISO
+    const shareParams = new URLSearchParams({
+      energy: draft.energy.toString(),
+      mood: draft.mood || '',
+      supplements: draft.supplementsCount?.toString() || '0',
+      protocols: draft.protocols?.join(',') || '',
+      movement: draft.movement?.join(',') || '',
+      mindfulness: draft.mindfulness?.join(',') || '',
+      note: draft.moodComment || ''
+    })
+    
+    const checkinShareUrl = profileSlug 
+      ? `${baseUrl}/share/checkin/${profileSlug}/${checkinDate}?${shareParams.toString()}`
+      : `${baseUrl}/u/${profileSlug}?public=true`
+    
+    return { shareText, checkinShareUrl }
+  }
+
+  // Generate clean, professional Twitter text
+  const generateTwitterText = () => {
+    let tweet = `Today's check-in: ${draft.energy}/10`
+    
+    if (draft.mood) {
+      tweet += ` — ${draft.mood}`
+    }
+    
+    // Add sleep and recovery if available
+    if (draft.wearable?.sleepScore || draft.wearable?.recoveryScore) {
+      tweet += `\nSleep: ${draft.wearable?.sleepScore || 'N/A'} • Recovery: ${draft.wearable?.recoveryScore || 'N/A'}`
+    }
+    
+    // Add stack summary
+    const parts = []
+    
+    if (draft.supplementsCount && draft.supplementsCount > 0) {
+      parts.push(`Supplements: ${draft.supplementsCount}`)
+    }
+    if (draft.protocols && draft.protocols.length > 0) {
+      parts.push(`Protocols: ${draft.protocols.length}`)
+    }
+    if (draft.movement && draft.movement.length > 0) {
+      const movementSummary = draft.movement.length === 1 ? draft.movement[0] : `${draft.movement.length} activities`
+      parts.push(`Movement: ${movementSummary}`)
+    }
+    if (draft.mindfulness && draft.mindfulness.length > 0) {
+      const mindfulnessSummary = draft.mindfulness.length === 1 ? draft.mindfulness[0] : `${draft.mindfulness.length} practices`
+      parts.push(`Mindfulness: ${mindfulnessSummary}`)
+    }
+    
+    if (parts.length > 0) {
+      tweet += `\n${parts.join(' • ')}`
+    }
+    
+    // Add call to action and hashtags
+    const baseUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}`
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    
+    tweet += `\nSee my stack → ${profileSlug ? `${baseUrl}/u/${profileSlug}?public=true` : `${baseUrl}/dash`}`
+    tweet += `\n#biostackr #biohacking #accountability`
+    
+    return tweet
+  }
+
+  const handleShare = async (platform: string) => {
+    const { shareText, checkinShareUrl } = generateShareContent()
+    
+    // Get base URL for simple links
+    const baseUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}`
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     
     switch (platform) {
       case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`, '_blank')
+        const twitterText = generateTwitterText()
+        // Just use text, no URL - cleaner and more shareable
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`, '_blank')
         break
       case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')
+        // Facebook doesn't allow pre-filling text, so copy for user to paste
+        await navigator.clipboard.writeText(`${shareText}\n\n${checkinShareUrl}`)
+        setMessage('✅ Text copied! Open Facebook and paste (Ctrl+V) to share')
+        setTimeout(() => setMessage(''), 4000)
         break
       case 'instagram':
-        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`)
-        setMessage('✅ Text copied! Paste into Instagram post')
-        setTimeout(() => setMessage(''), 3000)
+        // Instagram doesn't have direct sharing API, so copy text for user to paste
+        await navigator.clipboard.writeText(`${shareText}\n\n${checkinShareUrl}`)
+        setMessage('✅ Text copied! Open Instagram and paste (Ctrl+V) to share')
+        setTimeout(() => setMessage(''), 4000)
         break
       case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank')
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(checkinShareUrl)}`, '_blank')
         break
     }
     
@@ -495,191 +709,6 @@ export default function DailyCheckinModal({
               </div>
             </div>
 
-            {/* Section 2: Share to Social Media - Light Gray Container */}
-            <div className="bg-gray-50 rounded-lg p-5">
-              {/* Centered Heading for Entire Bottom Section */}
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-zinc-900">Share to Social Media</h3>
-                <span className="text-sm text-gray-400">optional</span>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Left: Share Options */}
-                <div>
-                  {/* Live Preview Title - Centered and aligned with preview */}
-                  <div className="md:hidden text-center mb-4">
-                    <h4 className="text-sm font-medium text-zinc-900">Live Preview</h4>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {/* Add Wearables - positioned to align with preview */}
-                    <div className="mt-8">
-                      <details className="rounded-lg border border-zinc-200 bg-white p-3">
-                        <summary className="cursor-pointer text-sm font-medium">Add wearables data</summary>
-                        <div className="mt-3 grid grid-cols-3 gap-3">
-                          <select
-                            value={draft.wearable?.source ?? 'None'}
-                            onChange={(e) => setDraft(d => ({
-                              ...d,
-                              wearable: e.target.value === 'None'
-                                ? null
-                                : { 
-                                    source: e.target.value as WearableSource, 
-                                    sleepScore: d.wearable?.sleepScore, 
-                                    recoveryScore: d.wearable?.recoveryScore 
-                                  },
-                            }))}
-                            className="rounded-md border border-zinc-300 bg-white p-2 text-sm"
-                          >
-                            <option>None</option>
-                            <option>WHOOP</option>
-                            <option>Oura</option>
-                            <option>Apple Health</option>
-                            <option>Garmin</option>
-                            <option>Fitbit</option>
-                            <option>Polar</option>
-                            <option>Suunto</option>
-                            <option>Coros</option>
-                            <option>Amazfit</option>
-                            <option>Samsung Health</option>
-                            <option>Google Fit</option>
-                            <option>Strava</option>
-                            <option>MyFitnessPal</option>
-                            <option>Cronometer</option>
-                            <option>Eight Sleep</option>
-                            <option>Other</option>
-                          </select>
-                          
-                          {/* Custom wearable name input - only show when "Other" is selected */}
-                          {draft.wearable?.source === 'Other' && (
-                            <input
-                              type="text"
-                              placeholder="Enter wearable name..."
-                              value={draft.wearable?.customName ?? ''}
-                              onChange={(e) => setDraft(d => ({
-                                ...d,
-                                wearable: { 
-                                  ...(d.wearable ?? { source: 'Other' as WearableSource }), 
-                                  customName: e.target.value 
-                                }
-                              }))}
-                              className="rounded-md border border-zinc-300 bg-white p-2 text-sm"
-                              maxLength={30}
-                            />
-                          )}
-                          
-                          <input
-                            type="number"
-                            placeholder="Sleep"
-                            min="0"
-                            max="100"
-                            value={draft.wearable?.sleepScore ?? ''}
-                            onChange={(e) => setDraft(d => ({ 
-                              ...d, 
-                              wearable: { 
-                                ...(d.wearable ?? { source: 'WHOOP' as WearableSource }), 
-                                sleepScore: e.target.value ? Number(e.target.value) : undefined 
-                              } 
-                            }))}
-                            className="rounded-md border border-zinc-300 p-2 text-sm"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Recovery"
-                            min="0"
-                            max="100"
-                            value={draft.wearable?.recoveryScore ?? ''}
-                            onChange={(e) => setDraft(d => ({ 
-                              ...d, 
-                              wearable: { 
-                                ...(d.wearable ?? { source: 'WHOOP' as WearableSource }), 
-                                recoveryScore: e.target.value ? Number(e.target.value) : undefined 
-                              } 
-                            }))}
-                            className="rounded-md border border-zinc-300 p-2 text-sm"
-                          />
-                        </div>
-                      </details>
-                    </div>
-
-                    {/* Add Note */}
-                    <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                      <label className="block text-sm font-medium text-zinc-900 mb-2">Add a note</label>
-                      <textarea
-                        value={draft.moodComment ?? ''}
-                        onChange={(e) => setDraft(d => ({ ...d, moodComment: e.target.value || undefined }))}
-                        rows={3}
-                        maxLength={280}
-                        className="w-full rounded-md border border-zinc-300 p-2 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                        placeholder="How are you feeling about today's routine?"
-                      />
-                      <div className="text-xs text-zinc-500 mt-1">{(draft.moodComment || '').length}/280</div>
-                    </div>
-
-                    {/* Share Buttons */}
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button 
-                          className="rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
-                          onClick={() => handleShare('twitter')}
-                        >
-                          Twitter
-                        </button>
-                        <button 
-                          className="rounded-md bg-blue-600 px-3 py-2 text-white text-sm hover:bg-blue-700 transition-colors"
-                          onClick={() => handleShare('facebook')}
-                        >
-                          Facebook
-                        </button>
-                        <button 
-                          className="rounded-md bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-2 text-white text-sm hover:from-purple-600 hover:to-pink-600 transition-colors"
-                          onClick={() => handleShare('instagram')}
-                        >
-                          Instagram
-                        </button>
-                        <button 
-                          className="rounded-md bg-blue-700 px-3 py-2 text-white text-sm hover:bg-blue-800 transition-colors"
-                          onClick={() => handleShare('linkedin')}
-                        >
-                          LinkedIn
-                        </button>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button 
-                          className="flex-1 rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
-                          onClick={handleDownload}
-                        >
-                          Download image
-                        </button>
-                        <button 
-                          className="flex-1 rounded-md bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors" 
-                          onClick={handleCopyLink}
-                        >
-                          Copy link
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Live Preview */}
-                <div>
-                  <div className="text-center mb-4">
-                    <h4 className="text-sm font-medium text-zinc-900">Live Preview</h4>
-                  </div>
-                  <div className="transform scale-75 origin-top">
-                    <ShareCardPreview draft={draft} />
-                  </div>
-                  
-                  {message && message.includes('Shared') && (
-                    <div className="text-center text-sm text-green-600 mt-3">
-                      {message}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -705,6 +734,7 @@ export default function DailyCheckinModal({
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
       `}</style>
+
     </div>
   )
 }

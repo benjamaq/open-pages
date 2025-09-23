@@ -9,6 +9,13 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: true,
 })
 
+// Debug environment variables
+console.log('Stripe environment variables:')
+console.log('PRO_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID)
+console.log('PRO_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID)
+console.log('CREATOR_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID)
+console.log('CREATOR_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID)
+
 // Stripe product configuration
 export const STRIPE_CONFIG = {
   products: {
@@ -44,7 +51,12 @@ export type BillingPeriod = 'monthly' | 'yearly'
 
 // Helper function to get price ID
 export function getPriceId(plan: PlanType, period: BillingPeriod): string {
-  return STRIPE_CONFIG.products[plan][period].priceId
+  const priceId = STRIPE_CONFIG.products[plan][period].priceId
+  console.log(`Getting price ID for ${plan} ${period}:`, priceId)
+  if (!priceId) {
+    throw new Error(`Price ID not found for ${plan} ${period}. Check environment variables.`)
+  }
+  return priceId
 }
 
 // Helper function to get amount

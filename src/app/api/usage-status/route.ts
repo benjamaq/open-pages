@@ -12,10 +12,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Get user's profile and usage data
+    // Get user's profile
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, tier')
+      .select('id')
       .eq('user_id', user.id)
       .single()
 
@@ -23,9 +23,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
+    // Get user's usage data (which contains tier information)
     const { data: usageData, error: usageError } = await supabase
       .from('user_usage')
-      .select('stack_items_limit, protocols_limit, uploads_limit')
+      .select('tier, stack_items_limit, protocols_limit, uploads_limit, is_in_trial, trial_ended_at')
       .eq('user_id', user.id)
       .single()
 
@@ -33,8 +34,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Usage data not found' }, { status: 404 })
     }
 
-    // Get current counts
-    const [stackItemsResult, protocolsResult, uploadsResult] = await Promise.all([
+    // Get current counts - unified stack limit
+    const [stackItemsResult, protocolsResult, uploadsResult, libraryResult, gearResult] = await Promise.all([
       supabase
         .from('stack_items')
         .select('id', { count: 'exact' })
@@ -46,18 +47,48 @@ export async function GET() {
       supabase
         .from('uploads')
         .select('id', { count: 'exact' })
+        .eq('profile_id', profileData.id),
+      supabase
+        .from('library_items')
+        .select('id', { count: 'exact' })
+        .eq('profile_id', profileData.id),
+      supabase
+        .from('gear')
+        .select('id', { count: 'exact' })
         .eq('profile_id', profileData.id)
     ])
 
-    return NextResponse.json({
-      stackItems: stackItemsResult.count || 0,
-      protocols: protocolsResult.count || 0,
-      uploads: uploadsResult.count || 0,
-      stackItemsLimit: usageData.stack_items_limit || 10,
-      protocolsLimit: usageData.protocols_limit || 5,
-      uploadsLimit: usageData.uploads_limit || 3,
-      currentTier: profileData.tier || 'free'
+    // Handle potential errors gracefully
+    const stackItemsCount = stackItemsResult.error ? 0 : (stackItemsResult.count || 0)
+    const protocolsCount = protocolsResult.error ? 0 : (protocolsResult.count || 0)
+    const uploadsCount = uploadsResult.error ? 0 : (uploadsResult.count || 0)
+    const libraryCount = libraryResult.error ? 0 : (libraryResult.count || 0)
+    const gearCount = gearResult.error ? 0 : (gearResult.count || 0)
+
+    // Calculate total stack items (everything combined)
+    const totalStackItems = stackItemsCount + protocolsCount + uploadsCount + libraryCount + gearCount
+
+    const response = NextResponse.json({
+      stackItems: totalStackItems,
+      stackItemsLimit: usageData.stack_items_limit || 20, // Use actual limit from database
+      currentTier: usageData.tier || 'free',
+      isInTrial: usageData.is_in_trial || false,
+      trialEndedAt: usageData.trial_ended_at,
+      breakdown: {
+        supplements: stackItemsCount,
+        protocols: protocolsCount,
+        uploads: uploadsCount,
+        library: libraryCount,
+        gear: gearCount
+      }
     })
+
+    // Add cache-busting headers for Safari
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
 
   } catch (error) {
     console.error('Usage status API error:', error)

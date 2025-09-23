@@ -11,7 +11,7 @@ export default function WelcomePage() {
             <img 
               src="/BIOSTACKR LOGO 2.png" 
               alt="BioStackr" 
-              className="h-12 w-auto"
+              className="h-14 w-auto"
             />
             <Link 
               href="/dash" 

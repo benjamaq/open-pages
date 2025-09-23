@@ -28,24 +28,15 @@ export async function PATCH(request: NextRequest) {
     if (allow !== undefined) updateData.allow_stack_follow = allow
     if (showPublicFollowers !== undefined) updateData.show_public_followers = showPublicFollowers
 
-    // Update the profile (handle missing columns gracefully)
+    // Update the profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update(updateData)
       .eq('user_id', user.id)
 
     if (updateError) {
-      // If the columns don't exist yet, that's okay - we'll use defaults
-      if (updateError.message?.includes('column') || 
-          updateError.message?.includes('allow_stack_follow') ||
-          updateError.message?.includes('show_public_followers')) {
-        console.warn('Follow stack columns not found, using fallback storage')
-        // For now, we'll just return success - the feature will work with defaults
-        // The database migration can be run later
-      } else {
-        console.error('Update error:', updateError)
-        return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 })
-      }
+      console.error('Database update error:', updateError)
+      return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 })
     }
 
     // If disabling follows, optionally notify existing followers

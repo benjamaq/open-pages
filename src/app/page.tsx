@@ -11,7 +11,7 @@ export default function Home() {
                 <img 
                   src="/BIOSTACKR LOGO 2.png" 
                 alt="BioStackr" 
-                className="h-16 w-auto"
+                className="h-14 w-auto"
                 />
               </Link>
             <div className="hidden md:flex items-center space-x-8">

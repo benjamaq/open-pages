@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail } from 'lucide-react'
+import { X, Mail, Copy, Check } from 'lucide-react'
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean
   profileName: string
+  profileSlug?: string
 }
 
 interface FollowModalProps {
@@ -99,8 +100,9 @@ function FollowModal({ isOpen, onClose, profileName, onSubmit }: FollowModalProp
   )
 }
 
-export default function ProfileActionButtons({ isOwnProfile, profileName }: ProfileActionButtonsProps) {
+export default function ProfileActionButtons({ isOwnProfile, profileName, profileSlug }: ProfileActionButtonsProps) {
   const [showFollowModal, setShowFollowModal] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleFollow = () => {
     setShowFollowModal(true)
@@ -112,19 +114,57 @@ export default function ProfileActionButtons({ isOwnProfile, profileName }: Prof
     alert(`✅ You're now following ${profileName}'s stack! Check your email for confirmation.`)
   }
 
-  if (isOwnProfile) {
-    return null // Don't show buttons to profile owner
+  const handleCopyLink = async () => {
+    if (!profileSlug) return
+    
+    // Add ?public=true parameter to force clean view when shared
+    const profileUrl = `${window.location.origin}/u/${profileSlug}?public=true`
+    
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy link:', err)
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = profileUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
     <>
       <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
-        <button 
-          onClick={handleFollow}
-          className="px-4 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-        >
-          Follow my stack
-        </button>
+        {isOwnProfile ? (
+          <button 
+            onClick={handleCopyLink}
+            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied!
+              </>
+            ) : (
+              <>
+                Copy Public Link
+              </>
+            )}
+          </button>
+        ) : (
+          <button 
+            onClick={handleFollow}
+            className="px-4 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          >
+            Follow my stack
+          </button>
+        )}
       </div>
 
       {/* Follow Modal */}

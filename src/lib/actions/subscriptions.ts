@@ -54,6 +54,32 @@ export async function getUserSubscription(): Promise<UserSubscription | null> {
   }
 }
 
+// Get user's tier from profiles table
+export async function getUserTier(): Promise<'free' | 'pro' | 'creator'> {
+  try {
+    const supabase = await createClient()
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return 'free'
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('user_id', user.id)
+      .single()
+
+    if (error || !profile) {
+      console.error('Error fetching user tier:', error)
+      return 'free'
+    }
+
+    return profile.tier as 'free' | 'pro' | 'creator' || 'free'
+  } catch (error) {
+    console.error('Error in getUserTier:', error)
+    return 'free'
+  }
+}
+
 export async function getUserUsage(): Promise<UsageInfo[]> {
   try {
     const supabase = await createClient()

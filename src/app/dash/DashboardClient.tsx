@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
+import AddProtocolForm from '../../components/AddProtocolForm'
 import GearCard from '../../components/GearCard'
 import AddGearForm from '../../components/AddGearForm'
 import LibrarySection from '../../components/LibrarySection'
+import LibraryUploadForm from '../../components/LibraryUploadForm'
 import ShopMyGearSection from '../../components/ShopMyGearSection'
 import TierManagement from '../../components/TierManagement'
 import TrialNotification from '../../components/TrialNotification'
@@ -32,6 +35,7 @@ interface Counts {
   stackItems: number
   protocols: number
   uploads: number
+  followers: number
 }
 
 interface DashboardClientProps {
@@ -538,7 +542,7 @@ const DashboardCard = ({ children, title, onManage, collapsed = false, onToggleC
             aria-label="Manage items"
           >
             <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            <span>Add/Manage</span>
           </button>
         )}
       </div>
@@ -752,7 +756,7 @@ const CheckinCard = ({
                   <span>1</span>
                   <span>5</span>
                   <span>10</span>
-                </div>
+              </div>
               </div>
             </div>
           </div>
@@ -763,11 +767,12 @@ const CheckinCard = ({
 }
 
 // Row 1 — Supplements Card (Full Width)
-const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: {
+const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, onAdd }: {
   items: any[]
   onToggleComplete: (id: string, type: string) => void
   completedItems: Set<string>
   onManage: () => void
+  onAdd: () => void
 }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['morning']))
@@ -839,7 +844,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
                   </button>
                   
                   <div className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                    <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">
                         {item.name}
                         {item.dose && (
@@ -877,11 +882,16 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            {categoryFilteredItems.length}
+          </span>
+        </div>
+        <div className="flex items-center">
           {categoryFilteredItems.length > 0 && (
-            <button
-              onClick={() => {
+                <button
+                  onClick={() => {
                 const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
                 const allCompleted = allSupplementIds.every(id => completedItems.has(id))
                 
@@ -897,7 +907,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
                   })
                 }
               }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900 mr-2"
               aria-label="Check all supplements"
             >
               <span className="text-xs">
@@ -908,18 +918,27 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors mr-1"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
           <button
-            onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage supplements"
+            onClick={onAdd}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            style={{ marginRight: '-4px' }}
+            aria-label="Add supplement"
+            title="Add supplement"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={onManage}
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            aria-label="Manage supplements"
+            title="Manage supplements"
+          >
+            Manage
           </button>
         </div>
       </div>
@@ -1004,14 +1023,14 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
-                        </button>
+                </button>
                         <div className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                           <div className="text-sm font-medium">
                             {item.name}
                             {item.dose && (
                               <div className="text-xs text-gray-500">{item.dose}</div>
                             )}
-                          </div>
+              </div>
                         </div>
                       </div>
                     )
@@ -1019,10 +1038,10 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
                   {groupedSupplements.midday.length === 0 && (
                     <div className="text-center py-4">
                       <p className="text-xs text-gray-400">No midday supplements</p>
-                    </div>
-                  )}
-                  </div>
-                </div>
+            </div>
+          )}
+        </div>
+      </div>
 
                 {/* Evening Column */}
                 <div className="space-y-2">
@@ -1139,11 +1158,12 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage }: 
 }
 
 // Row 2 — Protocols Card
-const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
+const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAdd }: {
   items: any[]
   onToggleComplete: (id: string, type: string) => void
   completedItems: Set<string>
   onManage: () => void
+  onAdd: () => void
 }) => {
   const [collapsed, setCollapsed] = useState(false)
 
@@ -1158,45 +1178,32 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
-          Today's<br />
-          Protocols
-        </h2>
-        <div className="flex items-center space-x-2">
-          {items.length > 0 && (
-            <button
-              onClick={() => {
-                const allProtocolIds = items.map(item => `protocol-${item.id}`)
-                const allCompleted = allProtocolIds.every(id => completedItems.has(id))
-                
-                if (allCompleted) {
-                  // Uncheck all
-                  allProtocolIds.forEach(id => onToggleComplete(id.replace('protocol-', ''), 'protocol'))
-                } else {
-                  // Check all
-                  allProtocolIds.forEach(id => {
-                    if (!completedItems.has(id)) {
-                      onToggleComplete(id.replace('protocol-', ''), 'protocol')
-                    }
-                  })
-                }
-              }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-              aria-label="Check all protocols"
-            >
-              <span className="text-xs">
-                {items.every(item => completedItems.has(`protocol-${item.id}`)) ? '↶' : '✓'}
-              </span>
-              <span>{items.every(item => completedItems.has(`protocol-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
-            </button>
-          )}
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+            Today's<br />
+            Protocols
+          </h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            {items.length}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <button
+            onClick={onAdd}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            style={{ marginRight: '-4px' }}
+            aria-label="Add protocol"
+            title="Add protocol"
+          >
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
           <button
             onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage protocols"
+            title="Manage protocols"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            Manage
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -1263,7 +1270,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage }: {
 }
 
 // Row 2 — Movement Card
-const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () => void }) => {
+const MovementCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage: () => void; onAdd: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -1277,18 +1284,32 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
-          Today's<br />
-          Movement
-        </h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+            Today's<br />
+            Movement
+          </h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            {items.length}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <button
+            onClick={onAdd}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            style={{ marginRight: '-4px' }}
+            aria-label="Add movement"
+            title="Add movement"
+          >
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
           <button
             onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage movement"
+            title="Manage movement"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            Manage
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -1337,7 +1358,7 @@ const MovementCard = ({ items = [], onManage }: { items?: any[]; onManage: () =>
 }
 
 // Row 2 — Mindfulness Card
-const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: () => void }) => {
+const MindfulnessCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage: () => void; onAdd: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -1351,18 +1372,32 @@ const MindfulnessCard = ({ items = [], onManage }: { items?: any[]; onManage: ()
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
-          Today's<br />
-          Mindfulness
-        </h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+            Today's<br />
+            Mindfulness
+          </h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            {items.length}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <button
+            onClick={onAdd}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            style={{ marginRight: '-4px' }}
+            aria-label="Add mindfulness"
+            title="Add mindfulness"
+          >
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
           <button
             onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage mindfulness"
+            title="Manage mindfulness"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            Manage
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -1452,12 +1487,20 @@ const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => vo
             <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
           <button
-            onClick={onManage}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage food"
+            onClick={() => setShowAddFood(true)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Add food"
+            title="Add food"
           >
-            <Plus className="w-3 h-3" />
-            <span>Manage</span>
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={onManage}
+            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            aria-label="Manage food"
+            title="Manage food"
+          >
+            Manage
           </button>
         </div>
       </div>
@@ -1628,6 +1671,7 @@ const PillarCard = ({
 }
 
 export default function DashboardClient({ profile, counts, todayItems, userId }: DashboardClientProps) {
+  const router = useRouter()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
 
   // Load completed items from localStorage on mount
@@ -1651,9 +1695,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const loadDashboardData = async () => {
     try {
-      const response = await fetch('/api/dashboard')
+      // Add cache-busting timestamp for Safari
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/dashboard?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
       if (response.ok) {
         const data = await response.json()
+        // Update follower count from API (for real-time updates)
         setFollowerCount(data.followers.count || 0)
         
         // Show toast if there are new followers
@@ -1665,6 +1718,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error)
+      // Keep the server-side follower count if API fails
     }
   }
 
@@ -1723,12 +1777,19 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showQuickAddFood, setShowQuickAddFood] = useState(false)
   const [showAddGear, setShowAddGear] = useState(false)
+  const [showAddLibrary, setShowAddLibrary] = useState(false)
+  const [showAddSupplement, setShowAddSupplement] = useState(false)
+  const [showAddProtocol, setShowAddProtocol] = useState(false)
+  const [showAddMovement, setShowAddMovement] = useState(false)
+  const [showAddMindfulness, setShowAddMindfulness] = useState(false)
+  const [showAddFood, setShowAddFood] = useState(false)
+  const [showNotifyFollowers, setShowNotifyFollowers] = useState(false)
   const [isHoveringHero, setIsHoveringHero] = useState(false)
   const [displayName, setDisplayName] = useState(profile.display_name)
   const [showDisplayName, setShowDisplayName] = useState(true)
   const [isEditingDisplayName, setIsEditingDisplayName] = useState(false)
   const [tempDisplayName, setTempDisplayName] = useState(profile.display_name)
-  const [followerCount, setFollowerCount] = useState(0)
+  const [followerCount, setFollowerCount] = useState(counts.followers)
   const [showNewFollowerToast, setShowNewFollowerToast] = useState(false)
   const [newFollowerCount, setNewFollowerCount] = useState(0)
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
@@ -1913,7 +1974,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <img
                   src="/BIOSTACKR LOGO 2.png"
                   alt="Biostackr"
-                  className="h-12 w-auto"
+                  className="h-14 w-auto"
                 />
                 <span className="sr-only">Biostackr dashboard</span>
                 </Link>
@@ -1936,7 +1997,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <button
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(`${window.location.origin}/u/${profile.slug}`)
+                      await navigator.clipboard.writeText(`${window.location.origin}/u/${profile.slug}?public=true`)
                       setShowCopyToast(true)
                       setTimeout(() => setShowCopyToast(false), 2000)
                     } catch (err) {
@@ -1949,6 +2010,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 >
                   Copy Public Link
                 </button>
+
+                {/* Notify Followers Button */}
+            <button
+                  onClick={() => setShowNotifyFollowers(true)}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  title="Send update to your followers"
+                >
+                  Notify Followers
+            </button>
 
                 {/* Journal Link */}
             <button
@@ -1999,7 +2069,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               {/* Top: Display Name + Mission */}
               <div className="space-y-3">
                 {/* Clickable Profile Area */}
-                <button
+                          <button
                   onClick={() => setShowHeaderEditor(true)}
                   className="text-left group"
                 >
@@ -2012,28 +2082,20 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   <p className="text-base text-gray-600 group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
                   </p>
-                </button>
+                          </button>
 
-                {/* Daily Check-in Results */}
-                {dailyCheckIn && (
-                  <button
-                    onClick={() => setShowShareTodayModal(true)}
-                    className="text-left text-base text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
-                  >
-                    <span className="font-medium">Energy {dailyCheckIn.energy}/10</span>
-                    {dailyCheckIn.mood && (
-                      <span className="text-gray-500"> • {dailyCheckIn.mood}</span>
-                    )}
-                  </button>
-                )}
-              </div>
+                        </div>
+                        
+                        {/* Trial Status Badge - Small and positioned nicely */}
+                        <div className="mt-4 flex justify-end">
+                          <div className="scale-75 origin-top-right">
+                            <TrialStatusBadge userId={userId} currentTier={profile.tier || 'free'} />
+                          </div>
+                        </div>
 
               {/* Bottom: Badge Row - Inline */}
               <div className="mt-6">
                 <div className="flex flex-wrap items-center gap-4">
-                  {/* Trial Status Badge */}
-                  <TrialStatusBadge userId={userId} currentTier={profile.tier || 'free'} />
-                  
                   {/* Status Text Items */}
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     🔥 0-day streak
@@ -2041,6 +2103,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     ✅ {completionPercentage}% complete
                   </div>
+                  
+                  {/* Daily Check-in Energy & Mood Chip */}
+                  {dailyCheckIn && (
+                    <button
+                      onClick={() => setShowShareTodayModal(true)}
+                      className="text-sm font-medium hover:opacity-75 transition-opacity cursor-pointer"
+                      style={{ color: '#5C6370' }}
+                    >
+                      <span className="flex items-center space-x-1">
+                        <span>🔋</span>
+                        <span>Energy {dailyCheckIn.energy}/10</span>
+                        {dailyCheckIn.mood && (
+                          <span>• {dailyCheckIn.mood}</span>
+                        )}
+                      </span>
+                    </button>
+                  )}
                   
                   {/* Follower Count Text - Always Show */}
                         <button
@@ -2091,7 +2170,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               items={todayItems.supplements}
               onToggleComplete={handleToggleComplete}
               completedItems={completedItems}
-              onManage={() => window.location.href = '/dash/stack'}
+              onManage={() => router.push('/dash/stack')}
+              onAdd={() => setShowAddSupplement(true)}
             />
 
             {/* Row 2 — Three Equal Cards */}
@@ -2100,21 +2180,25 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 items={todayItems.protocols}
                 onToggleComplete={handleToggleComplete}
                 completedItems={completedItems}
-                onManage={() => window.location.href = '/dash/protocols'}
+                onManage={() => router.push('/dash/protocols')}
+                onAdd={() => setShowAddProtocol(true)}
               />
               <MovementCard
                 items={todayItems.movement}
-                onManage={() => window.location.href = '/dash/movement'}
+                onManage={() => router.push('/dash/movement')}
+                onAdd={() => setShowAddMovement(true)}
               />
               <MindfulnessCard
                 items={todayItems.mindfulness}
-                onManage={() => window.location.href = '/dash/mindfulness'}
+                onManage={() => router.push('/dash/mindfulness')}
+                onAdd={() => setShowAddMindfulness(true)}
               />
                   </div>
 
 
             {/* Row 4 — Library (Full Width) */}
             <LibrarySection
+              onAdd={() => setShowAddLibrary(true)}
               onManage={() => window.location.href = '/dash/library'}
               collapsed={libraryCollapsed}
               onToggleCollapse={() => setLibraryCollapsed(!libraryCollapsed)}
@@ -2123,6 +2207,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Row 5 — Gear (Full Width) */}
             <GearCard
               items={todayItems.gear}
+              onAdd={() => setShowAddGear(true)}
               onManage={() => window.location.href = '/dash/gear'}
             />
 
@@ -2310,13 +2395,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               <div>
                 <div className="font-medium">
                   You have {newFollowerCount} new follower{newFollowerCount > 1 ? 's' : ''}!
-                          </div>
+                    </div>
                 <div className="text-sm opacity-90">
                   Total followers: {followerCount}
-                        </div>
-                      </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
+                </div>
+                    </div>
         )}
         
         {/* Quick Add Food Modal */}
@@ -2331,7 +2416,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
-              </div>
+          </div>
 
               <AddStackItemForm 
                 onClose={() => {
@@ -2339,9 +2424,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   window.location.reload() // Refresh to show new food items
                 }} 
                 itemType="food"
-              />
-            </div>
-          </div>
+                            />
+                          </div>
+                        </div>
         )}
 
         {/* Daily Check-in Modal */}
@@ -2358,6 +2443,133 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         {/* Add Gear Modal */}
         {showAddGear && (
           <AddGearForm onClose={() => setShowAddGear(false)} />
+        )}
+
+        {/* Add Library Modal */}
+        {showAddLibrary && (
+          <LibraryUploadForm onClose={() => setShowAddLibrary(false)} />
+        )}
+
+        {/* Add Supplement Modal */}
+        {showAddSupplement && (
+          <AddStackItemForm 
+            onClose={() => setShowAddSupplement(false)} 
+            itemType="supplements"
+          />
+        )}
+
+        {/* Add Protocol Modal */}
+        {showAddProtocol && (
+          <AddProtocolForm 
+            onClose={() => setShowAddProtocol(false)} 
+          />
+        )}
+
+        {/* Add Movement Modal */}
+        {showAddMovement && (
+          <AddStackItemForm 
+            onClose={() => setShowAddMovement(false)} 
+            itemType="movement"
+          />
+        )}
+
+        {/* Add Mindfulness Modal */}
+        {showAddMindfulness && (
+          <AddStackItemForm 
+            onClose={() => setShowAddMindfulness(false)} 
+            itemType="mindfulness"
+          />
+        )}
+
+        {/* Add Food Modal */}
+        {showAddFood && (
+          <AddStackItemForm 
+            onClose={() => setShowAddFood(false)} 
+            itemType="food"
+          />
+        )}
+
+        {/* Notify Followers Modal */}
+        {showNotifyFollowers && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Notify Followers</h3>
+                <button
+                  onClick={() => setShowNotifyFollowers(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                Send an instant update to your followers about recent changes to your stack.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Update message (optional)
+                  </label>
+                  <textarea
+                    placeholder="e.g., 'Starting a new supplement protocol' or 'Added sauna to my routine'"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows={3}
+                  />
+            </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 mb-2">How Email Notifications Work:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• <strong>Instant notifications:</strong> You can send 1 per day to your followers</li>
+                    <li>• <strong>Weekly digest:</strong> Every Sunday at 5pm with ALL changes from the week</li>
+                    <li>• <strong>No changes = No email:</strong> If no changes are made during the week, no digest email will be sent</li>
+                    <li>• <strong>Complete coverage:</strong> Weekly digest includes everything, even if you sent instant notifications</li>
+                  </ul>
+          </div>
+
+                <div className="flex gap-3">
+                <button
+                    onClick={() => setShowNotifyFollowers(false)}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                    onClick={async () => {
+                      try {
+                        const message = document.querySelector('textarea')?.value || ''
+                        
+                        const response = await fetch('/api/notify-followers', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ message }),
+                        })
+
+                        const result = await response.json()
+
+                        if (response.ok) {
+                          alert(`✅ Instant notification sent to ${result.followersNotified} follower(s)!\n\nRemember: They'll also get a weekly digest every Sunday with ALL your changes.`)
+                          setShowNotifyFollowers(false)
+                        } else {
+                          throw new Error(result.error || 'Failed to send update')
+                        }
+                      } catch (error) {
+                        console.error('Failed to notify followers:', error)
+                        alert('Failed to send update. Please try again.')
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    Send Update
+                </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Dashboard Header Editor */}

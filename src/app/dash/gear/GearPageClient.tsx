@@ -58,17 +58,6 @@ const GearCard = ({
     return 'Just now'
   }
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      'Wearables': '⌚',
-      'Recovery': '🧊',
-      'Kitchen': '🍳',
-      'Fitness': '🏋️',
-      'Sleep': '🛏️',
-      'Other': '🔧'
-    }
-    return icons[category] || '🔧'
-  }
 
   useEffect(() => {
     const handleClickOutside = () => setShowKebab(false)
@@ -83,7 +72,6 @@ const GearCard = ({
       {/* Header Row */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3 flex-1">
-          <span className="text-2xl">{getCategoryIcon(gearItem.category)}</span>
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate" title={gearItem.name}>
               {gearItem.name}
@@ -295,8 +283,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                   <img 
                     src="/BIOSTACKR LOGO 2.png" 
                     alt="Biostackr" 
-                    className="h-16 w-auto"
-                    style={{ width: '280px' }}
+                    className="h-14 w-auto"
                   />
                 </Link>
               </div>

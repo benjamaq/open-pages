@@ -5,11 +5,17 @@ import { AlertTriangle, Crown, Plus, X } from 'lucide-react'
 
 interface UsageData {
   stackItems: number
-  protocols: number
-  uploads: number
   stackItemsLimit: number
-  protocolsLimit: number
-  uploadsLimit: number
+  currentTier: string
+  isInTrial: boolean
+  trialEndedAt: string | null
+  breakdown: {
+    supplements: number
+    protocols: number
+    uploads: number
+    library: number
+    gear: number
+  }
 }
 
 interface LimitCheckerProps {
@@ -55,49 +61,40 @@ export default function LimitChecker({ userId, currentTier }: LimitCheckerProps)
     setDismissed(true)
   }
 
-  if (loading || !usageData || currentTier !== 'free' || dismissed) {
+  // Don't show limit warnings if:
+  // 1. Still loading
+  // 2. No usage data
+  // 3. User is on Pro/Creator tier (not free)
+  // 4. User is in an active trial
+  // 5. User dismissed the warning
+  if (loading || !usageData || currentTier !== 'free' || usageData.isInTrial || dismissed) {
     return null
   }
 
-  // Check if user is approaching limits (80% or more)
+  // Check if user is approaching the unified stack limit (80% or more)
   const stackItemsNearLimit = usageData.stackItems >= (usageData.stackItemsLimit * 0.8)
-  const protocolsNearLimit = usageData.protocols >= (usageData.protocolsLimit * 0.8)
-  const uploadsNearLimit = usageData.uploads >= (usageData.uploadsLimit * 0.8)
+  const isNearLimit = stackItemsNearLimit
 
-  const isNearAnyLimit = stackItemsNearLimit || protocolsNearLimit || uploadsNearLimit
-
-  if (!isNearAnyLimit) {
+  if (!isNearLimit) {
     return null
   }
 
   const getLimitMessage = () => {
-    const limits = []
-    if (stackItemsNearLimit) {
-      limits.push(`${usageData.stackItems}/${usageData.stackItemsLimit} supplements`)
-    }
-    if (protocolsNearLimit) {
-      limits.push(`${usageData.protocols}/${usageData.protocolsLimit} protocols`)
-    }
-    if (uploadsNearLimit) {
-      limits.push(`${usageData.uploads}/${usageData.uploadsLimit} files`)
-    }
-    
-    return `You're using ${limits.join(', ')}`
+    return `You're using ${usageData.stackItems}/${usageData.stackItemsLimit} stack items`
   }
 
   const getDetailedMessage = () => {
-    const messages = []
-    if (stackItemsNearLimit) {
-      messages.push(`${usageData.stackItems}/${usageData.stackItemsLimit} supplements`)
-    }
-    if (protocolsNearLimit) {
-      messages.push(`${usageData.protocols}/${usageData.protocolsLimit} protocols`)
-    }
-    if (uploadsNearLimit) {
-      messages.push(`${usageData.uploads}/${usageData.uploadsLimit} files`)
-    }
+    const breakdown = usageData.breakdown
+    const parts = []
     
-    return `You're using ${messages.join(', ')}. Your existing items will remain safe, but you won't be able to add more until you upgrade.`
+    if (breakdown.supplements > 0) parts.push(`${breakdown.supplements} supplements`)
+    if (breakdown.protocols > 0) parts.push(`${breakdown.protocols} protocols`)
+    if (breakdown.uploads > 0) parts.push(`${breakdown.uploads} files`)
+    if (breakdown.library > 0) parts.push(`${breakdown.library} library items`)
+    if (breakdown.gear > 0) parts.push(`${breakdown.gear} gear items`)
+    
+    const breakdownText = parts.length > 0 ? parts.join(', ') : 'No items yet'
+    return `You're using ${usageData.stackItems}/${usageData.stackItemsLimit} stack items (${breakdownText}). Your existing items will remain safe, but you won't be able to add more until you upgrade.`
   }
 
   return (

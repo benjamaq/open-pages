@@ -33,8 +33,7 @@ export default async function BillingPage() {
               <img
                 src="/BIOSTACKR LOGO 2.png"
                 alt="Biostackr"
-                className="h-16 w-auto"
-                style={{ height: '80px', width: 'auto' }}
+                className="h-14 w-auto"
               />
               <span className="sr-only">Biostackr dashboard</span>
             </a>

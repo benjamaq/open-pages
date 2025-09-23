@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Plus, Edit3 } from 'lucide-react'
-import { createJournalEntry, updateJournalEntry } from '../lib/actions/journal'
+import { ChevronDown, Plus, Edit3, Trash2 } from 'lucide-react'
+import { createJournalEntry, updateJournalEntry, deleteJournalEntry } from '../lib/actions/journal'
 
 interface JournalEntry {
   id: string
@@ -35,38 +35,8 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // For testing, create sample entries if none exist
-  const sampleEntries = [
-    {
-      id: 'sample-1',
-      profile_id: 'sample',
-      heading: 'My Health Journey',
-      body: 'Started my morning with a 20-minute meditation session followed by cold exposure therapy. The combination of breathwork and cold plunge has been transformative for my energy levels and mental clarity. Planning to track this consistently over the next 30 days to measure the impact on my overall well-being and cognitive performance.',
-      public: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 'sample-2',
-      profile_id: 'sample',
-      heading: 'Supplement Protocol Update',
-      body: 'After 3 weeks of consistent magnesium supplementation, I\'ve noticed significant improvements in sleep quality and recovery. Switching from magnesium oxide to magnesium glycinate made a noticeable difference. Planning to add zinc and vitamin D3 to the evening routine.',
-      public: true,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-      updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'sample-3',
-      profile_id: 'sample',
-      heading: null,
-      body: 'Quick reflection on today\'s workout: Felt strong during the deadlifts, but noticed some fatigue in the final set. Might need to adjust my pre-workout nutrition timing.',
-      public: true,
-      created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      updated_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
-    }
-  ]
-
-  const displayEntries = journalEntries.length > 0 ? journalEntries : sampleEntries
+  // Use actual journal entries only
+  const displayEntries = journalEntries
   
   // Always show journal module for demo purposes
   // if (journalEntries.length === 0 || !showJournalPublic) return null
@@ -127,6 +97,25 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
     setFormData({ heading: '', body: '', public: true })
     setShowAddForm(false)
     setError(null)
+  }
+
+  const handleDelete = async (entryId: string) => {
+    if (!confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await deleteJournalEntry(entryId)
+      // The page will revalidate automatically due to revalidatePath in the action
+    } catch (err) {
+      console.error('Error deleting journal entry:', err)
+      setError('Failed to delete journal entry. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -238,20 +227,43 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
           /* Expanded State - Show all entries */
           <div className="px-6 pb-6 max-h-96 overflow-y-auto">
             <div className="space-y-6">
-              {displayEntries.map((entry, index) => (
+              {displayEntries.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-2">
+                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No journal entries yet</h3>
+                  <p className="text-gray-500 text-sm max-w-md mx-auto">
+                    Put your first journal entry here. Talk about your health journey, supplement experiences, workout reflections, or any insights you want to share.
+                  </p>
+                </div>
+              ) : (
+                displayEntries.map((entry, index) => (
                 <div key={entry.id} className={`${index > 0 ? 'border-t border-gray-100 pt-6' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-xs text-gray-500">
                       {formatDate(entry.created_at)}
                     </div>
                     {isOwnProfile && !entry.id.startsWith('sample') && (
-                      <button
-                        onClick={() => handleEdit(entry)}
-                        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                        title="Edit entry"
-                      >
-                        <Edit3 className="w-3 h-3 text-gray-400" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEdit(entry)}
+                          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          title="Edit entry"
+                        >
+                          <Edit3 className="w-3 h-3 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          disabled={isLoading}
+                          className="p-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                        </button>
+                      </div>
                     )}
                   </div>
                   {entry.heading && (
@@ -261,7 +273,8 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
                     {entry.body}
                   </div>
                 </div>
-              ))}
+                ))
+              )}
               
               {displayEntries.length > 10 && (
                 <div className="text-center pt-4 border-t border-gray-100">

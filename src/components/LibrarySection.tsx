@@ -6,12 +6,14 @@ import { LibraryItem, getUserLibraryItems } from '../lib/actions/library'
 import LibraryUploadForm from './LibraryUploadForm'
 
 interface LibrarySectionProps {
+  onAdd?: () => void
   onManage?: () => void
   collapsed?: boolean
   onToggleCollapse?: () => void
 }
 
 export default function LibrarySection({ 
+  onAdd,
   onManage, 
   collapsed = false, 
   onToggleCollapse 
@@ -106,32 +108,37 @@ export default function LibrarySection({
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-gray-600" />
             </div>
-            <div>
+            <div className="flex items-center space-x-3">
               <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Library</h2>
-              <p className="text-sm text-gray-500">
-                {loading ? 'Loading...' : 
-                 items.length > 0 ? `${items.length} ${items.length === 1 ? 'item' : 'items'}` :
-                 'Lab results, training plans, assessments & more'
-                }
-              </p>
+              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                {loading ? '...' : items.length}
+              </span>
             </div>
+            <p className="text-sm text-gray-500 mt-1">
+              {loading ? 'Loading...' : 
+               items.length > 0 ? 'Lab results, training plans, assessments & more' :
+               'Lab results, training plans, assessments & more'
+              }
+            </p>
           </div>
           
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowUploadForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-xs font-medium"
-            >
-              <Upload className="w-3 h-3" />
-              <span>Upload</span>
-            </button>
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Add to library"
+              >
+                <Plus className="w-4 h-4 text-gray-600" />
+              </button>
+            )}
             
             {onManage && (
               <button
                 onClick={onManage}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+                className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
               >
-                <span>Manage</span>
+                Manage
               </button>
             )}
 

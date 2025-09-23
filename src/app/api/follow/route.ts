@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '../../../lib/supabase/server'
-import { sendEmail, sendNewFollowerNotification } from '../../../lib/email/resend'
+// import { sendEmail, sendNewFollowerNotification } from '../../../lib/email/resend'
 import crypto from 'crypto'
 
 // POST /api/follow - Follow a user's stack
 export async function POST(request: NextRequest) {
   try {
     const { ownerUserId, email } = await request.json()
+
+    console.log('🔍 Follow API received:', { ownerUserId, email })
 
     if (!ownerUserId) {
       return NextResponse.json({ error: 'Owner user ID is required' }, { status: 400 })
@@ -15,13 +17,20 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Check if owner allows followers
+    console.log('🔍 Looking up profile for user_id:', ownerUserId)
     const { data: ownerProfile, error: ownerError } = await supabase
       .from('profiles')
-      .select('allow_stack_follow, name, slug')
+      .select('allow_stack_follow, display_name, slug, user_id')
       .eq('user_id', ownerUserId)
       .single()
 
+    console.log('🔍 Profile query result:', { ownerProfile, ownerError })
+    console.log('🔍 Owner profile data:', ownerProfile)
+    console.log('🔍 Owner error details:', ownerError)
+
     if (ownerError || !ownerProfile) {
+      console.error('❌ Profile not found:', ownerError)
+      console.error('❌ Owner profile data:', ownerProfile)
       return NextResponse.json({ error: 'Owner profile not found' }, { status: 404 })
     }
 
@@ -61,7 +70,7 @@ export async function POST(request: NextRequest) {
             .from('stack_followers')
             .update({ 
               verified_at: new Date().toISOString(),
-              verify_token: null 
+              "verify_token": null 
             })
             .eq('id', existing.id)
 
@@ -94,7 +103,8 @@ export async function POST(request: NextRequest) {
           })
 
         // Send owner notification
-        await sendOwnerNotification(supabase, ownerUserId)
+        // await sendOwnerNotification(supabase, ownerUserId)
+        console.log('📧 Would send owner notification for user:', ownerUserId)
       }
 
       return NextResponse.json({ status: 'following' })
@@ -114,7 +124,7 @@ export async function POST(request: NextRequest) {
       // Check if already following with this email
       const { data: existing } = await supabase
         .from('stack_followers')
-        .select('id, verified_at, verify_token')
+        .select('id, verified_at, "verify_token"')
         .eq('owner_user_id', ownerUserId)
         .eq('follower_email', email)
         .single()
@@ -128,13 +138,13 @@ export async function POST(request: NextRequest) {
         } else {
           // Resend verification
           followId = existing.id
-          verifyToken = existing.verify_token || crypto.randomBytes(32).toString('hex')
+          verifyToken = existing["verify_token"] || crypto.randomBytes(32).toString('hex')
           
           // Update token if needed
-          if (!existing.verify_token) {
+          if (!existing["verify_token"]) {
             await supabase
               .from('stack_followers')
-              .update({ verify_token: verifyToken })
+              .update({ "verify_token": verifyToken })
               .eq('id', followId)
           }
         }
@@ -147,7 +157,7 @@ export async function POST(request: NextRequest) {
           .insert({
             owner_user_id: ownerUserId,
             follower_email: email,
-            verify_token: verifyToken
+            "verify_token": verifyToken
           })
           .select('id')
           .single()
@@ -162,19 +172,22 @@ export async function POST(request: NextRequest) {
       // Send verification email
       const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/follow/verify?token=${verifyToken}`
       
-      const emailResult = await sendEmail({
-        to: email,
-        subject: `Confirm you want updates to ${ownerProfile.name || 'this user'}'s stack`,
-        html: generateVerificationEmail({
-          ownerName: ownerProfile.name || 'this user',
-          verifyUrl,
-          unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?token=${followId}`
-        })
-      })
+      // TODO: Re-enable email sending
+      console.log('📧 Would send verification email to:', email, 'with URL:', verifyUrl)
+      
+      // const emailResult = await sendEmail({
+      //   to: email,
+      //   subject: `Confirm you want updates to ${ownerProfile.display_name || 'this user'}'s stack`,
+      //   html: generateVerificationEmail({
+      //     ownerName: ownerProfile.display_name || 'this user',
+      //     verifyUrl,
+      //     unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?token=${followId}`
+      //   })
+      // })
 
-      if (!emailResult.success) {
-        return NextResponse.json({ error: 'Failed to send verification email' }, { status: 500 })
-      }
+      // if (!emailResult.success) {
+      //   return NextResponse.json({ error: 'Failed to send verification email' }, { status: 500 })
+      // }
 
       return NextResponse.json({ status: 'pending' })
     }

@@ -7,9 +7,11 @@ import UnifiedHeaderEditor from './UnifiedHeaderEditor'
 interface PublicProfileHeaderProps {
   profile: any
   isOwnProfile: boolean
+  followerCount?: number
+  showFollowerCount?: boolean
 }
 
-export default function PublicProfileHeader({ profile, isOwnProfile }: PublicProfileHeaderProps) {
+export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true }: PublicProfileHeaderProps) {
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
@@ -117,21 +119,33 @@ export default function PublicProfileHeader({ profile, isOwnProfile }: PublicPro
           </div>
         )}
 
-        {/* Eating Style Pill - Smaller */}
-        {(eatingStyle || isOwnProfile) && (
-          <button
-            onClick={isOwnProfile ? () => setShowHeaderEditor(true) : undefined}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-              eatingStyle && styleConfig.color ? 
-                `${styleConfig.color} ${isOwnProfile ? 'hover:opacity-80' : ''}` :
-                `bg-gray-100 text-gray-600 border-gray-200 ${isOwnProfile ? 'hover:bg-gray-200' : ''}`
-            } ${isOwnProfile ? 'cursor-pointer' : 'cursor-default'}`}
-          >
+        {/* Eating Style Pill - Only show if user has set one, or if it's their own profile */}
+        {eatingStyle && (
+          <div className="px-3 py-1.5 rounded-full text-xs font-medium border bg-gray-50 text-gray-700 border-gray-200">
             <span className="flex items-center gap-1.5">
               {styleConfig.icon && <span className="text-sm">{styleConfig.icon}</span>}
-              <span>{eatingStyle ? `My eating style is ${eatingStyle}` : 'Add eating style'}</span>
+              <span>Eating style: {eatingStyle}</span>
+            </span>
+          </div>
+        )}
+        
+        {/* Add Eating Style Button - Only for own profile */}
+        {isOwnProfile && !eatingStyle && (
+          <button
+            onClick={() => setShowHeaderEditor(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <span>Add eating style</span>
             </span>
           </button>
+        )}
+
+        {/* Follower Count - Only show if enabled and not own profile */}
+        {showFollowerCount && !isOwnProfile && followerCount > 0 && (
+          <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
+            👥 {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
+          </div>
         )}
 
         {/* Edit Button for Owner */}
