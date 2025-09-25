@@ -5,12 +5,14 @@ import { createClient } from '../../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { handleUpgradeRedirect } from '../../../../lib/actions/stripe'
+import BetaCodeInput from '../../../../components/BetaCodeInput'
 
 export default function ProSignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [referralCode, setReferralCode] = useState('')
+  const [betaCode, setBetaCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -32,6 +34,12 @@ export default function ProSignUpPage() {
 
     if (!name.trim()) {
       setError('Name is required')
+      setLoading(false)
+      return
+    }
+
+    if (!betaCode.trim()) {
+      setError('Beta code is required for Pro signup')
       setLoading(false)
       return
     }
@@ -74,6 +82,30 @@ export default function ProSignUpPage() {
           }
         } catch (profileError) {
           console.error('Profile upsert error:', profileError)
+        }
+
+        // Validate and activate beta code
+        try {
+          const response = await fetch('/api/beta/validate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: betaCode.trim() }),
+          })
+
+          const result = await response.json()
+
+          if (!response.ok) {
+            setError(result.error || 'Invalid beta code')
+            setLoading(false)
+            return
+          }
+        } catch (betaError) {
+          console.error('Beta code validation error:', betaError)
+          setError('Failed to validate beta code. Please try again.')
+          setLoading(false)
+          return
         }
 
         // Redirect to Stripe checkout session for payment
@@ -173,6 +205,21 @@ export default function ProSignUpPage() {
               </div>
               <p className="mt-1 text-xs text-gray-500">
                 Got a referral code? Enter it here to get special benefits!
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="betaCode" className="block text-sm font-medium text-gray-700">
+                Beta Code <span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1">
+                <BetaCodeInput
+                  onSuccess={(code) => setBetaCode(code)}
+                  placeholder="Enter your beta code"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                A valid beta code is required for Pro signup
               </p>
             </div>
 
