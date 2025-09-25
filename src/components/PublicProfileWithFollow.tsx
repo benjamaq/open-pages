@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase/client'
 import PublicProfileHeader from './PublicProfileHeader'
-import FollowButton from './FollowButton'
 
 interface PublicProfileWithFollowProps {
   profile: any
@@ -62,19 +61,8 @@ export default function PublicProfileWithFollow({
         showFollowerCount={showFollowerCount}
         isSharedPublicLink={isSharedPublicLink}
         isBetaUser={isBetaUser}
+        onFollowSuccess={handleFollowSuccess}
       />
-      
-      {!isOwnProfile && (
-        <div className="flex justify-center">
-          <FollowButton
-            ownerUserId={profile.user_id}
-            ownerName={profile.display_name || 'this user'}
-            allowsFollowing={profile.allow_stack_follow ?? true} // Default to true if not set
-            onFollowSuccess={handleFollowSuccess}
-            className="mt-4"
-          />
-        </div>
-      )}
     </div>
   )
 }

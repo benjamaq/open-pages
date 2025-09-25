@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Edit2 } from 'lucide-react'
 import UnifiedHeaderEditor from './UnifiedHeaderEditor'
+import FollowButton from './FollowButton'
 
 interface PublicProfileHeaderProps {
   profile: any
@@ -11,9 +12,10 @@ interface PublicProfileHeaderProps {
   showFollowerCount?: boolean
   isSharedPublicLink?: boolean
   isBetaUser?: boolean
+  onFollowSuccess?: () => void
 }
 
-export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true, isSharedPublicLink = false, isBetaUser = false }: PublicProfileHeaderProps) {
+export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true, isSharedPublicLink = false, isBetaUser = false, onFollowSuccess }: PublicProfileHeaderProps) {
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
@@ -154,6 +156,19 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
         {showFollowerCount && (!isOwnProfile || isSharedPublicLink) && followerCount > 0 && (
           <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
             👥 {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
+          </div>
+        )}
+
+        {/* Follow Stack Button - Only show for non-owners */}
+        {!isOwnProfile && (
+          <div className="ml-auto">
+            <FollowButton
+              ownerUserId={profile.user_id}
+              ownerName={profile.display_name || 'this user'}
+              allowsFollowing={profile.allow_stack_follow ?? true}
+              onFollowSuccess={onFollowSuccess}
+              className=""
+            />
           </div>
         )}
 
