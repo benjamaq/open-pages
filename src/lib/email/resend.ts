@@ -95,11 +95,11 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
     const resendClient = getResendClient()
     
     console.log('Sending email to:', data.to)
-    console.log('From:', data.from || 'Biostackr <onboarding@resend.dev>')
+    console.log('From:', data.from || 'Biostackr <noreply@biostacker.io>')
     console.log('Subject:', data.subject)
     
     const result = await resendClient.emails.send({
-      from: data.from || 'Biostackr <onboarding@resend.dev>',
+      from: data.from || 'Biostackr <noreply@biostacker.io>',
       to: data.to,
       subject: data.subject,
       html: data.html
