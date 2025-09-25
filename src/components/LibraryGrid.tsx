@@ -298,7 +298,7 @@ export default function LibraryGrid({
               ? 'Try adjusting your search or filters to find what you\'re looking for.'
               : isOwner 
                 ? 'Upload and organize your health documents, lab results, training plans, and other important files in one place.'
-                : 'This user hasn\'t shared any library items yet. Check back later to see their health documents, lab results, and training plans.'
+                : 'This user hasn\'t shared any library items yet.'
             }
           </p>
           {showAddButton && onAdd && (
