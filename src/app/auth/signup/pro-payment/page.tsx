@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { handleUpgradeRedirect } from '../../../../lib/actions/stripe'
 
-export default function ProPaymentPage() {
+function ProPaymentContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -96,5 +96,29 @@ export default function ProPaymentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ProPaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <div className="mb-8">
+            <img 
+              src="/BIOSTACKR LOGO 2.png" 
+              alt="BioStackr" 
+              className="h-16 w-auto mx-auto mb-6"
+            />
+          </div>
+          <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading payment...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ProPaymentContent />
+    </Suspense>
   )
 }
