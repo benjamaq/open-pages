@@ -9,6 +9,8 @@ interface UsageData {
   currentTier: string
   isInTrial: boolean
   trialEndedAt: string | null
+  isBetaUser: boolean
+  betaExpiresAt: string | null
   breakdown: {
     supplements: number
     protocols: number
@@ -64,10 +66,11 @@ export default function LimitChecker({ userId, currentTier }: LimitCheckerProps)
   // Don't show limit warnings if:
   // 1. Still loading
   // 2. No usage data
-  // 3. User is on Pro/Creator tier (not free)
+  // 3. User is on Pro/Creator tier OR is a beta user (unlimited access)
   // 4. User is in an active trial
   // 5. User dismissed the warning
-  if (loading || !usageData || currentTier !== 'free' || usageData.isInTrial || dismissed) {
+  const hasUnlimitedAccess = currentTier !== 'free' || usageData?.isBetaUser || usageData?.isInTrial
+  if (loading || !usageData || hasUnlimitedAccess || dismissed) {
     return null
   }
 

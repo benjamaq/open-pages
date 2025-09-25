@@ -27,6 +27,16 @@ export async function GET() {
 
     const profileId = (profileData as { id: string }).id
 
+    // Check if user is a beta user with Pro-level access
+    const { data: betaCode } = await supabase
+      .from('beta_codes')
+      .select('*')
+      .eq('used_by', user.id)
+      .not('used_at', 'is', null)
+      .single()
+
+    const isBetaUser = !!betaCode && new Date(betaCode.expires_at) > new Date()
+
     // Get user's usage data (which contains tier information)
     const { data: usageData, error: usageError } = await supabase
       .from('user_usage')
@@ -47,6 +57,10 @@ export async function GET() {
       is_in_trial: boolean
       trial_ended_at: string | null
     }
+
+    // Override tier and limits for beta users
+    const effectiveTier = isBetaUser ? 'pro' : usage.tier
+    const effectiveStackLimit = isBetaUser ? 999999 : usage.stack_items_limit // Unlimited for beta users
 
     // Get current counts - unified stack limit
     const [stackItemsResult, protocolsResult, uploadsResult, libraryResult, gearResult] = await Promise.all([
@@ -84,10 +98,12 @@ export async function GET() {
 
     const response = NextResponse.json({
       stackItems: totalStackItems,
-      stackItemsLimit: usage.stack_items_limit || 20, // Use actual limit from database (default 20)
-      currentTier: usage.tier || 'free',
+      stackItemsLimit: effectiveStackLimit, // Use beta-overridden limit
+      currentTier: effectiveTier, // Use beta-overridden tier
       isInTrial: usage.is_in_trial || false,
       trialEndedAt: usage.trial_ended_at,
+      isBetaUser: isBetaUser, // Include beta status
+      betaExpiresAt: betaCode?.expires_at || null,
       breakdown: {
         supplements: stackItemsCount,
         protocols: protocolsCount,
