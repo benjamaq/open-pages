@@ -16,6 +16,24 @@ interface AutoReplyEmailData {
   name: string
 }
 
+interface EmailData {
+  to: string
+  subject: string
+  html: string
+}
+
+interface FollowerNotificationData {
+  ownerName: string
+  ownerSlug: string
+  message: string
+  followerEmail: string
+}
+
+interface CreatorConfirmationData {
+  ownerName: string
+  followersNotified: number
+}
+
 export async function sendContactEmail(data: ContactEmailData): Promise<void> {
   console.log('📧 Contact form submission received:', {
     submissionId: data.submissionId,
@@ -126,4 +144,80 @@ export const emailTemplates = {
       </div>
     `
   })
+}
+
+// Generic email sending function
+export async function sendEmail(data: EmailData): Promise<boolean> {
+  console.log('📧 Sending email to:', data.to)
+  
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not configured, skipping email send')
+    return false
+  }
+
+  try {
+    const { Resend } = require('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    await resend.emails.send({
+      from: 'noreply@biostackr.com',
+      to: data.to,
+      subject: data.subject,
+      html: data.html
+    })
+    
+    console.log('✅ Email sent successfully')
+    return true
+  } catch (error) {
+    console.error('❌ Failed to send email:', error)
+    return false
+  }
+}
+
+// Follower notification email
+export function createFollowerNotificationEmail(
+  ownerName: string,
+  ownerSlug: string,
+  message: string,
+  followerEmail: string
+): EmailData {
+  return {
+    to: followerEmail,
+    subject: `${ownerName} shared an update on their stack`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">New Update from ${ownerName}</h2>
+        <p>Hi there!</p>
+        <p>${ownerName} just shared an update on their health stack:</p>
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="font-style: italic;">"${message}"</p>
+        </div>
+        <p>Check out their full stack at: <a href="https://biostackr.io/${ownerSlug}">biostackr.io/${ownerSlug}</a></p>
+        <br>
+        <p>Best regards,<br>The Biostackr Team</p>
+      </div>
+    `
+  }
+}
+
+// Creator confirmation email
+export function createCreatorConfirmationEmail(
+  ownerName: string,
+  followersNotified: number
+): EmailData {
+  return {
+    to: 'creator@example.com', // This should be the creator's email
+    subject: `Update sent to ${followersNotified} follower(s)`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Update Sent Successfully</h2>
+        <p>Hi ${ownerName},</p>
+        <p>Your update has been sent to ${followersNotified} follower(s).</p>
+        <p>Keep sharing your health journey!</p>
+        <br>
+        <p>Best regards,<br>The Biostackr Team</p>
+      </div>
+    `
+  }
 }
