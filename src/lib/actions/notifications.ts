@@ -227,6 +227,11 @@ export async function sendTestEmail() {
     item.name?.toLowerCase().includes('meditation')
   ) || []
 
+  // Debug: Check environment variables
+  console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
+  console.log('RESEND_DOMAIN:', process.env.RESEND_DOMAIN)
+  console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
+
   // Send test email - only to the user's own email for testing
   const result = await sendDailyReminder({
     userName: (profile as any).name || 'User',
@@ -251,6 +256,8 @@ export async function sendTestEmail() {
     profileUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dash`,
     unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe`
   })
+
+  console.log('Test email result:', result)
 
   if (!result.success) {
     throw new Error(result.error || 'Failed to send test email')

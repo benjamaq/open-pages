@@ -86,13 +86,26 @@ export interface WeeklySummaryData {
 
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
+    // Debug: Check if API key exists
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured')
+      return { success: false, error: 'RESEND_API_KEY environment variable is not configured' }
+    }
+
     const resendClient = getResendClient()
+    
+    console.log('Sending email to:', data.to)
+    console.log('From:', data.from || 'Biostackr <onboarding@resend.dev>')
+    console.log('Subject:', data.subject)
+    
     const result = await resendClient.emails.send({
       from: data.from || 'Biostackr <onboarding@resend.dev>',
       to: data.to,
       subject: data.subject,
       html: data.html
     })
+
+    console.log('Resend API response:', result)
 
     if (result.error) {
       console.error('Resend error:', result.error)
