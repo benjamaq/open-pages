@@ -1,9 +1,10 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Check, Heart, Settings } from 'lucide-react'
 
-export default function VerifySuccessPage() {
+function VerifySuccessContent() {
   const searchParams = useSearchParams()
   const ownerName = searchParams.get('owner') || 'this user'
   const ownerSlug = searchParams.get('slug')
@@ -81,5 +82,32 @@ export default function VerifySuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifySuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="text-green-600 text-6xl mb-4">
+              <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Loading...
+            </h1>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifySuccessContent />
+    </Suspense>
   )
 }
