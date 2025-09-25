@@ -18,15 +18,17 @@ export async function updateDashboardProfile(updates: {
     }
 
     // Get user's profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', user.id)
-      .single()
+      .order('created_at', { ascending: false })
 
-    if (profileError || !profile) {
+    if (profileError || !profiles || profiles.length === 0) {
       throw new Error('Profile not found')
     }
+
+    const profile = profiles[0]
 
     // Prepare updates object
     const profileUpdates: any = {}

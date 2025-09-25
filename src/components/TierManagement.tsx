@@ -94,8 +94,12 @@ export default function TierManagement({ currentTier, isOwner }: TierManagementP
   ]
 
   const handleUpgrade = (tier: 'pro' | 'creator') => {
-    // This would integrate with Stripe in production
-    alert(`Stripe integration coming soon! This would upgrade you to ${tier} tier.`)
+    // Redirect to the appropriate pricing page
+    if (tier === 'pro') {
+      window.location.href = '/pricing/pro'
+    } else if (tier === 'creator') {
+      window.location.href = '/pricing/creator'
+    }
   }
 
   return (

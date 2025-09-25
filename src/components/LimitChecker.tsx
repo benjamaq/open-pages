@@ -52,7 +52,7 @@ export default function LimitChecker({ userId, currentTier }: LimitCheckerProps)
   }
 
   const handleUpgrade = () => {
-    window.location.href = '/pricing'
+    window.location.href = '/pricing/pro'
   }
 
   const handleDismiss = () => {

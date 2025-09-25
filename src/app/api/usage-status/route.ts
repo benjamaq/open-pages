@@ -12,16 +12,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Get user's profile
-    const { data: profileData, error: profileError } = await supabase
+    // Get user's profile - handle multiple profiles
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', user.id)
-      .single()
+      .order('created_at', { ascending: false })
+
+    const profileData = profiles && profiles.length > 0 ? profiles[0] : null
 
     if (profileError || !profileData) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
+
+    const profileId = (profileData as { id: string }).id
 
     // Get user's usage data (which contains tier information)
     const { data: usageData, error: usageError } = await supabase
@@ -34,28 +38,38 @@ export async function GET() {
       return NextResponse.json({ error: 'Usage data not found' }, { status: 404 })
     }
 
+    // Type assertion for usage data
+    const usage = usageData as {
+      tier: string
+      stack_items_limit: number
+      protocols_limit: number
+      uploads_limit: number
+      is_in_trial: boolean
+      trial_ended_at: string | null
+    }
+
     // Get current counts - unified stack limit
     const [stackItemsResult, protocolsResult, uploadsResult, libraryResult, gearResult] = await Promise.all([
       supabase
         .from('stack_items')
         .select('id', { count: 'exact' })
-        .eq('profile_id', profileData.id),
+        .eq('profile_id', profileId),
       supabase
         .from('protocols')
         .select('id', { count: 'exact' })
-        .eq('profile_id', profileData.id),
+        .eq('profile_id', profileId),
       supabase
         .from('uploads')
         .select('id', { count: 'exact' })
-        .eq('profile_id', profileData.id),
+        .eq('profile_id', profileId),
       supabase
         .from('library_items')
         .select('id', { count: 'exact' })
-        .eq('profile_id', profileData.id),
+        .eq('profile_id', profileId),
       supabase
         .from('gear')
         .select('id', { count: 'exact' })
-        .eq('profile_id', profileData.id)
+        .eq('profile_id', profileId)
     ])
 
     // Handle potential errors gracefully
@@ -70,10 +84,10 @@ export async function GET() {
 
     const response = NextResponse.json({
       stackItems: totalStackItems,
-      stackItemsLimit: usageData.stack_items_limit || 20, // Use actual limit from database
-      currentTier: usageData.tier || 'free',
-      isInTrial: usageData.is_in_trial || false,
-      trialEndedAt: usageData.trial_ended_at,
+      stackItemsLimit: usage.stack_items_limit || 20, // Use actual limit from database (default 20)
+      currentTier: usage.tier || 'free',
+      isInTrial: usage.is_in_trial || false,
+      trialEndedAt: usage.trial_ended_at,
       breakdown: {
         supplements: stackItemsCount,
         protocols: protocolsCount,

@@ -78,7 +78,12 @@ export default async function ProfilePage({ params, searchParams }: {
 }) {
   const { slug } = await params
   const search = await searchParams
-  const supabase = await createClient()
+  
+  // Redirect to new BioStackr-branded URL
+  const redirect = (await import('next/navigation')).redirect
+  const searchParamsString = search ? new URLSearchParams(search as Record<string, string>).toString() : ''
+  const redirectUrl = `/biostackr/${slug}${searchParamsString ? `?${searchParamsString}` : ''}`
+  redirect(redirectUrl)
   
 
   // Check if user is authenticated and get their profile
@@ -89,15 +94,15 @@ export default async function ProfilePage({ params, searchParams }: {
   // Only proceed if we have a valid user and no error
   if (user && !userError) {
     try {
-      const { data: userProfile, error: profileError } = await supabase
+      const { data: userProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('slug')
         .eq('user_id', user.id)
-        .single()
+        .order('created_at', { ascending: false })
       
-      // Only set if we successfully got the profile
-      if (!profileError && userProfile) {
-        currentUserProfile = userProfile as { slug: string }
+      // Only set if we successfully got the profile (use most recent)
+      if (!profileError && userProfiles && userProfiles.length > 0) {
+        currentUserProfile = userProfiles[0] as { slug: string }
       }
     } catch (err) {
       console.log('Profile fetch error:', err)
@@ -105,8 +110,10 @@ export default async function ProfilePage({ params, searchParams }: {
     }
   }
 
-  // Fetch profile data from Supabase
-  const { data: profile, error: profileError } = await supabase
+  // Fetch profile data from Supabase - handle multiple profiles with same slug
+  console.log('🔍 Searching for profile with slug:', slug)
+  
+  const { data: profiles, error: profileError } = await supabase
     .from('profiles')
     .select(`
       *,
@@ -114,16 +121,20 @@ export default async function ProfilePage({ params, searchParams }: {
       uploads:uploads(*)
     `)
     .eq('slug', slug)
-    .single()
+    .order('created_at', { ascending: false })
+
+  console.log('🔍 Profile query result:', { profiles, profileError, profilesLength: profiles?.length })
+
+  const profile = profiles && profiles.length > 0 ? profiles[0] : null
 
   // Debug: Log profile data to see what fields are available
   if (profile) {
-    console.log('🔍 Profile data for', slug, ':', {
-      user_id: (profile as any).user_id,
-      display_name: (profile as any).display_name,
-      allow_stack_follow: (profile as any).allow_stack_follow,
-      allFields: Object.keys(profile)
-    })
+    console.log('🔍 Profile data for', slug, ':')
+    console.log('  user_id:', (profile as any).user_id)
+    console.log('  display_name:', (profile as any).display_name)
+    console.log('  allow_stack_follow:', (profile as any).allow_stack_follow)
+    console.log('  show_public_followers:', (profile as any).show_public_followers)
+    console.log('  allFields:', Object.keys(profile))
   }
 
 
@@ -548,11 +559,20 @@ export default async function ProfilePage({ params, searchParams }: {
 
               {/* Follow Button - Only show to visitors or in shared public links */}
               {!isOwnProfile && (
-                <FollowButton
-                  ownerUserId={(profile as any).user_id}
-                  ownerName={(profile as any).display_name || 'this user'}
-                  allowsFollowing={(profile as any).allow_stack_follow ?? false}
-                />
+                <>
+                  {console.log('🔍 About to render FollowButton with:', {
+                    isOwnProfile,
+                    ownerUserId: (profile as any).user_id,
+                    ownerName: (profile as any).display_name || 'this user',
+                    allowsFollowing: (profile as any).allow_stack_follow ?? false,
+                    allow_stack_follow_raw: (profile as any).allow_stack_follow
+                  })}
+                  <FollowButton
+                    ownerUserId={(profile as any).user_id}
+                    ownerName={(profile as any).display_name || 'this user'}
+                    allowsFollowing={(profile as any).allow_stack_follow ?? true}
+                  />
+                </>
               )}
               </div>
             </div>

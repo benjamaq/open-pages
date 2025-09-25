@@ -114,12 +114,6 @@ export default function LibrarySection({
                 {loading ? '...' : items.length}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              {loading ? 'Loading...' : 
-               items.length > 0 ? 'Lab results, training plans, assessments & more' :
-               'Lab results, training plans, assessments & more'
-              }
-            </p>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -213,7 +207,16 @@ export default function LibrarySection({
                         </button>
                         {featuredTrainingPlan.allow_download && (
                           <button
-                            onClick={() => window.open(`/api/library/${featuredTrainingPlan.id}/download`, '_blank')}
+                            onClick={() => {
+                              const link = document.createElement('a')
+                              link.href = `/api/library/${featuredTrainingPlan.id}/download`
+                              link.download = featuredTrainingPlan.title || 'download'
+                              link.target = '_blank'
+                              link.rel = 'noopener noreferrer'
+                              document.body.appendChild(link)
+                              link.click()
+                              document.body.removeChild(link)
+                            }}
                             className="text-green-600 hover:text-green-700 p-1"
                           >
                             <Download className="w-4 h-4" />
@@ -273,7 +276,16 @@ export default function LibrarySection({
                           </button>
                           {item.allow_download && (
                             <button
-                              onClick={() => window.open(`/api/library/${item.id}/download`, '_blank')}
+                              onClick={() => {
+                                const link = document.createElement('a')
+                                link.href = `/api/library/${item.id}/download`
+                                link.download = item.title || 'download'
+                                link.target = '_blank'
+                                link.rel = 'noopener noreferrer'
+                                document.body.appendChild(link)
+                                link.click()
+                                document.body.removeChild(link)
+                              }}
                               className="text-gray-600 hover:text-gray-900 p-1"
                               title="Download"
                             >

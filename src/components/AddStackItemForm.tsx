@@ -110,9 +110,11 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
     let defaultDays = [0, 1, 2, 3, 4, 5, 6] // All days
     
     if (frequency === 'weekly') {
-      defaultDays = [1] // Default to Monday for weekly
+      // Default to today's day of week for weekly
+      defaultDays = [new Date().getDay()]
     } else if (frequency === 'bi-weekly') {
-      defaultDays = [1] // Default to Monday for bi-weekly
+      // Default to today's day of week for bi-weekly
+      defaultDays = [new Date().getDay()]
     }
     
     setFormData(prev => ({
@@ -171,11 +173,11 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md max-h-[85vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-6 pb-4">
+        <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Add {itemType === 'supplements' ? 'Supplement' : 
                    itemType === 'movement' ? 'Movement' :
                    itemType === 'food' ? 'Food Item' :
@@ -194,7 +196,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
               {error}
@@ -208,7 +210,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full text-lg font-medium px-0 py-3 border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none bg-transparent placeholder-gray-400"
+                className="w-full text-base sm:text-lg font-medium px-0 py-2 sm:py-3 border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none bg-transparent placeholder-gray-400"
                 placeholder={
                   itemType === 'supplements' ? 'Supplement name...' :
                   itemType === 'movement' ? 'Movement name...' :
@@ -260,7 +262,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                     key={option.value}
                     type="button"
                     onClick={() => handleFrequencyChange(option.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
+                    className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium border-2 transition-all ${
                       formData.frequency === option.value
                         ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
                         : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -272,17 +274,21 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
               </div>
             </div>
 
-            {/* Custom Day Picker */}
-            {formData.frequency === 'custom' && (
+            {/* Day Picker for Weekly, Bi-weekly, and Custom */}
+            {(formData.frequency === 'weekly' || formData.frequency === 'bi-weekly' || formData.frequency === 'custom') && (
               <div className="animate-in slide-in-from-top-2 duration-200">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Select Days</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {formData.frequency === 'weekly' ? 'Select Day of Week' :
+                   formData.frequency === 'bi-weekly' ? 'Select Day of Week' :
+                   'Select Days'}
+                </label>
                 <div className="flex space-x-2">
                   {dayNames.map((day, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => handleDayToggle(index)}
-                      className={`w-10 h-10 rounded-full text-sm font-medium border-2 transition-all ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm font-medium border-2 transition-all ${
                         formData.schedule_days.includes(index)
                           ? 'bg-gray-900 text-white border-gray-900 shadow-sm transform scale-105'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -292,6 +298,12 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                     </button>
                   ))}
                 </div>
+                {formData.frequency === 'weekly' && (
+                  <p className="text-xs text-gray-500 mt-2">This item will appear every week on the selected day</p>
+                )}
+                {formData.frequency === 'bi-weekly' && (
+                  <p className="text-xs text-gray-500 mt-2">This item will appear every other week on the selected day</p>
+                )}
               </div>
             )}
 
@@ -395,7 +407,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                       type="text"
                       value={formData.dose} // Reuse dose field for duration
                       onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                       placeholder="e.g., 30 minutes, 3 sets of 10"
                     />
                   </div>
@@ -409,7 +421,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                       type="text"
                       value={formData.dose} // Reuse dose field for portion
                       onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                       placeholder="e.g., 1 cup, 100g, 1 serving"
                     />
                   </div>
@@ -423,7 +435,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                       type="text"
                       value={formData.dose} // Reuse dose field for duration
                       onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                       placeholder="e.g., 10 minutes, 5 breaths"
                     />
                   </div>
@@ -435,7 +447,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base"
                     placeholder="Any additional notes..."
                   />
                 </div>
@@ -444,19 +456,19 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
           </div>
 
           {/* Bottom CTA - Sticky */}
-          <div className="sticky bottom-0 bg-white pt-4 -mx-6 px-6 pb-6">
+          <div className="sticky bottom-0 bg-white pt-3 sm:pt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6">
             <div className="flex space-x-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
                 disabled={isLoading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 disabled={isLoading}
               >
                 {isLoading ? 'Adding...' : '+ Add to Schedule'}

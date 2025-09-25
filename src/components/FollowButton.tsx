@@ -10,13 +10,15 @@ interface FollowButtonProps {
   ownerName: string
   allowsFollowing: boolean
   className?: string
+  onFollowSuccess?: () => void
 }
 
 export default function FollowButton({ 
   ownerUserId, 
   ownerName, 
   allowsFollowing, 
-  className = '' 
+  className = '',
+  onFollowSuccess
 }: FollowButtonProps) {
   const [followStatus, setFollowStatus] = useState<'not_following'>('not_following')
   const [isLoading, setIsLoading] = useState(false)
@@ -25,6 +27,7 @@ export default function FollowButton({
   const [message, setMessage] = useState('')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [ownerCanReceiveFollowers, setOwnerCanReceiveFollowers] = useState(true)
+
 
   useEffect(() => {
     checkFollowStatus()
@@ -82,6 +85,11 @@ export default function FollowButton({
 
       setShowEmailForm(false)
       setIsLoading(false)
+      
+      // Notify parent component of successful follow
+      if (onFollowSuccess) {
+        onFollowSuccess()
+      }
       
       // Reset to initial state after showing success message
       setTimeout(() => {

@@ -153,7 +153,7 @@ export default function DashboardHeaderEditor({
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     >
                       <Upload className="w-4 h-4" />
                       {isUploading ? 'Uploading...' : 'Upload Photo'}
@@ -162,7 +162,7 @@ export default function DashboardHeaderEditor({
                     {avatarUrl && (
                       <button
                         onClick={handleRemovePhoto}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-200 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                         Remove
@@ -263,16 +263,16 @@ export default function DashboardHeaderEditor({
           </div>
 
           {/* Footer */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-6 border-t border-gray-200 mt-6">
             <button
               onClick={handleCancel}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 text-gray-700 bg-gray-100 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               Save Changes
             </button>

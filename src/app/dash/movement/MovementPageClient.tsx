@@ -212,8 +212,30 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
   }
 
   const handleDuplicate = async (movement: MovementItem) => {
-    // This would need to be implemented in the actions
-    console.log('Duplicate movement:', movement)
+    try {
+      // Import the addStackItem function
+      const { addStackItem } = await import('../../../lib/actions/stack')
+      
+      // Create a duplicate with "Copy of" prefix
+      const duplicateData = {
+        name: `Copy of ${movement.name}`,
+        dose: movement.dose || '',
+        timing: movement.timing || '',
+        notes: movement.notes || '',
+        public: movement.public,
+        itemType: 'movement',
+        frequency: 'daily', // Default frequency
+        time_preference: 'anytime', // Default time preference
+        schedule_days: [0, 1, 2, 3, 4, 5, 6], // Default to all days
+        category: 'General' // Default category
+      }
+      
+      await addStackItem(duplicateData)
+      router.refresh()
+    } catch (error) {
+      console.error('Failed to duplicate movement:', error)
+      alert('Failed to duplicate movement. Please try again.')
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -254,7 +276,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
               {/* Dashboard Button */}
               <Link 
                 href="/dash" 
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Dashboard
               </Link>
@@ -279,14 +301,14 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Movement Management</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Movement Management</h1>
             <p className="text-gray-600 mt-1">
               Manage your movement activities and exercise routines
             </p>
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Movement
@@ -305,7 +327,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
                 </p>
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Movement

@@ -19,9 +19,15 @@ import BackgroundColorPicker from '../../../components/BackgroundColorPicker'
 interface SettingsClientProps {
   profile: any
   userEmail: string
+  trialInfo: {
+    isInTrial: boolean
+    trialStartedAt: string | null
+    trialEndedAt: string | null
+    tier: 'free' | 'pro' | 'creator'
+  }
 }
 
-export default function SettingsClient({ profile, userEmail }: SettingsClientProps) {
+export default function SettingsClient({ profile, userEmail, trialInfo }: SettingsClientProps) {
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     email_enabled: true,
     daily_reminder_enabled: true,
@@ -42,6 +48,16 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
   const [editingBio, setEditingBio] = useState(false)
   const [tempBio, setTempBio] = useState(profile.bio || '')
   const [isSaving, setIsSaving] = useState(false)
+  const [isBetaUser, setIsBetaUser] = useState(false)
+  const [betaExpiration, setBetaExpiration] = useState<{
+    expiresAt: string | null
+    daysUntilExpiration: number | null
+    isExpired: boolean
+  }>({
+    expiresAt: null,
+    daysUntilExpiration: null,
+    isExpired: false
+  })
   const [isSendingTest, setIsSendingTest] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -55,7 +71,25 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
     loadFollowerCount()
     loadFollowerSettings()
     loadSubscriptionData()
+    checkBetaStatus()
   }, [])
+
+  const checkBetaStatus = async () => {
+    try {
+      const response = await fetch('/api/beta/status')
+      if (response.ok) {
+        const data = await response.json()
+        setIsBetaUser(data.isBetaUser || false)
+        setBetaExpiration({
+          expiresAt: data.expiresAt,
+          daysUntilExpiration: data.daysUntilExpiration,
+          isExpired: data.isExpired || false
+        })
+      }
+    } catch (error) {
+      console.error('Failed to check beta status:', error)
+    }
+  }
 
   const loadSubscriptionData = async () => {
     try {
@@ -74,22 +108,9 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
   }
 
   const loadFollowerSettings = () => {
-    // Load from localStorage as fallback, but default to true if not set
-    const savedAllowFollowers = localStorage.getItem('biostackr_allow_followers')
-    if (savedAllowFollowers !== null) {
-      setAllowFollowers(savedAllowFollowers === 'true')
-    } else {
-      // Default to true (allow following) if no saved preference
-      setAllowFollowers(true)
-    }
-
-    const savedShowPublicFollowers = localStorage.getItem('biostackr_show_public_followers')
-    if (savedShowPublicFollowers !== null) {
-      setShowPublicFollowers(savedShowPublicFollowers === 'true')
-    } else {
-      // Default to true (show follower count) if no saved preference
-      setShowPublicFollowers(true)
-    }
+    // Use profile data from database as the source of truth
+    setAllowFollowers(profile.allow_stack_follow ?? true)
+    setShowPublicFollowers(profile.show_public_followers ?? true)
   }
 
   const loadFollowerCount = async () => {
@@ -177,9 +198,6 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
 
       setAllowFollowers(enabled)
       
-      // Store in localStorage as backup until database is migrated
-      localStorage.setItem('biostackr_allow_followers', enabled.toString())
-      
       setSaveMessage(enabled 
         ? '✅ Stack following enabled! Others can now follow your public stack.'
         : '✅ Stack following disabled. Existing followers will stop receiving updates.'
@@ -189,18 +207,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
     } catch (error) {
       console.error('Error updating follower settings:', error)
       
-      // If it's a database issue, still update the UI and store locally
-      if (error instanceof Error && error.message.includes('column')) {
-        setAllowFollowers(enabled)
-        localStorage.setItem('biostackr_allow_followers', enabled.toString())
-        setSaveMessage(enabled 
-          ? '⚠️ Following enabled locally. Run database migration to persist permanently.'
-          : '⚠️ Following disabled locally. Run database migration to persist permanently.'
-        )
-        setTimeout(() => setSaveMessage(''), 8000)
-      } else {
-        setSaveMessage('Failed to update follower settings. Please try again.')
-      }
+      setSaveMessage('Failed to update follower settings. Please try again.')
     }
   }
 
@@ -221,9 +228,6 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       }
 
       setShowPublicFollowers(enabled)
-      
-      // Store in localStorage as backup until database is migrated
-      localStorage.setItem('biostackr_show_public_followers', enabled.toString())
       
       setSaveMessage(enabled 
         ? '✅ Follower count will now be shown on your public profile.'
@@ -301,15 +305,30 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
         console.log('🎯 Upload successful! URL:', result.url)
             setUploadProgress(100)
             
-            // Update profile avatar
+            // Update profile avatar via API route
         console.log('Updating profile with URL:', result.url)
-              const { updateProfileAvatar } = await import('../../../lib/actions/avatar')
-              await updateProfileAvatar(result.url)
+        const updateResponse = await fetch('/api/profile/update', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ avatar_url: result.url })
+        })
+        
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update profile')
+        }
+        
+        const updateResult = await updateResponse.json()
+        console.log('Profile update result:', updateResult)
               
               setSaveMessage('✅ Profile photo updated successfully!')
         alert('✅ Profile photo updated successfully!')
-        console.log('Success! Refreshing page in 1 second...')
-              setTimeout(() => window.location.reload(), 1000)
+        console.log('Success! Refreshing page in 2 seconds...')
+              setTimeout(() => {
+                console.log('Reloading page...')
+                window.location.reload()
+              }, 2000)
         } else {
         throw new Error('No URL returned from upload')
       }
@@ -438,7 +457,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
                 <img
                   src={profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.display_name || 'User'}&backgroundColor=000000&textColor=ffffff`}
                   alt="Profile"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  className="w-20 h-20 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-gray-200"
                 />
                 {isUploading && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
@@ -686,32 +705,40 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       {/* Subscription Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
-          {subscription?.plan_type === 'creator' ? (
+          {trialInfo.tier === 'creator' ? (
             <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-sm">⭐</span>
             </div>
-          ) : subscription?.plan_type === 'pro' ? (
+          ) : trialInfo.tier === 'pro' && !isBetaUser ? (
             <Crown className="w-6 h-6 text-yellow-500" />
+          ) : isBetaUser ? (
+            <TestTube className="w-6 h-6 text-blue-500" />
           ) : (
             <Zap className="w-6 h-6 text-green-500" />
           )}
           <h2 className="text-xl font-semibold text-gray-900">
-            {subscription?.plan_type === 'creator' ? 'Biostackr Creator' : 
-             subscription?.plan_type === 'pro' ? 'Biostackr Pro' : 'Subscription'}
+            {trialInfo.tier === 'creator' ? 'Biostackr Creator' : 
+             trialInfo.tier === 'pro' && !isBetaUser ? 'Biostackr Pro' : 
+             isBetaUser ? 'Beta Tester' : 'Subscription'}
           </h2>
-          {subscription?.plan_type === 'creator' && (
+          {trialInfo.tier === 'creator' && (
             <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
               ⭐ CREATOR
             </span>
           )}
-          {subscription?.plan_type === 'pro' && (
+          {trialInfo.tier === 'pro' && !isBetaUser && (
             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
               PRO
             </span>
           )}
+          {isBetaUser && (
+            <span className="px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
+              BETA
+            </span>
+          )}
         </div>
 
-        {subscription?.plan_type === 'free' ? (
+        {trialInfo.tier === 'free' && !isBetaUser ? (
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-medium text-gray-900 mb-3">Current Usage</h3>
@@ -736,8 +763,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               </p>
               <div className="flex items-center space-x-4">
                 <a
-                  href="/pricing"
-                  target="_blank"
+                  href="/pricing/pro"
                   className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors"
                 >
                   Upgrade to Pro - $9.99/month
@@ -746,7 +772,69 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               </div>
             </div>
           </div>
-        ) : subscription?.plan_type === 'creator' ? (
+        ) : isBetaUser ? (
+          <div className="space-y-4">
+            {/* Expiration Warning */}
+            {betaExpiration.daysUntilExpiration !== null && betaExpiration.daysUntilExpiration <= 30 && betaExpiration.daysUntilExpiration > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-yellow-800 mb-1">
+                      ⚠️ Beta Access Expiring Soon
+                    </h4>
+                    <p className="text-sm text-yellow-700 mb-2">
+                      Your beta access expires in {betaExpiration.daysUntilExpiration} days. 
+                      After expiration, you'll return to the free tier.
+                    </p>
+                    <a
+                      href="/pricing/pro"
+                      className="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                    >
+                      Upgrade to Pro - $9.99/month
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="font-medium text-blue-900 mb-2">🧪 Beta Access - Pro Features Active</h3>
+              <p className="text-sm text-blue-800 mb-3">
+                You have 6 months of free Pro access as a beta tester. Thank you for helping us improve BioStackr!
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                <div>✓ Unlimited supplements</div>
+                <div>✓ Unlimited protocols</div>
+                <div>✓ Unlimited movement</div>
+                <div>✓ Unlimited mindfulness</div>
+                <div>✓ 1GB file storage</div>
+                <div>✓ Unlimited followers</div>
+                <div>✓ Advanced analytics</div>
+                <div>✓ Beta feedback access</div>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-medium text-gray-900">Beta Tester</h3>
+                  <p className="text-sm text-gray-600">
+                    {betaExpiration.daysUntilExpiration !== null && betaExpiration.daysUntilExpiration > 0
+                      ? `${betaExpiration.daysUntilExpiration} days remaining`
+                      : '6 months free Pro access'
+                    }
+                  </p>
+                </div>
+                <div className="text-sm text-gray-500">
+                  No billing required
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : trialInfo.tier === 'creator' ? (
           <div className="space-y-4">
             <div className="bg-purple-50 rounded-lg p-4">
               <h3 className="font-medium text-purple-900 mb-2">Creator Features Active</h3>
@@ -896,9 +984,10 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
             <h4 className="font-medium text-blue-900 mb-2">How Stack Following Works</h4>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Followers receive weekly email digests of your public stack changes</li>
+              <li>• You can notify followers once a day with special updates</li>
               <li>• Only public items are shared (private items never included)</li>
-              <li>• Followers can choose daily, weekly, or no emails</li>
-              <li>• You can disable following anytime</li>
+              <li>• All followers receive the same weekly digest format</li>
+              <li>• You can disable following anytime to stop all notifications</li>
             </ul>
           </div>
         </div>
@@ -1109,9 +1198,26 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
               Send a test email to verify your setup is working
             </p>
           </div>
+
+          {/* Save Button */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div>
+              {saveMessage && (
+                <p className={`text-sm ${saveMessage.includes('✅') ? 'text-green-600' : saveMessage.includes('⚠️') ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {saveMessage}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? 'Saving...' : 'Save Email Settings'}
+            </button>
+          </div>
         </div>
       </div>
-
 
       {/* Other Email Types - Only show if emails enabled */}
       {preferences.email_enabled && (
@@ -1122,7 +1228,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
           <div className="flex items-center justify-between">
             <div>
                 <h4 className="font-medium text-gray-900">Missed Items Follow-ups</h4>
-                <p className="text-sm text-gray-500">Get follow-up emails about items you haven't completed</p>
+                <p className="text-sm text-gray-500">Get gentle reminders about items you haven't completed in 2+ days</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1138,7 +1244,7 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
           <div className="flex items-center justify-between">
             <div>
               <h4 className="font-medium text-gray-900">Weekly Summary</h4>
-              <p className="text-sm text-gray-500">Get a weekly report of your progress</p>
+              <p className="text-sm text-gray-500">Get a weekly report of your progress and stats</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1154,23 +1260,29 @@ export default function SettingsClient({ profile, userEmail }: SettingsClientPro
       </div>
       )}
 
-      {/* Save Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveMessage && (
-            <div className={`text-sm ${saveMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-              {saveMessage}
-            </div>
-          )}
+      {/* Contact Support Section */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Mail className="h-5 w-5 mr-2" />
+          Need Help?
+        </h3>
+        <p className="text-gray-600 mb-4">
+          Having trouble with your account or have questions? Our support team is here to help.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <a
+            href="/contact"
+            className="inline-flex items-center px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Contact Support
+          </a>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSaving ? 'Saving...' : 'Save Settings'}
-        </button>
+        <p className="text-sm text-gray-500 mt-3">
+          We typically respond within 24 hours. Pro users get priority support.
+        </p>
       </div>
+
 
     </div>
   )

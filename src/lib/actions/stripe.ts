@@ -41,7 +41,7 @@ export async function createCheckoutSession(
         },
       ],
       mode: 'subscription',
-      success_url: `${origin}/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/dash?welcome=pro`,
       cancel_url: `${origin}/pricing`,
       metadata: {
         user_id: user.id,

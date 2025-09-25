@@ -355,18 +355,18 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
                     disabled={isLoading}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Saving...' : editingEntry ? 'Update Entry' : 'Save Entry'}

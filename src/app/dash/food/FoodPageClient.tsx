@@ -248,8 +248,30 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
   }
 
   const handleDuplicate = async (item: FoodItem) => {
-    // TODO: Implement duplicate functionality
-    console.log('Duplicate food item:', item)
+    try {
+      // Import the addStackItem function
+      const { addStackItem } = await import('../../../lib/actions/stack')
+      
+      // Create a duplicate with "Copy of" prefix
+      const duplicateData = {
+        name: `Copy of ${item.name}`,
+        dose: item.dose || '',
+        timing: item.timing || '',
+        brand: item.brand || '',
+        notes: item.notes || '',
+        public: item.public,
+        itemType: 'food',
+        frequency: item.frequency || 'daily',
+        time_preference: item.time_preference || 'anytime',
+        schedule_days: item.schedule_days || [0, 1, 2, 3, 4, 5, 6]
+      }
+      
+      await addStackItem(duplicateData)
+      router.refresh()
+    } catch (error) {
+      console.error('Failed to duplicate food item:', error)
+      alert('Failed to duplicate food item. Please try again.')
+    }
   }
 
   const clearFilters = () => {
@@ -280,7 +302,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
               <div className="flex items-center space-x-4">
                 <Link 
                   href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -318,7 +340,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
           {/* Header Bar */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900">Food Management</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Food Management</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -337,7 +359,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
               {/* Filter */}
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className="relative flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter</span>
@@ -351,7 +373,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
               {/* Add Food Item */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Food Item</span>
@@ -411,7 +433,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
                 </button>
                 <button
                   onClick={() => setShowFilter(false)}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Apply
                 </button>
@@ -442,7 +464,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
               <p className="text-gray-600 mb-6">Add your first food item to track your nutrition.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
                 + Add Food Item
               </button>

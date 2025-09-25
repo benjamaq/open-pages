@@ -38,6 +38,7 @@ interface PublicProfileClientProps {
   publicShopGearItems: any[]
   publicModules: PublicModules
   isOwnProfile: boolean
+  isSharedPublicLink: boolean
 }
 
 export default function PublicProfileClient({
@@ -52,7 +53,8 @@ export default function PublicProfileClient({
   publicJournalEntries,
   publicShopGearItems,
   publicModules,
-  isOwnProfile
+  isOwnProfile,
+  isSharedPublicLink
 }: PublicProfileClientProps) {
   const [showJournalPublic, setShowJournalPublic] = useState(profile.show_journal_public || false)
   const [currentModules, setCurrentModules] = useState<PublicModules>(publicModules || {
@@ -83,8 +85,8 @@ export default function PublicProfileClient({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
       
-      {/* Customization Controls (Owner Only) */}
-      {isOwnProfile && (
+      {/* Customization Controls (Owner Only, Not in Shared Public Link) */}
+      {isOwnProfile && !isSharedPublicLink && (
         <div className="flex justify-end mb-3">
           <SectionToggleSheet 
             currentModules={currentModules}
@@ -94,13 +96,13 @@ export default function PublicProfileClient({
       )}
 
       {/* Journal section */}
-      {(currentModules?.journal && (publicJournalEntries.length > 0 || isOwnProfile)) && (
+      {(currentModules?.journal && (publicJournalEntries.length > 0 || (isOwnProfile && !isSharedPublicLink))) && (
         <div id="journal">
           <JournalSection 
             journalEntries={publicJournalEntries} 
             showJournalPublic={showJournalPublic}
             onToggleVisibility={handleJournalVisibilityToggle}
-            isOwnProfile={isOwnProfile}
+            isOwnProfile={isOwnProfile && !isSharedPublicLink}
             profileId={profile.id}
           />
         </div>
@@ -135,7 +137,7 @@ export default function PublicProfileClient({
       {profile.tier === 'creator' && publicShopGearItems.length > 0 && (
         <PublicShopMyGearSection 
           items={publicShopGearItems}
-          isOwner={isOwnProfile}
+          isOwner={isOwnProfile && !isSharedPublicLink}
         />
       )}
       

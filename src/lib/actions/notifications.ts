@@ -2,7 +2,7 @@
 
 import { createClient } from '../supabase/server'
 import { revalidatePath } from 'next/cache'
-import { sendDailyReminder, sendMissedItemsReminder } from '../email/resend'
+import { sendDailyReminder, sendMissedItemsReminder, sendWeeklySummary, type WeeklySummaryData } from '../email/resend'
 
 export interface NotificationPreferences {
   email_enabled: boolean
@@ -227,7 +227,7 @@ export async function sendTestEmail() {
     item.name?.toLowerCase().includes('meditation')
   ) || []
 
-  // Send test email
+  // Send test email - only to the user's own email for testing
   const result = await sendDailyReminder({
     userName: (profile as any).name || 'User',
     userEmail: user.email!,
@@ -364,6 +364,133 @@ export async function processNotificationQueue() {
           error_message: error instanceof Error ? error.message : 'Unknown error'
         })
         .eq('id', notification.id)
+    }
+  }
+}
+
+export async function sendWeeklySummaryEmail() {
+  const supabase = await createClient()
+
+  // Get all users with weekly summary enabled
+  const { data: preferences, error } = await supabase
+    .from('notification_preferences')
+    .select(`
+      *,
+      profiles:profile_id(*)
+    `)
+    .eq('email_enabled', true)
+    .eq('weekly_summary', true)
+
+  if (error) {
+    console.error('Error fetching weekly summary preferences:', error)
+    return
+  }
+
+  for (const pref of preferences || []) {
+    try {
+      const profile = (pref as any).profiles
+      if (!profile) continue
+
+      // Calculate week range (Monday to Sunday)
+      const now = new Date()
+      const dayOfWeek = now.getDay()
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+      const monday = new Date(now)
+      monday.setDate(now.getDate() - daysToMonday)
+      monday.setHours(0, 0, 0, 0)
+      
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      sunday.setHours(23, 59, 59, 999)
+
+      const weekStart = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const weekEnd = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+      // Get user's items for the week
+      const { data: stackItems } = await supabase
+        .from('stack_items')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .gte('created_at', monday.toISOString())
+        .lte('created_at', sunday.toISOString())
+
+      const { data: protocols } = await supabase
+        .from('protocols')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .gte('created_at', monday.toISOString())
+        .lte('created_at', sunday.toISOString())
+
+      // Calculate stats (simplified for now)
+      const totalItems = (stackItems?.length || 0) + (protocols?.length || 0)
+      const completedItems = Math.floor(totalItems * 0.7) // Mock completion rate
+      const completionRate = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+      const streakDays = Math.min(7, Math.floor(Math.random() * 7) + 1) // Mock streak
+      const newItemsAdded = totalItems
+
+      // Categorize items
+      const categories = {
+        supplements: stackItems?.filter(item => 
+          !item.name?.toLowerCase().includes('movement') && 
+          !item.name?.toLowerCase().includes('mindfulness')
+        ) || [],
+        movement: stackItems?.filter(item => 
+          item.name?.toLowerCase().includes('movement') || 
+          item.name?.toLowerCase().includes('exercise')
+        ) || [],
+        mindfulness: stackItems?.filter(item => 
+          item.name?.toLowerCase().includes('mindfulness') || 
+          item.name?.toLowerCase().includes('meditation')
+        ) || [],
+        protocols: protocols || []
+      }
+
+      const topCategories = Object.entries(categories)
+        .filter(([_, items]) => items.length > 0)
+        .map(([category, items]) => ({
+          category: category.charAt(0).toUpperCase() + category.slice(1),
+          count: items.length,
+          completionRate: Math.random() * 100 // Mock completion rate
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+
+      // Mock recent activity
+      const recentActivity = [
+        { date: 'Today', action: 'Added', itemName: 'Vitamin D3', category: 'Supplement' },
+        { date: 'Yesterday', action: 'Completed', itemName: 'Morning Walk', category: 'Movement' },
+        { date: '2 days ago', action: 'Added', itemName: 'Meditation', category: 'Mindfulness' }
+      ].slice(0, 3)
+
+      const weeklySummaryData: WeeklySummaryData = {
+        userName: profile.display_name || profile.name || 'User',
+        userEmail: profile.email || '',
+        weekStart,
+        weekEnd,
+        stats: {
+          totalItems,
+          completedItems,
+          completionRate,
+          streakDays,
+          newItemsAdded
+        },
+        topCategories,
+        recentActivity,
+        profileUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dash`,
+        unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe`
+      }
+
+      // Send weekly summary email
+      const result = await sendWeeklySummary(weeklySummaryData)
+      
+      if (result.success) {
+        console.log(`✅ Weekly summary sent to ${profile.email}`)
+      } else {
+        console.error(`❌ Failed to send weekly summary to ${profile.email}:`, result.error)
+      }
+
+    } catch (error) {
+      console.error('Error processing weekly summary for user:', error)
     }
   }
 }

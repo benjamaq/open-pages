@@ -1,5 +1,6 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates = await request.json()
+    console.log('Profile update request:', updates)
     
     // Validate allowed fields
     const allowedFields = ['display_name', 'bio', 'avatar_url']
@@ -21,23 +23,36 @@ export async function PATCH(request: NextRequest) {
         obj[key] = updates[key]
         return obj
       }, {} as any)
+    
+    console.log('Filtered updates:', filteredUpdates)
 
     if (Object.keys(filteredUpdates).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
     }
 
     // Update the profile
-    const { data, error } = await supabase
+    const { data: profiles, error } = await supabase
       .from('profiles')
       .update(filteredUpdates)
       .eq('user_id', user.id)
       .select()
-      .single()
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Profile update error:', error)
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
+
+    const data = profiles && profiles.length > 0 ? profiles[0] : null
+    console.log('Profile update result:', data)
+
+    if (!data) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    }
+
+    // Invalidate the dashboard cache to force fresh data on next request
+    revalidatePath('/dash')
+    console.log('Cache invalidated for /dash')
 
     return NextResponse.json({ success: true, profile: data })
 

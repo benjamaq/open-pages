@@ -20,6 +20,7 @@ export async function updateProfileAvatar(avatarUrl: string) {
     .update({ avatar_url: avatarUrl })
     .eq('user_id', user.id)
     .select()
+    .single()
 
   if (error) {
     console.error('Profile update error:', error)

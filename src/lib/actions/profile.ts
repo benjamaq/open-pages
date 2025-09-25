@@ -19,21 +19,24 @@ export async function createProfile(formData: {
     throw new Error('User not authenticated')
   }
 
-  // Create the profile
+  // Upsert the profile - handles race conditions atomically
   const { error: profileError } = await supabase
     .from('profiles')
-    .insert({
+    .upsert({
       user_id: user.id,
       slug: formData.slug,
       display_name: formData.display_name,
       bio: formData.bio || null,
       avatar_url: formData.avatar_url || null,
       public: true
+    }, {
+      onConflict: 'user_id',
+      ignoreDuplicates: false
     })
 
   if (profileError) {
-    console.error('Profile creation error:', profileError)
-    throw new Error(`Failed to create profile: ${profileError.message}`)
+    console.error('Profile upsert error:', profileError)
+    throw new Error(`Failed to upsert profile: ${profileError.message}`)
   }
 
   // Revalidate the dashboard page

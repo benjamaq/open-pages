@@ -37,7 +37,7 @@ export async function GET() {
 
     // Get user's subscription from database
     const { data: subscription } = await supabase
-      .from('user_subscriptions')
+      .from('user_usage')
       .select('*')
       .eq('user_id', user.id)
       .single()
@@ -134,12 +134,12 @@ async function getUserUsage(supabase: ReturnType<typeof createClient>, userId: s
 
   // Get user's subscription to determine limits
   const { data: userSub } = await supabase
-    .from('user_subscriptions')
-    .select('plan_type')
+    .from('user_usage')
+    .select('tier')
     .eq('user_id', userId)
     .single()
 
-  const isPro = userSub?.plan_type === 'pro'
+  const isPro = userSub?.tier === 'pro'
 
   return {
     current_period_start: startOfMonth.toISOString(),

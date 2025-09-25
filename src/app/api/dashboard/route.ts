@@ -12,12 +12,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile - handle multiple profiles
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('id, user_id, name, slug, allow_stack_follow, show_public_followers')
       .eq('user_id', user.id)
-      .single()
+      .order('created_at', { ascending: false })
+
+    const profile = profiles && profiles.length > 0 ? profiles[0] : null
 
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })

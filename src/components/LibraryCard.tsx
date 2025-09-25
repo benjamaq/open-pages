@@ -95,7 +95,17 @@ export default function LibraryCard({
 
   const handleDownload = () => {
     if (item.allow_download || isOwner) {
-      window.open(`/api/library/${item.id}/download`, '_blank')
+      // Create a temporary link element for better mobile compatibility
+      const link = document.createElement('a')
+      link.href = `/api/library/${item.id}/download`
+      link.download = item.title || 'download'
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      
+      // Add to DOM, click, and remove
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 

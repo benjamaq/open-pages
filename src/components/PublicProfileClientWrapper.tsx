@@ -16,6 +16,7 @@ interface PublicProfileClientWrapperProps {
   publicShopGearItems: any[]
   publicModules: any
   isOwnProfile: boolean
+  isSharedPublicLink: boolean
 }
 
 export default function PublicProfileClientWrapper(props: PublicProfileClientWrapperProps) {

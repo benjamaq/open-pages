@@ -60,7 +60,7 @@ CREATE TABLE user_usage (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     tier TEXT DEFAULT 'free' CHECK (tier IN ('free', 'pro')),
-    stack_items_limit INTEGER DEFAULT 10,
+    stack_items_limit INTEGER DEFAULT 20,
     protocols_limit INTEGER DEFAULT 5,
     uploads_limit INTEGER DEFAULT 3,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -266,7 +266,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.user_usage (user_id, tier, stack_items_limit, protocols_limit, uploads_limit)
-    VALUES (NEW.id, 'free', 10, 5, 3);
+    VALUES (NEW.id, 'free', 20, 5, 3);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

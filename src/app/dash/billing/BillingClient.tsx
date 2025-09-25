@@ -102,26 +102,10 @@ export default function BillingClient({ userEmail }: BillingClientProps) {
     try {
       setIsUpdating(true)
       
-      const response = await fetch('/api/billing/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          price_id: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
-          success_url: `${window.location.origin}/dash/billing?success=true`,
-          cancel_url: `${window.location.origin}/dash/billing`
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      const { url } = await response.json()
-      window.location.href = url
+      // Use the proper upgrade redirect function
+      window.location.href = '/pricing/pro'
     } catch (err) {
-      console.error('Error creating checkout session:', err)
+      console.error('Error redirecting to upgrade:', err)
       setError('Failed to start upgrade process. Please try again.')
       setIsUpdating(false)
     }

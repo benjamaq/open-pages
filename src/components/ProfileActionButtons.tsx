@@ -118,7 +118,7 @@ export default function ProfileActionButtons({ isOwnProfile, profileName, profil
     if (!profileSlug) return
     
     // Add ?public=true parameter to force clean view when shared
-    const profileUrl = `${window.location.origin}/u/${profileSlug}?public=true`
+    const profileUrl = `${window.location.origin}/biostackr/${profileSlug}?public=true`
     
     try {
       await navigator.clipboard.writeText(profileUrl)

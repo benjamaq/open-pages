@@ -1,5 +1,8 @@
 import { createClient } from '../../lib/supabase/server'
 import { redirect } from 'next/navigation'
+
+// Force fresh data on every request to prevent caching issues
+export const dynamic = 'force-dynamic'
 import DashboardClient from './DashboardClient'
 import type { Metadata } from 'next'
 
@@ -17,7 +20,6 @@ export const metadata: Metadata = {
 }
 
 // Force dynamic rendering for Safari
-export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function DashboardPage() {
@@ -30,38 +32,60 @@ export default async function DashboardPage() {
     redirect('/auth/signin')
   }
 
-  // Check if user has a profile, create one if missing
-  let { data: profile } = await supabase
+  // First, try to fetch existing profile
+  const { data: profiles, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('user_id', user.id)
-    .single()
+    .order('created_at', { ascending: false })
 
-  // If no profile exists, create a basic one automatically
+  let profile = profiles && profiles.length > 0 ? profiles[0] : null
+
+  // If no profile exists, create one using upsert to handle race conditions
   if (!profile) {
     const { generateUniqueSlug } = await import('../../lib/slug')
     const slug = generateUniqueSlug(user.email?.split('@')[0] || 'user')
     
-    const { data: newProfile, error: createError } = await supabase
+    const { data: newProfiles, error: createError } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         user_id: user.id,
         display_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         slug: slug,
         bio: null,
         avatar_url: null,
-        public: true
+        public: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id',
+        ignoreDuplicates: false
       })
       .select()
-      .single()
+      .order('created_at', { ascending: false })
 
     if (createError) {
       console.error('Error creating profile:', createError)
-      // Still redirect to create-profile if automatic creation fails
-      redirect('/dash/create-profile')
+      // If it's a duplicate key error, try to fetch the existing profile
+      if (createError.code === '23505') {
+        console.log('ℹ️ Profile already exists, fetching existing profile')
+        const { data: existingProfiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        profile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null
+      } else {
+        redirect('/dash/create-profile')
+      }
+    } else {
+      profile = newProfiles && newProfiles.length > 0 ? newProfiles[0] : null
     }
-    
-    profile = newProfile
+  }
+
+  if (profileError || !profile) {
+    console.error('Error fetching profile:', profileError)
+    redirect('/dash/create-profile')
   }
 
   // Get user's tier information from user_usage table
@@ -82,6 +106,13 @@ export default async function DashboardPage() {
   // Get today's day of week (0 = Sunday, 1 = Monday, etc.)
   const today = new Date()
   const dayOfWeek = today.getDay()
+  
+  // Helper function to check if bi-weekly item should show today
+  const shouldShowBiWeekly = (createdAt: string) => {
+    const createdDate = new Date(createdAt)
+    const weeksDiff = Math.floor((today.getTime() - createdDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+    return weeksDiff % 2 === 0 // Show every other week
+  }
 
   // Fetch counts and today's items for dashboard
   const [stackItemsResult, protocolsResult, uploadsResult, followersResult, todaySupplements, todayMindfulness, todayMovement, todayProtocols, todayFood, userGear] = await Promise.all([
@@ -99,7 +130,7 @@ export default async function DashboardPage() {
       .eq('profile_id', profile.id),
     supabase
       .from('stack_followers')
-      .select('id, created_at')
+      .select('id, created_at', { count: 'exact' })
       .eq('owner_user_id', user.id)
       .not('verified_at', 'is', null),
     supabase
@@ -142,16 +173,27 @@ export default async function DashboardPage() {
     stackItems: stackItemsResult.count || 0,
     protocols: protocolsResult.count || 0,
     uploads: uploadsResult.count || 0,
-    followers: followersResult.data?.length || 0
+    followers: followersResult.count || 0
+  }
+
+  // Filter bi-weekly items based on creation date
+  const filterBiWeekly = (items: any[]) => {
+    return items.filter(item => {
+      // If item has frequency field, check if it's bi-weekly
+      if (item.frequency === 'bi-weekly') {
+        return shouldShowBiWeekly(item.created_at)
+      }
+      return true // Show all other items
+    })
   }
 
   const todayItems = {
-    supplements: todaySupplements.data || [],
-    mindfulness: todayMindfulness.data || [],
-    movement: todayMovement.data || [],
-    protocols: todayProtocols.data || [],
-    food: todayFood.data || [],
-    gear: userGear.data || []
+    supplements: filterBiWeekly(todaySupplements.data || []),
+    mindfulness: filterBiWeekly(todayMindfulness.data || []),
+    movement: filterBiWeekly(todayMovement.data || []),
+    protocols: filterBiWeekly(todayProtocols.data || []),
+    food: filterBiWeekly(todayFood.data || []),
+    gear: userGear.data || [] // Gear doesn't have scheduling
   }
 
   return (

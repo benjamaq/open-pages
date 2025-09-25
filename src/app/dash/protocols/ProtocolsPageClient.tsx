@@ -216,8 +216,26 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
   }
 
   const handleDuplicate = async (protocol: Protocol) => {
-    // TODO: Implement duplicate functionality
-    console.log('Duplicate protocol:', protocol)
+    try {
+      // Import the addProtocol function
+      const { addProtocol } = await import('../../../lib/actions/protocols')
+      
+      // Create a duplicate with "Copy of" prefix
+      const duplicateData = {
+        name: `Copy of ${protocol.name}`,
+        description: protocol.description || undefined,
+        frequency: protocol.frequency || undefined,
+        public: protocol.public,
+        time_preference: 'anytime', // Default since we don't have this in the Protocol interface
+        schedule_days: [0, 1, 2, 3, 4, 5, 6] // Default to all days
+      }
+      
+      await addProtocol(duplicateData)
+      router.refresh()
+    } catch (error) {
+      console.error('Failed to duplicate protocol:', error)
+      alert('Failed to duplicate protocol. Please try again.')
+    }
   }
 
   // Filter protocols based on search and filters
@@ -266,7 +284,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
                 {/* Dashboard Button */}
                 <Link 
                   href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -291,7 +309,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
           {/* Header Bar */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900">Protocols Management</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Protocols Management</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -303,14 +321,14 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search protocols..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-64"
+                  className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-48 sm:w-64"
                 />
               </div>
 
               {/* Filter */}
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className="relative flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter</span>
@@ -324,7 +342,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
               {/* Add Protocol */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Protocol</span>
@@ -412,7 +430,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
               <p className="text-gray-600 mb-6">Add your first protocol to build your wellness routine.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
                 + Add Protocol
               </button>

@@ -231,11 +231,15 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
               </div>
             </div>
 
-            {/* Custom Day Picker */}
-            {formData.frequency === 'custom' && (
+            {/* Day Picker for Weekly, Bi-weekly, and Custom */}
+            {(formData.frequency === 'weekly' || formData.frequency === 'bi-weekly' || formData.frequency === 'custom') && (
               <div className="animate-in slide-in-from-top-2 duration-200">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Select Days</label>
-                <div className="flex space-x-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {formData.frequency === 'weekly' ? 'Select day(s) for weekly schedule' :
+                   formData.frequency === 'bi-weekly' ? 'Select day(s) for bi-weekly schedule' :
+                   'Select Days'}
+                </label>
+                <div className="flex flex-wrap gap-2">
                   {dayNames.map((day, index) => (
                     <button
                       key={index}
@@ -251,6 +255,11 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
                     </button>
                   ))}
                 </div>
+                {formData.frequency === 'bi-weekly' && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Bi-weekly items will appear every other week on the selected day(s)
+                  </p>
+                )}
               </div>
             )}
 
@@ -321,14 +330,14 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
                 disabled={isLoading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 disabled={isLoading}
               >
                 {isLoading ? 'Adding...' : '+ Add to Schedule'}

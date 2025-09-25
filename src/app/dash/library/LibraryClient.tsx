@@ -69,7 +69,7 @@ export default function LibraryClient({ profile, initialItems }: LibraryClientPr
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header - Brand First Design */}
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}
@@ -88,26 +88,18 @@ export default function LibraryClient({ profile, initialItems }: LibraryClientPr
 
         {/* Row 2: Navigation */}
         <div>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/dash"
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </Link>
-                <span className="text-gray-300">•</span>
                 <span className="text-gray-900 font-medium">Library</span>
               </div>
               
               <div className="flex items-center space-x-3">
-                <Link
-                  href={`/u/${profile.slug}#library`}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                <Link 
+                  href="/dash"
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                 >
-                  View Public Library
+                  Dashboard
                 </Link>
               </div>
             </div>

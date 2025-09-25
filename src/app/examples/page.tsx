@@ -722,7 +722,7 @@ Journal
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link 
-                href="/auth/signup" 
+                href="/#pricing" 
                 className="group relative bg-white text-gray-900 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center gap-2"
               >
                 Create Your Stack

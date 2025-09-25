@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import BetaCodeInput from './BetaCodeInput'
 
 interface AuthFormProps {
   mode: 'signin' | 'signup'
@@ -14,6 +15,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [referralCode, setReferralCode] = useState('')
+  const [betaCode, setBetaCode] = useState('')
+  const [isBetaUser, setIsBetaUser] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -39,6 +42,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
       return
     }
 
+    if (mode === 'signup' && !isBetaUser) {
+      setError('A valid beta code is required to sign up during the beta period')
+      setLoading(false)
+      return
+    }
+
     try {
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
@@ -54,29 +63,70 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else if (data.user) {
-          // Create profile with name and referral code
+          // Create profile with name and referral code - handles race conditions atomically
           try {
+            // Generate a unique slug
+            const baseSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
+            const timestamp = Date.now().toString(36)
+            const uniqueSlug = `${baseSlug}-${timestamp}`
+            
             const { error: profileError } = await supabase
               .from('profiles')
-              .insert([
-                {
-                  user_id: data.user.id,
-                  display_name: name.trim(),
-                  referral_code: referralCode.trim() || null,
-                  referral_source: referralCode.trim() === 'redditgo' ? 'reddit' : null,
-                  slug: email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
-                  bio: null,
-                  avatar_url: null,
-                  public: true
-                }
-              ])
+              .upsert({
+                user_id: data.user.id,
+                display_name: name.trim(),
+                referral_code: referralCode.trim() || null,
+                referral_source: referralCode.trim() === 'redditgo' ? 'reddit' : null,
+                slug: uniqueSlug,
+                bio: null,
+                avatar_url: null,
+                public: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }, {
+                onConflict: 'user_id',
+                ignoreDuplicates: false
+              })
 
             if (profileError) {
-              console.error('Profile creation error:', profileError)
-              // Don't fail the signup if profile creation fails
+              console.error('Profile upsert error:', profileError)
+              // If it's a duplicate key error, that's actually okay - profile already exists
+              if (profileError.code === '23505') {
+                console.log('ℹ️ Profile already exists for user:', data.user.id)
+              } else {
+                console.error('❌ Unexpected profile error:', profileError)
+              }
+            } else {
+              console.log('✅ Profile created successfully for user:', data.user.id)
             }
           } catch (profileError) {
-            console.error('Profile creation error:', profileError)
+            console.error('Profile upsert error:', profileError)
+            // Don't fail the signup if profile creation fails
+          }
+
+          // Activate beta code if provided
+          if (isBetaUser && betaCode.trim()) {
+            console.log('🔄 Attempting to activate beta code:', betaCode)
+            try {
+              const response = await fetch('/api/beta/validate', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: betaCode.trim() }),
+              })
+
+              if (response.ok) {
+                console.log('✅ Beta code activated for user:', data.user.id)
+              } else {
+                const errorData = await response.json()
+                console.error('❌ Failed to activate beta code:', errorData)
+              }
+            } catch (betaError) {
+              console.error('Beta code activation error:', betaError)
+            }
+          } else {
+            console.log('❌ Beta code not activated - isBetaUser:', isBetaUser, 'betaCode:', betaCode)
           }
 
           // Redirect to dashboard for new users
@@ -161,7 +211,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -180,13 +230,25 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     type="text"
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-                    placeholder="Enter referral code (e.g., redditgo)"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
+                    placeholder="Enter referral code"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
                   Got a referral code? Enter it here to get special benefits!
                 </p>
+              </div>
+            )}
+
+            {isSignUp && (
+              <div>
+                <BetaCodeInput 
+                  onSuccess={(code) => {
+                    setIsBetaUser(true)
+                    setBetaCode(code)
+                  }}
+                  onError={(error) => setError(error)}
+                />
               </div>
             )}
 

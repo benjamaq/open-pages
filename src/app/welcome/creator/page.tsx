@@ -162,7 +162,7 @@ export default function CreatorWelcomePage() {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500">
               Questions about Creator features?{' '}
-              <Link href="/support" className="text-purple-600 hover:text-purple-500 font-medium">
+              <Link href="/contact" className="text-purple-600 hover:text-purple-500 font-medium">
                 Contact support
               </Link>
             </p>

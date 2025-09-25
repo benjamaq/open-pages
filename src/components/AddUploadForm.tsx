@@ -318,7 +318,7 @@ export default function AddUploadForm({ onClose }: AddUploadFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -326,7 +326,7 @@ export default function AddUploadForm({ onClose }: AddUploadFormProps) {
               type="submit"
               form="upload-form"
               disabled={isLoading || !file}
-              className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={async (e) => {
                 e.preventDefault()
                 const form = document.getElementById('upload-form') as HTMLFormElement

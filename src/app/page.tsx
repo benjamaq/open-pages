@@ -17,24 +17,22 @@ export default function Home() {
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/examples" className="text-gray-600 hover:text-gray-900 transition-colors">Examples</Link>
               <Link href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
-              <Link href="/pricing/creator" className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium hover:from-purple-600 hover:to-purple-700 transition-colors">
-                <span>⭐</span>
-                <span>Creators</span>
-              </Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
               <Link href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/auth/signin" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Sign In
-              </Link>
+            <div className="flex items-center space-x-2">
               <Link 
                 href="/auth/signup" 
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
-                Create your stack
+                <span className="hidden sm:inline">Have Beta Code?</span>
+                <span className="sm:hidden">Beta Code</span>
+              </Link>
+              <Link 
+                href="/auth/signin" 
+                className="text-gray-600 text-xs sm:text-sm hover:text-gray-900 transition-colors"
+              >
+                Sign In
               </Link>
             </div>
           </div>
@@ -42,26 +40,34 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-20 lg:pt-32 lg:pb-28">
+      <section className="pt-16 pb-20 sm:pt-24 lg:pt-32 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Beta Badge - Positioned below nav */}
+          <div className="mb-6 sm:mb-8">
+            <div className="bg-black text-white rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center text-lg sm:text-2xl font-bold">
+              BETA
+            </div>
+          </div>
+          
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
             <div className="lg:col-span-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Build your stack. Share what works.
-          </h1>
-              <p className="mt-6 text-xl text-gray-600 leading-relaxed">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                <span className="block">Build your stack.</span>
+                <span className="block">Share what works.</span>
+              </h1>
+              <p className="mt-6 text-lg sm:text-xl text-gray-600 leading-relaxed">
                 Less chaos, more consistency. One place for your supplements, protocols, movement, mindfulness, gear and labs—with a clear Today list so it actually gets done. When you're ready, publish a beautiful profile people can follow.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link 
-                  href="/auth/signup" 
-                  className="bg-gray-900 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-800 transition-colors text-center"
+                  href="/waitlist" 
+                  className="bg-gray-900 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium hover:bg-gray-800 transition-colors text-center"
                 >
-                  Create your stack
+                  Join Waitlist
                 </Link>
                 <Link 
-                  href="/examples" 
-                  className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-50 transition-colors text-center"
+                  href="/examples"
+                  className="border border-gray-300 text-gray-700 px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium hover:bg-gray-50 transition-colors text-center"
                 >
                   See examples of stacks
                 </Link>
@@ -602,118 +608,11 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
-            <p className="text-sm text-gray-500 mt-3">Free to start • 14-day Pro trial included</p>
+            <p className="text-sm text-gray-500 mt-3">Free to start • Upgrade when ready</p>
           </div>
         </div>
       </section>
 
-      {/* For Coaches & Creators */}
-      <section id="creators" className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20"></div>
-        </div>
-        
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span className="text-white/90 font-medium">Creator Features</span>
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-4">For coaches & creators</h2>
-            <p className="text-xl text-white/80 max-w-3xl mx-auto">
-              Transform your health expertise into a thriving business with professional tools and monetization features
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Monetization Features</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Affiliate links & buy buttons on supplements and gear</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Dedicated "Shop My Gear" page with featured products</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Follower tracking and engagement metrics</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-500 rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Branding & Customization</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Custom branding with your logo and color scheme</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Professional profile that builds trust and authority</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-white/90 leading-relaxed">Priority support and creator resources</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <Link 
-              href="/pricing/creator" 
-              className="inline-flex items-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
-            >
-              <span>Start as Creator</span>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-            <p className="text-white/60 text-sm mt-3">Starting at $29.95/month • Full creator toolkit included</p>
-          </div>
-        </div>
-      </section>
 
       {/* Pricing */}
       <section id="pricing" className="py-16 bg-gray-50">
@@ -721,13 +620,13 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose your plan. Build your stack.</h2>
             <p className="text-xl text-gray-600">Start free. Go unlimited when you're ready.</p>
-            <p className="text-sm text-gray-500 mt-2">14-day Pro trial included • Cancel anytime • Your data stays yours</p>
+            <p className="text-sm text-gray-500 mt-2">Cancel anytime • Your data stays yours</p>
         </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <div className="text-center">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 flex flex-col">
+              <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900">Free</h3>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-gray-900">$0</span>
@@ -735,23 +634,11 @@ export default function Home() {
                 </div>
                 <p className="mt-2 text-gray-600">Perfect for getting started</p>
               </div>
-              <div className="mt-8">
+              <div className="mt-8 flex-grow">
                 <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Up to 10 supplements</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Up to 3 protocols</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">2 movement items</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">2 mindfulness items</span>
+                    <span className="text-gray-700">Up to 20 stack items (supplements, protocols, movement, mindfulness)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
@@ -774,11 +661,12 @@ export default function Home() {
                 >
                   Get started
                 </Link>
+                <div className="h-6"></div>
               </div>
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
+            <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative flex flex-col">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                 <span className="bg-gray-900 text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
                   Recommended
@@ -792,7 +680,7 @@ export default function Home() {
                 </div>
                 <p className="mt-2 text-gray-600">For serious health optimizers</p>
               </div>
-              <div className="mt-8">
+              <div className="mt-8 flex-grow">
                 <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
@@ -818,67 +706,17 @@ export default function Home() {
               </div>
               <div className="mt-8">
                 <Link 
-                  href="/upgrade/pro"
+                  href="/pricing/pro"
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
                 >
                   Get Started with Pro
                 </Link>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  14-day trial included • Save with annual
+                  Save with annual billing
                 </p>
               </div>
           </div>
           
-            {/* Creator Plan */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900">Creator</h3>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-gray-900">$29.95</span>
-                  <span className="text-gray-600">/month</span>
-                </div>
-                <p className="mt-2 text-gray-600">For coaches & creators</p>
-              </div>
-              <div className="mt-8">
-                <ul className="space-y-3">
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Everything in Pro</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Affiliate links & buy buttons on supplements and gear</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Shop My Gear page</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Custom branding (logo & colors)</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Audience insights (followers, clicks)</span>
-                  </li>
-                  <li className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Creator support</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-8">
-                <Link 
-                  href="/upgrade/creator"
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
-                >
-                  Get Started with Creator
-                </Link>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Turn your stack into a shareable business hub
-                </p>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -1069,6 +907,11 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
             <p>&copy; 2024 BioStackr. Built for the health optimization community.</p>
+            <div className="mt-4">
+              <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm">
+                Contact Us
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

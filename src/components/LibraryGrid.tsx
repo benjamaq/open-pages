@@ -285,16 +285,20 @@ export default function LibraryGrid({
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">📚</span>
-          </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchQuery || selectedCategory !== 'all' ? 'No items found' : emptyMessage}
+            {searchQuery || selectedCategory !== 'all' 
+              ? 'No items found' 
+              : isOwner 
+                ? emptyMessage 
+                : 'No library items shared yet'
+            }
           </h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
             {searchQuery || selectedCategory !== 'all' 
               ? 'Try adjusting your search or filters to find what you\'re looking for.'
-              : 'Build your health library, keep all your health records in one place, easily searchable and shareable too.'
+              : isOwner 
+                ? 'Upload and organize your health documents, lab results, training plans, and other important files in one place.'
+                : 'This user hasn\'t shared any library items yet. Check back later to see their health documents, lab results, and training plans.'
             }
           </p>
           {showAddButton && onAdd && (

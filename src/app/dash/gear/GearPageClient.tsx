@@ -241,8 +241,27 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
   }
 
   const handleDuplicate = async (gearItem: GearItem) => {
-    // TODO: Implement duplicate functionality
-    console.log('Duplicate gear:', gearItem)
+    try {
+      // Import the addGear function
+      const { addGear } = await import('../../../lib/actions/gear')
+      
+      // Create a duplicate with "Copy of" prefix
+      const duplicateData = {
+        name: `Copy of ${gearItem.name}`,
+        brand: gearItem.brand || undefined,
+        model: gearItem.model || undefined,
+        category: gearItem.category,
+        description: gearItem.description || undefined,
+        buy_link: gearItem.buy_link || undefined,
+        public: gearItem.public
+      }
+      
+      await addGear(duplicateData)
+      router.refresh()
+    } catch (error) {
+      console.error('Failed to duplicate gear item:', error)
+      alert('Failed to duplicate gear item. Please try again.')
+    }
   }
 
   // Filter gear based on search and filters
@@ -291,7 +310,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 {/* Dashboard Button */}
                 <Link 
                   href="/dash" 
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -316,7 +335,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
           {/* Header Bar */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900">Gear Management</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Gear Management</h1>
               <p className="text-gray-600 mt-2">
                 Showcase your equipment, wearables, and tools
               </p>
@@ -338,7 +357,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
               {/* Filter */}
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className="relative flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter</span>
@@ -352,7 +371,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
               {/* Add Gear */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Gear</span>
@@ -414,7 +433,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 </button>
                 <button
                   onClick={() => setShowFilter(false)}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Apply
                 </button>
@@ -445,7 +464,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
               <p className="text-gray-600 mb-6">Add your first gear item to showcase your equipment.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
                 + Add Gear
               </button>

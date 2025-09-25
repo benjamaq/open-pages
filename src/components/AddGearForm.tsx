@@ -255,13 +255,10 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
                   </div>
                   <button 
                     type="button"
-                    onClick={() => {
-                      onClose() // Close the gear form first
-                      window.location.href = '/upgrade/creator' // Navigate to creator upgrade page
-                    }}
-                    className="px-3 py-1 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
+                    disabled
+                    className="px-3 py-1 bg-gray-300 text-gray-500 rounded-lg text-xs font-medium cursor-not-allowed"
                   >
-                    Upgrade to Creator
+                    Coming Soon
                   </button>
                 </div>
               </div>
@@ -300,7 +297,7 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -308,7 +305,7 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
               type="submit"
               form="gear-form"
               disabled={isLoading || !formData.name.trim()}
-              className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={async (e) => {
                 e.preventDefault()
                 const form = document.querySelector('form')

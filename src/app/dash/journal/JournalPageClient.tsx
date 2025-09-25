@@ -153,7 +153,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
             <div className="flex items-center space-x-4">
               <Link 
                 href="/dash" 
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Dashboard
               </Link>
@@ -215,7 +215,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
             {/* Add Entry Button */}
             <button
               onClick={() => setShowAddForm(true)}
-              className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>New Entry</span>
@@ -291,21 +291,21 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 mt-6 pt-4 border-t border-gray-100">
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 sm:flex-none px-1 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm border border-gray-300 text-gray-600 sm:text-gray-700 rounded hover:bg-gray-50 transition-colors"
                     disabled={isLoading}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+                    className="flex-1 sm:flex-none px-1 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Saving...' : editingEntry ? 'Update Entry' : 'Save Entry'}
+                    {isLoading ? 'Saving...' : editingEntry ? 'Update' : 'Save'}
                   </button>
                 </div>
               </div>
@@ -379,7 +379,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
             <p className="text-gray-600 mb-6">Start documenting your health journey and thoughts.</p>
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              className="bg-gray-900 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               + Create First Entry
             </button>

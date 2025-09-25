@@ -1,116 +1,129 @@
-// Simple email service for notifications
-// In production, you'd integrate with SendGrid, Resend, AWS SES, etc.
+// Email utility functions for contact form
+// This is a placeholder implementation - you'll need to integrate with an actual email service
 
-export interface EmailData {
-  to: string
+interface ContactEmailData {
+  name: string
+  email: string
   subject: string
-  html: string
-  text?: string
+  category: string
+  message: string
+  submissionId: string
+  userId?: string
 }
 
-export async function sendEmail(emailData: EmailData): Promise<boolean> {
+interface AutoReplyEmailData {
+  email: string
+  name: string
+}
+
+export async function sendContactEmail(data: ContactEmailData): Promise<void> {
+  console.log('📧 Contact form submission received:', {
+    submissionId: data.submissionId,
+    userId: data.userId,
+    name: data.name,
+    email: data.email,
+    subject: data.subject,
+    category: data.category,
+    message: data.message.substring(0, 100) + '...'
+  })
+
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not configured, skipping email send')
+    return
+  }
+
   try {
-    // For now, just log the email to console
-    // In production, replace this with actual email service
-    console.log('📧 EMAIL SENT:', {
-      to: emailData.to,
-      subject: emailData.subject,
-      preview: emailData.html.substring(0, 200) + '...'
+    const { Resend } = require('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    const template = emailTemplates.contactForm(data)
+    
+    await resend.emails.send({
+      from: 'noreply@biostackr.com',
+      to: 'ben09@mac.com',
+      subject: template.subject,
+      html: template.html
     })
     
-    // Simulate email sending delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    return true
+    console.log('✅ Contact email sent successfully')
   } catch (error) {
-    console.error('Failed to send email:', error)
-    return false
+    console.error('❌ Failed to send contact email:', error)
+    throw error
   }
 }
 
-export function createFollowerNotificationEmail(
-  creatorName: string,
-  creatorSlug: string,
-  message: string,
-  followerEmail: string
-): EmailData {
-  const subject = `${creatorName} updated their stack`
-  const profileUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/u/${creatorSlug}?public=true`
+export async function sendAutoReplyEmail(data: AutoReplyEmailData): Promise<void> {
+  console.log('📧 Auto-reply email would be sent to:', data.email, 'for user:', data.name)
   
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #0F1115; margin-bottom: 16px;">${creatorName} updated their stack</h2>
-      
-      ${message ? `<p style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0; font-style: italic;">"${message}"</p>` : ''}
-      
-      <p style="color: #5C6370; margin-bottom: 24px;">
-        Check out their latest changes and see what's new in their health stack.
-      </p>
-      
-      <a href="${profileUrl}" 
-         style="background: #0F1115; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 500;">
-        View Stack
-      </a>
-      
-      <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 24px 0;">
-        <p style="color: #5C6370; font-size: 14px; margin: 0;">
-          <strong>📅 Weekly Digest:</strong> Every Sunday at 5pm, you'll receive a complete summary of all changes to ${creatorName}'s stack, including any updates not covered in instant notifications.
-        </p>
-      </div>
-      
-      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
-      
-      <p style="color: #9ca3af; font-size: 14px;">
-        You're receiving this because you follow ${creatorName}'s stack. 
-        <a href="#" style="color: #6b7280;">Unsubscribe</a> | 
-        <a href="#" style="color: #6b7280;">Manage preferences</a>
-      </p>
-    </div>
-  `
-  
-  const text = `${creatorName} updated their stack${message ? `: "${message}"` : ''}. View their stack at: ${profileUrl}`
-  
-  return {
-    to: followerEmail,
-    subject,
-    html,
-    text
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not configured, skipping auto-reply email')
+    return
+  }
+
+  try {
+    const { Resend } = require('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    const template = emailTemplates.autoReply(data)
+    
+    await resend.emails.send({
+      from: 'noreply@biostackr.com',
+      to: data.email,
+      subject: template.subject,
+      html: template.html
+    })
+    
+    console.log('✅ Auto-reply email sent successfully')
+  } catch (error) {
+    console.error('❌ Failed to send auto-reply email:', error)
+    throw error
   }
 }
 
-export function createCreatorConfirmationEmail(
-  creatorName: string,
-  followersNotified: number
-): EmailData {
-  const subject = `Update sent to ${followersNotified} follower${followersNotified !== 1 ? 's' : ''}`
-  
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #0F1115; margin-bottom: 16px;">Update sent successfully!</h2>
-      
-      <p style="color: #5C6370; margin-bottom: 24px;">
-        Your stack update has been sent to <strong>${followersNotified} follower${followersNotified !== 1 ? 's' : ''}</strong>.
-      </p>
-      
-      <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 16px; margin: 16px 0;">
-        <p style="color: #0c4a6e; margin: 0; font-size: 14px;">
-          <strong>Note:</strong> You can only send 1 instant notification per day to each follower. 
-          Other changes will be included in the daily digest.
+// Email templates
+export const emailTemplates = {
+  contactForm: (data: ContactEmailData) => ({
+    subject: `[${data.category.toUpperCase()}] ${data.subject}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">New Contact Form Submission</h2>
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Category:</strong> ${data.category}</p>
+          <p><strong>Subject:</strong> ${data.subject}</p>
+        </div>
+        <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h3>Message:</h3>
+          <p style="white-space: pre-wrap;">${data.message}</p>
+        </div>
+        <hr style="margin: 20px 0;">
+        <p style="font-size: 12px; color: #666;">
+          <strong>Submission ID:</strong> ${data.submissionId}<br>
+          <strong>User ID:</strong> ${data.userId || 'Not logged in'}<br>
+          <strong>Timestamp:</strong> ${new Date().toISOString()}
         </p>
       </div>
-      
-      <p style="color: #5C6370; font-size: 14px;">
-        Thanks for keeping your followers updated!
-      </p>
-    </div>
-  `
+    `
+  }),
   
-  const text = `Your stack update has been sent to ${followersNotified} follower${followersNotified !== 1 ? 's' : ''}.`
-  
-  return {
-    to: 'creator@example.com', // In production, get from user profile
-    subject,
-    html,
-    text
-  }
+  autoReply: (data: AutoReplyEmailData) => ({
+    subject: 'Thank you for contacting Biostackr',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Thank you for contacting Biostackr!</h2>
+        <p>Hi ${data.name},</p>
+        <p>We've received your message and will get back to you within 24 hours.</p>
+        <p>If you have any urgent questions, please don't hesitate to reach out.</p>
+        <br>
+        <p>Best regards,<br>The Biostackr Team</p>
+        <hr style="margin: 20px 0;">
+        <p style="font-size: 12px; color: #666;">
+          This is an automated response. Please do not reply to this email.
+        </p>
+      </div>
+    `
+  })
 }

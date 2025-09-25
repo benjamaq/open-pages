@@ -23,7 +23,7 @@ export async function POST() {
 
     // Get user's subscription
     const { data: subscription } = await supabase
-      .from('user_subscriptions')
+      .from('user_usage')
       .select('stripe_subscription_id')
       .eq('user_id', user.id)
       .single()
@@ -42,7 +42,7 @@ export async function POST() {
 
     // Update database
     await supabase
-      .from('user_subscriptions')
+      .from('user_usage')
       .update({
         cancel_at_period_end: true,
         updated_at: new Date().toISOString()

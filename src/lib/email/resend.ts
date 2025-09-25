@@ -57,11 +57,38 @@ export interface MissedItemsData {
   unsubscribeUrl: string
 }
 
+export interface WeeklySummaryData {
+  userName: string
+  userEmail: string
+  weekStart: string
+  weekEnd: string
+  stats: {
+    totalItems: number
+    completedItems: number
+    completionRate: number
+    streakDays: number
+    newItemsAdded: number
+  }
+  topCategories: Array<{
+    category: string
+    count: number
+    completionRate: number
+  }>
+  recentActivity: Array<{
+    date: string
+    action: string
+    itemName: string
+    category: string
+  }>
+  profileUrl: string
+  unsubscribeUrl: string
+}
+
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const resendClient = getResendClient()
     const result = await resendClient.emails.send({
-      from: data.from || 'Biostackr <noreply@biostackr.com>',
+      from: data.from || 'Biostackr <onboarding@resend.dev>',
       to: data.to,
       subject: data.subject,
       html: data.html
@@ -109,6 +136,16 @@ export async function sendNewFollowerNotification(ownerEmail: string, ownerName:
   return sendEmail({
     to: ownerEmail,
     subject: 'You have a new follower on Biostackr 🎉',
+    html
+  })
+}
+
+export async function sendWeeklySummary(data: WeeklySummaryData): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateWeeklySummaryHTML(data)
+  
+  return sendEmail({
+    to: data.userEmail,
+    subject: `Your Biostackr Weekly Summary - ${data.weekStart} to ${data.weekEnd}`,
     html
   })
 }
@@ -390,6 +427,150 @@ function generateMissedItemsHTML(data: MissedItemsData): string {
           <div class="cta">
             <a href="${data.profileUrl}" class="cta-button">
               Complete Now →
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>
+            Sent by <strong>Biostackr</strong> • 
+            <a href="${data.unsubscribeUrl}">Unsubscribe</a>
+          </p>
+          <p style="margin-top: 16px; font-size: 12px;">
+            This email was sent to ${data.userEmail}
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function generateWeeklySummaryHTML(data: WeeklySummaryData): string {
+  const completionPercentage = Math.round(data.stats.completionRate)
+  const streakText = data.stats.streakDays === 1 ? 'day' : 'days'
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Biostackr Weekly Summary</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 32px 24px; }
+        .greeting { font-size: 18px; margin-bottom: 24px; }
+        .week-range { background: #f7fafc; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center; color: #4a5568; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #f7fafc; border-radius: 8px; padding: 20px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: 700; color: #2d3748; margin-bottom: 8px; }
+        .stat-label { color: #718096; font-weight: 500; font-size: 14px; }
+        .completion-rate { color: #059669; }
+        .streak { color: #d69e2e; }
+        .new-items { color: #667eea; }
+        .section { margin-bottom: 32px; }
+        .section h2 { color: #2d3748; font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; }
+        .section-icon { width: 24px; height: 24px; margin-right: 12px; }
+        .category-list { background: #f7fafc; border-radius: 8px; padding: 16px; }
+        .category-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .category-item:last-child { border-bottom: none; }
+        .category-name { font-weight: 600; color: #2d3748; }
+        .category-stats { font-size: 14px; color: #718096; }
+        .activity-list { background: #f7fafc; border-radius: 8px; padding: 16px; }
+        .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-action { font-weight: 600; color: #2d3748; }
+        .activity-details { font-size: 14px; color: #718096; }
+        .cta { text-align: center; margin: 32px 0; }
+        .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        .footer a { color: #667eea; text-decoration: none; }
+        .empty-state { text-align: center; color: #718096; font-style: italic; padding: 16px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📊 Weekly Summary</h1>
+          <p>Your Biostackr progress this week</p>
+        </div>
+        
+        <div class="content">
+          <div class="greeting">
+            Hi ${data.userName}! 👋<br>
+            Here's how you did this week:
+          </div>
+
+          <div class="week-range">
+            <strong>${data.weekStart}</strong> to <strong>${data.weekEnd}</strong>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number completion-rate">${completionPercentage}%</div>
+              <div class="stat-label">Completion Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number streak">${data.stats.streakDays}</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">${data.stats.completedItems}</div>
+              <div class="stat-label">Items Completed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number new-items">${data.stats.newItemsAdded}</div>
+              <div class="stat-label">New Items Added</div>
+            </div>
+          </div>
+
+          ${data.topCategories.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">📈</span>
+              Top Categories
+            </h2>
+            <div class="category-list">
+              ${data.topCategories.map(category => `
+                <div class="category-item">
+                  <div>
+                    <div class="category-name">${category.category}</div>
+                    <div class="category-stats">${category.count} items • ${Math.round(category.completionRate)}% completion</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          ${data.recentActivity.length > 0 ? `
+          <div class="section">
+            <h2>
+              <span class="section-icon">⚡</span>
+              Recent Activity
+            </h2>
+            <div class="activity-list">
+              ${data.recentActivity.map(activity => `
+                <div class="activity-item">
+                  <div>
+                    <div class="activity-action">${activity.action}</div>
+                    <div class="activity-details">${activity.itemName} • ${activity.category}</div>
+                  </div>
+                  <div class="activity-details">${activity.date}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="cta">
+            <a href="${data.profileUrl}" class="cta-button">
+              View Full Dashboard →
             </a>
           </div>
         </div>

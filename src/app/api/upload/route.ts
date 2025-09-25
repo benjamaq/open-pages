@@ -48,8 +48,9 @@ export async function POST(request: NextRequest) {
 
     // Determine bucket and path based on type
     const bucket = type === 'avatar' ? 'avatars' : 'uploads'
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`
+    const fileName = file.name || 'unnamed'
+    const fileExt = fileName.split('.').pop() || 'jpg'
+    const fileNameWithExt = `${user.id}/${Date.now()}.${fileExt}`
 
     try {
       // Check if bucket exists, create if needed
@@ -82,10 +83,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Upload to Supabase Storage
-      console.log('Attempting to upload file:', fileName, 'to bucket:', bucket)
+      console.log('Attempting to upload file:', fileNameWithExt, 'to bucket:', bucket)
       const { data, error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(fileName, file, {
+        .upload(fileNameWithExt, file, {
           cacheControl: '3600',
           upsert: true // Allow overwriting
         })
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       // Get public URL
       const { data: urlData } = supabase.storage
         .from(bucket)
-        .getPublicUrl(fileName)
+        .getPublicUrl(fileNameWithExt)
 
       if (!urlData.publicUrl) {
         return NextResponse.json({ error: 'Failed to get public URL' }, { status: 500 })
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ 
         url: urlData.publicUrl,
-        path: fileName,
+        path: fileNameWithExt,
         success: true 
       })
 

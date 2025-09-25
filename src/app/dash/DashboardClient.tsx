@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
@@ -19,6 +19,7 @@ import TrialNotification from '../../components/TrialNotification'
 import TrialStatusBadge from '../../components/TrialStatusBadge'
 import LimitChecker from '../../components/LimitChecker'
 import DashboardHeaderEditor from '../../components/DashboardHeaderEditor'
+import BetaFeedbackWidget from '../../components/BetaFeedbackWidget'
 
 interface Profile {
   id: string
@@ -524,7 +525,7 @@ const DashboardCard = ({ children, title, onManage, collapsed = false, onToggleC
     }}
   >
     <div className="flex items-center justify-between p-6 pb-4">
-      <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>{title}</h2>
+      <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>{title}</h2>
       <div className="flex items-center space-x-2">
         {onToggleCollapse && (
           <button
@@ -594,7 +595,7 @@ const CheckinCard = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Check-in</h2>
+        <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Today's Check-in</h2>
         <button
           onClick={() => setShowDetails(!showDetails)}
           className="text-sm font-medium hover:text-gray-700 transition-colors"
@@ -883,7 +884,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {categoryFilteredItems.length}
           </span>
@@ -917,13 +918,6 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
             </button>
           )}
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors mr-1"
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
-          </button>
-          <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             style={{ marginRight: '-4px' }}
@@ -939,6 +933,13 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
             title="Manage supplements"
           >
             Manage
+          </button>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
         </div>
       </div>
@@ -1179,7 +1180,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
             Today's<br />
             Protocols
           </h2>
@@ -1270,7 +1271,13 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
 }
 
 // Row 2 — Movement Card
-const MovementCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage: () => void; onAdd: () => void }) => {
+const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, onAdd }: { 
+  items?: any[]; 
+  onToggleComplete: (id: string, type: string) => void;
+  completedItems: Set<string>;
+  onManage: () => void; 
+  onAdd: () => void 
+}) => {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -1285,7 +1292,7 @@ const MovementCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
             Today's<br />
             Movement
           </h2>
@@ -1325,18 +1332,33 @@ const MovementCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage
         <div className="px-6 pb-6 max-h-72 overflow-y-auto">
           {items.length > 0 ? (
             <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                  <button
-                    className="w-3 h-3 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
-                  >
-                  </button>
-                  <div className="flex-1">
-                    <span className="text-base font-medium text-gray-900">{item.name}</span>
-                    {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+              {items.map((item) => {
+                const itemKey = `movement-${item.id}`
+                const isCompleted = completedItems.has(itemKey)
+                
+                return (
+                  <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                    <button
+                      onClick={() => onToggleComplete(item.id, 'movement')}
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                        isCompleted 
+                          ? 'bg-gray-900 border-gray-900' 
+                          : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      {isCompleted && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <span className={`text-base font-medium ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {item.name}
+                      </span>
+                      {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -1358,7 +1380,13 @@ const MovementCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage
 }
 
 // Row 2 — Mindfulness Card
-const MindfulnessCard = ({ items = [], onManage, onAdd }: { items?: any[]; onManage: () => void; onAdd: () => void }) => {
+const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManage, onAdd }: { 
+  items?: any[]; 
+  onToggleComplete: (id: string, type: string) => void;
+  completedItems: Set<string>;
+  onManage: () => void; 
+  onAdd: () => void 
+}) => {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -1373,7 +1401,7 @@ const MindfulnessCard = ({ items = [], onManage, onAdd }: { items?: any[]; onMan
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
             Today's<br />
             Mindfulness
           </h2>
@@ -1413,18 +1441,33 @@ const MindfulnessCard = ({ items = [], onManage, onAdd }: { items?: any[]; onMan
         <div className="px-6 pb-6 max-h-72 overflow-y-auto">
           {items.length > 0 ? (
             <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                  <button
-                    className="w-3 h-3 rounded border-2 flex items-center justify-center transition-all duration-200 border-gray-300 hover:border-gray-500"
-                  >
-                  </button>
-                  <div className="flex-1">
-                    <span className="text-base font-medium text-gray-900">{item.name}</span>
-                    {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+              {items.map((item) => {
+                const itemKey = `mindfulness-${item.id}`
+                const isCompleted = completedItems.has(itemKey)
+                
+                return (
+                  <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                    <button
+                      onClick={() => onToggleComplete(item.id, 'mindfulness')}
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                        isCompleted 
+                          ? 'bg-gray-900 border-gray-900' 
+                          : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      {isCompleted && (
+                        <Check className="w-3 h-3 text-white" />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <span className={`text-base font-medium ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {item.name}
+                      </span>
+                      {item.dose && <div className="text-sm text-gray-500">{item.dose}</div>}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -1446,7 +1489,7 @@ const MindfulnessCard = ({ items = [], onManage, onAdd }: { items?: any[]; onMan
 }
 
 // Row 3 — Food Card (Full Width)
-const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => void, onQuickAdd: () => void, foodItems?: any[] }) => {
+const FoodCard = ({ onManage, onQuickAdd, foodItems = [], onAddFood }: { onManage: () => void, onQuickAdd: () => void, foodItems?: any[], onAddFood: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
 
   const mealSections = [
@@ -1477,7 +1520,7 @@ const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => vo
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Today's Food</h2>
+        <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Today's Food</h2>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -1487,7 +1530,7 @@ const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => vo
             <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
           </button>
           <button
-            onClick={() => setShowAddFood(true)}
+            onClick={onAddFood}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="Add food"
             title="Add food"
@@ -1539,6 +1582,18 @@ const FoodCard = ({ onManage, onQuickAdd, foodItems = [] }: { onManage: () => vo
   )
 }
 
+interface PillarCardProps {
+  title: string
+  count: number
+  maxCount: number
+  items: any[]
+  emptyMessage: string
+  onToggleComplete: (itemId: string, type: string) => void
+  completedItems: Set<string>
+  type: string
+  onManage: () => void
+  viewAllLink: string
+}
 
 const PillarCard = ({ 
   title, 
@@ -1672,7 +1727,18 @@ const PillarCard = ({
 
 export default function DashboardClient({ profile, counts, todayItems, userId }: DashboardClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
+  const [isBetaUser, setIsBetaUser] = useState(false)
+  const [betaExpiration, setBetaExpiration] = useState<{
+    expiresAt: string | null
+    daysUntilExpiration: number | null
+    isExpired: boolean
+  }>({
+    expiresAt: null,
+    daysUntilExpiration: null,
+    isExpired: false
+  })
 
   // Load completed items from localStorage on mount
   useEffect(() => {
@@ -1687,11 +1753,41 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         console.error('Failed to load completed items:', error)
       }
     }
+
+    // Check if user is beta user
+    const checkBetaStatus = async () => {
+      try {
+        const response = await fetch('/api/beta/status')
+        if (response.ok) {
+          const data = await response.json()
+          setIsBetaUser(data.isBetaUser || false)
+          setBetaExpiration({
+            expiresAt: data.expiresAt,
+            daysUntilExpiration: data.daysUntilExpiration,
+            isExpired: data.isExpired || false
+          })
+        }
+      } catch (error) {
+        console.error('Failed to check beta status:', error)
+      }
+    }
+    checkBetaStatus()
+    
+    // Check for welcome parameter
+    const welcomeParam = searchParams.get('welcome')
+    if (welcomeParam === 'pro' || welcomeParam === 'creator') {
+      setWelcomeType(welcomeParam)
+      setShowWelcomePopup(true)
+      // Remove the welcome parameter from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('welcome')
+      window.history.replaceState({}, '', url.toString())
+    }
     
     // Load dashboard data including follower count
     loadDashboardData()
     loadDailyCheckIn()
-  }, [userId])
+  }, [userId, searchParams])
 
   const loadDashboardData = async () => {
     try {
@@ -1797,6 +1893,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [profileMission, setProfileMission] = useState(profile.bio || '')
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false)
+  const [welcomeType, setWelcomeType] = useState<'pro' | 'creator' | null>(null)
   
   const [headerPrefs, setHeaderPrefs] = useState<HeaderPrefs>({
     bg_type: 'preset', // Start with a preset background
@@ -1888,15 +1986,96 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     setIsEditingMission(true)
   }
 
-  const handleSaveMission = () => {
+  const handleSaveMission = async () => {
     setMission(tempMission)
     setIsEditingMission(false)
-    // TODO: Persist to backend
+    
+    // Persist to backend
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bio: tempMission })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save mission')
+      }
+      
+      console.log('Mission saved successfully')
+    } catch (error) {
+      console.error('Failed to save mission:', error)
+      // Revert the mission if save failed
+      setMission(mission)
+    }
   }
 
   const handleCancelMission = () => {
     setTempMission(mission)
     setIsEditingMission(false)
+  }
+
+  const handleHeaderAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('Please select a JPG, PNG, or WEBP file')
+      return
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    try {
+      // Create form data
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'avatar')
+
+      // Upload file
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const uploadResult = await uploadResponse.json()
+      
+      if (uploadResult.error) {
+        throw new Error(uploadResult.error)
+      }
+
+      // Update profile with new avatar URL
+      const updateResponse = await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ avatar_url: uploadResult.url })
+      })
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update profile')
+      }
+
+      // Refresh the page to show the new avatar
+      window.location.reload()
+
+    } catch (error) {
+      console.error('Avatar upload failed:', error)
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   const handleEditDisplayName = () => {
@@ -1952,7 +2131,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }
 
   // Calculate completion stats for chips
-  const totalTodayItems = todayItems.supplements.length + todayItems.protocols.length
+  const totalTodayItems = todayItems.supplements.length + todayItems.mindfulness.length + todayItems.movement.length + todayItems.protocols.length + todayItems.food.length + todayItems.gear.length
   const completedTodayItems = Array.from(completedItems).length
   const completionPercentage = totalTodayItems > 0 ? Math.round((completedTodayItems / totalTodayItems) * 100) : 0
 
@@ -1984,46 +2163,85 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           {/* Row 2: Utility Toolbar */}
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-end gap-3 py-2">
+              <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-2 overflow-x-auto">
                 {/* Public Profile Button */}
                 <button
                   onClick={() => window.location.href = `/u/${profile.slug}`}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
-                  Public Profile
+                  <span className="hidden sm:inline">Public Profile</span>
+                  <span className="sm:hidden">Public Profile</span>
                 </button>
 
                 {/* Copy Public Link Button */}
                 <button
                   onClick={async () => {
+                    const linkText = `${window.location.origin}/biostackr/${profile.slug}?public=true`
+                    
                     try {
-                      await navigator.clipboard.writeText(`${window.location.origin}/u/${profile.slug}?public=true`)
-                      setShowCopyToast(true)
-                      setTimeout(() => setShowCopyToast(false), 2000)
+                      // Check if clipboard API is available and secure context (HTTPS)
+                      if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                        await navigator.clipboard.writeText(linkText)
+                        setShowCopyToast(true)
+                        setTimeout(() => setShowCopyToast(false), 2000)
+                      } else {
+                        // Fallback for mobile Safari and other browsers without clipboard API
+                        const textArea = document.createElement('textarea')
+                        textArea.value = linkText
+                        textArea.style.position = 'fixed'
+                        textArea.style.left = '-999999px'
+                        textArea.style.top = '-999999px'
+                        textArea.style.opacity = '0'
+                        textArea.style.pointerEvents = 'none'
+                        textArea.setAttribute('readonly', '')
+                        document.body.appendChild(textArea)
+                        
+                        // Focus and select for mobile compatibility
+                        textArea.focus()
+                        textArea.select()
+                        textArea.setSelectionRange(0, 99999) // For mobile devices
+                        
+                        try {
+                          const successful = document.execCommand('copy')
+                          if (successful) {
+                            setShowCopyToast(true)
+                            setTimeout(() => setShowCopyToast(false), 2000)
+                          } else {
+                            throw new Error('execCommand failed')
+                          }
+                        } catch (fallbackErr) {
+                          console.error('Fallback copy failed:', fallbackErr)
+                          alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
+                        } finally {
+                          document.body.removeChild(textArea)
+                        }
+                      }
                     } catch (err) {
                       console.error('Failed to copy: ', err)
-                      alert('Failed to copy link. Please try again.')
+                      alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
                     }
                   }}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Copy your public Biostackr link"
                 >
-                  Copy Public Link
+                  <span className="hidden sm:inline">Copy Public Link</span>
+                  <span className="sm:hidden">Public Link</span>
                 </button>
 
                 {/* Notify Followers Button */}
             <button
                   onClick={() => setShowNotifyFollowers(true)}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Send update to your followers"
                 >
-                  Notify Followers
+                  <span className="hidden sm:inline">Notify Followers</span>
+                  <span className="sm:hidden">Notify</span>
             </button>
 
                 {/* Journal Link */}
             <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
             >
                   Journal
             </button>
@@ -2031,7 +2249,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Settings Button */}
                 <button
                   onClick={() => window.location.href = '/dash/settings'}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   Settings
                 </button>
@@ -2051,15 +2269,34 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   <img 
                     src={profile.avatar_url} 
                     alt={displayName}
-                    className="w-32 h-32 object-cover rounded-2xl border border-gray-200"
+                    className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 object-cover rounded-2xl border border-gray-200"
                   />
                 ) : (
-                  <div className="w-32 h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-white">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
+                    <span className="text-lg sm:text-xl lg:text-3xl font-bold text-white">
                       {showDisplayName ? `${firstName.charAt(0)}${lastName.charAt(0)}` : 'AS'}
                     </span>
                   </div>
                 )}
+                
+                {/* Upload Overlay */}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                  <button
+                    onClick={() => document.getElementById('header-avatar-upload')?.click()}
+                    className="opacity-0 group-hover:opacity-100 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-900 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  >
+                    Change Photo
+                  </button>
+                </div>
+                
+                {/* Hidden file input */}
+                <input
+                  id="header-avatar-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleHeaderAvatarUpload}
+                />
               </div>
               </div>
 
@@ -2078,6 +2315,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                       {displayName}
                     </h1>
                     <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    {isBetaUser && (
+                      <div className="px-2 py-1 bg-green-600 text-white rounded-full text-xs font-medium">
+                        BETA
+                      </div>
+                    )}
                   </div>
                   <p className="text-base text-gray-600 group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
@@ -2138,11 +2380,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   {/* My Daily Check-in Button */}
                         <button
                     onClick={() => setShowShareTodayModal(true)}
-                    className="group px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="group px-2 sm:px-3 lg:px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap flex-shrink-0"
                     title="Share today's health update"
                         >
-                    <span className="flex items-center space-x-1.5">
-                      <Share className="w-3.5 h-3.5 group-hover:translate-y-[-1px] transition-transform duration-200" />
+                    <span className="flex items-center">
                       <span>My daily check-in</span>
                     </span>
                         </button>
@@ -2156,12 +2397,47 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           {/* Trial Notifications */}
           <TrialNotification userId={userId} currentTier={profile.tier || 'free'} />
-          <LimitChecker userId={userId} currentTier={profile.tier || 'free'} />
+          {/* Only show limit checker if not showing welcome popup */}
+          {!showWelcomePopup && <LimitChecker userId={userId} currentTier={profile.tier || 'free'} />}
           
           {/* Date Label - Subtle, above first module */}
           <div className="text-sm text-gray-400 mb-2">
             {getFormattedDate()}
                   </div>
+
+          {/* Beta Expiration Warning */}
+          {isBetaUser && betaExpiration.daysUntilExpiration !== null && betaExpiration.daysUntilExpiration <= 30 && betaExpiration.daysUntilExpiration > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-yellow-800 mb-1">
+                    ⚠️ Beta Access Expiring Soon
+                  </h4>
+                  <p className="text-sm text-yellow-700 mb-3">
+                    Your beta access expires in {betaExpiration.daysUntilExpiration} days. 
+                    After expiration, you'll return to the free tier with limited features.
+                  </p>
+                  <div className="flex gap-3">
+                    <a
+                      href="/pricing/pro"
+                      className="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                    >
+                      Upgrade to Pro - $9.99/month
+                    </a>
+                    <a
+                      href="/dash/settings"
+                      className="inline-flex items-center px-3 py-1.5 border border-yellow-300 text-yellow-700 text-sm font-medium rounded-lg hover:bg-yellow-100 transition-colors"
+                    >
+                      View Settings
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-8">
             
@@ -2185,11 +2461,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               />
               <MovementCard
                 items={todayItems.movement}
+                onToggleComplete={handleToggleComplete}
+                completedItems={completedItems}
                 onManage={() => router.push('/dash/movement')}
                 onAdd={() => setShowAddMovement(true)}
               />
               <MindfulnessCard
                 items={todayItems.mindfulness}
+                onToggleComplete={handleToggleComplete}
+                completedItems={completedItems}
                 onManage={() => router.push('/dash/mindfulness')}
                 onAdd={() => setShowAddMindfulness(true)}
               />
@@ -2440,6 +2720,53 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           profileSlug={profile.slug}
         />
 
+        {/* Welcome Popup */}
+        {showWelcomePopup && welcomeType && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+              <div className="mb-4">
+                {welcomeType === 'creator' ? (
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">⭐</span>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">⚡</span>
+                  </div>
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Welcome to {welcomeType === 'creator' ? 'Creator' : 'Pro'}!
+              </h2>
+              <p className="text-gray-600 mb-6">
+                {welcomeType === 'creator' 
+                  ? "You're all set up with your Creator account. Start building your health empire with affiliate links, custom branding, and follower insights!"
+                  : "You're now on the Pro plan! Enjoy unlimited tracking, priority support, and enhanced features."
+                }
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowWelcomePopup(false)}
+                  className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                >
+                  {welcomeType === 'creator' ? 'Start Building My Stack' : 'Continue Building My Stack'}
+                </button>
+                {welcomeType === 'creator' && (
+                  <button
+                    onClick={() => {
+                      setShowWelcomePopup(false)
+                      router.push('/dash/settings')
+                    }}
+                    className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    Set Up Creator Features
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Add Gear Modal */}
         {showAddGear && (
           <AddGearForm onClose={() => setShowAddGear(false)} />
@@ -2520,13 +2847,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2">How Email Notifications Work:</h4>
+                  <h4 className="font-semibold text-blue-900 mb-2">What's Included in Email Notifications:</h4>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• <strong>Instant notifications:</strong> You can send 1 per day to your followers</li>
-                    <li>• <strong>Weekly digest:</strong> Every Sunday at 5pm with ALL changes from the week</li>
-                    <li>• <strong>No changes = No email:</strong> If no changes are made during the week, no digest email will be sent</li>
-                    <li>• <strong>Complete coverage:</strong> Weekly digest includes everything, even if you sent instant notifications</li>
+                    <li>• <strong>Your custom message</strong> (what you type above)</li>
+                    <li>• <strong>Your public profile link</strong> (automatically included)</li>
+                    <li>• <strong>Recent changes summary</strong> (supplements, protocols, etc.)</li>
+                    <li>• <strong>Unsubscribe link</strong> (followers can opt out anytime)</li>
                   </ul>
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-blue-700">
+                      <strong>Frequency:</strong> 1 instant notification per day max • Weekly digest every Sunday at 5pm with ALL changes
+                    </p>
+                  </div>
           </div>
 
                 <div className="flex gap-3">
@@ -2616,6 +2948,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
       `}</style>
+
+      {/* Beta Feedback Widget */}
+      <BetaFeedbackWidget isBetaUser={isBetaUser} />
     </>
   )
 }

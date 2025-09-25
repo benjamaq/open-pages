@@ -9,9 +9,11 @@ interface PublicProfileHeaderProps {
   isOwnProfile: boolean
   followerCount?: number
   showFollowerCount?: boolean
+  isSharedPublicLink?: boolean
+  isBetaUser?: boolean
 }
 
-export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true }: PublicProfileHeaderProps) {
+export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true, isSharedPublicLink = false, isBetaUser = false }: PublicProfileHeaderProps) {
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
@@ -129,8 +131,8 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           </div>
         )}
         
-        {/* Add Eating Style Button - Only for own profile */}
-        {isOwnProfile && !eatingStyle && (
+        {/* Add Eating Style Button - Only for own profile and not shared public link */}
+        {isOwnProfile && !isSharedPublicLink && !eatingStyle && (
           <button
             onClick={() => setShowHeaderEditor(true)}
             className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 cursor-pointer"
@@ -141,15 +143,22 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           </button>
         )}
 
-        {/* Follower Count - Only show if enabled and not own profile */}
-        {showFollowerCount && !isOwnProfile && followerCount > 0 && (
+            {/* Beta Badge - Show for beta users */}
+            {isBetaUser && (
+              <div className="px-3 py-1.5 bg-green-600 text-white rounded-full text-xs font-medium">
+                BETA
+              </div>
+            )}
+
+        {/* Follower Count - Show if enabled and (not own profile OR is shared public link) */}
+        {showFollowerCount && (!isOwnProfile || isSharedPublicLink) && followerCount > 0 && (
           <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
             👥 {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
           </div>
         )}
 
-        {/* Edit Button for Owner */}
-        {isOwnProfile && (
+        {/* Edit Button for Owner - Only show if not shared public link */}
+        {isOwnProfile && !isSharedPublicLink && (
           <button
             onClick={() => setShowHeaderEditor(true)}
             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-200"

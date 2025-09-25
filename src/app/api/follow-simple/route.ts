@@ -32,80 +32,93 @@ export async function POST(request: NextRequest) {
     // Get current user (if signed in)
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Try to insert into database now that RLS policies are fixed
-    try {
-      const { data: newFollow, error: followError } = await supabase
-        .from('stack_followers')
-        .insert({
-          owner_user_id: ownerUserId,
-          follower_email: email,
-          verified_at: new Date().toISOString() // Auto-verify for now
-        })
-        .select('id')
-        .single()
+    // Check if already following to prevent duplicates
+    const { data: existingFollow } = await supabase
+      .from('stack_followers')
+      .select('id, verified_at')
+      .eq('owner_user_id', ownerUserId)
+      .eq('follower_email', email)
+      .single()
 
-      if (followError) {
-        console.error('Error creating follow:', followError)
-        console.error('Follow error details:', JSON.stringify(followError, null, 2))
-        
-        // Fall back to simulation if database insert fails
-        console.log('✅ Falling back to simulation due to database error:', {
-          owner: ownerProfile.display_name,
-          email: email,
-          user: user?.id || 'anonymous',
-          timestamp: new Date().toISOString()
+    if (existingFollow) {
+      if (existingFollow.verified_at) {
+        return NextResponse.json({ 
+          status: 'already_following',
+          message: `You're already following ${ownerProfile.display_name}'s stack!`
         })
-        
+      } else {
+        // Update existing unverified follow
+        const { error: updateError } = await supabase
+          .from('stack_followers')
+          .update({ verified_at: new Date().toISOString() })
+          .eq('id', existingFollow.id)
+
+        if (updateError) {
+          console.error('Error updating follow:', updateError)
+          return NextResponse.json({ error: 'Failed to update follow status' }, { status: 500 })
+        }
+
         return NextResponse.json({ 
           status: 'following',
-          message: 'Successfully followed! (Simulated due to DB error)',
-          owner: ownerProfile.display_name
+          message: `You're now following ${ownerProfile.display_name}'s stack!`
         })
       }
-
-      // Create email preferences
-      const { error: prefsError } = await supabase
-        .from('email_prefs')
-        .insert({
-          follower_id: newFollow.id,
-          cadence: 'weekly'
-        })
-
-      if (prefsError) {
-        console.error('Error creating email preferences:', prefsError)
-        // Don't fail the whole operation for prefs error
-      }
-
-      console.log('✅ Real follow created in database:', {
-        owner: ownerProfile.display_name,
-        email: email,
-        followId: newFollow.id,
-        timestamp: new Date().toISOString()
-      })
-
-      return NextResponse.json({ 
-        status: 'following',
-        message: 'Successfully followed!',
-        owner: ownerProfile.display_name
-      })
-
-    } catch (dbError) {
-      console.error('Database operation failed:', dbError)
-      
-      // Fall back to simulation
-      console.log('✅ Falling back to simulation due to database error:', {
-        owner: ownerProfile.display_name,
-        email: email,
-        user: user?.id || 'anonymous',
-        timestamp: new Date().toISOString()
-      })
-      
-      return NextResponse.json({ 
-        status: 'following',
-        message: 'Successfully followed! (Simulated due to DB error)',
-        owner: ownerProfile.display_name
-      })
     }
+
+    // Try to insert into database
+    const { data: newFollow, error: followError } = await supabase
+      .from('stack_followers')
+      .insert({
+        owner_user_id: ownerUserId,
+        follower_email: email,
+        verified_at: new Date().toISOString() // Auto-verify for now
+      })
+      .select('id')
+      .single()
+
+    if (followError) {
+      console.error('Error creating follow:', followError)
+      console.error('Follow error details:', JSON.stringify(followError, null, 2))
+      
+      // Handle specific error cases
+      if (followError.code === '23505') { // Unique constraint violation
+        return NextResponse.json({ 
+          status: 'already_following',
+          message: `You're already following ${ownerProfile.display_name}'s stack!`
+        })
+      }
+      
+      return NextResponse.json({ 
+        error: 'Failed to create follow',
+        details: followError.message 
+      }, { status: 500 })
+    }
+
+    // Create email preferences
+    const { error: prefsError } = await supabase
+      .from('email_prefs')
+      .insert({
+        follower_id: newFollow.id,
+        cadence: 'weekly'
+      })
+
+    if (prefsError) {
+      console.error('Error creating email preferences:', prefsError)
+      // Don't fail the whole operation for prefs error
+    }
+
+    console.log('✅ Follow created in database:', {
+      owner: ownerProfile.display_name,
+      email: email,
+      followId: newFollow.id,
+      timestamp: new Date().toISOString()
+    })
+
+    return NextResponse.json({ 
+      status: 'following',
+      message: `You're now following ${ownerProfile.display_name}'s stack!`,
+      owner: ownerProfile.display_name
+    })
 
   } catch (error) {
     console.error('❌ Simple follow API error:', error)

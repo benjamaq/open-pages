@@ -45,15 +45,15 @@ export async function PATCH(request: NextRequest) {
       console.log('Stack following disabled - existing followers will stop receiving updates')
     }
 
-    // Revalidate relevant pages
-    const { data: profile } = await supabase
+    // Revalidate relevant pages - handle multiple profiles
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('slug')
       .eq('user_id', user.id)
-      .single()
+      .order('created_at', { ascending: false })
 
-    if (profile?.slug) {
-      revalidatePath(`/u/${profile.slug}`)
+    if (profiles && profiles.length > 0) {
+      revalidatePath(`/u/${profiles[0].slug}`)
     }
     revalidatePath('/dash/settings')
 

@@ -5,10 +5,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase/client'
 
 const freeFeatures = [
-  'Up to 10 supplements',
-  'Up to 3 protocols',
-  '2 movement items',
-  '2 mindfulness items',
+  'Up to 20 stack items (supplements, protocols, movement, mindfulness)',
   '5 library files (10 MB each)',
   'Public profile with followers',
   'Daily Check-in & progress tracking'
@@ -22,14 +19,6 @@ const proFeatures = [
   'Enhanced progress tracking'
 ]
 
-const creatorFeatures = [
-  'Everything in Pro',
-  'Affiliate links & buy buttons on supplements and gear',
-  'Shop My Gear page',
-  'Custom branding (logo & colors)',
-  'Audience insights (followers, clicks)',
-  'Creator support'
-]
 
 export default function PricingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -37,16 +26,22 @@ export default function PricingPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setIsLoggedIn(!!user)
-      setLoading(false)
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsLoggedIn(!!user)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setIsLoggedIn(false)
+      } finally {
+        setLoading(false)
+      }
     }
     checkAuth()
   }, [])
 
   const getCtaText = (plan: string) => {
-    if (loading) return 'Loading...'
+    if (loading) return 'Get Started' // Default to Get Started while loading
     if (isLoggedIn) {
       return plan === 'free' ? 'Continue with Free' : `Upgrade to ${plan}`
     }
@@ -54,10 +49,19 @@ export default function PricingPage() {
   }
 
   const getCtaHref = (plan: string) => {
-    if (isLoggedIn) {
-      return plan === 'free' ? '/dash' : `/upgrade/${plan.toLowerCase()}`
+    if (loading) {
+      // Default to new user flow while loading
+      if (plan === 'pro') return '/pricing/pro'
+      return '/auth/signup'
     }
-    return '/auth/signup'
+    if (isLoggedIn) {
+      return plan === 'free' ? '/dash' : `/pricing/${plan.toLowerCase()}`
+    }
+    // For new users, direct them to specific pricing pages
+    if (plan === 'pro') {
+      return '/pricing/pro'
+    }
+    return '/auth/signup' // Free plan goes directly to signup
   }
 
 
@@ -94,13 +98,13 @@ export default function PricingPage() {
             Start free. Go unlimited when you're ready.
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            14-day Pro trial included • Cancel anytime • Your data stays yours
+            Cancel anytime • Your data stays yours
           </p>
         </div>
 
 
         {/* Pricing Cards */}
-        <div className="mt-16 grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="mt-16 grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Free Plan */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <div className="text-center">
@@ -172,48 +176,11 @@ export default function PricingPage() {
                 {getCtaText('pro')}
               </Link>
               <p className="text-xs text-gray-500 text-center mt-2">
-                14-day Pro trial included • Save with annual
+                Save with annual billing
               </p>
             </div>
           </div>
 
-          {/* Creator Plan */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
-                <span>Creator</span>
-                <span className="text-gray-600">🎨</span>
-              </h2>
-              <div className="mt-4">
-                <span className="text-4xl font-bold text-gray-900">$29.95</span>
-                <span className="text-gray-600">/month</span>
-              </div>
-              <p className="mt-2 text-gray-600">For coaches & creators</p>
-            </div>
-
-            <div className="mt-8">
-              <ul className="space-y-3">
-                {creatorFeatures.map((feature, index) => (
-                  <li key={index} className="flex items-start space-x-3">
-                    <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-8">
-              <Link 
-                href={getCtaHref('creator')}
-                className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
-              >
-                {getCtaText('creator')}
-              </Link>
-              <p className="text-xs text-gray-500 text-center mt-2">
-                Turn your stack into a shareable business hub
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* FAQ */}
@@ -232,10 +199,10 @@ export default function PricingPage() {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">
-                What happens after my trial?
+                What happens when I upgrade?
               </h3>
               <p className="text-gray-600">
-                You keep everything you created. On Free, you can use your stack with sensible limits; upgrade for unlimited.
+                You get immediate access to unlimited features. On Free, you can use your stack with sensible limits; upgrade for unlimited.
               </p>
             </div>
             <div>
@@ -243,15 +210,7 @@ export default function PricingPage() {
                 Do you offer yearly pricing?
               </h3>
               <p className="text-gray-600">
-                Yes—save 2 months with annual: Pro $99.90/yr, Creator $199.90/yr.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                What's the difference between Pro and Creator?
-              </h3>
-              <p className="text-gray-600">
-                Creator includes affiliate links & buy buttons, Shop My Gear, custom branding, and creator-focused analytics.
+                Yes—save 2 months with annual: Pro $99.90/yr.
               </p>
             </div>
           </div>
@@ -263,7 +222,7 @@ export default function PricingPage() {
             <strong>No lock-in:</strong> downgrade anytime; your data stays safe.
           </p>
           <p className="mb-2">
-            <strong>Fair limits:</strong> after trial, Free limits what you can add/activate—upgrade for unlimited.
+            <strong>Fair limits:</strong> Free tier has sensible limits—upgrade for unlimited.
           </p>
           <p className="mb-2">
             <strong>Taxes:</strong> prices exclude VAT/GST where applicable.
