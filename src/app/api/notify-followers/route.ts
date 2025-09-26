@@ -37,12 +37,19 @@ export async function POST(request: NextRequest) {
 
     const { message } = await request.json()
 
-    // For now, simulate followers with creator's own email for testing
-    // In production, you'd query the stack_followers table
-    const followers = [
-      { email: user.email || 'creator@example.com', name: profile.display_name }
-    ]
+    // Get actual followers from the database
+    const { data: followersData, error: followersError } = await supabase
+      .from('stack_followers')
+      .select('email, created_at')
+      .eq('owner_user_id', user.id)
+      .not('verified_at', 'is', null)
 
+    if (followersError) {
+      console.error('Error fetching followers:', followersError)
+      return NextResponse.json({ error: 'Failed to fetch followers' }, { status: 500 })
+    }
+
+    const followers = followersData || []
     let followersNotified = 0
 
     console.log(`📧 Sending notifications to ${followers.length} follower(s)...`)
