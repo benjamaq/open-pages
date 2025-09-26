@@ -198,10 +198,11 @@ export function createFollowerNotificationEmail(
           .header { background: linear-gradient(135deg, #1a202c 0%, #4c1d95 100%); color: white; padding: 32px 24px; text-align: center; }
           .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
           .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+          .logo { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
           .content { padding: 32px 24px; }
           .greeting { font-size: 18px; margin-bottom: 24px; color: #2d3748; }
           .update-box { background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0; position: relative; }
-          .update-box::before { content: '💬'; font-size: 24px; position: absolute; top: -12px; left: 24px; background: white; padding: 0 8px; }
+          .update-box::before { content: ''; }
           .update-text { font-style: italic; font-size: 16px; line-height: 1.6; color: #4a5568; margin: 0; }
           .cta { text-align: center; margin: 32px 0; }
           .cta-button { display: inline-block; background: #1a202c; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: all 0.2s; }
@@ -214,13 +215,13 @@ export function createFollowerNotificationEmail(
       <body>
         <div class="container">
           <div class="header">
-            <h1>🧬 BioStackr</h1>
+            <div class="logo">BioStackr</div>
             <p>New Update from ${ownerName}</p>
           </div>
           
           <div class="content">
             <div class="greeting">
-              Hi there! 👋
+              Hi there!
             </div>
             
             <p style="color: #4a5568; margin-bottom: 24px;">
@@ -232,7 +233,7 @@ export function createFollowerNotificationEmail(
             </div>
             
             <div class="cta">
-              <a href="https://biostackr.io/${ownerSlug}" class="cta-button">
+              <a href="https://biostackr.io/biostackr/${ownerSlug}" class="cta-button">
                 View Full Stack
               </a>
             </div>
