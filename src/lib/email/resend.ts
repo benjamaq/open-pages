@@ -674,10 +674,10 @@ function generateWelcomeEmailHTML(ownerName: string): string {
           </div>
 
           <div class="cta">
-            <a href="https://www.biostacker.io" class="cta-button">
+            <a href="https://www.biostackr.io" class="cta-button">
               Create Your Own Stack
             </a>
-            <a href="https://www.biostacker.io" class="cta-secondary">
+            <a href="https://www.biostackr.io" class="cta-secondary">
               Explore BioStackr
             </a>
           </div>
@@ -690,7 +690,7 @@ function generateWelcomeEmailHTML(ownerName: string): string {
               Join thousands of people tracking their supplements, protocols, and wellness routines. 
               <span class="brand-highlight">Create your personalized health dashboard</span> and share your journey with others.
             </p>
-            <a href="https://www.biostacker.io" style="display: inline-block; background: #4c1d95; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">
+            <a href="https://www.biostackr.io" style="display: inline-block; background: #4c1d95; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">
               Get Started Free
             </a>
           </div>
@@ -701,8 +701,8 @@ function generateWelcomeEmailHTML(ownerName: string): string {
             This email was sent because you followed ${ownerName}'s stack on BioStackr.
           </p>
           <p style="margin-top: 16px; font-size: 12px;">
-            <a href="https://www.biostacker.io/unsubscribe">Unsubscribe</a> | 
-            <a href="https://www.biostacker.io">BioStackr</a>
+            <a href="https://www.biostackr.io/unsubscribe">Unsubscribe</a> | 
+            <a href="https://www.biostackr.io">BioStackr</a>
           </p>
         </div>
       </div>
