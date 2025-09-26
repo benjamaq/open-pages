@@ -74,9 +74,10 @@ export async function POST(request: NextRequest) {
     try {
       const confirmationEmail = createCreatorConfirmationEmail(
         profile.display_name,
-        followersNotified
+        followersNotified,
+        user.email || 'creator@example.com'
       )
-      console.log(`📧 Sending confirmation email to creator...`)
+      console.log(`📧 Sending confirmation email to creator: ${user.email}`)
       await sendEmail(confirmationEmail)
       console.log(`✅ Confirmation email sent`)
     } catch (error) {

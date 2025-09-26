@@ -58,7 +58,7 @@ export async function sendContactEmail(data: ContactEmailData): Promise<void> {
     const template = emailTemplates.contactForm(data)
     
     await resend.emails.send({
-      from: 'noreply@biostackr.com',
+      from: 'noreply@biostacker.io',
       to: 'ben09@mac.com',
       subject: template.subject,
       html: template.html
@@ -87,7 +87,7 @@ export async function sendAutoReplyEmail(data: AutoReplyEmailData): Promise<void
     const template = emailTemplates.autoReply(data)
     
     await resend.emails.send({
-      from: 'noreply@biostackr.com',
+      from: 'noreply@biostacker.io',
       to: data.email,
       subject: template.subject,
       html: template.html
@@ -161,7 +161,7 @@ export async function sendEmail(data: EmailData): Promise<boolean> {
     const resend = new Resend(process.env.RESEND_API_KEY)
     
     await resend.emails.send({
-      from: 'noreply@biostackr.com',
+      from: 'noreply@biostacker.io',
       to: data.to,
       subject: data.subject,
       html: data.html
@@ -204,10 +204,11 @@ export function createFollowerNotificationEmail(
 // Creator confirmation email
 export function createCreatorConfirmationEmail(
   ownerName: string,
-  followersNotified: number
+  followersNotified: number,
+  creatorEmail: string
 ): EmailData {
   return {
-    to: 'creator@example.com', // This should be the creator's email
+    to: creatorEmail,
     subject: `Update sent to ${followersNotified} follower(s)`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
