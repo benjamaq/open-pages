@@ -196,6 +196,18 @@ export default async function DashboardPage() {
     gear: userGear.data || [] // Gear doesn't have scheduling
   }
 
+  // Debug logging for movement items
+  console.log('🔍 Dashboard filtering debug:')
+  console.log(`Today is day ${dayOfWeek} (0=Sunday, 1=Monday, etc.)`)
+  console.log(`Movement items scheduled for today: ${todayMovement.data?.length || 0}`)
+  console.log(`Movement items after bi-weekly filter: ${todayItems.movement.length}`)
+  if (todayMovement.data) {
+    todayMovement.data.forEach(item => {
+      const isScheduledToday = item.schedule_days?.includes(dayOfWeek)
+      console.log(`- ${item.name}: schedule_days=[${item.schedule_days?.join(', ')}], scheduled today: ${isScheduledToday}`)
+    })
+  }
+
   return (
     <DashboardClient profile={profileWithTier} counts={counts} todayItems={todayItems} userId={user.id} />
   )
