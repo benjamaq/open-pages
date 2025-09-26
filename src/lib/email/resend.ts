@@ -622,22 +622,26 @@ function generateWelcomeEmailHTML(ownerName: string): string {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Welcome to BioStackr!</title>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a202c; margin: 0; padding: 0; background-color: #f8f9fa; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1a202c 0%, #4c1d95 100%); color: white; padding: 32px 24px; text-align: center; }
         .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
         .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
         .content { padding: 32px 24px; }
-        .greeting { font-size: 18px; margin-bottom: 24px; }
-        .welcome-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
+        .greeting { font-size: 18px; margin-bottom: 24px; color: #2d3748; }
+        .welcome-box { background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center; }
         .welcome-icon { font-size: 48px; margin-bottom: 16px; }
-        .expectations { background: #f7fafc; border-radius: 8px; padding: 20px; margin: 24px 0; }
-        .expectations h3 { color: #2d3748; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; }
+        .expectations { background: #f7fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0; }
+        .expectations h3 { color: #1a202c; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; }
         .expectations ul { color: #4a5568; margin: 0; padding-left: 20px; line-height: 1.6; }
         .cta { text-align: center; margin: 32px 0; }
-        .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
-        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
-        .footer a { color: #667eea; text-decoration: none; }
+        .cta-button { display: inline-block; background: #1a202c; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: all 0.2s; }
+        .cta-button:hover { background: #2d3748; transform: translateY(-1px); }
+        .cta-secondary { display: inline-block; background: #f7fafc; color: #1a202c; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; border: 2px solid #e2e8f0; margin-left: 12px; }
+        .cta-secondary:hover { background: #edf2f7; border-color: #cbd5e0; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; border-top: 1px solid #e2e8f0; }
+        .footer a { color: #4c1d95; text-decoration: none; font-weight: 500; }
+        .brand-highlight { color: #4c1d95; font-weight: 600; }
       </style>
     </head>
     <body>
@@ -671,7 +675,23 @@ function generateWelcomeEmailHTML(ownerName: string): string {
 
           <div class="cta">
             <a href="https://www.biostacker.io" class="cta-button">
-              Visit BioStackr
+              Create Your Own Stack
+            </a>
+            <a href="https://www.biostacker.io" class="cta-secondary">
+              Explore BioStackr
+            </a>
+          </div>
+
+          <div style="background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+            <h3 style="color: #1a202c; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">
+              Ready to build your own health stack?
+            </h3>
+            <p style="color: #4a5568; margin: 0 0 16px 0; font-size: 14px; line-height: 1.5;">
+              Join thousands of people tracking their supplements, protocols, and wellness routines. 
+              <span class="brand-highlight">Create your personalized health dashboard</span> and share your journey with others.
+            </p>
+            <a href="https://www.biostacker.io" style="display: inline-block; background: #4c1d95; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">
+              Get Started Free
             </a>
           </div>
         </div>
