@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '../../../lib/supabase/server'
+import { sendWelcomeEmail, sendNewFollowerNotification } from '../../../lib/email/resend'
 
 export async function POST(request: NextRequest) {
   try {
@@ -122,6 +123,53 @@ export async function POST(request: NextRequest) {
       followId: newFollow.id,
       timestamp: new Date().toISOString()
     })
+
+    // Send welcome email to follower
+    try {
+      console.log('📧 Sending welcome email to:', email)
+      const welcomeResult = await sendWelcomeEmail(email, ownerProfile.display_name)
+      if (welcomeResult.success) {
+        console.log('✅ Welcome email sent successfully')
+      } else {
+        console.error('❌ Failed to send welcome email:', welcomeResult.error)
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending welcome email:', emailError)
+      // Don't fail the follow if email fails
+    }
+
+    // Send notification to owner about new follower
+    try {
+      // Get owner's email from auth
+      const { data: ownerAuth } = await supabase.auth.admin.getUserById(ownerUserId)
+      const ownerEmail = ownerAuth?.user?.email
+
+      if (ownerEmail) {
+        // Get total follower count for notification
+        const { count: totalFollowers } = await supabase
+          .from('stack_followers')
+          .select('*', { count: 'exact', head: true })
+          .eq('owner_user_id', ownerUserId)
+          .not('verified_at', 'is', null)
+
+        console.log('📧 Sending new follower notification to owner:', ownerEmail)
+        const notificationResult = await sendNewFollowerNotification(
+          ownerEmail,
+          ownerProfile.display_name,
+          totalFollowers || 1
+        )
+        if (notificationResult.success) {
+          console.log('✅ New follower notification sent successfully')
+        } else {
+          console.error('❌ Failed to send new follower notification:', notificationResult.error)
+        }
+      } else {
+        console.warn('⚠️ Could not get owner email for notification')
+      }
+    } catch (notificationError) {
+      console.error('❌ Error sending new follower notification:', notificationError)
+      // Don't fail the follow if notification fails
+    }
 
     return NextResponse.json({ 
       status: 'following',

@@ -163,6 +163,16 @@ export async function sendWeeklySummary(data: WeeklySummaryData): Promise<{ succ
   })
 }
 
+export async function sendWelcomeEmail(followerEmail: string, ownerName: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateWelcomeEmailHTML(ownerName)
+  
+  return sendEmail({
+    to: followerEmail,
+    subject: `Welcome to BioStackr! You're now following ${ownerName}'s stack`,
+    html
+  })
+}
+
 function generateDailyReminderHTML(data: DailyReminderData): string {
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -595,6 +605,84 @@ function generateWeeklySummaryHTML(data: WeeklySummaryData): string {
           </p>
           <p style="margin-top: 16px; font-size: 12px;">
             This email was sent to ${data.userEmail}
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function generateWelcomeEmailHTML(ownerName: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Welcome to BioStackr!</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 32px 24px; }
+        .greeting { font-size: 18px; margin-bottom: 24px; }
+        .welcome-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; }
+        .welcome-icon { font-size: 48px; margin-bottom: 16px; }
+        .expectations { background: #f7fafc; border-radius: 8px; padding: 20px; margin: 24px 0; }
+        .expectations h3 { color: #2d3748; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; }
+        .expectations ul { color: #4a5568; margin: 0; padding-left: 20px; line-height: 1.6; }
+        .cta { text-align: center; margin: 32px 0; }
+        .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        .footer a { color: #667eea; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Welcome to BioStackr! 🎉</h1>
+          <p>Thanks for following ${ownerName}'s health stack</p>
+        </div>
+        
+        <div class="content">
+          <div class="welcome-box">
+            <div class="welcome-icon">🚀</div>
+            <h2 style="color: #1a202c; margin: 0 0 15px 0; font-size: 24px; font-weight: 600;">
+              You're all set!
+            </h2>
+            <p style="color: #4a5568; margin: 0; font-size: 16px; line-height: 1.6;">
+              You'll now receive weekly updates when ${ownerName} makes changes to their public health stack. 
+              Stay informed about their latest supplements, protocols, and wellness practices.
+            </p>
+          </div>
+
+          <div class="expectations">
+            <h3>What to expect:</h3>
+            <ul>
+              <li>Weekly digest emails with stack updates</li>
+              <li>Notifications when new items are added</li>
+              <li>Insights into their wellness journey</li>
+              <li>Easy unsubscribe option in every email</li>
+            </ul>
+          </div>
+
+          <div class="cta">
+            <a href="https://www.biostacker.io" class="cta-button">
+              Visit BioStackr
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>
+            This email was sent because you followed ${ownerName}'s stack on BioStackr.
+          </p>
+          <p style="margin-top: 16px; font-size: 12px;">
+            <a href="https://www.biostacker.io/unsubscribe">Unsubscribe</a> | 
+            <a href="https://www.biostacker.io">BioStackr</a>
           </p>
         </div>
       </div>
