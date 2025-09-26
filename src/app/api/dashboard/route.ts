@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     let newFollowersSinceLastCheck = 0
     
     try {
+      console.log('🔍 Fetching followers for user:', user.id)
       const { data: followers, error: followersError } = await supabase
         .from('stack_followers')
         .select('id, created_at')
@@ -37,27 +38,28 @@ export async function GET(request: NextRequest) {
         .not('verified_at', 'is', null)
 
       if (followersError) {
+        console.error('❌ Followers query error:', followersError)
         if (followersError.message?.includes('relation') || followersError.message?.includes('table')) {
-          console.warn('Follow stack tables not found, using default follower count')
-          // For now, simulate 1 follower for testing
-          followerCount = 1
+          console.warn('⚠️ Follow stack tables not found, using default follower count')
+          followerCount = 0
           newFollowersSinceLastCheck = 0
         } else {
           throw followersError
         }
       } else {
         followerCount = followers?.length || 0
+        console.log('✅ Follower count fetched:', followerCount)
         
         // Check for new followers in last 24 hours (for toast notification)
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
         newFollowersSinceLastCheck = followers?.filter(f => 
           new Date(f.created_at) > yesterday
         ).length || 0
+        console.log('📈 New followers since yesterday:', newFollowersSinceLastCheck)
       }
     } catch (error) {
-      console.error('Error fetching follower count:', error)
-      // Use defaults - simulate 1 follower for testing
-      followerCount = 1
+      console.error('❌ Error fetching follower count:', error)
+      followerCount = 0
       newFollowersSinceLastCheck = 0
     }
 

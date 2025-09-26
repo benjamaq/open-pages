@@ -1787,6 +1787,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     // Load dashboard data including follower count
     loadDashboardData()
     loadDailyCheckIn()
+    
+    // Set up periodic refresh for follower count (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      loadDashboardData()
+    }, 30000)
+    
+    return () => clearInterval(refreshInterval)
   }, [userId, searchParams])
 
   const loadDashboardData = async () => {
@@ -1804,6 +1811,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         const data = await response.json()
         // Update follower count from API (for real-time updates)
         setFollowerCount(data.followers.count || 0)
+        console.log('🔄 Dashboard follower count updated:', data.followers.count)
         
         // Show toast if there are new followers
         if (data.followers.newSinceLastCheck > 0) {
@@ -1811,6 +1819,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           setShowNewFollowerToast(true)
           setTimeout(() => setShowNewFollowerToast(false), 5000)
         }
+      } else {
+        console.error('Failed to load dashboard data:', response.status)
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error)

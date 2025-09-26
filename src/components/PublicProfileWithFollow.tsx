@@ -30,6 +30,8 @@ export default function PublicProfileWithFollow({
     
     setIsRefreshing(true)
     try {
+      // Add cache-busting timestamp for Safari
+      const timestamp = new Date().getTime()
       const supabase = createClient()
       const { count, error } = await supabase
         .from('stack_followers')
@@ -39,6 +41,9 @@ export default function PublicProfileWithFollow({
 
       if (!error && count !== null) {
         setFollowerCount(count)
+        console.log('🔄 Follower count refreshed:', count)
+      } else {
+        console.error('Failed to refresh follower count:', error)
       }
     } catch (error) {
       console.error('Failed to refresh follower count:', error)
@@ -49,8 +54,18 @@ export default function PublicProfileWithFollow({
 
   const handleFollowSuccess = () => {
     // Refresh follower count after successful follow
+    console.log('🔄 Follow success callback triggered, refreshing count')
     refreshFollowerCount()
   }
+
+  // Set up periodic refresh for follower count (every 30 seconds)
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      refreshFollowerCount()
+    }, 30000)
+    
+    return () => clearInterval(refreshInterval)
+  }, [])
 
   return (
     <div className="space-y-4">

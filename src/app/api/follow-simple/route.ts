@@ -11,6 +11,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Owner user ID is required' }, { status: 400 })
     }
 
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
     const supabase = await createClient()
 
     // Check if owner allows followers
@@ -33,12 +37,17 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // Check if already following to prevent duplicates
-    const { data: existingFollow } = await supabase
+    const { data: existingFollow, error: checkError } = await supabase
       .from('stack_followers')
       .select('id, verified_at')
       .eq('owner_user_id', ownerUserId)
       .eq('follower_email', email)
       .single()
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('❌ Error checking existing follow:', checkError)
+      return NextResponse.json({ error: 'Failed to check follow status' }, { status: 500 })
+    }
 
     if (existingFollow) {
       if (existingFollow.verified_at) {

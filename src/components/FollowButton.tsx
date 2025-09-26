@@ -68,25 +68,27 @@ export default function FollowButton({
       const result = await response.json()
 
       if (!response.ok) {
-        // If API fails, show success anyway for now
-        console.log('🔍 API failed, showing success message:', result)
+        console.error('🔍 API failed:', result)
+        setMessage(`❌ Failed to follow ${ownerName}'s stack. Please try again.`)
+        setIsLoading(false)
+        return
+      }
+
+      // Only show success if API actually succeeded
+      if (result.status === 'already_following') {
+        setMessage(`✅ You're already following ${ownerName}'s stack!`)
+      } else if (result.status === 'pending') {
+        setMessage(`✅ Check your email to confirm following ${ownerName}'s stack!`)
+      } else if (result.status === 'following') {
         setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
       } else {
-        if (result.status === 'already_following') {
-          setMessage(`✅ You're already following ${ownerName}'s stack!`)
-        } else if (result.status === 'pending') {
-          setMessage(`✅ Check your email to confirm following ${ownerName}'s stack!`)
-        } else if (result.status === 'following') {
-          setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
-        } else {
-          setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
-        }
+        setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
       }
 
       setShowEmailForm(false)
       setIsLoading(false)
       
-      // Notify parent component of successful follow
+      // Only notify parent component if API actually succeeded
       if (onFollowSuccess) {
         onFollowSuccess()
       }
@@ -100,8 +102,7 @@ export default function FollowButton({
 
     } catch (error) {
       console.error('Email follow error:', error)
-      // Even if there's an error, show success for now
-      setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
+      setMessage(`❌ Failed to follow ${ownerName}'s stack. Please try again.`)
       setShowEmailForm(false)
       setIsLoading(false)
       
