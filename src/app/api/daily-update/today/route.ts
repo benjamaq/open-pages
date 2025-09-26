@@ -20,6 +20,7 @@ export interface DailyUpdateData {
 
 // GET /api/daily-update/today - Get or create today's update
 export async function GET(request: NextRequest) {
+  console.log('🔍 Daily update API called:', new Date().toISOString())
   try {
     const supabase = await createClient()
 

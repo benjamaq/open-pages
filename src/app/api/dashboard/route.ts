@@ -3,6 +3,7 @@ import { createClient } from '../../../lib/supabase/server'
 
 // GET /api/dashboard - Get dashboard data including follower count
 export async function GET(request: NextRequest) {
+  console.log('🔍 Dashboard API called:', new Date().toISOString())
   try {
     const supabase = await createClient()
 
