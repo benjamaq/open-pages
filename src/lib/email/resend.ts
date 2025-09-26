@@ -632,15 +632,12 @@ function generateWelcomeEmailHTML(ownerName: string): string {
         .content { padding: 32px 24px; }
         .greeting { font-size: 18px; margin-bottom: 24px; color: #2d3748; }
         .welcome-box { background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center; }
-        .welcome-icon { font-size: 48px; margin-bottom: 16px; }
         .expectations { background: #f7fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0; }
         .expectations h3 { color: #1a202c; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; }
         .expectations ul { color: #4a5568; margin: 0; padding-left: 20px; line-height: 1.6; }
         .cta { text-align: center; margin: 32px 0; }
         .cta-button { display: inline-block; background: #1a202c; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: all 0.2s; }
         .cta-button:hover { background: #2d3748; transform: translateY(-1px); }
-        .cta-secondary { display: inline-block; background: #f7fafc; color: #1a202c; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; border: 2px solid #e2e8f0; margin-left: 12px; }
-        .cta-secondary:hover { background: #edf2f7; border-color: #cbd5e0; }
         .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; border-top: 1px solid #e2e8f0; }
         .footer a { color: #4c1d95; text-decoration: none; font-weight: 500; }
         .brand-highlight { color: #4c1d95; font-weight: 600; }
@@ -649,13 +646,12 @@ function generateWelcomeEmailHTML(ownerName: string): string {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Welcome to BioStackr! 🎉</h1>
+          <h1>Welcome to BioStackr!</h1>
           <p>Thanks for following ${ownerName}'s health stack</p>
         </div>
         
         <div class="content">
           <div class="welcome-box">
-            <div class="welcome-icon">🚀</div>
             <h2 style="color: #1a202c; margin: 0 0 15px 0; font-size: 24px; font-weight: 600;">
               You're all set!
             </h2>
@@ -678,22 +674,6 @@ function generateWelcomeEmailHTML(ownerName: string): string {
           <div class="cta">
             <a href="https://www.biostackr.io" class="cta-button">
               Create Your Own Stack
-            </a>
-            <a href="https://www.biostackr.io" class="cta-secondary">
-              Explore BioStackr
-            </a>
-          </div>
-
-          <div style="background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
-            <h3 style="color: #1a202c; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">
-              Ready to build your own health stack?
-            </h3>
-            <p style="color: #4a5568; margin: 0 0 16px 0; font-size: 14px; line-height: 1.5;">
-              Join thousands of people tracking their supplements, protocols, and wellness routines. 
-              <span class="brand-highlight">Create your personalized health dashboard</span> and share your journey with others.
-            </p>
-            <a href="https://www.biostackr.io" style="display: inline-block; background: #4c1d95; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">
-              Get Started Free
             </a>
           </div>
         </div>
