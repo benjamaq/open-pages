@@ -127,7 +127,9 @@ export async function POST(request: NextRequest) {
     // Send welcome email to follower
     try {
       console.log('📧 Sending welcome email to:', email)
+      console.log('📧 Owner name:', ownerProfile.display_name)
       const welcomeResult = await sendWelcomeEmail(email, ownerProfile.display_name)
+      console.log('📧 Welcome email result:', welcomeResult)
       if (welcomeResult.success) {
         console.log('✅ Welcome email sent successfully')
       } else {
