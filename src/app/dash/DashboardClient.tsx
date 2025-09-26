@@ -2444,15 +2444,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Helpful Note */}
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                Today's dashboard shows only scheduled items. 
-                <a 
-                  href={`/u/${profile.slug}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-gray-800 underline ml-1"
-                >
-                  View complete stack
-                </a>
+                Today's dashboard shows only scheduled items. To view the complete stack, go to your public page.
               </p>
             </div>
             

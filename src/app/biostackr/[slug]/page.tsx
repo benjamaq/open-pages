@@ -150,6 +150,7 @@ export default async function ProfilePage({ params, searchParams }: {
         .from('stack_items')
         .select('*')
         .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'supplements')
         .eq('public', true)
         .order('created_at', { ascending: false })
       publicSupplements = supplements || []
@@ -179,9 +180,10 @@ export default async function ProfilePage({ params, searchParams }: {
   if (publicModules.movement) {
     try {
       const { data: movement } = await supabase
-        .from('movement')
+        .from('stack_items')
         .select('*')
         .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'movement')
         .eq('public', true)
         .order('created_at', { ascending: false })
       publicMovement = movement || []
@@ -195,9 +197,10 @@ export default async function ProfilePage({ params, searchParams }: {
   if (publicModules.mindfulness) {
     try {
       const { data: mindfulness } = await supabase
-        .from('mindfulness')
+        .from('stack_items')
         .select('*')
         .eq('profile_id', (profile as any).id)
+        .eq('item_type', 'mindfulness')
         .eq('public', true)
         .order('created_at', { ascending: false })
       publicMindfulness = mindfulness || []
