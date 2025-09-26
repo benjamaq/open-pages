@@ -153,7 +153,8 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
   const timeOptions = [
     { value: 'morning', label: 'Morning', icon: '🌅' },
     { value: 'midday', label: 'Midday', icon: '☀️' },
-    { value: 'evening', label: 'Evening', icon: '🌙' }
+    { value: 'evening', label: 'Evening', icon: '🌙' },
+    { value: 'anytime', label: 'Anytime', icon: '⏰' }
   ]
 
   const categoryOptions = [
@@ -173,7 +174,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md max-h-[90vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
@@ -282,13 +283,13 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                    formData.frequency === 'bi-weekly' ? 'Select Day of Week' :
                    'Select Days'}
                 </label>
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2 sm:space-x-2 sm:gap-0">
                   {dayNames.map((day, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => handleDayToggle(index)}
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm font-medium border-2 transition-all ${
+                      className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm font-medium border-2 transition-all flex-shrink-0 ${
                         formData.schedule_days.includes(index)
                           ? 'bg-gray-900 text-white border-gray-900 shadow-sm transform scale-105'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -303,6 +304,9 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                 )}
                 {formData.frequency === 'bi-weekly' && (
                   <p className="text-xs text-gray-500 mt-2">This item will appear every other week on the selected day</p>
+                )}
+                {formData.frequency === 'custom' && (
+                  <p className="text-xs text-gray-500 mt-2">Select the days when this item should appear</p>
                 )}
               </div>
             )}

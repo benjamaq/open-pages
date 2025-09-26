@@ -232,17 +232,21 @@ export default function EditStackItemForm({ item, onClose }: EditStackItemFormPr
               </div>
             </div>
 
-            {/* Custom Day Picker */}
-            {formData.frequency === 'custom' && (
+            {/* Day Picker for Weekly, Bi-weekly, and Custom */}
+            {(formData.frequency === 'weekly' || formData.frequency === 'bi-weekly' || formData.frequency === 'custom') && (
               <div className="animate-in slide-in-from-top-2 duration-200">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Select Days</label>
-                <div className="flex space-x-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {formData.frequency === 'weekly' ? 'Select Day of Week' :
+                   formData.frequency === 'bi-weekly' ? 'Select Day of Week' :
+                   'Select Days'}
+                </label>
+                <div className="flex flex-wrap gap-2 sm:space-x-2 sm:gap-0">
                   {dayNames.map((day, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => handleDayToggle(index)}
-                      className={`w-10 h-10 rounded-full text-sm font-medium border-2 transition-all ${
+                      className={`w-10 h-10 rounded-full text-sm font-medium border-2 transition-all flex-shrink-0 ${
                         formData.schedule_days.includes(index)
                           ? 'bg-gray-900 text-white border-gray-900 shadow-sm transform scale-105'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -252,6 +256,15 @@ export default function EditStackItemForm({ item, onClose }: EditStackItemFormPr
                     </button>
                   ))}
                 </div>
+                {formData.frequency === 'weekly' && (
+                  <p className="text-xs text-gray-500 mt-2">This item will appear every week on the selected day</p>
+                )}
+                {formData.frequency === 'bi-weekly' && (
+                  <p className="text-xs text-gray-500 mt-2">This item will appear every other week on the selected day</p>
+                )}
+                {formData.frequency === 'custom' && (
+                  <p className="text-xs text-gray-500 mt-2">Select the days when this item should appear</p>
+                )}
               </div>
             )}
 
