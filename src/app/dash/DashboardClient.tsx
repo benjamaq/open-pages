@@ -2442,10 +2442,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div className="space-y-8">
             
             {/* Helpful Note */}
-            <div className="text-center">
-              <p className="text-xs text-gray-500">
-                Today's dashboard shows only scheduled items. To view the complete stack, go to your public page.
-              </p>
+            <div className="text-sm text-gray-400 mb-2">
+              Your dashboard only shows items scheduled for today. To view your complete stack, go to your public profile page.
             </div>
             
             {/* Row 1 — Today's Supplements (Full Width) */}
