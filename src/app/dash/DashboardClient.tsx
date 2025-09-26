@@ -2410,11 +2410,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           {/* Only show limit checker if not showing welcome popup */}
           {!showWelcomePopup && <LimitChecker userId={userId} currentTier={profile.tier || 'free'} />}
           
-          {/* Date Label - Subtle, above first module */}
-          <div className="text-sm text-gray-400 mb-2">
-            {getFormattedDate()}
-          </div>
-
           {/* Beta Expiration Warning */}
           {isBetaUser && betaExpiration.daysUntilExpiration !== null && betaExpiration.daysUntilExpiration <= 30 && betaExpiration.daysUntilExpiration > 0 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -2451,9 +2446,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           
           <div className="space-y-8">
             
-            {/* Helpful Note - Directly above supplements module */}
-            <div className="flex justify-end text-sm text-gray-400 mb-2 pr-4">
-              <div>Your dashboard only shows items scheduled for today. To view your complete stack, go to your public profile page.</div>
+            {/* Date and Helpful Note - Right above supplements module */}
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-sm text-gray-400">
+                {getFormattedDate()}
+              </div>
+              <div className="text-sm text-gray-400">
+                Your dashboard only shows items scheduled for today. To view your complete stack, go to your public profile page.
+              </div>
             </div>
             
             {/* Row 1 — Today's Supplements (Full Width) */}
