@@ -186,17 +186,76 @@ export function createFollowerNotificationEmail(
     to: followerEmail,
     subject: `${ownerName} shared an update on their stack`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">New Update from ${ownerName}</h2>
-        <p>Hi there!</p>
-        <p>${ownerName} just shared an update on their health stack:</p>
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="font-style: italic;">"${message}"</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Update from ${ownerName}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a202c; margin: 0; padding: 0; background-color: #f8f9fa; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+          .header { background: linear-gradient(135deg, #1a202c 0%, #4c1d95 100%); color: white; padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+          .header p { margin: 8px 0 0; font-size: 16px; opacity: 0.9; }
+          .content { padding: 32px 24px; }
+          .greeting { font-size: 18px; margin-bottom: 24px; color: #2d3748; }
+          .update-box { background: #f7fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0; position: relative; }
+          .update-box::before { content: '💬'; font-size: 24px; position: absolute; top: -12px; left: 24px; background: white; padding: 0 8px; }
+          .update-text { font-style: italic; font-size: 16px; line-height: 1.6; color: #4a5568; margin: 0; }
+          .cta { text-align: center; margin: 32px 0; }
+          .cta-button { display: inline-block; background: #1a202c; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: all 0.2s; }
+          .cta-button:hover { background: #2d3748; transform: translateY(-1px); }
+          .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; border-top: 1px solid #e2e8f0; }
+          .footer a { color: #4c1d95; text-decoration: none; font-weight: 500; }
+          .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🧬 BioStackr</h1>
+            <p>New Update from ${ownerName}</p>
+          </div>
+          
+          <div class="content">
+            <div class="greeting">
+              Hi there! 👋
+            </div>
+            
+            <p style="color: #4a5568; margin-bottom: 24px;">
+              <strong>${ownerName}</strong> just shared an update on their health stack:
+            </p>
+            
+            <div class="update-box">
+              <p class="update-text">"${message}"</p>
+            </div>
+            
+            <div class="cta">
+              <a href="https://biostackr.io/${ownerSlug}" class="cta-button">
+                View Full Stack
+              </a>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p style="color: #718096; font-size: 14px; text-align: center; margin: 0;">
+              Stay updated with ${ownerName}'s wellness journey
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>
+              This email was sent because you're following ${ownerName}'s stack on BioStackr.
+            </p>
+            <p style="margin-top: 16px; font-size: 12px;">
+              <a href="https://biostackr.io/unsubscribe">Unsubscribe</a> | 
+              <a href="https://biostackr.io">BioStackr</a>
+            </p>
+          </div>
         </div>
-        <p>Check out their full stack at: <a href="https://biostackr.io/${ownerSlug}">biostackr.io/${ownerSlug}</a></p>
-        <br>
-        <p>Best regards,<br>The Biostackr Team</p>
-      </div>
+      </body>
+      </html>
     `
   }
 }
