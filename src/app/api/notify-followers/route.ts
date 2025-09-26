@@ -40,19 +40,35 @@ export async function POST(request: NextRequest) {
     // Get actual followers from the database
     const { data: followersData, error: followersError } = await supabase
       .from('stack_followers')
-      .select('email, created_at')
+      .select('follower_email, created_at, verified_at')
       .eq('owner_user_id', user.id)
       .not('verified_at', 'is', null)
 
     if (followersError) {
       console.error('Error fetching followers:', followersError)
-      return NextResponse.json({ error: 'Failed to fetch followers' }, { status: 500 })
+      // If table doesn't exist, return helpful error
+      if (followersError.message?.includes('relation') || followersError.message?.includes('table')) {
+        return NextResponse.json({ 
+          error: 'Followers table not found. Please run the database migration first.',
+          details: followersError.message 
+        }, { status: 500 })
+      }
+      return NextResponse.json({ error: 'Failed to fetch followers', details: followersError.message }, { status: 500 })
     }
 
     const followers = followersData || []
     let followersNotified = 0
 
     console.log(`📧 Sending notifications to ${followers.length} follower(s)...`)
+    
+    // If no followers, return early
+    if (followers.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No followers to notify',
+        followersNotified: 0
+      })
+    }
 
     // Send emails to followers
     for (const follower of followers) {
@@ -61,19 +77,19 @@ export async function POST(request: NextRequest) {
           profile.display_name,
           profile.slug,
           message,
-          follower.email
+          follower.follower_email
         )
         
-        console.log(`📧 Sending email to: ${follower.email}`)
+        console.log(`📧 Sending email to: ${follower.follower_email}`)
         const emailSent = await sendEmail(emailData)
         if (emailSent) {
           followersNotified++
-          console.log(`✅ Email sent successfully to ${follower.email}`)
+          console.log(`✅ Email sent successfully to ${follower.follower_email}`)
         } else {
-          console.log(`❌ Failed to send email to ${follower.email}`)
+          console.log(`❌ Failed to send email to ${follower.follower_email}`)
         }
       } catch (error) {
-        console.error(`Failed to send email to ${follower.email}:`, error)
+        console.error(`Failed to send email to ${follower.follower_email}:`, error)
       }
     }
 
