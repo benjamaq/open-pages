@@ -143,8 +143,7 @@ export default async function DashboardPage() {
       .from('stack_items')
       .select('*')
       .eq('profile_id', profile.id)
-      .eq('item_type', 'mindfulness')
-      .contains('schedule_days', [dayOfWeek]),
+      .eq('item_type', 'mindfulness'),
     supabase
       .from('stack_items')
       .select('*')
