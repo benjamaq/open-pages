@@ -2442,7 +2442,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div className="space-y-8">
             
             {/* Helpful Note - Directly above supplements module */}
-            <div className="flex justify-center text-sm text-gray-400 mb-2">
+            <div className="flex justify-end text-sm text-gray-400 mb-2 pr-4">
               <div>Your dashboard only shows items scheduled for today. To view your complete stack, go to your public profile page.</div>
             </div>
             
