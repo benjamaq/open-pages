@@ -82,7 +82,7 @@ export default function LibrarySection({
     })
   }
 
-  const recentItems = items.slice(0, 5)
+  const recentItems = items
   const categoryStats = items.reduce((acc, item) => {
     acc[item.category] = (acc[item.category] || 0) + 1
     return acc
