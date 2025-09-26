@@ -2441,6 +2441,33 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           
           <div className="space-y-8">
             
+            {/* Helpful Note */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-800">
+                    <strong>Today's Dashboard:</strong> Shows only items scheduled for today. 
+                    <span className="ml-1">
+                      To see your complete stack, visit your 
+                      <a 
+                        href={`/u/${profile.slug}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-medium underline hover:text-blue-900 ml-1"
+                      >
+                        public profile page
+                      </a>.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             {/* Row 1 — Today's Supplements (Full Width) */}
             <SupplementsCard
               items={todayItems.supplements}
