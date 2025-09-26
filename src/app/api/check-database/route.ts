@@ -61,16 +61,18 @@ export async function GET(request: NextRequest) {
 
     // Check profiles table
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, display_name, slug, allow_stack_follow')
+        .select('id, display_name, slug, allow_stack_follow, user_id, created_at')
         .eq('user_id', user.id)
-        .single()
+        .order('created_at', { ascending: false })
 
       results.tables.profiles = {
         exists: true,
         error: profileError?.message || null,
-        data: profile
+        count: profiles?.length || 0,
+        data: profiles || [],
+        primaryProfile: profiles && profiles.length > 0 ? profiles[0] : null
       }
     } catch (error) {
       results.tables.profiles = {

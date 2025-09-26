@@ -25,18 +25,21 @@ export default function TestFollowersPage() {
 
       console.log('🔍 Loading followers for user:', user.id)
 
-      // Get user's profile
-      const { data: profile, error: profileError } = await supabase
+      // Get user's profile (handle multiple profiles)
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, display_name, slug, user_id')
+        .select('id, display_name, slug, user_id, created_at')
         .eq('user_id', user.id)
-        .single()
+        .order('created_at', { ascending: false })
 
-      if (profileError || !profile) {
-        setError('Profile not found')
+      if (profileError || !profiles || profiles.length === 0) {
+        setError(`Profile not found: ${profileError?.message || 'No profiles found'}`)
         setLoading(false)
         return
       }
+
+      // Use the most recent profile
+      const profile = profiles[0]
 
       console.log('👤 Profile found:', profile)
 
