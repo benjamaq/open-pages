@@ -149,7 +149,8 @@ export async function sendNewFollowerNotification(ownerEmail: string, ownerName:
   return sendEmail({
     to: ownerEmail,
     subject: 'You have a new follower on Biostackr 🎉',
-    html
+    html,
+    from: 'Biostackr <noreply@biostackr.io>'
   })
 }
 
@@ -169,7 +170,8 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
   return sendEmail({
     to: followerEmail,
     subject: `Welcome to BioStackr! You're now following ${ownerName}'s stack`,
-    html
+    html,
+    from: 'Biostackr <noreply@biostackr.io>'
   })
 }
 
