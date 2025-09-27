@@ -233,37 +233,47 @@ export async function sendTestEmail() {
   console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
 
   // Send test email - only to the user's own email for testing
-  const result = await sendDailyReminder({
-    userName: (profile as any).name || 'User',
-    userEmail: user.email!,
-    supplements: supplements.map((item: any) => ({
-      name: item.name,
-      dose: item.dose,
-      timing: item.timing
-    })),
-    protocols: protocols.map((item: any) => ({
-      name: item.name,
-      frequency: item.frequency
-    })),
-    movement: movement.map((item: any) => ({
-      name: item.name,
-      duration: item.dose
-    })),
-    mindfulness: mindfulness.map((item: any) => ({
-      name: item.name,
-      duration: item.dose
-    })),
-    profileUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dash`,
-    unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe`
-  })
+  try {
+    const emailData = {
+      userName: (profile as any).display_name || (profile as any).name || 'User',
+      userEmail: user.email!,
+      supplements: supplements.map((item: any) => ({
+        name: item.name || 'Unknown supplement',
+        dose: item.dose || '',
+        timing: item.timing || item.time_preference || 'anytime'
+      })),
+      protocols: protocols.map((item: any) => ({
+        name: item.name || 'Unknown protocol',
+        frequency: item.frequency || 'daily'
+      })),
+      movement: movement.map((item: any) => ({
+        name: item.name || 'Unknown movement',
+        duration: item.dose || '30 min'
+      })),
+      mindfulness: mindfulness.map((item: any) => ({
+        name: item.name || 'Unknown mindfulness',
+        duration: item.dose || '15 min'
+      })),
+      profileUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dash`,
+      unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe`
+    }
 
-  console.log('Test email result:', result)
+    console.log('📧 Sending test email with data:', emailData)
+    
+    const result = await sendDailyReminder(emailData)
 
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to send test email')
+    console.log('📧 Test email result:', result)
+
+    if (!result.success) {
+      console.error('❌ Test email failed:', result.error)
+      throw new Error(result.error || 'Failed to send test email')
+    }
+
+    return result
+  } catch (error) {
+    console.error('❌ Error in sendTestEmail:', error)
+    throw new Error(`Failed to send test email: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-
-  return result
 }
 
 export async function queueDailyReminders() {
