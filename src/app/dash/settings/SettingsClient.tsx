@@ -163,6 +163,8 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setSaveMessage('')
     
     try {
+      console.log('🧪 Attempting to send test email...')
+      
       const response = await fetch('/api/test-email-settings', {
         method: 'POST',
         headers: {
@@ -170,7 +172,10 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
         }
       })
 
+      console.log('📧 Response status:', response.status)
+      
       const result = await response.json()
+      console.log('📧 Response result:', result)
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to send test email')
@@ -179,7 +184,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
       setSaveMessage('Test email sent! Check your inbox.')
       setTimeout(() => setSaveMessage(''), 5000)
     } catch (error) {
-      console.error('Error sending test email:', error)
+      console.error('❌ Error sending test email:', error)
       setSaveMessage('Failed to send test email. Please check your email configuration.')
     } finally {
       setIsSendingTest(false)
