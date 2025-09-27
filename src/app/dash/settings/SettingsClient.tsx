@@ -5,7 +5,6 @@ import { Bell, Mail, Clock, TestTube, User, LogOut, Camera, Upload, Zap, Crown, 
 import { 
   getNotificationPreferences, 
   updateNotificationPreferences, 
-  sendTestEmail,
   type NotificationPreferences 
 } from '../../../lib/actions/notifications'
 import { 
@@ -164,7 +163,19 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setSaveMessage('')
     
     try {
-      await sendTestEmail()
+      const response = await fetch('/api/test-email-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send test email')
+      }
+
       setSaveMessage('Test email sent! Check your inbox.')
       setTimeout(() => setSaveMessage(''), 5000)
     } catch (error) {
