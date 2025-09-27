@@ -187,7 +187,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
         throw new Error(result.error || 'Failed to send test email')
       }
 
-      setSaveMessage('Test email sent! Check your inbox.')
+      setSaveMessage('✅ Test email sent! Check your inbox.')
       setTimeout(() => setSaveMessage(''), 5000)
     } catch (error) {
       console.error('❌ Error sending test email:', error)
