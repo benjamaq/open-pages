@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #667eea;">Test Email from BioStackr</h1>
               <p>This is a test email to verify that the email system is working correctly.</p>
-              <p>If you received this email, the Resend configuration is working! 🎉</p>
+              <p>If you received this email, your email notifications are working! 🎉</p>
               <p><strong>Test Details:</strong></p>
               <ul>
                 <li>Type: ${type}</li>
