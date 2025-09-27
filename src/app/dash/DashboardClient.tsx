@@ -2447,7 +2447,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div className="space-y-8">
             
             {/* Date and Helpful Note - Right above supplements module */}
-            <div className="flex justify-between items-center mb-1">
+            <div className="flex justify-between items-center -mb-6 relative z-10">
               <div className="text-sm text-gray-400">
                 {getFormattedDate()}
               </div>
