@@ -2452,7 +2452,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {getFormattedDate()}
               </div>
               <div className="text-sm text-gray-400">
-                Your dashboard only shows items scheduled for today. To view your complete stack, go to your public profile page.
+                Your dashboard only shows items scheduled for today. view complete stack in public profile
               </div>
             </div>
             
