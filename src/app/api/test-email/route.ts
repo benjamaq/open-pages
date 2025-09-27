@@ -21,19 +21,38 @@ export async function POST(request: NextRequest) {
       case 'test':
         result = await sendEmail({
           to: email,
-          subject: 'Test Email from BioStackr',
+          subject: '🧪 NEW TEST EMAIL from BioStackr',
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #667eea;">Test Email from BioStackr</h1>
-              <p>This is a test email to verify that the email system is working correctly.</p>
-              <p>If you received this email, your email notifications are working! 🎉</p>
-              <p><strong>Test Details:</strong></p>
-              <ul>
-                <li>Type: ${type}</li>
-                <li>Email: ${email}</li>
-                <li>Owner: ${ownerName || 'Test User'}</li>
-                <li>Timestamp: ${new Date().toISOString()}</li>
-              </ul>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+              <div style="background: linear-gradient(135deg, #1a202c 0%, #4c1d95 100%); color: white; padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700;">🧪 NEW TEST EMAIL</h1>
+                <p style="margin: 8px 0 0; font-size: 16px; opacity: 0.9;">BioStackr Email System Test</p>
+              </div>
+              <div style="padding: 32px 24px; background: white; border-radius: 0 0 12px 12px;">
+                <div style="background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+                  <h3 style="color: #1a202c; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">
+                    ✅ Email System Working!
+                  </h3>
+                  <p style="color: #4a5568; margin: 0; font-size: 16px; line-height: 1.6;">
+                    This is the NEW beautiful test email format. If you received this, your email notifications are working perfectly! 🎉
+                  </p>
+                </div>
+                <div style="background: #f7fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
+                  <h3 style="color: #1a202c; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Test Details:</h3>
+                  <ul style="color: #4a5568; margin: 0; padding-left: 20px; line-height: 1.6;">
+                    <li><strong>Type:</strong> ${type}</li>
+                    <li><strong>Email:</strong> ${email}</li>
+                    <li><strong>Owner:</strong> ${ownerName || 'Test User'}</li>
+                    <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
+                    <li><strong>Format:</strong> NEW Beautiful Design ✨</li>
+                  </ul>
+                </div>
+                <div style="text-align: center; margin: 32px 0;">
+                  <p style="color: #718096; font-size: 14px; margin: 0;">
+                    This email was sent from the updated BioStackr email system.
+                  </p>
+                </div>
+              </div>
             </div>
           `
         })
