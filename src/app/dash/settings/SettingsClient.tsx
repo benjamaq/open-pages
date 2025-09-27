@@ -165,11 +165,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     try {
       console.log('🧪 Attempting to send test email...')
       
-      const response = await fetch('/api/test-email-settings', {
+      const response = await fetch(`/api/test-email-settings?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        cache: 'no-cache'
       })
 
       console.log('📧 Response status:', response.status)
