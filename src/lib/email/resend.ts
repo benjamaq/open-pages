@@ -150,7 +150,7 @@ export async function sendNewFollowerNotification(ownerEmail: string, ownerName:
     to: ownerEmail,
     subject: 'You have a new follower on Biostackr 🎉',
     html,
-    from: 'Biostackr <noreply@biostackr.io>'
+    from: 'Biostackr <onboarding@resend.dev>'
   })
 }
 
@@ -171,7 +171,7 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
     to: followerEmail,
     subject: `Welcome to BioStackr! You're now following ${ownerName}'s stack`,
     html,
-    from: 'Biostackr <noreply@biostackr.io>'
+    from: 'Biostackr <onboarding@resend.dev>'
   })
 }
 
