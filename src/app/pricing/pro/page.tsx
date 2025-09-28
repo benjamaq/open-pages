@@ -76,6 +76,10 @@ export default function ProPricingPage() {
             Track unlimited supplements, protocols, and gear. Get priority support and 
             advanced progress tracking to optimize your health journey.
           </p>
+          <div className="mt-4 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
+            <span>🎁</span>
+            <span>Have a beta code? Get 6 months free Pro access!</span>
+          </div>
         </div>
 
         {/* Billing Toggle */}
@@ -202,7 +206,7 @@ export default function ProPricingPage() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I get started?</h3>
-              <p className="text-gray-600">Simply click "Get started with Pro" above to begin your unlimited health optimization journey. No special codes required.</p>
+              <p className="text-gray-600">Click "Get started with Pro" above to begin. If you have a beta code, you can enter it during signup for 6 months of free Pro access!</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>

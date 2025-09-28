@@ -5,12 +5,15 @@ import { createClient } from '../../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { handleUpgradeRedirect } from '../../../../lib/actions/stripe'
+import BetaCodeInput from '../../../../components/BetaCodeInput'
 
 export default function ProSignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [referralCode, setReferralCode] = useState('')
+  const [betaCode, setBetaCode] = useState('')
+  const [isBetaUser, setIsBetaUser] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -78,7 +81,46 @@ export default function ProSignUpPage() {
         }
 
 
-        // Redirect to Stripe checkout session for payment
+        // Activate beta code if provided
+        if (isBetaUser && betaCode.trim()) {
+          console.log('🔄 Attempting to activate beta code:', betaCode)
+          try {
+            const response = await fetch('/api/beta/validate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ code: betaCode.trim() }),
+            })
+
+            if (response.ok) {
+              console.log('✅ Beta code activated for user:', data.user.id)
+              // Beta users get 6 months free - redirect to dashboard
+              const successMessage = referralCode.trim() === 'redditgo' 
+                ? 'Account created successfully! Welcome from Reddit! 🎉 You have 6 months of Pro access! Redirecting...'
+                : 'Account created successfully! You have 6 months of Pro access! Redirecting...'
+              setMessage(successMessage)
+              setTimeout(() => {
+                router.push('/dash')
+                router.refresh()
+              }, 2000)
+              return
+            } else {
+              const errorData = await response.json()
+              console.error('❌ Failed to activate beta code:', errorData)
+              setError('Invalid beta code. Please check and try again.')
+              setLoading(false)
+              return
+            }
+          } catch (betaError) {
+            console.error('Beta code activation error:', betaError)
+            setError('Failed to validate beta code. Please try again.')
+            setLoading(false)
+            return
+          }
+        }
+
+        // Non-beta users go to payment
         const successMessage = referralCode.trim() === 'redditgo' 
           ? 'Account created successfully! Welcome from Reddit! 🎉 Redirecting to payment...'
           : 'Account created successfully! Redirecting to payment...'
@@ -178,6 +220,24 @@ export default function ProSignUpPage() {
               </p>
             </div>
 
+            <div>
+              <label htmlFor="betaCode" className="block text-sm font-medium text-gray-700">
+                Beta Code <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <div className="mt-1">
+                <BetaCodeInput
+                  onSuccess={(code) => {
+                    setIsBetaUser(true)
+                    setBetaCode(code)
+                  }}
+                  onError={(error) => setError(error)}
+                  placeholder="Enter your beta code for 6 months free Pro access"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Have a beta code? Enter it here for 6 months of free Pro access!
+              </p>
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
