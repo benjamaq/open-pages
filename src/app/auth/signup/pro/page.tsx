@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '../../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -17,8 +17,29 @@ export default function ProSignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setIsLoggedIn(true)
+          // If user is logged in, show a message that they can enter beta code or proceed to payment
+          setMessage('You are already logged in. Enter a beta code below for free Pro access, or proceed to payment.')
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [supabase.auth])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +47,53 @@ export default function ProSignUpPage() {
     setError(null)
     setMessage(null)
 
-    // Client-side validation
+    // If user is already logged in, handle beta code or redirect to payment
+    if (isLoggedIn) {
+      if (isBetaUser && betaCode.trim()) {
+        // Activate beta code for logged-in user
+        try {
+          const response = await fetch('/api/beta/validate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: betaCode.trim() }),
+          })
+
+          if (response.ok) {
+            setMessage('Beta code activated! You now have 6 months of free Pro access! Redirecting to dashboard...')
+            setTimeout(() => {
+              router.push('/dash')
+              router.refresh()
+            }, 2000)
+            return
+          } else {
+            const errorData = await response.json()
+            setError('Invalid beta code. Please check and try again.')
+            setLoading(false)
+            return
+          }
+        } catch (betaError) {
+          console.error('Beta code activation error:', betaError)
+          setError('Failed to validate beta code. Please try again.')
+          setLoading(false)
+          return
+        }
+      } else {
+        // No beta code, redirect to payment
+        try {
+          await handleUpgradeRedirect('pro', 'monthly')
+        } catch (error) {
+          console.error('Checkout session error:', error)
+          if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+            setError('Failed to redirect to payment. Please try again.')
+          }
+        }
+        return
+      }
+    }
+
+    // Client-side validation for new users
     if (password.length < 6) {
       setError('Password must be at least 6 characters long')
       setLoading(false)
@@ -38,7 +105,6 @@ export default function ProSignUpPage() {
       setLoading(false)
       return
     }
-
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -145,6 +211,19 @@ export default function ProSignUpPage() {
   }
 
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8" style={{ backgroundColor: '#FFFFFF' }}>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
+          </div>
+          <p className="mt-4 text-center text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8" style={{ backgroundColor: '#FFFFFF' }}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -159,10 +238,10 @@ export default function ProSignUpPage() {
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Create your account
+          {isLoggedIn ? 'Upgrade to Pro' : 'Create your account'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Start sharing your health journey
+          {isLoggedIn ? 'Enter a beta code for free Pro access or proceed to payment' : 'Start sharing your health journey'}
         </p>
       </div>
 
@@ -181,44 +260,48 @@ export default function ProSignUpPage() {
               </div>
             )}
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <div className="mt-1">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            </div>
+            {!isLoggedIn && (
+              <>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
-                Referral Code <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <div className="mt-1">
-                <input
-                  id="referralCode"
-                  name="referralCode"
-                  type="text"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-                  placeholder="Enter referral code (e.g., redditgo)"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Got a referral code? Enter it here to get special benefits!
-              </p>
-            </div>
+                <div>
+                  <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
+                    Referral Code <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="referralCode"
+                      name="referralCode"
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                      placeholder="Enter referral code (e.g., redditgo)"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Got a referral code? Enter it here to get special benefits!
+                  </p>
+                </div>
+              </>
+            )}
 
             <div>
               <label htmlFor="betaCode" className="block text-sm font-medium text-gray-700">
@@ -239,46 +322,50 @@ export default function ProSignUpPage() {
               </p>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
+            {!isLoggedIn && (
+              <>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email address
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-                  placeholder="Enter your password"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Password must be at least 6 characters long
-              </p>
-            </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
+                      placeholder="Enter your password"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Password must be at least 6 characters long
+                  </p>
+                </div>
+              </>
+            )}
 
             <div>
               <button
@@ -289,10 +376,10 @@ export default function ProSignUpPage() {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Creating account...
+                    {isLoggedIn ? 'Processing...' : 'Creating account...'}
                   </div>
                 ) : (
-                  'Create account'
+                  isLoggedIn ? 'Proceed to Payment' : 'Create account'
                 )}
               </button>
             </div>

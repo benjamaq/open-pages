@@ -30,13 +30,9 @@ export default function ProPricingPage() {
   }
 
   const getCtaHref = () => {
-    // For logged-in users, go directly to payment
-    // For new users, go to signup first
-    if (isLoggedIn) {
-      return `/auth/signup/pro-payment?billing=${billingPeriod}`
-    } else {
-      return '/auth/signup/pro'
-    }
+    // Always go to signup page so users can enter beta codes
+    // The signup page will handle redirecting existing users appropriately
+    return '/auth/signup/pro'
   }
 
   return (
