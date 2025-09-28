@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import BetaCodeInput from './BetaCodeInput'
 
 interface AuthFormProps {
   mode: 'signin' | 'signup'
@@ -15,8 +14,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [referralCode, setReferralCode] = useState('')
-  const [betaCode, setBetaCode] = useState('')
-  const [isBetaUser, setIsBetaUser] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -42,11 +39,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
       return
     }
 
-    if (mode === 'signup' && !isBetaUser) {
-      setError('A valid beta code is required to sign up during the beta period')
-      setLoading(false)
-      return
-    }
 
     try {
       if (mode === 'signup') {
@@ -104,30 +96,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
             // Don't fail the signup if profile creation fails
           }
 
-          // Activate beta code if provided
-          if (isBetaUser && betaCode.trim()) {
-            console.log('🔄 Attempting to activate beta code:', betaCode)
-            try {
-              const response = await fetch('/api/beta/validate', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: betaCode.trim() }),
-              })
-
-              if (response.ok) {
-                console.log('✅ Beta code activated for user:', data.user.id)
-              } else {
-                const errorData = await response.json()
-                console.error('❌ Failed to activate beta code:', errorData)
-              }
-            } catch (betaError) {
-              console.error('Beta code activation error:', betaError)
-            }
-          } else {
-            console.log('❌ Beta code not activated - isBetaUser:', isBetaUser, 'betaCode:', betaCode)
-          }
 
           // Redirect to dashboard for new users
           const successMessage = referralCode.trim() === 'redditgo' 
@@ -240,17 +208,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </div>
             )}
 
-            {isSignUp && (
-              <div>
-                <BetaCodeInput 
-                  onSuccess={(code) => {
-                    setIsBetaUser(true)
-                    setBetaCode(code)
-                  }}
-                  onError={(error) => setError(error)}
-                />
-              </div>
-            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

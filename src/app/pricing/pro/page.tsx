@@ -76,10 +76,6 @@ export default function ProPricingPage() {
             Track unlimited supplements, protocols, and gear. Get priority support and 
             advanced progress tracking to optimize your health journey.
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
-            <span>🔑</span>
-            <span>Beta code required</span>
-          </div>
         </div>
 
         {/* Billing Toggle */}
@@ -205,8 +201,8 @@ export default function ProPricingPage() {
               <p className="text-gray-600">Unlimited tracking of all health items, priority support, featured profile status, and enhanced progress tracking.</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Do I need a beta code?</h3>
-              <p className="text-gray-600">Yes, a valid beta code is required to sign up for the Pro plan during our beta period. Get your code from our waitlist or existing beta users.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I get started?</h3>
+              <p className="text-gray-600">Simply click "Get started with Pro" above to begin your unlimited health optimization journey. No special codes required.</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>

@@ -22,17 +22,16 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2">
               <Link 
-                href="/auth/signup" 
-                className="bg-gray-900 text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                <span className="hidden sm:inline">Have Beta Code?</span>
-                <span className="sm:hidden">Beta Code</span>
-              </Link>
-              <Link 
                 href="/auth/signin" 
                 className="text-gray-600 text-xs sm:text-sm hover:text-gray-900 transition-colors"
               >
                 Sign In
+              </Link>
+              <Link 
+                href="/auth/signup" 
+                className="bg-gray-900 text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                Sign Up
               </Link>
             </div>
           </div>
@@ -60,10 +59,10 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link 
-                  href="/waitlist" 
+                  href="/auth/signup" 
                   className="bg-gray-900 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium hover:bg-gray-800 transition-colors text-center"
                 >
-                  Join Waitlist
+                  Create Your Stack
                 </Link>
                 <Link 
                   href="/examples"
