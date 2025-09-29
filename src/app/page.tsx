@@ -45,7 +45,7 @@ export default function Home() {
       <section className="pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Beta Badge - Positioned below nav */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-8 sm:mb-6">
             <div className="bg-black text-white rounded-full w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center text-xs sm:text-sm font-bold">
               BETA
             </div>
