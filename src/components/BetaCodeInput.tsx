@@ -54,7 +54,7 @@ export default function BetaCodeInput({ onSuccess, onError }: BetaCodeInputProps
           Have a Beta Code?
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Enter your beta code to get 6 months of Pro access for free!
+          Enter your beta code for special access.
         </p>
       </div>
 

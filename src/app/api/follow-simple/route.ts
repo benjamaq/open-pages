@@ -18,6 +18,23 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+    // SECURITY: Check if user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    // SECURITY: Rate limiting - check if user has made too many follow requests
+    const { count: recentFollows } = await supabase
+      .from('stack_followers')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_user_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+
+    if (recentFollows && recentFollows > 10) {
+      return NextResponse.json({ error: 'Too many follow requests. Please try again later.' }, { status: 429 })
+    }
+
     // Check if owner allows followers
     const { data: ownerProfile, error: ownerError } = await supabase
       .from('profiles')
@@ -80,6 +97,7 @@ export async function POST(request: NextRequest) {
       .from('stack_followers')
       .insert({
         owner_user_id: ownerUserId,
+        follower_user_id: user.id, // Use authenticated user ID
         follower_email: email,
         verified_at: new Date().toISOString() // Auto-verify for now
       })
