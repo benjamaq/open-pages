@@ -46,7 +46,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Beta Badge - Positioned below nav */}
           <div className="mb-4 sm:mb-6">
-            <div className="bg-black text-white rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-sm sm:text-lg font-bold">
+            <div className="bg-black text-white rounded-full w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center text-xs sm:text-sm font-bold">
               BETA
             </div>
           </div>
@@ -77,8 +77,8 @@ export default function Home() {
                 </Link>
                   </div>
                   
-              </div>
-            </div>
+                      </div>
+                        </div>
             <div className="mt-12 lg:mt-0 lg:col-span-6">
               {/* Stack Page Preview Card */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 max-w-md mx-auto">
@@ -86,18 +86,18 @@ export default function Home() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                     AJ
-                  </div>
+                        </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">Alex J</h3>
                     <p className="text-sm text-gray-600">Optimizing human potential through science-backed protocols</p>
                     <div className="mt-1">
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">187 followers</span>
-                </div>
+                        </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs rounded-full px-3 py-1 ring-1 ring-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white cursor-pointer">Follow</span>
                       </div>
-                        </div>
+                    </div>
                     
                 {/* Sections Preview */}
                 <div className="space-y-3">
@@ -109,7 +109,7 @@ export default function Home() {
                         <p className="font-medium text-gray-900">Morning</p>
                         <p>• Vitamin D3 5000 IU (Thorne) with breakfast</p>
                         <p>• Omega-3 2000mg EPA (Nordic Naturals) with fat</p>
-                        </div>
+                      </div>
                       <div className="bg-gray-50 rounded p-2">
                         <p className="font-medium text-gray-900">Mid-day</p>
                         <p>• B-Complex (Garden of Life) with lunch</p>
@@ -130,7 +130,7 @@ export default function Home() {
                       <p>• Ice bath (3 min daily), Red light therapy (20 min)</p>
                       <p>• Sleep optimization routine, Breathwork (10 min)</p>
                       </div>
-                        </div>
+                    </div>
                     
                   {/* Library */}
                   <div>
@@ -149,21 +149,21 @@ export default function Home() {
                       <p>• Zone 2 cardio 3x/week, Daily walks 8k+ steps</p>
                       <p>• Mobility work, Yoga 2x/week</p>
                       </div>
-                      </div>
                     </div>
-                    
+                  </div>
+                  
                 {/* Footer */}
                 <div className="text-xs text-gray-500 flex justify-between pt-3 border-t border-gray-100 mt-4">
                   <span>View full stack ↗</span>
                   <span>Powered by BioStackr.io</span>
-                      </div>
+                    </div>
                     </div>
                     
               {/* Caption */}
               <p className="text-xs text-gray-500 text-center mt-3">Auto-updates when the owner changes their stack.</p>
-                      </div>
-                      </div>
-                    </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Why this beats scattered files */}
@@ -177,29 +177,29 @@ export default function Home() {
               </h2>
               
               <div className="space-y-8">
-                <div>
+                  <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Too Many Places</h3>
                   <p className="text-gray-600">
                     Supplements in Notes. Training in Sheets. Labs in email. Protocols in head. Journal in five different apps. Finding anything takes 10 minutes.
                   </p>
-                      </div>
-                
-                <div>
+              </div>
+
+                  <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Can't Share Easily</h3>
                   <p className="text-gray-600">
                     Coach asks for your stack. You type it out. Doctor asks two weeks later. You type it again. Friend asks what you're taking. You give up and say 'I'll send it later.'
                   </p>
-                  </div>
-                  
-                <div>
+              </div>
+
+                  <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">No Privacy Control</h3>
                   <p className="text-gray-600">
                     You want to share training with gym friends but not supplements. Want to show doctor just medical stuff. Impossible with spreadsheets or screenshots.
                   </p>
-                    </div>
-                    </div>
-                    </div>
-            
+                  </div>
+                </div>
+              </div>
+
             {/* Right side - BioStackr Solution */}
             <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">BioStackr Solution</h3>
@@ -226,9 +226,9 @@ export default function Home() {
                   <span>Searchable library where nothing gets lost</span>
                 </li>
               </ul>
-                    </div>
                   </div>
                 </div>
+              </div>
       </section>
 
       {/* What you can track */}
@@ -238,7 +238,7 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
               Everything that matters for your health
             </h2>
-              </div>
+                  </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -247,11 +247,11 @@ export default function Home() {
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
                   </svg>
-            </div>
+                </div>
                 <h3 className="text-lg font-bold text-gray-900">Supplements ✓</h3>
-          </div>
+              </div>
               <p className="text-gray-600">Form, dose, timing, brand, notes</p>
-        </div>
+            </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
@@ -259,48 +259,48 @@ export default function Home() {
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  </div>
+                      </div>
                 <h3 className="text-lg font-bold text-gray-900">Protocols ✓</h3>
-                </div>
+                      </div>
               <p className="text-gray-600">Cold plunges, breath work, fasting windows, sleep hygiene</p>
-              </div>
-
+                    </div>
+                    
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  </div>
+                      </div>
                 <h3 className="text-lg font-bold text-gray-900">Training ✓</h3>
-                </div>
+                      </div>
               <p className="text-gray-600">Programs, splits, exercise selection, progression</p>
-              </div>
-
+                    </div>
+                    
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  </div>
+                      </div>
                 <h3 className="text-lg font-bold text-gray-900">Labs ✓</h3>
-                </div>
+                      </div>
               <p className="text-gray-600">Upload results, track trends, share with providers</p>
-              </div>
-
+                </div>
+                
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  </div>
+                    </div>
                 <h3 className="text-lg font-bold text-gray-900">Journal ✓</h3>
-                </div>
+                    </div>
               <p className="text-gray-600">Daily progress updates, how you feel, what's working</p>
-              </div>
-
+                </div>
+                
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -309,19 +309,19 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 2v4m6-4v4M9 18v4m6-4v4" />
                     <circle cx="12" cy="12" r="2" strokeWidth="1.5" />
                   </svg>
-                  </div>
+                    </div>
                 <h3 className="text-lg font-bold text-gray-900">Gear & Extras ✓</h3>
-                </div>
+                    </div>
               <p className="text-gray-600">Equipment, apps, mindfulness practices, anything else</p>
-              </div>
-            </div>
-
+                  </div>
+                </div>
+                
           <div className="text-center mt-8">
             <p className="text-gray-600">
               Organised, searchable, always accessible. Each category is optional. Build what matters to you. Toggle everything individually when sharing.
             </p>
-                      </div>
-                      </div>
+          </div>
+        </div>
       </section>
 
       {/* Share what matters. Hide what doesn't. */}
@@ -329,7 +329,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Right side - Copy (moved to left for mobile) */}
-            <div className="order-2 lg:order-2">
+            <div className="order-1 lg:order-2">
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
                 Share what matters. Hide what doesn't.
               </h2>
@@ -356,10 +356,10 @@ export default function Home() {
                   <span>Change anytime—people see updates instantly</span>
                 </li>
               </ul>
-            </div>
-            
+          </div>
+          
             {/* Left side - Visual (moved to right for mobile) */}
-            <div className="order-1 lg:order-1 bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            <div className="order-2 lg:order-1 bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Privacy Controls</h3>
               
               {/* Module-level toggles */}
@@ -368,35 +368,35 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span className="font-medium text-gray-900">Supplements</span>
-                      </div>
+              </div>
                   <span className="text-sm text-green-600 font-medium">ON</span>
-                    </div>
-                    
+            </div>
+
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span className="font-medium text-gray-900">Protocols</span>
-                      </div>
+              </div>
                   <span className="text-sm text-green-600 font-medium">ON</span>
-                      </div>
+            </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                     <span className="font-medium text-gray-900">Movement</span>
-                    </div>
+              </div>
                   <span className="text-sm text-gray-500 font-medium">OFF</span>
-                </div>
-                
+            </div>
+
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                     <span className="font-medium text-gray-900">Labs</span>
-                    </div>
+              </div>
                   <span className="text-sm text-gray-500 font-medium">OFF</span>
                   </div>
-                </div>
-                
+            </div>
+
               {/* Item-level toggle example */}
               <div className="border-t border-gray-200 pt-4">
                 <p className="text-sm text-gray-600 mb-3">Individual items:</p>
@@ -404,12 +404,12 @@ export default function Home() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-700">• Vitamin D3 5000 IU</span>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    </div>
+              </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-700">• Magnesium Glycinate</span>
                     <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                    </div>
-                    </div>
+            </div>
+              </div>
                   </div>
             </div>
           </div>
@@ -430,25 +430,25 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+                  </svg>
+                </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Your Coach</h3>
               <p className="text-gray-600 leading-relaxed">
                 Share your complete profile—supplements, training splits, protocols, labs, and progress journal. Everything they need to guide you.
               </p>
-            </div>
+              </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
+                  </svg>
+                </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Your Doctor</h3>
               <p className="text-gray-600 leading-relaxed">
                 Toggle on just labs and supplements. Toggle off training and journal. Give them medical context without the noise.
               </p>
-            </div>
+                </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -467,14 +467,14 @@ export default function Home() {
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-              </div>
+                </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Yourself</h3>
               <p className="text-gray-600 leading-relaxed">
                 Finally, everything in one place. No more Notes app chaos, lost lab results, or forgotten training plans from three phones ago.
                 </p>
-            </div>
-              </div>
-            </div>
+                    </div>
+                  </div>
+                    </div>
       </section>
 
 
@@ -486,7 +486,7 @@ export default function Home() {
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fbbf24' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             backgroundSize: '60px 60px'
           }}></div>
-              </div>
+                  </div>
           
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
@@ -496,7 +496,7 @@ export default function Home() {
             <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-light">
               Use the journal to tell your story behind the data, the metrics, and the supplements.
             </p>
-          </div>
+                    </div>
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             {/* Left side - Visual */}
@@ -507,12 +507,12 @@ export default function Home() {
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                </div>
+                  </div>
                 <div>
                     <h3 className="text-xl font-semibold text-gray-900">Today's Reflection</h3>
                     <p className="text-sm text-gray-500">March 15, 2024</p>
-                </div>
-              </div>
+                    </div>
+                  </div>
 
                 <div className="space-y-6">
                   <div className="border-l-4 border-amber-300 pl-6 py-2">
@@ -522,8 +522,8 @@ export default function Home() {
                     <div className="flex items-center gap-3 mt-3">
                       <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Public</span>
                       <span className="text-xs text-gray-500">Training Victory</span>
+                </div>
               </div>
-            </div>
 
                   <div className="border-l-4 border-gray-300 pl-6 py-2">
                     <p className="text-gray-700 italic leading-relaxed">
@@ -532,9 +532,9 @@ export default function Home() {
                     <div className="flex items-center gap-3 mt-3">
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Private</span>
                       <span className="text-xs text-gray-500">Mindfulness Journey</span>
-                </div>
-                    </div>
-                  </div>
+            </div>
+          </div>
+        </div>
                     </div>
               
               <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-8 text-white shadow-xl">
@@ -542,8 +542,8 @@ export default function Home() {
                   "The most powerful optimization isn't in the supplements or protocols—it's in understanding yourself, celebrating your growth, and sharing that journey with others."
                 </p>
                   </div>
-                    </div>
-            
+          </div>
+
             {/* Right side - Copy */}
             <div className="space-y-10">
               <div>
@@ -682,7 +682,7 @@ export default function Home() {
             <div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">How do I get feedback on my stack?</h3>
               <p className="text-gray-600">
-                Share your link on Reddit, Discord, or with friends to get feedback. People can follow your page to get email updates when you make changes, keeping them in the loop on your progress.
+                Share your link with your community and on socials with friends to get feedback. People can follow your page to get email updates when you make changes, keeping them in the loop on your progress.
               </p>
             </div>
           </div>
