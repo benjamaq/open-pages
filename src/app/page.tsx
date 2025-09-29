@@ -328,8 +328,38 @@ export default function Home() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Visual */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            {/* Right side - Copy (moved to left for mobile) */}
+            <div className="order-2 lg:order-2">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                Share what matters. Hide what doesn't.
+              </h2>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Smart privacy controls</h3>
+              <p className="text-lg text-gray-600 mb-6">
+                Your health stack is personal. Share your complete profile with your coach, just supplements with friends, or keep everything private. You control exactly what gets shared.
+              </p>
+              
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <span>Module-level controls (show/hide entire categories)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <span>Item-level controls (show/hide individual entries)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <span>One link, multiple views—people see only what you allow</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <span>Change anytime—people see updates instantly</span>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Left side - Visual (moved to right for mobile) */}
+            <div className="order-1 lg:order-1 bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Privacy Controls</h3>
               
               {/* Module-level toggles */}
@@ -381,36 +411,6 @@ export default function Home() {
                     </div>
                     </div>
                   </div>
-                </div>
-                
-            {/* Right side - Copy */}
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Share what matters. Hide what doesn't.
-              </h2>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Smart privacy controls</h3>
-              <p className="text-lg text-gray-600 mb-6">
-                Your health stack is personal. Share your complete profile with your coach, just supplements with friends, or keep everything private. You control exactly what gets shared.
-              </p>
-              
-              <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Module-level controls (show/hide entire categories)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Item-level controls (show/hide individual entries)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>One link, multiple views—people see only what you allow</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Change anytime—people see updates instantly</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
