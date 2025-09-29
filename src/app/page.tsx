@@ -458,7 +458,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Your Community</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share your stack with your community. One clean link. No screenshots, no retyping your list every time someone asks.
+                Share your stack with community and socials. One clean link. No screenshots, no retyping your list every time someone asks.
               </p>
             </div>
 

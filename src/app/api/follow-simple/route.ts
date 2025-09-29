@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const { count: recentFollows } = await supabase
       .from('stack_followers')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_user_id', user.id)
+      .eq('follower_user_id', currentUser.id)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
 
     if (recentFollows && recentFollows > 10) {
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user (if signed in)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
 
     // Check if already following to prevent duplicates
     const { data: existingFollow, error: checkError } = await supabase
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       .from('stack_followers')
       .insert({
         owner_user_id: ownerUserId,
-        follower_user_id: user.id, // Use authenticated user ID
+        follower_user_id: currentUser.id, // Use authenticated user ID
         follower_email: email,
         verified_at: new Date().toISOString() // Auto-verify for now
       })
