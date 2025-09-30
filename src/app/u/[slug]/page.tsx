@@ -564,7 +564,7 @@ export default async function ProfilePage({ params, searchParams }: {
                     isOwnProfile,
                     ownerUserId: (profile as any).user_id,
                     ownerName: (profile as any).display_name || 'this user',
-                    allowsFollowing: (profile as any).allow_stack_follow ?? false,
+                    allowsFollowing: (profile as any).allow_stack_follow ?? true,
                     allow_stack_follow_raw: (profile as any).allow_stack_follow
                   })}
                   <FollowButton
