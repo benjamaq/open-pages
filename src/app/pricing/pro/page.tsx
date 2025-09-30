@@ -26,6 +26,9 @@ export default function ProPricingPage() {
   }, [])
 
   const getCtaText = () => {
+    if (isLoggedIn) {
+      return 'Get started with Pro'
+    }
     return 'Get started with Pro'
   }
 

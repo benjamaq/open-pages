@@ -43,7 +43,7 @@ export default function PricingPage() {
   const getCtaText = (plan: string) => {
     if (loading) return 'Get Started' // Default to Get Started while loading
     if (isLoggedIn) {
-      return plan === 'free' ? 'Continue with Free' : `Upgrade to ${plan}`
+      return plan === 'free' ? 'Continue with Free' : `Get started with ${plan}`
     }
     return 'Get Started'
   }
@@ -150,9 +150,9 @@ export default function PricingPage() {
                 <span>Pro</span>
                 <span className="text-gray-600">⚡</span>
               </h2>
-              <div className="mt-4">
+              <div className="mt-4 flex items-baseline justify-center">
                 <span className="text-4xl font-bold text-gray-900">$9.99</span>
-                <span className="text-gray-600">/month</span>
+                <span className="text-gray-600 ml-1">/month</span>
               </div>
               <p className="mt-2 text-gray-600">For serious health optimizers</p>
             </div>

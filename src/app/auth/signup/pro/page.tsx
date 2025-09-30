@@ -192,16 +192,20 @@ export default function ProSignUpPage() {
           : 'Account created successfully! Redirecting to payment...'
         setMessage(successMessage)
         
-        // Create Stripe checkout session and redirect using server action
-        try {
-          await handleUpgradeRedirect('pro', 'monthly')
-        } catch (error) {
-          console.error('Checkout session error:', error)
-          // Don't show error for redirects (NEXT_REDIRECT is normal)
-          if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+        // Wait a moment for auth state to settle, then redirect to payment page
+        // This handles Safari's authentication state issues
+        setTimeout(async () => {
+          try {
+            // Force refresh auth state
+            await supabase.auth.getSession()
+            // Redirect to payment page instead of direct checkout
+            router.push('/auth/signup/pro-payment?billing=monthly')
+          } catch (error) {
+            console.error('Payment redirect error:', error)
             setError('Failed to redirect to payment. Please try again.')
+            setLoading(false)
           }
-        }
+        }, 1500)
       }
     } catch {
       setError('An unexpected error occurred')
