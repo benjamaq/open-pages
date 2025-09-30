@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const { count: recentFollows } = await supabase
       .from('stack_followers')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_user_id', currentUser.id)
+      .eq('follower_user_id', user.id)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
 
     if (recentFollows && recentFollows > 10) {
