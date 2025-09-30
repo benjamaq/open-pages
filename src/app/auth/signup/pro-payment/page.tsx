@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '../../../../lib/supabase/client'
 
 function ProPaymentContent() {
   const router = useRouter()
@@ -24,6 +25,16 @@ function ProPaymentContent() {
     try {
       console.log('Client - Making request to create checkout session')
       
+      // Get current user info
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        setError('You must be logged in to upgrade')
+        setLoading(false)
+        return
+      }
+      
       const response = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -33,6 +44,8 @@ function ProPaymentContent() {
         body: JSON.stringify({
           plan: 'pro',
           period: billingPeriod,
+          userId: user.id,
+          userEmail: user.email,
         }),
       })
 

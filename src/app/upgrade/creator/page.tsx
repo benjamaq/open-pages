@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import AuthCheck from '../auth-check'
+import { createClient } from '../../../lib/supabase/client'
 
 export default function UpgradeCreatorPage() {
   const [loading, setLoading] = useState(false)
@@ -13,6 +14,16 @@ export default function UpgradeCreatorPage() {
     try {
       console.log('Creator Upgrade - Making request to create checkout session')
       
+      // Get current user info
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        alert('You must be logged in to upgrade')
+        setLoading(false)
+        return
+      }
+      
       const response = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -22,6 +33,8 @@ export default function UpgradeCreatorPage() {
         body: JSON.stringify({
           plan: 'creator',
           period: billingPeriod,
+          userId: user.id,
+          userEmail: user.email,
         }),
       })
 
