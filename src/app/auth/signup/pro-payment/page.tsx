@@ -3,7 +3,6 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { handleUpgradeRedirect } from '../../../../lib/actions/stripe'
 
 function ProPaymentContent() {
   const router = useRouter()
@@ -23,14 +22,28 @@ function ProPaymentContent() {
     setError(null)
     
     try {
-      await handleUpgradeRedirect('pro', billingPeriod)
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: 'pro',
+          period: billingPeriod,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create checkout session')
+      }
+
+      const { url } = await response.json()
+      window.location.href = url
     } catch (error) {
       console.error('Checkout session error:', error)
-      // Don't show error for redirects (NEXT_REDIRECT is normal)
-      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-        setError('Failed to redirect to payment. Please try again.')
-        setLoading(false)
-      }
+      setError(error instanceof Error ? error.message : 'Failed to redirect to payment. Please try again.')
+      setLoading(false)
     }
   }
 

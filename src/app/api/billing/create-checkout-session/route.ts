@@ -1,95 +1,73 @@
-import { createClient } from '../../../../lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-
-// Initialize Stripe (with error handling for missing env vars)
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('STRIPE_SECRET_KEY not found - billing features will be disabled')
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20'
-}) : null
+import { createClient } from '../../../../lib/supabase/server'
+import { stripe } from '../../../../lib/stripe'
+import { getPriceId } from '../../../../lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if Stripe is configured
-    if (!stripe) {
-      return NextResponse.json({ error: 'Billing not configured' }, { status: 503 })
-    }
-
     const supabase = await createClient()
-    
-    // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'User must be authenticated' }, { status: 401 })
     }
 
-    const { price_id, success_url, cancel_url } = await request.json()
+    const { plan, period, promoCode } = await request.json()
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3009'
 
-    if (!price_id) {
-      return NextResponse.json({ error: 'Price ID is required' }, { status: 400 })
-    }
-
-    // Get or create Stripe customer
-    let customerId: string
-
-    // Check if user already has a customer ID
-    const { data: existingSubscription } = await supabase
-      .from('user_subscriptions')
-      .select('stripe_customer_id')
+    // Get user's profile for metadata
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('slug, display_name')
       .eq('user_id', user.id)
       .single()
 
-    if (existingSubscription?.stripe_customer_id) {
-      customerId = existingSubscription.stripe_customer_id
-    } else {
-      // Create new Stripe customer
-      const customer = await stripe.customers.create({
-        email: user.email!,
-        metadata: {
-          user_id: user.id
-        }
-      })
-      customerId = customer.id
-
-      // Save customer ID to database
-      await supabase
-        .from('user_subscriptions')
-        .upsert({
-          user_id: user.id,
-          stripe_customer_id: customerId,
-          plan_type: 'free',
-          status: 'active'
-        })
-    }
-
-    // Create Stripe checkout session
+    const priceId = getPriceId(plan, period)
+    
+    // Create checkout session
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
+      customer_email: user.email,
       line_items: [
         {
-          price: price_id,
-          quantity: 1
-        }
+          price: priceId,
+          quantity: 1,
+        },
       ],
       mode: 'subscription',
-      success_url: success_url || `${process.env.NEXT_PUBLIC_APP_URL}/dash/billing?success=true`,
-      cancel_url: cancel_url || `${process.env.NEXT_PUBLIC_APP_URL}/dash/billing`,
+      success_url: `${origin}/dash?welcome=pro`,
+      cancel_url: `${origin}/pricing`,
       metadata: {
-        user_id: user.id
-      }
+        user_id: user.id,
+        plan: plan,
+        period: period,
+        profile_slug: profile?.slug || '',
+      },
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan: plan,
+          period: period,
+        },
+      },
+      // Add promo code if provided
+      ...(promoCode && {
+        discounts: [
+          {
+            coupon: promoCode,
+          },
+        ],
+      }),
+      // Allow promotion codes to be entered
+      allow_promotion_codes: true,
     })
 
-    return NextResponse.json({ url: session.url })
+    if (!session.url) {
+      throw new Error('Failed to create checkout session')
+    }
 
+    return NextResponse.json({ url: session.url })
   } catch (error) {
-    console.error('Create checkout session error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    )
+    console.error('Error creating checkout session:', error)
+    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
   }
 }
