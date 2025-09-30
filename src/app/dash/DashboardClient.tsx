@@ -2170,31 +2170,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               </div>
               </div>
 
-          {/* Row 2: Beta Code Input */}
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-center py-2">
-              <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Beta Code:</span>
-                <input
-                  type="text"
-                  placeholder="Enter beta code"
-                  className="bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-500 w-32"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const code = (e.target as HTMLInputElement).value.trim()
-                      if (code) {
-                        // Handle beta code submission
-                        console.log('Beta code entered:', code)
-                        // You can add beta code logic here
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3: Utility Toolbar */}
+          {/* Row 2: Utility Toolbar */}
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-2 overflow-x-auto">
