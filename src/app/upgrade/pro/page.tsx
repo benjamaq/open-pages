@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { handleUpgradeRedirect } from '../../../lib/actions/stripe'
 import PromoCodeInput from '../../../components/PromoCodeInput'
 import AuthCheck from '../auth-check'
 
@@ -15,13 +14,36 @@ export default function UpgradeProPage() {
   const handleUpgrade = async () => {
     setLoading(true)
     try {
-      await handleUpgradeRedirect('pro', billingPeriod)
+      console.log('Upgrade - Making request to create checkout session')
+      
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for Safari
+        body: JSON.stringify({
+          plan: 'pro',
+          period: billingPeriod,
+          promoCode: promoCode,
+        }),
+      })
+
+      console.log('Upgrade - Response status:', response.status)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Upgrade - Error response:', errorData)
+        alert(errorData.error || 'Something went wrong. Please try again.')
+        return
+      }
+
+      const { url } = await response.json()
+      console.log('Upgrade - Got checkout URL:', url)
+      window.location.href = url
     } catch (error) {
       console.error('Upgrade error:', error)
-      // Don't show error for redirects (NEXT_REDIRECT is normal)
-      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-        alert('Something went wrong. Please try again.')
-      }
+      alert('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { handleUpgradeRedirect } from '../../../lib/actions/stripe'
 import AuthCheck from '../auth-check'
 
 export default function UpgradeCreatorPage() {
@@ -12,13 +11,35 @@ export default function UpgradeCreatorPage() {
   const handleUpgrade = async () => {
     setLoading(true)
     try {
-      await handleUpgradeRedirect('creator', billingPeriod)
-    } catch (error) {
-      console.error('Upgrade error:', error)
-      // Don't show error for redirects (NEXT_REDIRECT is normal)
-      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-        alert('Something went wrong. Please try again.')
+      console.log('Creator Upgrade - Making request to create checkout session')
+      
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for Safari
+        body: JSON.stringify({
+          plan: 'creator',
+          period: billingPeriod,
+        }),
+      })
+
+      console.log('Creator Upgrade - Response status:', response.status)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Creator Upgrade - Error response:', errorData)
+        alert(errorData.error || 'Something went wrong. Please try again.')
+        return
       }
+
+      const { url } = await response.json()
+      console.log('Creator Upgrade - Got checkout URL:', url)
+      window.location.href = url
+    } catch (error) {
+      console.error('Creator upgrade error:', error)
+      alert('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
