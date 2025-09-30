@@ -18,17 +18,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // SECURITY: Check if user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    // SECURITY: Rate limiting - check if user has made too many follow requests
+    // SECURITY: Rate limiting - check if email has made too many follow requests recently
     const { count: recentFollows } = await supabase
       .from('stack_followers')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_user_id', user.id)
+      .eq('follower_email', email)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
 
     if (recentFollows && recentFollows > 10) {
@@ -51,8 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This user does not allow followers' }, { status: 400 })
     }
 
-    // Use the already authenticated user
-    const currentUser = user
+    // No authentication required for following public stacks
 
     // Check if already following to prevent duplicates
     const { data: existingFollow, error: checkError } = await supabase
@@ -97,7 +90,7 @@ export async function POST(request: NextRequest) {
       .from('stack_followers')
       .insert({
         owner_user_id: ownerUserId,
-        follower_user_id: currentUser.id, // Use authenticated user ID
+        follower_user_id: null, // Anonymous follow - no user ID
         follower_email: email,
         verified_at: new Date().toISOString() // Auto-verify for now
       })
