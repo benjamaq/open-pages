@@ -1,14 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '../../../../lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { stripe } from '../../../../lib/stripe'
 import { getPriceId } from '../../../../lib/stripe'
+import { Database } from '../../../../lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    // Create Supabase client with request cookies
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // This is a server-side API route, we can't set cookies here
+            // The client will handle session management
+          },
+        },
+      }
+    )
+
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
+    console.log('API Route - User check:', { user: !!user, error: userError })
+    console.log('API Route - Cookies:', request.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })))
+    
     if (userError || !user) {
+      console.error('Authentication error:', userError)
       return NextResponse.json({ error: 'User must be authenticated' }, { status: 401 })
     }
 

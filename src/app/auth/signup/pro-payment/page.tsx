@@ -22,23 +22,30 @@ function ProPaymentContent() {
     setError(null)
     
     try {
+      console.log('Client - Making request to create checkout session')
+      
       const response = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important for Safari
         body: JSON.stringify({
           plan: 'pro',
           period: billingPeriod,
         }),
       })
 
+      console.log('Client - Response status:', response.status)
+      
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Client - Error response:', errorData)
         throw new Error(errorData.error || 'Failed to create checkout session')
       }
 
       const { url } = await response.json()
+      console.log('Client - Got checkout URL:', url)
       window.location.href = url
     } catch (error) {
       console.error('Checkout session error:', error)
