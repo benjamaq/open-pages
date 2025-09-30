@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { createClient } from '../../../../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { handleUpgradeRedirect } from '../../../../lib/actions/stripe'
 import BetaCodeInput from '../../../../components/BetaCodeInput'
 
 export default function ProSignUpPage() {
@@ -80,15 +79,25 @@ export default function ProSignUpPage() {
           return
         }
       } else {
-        // No beta code, redirect to payment
-        try {
-          await handleUpgradeRedirect('pro', 'monthly')
-        } catch (error) {
-          console.error('Checkout session error:', error)
-          if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+        // No beta code, redirect to payment page
+        const successMessage = referralCode.trim() === 'redditgo' 
+          ? 'Account created successfully! Welcome from Reddit! 🎉 Redirecting to payment...'
+          : 'Account created successfully! Redirecting to payment...'
+        setMessage(successMessage)
+        
+        // Wait a moment for auth state to settle, then redirect to payment page
+        setTimeout(async () => {
+          try {
+            // Force refresh auth state
+            await supabase.auth.getSession()
+            // Redirect to payment page instead of direct checkout
+            router.push('/auth/signup/pro-payment?billing=monthly')
+          } catch (error) {
+            console.error('Payment redirect error:', error)
             setError('Failed to redirect to payment. Please try again.')
+            setLoading(false)
           }
-        }
+        }, 1500)
         return
       }
     }
