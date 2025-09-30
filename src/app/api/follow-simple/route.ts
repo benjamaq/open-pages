@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This user does not allow followers' }, { status: 400 })
     }
 
-    // Get current user (if signed in)
-    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    // Use the already authenticated user
+    const currentUser = user
 
     // Check if already following to prevent duplicates
     const { data: existingFollow, error: checkError } = await supabase
