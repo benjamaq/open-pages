@@ -147,12 +147,25 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setSaveMessage('')
     
     try {
-      await updateNotificationPreferences(preferences)
+      const response = await fetch('/api/settings/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferences)
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.details || result.error || 'Failed to save settings')
+      }
+      
       setSaveMessage('Settings saved successfully!')
       setTimeout(() => setSaveMessage(''), 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving preferences:', error)
-      setSaveMessage('Failed to save settings. Please try again.')
+      setSaveMessage(`Failed to save settings: ${error.message}`)
     } finally {
       setIsSaving(false)
     }
