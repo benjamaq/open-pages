@@ -179,10 +179,8 @@ export async function POST(request: NextRequest) {
 }
 
 // Health check endpoint
-export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    message: 'Daily reminder service is running'
-  })
+// Vercel Cron uses GET requests, so we need to handle both GET and POST
+export async function GET(request: NextRequest) {
+  // Delegate to POST handler for Vercel Cron
+  return POST(request)
 }
