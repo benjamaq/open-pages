@@ -3,12 +3,12 @@ import { sendDailyReminder } from '../../../lib/email/resend'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🧪 Manual email test triggered')
+    console.log('🧪 Manual email test triggered for me.com')
     
     // Test data
     const testData = {
       userName: 'Test User',
-      userEmail: 'findbenhere@gmail.com', // Your email
+      userEmail: 'ben09@me.com', // Your me.com email
       supplements: [
         { name: 'Vitamin D', dose: '2000 IU', timing: 'morning' },
         { name: 'Omega-3', dose: '1000mg', timing: 'with food' }
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      message: 'Test email sent to findbenhere@gmail.com',
+      message: 'Test email sent to ben09@me.com',
       timestamp: new Date().toISOString()
     })
     
