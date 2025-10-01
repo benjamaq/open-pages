@@ -63,18 +63,45 @@ export async function POST(request: NextRequest) {
           current_utc: `${currentHour}:${currentMinute}`
         })
         
-        // Convert reminder time from user's timezone to UTC
+        // Simple timezone offset mapping (for now, just support UTC)
+        // For proper timezone support, we'd use a library like date-fns-tz
         const userTimezone = pref.timezone || 'UTC'
-        const now = new Date()
+        let reminderUTCHour = reminderHour
+        let reminderUTCMinute = reminderMinute
         
-        // Create a date object for the reminder time in user's timezone
-        const reminderDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }))
-        reminderDate.setHours(reminderHour, reminderMinute, 0, 0)
+        // Simple offset conversion for common timezones
+        const timezoneOffsets: Record<string, number> = {
+          'UTC': 0,
+          'Europe/London': 0, // BST is +1, but will be handled dynamically
+          'Europe/Paris': -1,
+          'Europe/Berlin': -1,
+          'Europe/Madrid': -1,
+          'Europe/Rome': -1,
+          'America/New_York': 4,
+          'America/Chicago': 5,
+          'America/Denver': 6,
+          'America/Los_Angeles': 7,
+          'Asia/Tokyo': -9,
+          'Asia/Singapore': -8,
+          'Australia/Sydney': -10
+        }
         
-        // Get the UTC equivalent
-        const reminderUTC = new Date(reminderDate.toLocaleString('en-US', { timeZone: 'UTC' }))
-        const reminderUTCHour = reminderUTC.getHours()
-        const reminderUTCMinute = reminderUTC.getMinutes()
+        // For Europe/London, check if we're in BST (British Summer Time)
+        if (userTimezone === 'Europe/London') {
+          const testDate = new Date()
+          const jan = new Date(testDate.getFullYear(), 0, 1)
+          const jul = new Date(testDate.getFullYear(), 6, 1)
+          const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset())
+          const isDST = testDate.getTimezoneOffset() < stdOffset
+          reminderUTCHour = reminderHour - (isDST ? 1 : 0)
+        } else {
+          const offset = timezoneOffsets[userTimezone] || 0
+          reminderUTCHour = reminderHour - offset
+        }
+        
+        // Handle hour overflow/underflow
+        if (reminderUTCHour < 0) reminderUTCHour += 24
+        if (reminderUTCHour >= 24) reminderUTCHour -= 24
         
         console.log(`⏰ Converted time:`, {
           user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
