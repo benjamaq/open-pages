@@ -72,6 +72,7 @@ async function handleSend() {
     const errors = []
 
     for (const pref of preferences) {
+      let userEmail = 'Unknown'
       try {
         // Get profile data separately
         const { data: profile, error: profileError } = await supabaseAdmin
@@ -88,8 +89,8 @@ async function handleSend() {
 
         // Get user email from auth.users using admin client
         const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id)
-        const userEmail = userData?.user?.email
-        if (!userEmail) {
+        userEmail = userData?.user?.email || 'Unknown'
+        if (!userData?.user?.email) {
           console.error(`⚠️ Skipping user ${profile.id} - no email data`)
           errors.push({ user: profile.id, error: 'No email found' })
           continue
