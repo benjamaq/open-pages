@@ -25,7 +25,12 @@ export async function POST() {
 
 async function handleSend() {
   try {
-    console.log('🕐 Cron job started at:', new Date().toISOString())
+    console.log('🚀 CRON TRIGGERED', { 
+      currentUTCHour: new Date().getUTCHours(),
+      currentUTCMinute: new Date().getUTCMinutes(),
+      currentUTC: new Date().toISOString(),
+      londonTime: new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
+    })
 
     const supabaseAdmin = createAdminClient()
     const currentUtcTime = new Date()
@@ -42,11 +47,11 @@ async function handleSend() {
       return NextResponse.json({ error: 'Database error', details: prefsError }, { status: 500 })
     }
 
-    console.log(`📧 Found ${preferences?.length || 0} users with email notifications enabled`)
+    console.log(`📧 FOUND USERS: ${preferences?.length || 0}`, preferences)
     console.log('Raw preferences data:', JSON.stringify(preferences, null, 2))
 
     if (!preferences || preferences.length === 0) {
-      console.log('No users with reminders enabled')
+      console.log('❌ No users with reminders enabled - EXITING EARLY')
       return NextResponse.json({ message: 'No reminders to send' })
     }
 
@@ -80,28 +85,45 @@ async function handleSend() {
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
         
-        // Simple timezone conversion for now
-        const userTimezone = pref.timezone || 'UTC'
+        // Proper timezone conversion using date-fns-tz
+        const userTimezone = pref.timezone || 'Europe/London'
         const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
         
-        // Create UTC time for comparison (simplified approach)
-        const reminderUtc = new Date()
-        reminderUtc.setUTCHours(reminderHour, reminderMinute, 0, 0)
+        // Create user's local time
+        const userLocalTime = new Date()
+        userLocalTime.setHours(reminderHour, reminderMinute, 0, 0)
+        
+        // Convert to UTC properly
+        const reminderUtc = new Date(userLocalTime.getTime() - (userLocalTime.getTimezoneOffset() * 60000))
+        
+        // For London timezone, handle GMT/BST properly
+        if (userTimezone === 'Europe/London') {
+          const now = new Date()
+          const isBST = now.getTimezoneOffset() < 0 // BST is UTC+1, GMT is UTC+0
+          const offset = isBST ? 1 : 0
+          reminderUtc.setUTCHours(reminderHour - offset, reminderMinute, 0, 0)
+        }
         
         // Check if current UTC time is within 5-min window (cron interval)
         const windowStart = startOfMinute(reminderUtc)
         const windowEnd = endOfMinute(reminderUtc)
         
-        console.log(`🕐 Time check:`, {
+        const inWindow = currentUtcTime >= windowStart && currentUtcTime <= windowEnd
+        console.log(`🕐 TIME CHECK for ${userEmail}:`, {
           user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
           utc_time: reminderUtc.toISOString(),
           current_utc: currentUtcTime.toISOString(),
           window_start: windowStart.toISOString(),
           window_end: windowEnd.toISOString(),
-          in_window: currentUtcTime >= windowStart && currentUtcTime <= windowEnd
+          in_window: inWindow,
+          current_hour: currentUtcTime.getUTCHours(),
+          current_minute: currentUtcTime.getUTCMinutes(),
+          reminder_hour: reminderUtc.getUTCHours(),
+          reminder_minute: reminderUtc.getUTCMinutes()
         })
         
-        if (currentUtcTime >= windowStart && currentUtcTime <= windowEnd) {
+        if (inWindow) {
+          console.log(`🎯 SENDING EMAIL to ${userEmail} - time matches!`)
           // Get user's actual data
           const { data: supplements } = await supabaseAdmin
             .from('supplements')
