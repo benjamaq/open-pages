@@ -199,8 +199,7 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
         .content { padding: 32px 24px; }
         .greeting { font-size: 18px; margin-bottom: 24px; }
         .section { margin-bottom: 32px; }
-        .section h2 { color: #2d3748; font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; }
-        .section-icon { width: 24px; height: 24px; margin-right: 12px; }
+        .section h2 { color: #2d3748; font-size: 20px; margin-bottom: 16px; }
         .item-list { background: #f7fafc; border-radius: 8px; padding: 16px; }
         .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
         .item:last-child { border-bottom: none; }
@@ -216,20 +215,19 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
     <body>
       <div class="container">
         <div class="header">
-          <h1>🧬 Biostackr</h1>
+          <h1>Biostackr</h1>
           <p>Your Daily Health Reminder</p>
         </div>
         
         <div class="content">
           <div class="greeting">
-            Good morning, ${data.userName}! 👋<br>
+            Good morning, ${data.userName}!<br>
             Here's your health routine for <strong>${today}</strong>
           </div>
 
           ${data.supplements.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">💊</span>
               Supplements (${data.supplements.length})
             </h2>
             <div class="item-list">
@@ -248,7 +246,6 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
           ${data.protocols.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">📋</span>
               Protocols (${data.protocols.length})
             </h2>
             <div class="item-list">
@@ -267,7 +264,6 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
           ${data.movement.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">🏃‍♂️</span>
               Movement (${data.movement.length})
             </h2>
             <div class="item-list">
@@ -286,7 +282,6 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
           ${data.mindfulness.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">🧘‍♀️</span>
               Mindfulness (${data.mindfulness.length})
             </h2>
             <div class="item-list">
@@ -557,7 +552,6 @@ function generateWeeklySummaryHTML(data: WeeklySummaryData): string {
           ${data.topCategories.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">📈</span>
               Top Categories
             </h2>
             <div class="category-list">
@@ -576,7 +570,6 @@ function generateWeeklySummaryHTML(data: WeeklySummaryData): string {
           ${data.recentActivity.length > 0 ? `
           <div class="section">
             <h2>
-              <span class="section-icon">⚡</span>
               Recent Activity
             </h2>
             <div class="activity-list">
