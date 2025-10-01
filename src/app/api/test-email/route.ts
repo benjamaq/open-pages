@@ -29,8 +29,20 @@ export async function GET(request: NextRequest) {
     
     console.log('📧 Sending test email to:', testData.userEmail)
     
-    // Send the test email
-    await sendDailyReminder(testData)
+    // Send the test email with proper data structure
+    const emailData = {
+      userName: testData.userName,
+      userEmail: testData.userEmail,
+      supplements: testData.supplements,
+      protocols: testData.protocols,
+      movement: testData.movement,
+      mindfulness: testData.mindfulness,
+      profileUrl: 'https://biostackr.io/dash',
+      unsubscribeUrl: 'https://biostackr.io/dash/settings'
+    }
+    
+    console.log('📧 Sending test email with data:', emailData)
+    await sendDailyReminder(emailData)
     
     console.log('✅ Test email sent successfully')
     
