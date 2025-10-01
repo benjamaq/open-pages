@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
-import { zonedTimeToUtc } from 'date-fns-tz'
+import * as dateFnsTz from 'date-fns-tz'
 import { startOfMinute, endOfMinute } from 'date-fns'
 import { sendDailyReminder } from '../../../../lib/email/resend'
 
@@ -86,7 +86,7 @@ async function handleSend() {
         // Convert user's local time to UTC using proper timezone handling
         const userTimezone = pref.timezone || 'UTC'
         const reminderTimeLocal = new Date(`1970-01-01T${pref.reminder_time}`)
-        const reminderUtc = zonedTimeToUtc(reminderTimeLocal, userTimezone)
+        const reminderUtc = dateFnsTz.zonedTimeToUtc(reminderTimeLocal, userTimezone)
         
         // Check if current UTC time is within 5-min window (cron interval)
         const windowStart = startOfMinute(reminderUtc)
