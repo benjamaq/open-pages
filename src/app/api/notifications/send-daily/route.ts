@@ -51,6 +51,7 @@ async function handleSend() {
     }
 
     console.log(`📧 Found ${preferences?.length || 0} users with email notifications enabled`)
+    console.log('Raw preferences data:', JSON.stringify(preferences, null, 2))
 
     if (!preferences || preferences.length === 0) {
       console.log('No users with reminders enabled')
@@ -97,6 +98,8 @@ async function handleSend() {
           user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
           utc_time: reminderUtc.toISOString(),
           current_utc: currentUtcTime.toISOString(),
+          window_start: windowStart.toISOString(),
+          window_end: windowEnd.toISOString(),
           in_window: currentUtcTime >= windowStart && currentUtcTime <= windowEnd
         })
         
