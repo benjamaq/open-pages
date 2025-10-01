@@ -1225,7 +1225,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           <div className="flex items-center justify-between pt-4 border-t border-gray-200">
             <div>
               {saveMessage && (
-                <p className={`text-sm ${saveMessage.includes('✅') ? 'text-green-600' : saveMessage.includes('⚠️') ? 'text-yellow-600' : 'text-red-600'}`}>
+                <p className={`text-sm ${saveMessage.includes('successfully') || saveMessage.includes('✅') ? 'text-green-600' : saveMessage.includes('⚠️') ? 'text-yellow-600' : 'text-red-600'}`}>
                   {saveMessage}
                 </p>
               )}
