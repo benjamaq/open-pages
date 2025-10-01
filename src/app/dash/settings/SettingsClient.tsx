@@ -177,6 +177,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     
     try {
       console.log('🧪 Attempting to send test email...')
+      console.log('📧 User email:', userEmail)
+      console.log('📧 User email type:', typeof userEmail)
+      
+      if (!userEmail) {
+        throw new Error('User email is not available')
+      }
       
       const response = await fetch(`/api/test-email?t=${Date.now()}`, {
         method: 'POST',
@@ -204,7 +210,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
       setTimeout(() => setSaveMessage(''), 5000)
     } catch (error) {
       console.error('❌ Error sending test email:', error)
-      setSaveMessage('Failed to send test email. Please check your email configuration.')
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack,
+        userEmail: userEmail
+      })
+      setSaveMessage(`Failed to send test email: ${error.message}`)
     } finally {
       setIsSendingTest(false)
     }
