@@ -50,14 +50,35 @@ export async function POST(request: NextRequest) {
 
     console.log('Attempting to upsert preferences:', { profile_id: profile.id, ...updateData })
 
-    // Try to update preferences
-    const { data: result, error: updateError } = await supabase
+    // Try to update preferences - first check if record exists
+    const { data: existingRecord } = await supabase
       .from('notification_preferences')
-      .upsert({
-        profile_id: profile.id,
-        ...updateData
-      })
-      .select()
+      .select('id')
+      .eq('profile_id', profile.id)
+      .single()
+
+    let result, updateError
+    if (existingRecord) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .update(updateData)
+        .eq('profile_id', profile.id)
+        .select()
+      result = data
+      updateError = error
+    } else {
+      // Insert new record
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .insert({
+          profile_id: profile.id,
+          ...updateData
+        })
+        .select()
+      result = data
+      updateError = error
+    }
 
     if (updateError) {
       console.error('Update error:', updateError)
