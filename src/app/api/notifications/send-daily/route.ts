@@ -127,9 +127,9 @@ async function handleSend() {
           offset: offset
         })
         
-        // TEMPORARY: Always send for testing
-        if (true) { // inWindow) {
-          console.log(`🎯 SENDING EMAIL to ${userEmail} - TESTING MODE (bypassing time check)`)
+        // Check if current time matches reminder time
+        if (inWindow) {
+          console.log(`🎯 SENDING EMAIL to ${userEmail} - Time match confirmed`)
           // Get user's actual data
           const { data: supplements } = await supabaseAdmin
             .from('supplements')
