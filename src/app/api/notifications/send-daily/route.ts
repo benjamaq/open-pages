@@ -33,15 +33,7 @@ async function handleSend() {
     // Fetch users with reminders enabled (bypass RLS with admin client)
     const { data: preferences, error: prefsError } = await supabaseAdmin
       .from('notification_preferences')
-      .select(`
-        *,
-        profiles:profile_id(
-          id,
-          user_id,
-          display_name,
-          slug
-        )
-      `)
+      .select('*')
       .eq('email_enabled', true)
       .eq('daily_reminder_enabled', true)
 
@@ -63,9 +55,15 @@ async function handleSend() {
 
     for (const pref of preferences) {
       try {
-        const profile = (pref as any).profiles
-        if (!profile) {
-          console.log(`⚠️ Skipping user - no profile data`)
+        // Get profile data separately
+        const { data: profile, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, user_id, display_name, slug')
+          .eq('id', pref.profile_id)
+          .single()
+        
+        if (profileError || !profile) {
+          console.log(`⚠️ Skipping preference - no profile data:`, profileError)
           continue
         }
 
