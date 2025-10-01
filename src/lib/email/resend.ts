@@ -95,11 +95,11 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
     const resendClient = getResendClient()
     
     console.log('Sending email to:', data.to)
-    console.log('From:', data.from || 'Biostackr <onboarding@resend.dev>')
+    console.log('From:', data.from || 'Biostackr <notifications@bio-stackr.io>')
     console.log('Subject:', data.subject)
     
     const result = await resendClient.emails.send({
-      from: data.from || 'onboarding@resend.dev',
+      from: data.from || 'notifications@bio-stackr.io',
       to: data.to,
       subject: data.subject,
       html: data.html
@@ -150,7 +150,7 @@ export async function sendNewFollowerNotification(ownerEmail: string, ownerName:
     to: ownerEmail,
     subject: 'You have a new follower on Biostackr 🎉',
     html,
-    from: 'Biostackr <onboarding@resend.dev>'
+    from: 'Biostackr <notifications@bio-stackr.io>'
   })
 }
 
@@ -171,7 +171,7 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
     to: followerEmail,
     subject: `Welcome to BioStackr! You're now following ${ownerName}'s stack`,
     html,
-    from: 'Biostackr <onboarding@resend.dev>'
+    from: 'Biostackr <notifications@bio-stackr.io>'
   })
 }
 
