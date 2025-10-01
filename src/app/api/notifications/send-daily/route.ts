@@ -132,9 +132,10 @@ async function handleSend() {
           console.log(`🎯 SENDING EMAIL to ${userEmail} - Time match confirmed`)
           // Get user's actual data
           const { data: supplements } = await supabaseAdmin
-            .from('supplements')
-            .select('name, dose, timing')
+            .from('stack_items')
+            .select('name, dose, timing, brand, notes')
             .eq('profile_id', profile.id)
+            .eq('item_type', 'supplements')
 
           const { data: allProtocols } = await supabaseAdmin
             .from('protocols')
@@ -151,14 +152,16 @@ async function handleSend() {
           }) || []
 
           const { data: movement } = await supabaseAdmin
-            .from('movement')
-            .select('name, duration')
+            .from('stack_items')
+            .select('name, dose, timing, notes')
             .eq('profile_id', profile.id)
+            .eq('item_type', 'movement')
 
           const { data: mindfulness } = await supabaseAdmin
-            .from('mindfulness')
-            .select('name, duration')
+            .from('stack_items')
+            .select('name, dose, timing, notes')
             .eq('profile_id', profile.id)
+            .eq('item_type', 'mindfulness')
 
           const dailyReminderData = {
             userName: userName,

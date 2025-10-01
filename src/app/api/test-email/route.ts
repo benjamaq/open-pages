@@ -59,10 +59,10 @@ async function handleTestEmail(request: NextRequest) {
           
           // Fetch real stack data
           const [supplements, allProtocols, movement, mindfulness] = await Promise.all([
-            supabaseAdmin.from('supplements').select('name, dose, timing').eq('profile_id', profile.id),
+            supabaseAdmin.from('stack_items').select('name, dose, timing, brand, notes').eq('profile_id', profile.id).eq('item_type', 'supplements'),
             supabaseAdmin.from('protocols').select('name, frequency, schedule_days').eq('profile_id', profile.id),
-            supabaseAdmin.from('movement').select('name, duration').eq('profile_id', profile.id),
-            supabaseAdmin.from('mindfulness').select('name, duration').eq('profile_id', profile.id)
+            supabaseAdmin.from('stack_items').select('name, dose, timing, notes').eq('profile_id', profile.id).eq('item_type', 'movement'),
+            supabaseAdmin.from('stack_items').select('name, dose, timing, notes').eq('profile_id', profile.id).eq('item_type', 'mindfulness')
           ])
           
           // Filter protocols that are due today (0=Sunday, 1=Monday, etc.)
