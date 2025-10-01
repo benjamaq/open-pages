@@ -63,50 +63,44 @@ export async function POST(request: NextRequest) {
           current_utc: `${currentHour}:${currentMinute}`
         })
         
-        // Simple timezone offset mapping (for now, just support UTC)
-        // For proper timezone support, we'd use a library like date-fns-tz
+        // Convert user's local time to UTC
         const userTimezone = pref.timezone || 'UTC'
         let reminderUTCHour = reminderHour
         let reminderUTCMinute = reminderMinute
         
-        // Simple offset conversion for common timezones
+        // Simple offset conversion for common timezones (offset = UTC - Local)
         const timezoneOffsets: Record<string, number> = {
           'UTC': 0,
-          'Europe/London': 0, // BST is +1, but will be handled dynamically
-          'Europe/Paris': -1,
-          'Europe/Berlin': -1,
-          'Europe/Madrid': -1,
-          'Europe/Rome': -1,
-          'America/New_York': 4,
-          'America/Chicago': 5,
-          'America/Denver': 6,
-          'America/Los_Angeles': 7,
-          'Asia/Tokyo': -9,
-          'Asia/Singapore': -8,
-          'Australia/Sydney': -10
+          'Europe/London': 1, // London is UTC+1 (BST) or UTC+0 (GMT) - we'll use BST for now
+          'Europe/Paris': 2,  // UTC+2 (CEST) or UTC+1 (CET)
+          'Europe/Berlin': 2,
+          'Europe/Madrid': 2,
+          'Europe/Rome': 2,
+          'America/New_York': -4, // UTC-4 (EDT) or UTC-5 (EST)
+          'America/Chicago': -5,  // UTC-5 (CDT) or UTC-6 (CST)
+          'America/Denver': -6,   // UTC-6 (MDT) or UTC-7 (MST)
+          'America/Los_Angeles': -7, // UTC-7 (PDT) or UTC-8 (PST)
+          'Asia/Tokyo': 9,
+          'Asia/Singapore': 8,
+          'Australia/Sydney': 11
         }
         
-        // For Europe/London, check if we're in BST (British Summer Time)
-        if (userTimezone === 'Europe/London') {
-          const testDate = new Date()
-          const jan = new Date(testDate.getFullYear(), 0, 1)
-          const jul = new Date(testDate.getFullYear(), 6, 1)
-          const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset())
-          const isDST = testDate.getTimezoneOffset() < stdOffset
-          reminderUTCHour = reminderHour - (isDST ? 1 : 0)
-        } else {
-          const offset = timezoneOffsets[userTimezone] || 0
-          reminderUTCHour = reminderHour - offset
-        }
+        // Apply timezone offset
+        const offset = timezoneOffsets[userTimezone] || 0
+        reminderUTCHour = reminderHour - offset
         
         // Handle hour overflow/underflow
-        if (reminderUTCHour < 0) reminderUTCHour += 24
-        if (reminderUTCHour >= 24) reminderUTCHour -= 24
+        if (reminderUTCHour < 0) {
+          reminderUTCHour += 24
+        } else if (reminderUTCHour >= 24) {
+          reminderUTCHour -= 24
+        }
         
         console.log(`⏰ Converted time:`, {
           user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
           utc_time: `${reminderUTCHour}:${reminderUTCMinute} UTC`,
-          current_utc: `${currentHour}:${currentMinute} UTC`
+          current_utc: `${currentHour}:${currentMinute} UTC`,
+          should_send: (currentHour === reminderUTCHour && currentMinute >= reminderUTCMinute)
         })
         
         // Check if it's time to send (with 5-minute window)
