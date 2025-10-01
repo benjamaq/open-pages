@@ -130,8 +130,9 @@ async function handleSend() {
           reminder_minute: reminderUtc.getUTCMinutes()
         })
         
-        if (inWindow) {
-          console.log(`🎯 SENDING EMAIL to ${userEmail} - time matches!`)
+        // TEMPORARY: Always send for testing
+        if (true) { // inWindow) {
+          console.log(`🎯 SENDING EMAIL to ${userEmail} - TESTING MODE (bypassing time check)`)
           // Get user's actual data
           const { data: supplements } = await supabaseAdmin
             .from('supplements')
