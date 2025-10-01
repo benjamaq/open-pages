@@ -38,11 +38,36 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
   }
 
   // Get notification preferences
-  const { data: preferences, error: prefsError } = await supabase
-    .from('notification_preferences')
-    .select('*')
-    .eq('profile_id', profile.id)
-    .single()
+  let preferences = null
+  let prefsError = null
+  
+  try {
+    const result = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('profile_id', profile.id)
+      .single()
+    
+    preferences = result.data
+    prefsError = result.error
+  } catch (error: any) {
+    // If table doesn't exist yet, return defaults
+    if (error.message?.includes('relation') || error.message?.includes('table')) {
+      return {
+        email_enabled: true,
+        daily_reminder_enabled: true,
+        reminder_time: '09:00',
+        timezone: 'UTC',
+        supplements_reminder: true,
+        protocols_reminder: true,
+        movement_reminder: true,
+        mindfulness_reminder: true,
+        missed_items_reminder: true,
+        weekly_summary: false
+      }
+    }
+    throw error
+  }
 
   if (prefsError && prefsError.code !== 'PGRST116') {
     // If table doesn't exist yet, return defaults
@@ -79,15 +104,34 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
       weekly_summary: false
     }
 
-    const { data: newPrefs, error: createError } = await supabase
-      .from('notification_preferences')
-      .insert(defaultPrefs)
-      .select()
-      .single()
+    try {
+      const { data: newPrefs, error: createError } = await supabase
+        .from('notification_preferences')
+        .insert(defaultPrefs)
+        .select()
+        .single()
 
-    if (createError) {
+      if (createError) {
+        // If table doesn't exist, return defaults
+        if (createError.message?.includes('relation') || createError.message?.includes('table')) {
+          return {
+            email_enabled: true,
+            daily_reminder_enabled: true,
+            reminder_time: '09:00',
+            timezone: 'UTC',
+            supplements_reminder: true,
+            protocols_reminder: true,
+            movement_reminder: true,
+            mindfulness_reminder: true,
+            missed_items_reminder: true,
+            weekly_summary: false
+          }
+        }
+        throw createError
+      }
+    } catch (error: any) {
       // If table doesn't exist, return defaults
-      if (createError.message?.includes('relation') || createError.message?.includes('table')) {
+      if (error.message?.includes('relation') || error.message?.includes('table')) {
         return {
           email_enabled: true,
           daily_reminder_enabled: true,
@@ -101,7 +145,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
           weekly_summary: false
         }
       }
-      throw createError
+      throw error
     }
 
     return {
@@ -133,13 +177,16 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
 }
 
 export async function updateNotificationPreferences(preferences: Partial<NotificationPreferences>) {
+  console.log('updateNotificationPreferences called with:', preferences)
   const supabase = await createClient()
 
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
+    console.error('Authentication error:', userError)
     throw new Error('Authentication required')
   }
+  console.log('User authenticated:', user.id)
 
   // Get user's profile
   const { data: profile, error: profileError } = await supabase
@@ -149,8 +196,10 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
     .single()
 
   if (profileError || !profile) {
+    console.error('Profile error:', profileError)
     throw new Error('Profile not found')
   }
+  console.log('Profile found:', profile.id)
 
   // Prepare update data
   const updateData: any = {}
@@ -165,21 +214,34 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
   if (preferences.missed_items_reminder !== undefined) updateData.missed_items_reminder = preferences.missed_items_reminder
   if (preferences.weekly_summary !== undefined) updateData.weekly_summary = preferences.weekly_summary
 
-  // Update preferences
-  const { error: updateError } = await supabase
-    .from('notification_preferences')
-    .upsert({
-      profile_id: profile.id,
-      ...updateData
-    })
+  // Try to update preferences, but handle missing table gracefully
+  console.log('Attempting to upsert preferences:', { profile_id: profile.id, ...updateData })
+  try {
+    const { error: updateError } = await supabase
+      .from('notification_preferences')
+      .upsert({
+        profile_id: profile.id,
+        ...updateData
+      })
 
-  if (updateError) {
-    // If table doesn't exist, that's okay - preferences will work with defaults
-    if (updateError.message?.includes('relation') || updateError.message?.includes('table')) {
+    if (updateError) {
+      console.error('Update error:', updateError)
+      // If table doesn't exist, that's okay - preferences will work with defaults
+      if (updateError.message?.includes('relation') || updateError.message?.includes('table')) {
+        console.warn('Notification preferences table not found, using defaults')
+        return
+      }
+      throw updateError
+    }
+    console.log('Preferences updated successfully')
+  } catch (error: any) {
+    console.error('Upsert error:', error)
+    // Handle any other database errors gracefully
+    if (error.message?.includes('relation') || error.message?.includes('table')) {
       console.warn('Notification preferences table not found, using defaults')
       return
     }
-    throw updateError
+    throw error
   }
 
   revalidatePath('/dash/settings')
@@ -281,16 +343,36 @@ export async function queueDailyReminders() {
 
   // This would typically be called by a cron job
   // Get all users with daily reminders enabled
-  const { data: preferences, error } = await supabase
-    .from('notification_preferences')
-    .select(`
-      *,
-      profiles:profile_id(*)
-    `)
-    .eq('email_enabled', true)
-    .eq('daily_reminder_enabled', true)
+  let preferences = []
+  let error = null
+  
+  try {
+    const result = await supabase
+      .from('notification_preferences')
+      .select(`
+        *,
+        profiles:profile_id(*)
+      `)
+      .eq('email_enabled', true)
+      .eq('daily_reminder_enabled', true)
+    
+    preferences = result.data || []
+    error = result.error
+  } catch (err: any) {
+    // If table doesn't exist, just return (no users to notify)
+    if (err.message?.includes('relation') || err.message?.includes('table')) {
+      console.log('Notification preferences table not found, skipping daily reminders')
+      return
+    }
+    throw err
+  }
 
   if (error) {
+    // If table doesn't exist, just return (no users to notify)
+    if (error.message?.includes('relation') || error.message?.includes('table')) {
+      console.log('Notification preferences table not found, skipping daily reminders')
+      return
+    }
     console.error('Error fetching notification preferences:', error)
     return
   }
@@ -389,16 +471,36 @@ export async function sendWeeklySummaryEmail() {
   const supabase = await createClient()
 
   // Get all users with weekly summary enabled
-  const { data: preferences, error } = await supabase
-    .from('notification_preferences')
-    .select(`
-      *,
-      profiles:profile_id(*)
-    `)
-    .eq('email_enabled', true)
-    .eq('weekly_summary', true)
+  let preferences = []
+  let error = null
+  
+  try {
+    const result = await supabase
+      .from('notification_preferences')
+      .select(`
+        *,
+        profiles:profile_id(*)
+      `)
+      .eq('email_enabled', true)
+      .eq('weekly_summary', true)
+    
+    preferences = result.data || []
+    error = result.error
+  } catch (err: any) {
+    // If table doesn't exist, just return (no users to notify)
+    if (err.message?.includes('relation') || err.message?.includes('table')) {
+      console.log('Notification preferences table not found, skipping weekly summary')
+      return
+    }
+    throw err
+  }
 
   if (error) {
+    // If table doesn't exist, just return (no users to notify)
+    if (error.message?.includes('relation') || error.message?.includes('table')) {
+      console.log('Notification preferences table not found, skipping weekly summary')
+      return
+    }
     console.error('Error fetching weekly summary preferences:', error)
     return
   }
