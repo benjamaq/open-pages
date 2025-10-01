@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
-import { zonedTimeToUtc } from 'date-fns-tz'
 import { sendDailyReminder } from '../../../../lib/email/resend'
 
 export const dynamic = 'force-dynamic'
