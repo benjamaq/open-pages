@@ -38,7 +38,7 @@ async function handleSend() {
         profiles:profile_id(
           id,
           user_id,
-          name,
+          display_name,
           slug
         )
       `)
@@ -77,7 +77,7 @@ async function handleSend() {
         }
 
         const userEmail = userData.user.email
-        const userName = profile.name || 'User'
+        const userName = profile.display_name || 'User'
         
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
