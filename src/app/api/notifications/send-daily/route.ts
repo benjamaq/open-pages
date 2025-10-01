@@ -5,9 +5,15 @@ import { sendDailyReminder } from '../../../../lib/email/resend'
 // This endpoint would be called by a cron job service like Vercel Cron or GitHub Actions
 export async function POST(request: NextRequest) {
   try {
-    // Verify the request is from a trusted source (in production, use a secret token)
+    // Verify the request is from a trusted source
+    // Vercel Cron sends requests without auth headers, so we check the user-agent or allow all in production
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const userAgent = request.headers.get('user-agent') || ''
+    const isVercelCron = userAgent.includes('vercel-cron')
+    
+    // Allow Vercel Cron or requests with valid CRON_SECRET
+    if (!isVercelCron && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.log('Unauthorized request - not from Vercel Cron and no valid auth header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -17,6 +23,8 @@ export async function POST(request: NextRequest) {
     const now = new Date()
     const currentHour = now.getUTCHours()
     const currentMinute = now.getUTCMinutes()
+    
+    console.log(`🕐 Cron job triggered at ${now.toISOString()} (UTC ${currentHour}:${currentMinute})`)
     
     // Find users who should receive reminders at this time
     const { data: preferences, error: prefsError } = await supabase
@@ -33,6 +41,8 @@ export async function POST(request: NextRequest) {
       `)
       .eq('email_enabled', true)
       .eq('daily_reminder_enabled', true)
+    
+    console.log(`📧 Found ${preferences?.length || 0} users with email notifications enabled`)
 
     if (prefsError) {
       console.error('Error fetching preferences:', prefsError)
