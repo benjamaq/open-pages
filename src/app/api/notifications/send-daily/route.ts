@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
 async function handleSend() {
   try {
-    console.log('🚀 CRON TRIGGERED', { 
+    console.log('🚀 CRON TRIGGERED - VERSION 2.0', { 
       currentUTCHour: new Date().getUTCHours(),
       currentUTCMinute: new Date().getUTCMinutes(),
       currentUTC: new Date().toISOString(),
