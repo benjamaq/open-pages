@@ -99,7 +99,7 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
     console.log('Subject:', data.subject)
     
     const result = await resendClient.emails.send({
-      from: data.from || 'ben09@mac.com',
+      from: data.from || 'onboarding@resend.dev',
       to: data.to,
       subject: data.subject,
       html: data.html
