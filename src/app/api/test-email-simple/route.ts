@@ -1,52 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendDailyReminder } from '../../../lib/email/resend'
+import { sendEmail } from '../../../lib/email/resend'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    // Simple test email with mock data
-    const emailData = {
-      userName: 'Test User',
-      userEmail: 'ben09@mac.com',
-      supplements: [
-        { name: 'Vitamin D', dose: '1000 IU', timing: 'morning' },
-        { name: 'Magnesium', dose: '400mg', timing: 'evening' }
-      ],
-      protocols: [
-        { name: 'Morning routine', frequency: 'daily' }
-      ],
-      movement: [
-        { name: 'Morning walk', duration: '30 min' }
-      ],
-      mindfulness: [
-        { name: 'Meditation', duration: '15 min' }
-      ],
-      profileUrl: 'https://www.biostackr.io/dash',
-      unsubscribeUrl: 'https://www.biostackr.io/unsubscribe'
-    }
-
-    console.log('📧 Sending simple test email with data:', emailData)
+    console.log('🧪 Simple email test triggered')
     
-    const result = await sendDailyReminder(emailData)
-
-    console.log('📧 Simple test email result:', result)
-
-    if (!result.success) {
-      console.error('❌ Simple test email failed:', result.error)
-      return NextResponse.json({ 
-        error: result.error || 'Failed to send test email' 
-      }, { status: 500 })
-    }
-
+    const result = await sendEmail({
+      to: 'ben09@me.com',
+      subject: 'Simple Test Email',
+      html: '<h1>Test Email</h1><p>This is a simple test email to check if basic email sending works.</p>'
+    })
+    
+    console.log('📧 Simple email result:', result)
+    
     return NextResponse.json({ 
       success: true, 
-      messageId: result.id,
-      message: 'Simple test email sent successfully!' 
+      message: 'Simple test email sent',
+      result: result,
+      timestamp: new Date().toISOString()
     })
-
-  } catch (error) {
-    console.error('❌ Error in simple test email API:', error)
+    
+  } catch (error: any) {
+    console.error('❌ Simple email test failed:', error)
     return NextResponse.json({ 
-      error: `Failed to send test email: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      error: 'Simple email test failed', 
+      details: error.message 
     }, { status: 500 })
   }
 }
