@@ -24,8 +24,7 @@ export async function GET(request: NextRequest) {
           id,
           user_id,
           name,
-          slug,
-          users:user_id(email)
+          slug
         )
       `)
       .eq('email_enabled', true)
@@ -43,12 +42,19 @@ export async function GET(request: NextRequest) {
     for (const pref of preferences || []) {
       try {
         const profile = (pref as any).profiles
-        if (!profile || !profile.users) {
-          console.log(`⚠️ Skipping user - no profile or email data`)
+        if (!profile) {
+          console.log(`⚠️ Skipping user - no profile data`)
           continue
         }
 
-        const userEmail = profile.users.email
+        // Get user email from auth.users
+        const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id)
+        if (!userData?.user?.email) {
+          console.log(`⚠️ Skipping user - no email data`)
+          continue
+        }
+
+        const userEmail = userData.user.email
         const userName = profile.name || 'User'
         
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
