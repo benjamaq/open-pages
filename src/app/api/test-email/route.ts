@@ -131,9 +131,21 @@ async function handleTestEmail(request: NextRequest) {
     }
     
     console.log('📧 Sending test email with data:', emailData)
-    await sendDailyReminder(emailData)
     
-    console.log('✅ Test email sent successfully')
+    try {
+      const result = await sendDailyReminder(emailData)
+      console.log('📧 Email send result:', result)
+      
+      if (result.success) {
+        console.log('✅ Test email sent successfully')
+      } else {
+        console.error('❌ Email send failed:', result.error)
+        throw new Error(result.error || 'Email send failed')
+      }
+    } catch (error) {
+      console.error('❌ Error in sendDailyReminder:', error)
+      throw error
+    }
     
     return NextResponse.json({ 
       success: true, 
