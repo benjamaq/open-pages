@@ -57,9 +57,41 @@ export async function POST(request: NextRequest) {
         // Parse reminder time
         const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
         
+        console.log(`👤 Checking user preference:`, {
+          reminder_time: pref.reminder_time,
+          timezone: pref.timezone,
+          current_utc: `${currentHour}:${currentMinute}`
+        })
+        
+        // Convert reminder time from user's timezone to UTC
+        const userTimezone = pref.timezone || 'UTC'
+        const now = new Date()
+        
+        // Create a date object for the reminder time in user's timezone
+        const reminderDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }))
+        reminderDate.setHours(reminderHour, reminderMinute, 0, 0)
+        
+        // Get the UTC equivalent
+        const reminderUTC = new Date(reminderDate.toLocaleString('en-US', { timeZone: 'UTC' }))
+        const reminderUTCHour = reminderUTC.getHours()
+        const reminderUTCMinute = reminderUTC.getMinutes()
+        
+        console.log(`⏰ Converted time:`, {
+          user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
+          utc_time: `${reminderUTCHour}:${reminderUTCMinute} UTC`,
+          current_utc: `${currentHour}:${currentMinute} UTC`
+        })
+        
         // Check if it's time to send (with 5-minute window)
-        const timeDiff = Math.abs((currentHour * 60 + currentMinute) - (reminderHour * 60 + reminderMinute))
-        if (timeDiff > 5) continue // Skip if not within 5-minute window
+        const timeDiff = Math.abs((currentHour * 60 + currentMinute) - (reminderUTCHour * 60 + reminderUTCMinute))
+        console.log(`📊 Time difference: ${timeDiff} minutes`)
+        
+        if (timeDiff > 5) {
+          console.log(`⏭️ Skipping - not within 5-minute window`)
+          continue // Skip if not within 5-minute window
+        }
+        
+        console.log(`✅ Time matches! Preparing to send email...`)
 
         const profile = (pref as any).profiles
         const userEmail = profile.users.email
