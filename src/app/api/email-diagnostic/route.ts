@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (resendClient) {
       try {
         const result = await resendClient.emails.send({
-          from: 'onboarding@resend.dev',
+          from: 'notifications@biostackr.io',
           to: 'ben09@mac.com',
           subject: '🔍 Email Diagnostic Test',
           html: `
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
               <h1 style="color: #1a202c;">🔍 Email Diagnostic Test</h1>
               <p>This is a diagnostic test email to check if the email system is working.</p>
               <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-              <p><strong>From:</strong> onboarding@resend.dev</p>
+              <p><strong>From:</strong> notifications@biostackr.io</p>
               <p><strong>To:</strong> ben09@mac.com</p>
             </div>
           `

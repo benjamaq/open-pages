@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #1a202c;">🔍 Alternative Email Test</h1>
-          <p>This email is sent from the custom domain <strong>noreply@biostacker.io</strong> instead of onboarding@resend.dev</p>
+          <p>This email is sent from the custom domain <strong>noreply@biostacker.io</strong> instead of notifications@biostackr.io</p>
           <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
           <p><strong>From:</strong> noreply@biostacker.io</p>
           <p><strong>To:</strong> ${email}</p>
@@ -31,19 +31,19 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       console.error('❌ Alternative email failed:', result.error)
       
-      // Fallback to onboarding@resend.dev
-      console.log('🔄 Trying fallback with onboarding@resend.dev...')
+      // Fallback to notifications@biostackr.io
+      console.log('🔄 Trying fallback with notifications@biostackr.io...')
       
       const fallbackResult = await resend.emails.send({
-        from: 'onboarding@resend.dev',
+        from: 'notifications@biostackr.io',
         to: email,
         subject: '🔍 Fallback Email Test - Resend Domain',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a202c;">🔍 Fallback Email Test</h1>
-            <p>This email is sent from the fallback domain <strong>onboarding@resend.dev</strong></p>
+            <p>This email is sent from the fallback domain <strong>notifications@biostackr.io</strong></p>
             <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-            <p><strong>From:</strong> onboarding@resend.dev</p>
+            <p><strong>From:</strong> notifications@biostackr.io</p>
             <p><strong>To:</strong> ${email}</p>
             <p>If you receive this, the fallback delivery works!</p>
           </div>

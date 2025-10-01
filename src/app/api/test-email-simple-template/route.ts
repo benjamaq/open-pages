@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
           <h1 style="color: #1a202c;">🧪 SIMPLE TEST EMAIL</h1>
           <p>This is a simple test email with basic HTML.</p>
           <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-          <p><strong>From:</strong> onboarding@resend.dev</p>
+          <p><strong>From:</strong> notifications@biostackr.io</p>
           <p><strong>To:</strong> ${email}</p>
           <p>If you receive this, the simple template works!</p>
         </div>
