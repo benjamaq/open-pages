@@ -2764,7 +2764,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onClick={() => setShowWelcomePopup(false)}
                   className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
                 >
-                  {welcomeType === 'creator' ? 'Start Building My Stack' : 'Continue Building My Stack'}
+                  Build My Stack
                 </button>
                 {welcomeType === 'creator' && (
                   <button
