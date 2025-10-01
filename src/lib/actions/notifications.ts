@@ -184,7 +184,7 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
     console.error('Authentication error:', userError)
-    throw new Error('Authentication required')
+    throw new Error(`Authentication failed: ${userError?.message || 'No user found'}`)
   }
   console.log('User authenticated:', user.id)
 
@@ -197,7 +197,7 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
 
   if (profileError || !profile) {
     console.error('Profile error:', profileError)
-    throw new Error('Profile not found')
+    throw new Error(`Profile lookup failed: ${profileError?.message || 'Profile not found'}`)
   }
   console.log('Profile found:', profile.id)
 
@@ -231,7 +231,7 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
         console.warn('Notification preferences table not found, using defaults')
         return
       }
-      throw updateError
+      throw new Error(`Database update failed: ${updateError.message || 'Unknown database error'}`)
     }
     console.log('Preferences updated successfully')
   } catch (error: any) {
@@ -241,7 +241,8 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
       console.warn('Notification preferences table not found, using defaults')
       return
     }
-    throw error
+    // In production, throw a more descriptive error
+    throw new Error(`Database error: ${error.message || 'Unknown error'}`)
   }
 
   revalidatePath('/dash/settings')
