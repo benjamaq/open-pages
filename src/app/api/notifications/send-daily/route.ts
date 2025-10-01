@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz'
+import { zonedTimeToUtc } from 'date-fns-tz'
 import { startOfMinute, endOfMinute } from 'date-fns'
 import { sendDailyReminder } from '../../../../lib/email/resend'
 
