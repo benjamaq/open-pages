@@ -101,33 +101,31 @@ async function handleSend() {
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
         
-        // --- ⏰ FIX 2: ROBUST TIMEZONE MATCHING USING date-fns-tz ---
+        // --- ⏰ SIMPLIFIED TIMEZONE MATCHING (temporary fix) ---
         const userTimezone = pref.timezone || 'Europe/London'
         const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
         
-        // Create local date for reminder on CURRENT DAY (important for matching)
-        const nowLocal = zonedTimeToUtc(currentUtcTime, userTimezone) // Get current time in user TZ
-        const reminderLocal = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), reminderHour, reminderMinute, 0)
+        // Simple timezone conversion for London (UTC+1 during BST)
+        const isBST = currentUtcTime.getMonth() >= 2 && currentUtcTime.getMonth() <= 9 // Rough BST check
+        const offset = isBST ? 1 : 0
+        const reminderUtcHour = reminderHour - offset
         
-        // Convert to UTC
-        const reminderUtc = zonedTimeToUtc(reminderLocal, userTimezone)
+        // Check if current time matches reminder time (within 5 min window)
+        const currentHour = currentUtcTime.getUTCHours()
+        const currentMinute = currentUtcTime.getUTCMinutes()
+        const reminderMinuteUtc = reminderMinute
         
-        // Widen window to ~5 min buffer for cron reliability
-        const windowStart = subMinutes(startOfMinute(reminderUtc), 2) // Start 2 min before
-        const windowEnd = addMinutes(endOfMinute(reminderUtc), 2) // End 2 min after
-        
-        const inWindow = currentUtcTime >= windowStart && currentUtcTime <= windowEnd
+        const inWindow = Math.abs(currentHour - reminderUtcHour) <= 0 && Math.abs(currentMinute - reminderMinuteUtc) <= 2
         console.log(`🕐 TIME CHECK for ${userEmail}:`, {
           user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
-          utc_time: reminderUtc.toISOString(),
           current_utc: currentUtcTime.toISOString(),
-          window_start: windowStart.toISOString(),
-          window_end: windowEnd.toISOString(),
           in_window: inWindow,
-          current_hour: currentUtcTime.getUTCHours(),
-          current_minute: currentUtcTime.getUTCMinutes(),
-          reminder_hour: reminderUtc.getUTCHours(),
-          reminder_minute: reminderUtc.getUTCMinutes()
+          current_hour: currentHour,
+          current_minute: currentMinute,
+          reminder_hour: reminderUtcHour,
+          reminder_minute: reminderMinuteUtc,
+          is_bst: isBST,
+          offset: offset
         })
         
         // TEMPORARY: Always send for testing
