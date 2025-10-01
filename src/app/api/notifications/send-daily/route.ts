@@ -136,10 +136,19 @@ async function handleSend() {
             .select('name, dose, timing')
             .eq('profile_id', profile.id)
 
-          const { data: protocols } = await supabaseAdmin
+          const { data: allProtocols } = await supabaseAdmin
             .from('protocols')
-            .select('name, frequency')
+            .select('name, frequency, schedule_days')
             .eq('profile_id', profile.id)
+          
+          // Filter protocols that are due today (0=Sunday, 1=Monday, etc.)
+          const today = new Date().getDay()
+          const protocols = allProtocols?.filter(protocol => {
+            if (!protocol.schedule_days || protocol.schedule_days.length === 0) {
+              return true // If no schedule specified, include it
+            }
+            return protocol.schedule_days.includes(today)
+          }) || []
 
           const { data: movement } = await supabaseAdmin
             .from('movement')
