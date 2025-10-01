@@ -2,13 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendDailyReminder } from '../../../lib/email/resend'
 
 export async function GET(request: NextRequest) {
+  return handleTestEmail(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handleTestEmail(request)
+}
+
+async function handleTestEmail(request: NextRequest) {
   try {
     console.log('🧪 Manual email test triggered')
+    
+    // Try to get user email from request body (for POST requests)
+    let userEmail = 'findbenhere@gmail.com' // Default fallback
+    try {
+      const body = await request.json()
+      if (body.email) {
+        userEmail = body.email
+      }
+    } catch (e) {
+      // Ignore JSON parsing errors for GET requests
+    }
     
     // Test data
     const testData = {
       userName: 'Test User',
-      userEmail: 'findbenhere@gmail.com', // Your email
+      userEmail: userEmail,
       supplements: [
         { name: 'Vitamin D', dose: '2000 IU', timing: 'morning' },
         { name: 'Omega-3', dose: '1000mg', timing: 'with food' }
@@ -48,7 +67,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      message: 'Test email sent to findbenhere@gmail.com',
+      message: `Test email sent to ${userEmail}`,
       timestamp: new Date().toISOString()
     })
     
