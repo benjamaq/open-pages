@@ -2485,6 +2485,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 // For now, just open today's drawer
                 setShowEnhancedMoodDrawer(true);
               }}
+              onRefresh={loadTodayMoodEntry}
               streak={0} // TODO: Calculate actual streak
             />
 

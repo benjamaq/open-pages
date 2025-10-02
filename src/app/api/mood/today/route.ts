@@ -26,6 +26,14 @@ export async function GET() {
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      // If table doesn't exist, return null (empty state)
+      if (error.code === 'PGRST205') {
+        console.log('daily_entries table not found, returning empty state');
+        return NextResponse.json({
+          success: true,
+          entry: null
+        });
+      }
       console.error('Error fetching today entry:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch today entry' },

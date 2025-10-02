@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
       .order('local_date');
 
     if (entriesError) {
+      // If table doesn't exist, return empty data
+      if (entriesError.code === 'PGRST205') {
+        console.log('daily_entries table not found, returning empty month data');
+        return NextResponse.json({
+          success: true,
+          data: []
+        });
+      }
       console.error('Error fetching month data:', entriesError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch month data' },

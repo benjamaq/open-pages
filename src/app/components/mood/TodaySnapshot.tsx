@@ -14,6 +14,7 @@ interface TodaySnapshotProps {
   } | null;
   onEditToday: () => void;
   onEditDay: (date: string) => void;
+  onRefresh?: () => void;
   streak?: number;
 }
 
@@ -69,6 +70,7 @@ export default function TodaySnapshot({
   todayEntry, 
   onEditToday, 
   onEditDay, 
+  onRefresh,
   streak = 0 
 }: TodaySnapshotProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -88,7 +90,7 @@ export default function TodaySnapshot({
     };
 
     loadMonthlyData();
-  }, []);
+  }, [todayEntry]); // Refresh when todayEntry changes
 
   // Get selected chips
   const selectedChips = todayEntry?.tags?.map(tag => 
