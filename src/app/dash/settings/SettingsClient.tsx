@@ -1191,8 +1191,8 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               <div className="flex items-center space-x-3">
                 <span className="text-lg">🏃‍♂️</span>
                 <div>
-                            <h5 className="font-medium text-gray-900">Movement</h5>
-                            <p className="text-xs text-gray-500">Exercise activities</p>
+                            <h5 className="font-medium text-gray-900">Training & Rehab</h5>
+                            <p className="text-xs text-gray-500">Exercise & recovery activities</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

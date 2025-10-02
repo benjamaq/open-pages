@@ -179,10 +179,10 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              Add {itemType === 'supplements' ? 'Supplement' : 
-                   itemType === 'movement' ? 'Movement' :
+              Add {itemType === 'supplements' ? 'Supplement/Medication' : 
+                   itemType === 'movement' ? 'Training/Rehab' :
                    itemType === 'food' ? 'Food Item' :
-                   itemType === 'mindfulness' ? 'Mindfulness Practice' : 'Stack Item'}
+                   itemType === 'mindfulness' ? 'Mindfulness/Recovery' : 'Stack Item'}
             </h2>
             <button
               onClick={onClose}
@@ -213,8 +213,8 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full text-base sm:text-lg font-medium px-0 py-2 sm:py-3 border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none bg-transparent placeholder-gray-400"
                 placeholder={
-                  itemType === 'supplements' ? 'Supplement name...' :
-                  itemType === 'movement' ? 'Movement name...' :
+                  itemType === 'supplements' ? 'Supplement/medication name...' :
+                  itemType === 'movement' ? 'Training/rehab name...' :
                   itemType === 'food' ? 'Food name...' :
                   itemType === 'mindfulness' ? 'Practice name...' :
                   'Item name...'

@@ -143,7 +143,7 @@ export default function Home() {
                     
                   {/* Movement */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Movement</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-1">Training & Rehab</h4>
                     <div className="text-xs text-gray-600 space-y-0.5">
                       <p>• Strength training 4x/week (Push/Pull/Legs/Upper)</p>
                       <p>• Zone 2 cardio 3x/week, Daily walks 8k+ steps</p>
@@ -383,7 +383,7 @@ export default function Home() {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                    <span className="font-medium text-gray-900">Movement</span>
+                    <span className="font-medium text-gray-900">Training & Rehab</span>
               </div>
                   <span className="text-sm text-gray-500 font-medium">OFF</span>
             </div>

@@ -886,7 +886,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Today's Supplements</h2>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Supplements & Medications</h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {categoryFilteredItems.length}
           </span>
@@ -1294,8 +1294,8 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Today's<br />
-            Movement
+            Training &<br />
+            Rehab
           </h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}
@@ -1368,9 +1368,9 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Movement
+                  Add Training
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Gym, run, walk, yoga, surfing—whatever keeps you moving.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Strength training, cardio, rehab, sports—whatever keeps you active and healthy.</p>
               </div>
             </div>
           )}
@@ -1403,8 +1403,8 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Today's<br />
-            Mindfulness
+            Mindfulness &<br />
+            Recovery
           </h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}
@@ -2269,7 +2269,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
                   className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
             >
-                  Journal
+                  Journal & Notes
             </button>
 
                 {/* Settings Button */}
