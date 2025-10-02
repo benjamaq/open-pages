@@ -1428,24 +1428,50 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   // Load all dashboard data in one optimized call
   const loadDashboardData = async () => {
     try {
-      const response = await fetch('/api/dashboard-optimized')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
+      // Load mood data from optimized API
+      const moodResponse = await fetch('/api/dashboard-optimized')
+      if (moodResponse.ok) {
+        const moodData = await moodResponse.json()
+        if (moodData.success) {
           // Set mood data
-          setTodayMoodEntry(data.data.todayMoodEntry)
-          setMonthlyMoodData(data.data.monthlyMoodData)
+          setTodayMoodEntry(moodData.data.todayMoodEntry)
+          setMonthlyMoodData(moodData.data.monthlyMoodData)
           
           // Set beta status
-          if (data.data.betaStatus) {
-            setIsBetaUser(data.data.betaStatus.isBetaUser)
+          if (moodData.data.betaStatus) {
+            setIsBetaUser(moodData.data.betaStatus.isBetaUser)
             setBetaExpiration({
-              expiresAt: data.data.betaStatus.expiresAt,
-              daysUntilExpiration: data.data.betaStatus.daysUntilExpiration,
-              isExpired: data.data.betaStatus.isExpired
+              expiresAt: moodData.data.betaStatus.expiresAt,
+              daysUntilExpiration: moodData.data.betaStatus.daysUntilExpiration,
+              isExpired: moodData.data.betaStatus.isExpired
             })
           }
         }
+      }
+
+      // Load follower data from dashboard API (for real-time updates)
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/dashboard?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        // Update follower count from API (for real-time updates)
+        setFollowerCount(data.followers.count || 0)
+        console.log('🔄 Dashboard follower count updated:', data.followers.count)
+        
+        // Show toast if there are new followers
+        if (data.followers.newSinceLastCheck > 0) {
+          setNewFollowerCount(data.followers.newSinceLastCheck)
+          setShowNewFollowerToast(true)
+          setTimeout(() => setShowNewFollowerToast(false), 5000)
+        }
+      } else {
+        console.error('Failed to load dashboard data:', response.status)
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error)
@@ -1492,37 +1518,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     return () => clearInterval(refreshInterval)
   }, [userId, searchParams])
 
-  const loadDashboardData = async () => {
-    try {
-      // Add cache-busting timestamp for Safari
-      const timestamp = new Date().getTime()
-      const response = await fetch(`/api/dashboard?t=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        // Update follower count from API (for real-time updates)
-        setFollowerCount(data.followers.count || 0)
-        console.log('🔄 Dashboard follower count updated:', data.followers.count)
-        
-        // Show toast if there are new followers
-        if (data.followers.newSinceLastCheck > 0) {
-          setNewFollowerCount(data.followers.newSinceLastCheck)
-          setShowNewFollowerToast(true)
-          setTimeout(() => setShowNewFollowerToast(false), 5000)
-        }
-      } else {
-        console.error('Failed to load dashboard data:', response.status)
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error)
-      // Keep the server-side follower count if API fails
-    }
-  }
 
   const loadDailyCheckIn = async () => {
     try {
