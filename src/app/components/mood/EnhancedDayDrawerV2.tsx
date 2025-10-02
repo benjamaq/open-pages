@@ -223,7 +223,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-2xl font-semibold text-gray-900">
                   Daily Check-in
                 </h2>
                 <p className="text-sm text-gray-600">
@@ -265,7 +265,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
                         />
-                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                        <span className="text-xs text-gray-500 min-w-[4rem] text-center">
                           {formData.mood || 5} out of 10
                         </span>
                       </div>
@@ -288,7 +288,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
                         />
-                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                        <span className="text-xs text-gray-500 min-w-[4rem] text-center">
                           {formData.sleep_quality || 5} out of 10
                         </span>
                       </div>
@@ -311,7 +311,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
                         />
-                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                        <span className="text-xs text-gray-500 min-w-[4rem] text-center">
                           {formData.pain || 0} out of 10
                         </span>
                       </div>
