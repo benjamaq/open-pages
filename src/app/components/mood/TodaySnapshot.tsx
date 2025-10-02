@@ -21,46 +21,45 @@ interface TodaySnapshotProps {
 interface MetricPillProps {
   label: string;
   value: number;
+  max: number;
   palette: 'mood' | 'sleep' | 'pain';
+  onClick?: () => void;
+  className?: string;
 }
 
-const MetricPill = ({ label, value, palette }: MetricPillProps) => {
-  const pct = Math.max(0, Math.min(10, value)) / 10; // 0..1
+const MetricPill = ({ label, value, max, palette, onClick, className = '' }: MetricPillProps) => {
+  const pct = (value / max) * 100;
   
-  const getGradient = (palette: string, percentage: number) => {
-    if (palette === 'mood') {
-      if (percentage <= 0.2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
-      if (percentage <= 0.4) return 'linear-gradient(to right, #E54D2E, #F5A524)';
-      if (percentage <= 0.6) return 'linear-gradient(to right, #F5A524, #F5A524)';
-      if (percentage <= 0.8) return 'linear-gradient(to right, #F5A524, #22C55E)';
-      return 'linear-gradient(to right, #22C55E, #22C55E)';
-    } else if (palette === 'sleep') {
-      if (percentage <= 0.2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
-      if (percentage <= 0.4) return 'linear-gradient(to right, #E54D2E, #F59E0B)';
-      if (percentage <= 0.6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
-      if (percentage <= 0.8) return 'linear-gradient(to right, #F59E0B, #10B981)';
-      return 'linear-gradient(to right, #10B981, #10B981)';
-    } else { // pain
-      if (percentage <= 0.2) return 'linear-gradient(to right, #A7F3D0, #A7F3D0)';
-      if (percentage <= 0.4) return 'linear-gradient(to right, #A7F3D0, #F59E0B)';
-      if (percentage <= 0.6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
-      if (percentage <= 0.8) return 'linear-gradient(to right, #F59E0B, #EF4444)';
-      return 'linear-gradient(to right, #EF4444, #EF4444)';
+  const getPalette = () => {
+    if (palette === 'pain') {
+      // Pain: blue-grey→orange→red (bad = red)
+      if (value <= 2) return 'from-[#A7F3D0] to-[#A7F3D0]';
+      if (value <= 4) return 'from-[#A7F3D0] to-[#F59E0B]';
+      if (value <= 6) return 'from-[#F59E0B] to-[#F59E0B]';
+      if (value <= 8) return 'from-[#F59E0B] to-[#EF4444]';
+      return 'from-[#EF4444] to-[#EF4444]';
+    } else {
+      // Mood/Sleep: red→amber→green (good = green)
+      if (value <= 2) return 'from-[#E54D2E] to-[#E54D2E]';
+      if (value <= 4) return 'from-[#E54D2E] to-[#F5A524]';
+      if (value <= 6) return 'from-[#F5A524] to-[#F5A524]';
+      if (value <= 8) return 'from-[#F5A524] to-[#22C55E]';
+      return 'from-[#22C55E] to-[#22C55E]';
     }
   };
 
-  const bg = value === 0 ? '#F3F4F6' : getGradient(palette, pct);
+  const bg = value === 0 ? '#F3F4F6' : getPalette();
 
   return (
-    <div>
-      <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{label}</div>
+    <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
+      <div className="text-sm font-medium text-gray-700 mb-2">{label}</div>
       <div className="flex items-center">
         <div
-          className="h-2.5 w-28 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 w-32 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="ml-3 text-sm font-medium text-gray-900">{value}/10</div>
+        <div className="ml-3 text-base font-semibold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -92,10 +91,12 @@ export default function TodaySnapshot({
     loadMonthlyData();
   }, [todayEntry]); // Refresh when todayEntry changes
 
-  // Get selected chips
+  // Get selected chips (max 4)
   const selectedChips = todayEntry?.tags?.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
+
+  const displayChips = selectedChips.slice(0, 4);
 
   // Calculate 7-day averages
   const calculateAverages = () => {
@@ -114,73 +115,78 @@ export default function TodaySnapshot({
   const { avgMood, avgSleep, avgPain } = calculateAverages();
 
   return (
-    <div className="rounded-xl border border-gray-200/60 bg-white shadow-sm p-4 md:p-5 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)] gap-6">
+    <div className="bg-gray-50 rounded-xl border border-gray-200/60 p-6 mb-6">
+      {/* Single Column Layout */}
+      <div className="w-full">
         
-        {/* Left Column — Metric Pills */}
-        <div className="space-y-3">
+        {/* Top Row - Chips + Daily Check-in Button */}
+        <div className="flex items-center justify-between mb-6">
+          {/* Chips */}
+          {displayChips.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {displayChips.map((chip, index) => (
+                <span
+                  key={index}
+                  className="px-4 py-2 text-base bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                >
+                  {chip?.icon} {chip?.label}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* Daily Check-in Button */}
+          <button 
+            onClick={onEditToday}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-base font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+          >
+            My Daily Check-in
+          </button>
+        </div>
+
+        {/* Mood, Sleep, Pain Row */}
+        <div className="flex justify-around items-center mb-6">
           <MetricPill 
             label="Mood" 
             value={todayEntry?.mood || 0} 
+            max={10} 
             palette="mood" 
+            onClick={onEditToday}
+            className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label="SleepQ" 
+            label="Sleep Quality" 
             value={todayEntry?.sleep_quality || 0} 
+            max={10} 
             palette="sleep" 
+            onClick={onEditToday}
+            className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label="Pain / Soreness" 
+            label="Pain" 
             value={todayEntry?.pain || 0} 
+            max={10} 
             palette="pain" 
+            onClick={onEditToday}
+            className="flex-1 max-w-[200px]"
           />
         </div>
 
-        {/* Right Column — Actions & Context */}
-        <div className="flex flex-col">
-          {/* Top Row — Buttons */}
-          <div className="flex items-center justify-end gap-3">
-            <button 
-              onClick={onEditToday}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Edit
-            </button>
-            <button 
-              onClick={onEditToday}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm"
-            >
-              My daily check-in
-            </button>
+        {/* Weekly Averages */}
+        <div className="text-center mb-4">
+          <div className="text-sm text-gray-500">
+            This Week: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
           </div>
+        </div>
 
-          {/* Chips Row */}
-          {selectedChips.length > 0 && (
-            <div className="mt-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {selectedChips.slice(0, 8).map((chip, index) => (
-                  <button
-                    key={index}
-                    onClick={onEditToday}
-                    className="rounded-full px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                    aria-label={`Context: ${chip?.label}`}
-                  >
-                    {chip?.icon} {chip?.label}
-                  </button>
-                ))}
-                {selectedChips.length > 8 && (
-                  <span className="rounded-full px-3 py-1 text-sm bg-gray-200 text-gray-600">
-                    +{selectedChips.length - 8}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Averages Line */}
-          <div className="mt-2 text-xs text-gray-500">
-            Avg mood (7d): {avgMood} • Avg sleep (7d): {avgSleep} • Avg pain (7d): {avgPain}
-          </div>
+        {/* Edit Button - Bottom Right */}
+        <div className="flex justify-end">
+          <button 
+            onClick={onEditToday}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Edit
+          </button>
         </div>
       </div>
     </div>
