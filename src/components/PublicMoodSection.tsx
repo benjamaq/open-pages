@@ -128,13 +128,13 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
 
   return (
     <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6" style={{ backgroundColor: '#f3f4f6' }}>
-      {/* Updated layout v3 - matches dashboard exactly */}
+      {/* Updated layout v4 - horizontal mood/sleep/pain layout matches dashboard */}
       {/* Single Column Layout */}
       <div className="w-full">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-2 pb-3">
-          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker (Updated v3)</h3>
+          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}
@@ -185,22 +185,24 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
               ))}
             </div>
 
-            {/* Mood, Sleep, Pain Pills */}
-            <div className="flex flex-col space-y-3 mb-4">
+            {/* Mood, Sleep, Pain Row - Horizontal Layout */}
+            <div className="flex justify-around items-center mb-5">
               {todayEntry.mood !== null && (
                 <MetricPill
                   label="Mood"
                   value={todayEntry.mood}
                   max={10}
                   palette="mood"
+                  className="flex-1 max-w-[200px]"
                 />
               )}
               {todayEntry.sleep_quality !== null && (
                 <MetricPill
-                  label="Sleep"
+                  label="Sleep Quality"
                   value={todayEntry.sleep_quality}
                   max={10}
                   palette="sleep"
+                  className="flex-1 max-w-[200px]"
                 />
               )}
               {todayEntry.pain !== null && (
@@ -209,6 +211,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                   value={todayEntry.pain}
                   max={10}
                   palette="pain"
+                  className="flex-1 max-w-[200px]"
                 />
               )}
             </div>
