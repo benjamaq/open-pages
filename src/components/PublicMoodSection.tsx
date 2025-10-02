@@ -127,14 +127,14 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
   console.log('PublicMoodSection rendering with:', { todayEntry, moodData: moodData.length });
 
   return (
-    <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
-      {/* Updated layout v2 - matches dashboard exactly */}
+    <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6" style={{ backgroundColor: '#f3f4f6' }}>
+      {/* Updated layout v3 - matches dashboard exactly */}
       {/* Single Column Layout */}
       <div className="w-full">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-2 pb-3">
-          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
+          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker (Updated v3)</h3>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}

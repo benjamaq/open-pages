@@ -98,6 +98,17 @@ export default function PublicProfileClient({
         </div>
       )}
 
+      {/* Mood Tracker section */}
+      {currentModules?.mood && publicMoodData.length > 0 && (
+        <div id="mood" className="mb-8">
+          <PublicMoodSection 
+            key={`mood-${publicMoodData.length}-${Date.now()}`}
+            moodData={publicMoodData}
+            profileName={profile.display_name || 'this user'}
+          />
+        </div>
+      )}
+
       {/* Journal section */}
       {(currentModules?.journal && (publicJournalEntries.length > 0 || (isOwnProfile && !isSharedPublicLink))) && (
         <div id="journal">
@@ -107,16 +118,6 @@ export default function PublicProfileClient({
             onToggleVisibility={handleJournalVisibilityToggle}
             isOwnProfile={isOwnProfile && !isSharedPublicLink}
             profileId={profile.id}
-          />
-        </div>
-      )}
-
-      {/* Mood Tracker section */}
-      {currentModules?.mood && publicMoodData.length > 0 && (
-        <div id="mood" className="mb-8">
-          <PublicMoodSection 
-            moodData={publicMoodData}
-            profileName={profile.display_name || 'this user'}
           />
         </div>
       )}
