@@ -67,110 +67,6 @@ interface HeaderPrefs {
   show_hero_avatar: boolean
 }
 
-const BatteryVisual = ({ level }: { level: number }) => {
-  const batteryPercentage = level * 10
-  const batteryWidth = 320 // Much larger as specified
-  const batteryHeight = 48
-  const bodyWidth = 300
-  const fillWidth = Math.max(0, Math.min(bodyWidth - 4, Math.round((bodyWidth - 4) * (batteryPercentage / 100))))
-  
-  const getBatteryColor = (level: number) => {
-    if (level <= 3) return '#919191' // Gray
-    if (level <= 6) return '#9AD15A' // Soft lime
-    if (level <= 8) return '#2FAE58' // Rich green  
-    return '#22A447' // Deep green
-  }
-
-  const batteryColor = getBatteryColor(level)
-
-  return (
-    <div className="flex justify-center mb-6">
-      <svg width={batteryWidth} height={batteryHeight} viewBox={`0 0 ${batteryWidth} ${batteryHeight}`} className="battery-svg">
-        <defs>
-          {/* Battery gradient fill */}
-          <linearGradient id={`batteryFill-${level}`} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={batteryColor} />
-            <stop offset="50%" stopColor={batteryColor} stopOpacity="0.9" />
-            <stop offset="100%" stopColor={batteryColor} stopOpacity="0.8" />
-          </linearGradient>
-          
-          {/* Fine grain pattern */}
-          <pattern id="batteryGrain" patternUnits="userSpaceOnUse" width="2" height="2">
-            <rect width="2" height="2" fill={batteryColor} />
-            <circle cx="0.5" cy="0.5" r="0.2" fill="rgba(255,255,255,0.3)" />
-            <circle cx="1.5" cy="1.5" r="0.15" fill="rgba(255,255,255,0.2)" />
-          </pattern>
-          
-          {/* Gloss highlight */}
-          <linearGradient id="batteryGloss" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
-            <stop offset="40%" stopColor="rgba(255,255,255,0.1)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </linearGradient>
-        </defs>
-        
-        {/* Battery Body Background */}
-        <rect 
-          x="2" 
-          y="8" 
-          width={bodyWidth} 
-          height="32" 
-          rx="10" 
-          ry="10" 
-          fill="#F3F4F6"
-          stroke="#D1D5DB" 
-          strokeWidth="1"
-        />
-        
-        {/* Battery Cap */}
-        <rect 
-          x={bodyWidth + 2} 
-          y="16" 
-          width="10" 
-          height="16" 
-          rx="5" 
-          ry="5" 
-          fill="#D1D5DB"
-        />
-        
-        {/* Battery Fill */}
-        <rect 
-          x="4" 
-          y="10" 
-          width={fillWidth}
-          height="28" 
-          rx="8" 
-          ry="8" 
-          fill={`url(#batteryFill-${level})`}
-          className="transition-all duration-300 ease-out"
-        />
-        
-        {/* Grain Texture Overlay */}
-        <rect 
-          x="4" 
-          y="10" 
-          width={fillWidth}
-          height="28" 
-          rx="8" 
-          ry="8" 
-          fill="url(#batteryGrain)"
-          opacity="0.4"
-        />
-        
-        {/* Gloss Highlight */}
-        <rect 
-          x="4" 
-          y="10" 
-          width={fillWidth}
-          height="28" 
-          rx="8" 
-          ry="8" 
-          fill="url(#batteryGloss)"
-        />
-      </svg>
-    </div>
-  )
-}
 
 const HeaderCustomizer = ({ 
   isOpen, 
@@ -558,216 +454,6 @@ const DashboardCard = ({ children, title, onManage, collapsed = false, onToggleC
   </div>
 )
 
-// Row 0 — Today's Check-in Card (Compact)
-const CheckinCard = ({ 
-  energyLevel, 
-  setEnergyLevel, 
-  mission, 
-  isEditingMission,
-  tempMission,
-  setTempMission,
-  handleEditMission,
-  handleSaveMission,
-  handleCancelMission,
-  handleShareCheckIn,
-  completionPercentage
-}: {
-  energyLevel: number
-  setEnergyLevel: (level: number) => void
-  mission: string
-  isEditingMission: boolean
-  tempMission: string
-  setTempMission: (mission: string) => void
-  handleEditMission: () => void
-  handleSaveMission: () => void
-  handleCancelMission: () => void
-  handleShareCheckIn: () => void
-  completionPercentage: number
-}) => {
-  const [showDetails, setShowDetails] = useState(false)
-
-  return (
-    <div 
-      className="bg-white border border-gray-200 shadow-sm transition-all duration-200"
-      style={{ 
-        borderRadius: '16px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        maxHeight: showDetails ? '260px' : '160px'
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Today's Check-in</h2>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-sm font-medium hover:text-gray-700 transition-colors"
-          style={{ color: '#5C6370' }}
-        >
-          Details {showDetails ? '▴' : '▾'}
-        </button>
-      </div>
-
-      {/* Compact Row - Single Line Centered */}
-      <div className="px-6 pb-6">
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          
-          {/* Mission - Inline Editable */}
-          <div className="flex items-center">
-            {isEditingMission ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={tempMission}
-                  onChange={(e) => setTempMission(e.target.value)}
-                  placeholder="Set your daily mission…"
-                  maxLength={80}
-                  className="text-lg font-bold bg-transparent border-b-2 border-gray-300 focus:border-gray-900 focus:outline-none placeholder-gray-500 pb-1"
-                  style={{ color: '#0F1115' }}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveMission()
-                    if (e.key === 'Escape') handleCancelMission()
-                  }}
-                />
-                <button onClick={handleSaveMission} className="p-1 text-green-600 hover:text-green-700">
-                  <Check className="w-3 h-3" />
-                </button>
-                <button onClick={handleCancelMission} className="p-1 text-gray-500 hover:text-gray-700">
-                  <Cancel className="w-3 h-3" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleEditMission}
-                className="text-lg font-bold hover:text-gray-700 transition-colors"
-                style={{ color: '#0F1115' }}
-              >
-                {mission || "Set your daily mission…"}
-              </button>
-            )}
-          </div>
-
-          {/* Battery Pill - Compact */}
-          <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
-            <span>🔋</span>
-            <span className="text-sm font-medium" style={{ color: '#0F1115' }}>
-              {energyLevel}/10
-            </span>
-            <span className="text-sm" style={{ color: '#5C6370' }}>
-              {energyLevel <= 2 ? "Empty" :
-               energyLevel <= 4 ? "Low" :
-               energyLevel <= 6 ? "Stable" :
-               energyLevel <= 8 ? "Charged" :
-               "Full"}
-            </span>
-          </div>
-
-          {/* Optional Chips */}
-          <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-            🔥 0-day streak
-          </div>
-          <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium" style={{ color: '#5C6370' }}>
-            ✅ {completionPercentage}% complete
-          </div>
-
-          {/* Share Button */}
-          <button
-            onClick={handleShareCheckIn}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            Share Check-in
-          </button>
-        </div>
-
-        {/* Expandable Details Section */}
-        {showDetails && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="space-y-4">
-              {/* Apple-Style Battery Bar */}
-              <div className="flex justify-center">
-                <div className="relative">
-                  <div 
-                    className="bg-gray-200 rounded-full relative overflow-hidden shadow-inner border border-gray-300"
-                    style={{ width: '280px', height: '40px' }}
-                  >
-                    <div 
-                      className="h-full rounded-full transition-all ease-out relative"
-                      style={{
-                        width: `${energyLevel * 10}%`,
-                        background: energyLevel <= 3 ? 'linear-gradient(180deg, #A6AFBD 0%, #5C6370 100%)' :
-                                  energyLevel <= 6 ? 'linear-gradient(180deg, #9AD15A 0%, #6BB95E 100%)' :
-                                  'linear-gradient(180deg, #2FAE58 0%, #22A447 100%)',
-                        transitionDuration: '250ms'
-                      }}
-                    >
-                      {/* Fine Grain Texture */}
-                      <div 
-                        className="absolute inset-0 rounded-full opacity-30"
-                        style={{
-                          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.8) 1px, transparent 0)',
-                          backgroundSize: '3px 3px'
-                        }}
-                      />
-                      {/* Subtle Gloss */}
-                      <div 
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)'
-                        }}
-                      />
-                    </div>
-                  </div>
-                  {/* Battery Cap */}
-                  <div 
-                    className="absolute bg-gray-400 rounded-r-md border border-gray-500"
-                    style={{ 
-                      right: '-6px', 
-                      top: '12px', 
-                      width: '8px', 
-                      height: '16px' 
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Feedback Text */}
-              <p className="text-center italic font-medium" style={{ fontSize: '14px', color: '#5C6370' }}>
-                {energyLevel <= 2 ? "Running on empty. Be gentle today." :
-                 energyLevel <= 4 ? "Low power. Focus on essentials." :
-                 energyLevel <= 6 ? "Stable. Stay consistent." :
-                 energyLevel <= 8 ? "Charged. You've got momentum." :
-                 "Full power. Unstoppable."}
-              </p>
-
-              {/* Slider */}
-              <div className="px-8">
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={energyLevel}
-                  onChange={(e) => setEnergyLevel(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                  style={{
-                    background: 'linear-gradient(90deg, #A6AFBD 0%, #9AD15A 50%, #22A447 100%)',
-                    outline: 'none'
-                  }}
-                  aria-label="Energy level 1 to 10"
-                  aria-valuenow={energyLevel}
-                />
-                <div className="flex justify-between text-xs mt-1" style={{ color: '#A6AFBD' }}>
-                  <span>1</span>
-                  <span>5</span>
-                  <span>10</span>
-              </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
 // Row 1 — Supplements Card (Full Width)
 const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, onAdd }: {
@@ -1787,6 +1473,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     loadDashboardData()
     loadDailyCheckIn()
     loadTodayMoodEntry()
+    calculateStreak()
     
     // Set up periodic refresh for follower count (every 30 seconds)
     const refreshInterval = setInterval(() => {
@@ -1836,42 +1523,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         const data = JSON.parse(saved)
         const today = new Date().toISOString().split('T')[0]
         
-        // Only use if it's from today and for this user
-        if (data.date === today && data.userId === userId) {
-          setDailyCheckIn({
-            energy: data.energy,
-            mood: data.mood
-          })
-          setEnergyLevel(data.energy) // Also update the energy level
-          return
-        }
       }
       
       // Fallback: Try API if localStorage is empty or old
       const response = await fetch('/api/daily-update/today')
       if (response.ok) {
-        const data = await response.json()
-        if (data.dailyUpdate) {
-          setDailyCheckIn({
-            energy: data.dailyUpdate.energy_score || 1,
-            mood: data.dailyUpdate.mood_label || ''
-          })
-          setEnergyLevel(data.dailyUpdate.energy_score || 1)
-        }
       }
     } catch (error) {
       console.error('Error loading daily check-in:', error)
     }
   }
   
-  const handleEnergyUpdate = (newEnergy: number) => {
-    setEnergyLevel(newEnergy)
-    // Update daily check-in when energy is updated
-    setDailyCheckIn(prev => ({
-      energy: newEnergy,
-      mood: prev?.mood || ''
-    }))
-  }
 
   const loadTodayMoodEntry = async () => {
     try {
@@ -1884,14 +1546,62 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       console.error('Error loading today mood entry:', error)
     }
   }
+
+  const calculateStreak = async () => {
+    try {
+      const response = await fetch('/api/mood/month')
+      if (response.ok) {
+        const data = await response.json()
+        const entries = data.data || []
+        
+        // Sort entries by date (newest first)
+        const sortedEntries = entries.sort((a: any, b: any) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+        
+        let currentStreak = 0
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        // Check if today has an entry
+        const todayEntry = sortedEntries.find((entry: any) => {
+          const entryDate = new Date(entry.date)
+          entryDate.setHours(0, 0, 0, 0)
+          return entryDate.getTime() === today.getTime()
+        })
+        
+        if (todayEntry) {
+          currentStreak = 1
+          
+          // Count consecutive days backwards
+          for (let i = 1; i < sortedEntries.length; i++) {
+            const entryDate = new Date(sortedEntries[i].date)
+            entryDate.setHours(0, 0, 0, 0)
+            
+            const expectedDate = new Date(today)
+            expectedDate.setDate(today.getDate() - i)
+            expectedDate.setHours(0, 0, 0, 0)
+            
+            if (entryDate.getTime() === expectedDate.getTime()) {
+              currentStreak++
+            } else {
+              break
+            }
+          }
+        }
+        
+        setStreak(currentStreak)
+      }
+    } catch (error) {
+      console.error('Error calculating streak:', error)
+    }
+  }
   
-  const [energyLevel, setEnergyLevel] = useState(1)
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [mission, setMission] = useState('')
   const [isEditingMission, setIsEditingMission] = useState(false)
   const [tempMission, setTempMission] = useState('')
   const [showCustomizer, setShowCustomizer] = useState(false)
-  const [showBatteryModal, setShowBatteryModal] = useState(false)
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showQuickAddFood, setShowQuickAddFood] = useState(false)
   const [showAddGear, setShowAddGear] = useState(false)
@@ -1913,12 +1623,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
   const [showEnhancedMoodDrawer, setShowEnhancedMoodDrawer] = useState(false)
   const [todayMoodEntry, setTodayMoodEntry] = useState(null)
-  const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [profileMission, setProfileMission] = useState(profile.bio || '')
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
   const [welcomeType, setWelcomeType] = useState<'pro' | 'creator' | null>(null)
+  const [streak, setStreak] = useState(0)
   
   const [headerPrefs, setHeaderPrefs] = useState<HeaderPrefs>({
     bg_type: 'preset', // Start with a preset background
@@ -2119,7 +1829,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const handleShareCheckIn = () => {
     // TODO: Implement PNG export
-    console.log('Share check-in:', { energyLevel, mission, profile })
+    console.log('Share check-in:', { mission, profile })
   }
 
   const updateHeaderPrefs = (updates: Partial<HeaderPrefs>) => {
@@ -2364,31 +2074,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <div className="flex flex-wrap items-center gap-4">
                   {/* Status Text Items */}
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
-                    🔥 0-day streak
+                    🔥 {streak}-day streak
                       </div>
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     ✅ {completionPercentage}% complete
                   </div>
                   
-                  {/* Daily Check-in Energy & Mood Chip */}
-                  {todayMoodEntry && (
-                    <button
-                      onClick={() => setShowEnhancedMoodDrawer(true)}
-                      className="text-sm font-medium hover:opacity-75 transition-opacity cursor-pointer"
-                      style={{ color: '#5C6370' }}
-                    >
-                      <span className="flex items-center space-x-1">
-                        <span>🔋</span>
-                        <span>Energy {todayMoodEntry.energy || todayMoodEntry.mood}/5</span>
-                        {todayMoodEntry.sleep_quality && (
-                          <span>• Sleep {todayMoodEntry.sleep_quality}/5</span>
-                        )}
-                        {todayMoodEntry.tags && todayMoodEntry.tags.length > 0 && (
-                          <span>• {todayMoodEntry.tags[0]}</span>
-                        )}
-                      </span>
-                    </button>
-                  )}
                   
                   {/* Follower Count Text - Always Show */}
                         <button
@@ -2471,7 +2162,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 setShowEnhancedMoodDrawer(true);
               }}
               onRefresh={loadTodayMoodEntry}
-              streak={0} // TODO: Calculate actual streak
+              streak={streak}
             />
 
             {/* Helpful Note - Above Supplements */}
@@ -2765,6 +2456,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           onClose={() => {
             setShowEnhancedMoodDrawer(false)
             loadTodayMoodEntry() // Refresh data after closing
+            calculateStreak() // Recalculate streak
           }}
           date={new Date().toISOString().split('T')[0]}
           initialData={todayMoodEntry}
