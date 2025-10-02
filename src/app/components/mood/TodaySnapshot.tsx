@@ -33,18 +33,18 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
   const getPalette = () => {
     if (palette === 'pain') {
       // Pain: blue-grey→orange→red (bad = red)
-      if (value <= 2) return 'from-[#A7F3D0] to-[#A7F3D0]';
-      if (value <= 4) return 'from-[#A7F3D0] to-[#F59E0B]';
-      if (value <= 6) return 'from-[#F59E0B] to-[#F59E0B]';
-      if (value <= 8) return 'from-[#F59E0B] to-[#EF4444]';
-      return 'from-[#EF4444] to-[#EF4444]';
+      if (value <= 2) return 'linear-gradient(to right, #A7F3D0, #A7F3D0)';
+      if (value <= 4) return 'linear-gradient(to right, #A7F3D0, #F59E0B)';
+      if (value <= 6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
+      if (value <= 8) return 'linear-gradient(to right, #F59E0B, #EF4444)';
+      return 'linear-gradient(to right, #EF4444, #EF4444)';
     } else {
       // Mood/Sleep: red→amber→green (good = green)
-      if (value <= 2) return 'from-[#E54D2E] to-[#E54D2E]';
-      if (value <= 4) return 'from-[#E54D2E] to-[#F5A524]';
-      if (value <= 6) return 'from-[#F5A524] to-[#F5A524]';
-      if (value <= 8) return 'from-[#F5A524] to-[#22C55E]';
-      return 'from-[#22C55E] to-[#22C55E]';
+      if (value <= 2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
+      if (value <= 4) return 'linear-gradient(to right, #E54D2E, #F5A524)';
+      if (value <= 6) return 'linear-gradient(to right, #F5A524, #F5A524)';
+      if (value <= 8) return 'linear-gradient(to right, #F5A524, #22C55E)';
+      return 'linear-gradient(to right, #22C55E, #22C55E)';
     }
   };
 
@@ -103,6 +103,11 @@ export default function TodaySnapshot({
   const calculateAverages = () => {
     const last7Days = monthlyData.slice(-7);
     console.log('Last 7 days for averages:', last7Days);
+    
+    // Check what fields are actually available in the data
+    if (last7Days.length > 0) {
+      console.log('Sample day data structure:', last7Days[0]);
+    }
     
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
