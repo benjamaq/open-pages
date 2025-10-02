@@ -105,15 +105,10 @@ export default function LibrarySection({
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-gray-600" />
-            </div>
-            <div className="flex items-center space-x-3">
-              <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Library</h2>
-              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                {loading ? '...' : items.length}
-              </span>
-            </div>
+            <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Records & Plans</h2>
+            <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+              {loading ? '...' : items.length}
+            </span>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -306,7 +301,7 @@ export default function LibrarySection({
                     onClick={() => setShowUploadForm(true)}
                     className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                   >
-                    Add Library Item
+                    Add Record
                   </button>
                   <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Lab results, training plans, doctor's notes—keep all your health records organized.</p>
                 </div>

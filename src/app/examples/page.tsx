@@ -441,7 +441,7 @@ export default function ExamplesPage() {
           </div>
         </section>
 
-        {/* Mindfulness & Recovery */}
+        {/* Mind & Stress */}
         <section className="mt-20">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
@@ -451,7 +451,7 @@ export default function ExamplesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Mindfulness & Recovery</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Mind & Stress</h2>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Track mindfulness and recovery practices</h3>
               <p className="text-gray-600 mb-6">

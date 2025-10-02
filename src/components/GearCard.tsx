@@ -20,7 +20,7 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>My Gear</h2>
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>Devices & Tools</h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}
           </span>

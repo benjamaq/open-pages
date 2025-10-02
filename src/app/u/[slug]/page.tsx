@@ -352,7 +352,7 @@ export default async function ProfilePage({ params, searchParams }: {
       <section className="mb-8">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <h2 className="text-xl font-bold mb-6" style={{ color: '#0F1115' }}>
-            Protocols ({publicProtocols.length})
+            Protocols & Recovery ({publicProtocols.length})
           </h2>
           <div className="space-y-4">
             {publicProtocols.length > 0 ? (

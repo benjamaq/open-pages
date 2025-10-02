@@ -125,7 +125,7 @@ export default function Home() {
                     
                   {/* Protocols */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Protocols</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-1">Protocols & Recovery</h4>
                     <div className="text-xs text-gray-600 space-y-0.5">
                       <p>• Ice bath (3 min daily), Red light therapy (20 min)</p>
                       <p>• Sleep optimization routine, Breathwork (10 min)</p>
@@ -134,7 +134,7 @@ export default function Home() {
                     
                   {/* Library */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Library</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-1">Records & Plans</h4>
                     <div className="text-xs text-gray-600 space-y-0.5">
                         <p>📄 Lab Results Q3 2024</p>
                         <p>📋 Training Plan - Hypertrophy</p>
@@ -260,7 +260,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                       </div>
-                <h3 className="text-lg font-bold text-gray-900">Protocols ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Protocols & Recovery ✓</h3>
                       </div>
               <p className="text-gray-600">Cold plunges, breath work, fasting windows, sleep hygiene</p>
                     </div>
@@ -296,7 +296,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                     </div>
-                <h3 className="text-lg font-bold text-gray-900">Journal ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Journal & Notes ✓</h3>
                     </div>
               <p className="text-gray-600">Daily progress updates, how you feel, what's working</p>
                 </div>
@@ -310,7 +310,7 @@ export default function Home() {
                     <circle cx="12" cy="12" r="2" strokeWidth="1.5" />
                   </svg>
                     </div>
-                <h3 className="text-lg font-bold text-gray-900">Gear & Extras ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Devices & Tools ✓</h3>
                     </div>
               <p className="text-gray-600">Equipment, apps, mindfulness practices, anything else</p>
                   </div>
@@ -375,7 +375,7 @@ export default function Home() {
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="font-medium text-gray-900">Protocols</span>
+                    <span className="font-medium text-gray-900">Protocols & Recovery</span>
               </div>
                   <span className="text-sm text-green-600 font-medium">ON</span>
             </div>

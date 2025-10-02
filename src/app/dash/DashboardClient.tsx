@@ -1182,8 +1182,8 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Today's<br />
-            Protocols
+            Protocols &<br />
+            Recovery
           </h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}

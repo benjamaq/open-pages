@@ -235,7 +235,7 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     {/* Activity */}
                     {dayData.actions_snapshot.activity?.length > 0 && (
                       <div>
-                        <h4 className="text-xs font-medium text-gray-600 mb-1">Training & Rehab</h4>
+                        <h4 className="text-xs font-medium text-gray-600 mb-1">Movement</h4>
                         <div className="text-sm text-gray-700">
                           {dayData.actions_snapshot.activity.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
