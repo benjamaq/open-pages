@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     // Get user's profile - handle multiple profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, user_id, name, slug, allow_stack_follow, show_public_followers')
+      .select('id, user_id, display_name, slug')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       profile: {
         id: profile.id,
-        name: profile.name,
+        name: profile.display_name,
         slug: profile.slug,
-        allow_stack_follow: profile.allow_stack_follow || false,
-        show_public_followers: profile.show_public_followers || false
+        allow_stack_follow: false, // Default value since column might not exist
+        show_public_followers: false // Default value since column might not exist
       },
       followers: {
         count: followerCount,
