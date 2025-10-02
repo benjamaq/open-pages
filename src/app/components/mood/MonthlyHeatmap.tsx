@@ -27,7 +27,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
     
     for (let i = 0; i < 12; i++) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const value = date.toISOString().slice(0, 7);
+      const value = date.toLocaleDateString('sv-SE').slice(0, 7);
       const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       options.push({ value, label });
     }
@@ -60,7 +60,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
   const navigateMonth = (direction: 'prev' | 'next') => {
     const current = new Date(currentMonth + '-01');
     const newDate = new Date(current.getFullYear(), current.getMonth() + (direction === 'next' ? 1 : -1), 1);
-    setCurrentMonth(newDate.toISOString().slice(0, 7));
+    setCurrentMonth(newDate.toLocaleDateString('sv-SE').slice(0, 7));
   };
 
   // Get color for mood value
@@ -88,7 +88,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
     
     // Generate 6 weeks (42 days) to ensure we cover the month
     for (let i = 0; i < 42; i++) {
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = currentDate.toLocaleDateString('sv-SE');
       const dayData = monthData.find(d => d.date === dateStr);
       const isCurrentMonth = currentDate.getMonth() === month;
       const isToday = dateStr === new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD format in local timezone

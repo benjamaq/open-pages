@@ -90,8 +90,8 @@ export async function getTodayEntry(): Promise<DailyEntry | null> {
       return null;
     }
 
-    // Get today's date in user's timezone (for now, using UTC)
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date in user's timezone
+    const today = new Date().toLocaleDateString('sv-SE');
 
     // Get today's daily entry
     const { data, error } = await supabase
@@ -142,8 +142,8 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
     // Calculate month start/end
     const year = parseInt(month.split('-')[0]);
     const monthNum = parseInt(month.split('-')[1]);
-    const startDate = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
-    const endDate = new Date(year, monthNum, 0).toISOString().split('T')[0];
+    const startDate = new Date(year, monthNum - 1, 1).toLocaleDateString('sv-SE');
+    const endDate = new Date(year, monthNum, 0).toLocaleDateString('sv-SE');
 
     // Get daily entries for the month
     const { data: dailyEntries, error: entriesError } = await supabase
@@ -166,7 +166,7 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
     // Generate all days in the month
     const currentDate = new Date(year, monthNum - 1, 1);
     while (currentDate.getMonth() === monthNum - 1) {
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = currentDate.toLocaleDateString('sv-SE');
       const entry = entriesMap.get(dateStr);
       
       if (entry) {
@@ -266,8 +266,8 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
       .from('mood_entries')
       .select('*')
       .eq('profile_id', profile.id)
-      .gte('entry_date', startDate.toISOString().split('T')[0])
-      .lte('entry_date', endDate.toISOString().split('T')[0])
+      .gte('entry_date', startDate)
+      .lte('entry_date', endDate)
       .order('entry_date');
 
     if (moodError) {
@@ -293,7 +293,7 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
       const date = new Date(entry.entry_date);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
-      const weekKey = weekStart.toISOString().split('T')[0];
+      const weekKey = weekStart.toLocaleDateString('sv-SE');
       
       if (!entriesByWeek.has(weekKey)) {
         entriesByWeek.set(weekKey, []);
