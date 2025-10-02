@@ -90,33 +90,33 @@ begin
   -- Fetch active meds/supplements (replace with your actual table/logic)
   select coalesce(jsonb_agg(jsonb_build_object(
     'id', m.id, 'name', m.name, 'type', m.item_type,
-    'dose', m.dose, 'unit', m.unit, 'schedule', m.schedule_days
+    'dose', m.dose, 'timing', m.timing, 'brand', m.brand
   ) order by m.name), '[]'::jsonb)
   into v_meds
   from stack_items m
   where m.profile_id = (select id from profiles where user_id = p_user_id)
     and m.item_type = 'supplements'
-    and m.is_active = true; -- Assuming an is_active flag
+    and m.public = true; -- Use public flag instead of is_active
 
   -- Fetch active protocols (replace with your actual table/logic)
   select coalesce(jsonb_agg(jsonb_build_object(
-    'id', pr.id, 'name', pr.name, 'frequency', pr.frequency, 'notes', pr.notes
+    'id', pr.id, 'name', pr.name, 'frequency', pr.frequency, 'details', pr.details
   ) order by pr.name), '[]'::jsonb)
   into v_protocols
   from protocols pr
   where pr.profile_id = (select id from profiles where user_id = p_user_id)
-    and pr.is_active = true; -- Assuming an is_active flag
+    and pr.public = true; -- Use public flag instead of is_active
 
   -- Fetch activity for the day (replace with your actual table/logic)
-  -- Assuming 'movement' items are logged in stack_items with a local_date
+  -- For now, we'll use a simplified approach since stack_items doesn't have duration_min or local_date
   select coalesce(jsonb_agg(jsonb_build_object(
-    'id', a.id, 'name', a.name, 'duration_min', a.duration_min, 'notes', a.notes
+    'id', a.id, 'name', a.name, 'timing', a.timing, 'notes', a.notes
   ) order by a.name), '[]'::jsonb)
   into v_activity
   from stack_items a
   where a.profile_id = (select id from profiles where user_id = p_user_id)
     and a.item_type = 'movement'
-    and a.local_date = p_local_date; -- Assuming local_date for activity logs
+    and a.public = true; -- Use public flag instead of local_date filtering
 
   -- Devices (placeholder - replace with your actual table/logic)
   -- select coalesce(jsonb_agg(jsonb_build_object(
