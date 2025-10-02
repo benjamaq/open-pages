@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
+    console.log('Day API - Raw data from database:', data);
     return NextResponse.json({
       success: true,
       entry: data || null
