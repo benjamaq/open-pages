@@ -27,8 +27,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
     mood: null,
     sleep_quality: null,
     pain: null,
-    sleep_hours: null,
-    night_wakes: null,
     tags: null,
     journal: null
   });
@@ -39,6 +37,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [includeSnapshot, setIncludeSnapshot] = useState(true);
   const [snapshotData, setSnapshotData] = useState<any>(null);
+  const [wearables, setWearables] = useState({
+    recovery_score: null as number | null,
+    sleep_score: null as number | null
+  });
 
   // Initialize form data
   useEffect(() => {
@@ -48,13 +50,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
         mood: initialData.mood,
         sleep_quality: initialData.sleep_quality,
         pain: initialData.pain,
-        sleep_hours: initialData.sleep_hours,
-        night_wakes: initialData.night_wakes,
         tags: initialData.tags,
         journal: initialData.journal
       });
       setSelectedTags(initialData.tags || []);
-      setShowAdvanced(!!(initialData.pain || initialData.sleep_hours || initialData.night_wakes));
+      setShowAdvanced(false);
       setSnapshotData(initialData.actions_snapshot);
     } else {
       setFormData({
@@ -62,8 +62,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
         mood: null,
         sleep_quality: null,
         pain: null,
-        sleep_hours: null,
-        night_wakes: null,
         tags: null,
         journal: null
       });
@@ -206,8 +204,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
       formData.mood !== initialData.mood ||
       formData.sleep_quality !== initialData.sleep_quality ||
       formData.pain !== initialData.pain ||
-      formData.sleep_hours !== initialData.sleep_hours ||
-      formData.night_wakes !== initialData.night_wakes ||
       JSON.stringify(selectedTags) !== JSON.stringify(initialData.tags || []) ||
       formData.journal !== initialData.journal
     );
@@ -248,27 +244,27 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
           {/* Content */}
           <div className="px-6 py-6 space-y-6">
-            {/* Core Metrics - 0-10 scales */}
+            {/* Core Metrics - 0-10 scales - Stacked */}
             <div>
               <h3 className="text-base font-medium text-gray-900 mb-4">Today's Feel</h3>
-              <div className="grid gap-6 sm:grid-cols-3">
+              <div className="space-y-6">
                 {/* Mood */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     Mood (0-10)
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500">0</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
                     <input
                       type="range"
                       min="0"
                       max="10"
                       value={formData.mood || 5}
                       onChange={(e) => updateField('mood', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-3 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
                     />
-                    <span className="text-sm text-gray-500">10</span>
-                    <span className="text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
+                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
+                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
                       {formData.mood || 5}
                     </span>
                   </div>
@@ -276,21 +272,21 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                 {/* Sleep Quality */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     Sleep Quality (0-10)
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500">0</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
                     <input
                       type="range"
                       min="0"
                       max="10"
                       value={formData.sleep_quality || 5}
                       onChange={(e) => updateField('sleep_quality', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-3 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
                     />
-                    <span className="text-sm text-gray-500">10</span>
-                    <span className="text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
+                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
+                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
                       {formData.sleep_quality || 5}
                     </span>
                   </div>
@@ -298,21 +294,21 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                 {/* Pain */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     Pain / Soreness (0-10)
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500">0</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
                     <input
                       type="range"
                       min="0"
                       max="10"
                       value={formData.pain || 0}
                       onChange={(e) => updateField('pain', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-200 via-red-400 to-red-600 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-3 bg-gradient-to-r from-red-200 via-red-400 to-red-600 rounded-lg appearance-none cursor-pointer slider"
                     />
-                    <span className="text-sm text-gray-500">10</span>
-                    <span className="text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
+                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
+                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
                       {formData.pain || 0}
                     </span>
                   </div>
@@ -320,16 +316,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
               </div>
             </div>
 
-            {/* Context Tags */}
+            {/* Context Tags - All Chips */}
             <div>
               <h3 className="text-base font-medium text-gray-900 mb-4">Happened Today</h3>
               <div className="space-y-3">
-                {/* Suggested tags */}
-                {suggestedTags.length > 0 && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-2">Suggested:</p>
+                {/* All chips organized by category */}
+                {Object.entries(CHIP_CATALOG.reduce((acc, chip) => {
+                  if (!acc[chip.category]) acc[chip.category] = [];
+                  acc[chip.category].push(chip);
+                  return acc;
+                }, {} as Record<string, any[]>)).map(([category, chips]) => (
+                  <div key={category}>
+                    <p className="text-xs text-gray-500 mb-2 capitalize">{category}:</p>
                     <div className="flex flex-wrap gap-2">
-                      {suggestedTags.slice(0, 6).map(chip => (
+                      {chips.map(chip => (
                         <button
                           key={chip.slug}
                           onClick={() => toggleTag(chip.slug)}
@@ -344,31 +344,76 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       ))}
                     </div>
                   </div>
-                )}
-
-                {/* Other tags */}
-                <div>
-                  <p className="text-xs text-gray-500 mb-2">All options:</p>
-                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    {otherTags.slice(0, 20).map(chip => (
-                      <button
-                        key={chip.slug}
-                        onClick={() => toggleTag(chip.slug)}
-                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                          selectedTags.includes(chip.slug)
-                            ? 'bg-blue-100 border-blue-300 text-blue-800'
-                            : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        {chip.icon} {chip.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Actions Snapshot */}
+            {/* Wearables */}
+            <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+              <summary 
+                className="cursor-pointer text-sm text-gray-700 flex items-center justify-between"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                <span>Wearables</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              
+              {showAdvanced && (
+                <div className="mt-3 space-y-4">
+                  {/* Recovery Score */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Recovery Score (0-100)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={wearables.recovery_score || ''}
+                      onChange={(e) => setWearables(prev => ({ ...prev, recovery_score: e.target.value ? parseInt(e.target.value) : null }))}
+                      placeholder="e.g., 85"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Sleep Score */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sleep Score (0-100)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={wearables.sleep_score || ''}
+                      onChange={(e) => setWearables(prev => ({ ...prev, sleep_score: e.target.value ? parseInt(e.target.value) : null }))}
+                      placeholder="e.g., 78"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </details>
+
+            {/* Save Message */}
+            {saveMessage && (
+              <div className={`p-3 rounded-lg text-sm ${
+                saveMessage.includes('✅') 
+                  ? 'bg-green-50 text-green-800 border border-green-200' 
+                  : 'bg-red-50 text-red-800 border border-red-200'
+              }`}>
+                {saveMessage}
+              </div>
+            )}
+
+            {/* Actions Snapshot - Always at bottom */}
             <div>
               <h3 className="text-base font-medium text-gray-900 mb-4">Today's Actions Snapshot</h3>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -394,108 +439,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                 )}
               </div>
             </div>
-
-            {/* Advanced Options */}
-            <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-              <summary 
-                className="cursor-pointer text-sm text-gray-700 flex items-center justify-between"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-              >
-                <span>More Details</span>
-                <svg 
-                  className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              
-              {showAdvanced && (
-                <div className="mt-3 space-y-4">
-                  {/* Sleep Hours */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sleep Hours
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="24"
-                      step="0.5"
-                      value={formData.sleep_hours || ''}
-                      onChange={(e) => updateField('sleep_hours', e.target.value ? parseFloat(e.target.value) : null)}
-                      placeholder="e.g., 7.5"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  {/* Night Wakes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Night Wakes
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="20"
-                      value={formData.night_wakes || ''}
-                      onChange={(e) => updateField('night_wakes', e.target.value ? parseInt(e.target.value) : null)}
-                      placeholder="e.g., 2"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  {/* Feeling */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Feeling
-                    </label>
-                    <select
-                      value={formData.journal || ''}
-                      onChange={(e) => updateField('journal', e.target.value || null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select a feeling</option>
-                      <option value="Calm">Calm</option>
-                      <option value="Focused">Focused</option>
-                      <option value="Energised">Energised</option>
-                      <option value="Stressed">Stressed</option>
-                      <option value="Anxious">Anxious</option>
-                      <option value="Low / Down">Low / Down</option>
-                      <option value="Fatigued">Fatigued</option>
-                      <option value="In pain">In pain</option>
-                    </select>
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Notes
-                    </label>
-                    <textarea
-                      value={formData.journal || ''}
-                      onChange={(e) => updateField('journal', e.target.value || null)}
-                      placeholder="Any additional notes?"
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    />
-                  </div>
-                </div>
-              )}
-            </details>
-
-            {/* Save Message */}
-            {saveMessage && (
-              <div className={`p-3 rounded-lg text-sm ${
-                saveMessage.includes('✅') 
-                  ? 'bg-green-50 text-green-800 border border-green-200' 
-                  : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
-                {saveMessage}
-              </div>
-            )}
 
             {/* Actions */}
             <div className="flex space-x-3 pt-4">
