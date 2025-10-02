@@ -150,11 +150,11 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
         </div>
       </div>
 
-      {/* Description */}
+      {/* Header and Description */}
       <div className="mb-4 px-1">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Heat map view</h3>
         <p className="text-xs text-gray-500 leading-relaxed">
-          Click on any day to see your mood, supplements, protocols, and activities from that date. 
-          Cross-reference how you felt vs. what you were taking and doing to identify patterns and optimize your health stack.
+          Mood across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.
         </p>
       </div>
 

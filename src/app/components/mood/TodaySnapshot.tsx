@@ -189,13 +189,13 @@ export default function TodaySnapshot({
               onClick={() => setShowHeatmap(!showHeatmap)}
               className={`p-2 rounded-lg transition-colors ${
                 showHeatmap 
-                  ? 'bg-indigo-100 text-indigo-600' 
+                  ? 'bg-purple-100 text-purple-600' 
                   : 'hover:bg-gray-200 text-gray-600'
               }`}
               aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
               title="Monthly heatmap"
             >
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-4 h-4" style={{ color: showHeatmap ? '#7C3AED' : undefined }} />
             </button>
             <button
               onClick={() => setCollapsed(!collapsed)}
