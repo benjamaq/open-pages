@@ -152,7 +152,7 @@ export default function ExamplesPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-start">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="text-lg font-semibold text-gray-900">Health Library</h4>
+                <h4 className="text-lg font-semibold text-gray-900">Records & Plans</h4>
                 <button className="text-sm text-gray-600 hover:text-gray-900">+ Add File</button>
               </div>
 
@@ -229,7 +229,7 @@ export default function ExamplesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Document Library</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Records & Plans</h2>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Store all your health documents</h3>
               <p className="text-gray-600 mb-6">
@@ -503,7 +503,7 @@ export default function ExamplesPage() {
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h5 className="font-medium text-gray-900">Evening Gratitude</h5>
-                    <p className="text-sm text-gray-600">5 minutes • Journal 3 things • Before bed</p>
+                    <p className="text-sm text-gray-600">5 minutes • Journal & Notes 3 things • Before bed</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-blue-600 text-sm">Tonight</span>
@@ -526,7 +526,7 @@ export default function ExamplesPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-start">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="text-lg font-semibold text-gray-900">Journal</h4>
+                <h4 className="text-lg font-semibold text-gray-900">Journal & Notes</h4>
                 <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors">
                   New Entry
                 </button>
@@ -566,7 +566,7 @@ export default function ExamplesPage() {
 
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Journal entries this month</span>
+                  <span>Journal & Notes entries this month</span>
                   <span className="font-medium">15 entries</span>
                 </div>
               </div>
@@ -579,7 +579,7 @@ export default function ExamplesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Journal</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Journal & Notes</h2>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Record and share your health journey</h3>
               <p className="text-gray-600 mb-6">

@@ -180,7 +180,7 @@ export default function Home() {
                   <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">Too Many Places</h3>
                   <p className="text-gray-600">
-                    Supplements in Notes. Training in Sheets. Labs in email. Protocols in head. Journal in five different apps. Finding anything takes 10 minutes.
+                    Supplements in Notes. Movement in Sheets. Labs in email. Protocols in head. Journal & Notes in five different apps. Finding anything takes 10 minutes.
                   </p>
               </div>
 

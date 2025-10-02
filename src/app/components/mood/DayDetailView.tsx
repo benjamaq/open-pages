@@ -190,7 +190,7 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
               {/* Journal */}
               {dayData.journal && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Journal</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Journal & Notes</h3>
                   <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
                     {dayData.journal}
                   </div>
