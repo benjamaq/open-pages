@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 
 interface TodaySnapshotProps {
@@ -18,126 +17,51 @@ interface TodaySnapshotProps {
   streak?: number;
 }
 
-interface MeterProps {
+interface MetricPillProps {
   label: string;
   value: number;
-  max: number;
   palette: 'mood' | 'sleep' | 'pain';
-  onClick?: () => void;
-  className?: string;
 }
 
-const Meter = ({ label, value, max, palette, onClick, className = '' }: MeterProps) => {
-  const percentage = (value / max) * 100;
+const MetricPill = ({ label, value, palette }: MetricPillProps) => {
+  const pct = Math.max(0, Math.min(10, value)) / 10; // 0..1
   
-  const getPalette = () => {
-    if (palette === 'pain') {
-      // Pain: blue-grey→orange→red (bad = red)
-      if (value <= 2) return 'from-[#B7C3D0] to-[#B7C3D0]';
-      if (value <= 4) return 'from-[#B7C3D0] to-[#F59E0B]';
-      if (value <= 6) return 'from-[#F59E0B] to-[#F59E0B]';
-      if (value <= 8) return 'from-[#F59E0B] to-[#EF4444]';
-      return 'from-[#EF4444] to-[#EF4444]';
-    } else {
-      // Mood/Sleep: red→amber→green (good = green)
-      if (value <= 2) return 'from-[#E54D2E] to-[#E54D2E]';
-      if (value <= 4) return 'from-[#E54D2E] to-[#F5A524]';
-      if (value <= 6) return 'from-[#F5A524] to-[#F5A524]';
-      if (value <= 8) return 'from-[#F5A524] to-[#22C55E]';
-      return 'from-[#22C55E] to-[#22C55E]';
+  const getGradient = (palette: string, percentage: number) => {
+    if (palette === 'mood') {
+      if (percentage <= 0.2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
+      if (percentage <= 0.4) return 'linear-gradient(to right, #E54D2E, #F5A524)';
+      if (percentage <= 0.6) return 'linear-gradient(to right, #F5A524, #F5A524)';
+      if (percentage <= 0.8) return 'linear-gradient(to right, #F5A524, #22C55E)';
+      return 'linear-gradient(to right, #22C55E, #22C55E)';
+    } else if (palette === 'sleep') {
+      if (percentage <= 0.2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
+      if (percentage <= 0.4) return 'linear-gradient(to right, #E54D2E, #F59E0B)';
+      if (percentage <= 0.6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
+      if (percentage <= 0.8) return 'linear-gradient(to right, #F59E0B, #10B981)';
+      return 'linear-gradient(to right, #10B981, #10B981)';
+    } else { // pain
+      if (percentage <= 0.2) return 'linear-gradient(to right, #A7F3D0, #A7F3D0)';
+      if (percentage <= 0.4) return 'linear-gradient(to right, #A7F3D0, #F59E0B)';
+      if (percentage <= 0.6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
+      if (percentage <= 0.8) return 'linear-gradient(to right, #F59E0B, #EF4444)';
+      return 'linear-gradient(to right, #EF4444, #EF4444)';
     }
   };
 
+  const bg = value === 0 ? '#F3F4F6' : getGradient(palette, pct);
+
   return (
-    <div className={`flex items-center gap-3 ${className}`} onClick={onClick}>
-      <span className="text-sm font-medium text-gray-700 min-w-[50px]">{label}</span>
-      <div className="flex-1 relative h-2 rounded-full bg-gray-100 overflow-hidden">
-        <div 
-          className={`absolute inset-0 bg-gradient-to-r ${getPalette()} rounded-full transition-all duration-200`}
-          style={{ width: `${percentage}%` }}
+    <div>
+      <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{label}</div>
+      <div className="flex items-center">
+        <div
+          className="h-2.5 w-28 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          style={{ background: bg }}
+          aria-label={`${label} ${value} of 10`}
         />
+        <div className="ml-3 text-sm font-medium text-gray-900">{value}/10</div>
       </div>
-      <span className="text-sm font-medium text-gray-900 min-w-[28px] text-right">
-        {value}/{max}
-      </span>
     </div>
-  );
-};
-
-interface ToggleGroupProps {
-  options: string[];
-  defaultValue: string;
-  value?: string;
-  onValueChange?: (value: string) => void;
-}
-
-const ToggleGroup = ({ options, defaultValue, value, onValueChange }: ToggleGroupProps) => {
-  const [selected, setSelected] = useState(value || defaultValue);
-  
-  const handleSelect = (option: string) => {
-    setSelected(option);
-    onValueChange?.(option);
-  };
-
-  return (
-    <div className="flex gap-1">
-      {options.map(option => (
-        <button
-          key={option}
-          onClick={() => handleSelect(option)}
-          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-            selected === option 
-              ? 'bg-indigo-100 text-indigo-700' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
-  );
-};
-
-interface HeatmapCellProps {
-  value: number | null | undefined;
-  isToday: boolean;
-  mode: 'mood' | 'pain';
-  onClick: () => void;
-}
-
-const HeatmapCell = ({ value, isToday, mode, onClick }: HeatmapCellProps) => {
-  const getCellColor = () => {
-    if (value === null || value === undefined) {
-      // Empty days: faint neutral with hint of green for mood, blue-grey for pain
-      return mode === 'pain' ? 'bg-gray-200' : 'bg-green-100';
-    }
-    
-    const percentage = (value / 10) * 100;
-    if (mode === 'pain') {
-      // Pain: blue-grey→orange→red
-      if (percentage <= 20) return 'bg-[#B7C3D0]';
-      if (percentage <= 40) return 'bg-[#B7C3D0]';
-      if (percentage <= 60) return 'bg-[#F59E0B]';
-      if (percentage <= 80) return 'bg-[#F59E0B]';
-      return 'bg-[#EF4444]';
-    } else {
-      // Mood: red→amber→green
-      if (percentage <= 20) return 'bg-[#E54D2E]';
-      if (percentage <= 40) return 'bg-[#E54D2E]';
-      if (percentage <= 60) return 'bg-[#F5A524]';
-      if (percentage <= 80) return 'bg-[#F5A524]';
-      return 'bg-[#22C55E]';
-    }
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`w-3 h-3 rounded-sm ${getCellColor()} hover:ring-1 hover:ring-indigo-400 transition-all ${
-        isToday ? 'ring-2 ring-indigo-500' : ''
-      }`}
-      title={`${new Date().toLocaleDateString()} - ${mode}: ${value || 'N/A'}`}
-    />
   );
 };
 
@@ -147,179 +71,115 @@ export default function TodaySnapshot({
   onEditDay, 
   streak = 0 
 }: TodaySnapshotProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [heatmapMode, setHeatmapMode] = useState<'mood' | 'pain'>('mood');
-  const [fourteenDayData, setFourteenDayData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
 
-  // Load 14-day data for heatmap
+  // Load monthly data for averages
   useEffect(() => {
-    const loadFourteenDayData = async () => {
+    const loadMonthlyData = async () => {
       try {
         const response = await fetch('/api/mood/month?month=' + new Date().toISOString().slice(0, 7));
         if (response.ok) {
           const data = await response.json();
-          setFourteenDayData(data.data || []);
+          setMonthlyData(data.data || []);
         }
       } catch (error) {
-        console.error('Error loading 14-day data:', error);
+        console.error('Error loading monthly data:', error);
       }
     };
 
-    loadFourteenDayData();
+    loadMonthlyData();
   }, []);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  // Get selected chips (max 4, then +N)
+  // Get selected chips
   const selectedChips = todayEntry?.tags?.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
-  const displayChips = selectedChips.slice(0, 4);
-  const remainingCount = selectedChips.length - 4;
+  // Calculate 7-day averages
+  const calculateAverages = () => {
+    const last7Days = monthlyData.slice(-7);
+    const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
+    const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
+    const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
 
-  // Calculate 7-day average
-  const sevenDayAverage = () => {
-    const last7Days = fourteenDayData.slice(-7);
-    const values = last7Days.map(day => day[heatmapMode]).filter(val => val !== null && val !== undefined);
-    
-    if (values.length === 0) return 'N/A';
-    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    return avg.toFixed(1);
+    const avgMood = moodValues.length > 0 ? (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1) : '—';
+    const avgSleep = sleepValues.length > 0 ? (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1) : '—';
+    const avgPain = painValues.length > 0 ? (painValues.reduce((a, b) => a + b, 0) / painValues.length).toFixed(1) : '—';
+
+    return { avgMood, avgSleep, avgPain };
   };
 
-  const average = sevenDayAverage();
-
-  // Generate 14 days of data
-  const generate14Days = () => {
-    const days = [];
-    const today = new Date();
-    
-    for (let i = 13; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const existingDay = fourteenDayData.find(d => d.date === dateStr);
-      days.push({
-        date: dateStr,
-        mood: existingDay?.mood || null,
-        pain: existingDay?.pain || null,
-        hasJournal: existingDay?.hasJournal || false
-      });
-    }
-    
-    return days;
-  };
-
-  const fourteenDays = generate14Days();
-  const today = new Date().toISOString().split('T')[0];
+  const { avgMood, avgSleep, avgPain } = calculateAverages();
 
   return (
-    <div className="p-4 rounded-xl border border-gray-200/60 bg-white shadow-sm mb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-gray-900">
-          Today — {formatDate(new Date())}
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onEditToday}
-            className="text-sm text-gray-900 hover:underline"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-600 hover:text-gray-900"
-            aria-label="Toggle snapshot"
-          >
-            {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Row 1 — Chips */}
-      {displayChips.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {displayChips.map((chip, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 text-xs rounded-md border border-gray-200 bg-gray-50 text-gray-700"
-            >
-              {chip?.icon} {chip?.label}
-            </span>
-          ))}
-          {remainingCount > 0 && (
-            <span className="px-2 py-1 text-xs rounded-md border border-gray-200 bg-gray-100 text-gray-600">
-              +{remainingCount}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Row 2 — Meters */}
-      <div className="mt-2 flex items-center gap-6">
-        <Meter 
-          label="Mood" 
-          value={todayEntry?.mood || 0} 
-          max={10} 
-          palette="mood" 
-          onClick={onEditToday}
-          className="flex-1" 
-        />
-        <Meter 
-          label="SleepQ" 
-          value={todayEntry?.sleep_quality || 0} 
-          max={10} 
-          palette="sleep" 
-          onClick={onEditToday}
-          className="flex-1" 
-        />
-        <Meter 
-          label="Pain" 
-          value={todayEntry?.pain || 0} 
-          max={10} 
-          palette="pain" 
-          onClick={onEditToday}
-          className="flex-1" 
-        />
-      </div>
-
-      {/* Row 3 — 14-day strip */}
-      <div className="mt-3">
-        <div className="flex items-center justify-between">
-          <div /> {/* spacer */}
-          <ToggleGroup 
-            options={['Mood', 'Pain']} 
-            defaultValue="Mood"
-            value={heatmapMode === 'mood' ? 'Mood' : 'Pain'}
-            onValueChange={(value) => setHeatmapMode(value.toLowerCase() as 'mood' | 'pain')}
+    <div className="rounded-xl border border-gray-200/60 bg-white shadow-sm p-4 md:p-5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)] gap-6">
+        
+        {/* Left Column — Metric Pills */}
+        <div className="space-y-3">
+          <MetricPill 
+            label="Mood" 
+            value={todayEntry?.mood || 0} 
+            palette="mood" 
+          />
+          <MetricPill 
+            label="SleepQ" 
+            value={todayEntry?.sleep_quality || 0} 
+            palette="sleep" 
+          />
+          <MetricPill 
+            label="Pain / Soreness" 
+            value={todayEntry?.pain || 0} 
+            palette="pain" 
           />
         </div>
-        <div className="mt-2 grid grid-cols-14 gap-1.5">
-          {fourteenDays.map((day, index) => (
-            <HeatmapCell
-              key={index}
-              value={day[heatmapMode]}
-              isToday={day.date === today}
-              mode={heatmapMode}
-              onClick={() => onEditDay(day.date)}
-            />
-          ))}
-        </div>
-      </div>
 
-      {/* Row 4 — Caption */}
-      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-        <span>Avg {heatmapMode} last 7 days: {average}</span>
-        <button className="hover:underline">View month →</button>
+        {/* Right Column — Actions & Context */}
+        <div className="flex flex-col">
+          {/* Top Row — Buttons */}
+          <div className="flex items-center justify-end gap-3">
+            <button 
+              onClick={onEditToday}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Edit
+            </button>
+            <button 
+              onClick={onEditToday}
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm"
+            >
+              My daily check-in
+            </button>
+          </div>
+
+          {/* Chips Row */}
+          {selectedChips.length > 0 && (
+            <div className="mt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedChips.slice(0, 8).map((chip, index) => (
+                  <button
+                    key={index}
+                    onClick={onEditToday}
+                    className="rounded-full px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                    aria-label={`Context: ${chip?.label}`}
+                  >
+                    {chip?.icon} {chip?.label}
+                  </button>
+                ))}
+                {selectedChips.length > 8 && (
+                  <span className="rounded-full px-3 py-1 text-sm bg-gray-200 text-gray-600">
+                    +{selectedChips.length - 8}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Averages Line */}
+          <div className="mt-2 text-xs text-gray-500">
+            Avg mood (7d): {avgMood} • Avg sleep (7d): {avgSleep} • Avg pain (7d): {avgPain}
+          </div>
+        </div>
       </div>
     </div>
   );
