@@ -246,11 +246,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           <div className="px-6 py-6 space-y-6">
                 {/* Core Metrics - 0-10 scales - Stacked */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Feel</h3>
                   <div className="space-y-6">
                     {/* Mood */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-lg font-medium text-gray-700 mb-3">
                         Mood
                       </label>
                       <div className="flex items-center space-x-4">
@@ -273,7 +272,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                     {/* Sleep Quality */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-lg font-medium text-gray-700 mb-3">
                         Sleep Quality
                       </label>
                       <div className="flex items-center space-x-4">
@@ -296,7 +295,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                     {/* Pain */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-lg font-medium text-gray-700 mb-3">
                         Pain / Soreness
                       </label>
                       <div className="flex items-center space-x-4">
@@ -320,7 +319,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                 </div>
 
             {/* Context Tags - All Chips in Scrollable Box */}
-            <div>
+            <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Elements</h3>
               <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-3">
