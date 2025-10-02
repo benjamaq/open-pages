@@ -549,6 +549,5 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
         }
       `}</style>
     </div>
-    </>
   );
 }
