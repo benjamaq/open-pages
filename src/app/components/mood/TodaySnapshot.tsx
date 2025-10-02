@@ -99,12 +99,6 @@ export default function TodaySnapshot({
 
   const displayChips = selectedChips.slice(0, 4);
 
-  // Debug logging
-  console.log('TodaySnapshot - todayEntry:', todayEntry);
-  console.log('TodaySnapshot - selectedChips:', selectedChips);
-  console.log('TodaySnapshot - monthlyData:', monthlyData);
-  console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
-
   // Calculate 7-day averages
   const calculateAverages = () => {
     const last7Days = monthlyData.slice(-7);
@@ -120,6 +114,12 @@ export default function TodaySnapshot({
   };
 
   const { avgMood, avgSleep, avgPain } = calculateAverages();
+
+  // Debug logging
+  console.log('TodaySnapshot - todayEntry:', todayEntry);
+  console.log('TodaySnapshot - selectedChips:', selectedChips);
+  console.log('TodaySnapshot - monthlyData:', monthlyData);
+  console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
 
   return (
     <div className="bg-gray-50 rounded-xl border border-gray-200/60 p-4 mb-6">
