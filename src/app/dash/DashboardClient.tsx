@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
-import EnhancedDayDrawer from '../components/mood/EnhancedDayDrawer'
+import TodaySnapshot from '../components/mood/TodaySnapshot'
+import EnhancedDayDrawerV2 from '../components/mood/EnhancedDayDrawerV2'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
@@ -2476,6 +2477,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             </div>
             
             {/* Row 1 — Today's Supplements (Full Width) */}
+            {/* Today Snapshot */}
+            <TodaySnapshot
+              todayEntry={todayMoodEntry}
+              onEditToday={() => setShowEnhancedMoodDrawer(true)}
+              onEditDay={(date) => {
+                // For now, just open today's drawer
+                setShowEnhancedMoodDrawer(true);
+              }}
+              streak={0} // TODO: Calculate actual streak
+            />
+
             <SupplementsCard
               items={todayItems.supplements}
               onToggleComplete={handleToggleComplete}
@@ -2755,7 +2767,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         />
 
         {/* Enhanced Mood Tracking Drawer */}
-        <EnhancedDayDrawer
+        <EnhancedDayDrawerV2
           isOpen={showEnhancedMoodDrawer}
           onClose={() => {
             setShowEnhancedMoodDrawer(false)
