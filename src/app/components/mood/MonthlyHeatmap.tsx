@@ -150,6 +150,14 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
         </div>
       </div>
 
+      {/* Description */}
+      <div className="mb-4 px-1">
+        <p className="text-xs text-gray-500 leading-relaxed">
+          Click on any day to see your mood, supplements, protocols, and activities from that date. 
+          Cross-reference how you felt vs. what you were taking and doing to identify patterns and optimize your health stack.
+        </p>
+      </div>
+
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1">
         {/* Day headers */}
