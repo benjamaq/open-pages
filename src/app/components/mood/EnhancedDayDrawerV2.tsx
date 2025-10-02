@@ -305,9 +305,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                           max="10"
                           value={formData.pain || 0}
                           onChange={(e) => updateField('pain', parseInt(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
-                            background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                            background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
                           }}
                         />
                         <span className="text-xs text-gray-500 min-w-[4rem] text-center">
