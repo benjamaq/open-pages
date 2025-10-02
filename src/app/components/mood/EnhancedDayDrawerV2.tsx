@@ -45,7 +45,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
   // Initialize form data
   useEffect(() => {
-    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date });
     if (initialData) {
       const newFormData = {
         localDate: date,
@@ -55,7 +54,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
         tags: initialData.tags,
         journal: initialData.journal
       };
-      console.log('🔍 EnhancedDayDrawerV2 - Setting formData from initialData:', newFormData);
       setFormData(newFormData);
       setSelectedTags(initialData.tags || []);
       setShowAdvanced(false);
@@ -69,7 +67,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
         tags: null,
         journal: null
       };
-      console.log('🔍 EnhancedDayDrawerV2 - Setting formData to empty:', newFormData);
       setFormData(newFormData);
       setSelectedTags([]);
       setShowAdvanced(false);
@@ -165,10 +162,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
-    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value);
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
-      console.log(`🔍 EnhancedDayDrawerV2 - New formData:`, newData);
       return newData;
     });
   };
@@ -284,7 +279,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           max="10"
                           value={formData.mood || 5}
                           onChange={(e) => {
-                            console.log('🔍 Mood slider changed:', e.target.value);
                             updateField('mood', parseInt(e.target.value));
                           }}
                           className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
@@ -310,7 +304,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           max="10"
                           value={formData.sleep_quality || 5}
                           onChange={(e) => {
-                            console.log('🔍 Sleep slider changed:', e.target.value);
                             updateField('sleep_quality', parseInt(e.target.value));
                           }}
                           className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
@@ -336,7 +329,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           max="10"
                           value={formData.pain || 0}
                           onChange={(e) => {
-                            console.log('🔍 Pain slider changed:', e.target.value);
                             updateField('pain', parseInt(e.target.value));
                           }}
                           className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
