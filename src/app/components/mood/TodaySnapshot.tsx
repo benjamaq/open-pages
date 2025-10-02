@@ -173,26 +173,31 @@ export default function TodaySnapshot({
             >
               My Daily Check-in
             </button>
-            <button
-              onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
-                showHeatmap 
-                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
-                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
-              }`}
-              aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-              title="Monthly heatmap"
-            >
-              <Calendar 
-                className="w-4 h-4"
-                style={{ 
-                  color: 'white',
-                  fill: 'none',
-                  stroke: 'white',
-                  strokeWidth: '2'
-                }} 
-              />
-            </button>
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setShowHeatmap(!showHeatmap)}
+                className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                  showHeatmap 
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
+                    : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
+                }`}
+                aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                title="Monthly heatmap"
+              >
+                <Calendar 
+                  className="w-4 h-4"
+                  style={{ 
+                    color: 'white',
+                    fill: 'none',
+                    stroke: 'white',
+                    strokeWidth: '2'
+                  }} 
+                />
+              </button>
+              <span className="text-xs text-gray-500 mt-1 font-medium">
+                {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
+              </span>
+            </div>
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="p-1 rounded-full hover:bg-gray-200 transition-colors"
