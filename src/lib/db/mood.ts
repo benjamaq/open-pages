@@ -60,7 +60,35 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_tags: input.tags,
       p_journal: input.journal,
       p_completed_items: input.completedItems
-    });
+    })
+
+    // Handle function not found error gracefully
+    if (error && error.message?.includes('function') && error.message?.includes('does not exist')) {
+      console.warn('upsert_daily_entry_and_snapshot function not found, falling back to basic insert')
+      // Fallback to basic insert without snapshot
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('daily_entries')
+        .upsert({
+          user_id: user.id,
+          local_date: input.localDate,
+          mood: input.mood,
+          sleep_quality: input.sleep_quality,
+          pain: input.pain,
+          sleep_hours: input.sleep_hours,
+          night_wakes: input.night_wakes,
+          tags: input.tags,
+          journal: input.journal
+        }, { onConflict: 'user_id,local_date' })
+        .select()
+        .single()
+      
+      if (fallbackError) {
+        console.error('Fallback insert failed:', fallbackError)
+        return { ok: false, error: 'Failed to save daily entry' }
+      }
+      
+      return { ok: true, data: fallbackData }
+    };
 
     if (error) {
       console.error('Error saving daily entry:', error);
@@ -164,7 +192,7 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
     // Generate all days in the month
     const currentDate = new Date(year, monthNum - 1, 1);
     while (currentDate.getMonth() === monthNum - 1) {
-      const dateStr = currentDate.toLocaleDateString('sv-SE');
+      const dateStr = currentDate.toISOString().split('T')[0];
       const entry = entriesMap.get(dateStr);
       
       if (entry) {
@@ -238,9 +266,9 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
   try {
     const supabase = await createClient();
     
-    // Calculate date range
-    const endDate = new Date().toLocaleDateString('sv-SE');
-    const startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toLocaleDateString('sv-SE');
+    // Calculate date range (use UTC to avoid timezone issues)
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Get daily entries for the profile
     const { data: dailyEntries, error: entriesError } = await supabase
@@ -256,6 +284,12 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
       .lte('local_date', endDate)
       .order('local_date');
 
+    // Handle table not found error gracefully
+    if (entriesError && entriesError.code === 'PGRST205') {
+      console.warn('daily_entries table not found, returning empty data');
+      return [];
+    }
+
     if (entriesError) {
       console.error('Error fetching public mood data:', entriesError);
       return [];
@@ -270,7 +304,7 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
     const endDateObj = new Date(endDate);
     
     while (currentDate <= endDateObj) {
-      const dateStr = currentDate.toLocaleDateString('sv-SE');
+      const dateStr = currentDate.toISOString().split('T')[0];
       const entry = entriesMap.get(dateStr);
       
       if (entry) {

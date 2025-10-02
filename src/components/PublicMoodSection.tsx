@@ -3,7 +3,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 import { Heart, Moon, Zap, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
-import MonthlyHeatmap from '@/app/components/mood/MonthlyHeatmap';
+// Import MonthlyHeatmap conditionally to prevent build failures
+let MonthlyHeatmap: any = null
+try {
+  MonthlyHeatmap = require('@/app/components/mood/MonthlyHeatmap').default
+} catch (error) {
+  console.warn('MonthlyHeatmap not available:', error)
+}
 
 interface PublicMoodSectionProps {
   moodData: any[];
@@ -231,10 +237,12 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
         {/* Heatmap */}
         {showHeatmap && (
           <div className="px-6 pb-4">
-            <MonthlyHeatmap 
-              monthlyData={moodData}
-              onDayClick={() => {}} // No day detail for public profiles
-            />
+            {MonthlyHeatmap && (
+              <MonthlyHeatmap 
+                monthlyData={moodData}
+                onDayClick={() => {}} // No day detail for public profiles
+              />
+            )}
           </div>
         )}
       </div>

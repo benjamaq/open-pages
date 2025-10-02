@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { FEATURE_FLAGS } from '@/lib/feature-flags'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
@@ -2172,7 +2173,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             
             {/* Row 1 — Today's Supplements (Full Width) */}
             {/* Today Snapshot */}
-            {TodaySnapshot && (
+            {FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot && (
               <TodaySnapshot
                 key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
                 todayEntry={todayMoodEntry}
@@ -2357,7 +2358,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         />
 
         {/* Enhanced Mood Tracking Drawer */}
-        {EnhancedDayDrawerV2 && (
+        {FEATURE_FLAGS.MOOD_TRACKING && EnhancedDayDrawerV2 && (
           <EnhancedDayDrawerV2
             isOpen={showEnhancedMoodDrawer}
             onClose={() => {

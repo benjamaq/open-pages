@@ -260,8 +260,8 @@ export default async function ProfilePage({ params, searchParams }: {
     }
   }
 
-  // Fetch mood data
-  if (publicModules.mood) {
+  // Fetch mood data (only if feature is enabled)
+  if (publicModules.mood && process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true') {
     try {
       try {
         const { getPublicMoodData } = await import('@/lib/db/mood')

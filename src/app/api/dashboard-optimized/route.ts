@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get today's date
-    const today = new Date().toLocaleDateString('sv-SE');
+    // Get today's date (use UTC to avoid timezone issues)
+    const today = new Date().toISOString().split('T')[0];
     const dayOfWeek = new Date().getDay();
 
     // Fetch all data in parallel
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         .from('daily_entries')
         .select('mood, sleep_quality, pain, local_date')
         .eq('user_id', user.id)
-        .gte('local_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString('sv-SE'))
+        .gte('local_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
         .lte('local_date', today)
         .order('local_date'),
 

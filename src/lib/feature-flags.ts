@@ -1,5 +1,5 @@
 export const FEATURE_FLAGS = {
-  MOOD_TRACKING: process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true',
+  MOOD_TRACKING: process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true' || process.env.NODE_ENV === 'development',
   MOOD_TRACKING_BETA: process.env.NEXT_PUBLIC_MOOD_TRACKING_BETA === 'true'
 } as const;
 
