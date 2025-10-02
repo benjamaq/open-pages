@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
-import { CONTEXT_TAGS, ALL_CONTEXT_TAGS } from '@/lib/constants/mood-tags';
+import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
 
 type EnhancedDayDrawerProps = {
   isOpen: boolean;
@@ -150,29 +150,25 @@ export default function EnhancedDayDrawer({ isOpen, onClose, date, initialData }
 
   // Smart tag suggestions based on current values
   const getSuggestedTags = () => {
-    const suggestions: string[] = [];
+    const suggestions: any[] = [];
     
     if (formData.sleep_quality && formData.sleep_quality <= 2) {
-      suggestions.push(...CONTEXT_TAGS.sleep);
+      suggestions.push(...getChipsByCategory('sleep'));
     }
     
     if (formData.mood && formData.mood <= 2) {
-      suggestions.push(...CONTEXT_TAGS.stress);
+      suggestions.push(...getChipsByCategory('stress'));
     }
     
     if (formData.pain && formData.pain >= 7) {
-      suggestions.push(...CONTEXT_TAGS.pain);
-    }
-    
-    if (formData.energy && formData.energy <= 2) {
-      suggestions.push(...CONTEXT_TAGS.energy);
+      suggestions.push(...getChipsByCategory('pain'));
     }
     
     return [...new Set(suggestions)]; // Remove duplicates
   };
 
   const suggestedTags = getSuggestedTags();
-  const otherTags = ALL_CONTEXT_TAGS.filter(tag => !suggestedTags.includes(tag));
+  const otherTags = CHIP_CATALOG.filter(chip => !suggestedTags.some(s => s.slug === chip.slug));
 
   if (!isOpen) return null;
 
@@ -289,17 +285,17 @@ export default function EnhancedDayDrawer({ isOpen, onClose, date, initialData }
                   <div>
                     <p className="text-xs text-gray-500 mb-2">Suggested:</p>
                     <div className="flex flex-wrap gap-2">
-                      {suggestedTags.map(tag => (
+                      {suggestedTags.slice(0, 6).map(chip => (
                         <button
-                          key={tag}
-                          onClick={() => toggleTag(tag)}
+                          key={chip.slug}
+                          onClick={() => toggleTag(chip.slug)}
                           className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                            selectedTags.includes(tag)
+                            selectedTags.includes(chip.slug)
                               ? 'bg-blue-100 border-blue-300 text-blue-800'
                               : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                           }`}
                         >
-                          {tag}
+                          {chip.icon} {chip.label}
                         </button>
                       ))}
                     </div>
@@ -310,17 +306,17 @@ export default function EnhancedDayDrawer({ isOpen, onClose, date, initialData }
                 <div>
                   <p className="text-xs text-gray-500 mb-2">All options:</p>
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    {otherTags.map(tag => (
+                    {otherTags.slice(0, 20).map(chip => (
                       <button
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
+                        key={chip.slug}
+                        onClick={() => toggleTag(chip.slug)}
                         className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                          selectedTags.includes(tag)
+                          selectedTags.includes(chip.slug)
                             ? 'bg-blue-100 border-blue-300 text-blue-800'
                             : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        {tag}
+                        {chip.icon} {chip.label}
                       </button>
                     ))}
                   </div>

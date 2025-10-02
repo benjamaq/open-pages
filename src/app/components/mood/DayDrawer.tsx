@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { saveMoodEntry, type SaveMoodEntryInput } from '@/lib/db/mood';
+import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
 
 type DayDrawerProps = {
   isOpen: boolean;
@@ -30,7 +30,7 @@ const FEELING_OPTIONS = [
 ] as const;
 
 export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDrawerProps) {
-  const [formData, setFormData] = useState<SaveMoodEntryInput>({
+  const [formData, setFormData] = useState<SaveDailyEntryInput>({
     entryDate: date,
     mood: null,
     energy: null,
@@ -99,7 +99,7 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
     setSaveMessage('');
 
     try {
-      const result = await saveMoodEntry(formData);
+      const result = await saveDailyEntry(formData);
       
       if (result.ok) {
         setSaveMessage('✅ Check-in saved!');
