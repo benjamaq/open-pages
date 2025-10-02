@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 import { Heart, Moon, Zap, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
-import MonthlyHeatmap from '../mood/MonthlyHeatmap';
+import MonthlyHeatmap from '@/app/components/mood/MonthlyHeatmap';
 
 interface PublicMoodSectionProps {
   moodData: any[];
