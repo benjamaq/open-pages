@@ -134,6 +134,12 @@ export default async function ProfilePage({ params, searchParams }: {
     journal: (profile as any).show_journal_public ?? false,
     mood: (profile as any).show_mood_public ?? true
   }
+  
+  console.log('Profile public module settings:', {
+    show_mood_public: (profile as any).show_mood_public,
+    publicModulesMood: publicModules.mood,
+    profileId: (profile as any).id
+  })
 
   // Fetch public data for each module
   let publicSupplements: any[] = []
@@ -261,11 +267,18 @@ export default async function ProfilePage({ params, searchParams }: {
   }
 
   // Fetch mood data (only if feature is enabled)
-  if (publicModules.mood && process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true') {
+  console.log('Mood tracking check:', {
+    publicModulesMood: publicModules.mood,
+    envEnabled: process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED,
+    nodeEnv: process.env.NODE_ENV
+  })
+  
+  if (publicModules.mood) {
     try {
       try {
         const { getPublicMoodData } = await import('@/lib/db/mood')
         publicMoodData = await getPublicMoodData((profile as any).id, 30)
+        console.log('Mood data loaded:', publicMoodData.length, 'entries')
       } catch (error) {
         console.warn('Mood tracking not available for public profile:', error)
         publicMoodData = []
@@ -274,6 +287,8 @@ export default async function ProfilePage({ params, searchParams }: {
       console.error('Failed to fetch mood data:', error)
       publicMoodData = []
     }
+  } else {
+    console.log('Mood tracking disabled - publicModules.mood:', publicModules.mood, 'env:', process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED)
   }
 
   // Fetch public library items

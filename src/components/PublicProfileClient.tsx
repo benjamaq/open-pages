@@ -105,7 +105,15 @@ export default function PublicProfileClient({
       )}
 
       {/* Mood Tracker section */}
-      {currentModules?.mood && publicMoodData.length > 0 && PublicMoodSection && (
+      {(() => {
+        console.log('Mood tracker render check:', {
+          currentModulesMood: currentModules?.mood,
+          publicMoodDataLength: publicMoodData.length,
+          PublicMoodSectionExists: !!PublicMoodSection,
+          publicMoodData: publicMoodData
+        })
+        return currentModules?.mood && publicMoodData.length > 0 && PublicMoodSection
+      })() && (
         <div id="mood" className="mb-8">
           <PublicMoodSection 
             key={`mood-${publicMoodData.length}-${Date.now()}`}
