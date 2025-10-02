@@ -196,7 +196,7 @@ export default function TodaySnapshot({
               title="Monthly heatmap"
             >
               <Calendar 
-                className="w-4 h-4" 
+                className={`w-4 h-4 ${showHeatmap ? 'text-white' : 'text-gray-600'}`}
                 style={{ 
                   color: showHeatmap ? 'white' : '#6B7280',
                   fill: showHeatmap ? 'white' : 'currentColor'
