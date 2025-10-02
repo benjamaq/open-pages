@@ -1427,7 +1427,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   // Load completed items from localStorage on mount
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const today = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD format in local timezone
     const storageKey = `completedItems-${userId}-${today}`
     const saved = localStorage.getItem(storageKey)
     if (saved) {
@@ -1521,7 +1521,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       const saved = localStorage.getItem(`biostackr_last_daily_checkin_${userId}`)
       if (saved) {
         const data = JSON.parse(saved)
-        const today = new Date().toISOString().split('T')[0]
+        const today = new Date().toLocaleDateString('sv-SE')
         
       }
       
@@ -1663,7 +1663,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       }
       
       // Save to localStorage
-      const today = new Date().toISOString().split('T')[0]
+      const today = new Date().toLocaleDateString('sv-SE')
       const storageKey = `completedItems-${userId}-${today}`
       localStorage.setItem(storageKey, JSON.stringify(Array.from(newSet)))
       
@@ -2343,7 +2343,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             loadTodayMoodEntry() // Refresh data after closing
             calculateStreak() // Recalculate streak
           }}
-          date={new Date().toISOString().split('T')[0]}
+          date={new Date().toLocaleDateString('sv-SE')}
           initialData={todayMoodEntry}
         />
 

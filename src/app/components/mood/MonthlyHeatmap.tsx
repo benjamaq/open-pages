@@ -16,7 +16,7 @@ interface DayData {
 }
 
 export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [currentMonth, setCurrentMonth] = useState(new Date().toLocaleDateString('sv-SE').slice(0, 7)); // YYYY-MM in local timezone
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -91,7 +91,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
       const dateStr = currentDate.toISOString().split('T')[0];
       const dayData = monthData.find(d => d.date === dateStr);
       const isCurrentMonth = currentDate.getMonth() === month;
-      const isToday = dateStr === new Date().toISOString().split('T')[0];
+      const isToday = dateStr === new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD format in local timezone
       
       days.push({
         date: dateStr,
