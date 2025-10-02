@@ -157,11 +157,18 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        // Remove tag if already selected
+        return prev.filter(t => t !== tag);
+      } else if (prev.length < 4) {
+        // Add tag if under limit
+        return [...prev, tag];
+      } else {
+        // Already at limit, don't add
+        return prev;
+      }
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -328,7 +335,12 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
             {/* Context Tags - All Chips in Scrollable Box */}
             <div className="mt-8">
-              <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-4">Today's Elements</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm sm:text-base font-medium text-gray-900">Today's Elements</h3>
+                <span className="text-xs text-gray-500">
+                  {selectedTags.length}/4 selected
+                </span>
+              </div>
               <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-3">
                   {/* All chips organized by category */}
@@ -340,19 +352,26 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                     <div key={category}>
                       <p className="text-sm text-gray-500 mb-2 capitalize">{category}:</p>
                       <div className="flex flex-wrap gap-2">
-                        {chips.map(chip => (
-                          <button
-                            key={chip.slug}
-                            onClick={() => toggleTag(chip.slug)}
-                            className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                              selectedTags.includes(chip.slug)
-                                ? 'bg-blue-100 border-blue-300 text-blue-800'
-                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                            }`}
-                          >
-                            {chip.icon} {chip.label}
-                          </button>
-                        ))}
+                        {chips.map(chip => {
+                          const isSelected = selectedTags.includes(chip.slug);
+                          const isDisabled = !isSelected && selectedTags.length >= 4;
+                          return (
+                            <button
+                              key={chip.slug}
+                              onClick={() => toggleTag(chip.slug)}
+                              disabled={isDisabled}
+                              className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                  : isDisabled
+                                  ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                  : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              {chip.icon} {chip.label}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
