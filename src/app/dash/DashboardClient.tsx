@@ -13,6 +13,10 @@ let EnhancedDayDrawerV2: any = null
 try {
   TodaySnapshot = require('../components/mood/TodaySnapshot').default
   EnhancedDayDrawerV2 = require('../components/mood/EnhancedDayDrawerV2').default
+  console.log('🔍 DashboardClient - Mood components loaded:', {
+    TodaySnapshot: !!TodaySnapshot,
+    EnhancedDayDrawerV2: !!EnhancedDayDrawerV2
+  })
 } catch (error) {
   console.warn('Mood tracking components not available:', error)
 }
@@ -2376,7 +2380,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               loadTodayMoodEntry() // Refresh data after closing
               calculateStreak() // Recalculate streak
             }}
-            date={new Date().toLocaleDateString('sv-SE')}
+            date={new Date().toISOString().split('T')[0]}
             userId={userId}
             initialData={todayMoodEntry}
           />
