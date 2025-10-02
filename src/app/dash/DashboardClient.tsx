@@ -2384,19 +2384,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               loadTodayMoodEntry() // Refresh data after closing
               calculateStreak() // Recalculate streak
             }}
-            date={new Date().toISOString().split('T')[0]}
+            date={new Date().toLocaleDateString('sv-SE')}
             userId={userId}
             initialData={todayMoodEntry}
           />
         )}
         
-        {/* Debug: Show if mood drawer should be visible */}
-        {console.log('🔍 DashboardClient - Mood drawer state:', {
-          FEATURE_FLAGS_MOOD_TRACKING: FEATURE_FLAGS.MOOD_TRACKING,
-          EnhancedDayDrawerV2_loaded: !!EnhancedDayDrawerV2,
-          showEnhancedMoodDrawer,
-          todayMoodEntry: !!todayMoodEntry
-        })}
 
         {/* Welcome Popup */}
         {showWelcomePopup && welcomeType && (

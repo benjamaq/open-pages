@@ -127,7 +127,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
     try {
       // Get completed items from localStorage
-      const today = new Date().toISOString().split('T')[0]; // More Safari-compatible
+      const today = new Date().toLocaleDateString('sv-SE'); // Match dashboard format
       const storageKey = `completedItems-${userId}-${today}`;
       
       let completedItems = [];
