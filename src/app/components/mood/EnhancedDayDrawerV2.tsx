@@ -42,10 +42,23 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
     recovery_score: null as number | null,
     sleep_score: null as number | null
   });
+  const [isUserEditing, setIsUserEditing] = useState(false);
 
-  // Initialize form data
+  // Initialize form data - only reset when not actively editing
   useEffect(() => {
-    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date });
+    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date, isUserEditing });
+    
+    // Reset editing flag when drawer opens
+    if (isOpen) {
+      setIsUserEditing(false);
+    }
+    
+    // Don't reset form data if user is actively editing
+    if (isUserEditing) {
+      console.log('🔍 EnhancedDayDrawerV2 - Skipping form reset - user is editing');
+      return;
+    }
+    
     if (initialData) {
       const newFormData = {
         localDate: date,
@@ -76,7 +89,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       setSnapshotData(null);
     }
     setSaveMessage('');
-  }, [date, initialData]);
+  }, [date, initialData, isUserEditing]);
 
   // Load snapshot data
   useEffect(() => {
@@ -168,6 +181,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
   const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
     console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value);
+    setIsUserEditing(true); // Mark that user is actively editing
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       console.log(`🔍 EnhancedDayDrawerV2 - New formData:`, newData);
@@ -176,6 +190,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const toggleTag = (tag: string) => {
+    setIsUserEditing(true); // Mark that user is actively editing
     setSelectedTags(prev => {
       if (prev.includes(tag)) {
         // Remove tag if already selected
