@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
-import { CONTEXT_TAGS, ALL_CONTEXT_TAGS } from '@/lib/constants/mood-tags';
+import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
 
 type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
@@ -25,7 +25,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
-    energy: null,
     sleep_quality: null,
     pain: null,
     sleep_hours: null,
@@ -47,7 +46,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
       setFormData({
         localDate: date,
         mood: initialData.mood,
-        energy: initialData.energy,
         sleep_quality: initialData.sleep_quality,
         pain: initialData.pain,
         sleep_hours: initialData.sleep_hours,
@@ -62,7 +60,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
       setFormData({
         localDate: date,
         mood: null,
-        energy: null,
         sleep_quality: null,
         pain: null,
         sleep_hours: null,
@@ -182,36 +179,31 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
   // Smart tag suggestions based on current values
   const getSuggestedTags = () => {
-    const suggestions: string[] = [];
+    const suggestions: any[] = [];
     
     if (formData.sleep_quality && formData.sleep_quality <= 3) {
-      suggestions.push(...CONTEXT_TAGS.sleep);
+      suggestions.push(...getChipsByCategory('sleep'));
     }
     
     if (formData.mood && formData.mood <= 3) {
-      suggestions.push(...CONTEXT_TAGS.stress);
+      suggestions.push(...getChipsByCategory('stress'));
     }
     
     if (formData.pain && formData.pain >= 7) {
-      suggestions.push(...CONTEXT_TAGS.pain);
-    }
-    
-    if (formData.energy && formData.energy <= 3) {
-      suggestions.push(...CONTEXT_TAGS.energy);
+      suggestions.push(...getChipsByCategory('pain'));
     }
     
     return [...new Set(suggestions)]; // Remove duplicates
   };
 
   const suggestedTags = getSuggestedTags();
-  const otherTags = ALL_CONTEXT_TAGS.filter(tag => !suggestedTags.includes(tag));
+  const otherTags = CHIP_CATALOG.filter(chip => !suggestedTags.some(s => s.slug === chip.slug));
 
   const hasChanges = () => {
     if (!initialData) return true;
     
     return (
       formData.mood !== initialData.mood ||
-      formData.energy !== initialData.energy ||
       formData.sleep_quality !== initialData.sleep_quality ||
       formData.pain !== initialData.pain ||
       formData.sleep_hours !== initialData.sleep_hours ||
@@ -259,7 +251,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
             {/* Core Metrics - 0-10 scales */}
             <div>
               <h3 className="text-base font-medium text-gray-900 mb-4">Today's Feel</h3>
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-3">
                 {/* Mood */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -278,28 +270,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                     <span className="text-sm text-gray-500">10</span>
                     <span className="text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
                       {formData.mood || 5}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Energy */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Energy (0-10)
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500">0</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={formData.energy || 5}
-                      onChange={(e) => updateField('energy', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
-                    />
-                    <span className="text-sm text-gray-500">10</span>
-                    <span className="text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
-                      {formData.energy || 5}
                     </span>
                   </div>
                 </div>
@@ -329,7 +299,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                 {/* Pain */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pain (0-10)
+                    Pain / Soreness (0-10)
                   </label>
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-500">0</span>
@@ -359,17 +329,17 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                   <div>
                     <p className="text-xs text-gray-500 mb-2">Suggested:</p>
                     <div className="flex flex-wrap gap-2">
-                      {suggestedTags.map(tag => (
+                      {suggestedTags.slice(0, 6).map(chip => (
                         <button
-                          key={tag}
-                          onClick={() => toggleTag(tag)}
+                          key={chip.slug}
+                          onClick={() => toggleTag(chip.slug)}
                           className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                            selectedTags.includes(tag)
+                            selectedTags.includes(chip.slug)
                               ? 'bg-blue-100 border-blue-300 text-blue-800'
                               : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                           }`}
                         >
-                          {tag}
+                          {chip.icon} {chip.label}
                         </button>
                       ))}
                     </div>
@@ -380,17 +350,17 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                 <div>
                   <p className="text-xs text-gray-500 mb-2">All options:</p>
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    {otherTags.map(tag => (
+                    {otherTags.slice(0, 20).map(chip => (
                       <button
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
+                        key={chip.slug}
+                        onClick={() => toggleTag(chip.slug)}
                         className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                          selectedTags.includes(tag)
+                          selectedTags.includes(chip.slug)
                             ? 'bg-blue-100 border-blue-300 text-blue-800'
                             : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        {tag}
+                        {chip.icon} {chip.label}
                       </button>
                     ))}
                   </div>

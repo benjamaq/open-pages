@@ -6,7 +6,6 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 interface TodaySnapshotProps {
   todayEntry?: {
     mood?: number | null;
-    energy?: number | null;
     sleep_quality?: number | null;
     pain?: number | null;
     sleep_hours?: number | null;
@@ -23,22 +22,21 @@ interface TodaySnapshotProps {
 interface MiniMeterProps {
   label: string;
   value: number;
-  variant?: 'default' | 'pain';
+  variant?: 'mood' | 'pain';
 }
 
-const MiniMeter = ({ label, value, variant = 'default' }: MiniMeterProps) => {
+const MiniMeter = ({ label, value, variant = 'mood' }: MiniMeterProps) => {
   const percentage = (value / 10) * 100;
   
   const getGradient = () => {
     if (variant === 'pain') {
-      // Pain: red ramp
+      // Pain: red ramp (0-2: #FEE2E2, 3-5: #FCA5A5, 6-8: #EF4444, 9-10: #B91C1C)
       if (value <= 2) return 'from-red-200 to-red-300';
-      if (value <= 4) return 'from-red-300 to-red-400';
-      if (value <= 6) return 'from-red-400 to-red-500';
-      if (value <= 8) return 'from-red-500 to-red-600';
+      if (value <= 5) return 'from-red-300 to-red-400';
+      if (value <= 8) return 'from-red-400 to-red-500';
       return 'from-red-600 to-red-700';
     } else {
-      // Mood/Energy/Sleep: red → amber → green
+      // Mood/Sleep: BioStackr gradient (red → amber → green)
       if (value <= 2) return 'from-red-400 to-red-500';
       if (value <= 4) return 'from-red-500 to-amber-400';
       if (value <= 6) return 'from-amber-400 to-amber-500';
@@ -48,15 +46,15 @@ const MiniMeter = ({ label, value, variant = 'default' }: MiniMeterProps) => {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[12px] font-medium text-gray-700 min-w-[40px]">{label}</span>
-      <div className="relative w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+    <div className="flex items-center gap-3">
+      <span className="text-[12px] font-medium text-gray-700 min-w-[50px]">{label}</span>
+      <div className="relative w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div 
           className={`absolute inset-0 bg-gradient-to-r ${getGradient()} rounded-full`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-[12px] font-semibold text-gray-900 min-w-[24px]">{value}/10</span>
+      <span className="text-[12px] font-semibold text-gray-900 min-w-[28px] text-right">{value}/10</span>
     </div>
   );
 };
@@ -68,25 +66,24 @@ interface MicroHeatmapProps {
     pain?: number | null;
     hasJournal?: boolean;
   }>;
-  primary: 'mood' | 'pain';
+  mode: 'mood' | 'pain';
   onDayClick: (date: string) => void;
 }
 
-const MicroHeatmap = ({ data, primary, onDayClick }: MicroHeatmapProps) => {
+const MicroHeatmap = ({ data, mode, onDayClick }: MicroHeatmapProps) => {
   const getDayColor = (value: number | null | undefined) => {
     if (value === null || value === undefined) return 'bg-gray-100';
     
     const percentage = (value / 10) * 100;
-    if (primary === 'pain') {
-      // Pain: red ramp
+    if (mode === 'pain') {
+      // Pain: red ramp (0-2: #FEE2E2, 3-5: #FCA5A5, 6-8: #EF4444, 9-10: #B91C1C)
       if (percentage <= 20) return 'bg-red-200';
-      if (percentage <= 40) return 'bg-red-300';
-      if (percentage <= 60) return 'bg-red-400';
+      if (percentage <= 50) return 'bg-red-300';
       if (percentage <= 80) return 'bg-red-500';
-      return 'bg-red-600';
+      return 'bg-red-700';
     } else {
-      // Mood: red → amber → green
-      if (percentage <= 20) return 'bg-red-400';
+      // Mood: BioStackr gradient (red → amber → green)
+      if (percentage <= 20) return 'bg-red-500';
       if (percentage <= 40) return 'bg-red-500';
       if (percentage <= 60) return 'bg-amber-400';
       if (percentage <= 80) return 'bg-amber-500';
@@ -100,8 +97,8 @@ const MicroHeatmap = ({ data, primary, onDayClick }: MicroHeatmapProps) => {
         <button
           key={index}
           onClick={() => onDayClick(day.date)}
-          className={`w-2 h-2 rounded-sm ${getDayColor(day[primary])} hover:ring-1 hover:ring-indigo-400 transition-all`}
-          title={`${new Date(day.date).toLocaleDateString()} - ${primary}: ${day[primary] || 'N/A'}`}
+          className={`w-3 h-3 rounded-md ${getDayColor(day[mode])} hover:ring-1 hover:ring-indigo-400 transition-all`}
+          title={`${new Date(day.date).toLocaleDateString()} - ${mode}: ${day[mode] || 'N/A'}`}
         />
       ))}
     </div>
@@ -137,7 +134,7 @@ export default function TodaySnapshot({
   streak = 0 
 }: TodaySnapshotProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [heatmapPrimary, setHeatmapPrimary] = useState<'mood' | 'pain'>('mood');
+  const [heatmapMode, setHeatmapMode] = useState<'mood' | 'pain'>('mood');
   const [fourteenDayData, setFourteenDayData] = useState<any[]>([]);
 
   // Load 14-day data for micro heatmap
@@ -160,8 +157,8 @@ export default function TodaySnapshot({
     const today = new Date();
     return today.toLocaleDateString('en-US', { 
       weekday: 'short', 
-      day: 'numeric', 
-      month: 'short' 
+      month: 'short', 
+      day: 'numeric' 
     });
   };
 
@@ -181,37 +178,26 @@ export default function TodaySnapshot({
     return parts.length > 0 ? parts.join(' • ') : "No actions logged yet.";
   };
 
-  const getChips = () => {
-    return todayEntry?.tags || [];
-  };
-
-  const hasData = todayEntry && (
-    todayEntry.mood !== null || 
-    todayEntry.energy !== null || 
-    todayEntry.sleep_quality !== null || 
-    todayEntry.pain !== null
-  );
-
   return (
     <section className="rounded-xl border border-gray-200/60 bg-white shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3">
-        <div className="flex items-center gap-2">
+        <div>
           <span className="text-sm font-semibold text-gray-900">Today Snapshot</span>
-          <span className="text-xs text-gray-500">
+          <span className="ml-2 text-xs text-gray-500">
             {formatDate()} • Day {streak}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button 
             onClick={onEditToday}
-            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+            className="text-sm text-indigo-600 hover:text-indigo-700"
           >
             Edit today
           </button>
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center gap-1"
+            className="text-sm text-gray-700 hover:text-gray-900 flex items-center gap-1"
           >
             {isExpanded ? 'Collapse' : 'Expand'}
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -221,21 +207,18 @@ export default function TodaySnapshot({
 
       {/* Main Content */}
       <div className="grid grid-cols-12 items-center gap-4 px-4 pb-3">
-        {/* Left: meters + snapshot/chips */}
-        <div className="col-span-12 lg:col-span-8 space-y-1.5">
-          {/* Metrics Row */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="col-span-12 lg:col-span-8">
+          {/* Three Mini Meters */}
+          <div className="flex flex-wrap items-center gap-6">
             <MiniMeter 
               label="Mood" 
-              value={todayEntry?.mood || 0} 
-            />
-            <MiniMeter 
-              label="Energy" 
-              value={todayEntry?.energy || 0} 
+              value={todayEntry?.mood || 5} 
+              variant="mood"
             />
             <MiniMeter 
               label="SleepQ" 
-              value={todayEntry?.sleep_quality || 0} 
+              value={todayEntry?.sleep_quality || 5} 
+              variant="mood"
             />
             <MiniMeter 
               label="Pain" 
@@ -243,31 +226,10 @@ export default function TodaySnapshot({
               variant="pain"
             />
           </div>
-
-          {/* Snapshot & Chips Row */}
-          <div className="flex flex-wrap items-center gap-2 text-[13px]">
-            <span className="text-gray-700">
-              <strong className="font-medium">Snapshot:</strong> {getSnapshotText()}
-            </span>
-            <span className="hidden sm:inline text-gray-300">•</span>
-            <div className="flex items-center gap-1">
-              {getChips().slice(0, 2).map((chip, index) => (
-                <span 
-                  key={index}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700"
-                >
-                  {chip}
-                </span>
-              ))}
-              {getChips().length > 2 && (
-                <button 
-                  onClick={() => setIsExpanded(true)}
-                  className="text-xs text-indigo-600 hover:text-indigo-700"
-                >
-                  +{getChips().length - 2} more
-                </button>
-              )}
-            </div>
+          
+          {/* Snapshot Line */}
+          <div className="mt-2 text-[13px] text-gray-700">
+            <span className="font-medium">Snapshot:</span> {getSnapshotText()}
           </div>
         </div>
 
@@ -275,14 +237,14 @@ export default function TodaySnapshot({
         <div className="col-span-12 lg:col-span-4">
           <MicroHeatmap 
             data={fourteenDayData} 
-            primary={heatmapPrimary} 
+            mode={heatmapMode} 
             onDayClick={onEditDay}
           />
           <div className="mt-1 flex items-center justify-between">
             <TogglePills 
               options={['Mood', 'Pain']} 
-              selected={heatmapPrimary}
-              onSelect={(option) => setHeatmapPrimary(option.toLowerCase() as 'mood' | 'pain')}
+              selected={heatmapMode === 'mood' ? 'Mood' : 'Pain'}
+              onSelect={(option) => setHeatmapMode(option.toLowerCase() as 'mood' | 'pain')}
             />
             <a 
               href="#" 
@@ -297,22 +259,22 @@ export default function TodaySnapshot({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="border-t border-gray-100 px-4 py-3 space-y-4">
-          {/* Larger Heatmap */}
+          {/* Last 14 days strip */}
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-900">14-Day Overview</h4>
+            <h4 className="text-sm font-medium text-gray-900">Last 14 days</h4>
             <div className="flex gap-1">
               {fourteenDayData.slice(-14).map((day, index) => (
                 <button
                   key={index}
                   onClick={() => onEditDay(day.date)}
-                  className={`w-6 h-6 rounded-md text-[10px] font-medium text-white ${
-                    day[heatmapPrimary] !== null && day[heatmapPrimary] !== undefined
-                      ? heatmapPrimary === 'pain'
-                        ? day[heatmapPrimary] <= 2 ? 'bg-red-200' : day[heatmapPrimary] <= 4 ? 'bg-red-300' : day[heatmapPrimary] <= 6 ? 'bg-red-400' : day[heatmapPrimary] <= 8 ? 'bg-red-500' : 'bg-red-600'
-                        : day[heatmapPrimary] <= 2 ? 'bg-red-400' : day[heatmapPrimary] <= 4 ? 'bg-red-500' : day[heatmapPrimary] <= 6 ? 'bg-amber-400' : day[heatmapPrimary] <= 8 ? 'bg-amber-500' : 'bg-green-500'
+                  className={`w-7 h-7 rounded-md text-[10px] font-medium text-white ${
+                    day[heatmapMode] !== null && day[heatmapMode] !== undefined
+                      ? heatmapMode === 'pain'
+                        ? day[heatmapMode] <= 2 ? 'bg-red-200' : day[heatmapMode] <= 5 ? 'bg-red-300' : day[heatmapMode] <= 8 ? 'bg-red-500' : 'bg-red-700'
+                        : day[heatmapMode] <= 2 ? 'bg-red-500' : day[heatmapMode] <= 4 ? 'bg-red-500' : day[heatmapMode] <= 6 ? 'bg-amber-400' : day[heatmapMode] <= 8 ? 'bg-amber-500' : 'bg-green-500'
                       : 'bg-gray-100'
                   } hover:ring-2 hover:ring-indigo-400 transition-all`}
-                  title={`${new Date(day.date).toLocaleDateString()} - ${heatmapPrimary}: ${day[heatmapPrimary] || 'N/A'}`}
+                  title={`${new Date(day.date).toLocaleDateString()} - ${heatmapMode}: ${day[heatmapMode] || 'N/A'}`}
                 >
                   {new Date(day.date).getDate()}
                 </button>
@@ -320,65 +282,11 @@ export default function TodaySnapshot({
             </div>
           </div>
 
-          {/* Full Chips List */}
-          {getChips().length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-900">Happened Today</h4>
-              <div className="flex flex-wrap gap-2">
-                {getChips().map((chip, index) => (
-                  <span 
-                    key={index}
-                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Actions Snapshot Details */}
-          {todayEntry?.actions_snapshot && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-900">Today's Actions Snapshot</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  {todayEntry.actions_snapshot.supplements_taken_count && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Supplements:</span>
-                      <span className="font-medium">{todayEntry.actions_snapshot.supplements_taken_count}</span>
-                    </div>
-                  )}
-                  {todayEntry.actions_snapshot.meds_taken_count && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Medications:</span>
-                      <span className="font-medium">{todayEntry.actions_snapshot.meds_taken_count}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  {todayEntry.actions_snapshot.movement_minutes && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Movement:</span>
-                      <span className="font-medium">{todayEntry.actions_snapshot.movement_minutes}m</span>
-                    </div>
-                  )}
-                  {todayEntry.actions_snapshot.mindfulness_minutes && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Mindfulness:</span>
-                      <span className="font-medium">{todayEntry.actions_snapshot.mindfulness_minutes}m</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Weekly Averages */}
+          {/* This Week averages */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-gray-900">This Week</h4>
             <div className="text-sm text-gray-600">
-              Average Mood: 6.2 • Average Energy: 5.8 • Average Sleep: 7.2h
+              Avg Mood 6.2 · Avg SleepQ 6.9 · Avg Pain 2.1
             </div>
           </div>
         </div>
