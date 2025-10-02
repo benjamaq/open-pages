@@ -1643,6 +1643,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
   const [showEnhancedMoodDrawer, setShowEnhancedMoodDrawer] = useState(false)
   const [todayMoodEntry, setTodayMoodEntry] = useState(null)
+  const [monthlyMoodData, setMonthlyMoodData] = useState([])
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [profileMission, setProfileMission] = useState(profile.bio || '')
