@@ -36,7 +36,7 @@ export default function PublicLibrarySection({
           {/* Header with collapse button */}
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              Library ({libraryItems.length})
+              Records & Plans ({libraryItems.length})
             </h2>
             <button
               onClick={() => setCollapsed(!collapsed)}

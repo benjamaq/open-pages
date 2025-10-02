@@ -160,7 +160,7 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4">
-          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>📝 Journal</h2>
+          <h2 className="font-bold text-xl" style={{ color: '#0F1115' }}>📝 Journal & Notes</h2>
           <div className="flex items-center space-x-2">
             {/* Add Entry Button - Only show for profile owner */}
             {isOwnProfile && (

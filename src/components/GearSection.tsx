@@ -44,7 +44,7 @@ export default function GearSection({ gear }: GearSectionProps) {
         <div className="flex items-center space-x-3">
           <span className="text-2xl">🎧</span>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Gear</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Devices & Tools</h2>
             <p className="text-sm text-gray-500">{gear.length} item{gear.length !== 1 ? 's' : ''}</p>
           </div>
         </div>

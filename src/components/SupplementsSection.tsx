@@ -40,7 +40,7 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold" style={{ color: '#0F1115' }}>
-            Supplements ({supplements.length})
+            Supplements & Meds ({supplements.length})
           </h2>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
