@@ -149,10 +149,10 @@ export default function TodaySnapshot({
           </div>
         )}
 
-        {/* This Week's Average Row */}
+        {/* Mood, Sleep, Pain Row */}
         <div className="flex justify-around items-center mb-4">
           <MetricPill 
-            label={`This Week's Average - Mood ${avgMood}`}
+            label="Mood" 
             value={todayEntry?.mood || 0} 
             max={10} 
             palette="mood" 
@@ -160,7 +160,7 @@ export default function TodaySnapshot({
             className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label={`This Week's Average - Sleep ${avgSleep}`}
+            label="Sleep Quality" 
             value={todayEntry?.sleep_quality || 0} 
             max={10} 
             palette="sleep" 
@@ -168,13 +168,20 @@ export default function TodaySnapshot({
             className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label={`This Week's Average - Pain ${avgPain}`}
+            label="Pain" 
             value={todayEntry?.pain || 0} 
             max={10} 
             palette="pain" 
             onClick={onEditToday}
             className="flex-1 max-w-[200px]"
           />
+        </div>
+
+        {/* Weekly Averages */}
+        <div className="text-center mb-3">
+          <div className="text-sm text-gray-500">
+            This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+          </div>
         </div>
 
 
