@@ -886,7 +886,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Supplements & Medications</h2>
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Supplements & Meds</h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {categoryFilteredItems.length}
           </span>
@@ -1294,8 +1294,7 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Training &<br />
-            Rehab
+            Movement
           </h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}
@@ -1403,8 +1402,7 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
       <div className="flex items-center justify-between p-6 pb-4">
         <div className="flex items-center space-x-3">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Mindfulness &<br />
-            Recovery
+            Mind & Stress
           </h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {items.length}
@@ -1477,9 +1475,9 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Mindfulness
+                  Add Mind & Stress
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathwork, journaling—keep habits simple for consistency.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathwork, CBT drills, NSDR, gratitude, mental skills.</p>
               </div>
             </div>
           )}
