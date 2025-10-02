@@ -2074,11 +2074,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <div className="flex flex-wrap items-center gap-4">
                   {/* Status Text Items */}
                   <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
+                    ✅ Today's checklist {completionPercentage}%
+                  </div>
+                  <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
                     🔥 {streak}-day streak
                       </div>
-                  <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
-                    ✅ {completionPercentage}% complete
-                  </div>
                   
                   
                   {/* Follower Count Text - Always Show */}
