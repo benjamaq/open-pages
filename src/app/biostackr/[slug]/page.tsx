@@ -122,21 +122,22 @@ export default async function ProfilePage({ params, searchParams }: {
     notFound()
   }
 
-  // Get public modules configuration
+  // Get public modules configuration from public_modules JSON field
+  const publicModulesData = (profile as any).public_modules || {}
   const publicModules = {
-    supplements: (profile as any).show_supplements_public ?? true,
-    protocols: (profile as any).show_protocols_public ?? true,
-    movement: (profile as any).show_movement_public ?? true,
-    mindfulness: (profile as any).show_mindfulness_public ?? true,
-    gear: (profile as any).show_gear_public ?? true,
-    uploads: (profile as any).show_uploads_public ?? true,
-    library: (profile as any).show_library_public ?? true,
-    journal: (profile as any).show_journal_public ?? false,
-    mood: (profile as any).show_mood_public ?? true
+    supplements: publicModulesData.supplements ?? true,
+    protocols: publicModulesData.protocols ?? true,
+    movement: publicModulesData.movement ?? true,
+    mindfulness: publicModulesData.mindfulness ?? true,
+    gear: publicModulesData.gear ?? true,
+    uploads: publicModulesData.uploads ?? true,
+    library: publicModulesData.library ?? true,
+    journal: publicModulesData.journal ?? false,
+    mood: publicModulesData.mood ?? true
   }
   
   console.log('Profile public module settings:', {
-    show_mood_public: (profile as any).show_mood_public,
+    publicModulesData,
     publicModulesMood: publicModules.mood,
     profileId: (profile as any).id
   })
