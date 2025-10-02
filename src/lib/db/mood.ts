@@ -3,33 +3,90 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
-export type MoodEntry = {
+export type DailyEntry = {
   id: string;
-  profile_id: string;
-  entry_date: string;
+  user_id: string;
+  local_date: string;
   mood?: number | null;
   energy?: number | null;
+  sleep_quality?: number | null;
   pain?: number | null;
   sleep_hours?: number | null;
-  readiness?: number | null;
-  feeling?: string | null;
-  note?: string | null;
+  night_wakes?: number | null;
+  tags?: string[] | null;
+  journal?: string | null;
+  meds?: any[] | null;
+  protocols?: any[] | null;
+  activity?: any[] | null;
+  devices?: any[] | null;
+  wearables?: any | null;
   created_at: string;
   updated_at: string;
 };
 
-export type SaveMoodEntryInput = {
-  entryDate: string; // 'YYYY-MM-DD' from client in user's tz
+export type SaveDailyEntryInput = {
+  localDate: string; // 'YYYY-MM-DD' from client in user's tz
   mood?: number | null;
   energy?: number | null;
+  sleep_quality?: number | null;
   pain?: number | null;
   sleep_hours?: number | null;
-  readiness?: number | null;
-  feeling?: string | null;
-  note?: string | null;
+  night_wakes?: number | null;
+  tags?: string[] | null;
+  journal?: string | null;
 };
 
-export async function saveMoodEntry(input: SaveMoodEntryInput): Promise<{ ok: true; data: MoodEntry } | { ok: false; error: string }> {
+// Context tag options
+export const CONTEXT_TAGS = {
+  sleep: [
+    'Slept really bad',
+    'Woke up all night', 
+    'Late to bed',
+    'Short sleep'
+  ],
+  energy: [
+    'Exhausted',
+    'Tired', 
+    'Wired',
+    'Low motivation'
+  ],
+  stress: [
+    'High stress',
+    'Sick',
+    'Infection suspected'
+  ],
+  lifestyle: [
+    'Alcohol last night',
+    'Late caffeine',
+    'Travel/jet lag'
+  ],
+  meds: [
+    'New med started',
+    'Dose change',
+    'Missed dose'
+  ],
+  pain: [
+    'Pain was really bad',
+    'Migraine',
+    'GI upset'
+  ],
+  parenting: [
+    'Baby frequent wakes',
+    'Cluster feeds'
+  ],
+  cycle: [
+    'PMS',
+    'Cycle day'
+  ],
+  other: [
+    'Big workout',
+    'Rest day'
+  ]
+} as const;
+
+export const ALL_CONTEXT_TAGS = Object.values(CONTEXT_TAGS).flat();
+
+export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: true; data: DailyEntry } | { ok: false; error: string }> {
   try {
     const supabase = await createClient();
     
@@ -39,42 +96,22 @@ export async function saveMoodEntry(input: SaveMoodEntryInput): Promise<{ ok: tr
       return { ok: false, error: 'Authentication required' };
     }
 
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return { ok: false, error: 'Profile not found' };
-    }
-
-    // Prepare data for upsert
-    const moodData = {
-      profile_id: profile.id,
-      entry_date: input.entryDate,
-      mood: input.mood,
-      energy: input.energy,
-      pain: input.pain,
-      sleep_hours: input.sleep_hours,
-      readiness: input.readiness,
-      feeling: input.feeling,
-      note: input.note,
-      updated_at: new Date().toISOString()
-    };
-
-    // Upsert mood entry
-    const { data, error } = await supabase
-      .from('mood_entries')
-      .upsert(moodData, {
-        onConflict: 'profile_id,entry_date'
-      })
-      .select()
-      .single();
+    // Call the RPC function to upsert with snapshot
+    const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
+      p_user_id: user.id,
+      p_local_date: input.localDate,
+      p_mood: input.mood,
+      p_energy: input.energy,
+      p_sleep_quality: input.sleep_quality,
+      p_pain: input.pain,
+      p_sleep_hours: input.sleep_hours,
+      p_night_wakes: input.night_wakes,
+      p_tags: input.tags,
+      p_journal: input.journal
+    });
 
     if (error) {
-      console.error('Error saving mood entry:', error);
+      console.error('Error saving daily entry:', error);
       return { ok: false, error: error.message };
     }
 
@@ -84,12 +121,12 @@ export async function saveMoodEntry(input: SaveMoodEntryInput): Promise<{ ok: tr
 
     return { ok: true, data };
   } catch (error) {
-    console.error('Error in saveMoodEntry:', error);
-    return { ok: false, error: 'Failed to save mood entry' };
+    console.error('Error in saveDailyEntry:', error);
+    return { ok: false, error: 'Failed to save daily entry' };
   }
 }
 
-export async function getTodayEntry(): Promise<MoodEntry | null> {
+export async function getTodayEntry(): Promise<DailyEntry | null> {
   try {
     const supabase = await createClient();
     
@@ -99,26 +136,15 @@ export async function getTodayEntry(): Promise<MoodEntry | null> {
       return null;
     }
 
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return null;
-    }
-
     // Get today's date in user's timezone (for now, using UTC)
     const today = new Date().toISOString().split('T')[0];
 
-    // Get today's mood entry
+    // Get today's daily entry
     const { data, error } = await supabase
-      .from('mood_entries')
+      .from('daily_entries')
       .select('*')
-      .eq('profile_id', profile.id)
-      .eq('entry_date', today)
+      .eq('user_id', user.id)
+      .eq('local_date', today)
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -136,12 +162,13 @@ export async function getTodayEntry(): Promise<MoodEntry | null> {
 export type DayDatum = {
   date: string;
   mood?: number | null;
-  pain?: number | null;
   energy?: number | null;
+  sleep_quality?: number | null;
+  pain?: number | null;
   sleep_hours?: number | null;
-  readiness?: number | null;
-  feeling?: string | null;
-  note?: string | null;
+  night_wakes?: number | null;
+  tags?: string[] | null;
+  journal?: string | null;
   hasJournal?: boolean;
   markers?: Array<{ color: string; position: 'top' | 'bottom' }>;
   sleepBadge?: 'low' | undefined;
@@ -158,46 +185,29 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
       return [];
     }
 
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return [];
-    }
-
     // Calculate month start/end
     const year = parseInt(month.split('-')[0]);
     const monthNum = parseInt(month.split('-')[1]);
     const startDate = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
     const endDate = new Date(year, monthNum, 0).toISOString().split('T')[0];
 
-    // Get mood entries for the month
-    const { data: moodEntries, error: moodError } = await supabase
-      .from('mood_entries')
+    // Get daily entries for the month
+    const { data: dailyEntries, error: entriesError } = await supabase
+      .from('daily_entries')
       .select('*')
-      .eq('profile_id', profile.id)
-      .gte('entry_date', startDate)
-      .lte('entry_date', endDate)
-      .order('entry_date');
+      .eq('user_id', user.id)
+      .gte('local_date', startDate)
+      .lte('local_date', endDate)
+      .order('local_date');
 
-    if (moodError) {
-      console.error('Error fetching month data:', moodError);
+    if (entriesError) {
+      console.error('Error fetching month data:', entriesError);
       return [];
     }
 
-    // Get active protocols for markers (simplified for now)
-    const { data: protocols } = await supabase
-      .from('protocols')
-      .select('name, created_at, updated_at')
-      .eq('profile_id', profile.id);
-
     // Transform data
     const dayData: DayDatum[] = [];
-    const entriesMap = new Map(moodEntries?.map(entry => [entry.entry_date, entry]) || []);
+    const entriesMap = new Map(dailyEntries?.map(entry => [entry.local_date, entry]) || []);
 
     // Generate all days in the month
     const currentDate = new Date(year, monthNum - 1, 1);
@@ -209,29 +219,29 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
         dayData.push({
           date: dateStr,
           mood: entry.mood,
-          pain: entry.pain,
           energy: entry.energy,
+          sleep_quality: entry.sleep_quality,
+          pain: entry.pain,
           sleep_hours: entry.sleep_hours,
-          readiness: entry.readiness,
-          feeling: entry.feeling,
-          note: entry.note,
-          hasJournal: !!entry.note,
+          night_wakes: entry.night_wakes,
+          tags: entry.tags,
+          journal: entry.journal,
+          hasJournal: !!entry.journal,
           markers: [], // TODO: Add protocol markers
           sleepBadge: entry.sleep_hours && entry.sleep_hours < 6 ? 'low' : undefined,
-          readinessBadge: entry.readiness 
-            ? (entry.readiness < 40 ? 'low' : entry.readiness > 80 ? 'high' : undefined)
-            : undefined
+          readinessBadge: undefined // Not used in new schema
         });
       } else {
         dayData.push({
           date: dateStr,
           mood: null,
-          pain: null,
           energy: null,
+          sleep_quality: null,
+          pain: null,
           sleep_hours: null,
-          readiness: null,
-          feeling: null,
-          note: null,
+          night_wakes: null,
+          tags: null,
+          journal: null,
           hasJournal: false,
           markers: [],
           sleepBadge: undefined,
