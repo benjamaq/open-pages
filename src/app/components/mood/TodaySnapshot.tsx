@@ -48,7 +48,7 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
     }
   };
 
-  const bg = value === 0 ? '#16A34A' : getPalette();
+  const bg = value === 0 ? '#15803D' : getPalette();
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
@@ -126,7 +126,7 @@ export default function TodaySnapshot({
         
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Mood Tracker</h3>
+          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <button 
             onClick={onEditToday}
             className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
