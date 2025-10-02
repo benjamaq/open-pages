@@ -328,16 +328,16 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 Dashboard
               </Link>
               <span className="text-gray-300">&gt;</span>
-              <span className="text-gray-900 font-medium">Gear Management</span>
+              <span className="text-gray-900 font-medium">Devices & Tools Management</span>
             </nav>
           </div>
 
           {/* Header Bar */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Gear Management</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Devices & Tools Management</h1>
               <p className="text-gray-600 mt-2">
-                Showcase your equipment, wearables, and tools
+                Inventory of gear (wearables, sauna, red-light, TENS, cold plunge, CGM, stim devices)
               </p>
             </div>
             
@@ -374,7 +374,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Gear</span>
+                <span>Add Device</span>
               </button>
             </div>
           </div>
@@ -460,13 +460,13 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🎧</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Gear yet</h3>
-              <p className="text-gray-600 mb-6">Add your first gear item to showcase your equipment.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Devices & Tools yet</h3>
+              <p className="text-gray-600 mb-6">Add your first device or tool to showcase your equipment.</p>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
-                + Add Gear
+                + Add Device
               </button>
             </div>
           )}
@@ -475,7 +475,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
           {filteredGear.length > 0 && (
             <div className="mt-8 text-center">
               <p className="text-gray-500 text-sm">
-                Showing {filteredGear.length} of {gear.length} gear items
+                Showing {filteredGear.length} of {gear.length} devices & tools
               </p>
             </div>
           )}

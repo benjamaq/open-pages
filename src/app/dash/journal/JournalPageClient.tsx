@@ -184,14 +184,14 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
               Dashboard
             </Link>
             <span className="text-gray-300">›</span>
-            <span className="text-gray-900 font-medium">Journal</span>
+            <span className="text-gray-900 font-medium">Journal & Notes</span>
           </nav>
         </div>
 
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold text-gray-900">📝 Journal</h1>
+            <h1 className="text-3xl font-bold text-gray-900">📝 Journal & Notes</h1>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -227,7 +227,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
         {showAddForm && (
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              {editingEntry ? 'Edit Entry' : 'New Journal Entry'}
+              {editingEntry ? 'Edit Entry' : 'New Journal & Notes Entry'}
             </h2>
             
             {error && (
@@ -253,7 +253,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Journal Entry
+                  Journal & Notes Entry
                 </label>
                 <textarea
                   rows={8}
@@ -375,7 +375,7 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Plus className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Journal Entries yet</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Journal & Notes Entries yet</h3>
             <p className="text-gray-600 mb-6">Start documenting your health journey and thoughts.</p>
             <button
               onClick={() => setShowAddForm(true)}

@@ -302,14 +302,14 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
                 Dashboard
               </Link>
               <span className="text-gray-300">&gt;</span>
-              <span className="text-gray-900 font-medium">Protocols Management</span>
+              <span className="text-gray-900 font-medium">Protocols & Recovery Management</span>
             </nav>
           </div>
 
           {/* Header Bar */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Protocols Management</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Protocols & Recovery Management</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -426,7 +426,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Protocols yet</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Protocols & Recovery yet</h3>
               <p className="text-gray-600 mb-6">Add your first protocol to build your wellness routine.</p>
               <button
                 onClick={() => setShowAddForm(true)}
@@ -441,7 +441,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
           {filteredProtocols.length > 0 && (
             <div className="mt-8 text-center">
               <p className="text-gray-500 text-sm">
-                Showing {filteredProtocols.length} of {protocols.length} protocols
+                Showing {filteredProtocols.length} of {protocols.length} protocols & recovery
               </p>
             </div>
           )}

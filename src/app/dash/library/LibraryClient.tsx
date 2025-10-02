@@ -91,7 +91,7 @@ export default function LibraryClient({ profile, initialItems }: LibraryClientPr
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center space-x-4">
-                <span className="text-gray-900 font-medium">Library</span>
+                <span className="text-gray-900 font-medium">Records & Plans</span>
               </div>
               
               <div className="flex items-center space-x-3">
@@ -117,8 +117,8 @@ export default function LibraryClient({ profile, initialItems }: LibraryClientPr
           onAdd={handleAdd}
           isOwner={true}
           showAddButton={true}
-          title="My Library"
-          emptyMessage="Your library is empty"
+          title="My Records & Plans"
+          emptyMessage="Your records & plans are empty"
         />
       </div>
 

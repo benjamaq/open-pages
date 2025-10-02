@@ -281,15 +281,15 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
               Dashboard
             </Link>
             <span className="text-gray-300">&gt;</span>
-            <span className="text-gray-900 font-medium">Mindfulness Management</span>
+            <span className="text-gray-900 font-medium">Mind & Stress Management</span>
           </nav>
         </div>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Mindfulness Management</h1>
-            <p className="text-gray-600 mt-1">Manage your mindfulness practices and meditation routines.</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Mind & Stress Management</h1>
+            <p className="text-gray-600 mt-1">Manage your meditation, breathwork, CBT drills, NSDR, gratitude, and mental skills.</p>
           </div>
           <button
             onClick={() => setShowAddForm(true)}
