@@ -49,6 +49,18 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
     }
 
     // Call the RPC function to upsert with snapshot
+    console.log('🔍 saveDailyEntry - Calling RPC with:', {
+      p_user_id: user.id,
+      p_local_date: input.localDate,
+      p_mood: input.mood,
+      p_sleep_quality: input.sleep_quality,
+      p_pain: input.pain,
+      p_night_wakes: input.night_wakes,
+      p_tags: input.tags,
+      p_journal: input.journal,
+      p_completed_items: input.completedItems
+    });
+    
     const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
       p_user_id: user.id,
       p_local_date: input.localDate,
