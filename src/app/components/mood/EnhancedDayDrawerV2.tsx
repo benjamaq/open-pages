@@ -45,27 +45,32 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
   // Initialize form data
   useEffect(() => {
+    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date });
     if (initialData) {
-      setFormData({
+      const newFormData = {
         localDate: date,
         mood: initialData.mood,
         sleep_quality: initialData.sleep_quality,
         pain: initialData.pain,
         tags: initialData.tags,
         journal: initialData.journal
-      });
+      };
+      console.log('🔍 EnhancedDayDrawerV2 - Setting formData from initialData:', newFormData);
+      setFormData(newFormData);
       setSelectedTags(initialData.tags || []);
       setShowAdvanced(false);
       setSnapshotData(initialData.actions_snapshot);
     } else {
-      setFormData({
+      const newFormData = {
         localDate: date,
         mood: null,
         sleep_quality: null,
         pain: null,
         tags: null,
         journal: null
-      });
+      };
+      console.log('🔍 EnhancedDayDrawerV2 - Setting formData to empty:', newFormData);
+      setFormData(newFormData);
       setSelectedTags([]);
       setShowAdvanced(false);
       setSnapshotData(null);
@@ -126,6 +131,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       const saved = localStorage.getItem(storageKey);
       const completedItems = saved ? JSON.parse(saved) : [];
 
+      // Debug logging
+      console.log('🔍 EnhancedDayDrawerV2 - Saving with data:', {
+        formData,
+        selectedTags,
+        completedItems,
+        includeSnapshot,
+        snapshotData
+      });
+
       const result = await saveDailyEntry({
         ...formData,
         tags: selectedTags.length > 0 ? selectedTags : null,
@@ -153,7 +167,12 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value);
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log(`🔍 EnhancedDayDrawerV2 - New formData:`, newData);
+      return newData;
+    });
   };
 
   const toggleTag = (tag: string) => {
