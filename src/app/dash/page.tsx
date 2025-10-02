@@ -107,6 +107,8 @@ export default async function DashboardPage() {
   const today = new Date()
   const dayOfWeek = today.getDay()
   
+  console.log('🔍 Dashboard - Day of week:', dayOfWeek, '(0=Sunday, 1=Monday, etc.)')
+  
   // Helper function to check if bi-weekly item should show today
   const shouldShowBiWeekly = (createdAt: string) => {
     const createdDate = new Date(createdAt)
@@ -175,6 +177,22 @@ export default async function DashboardPage() {
     uploads: uploadsResult.count || 0,
     followers: followersResult.count || 0
   }
+  
+  // Debug protocol filtering
+  console.log('🔍 Dashboard - Protocols found for today:', todayProtocols?.length || 0)
+  if (todayProtocols && todayProtocols.length > 0) {
+    console.log('🔍 Dashboard - Today protocols:', todayProtocols.map(p => ({ 
+      name: p.name, 
+      schedule_days: p.schedule_days 
+    })))
+  }
+  
+  // Also check all protocols for this profile
+  const { data: allProtocols } = await supabase
+    .from('protocols')
+    .select('name, schedule_days')
+    .eq('profile_id', profile.id)
+  console.log('🔍 Dashboard - All protocols for profile:', allProtocols)
 
   // Filter bi-weekly items based on creation date
   const filterBiWeekly = (items: any[]) => {
