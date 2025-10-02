@@ -8,6 +8,7 @@ type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
   onClose: () => void;
   date: string; // 'YYYY-MM-DD'
+  userId: string;
   initialData?: {
     mood?: number | null;
     energy?: number | null;
@@ -21,7 +22,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -119,9 +120,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
     setSaveMessage('');
 
     try {
+      // Get completed items from localStorage
+      const today = new Date().toLocaleDateString('sv-SE');
+      const storageKey = `completedItems-${userId}-${today}`;
+      const saved = localStorage.getItem(storageKey);
+      const completedItems = saved ? JSON.parse(saved) : [];
+
       const result = await saveDailyEntry({
         ...formData,
         tags: selectedTags.length > 0 ? selectedTags : null,
+        completedItems: completedItems.length > 0 ? completedItems : null,
         // Include snapshot data if enabled
         ...(includeSnapshot && snapshotData && {
           actions_snapshot: snapshotData

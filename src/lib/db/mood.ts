@@ -34,6 +34,7 @@ export type SaveDailyEntryInput = {
   night_wakes?: number | null;
   tags?: string[] | null;
   journal?: string | null;
+  completedItems?: string[] | null; // Array of completed item keys from localStorage
 };
 
 // Context tag options - moved to separate file to avoid server action issues
@@ -59,7 +60,8 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_sleep_hours: input.sleep_hours,
       p_night_wakes: input.night_wakes,
       p_tags: input.tags,
-      p_journal: input.journal
+      p_journal: input.journal,
+      p_completed_items: input.completedItems
     });
 
     if (error) {

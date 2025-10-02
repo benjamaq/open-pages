@@ -2344,6 +2344,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             calculateStreak() // Recalculate streak
           }}
           date={new Date().toLocaleDateString('sv-SE')}
+          userId={userId}
           initialData={todayMoodEntry}
         />
 

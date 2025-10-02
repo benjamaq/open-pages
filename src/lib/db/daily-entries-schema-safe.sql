@@ -79,7 +79,8 @@ create or replace function upsert_daily_entry_and_snapshot(
   p_sleep_hours numeric(3,1) default null,
   p_night_wakes smallint default null,
   p_tags text[] default '{}'::text[],
-  p_journal text default null
+  p_journal text default null,
+  p_completed_items text[] default null
 ) returns daily_entries
 language plpgsql
 as $$
@@ -91,36 +92,41 @@ declare
   v_wearables jsonb := '{}'::jsonb;
   v_row daily_entries;
 begin
-  -- Fetch active meds/supplements (replace with your actual table/logic)
-  select coalesce(jsonb_agg(jsonb_build_object(
-    'id', m.id, 'name', m.name, 'type', m.item_type,
-    'dose', m.dose, 'timing', m.timing, 'brand', m.brand
-  ) order by m.name), '[]'::jsonb)
-  into v_meds
-  from stack_items m
-  where m.profile_id = (select id from profiles where user_id = p_user_id)
-    and m.item_type = 'supplements'
-    and m.public = true; -- Use public flag instead of is_active
+  -- Fetch completed supplements/meds for the day
+  if p_completed_items is not null then
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', m.id, 'name', m.name, 'type', m.item_type,
+      'dose', m.dose, 'timing', m.timing, 'brand', m.brand
+    ) order by m.name), '[]'::jsonb)
+    into v_meds
+    from stack_items m
+    where m.profile_id = (select id from profiles where user_id = p_user_id)
+      and m.item_type = 'supplements'
+      and ('supplement-' || m.id::text) = any(p_completed_items);
+  end if;
 
-  -- Fetch active protocols (replace with your actual table/logic)
-  select coalesce(jsonb_agg(jsonb_build_object(
-    'id', pr.id, 'name', pr.name, 'frequency', pr.frequency, 'description', pr.description
-  ) order by pr.name), '[]'::jsonb)
-  into v_protocols
-  from protocols pr
-  where pr.profile_id = (select id from profiles where user_id = p_user_id)
-    and pr.public = true; -- Use public flag instead of is_active
+  -- Fetch completed protocols for the day
+  if p_completed_items is not null then
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', pr.id, 'name', pr.name, 'frequency', pr.frequency, 'description', pr.description
+    ) order by pr.name), '[]'::jsonb)
+    into v_protocols
+    from protocols pr
+    where pr.profile_id = (select id from profiles where user_id = p_user_id)
+      and ('protocol-' || pr.id::text) = any(p_completed_items);
+  end if;
 
-  -- Fetch activity for the day (replace with your actual table/logic)
-  -- For now, we'll use a simplified approach since stack_items doesn't have duration_min or local_date
-  select coalesce(jsonb_agg(jsonb_build_object(
-    'id', a.id, 'name', a.name, 'timing', a.timing, 'notes', a.notes
-  ) order by a.name), '[]'::jsonb)
-  into v_activity
-  from stack_items a
-  where a.profile_id = (select id from profiles where user_id = p_user_id)
-    and a.item_type = 'movement'
-    and a.public = true; -- Use public flag instead of local_date filtering
+  -- Fetch completed movement for the day
+  if p_completed_items is not null then
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', a.id, 'name', a.name, 'timing', a.timing, 'notes', a.notes
+    ) order by a.name), '[]'::jsonb)
+    into v_activity
+    from stack_items a
+    where a.profile_id = (select id from profiles where user_id = p_user_id)
+      and a.item_type = 'movement'
+      and ('movement-' || a.id::text) = any(p_completed_items);
+  end if;
 
   -- Devices (placeholder - replace with your actual table/logic)
   -- select coalesce(jsonb_agg(jsonb_build_object(
