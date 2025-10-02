@@ -2330,8 +2330,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         <DailyCheckinModal
           isOpen={showShareTodayModal}
           onClose={() => setShowShareTodayModal(false)}
-          onEnergyUpdate={handleEnergyUpdate}
-          currentEnergy={energyLevel}
           todayItems={todayItems}
           userId={userId}
           profileSlug={profile.slug}
