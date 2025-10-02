@@ -13,6 +13,7 @@ import PublicShopMyGearSection from './PublicShopMyGearSection'
 let PublicMoodSection: any = null
 try {
   PublicMoodSection = require('./PublicMoodSection').default
+  console.log('PublicMoodSection loaded successfully')
 } catch (error) {
   console.warn('PublicMoodSection not available:', error)
 }
@@ -112,7 +113,7 @@ export default function PublicProfileClient({
           PublicMoodSectionExists: !!PublicMoodSection,
           publicMoodData: publicMoodData
         })
-        return currentModules?.mood && publicMoodData.length > 0 && PublicMoodSection
+        return currentModules?.mood && PublicMoodSection
       })() && (
         <div id="mood" className="mb-8">
           <PublicMoodSection 
