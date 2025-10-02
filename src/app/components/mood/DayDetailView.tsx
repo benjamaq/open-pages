@@ -35,6 +35,9 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
       if (response.ok) {
         const data = await response.json();
         console.log('Day data loaded:', data);
+        console.log('Day data meds:', data.entry?.meds);
+        console.log('Day data protocols:', data.entry?.protocols);
+        console.log('Day data activity:', data.entry?.activity);
         setDayData(data.entry);
       } else {
         console.error('Failed to load day data:', response.status, response.statusText);

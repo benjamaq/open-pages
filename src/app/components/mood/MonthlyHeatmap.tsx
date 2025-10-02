@@ -153,7 +153,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
       {/* Header and Description */}
       <div className="mb-4 px-1 text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Heat map view</h3>
-        <p className="text-xs text-gray-500 leading-relaxed">
+        <p className="text-sm text-gray-500 leading-relaxed">
           Mood across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.
         </p>
       </div>
