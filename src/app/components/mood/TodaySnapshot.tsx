@@ -186,7 +186,7 @@ export default function TodaySnapshot({
         )}
 
         {/* Mood, Sleep, Pain Row */}
-        <div className="flex justify-around items-center mb-3">
+        <div className="flex justify-around items-center mb-5">
           <MetricPill 
             label="Mood" 
             value={todayEntry?.mood || 0} 
