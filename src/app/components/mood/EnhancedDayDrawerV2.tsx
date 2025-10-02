@@ -121,8 +121,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   }, [isOpen, onClose]);
 
   const handleSave = async () => {
-    console.log('🔍 EnhancedDayDrawerV2 - handleSave called!');
-    console.log('🔍 EnhancedDayDrawerV2 - Current formData:', formData);
     setIsSaving(true);
     setSaveMessage('');
 
@@ -131,43 +129,14 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       const today = new Date().toLocaleDateString('sv-SE'); // Match dashboard format
       const storageKey = `completedItems-${userId}-${today}`;
       
-      // Debug: Check ALL localStorage keys to see what's actually there
-      const allKeys = Object.keys(localStorage).filter(key => key.includes('completedItems'));
-      console.log('🔍 EnhancedDayDrawerV2 - All completedItems keys in localStorage:', allKeys);
-      
       let completedItems = [];
       try {
         const saved = localStorage.getItem(storageKey);
         completedItems = saved ? JSON.parse(saved) : [];
-        console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
-          today,
-          storageKey,
-          saved,
-          completedItems,
-          allKeys,
-          localStorageAvailable: true
-        });
       } catch (error) {
-        console.warn('🔍 EnhancedDayDrawerV2 - localStorage error:', error);
-        console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
-          today,
-          storageKey,
-          saved: null,
-          completedItems: [],
-          allKeys,
-          localStorageAvailable: false,
-          error: error.message
-        });
+        console.warn('localStorage error:', error);
       }
 
-      // Debug logging
-      console.log('🔍 EnhancedDayDrawerV2 - Saving with data:', {
-        formData,
-        selectedTags,
-        completedItems,
-        includeSnapshot,
-        snapshotData
-      });
 
       const result = await saveDailyEntry({
         ...formData,
@@ -261,15 +230,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   const otherTags = CHIP_CATALOG.filter(chip => !suggestedTags.some(s => s.slug === chip.slug));
 
   const hasChanges = () => {
-    if (!initialData) return true;
-    
-    return (
-      formData.mood !== initialData.mood ||
-      formData.sleep_quality !== initialData.sleep_quality ||
-      formData.pain !== initialData.pain ||
-      JSON.stringify(selectedTags) !== JSON.stringify(initialData.tags || []) ||
-      formData.journal !== initialData.journal
-    );
+    // Always allow saving - don't check for changes
+    return true;
   };
 
   if (!isOpen) return null;
@@ -659,12 +621,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  console.log('🔍 EnhancedDayDrawerV2 - Save button clicked!');
-                  console.log('🔍 EnhancedDayDrawerV2 - hasChanges():', hasChanges());
-                  console.log('🔍 EnhancedDayDrawerV2 - isSaving:', isSaving);
-                  handleSave();
-                }}
+                onClick={handleSave}
                 disabled={isSaving}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
