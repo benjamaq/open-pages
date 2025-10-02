@@ -37,7 +37,10 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
       const response = await fetch(`/api/mood/day?date=${date}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Day data loaded:', data);
         setDayData(data.entry);
+      } else {
+        console.error('Failed to load day data:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error loading day data:', error);
