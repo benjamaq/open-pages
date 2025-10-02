@@ -946,13 +946,6 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
         </div>
       </div>
 
-      {/* Helpful Note */}
-      <div className="text-center px-6 pb-2">
-        <div className="text-sm text-gray-400">
-          Your dashboard only shows items scheduled for today. view complete stack in public profile
-        </div>
-      </div>
-
       {!collapsed && (
         <div className="px-6 pb-6">
           {categoryFilteredItems.length > 0 ? (
@@ -2482,6 +2475,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               onRefresh={loadTodayMoodEntry}
               streak={0} // TODO: Calculate actual streak
             />
+
+            {/* Helpful Note - Above Supplements */}
+            <div className="text-center mb-4">
+              <div className="text-sm text-gray-400">
+                Your dashboard only shows items scheduled for today. view complete stack in public profile
+              </div>
+            </div>
 
             <SupplementsCard
               items={todayItems.supplements}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
+import { ChevronDown } from 'lucide-react';
 
 interface TodaySnapshotProps {
   todayEntry?: {
@@ -73,6 +74,7 @@ export default function TodaySnapshot({
   streak = 0 
 }: TodaySnapshotProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Load monthly data for averages
   useEffect(() => {
@@ -163,70 +165,84 @@ export default function TodaySnapshot({
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-2 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <button 
-            onClick={onEditToday}
-            className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
-          >
-            My Daily Check-in
-          </button>
-        </div>
-
-        {/* Chips Row */}
-        {displayChips.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-3">
-            {displayChips.map((chip, index) => (
-              <span
-                key={index}
-                className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
-              >
-                {chip?.icon} {chip?.label}
-              </span>
-            ))}
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={onEditToday}
+              className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+            >
+              My Daily Check-in
+            </button>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              aria-label={collapsed ? 'Expand' : 'Collapse'}
+            >
+              <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+            </button>
           </div>
-        )}
-
-        {/* Mood, Sleep, Pain Row */}
-        <div className="flex justify-around items-center mb-5">
-          <MetricPill 
-            label="Mood" 
-            value={todayEntry?.mood || 0} 
-            max={10} 
-            palette="mood" 
-            onClick={onEditToday}
-            className="flex-1 max-w-[200px]"
-          />
-          <MetricPill 
-            label="Sleep Quality" 
-            value={todayEntry?.sleep_quality || 0} 
-            max={10} 
-            palette="sleep" 
-            onClick={onEditToday}
-            className="flex-1 max-w-[200px]"
-          />
-          <MetricPill 
-            label="Pain" 
-            value={todayEntry?.pain || 0} 
-            max={10} 
-            palette="pain" 
-            onClick={onEditToday}
-            className="flex-1 max-w-[200px]"
-          />
         </div>
 
-        {/* Weekly Averages and Edit Button */}
-        <div className="flex items-center justify-between">
-          <div className="text-center flex-1">
-            <div className="text-sm text-gray-500">
-              This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+        {/* Collapsible Content */}
+        {!collapsed && (
+          <>
+            {/* Chips Row */}
+            {displayChips.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 mb-3">
+                {displayChips.map((chip, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                  >
+                    {chip?.icon} {chip?.label}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Mood, Sleep, Pain Row */}
+            <div className="flex justify-around items-center mb-5">
+              <MetricPill 
+                label="Mood" 
+                value={todayEntry?.mood || 0} 
+                max={10} 
+                palette="mood" 
+                onClick={onEditToday}
+                className="flex-1 max-w-[200px]"
+              />
+              <MetricPill 
+                label="Sleep Quality" 
+                value={todayEntry?.sleep_quality || 0} 
+                max={10} 
+                palette="sleep" 
+                onClick={onEditToday}
+                className="flex-1 max-w-[200px]"
+              />
+              <MetricPill 
+                label="Pain" 
+                value={todayEntry?.pain || 0} 
+                max={10} 
+                palette="pain" 
+                onClick={onEditToday}
+                className="flex-1 max-w-[200px]"
+              />
             </div>
-          </div>
-          <button 
-            onClick={onEditToday}
-            className="text-sm text-gray-500 hover:text-gray-700 ml-4"
-          >
-            Edit
-          </button>
-        </div>
+
+            {/* Weekly Averages and Edit Button */}
+            <div className="flex items-center justify-between">
+              <div className="text-center flex-1">
+                <div className="text-sm text-gray-500">
+                  This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+                </div>
+              </div>
+              <button 
+                onClick={onEditToday}
+                className="text-sm text-gray-500 hover:text-gray-700 ml-4"
+              >
+                Edit
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
