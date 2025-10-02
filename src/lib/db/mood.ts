@@ -27,7 +27,6 @@ export type DailyEntry = {
 export type SaveDailyEntryInput = {
   localDate: string; // 'YYYY-MM-DD' from client in user's tz
   mood?: number | null;
-  energy?: number | null;
   sleep_quality?: number | null;
   pain?: number | null;
   sleep_hours?: number | null;
@@ -54,7 +53,6 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_user_id: user.id,
       p_local_date: input.localDate,
       p_mood: input.mood,
-      p_energy: input.energy,
       p_sleep_quality: input.sleep_quality,
       p_pain: input.pain,
       p_sleep_hours: input.sleep_hours,
