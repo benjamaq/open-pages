@@ -263,8 +263,13 @@ export default async function ProfilePage({ params, searchParams }: {
   // Fetch mood data
   if (publicModules.mood) {
     try {
-      const { getPublicMoodData } = await import('@/lib/db/mood')
-      publicMoodData = await getPublicMoodData((profile as any).id, 30)
+      try {
+        const { getPublicMoodData } = await import('@/lib/db/mood')
+        publicMoodData = await getPublicMoodData((profile as any).id, 30)
+      } catch (error) {
+        console.warn('Mood tracking not available for public profile:', error)
+        publicMoodData = []
+      }
     } catch (error) {
       console.error('Failed to fetch mood data:', error)
       publicMoodData = []

@@ -9,7 +9,13 @@ import MindfulnessSection from './MindfulnessSection'
 import GearSection from './GearSection'
 import PublicLibrarySection from './PublicLibrarySection'
 import PublicShopMyGearSection from './PublicShopMyGearSection'
-import PublicMoodSection from './PublicMoodSection'
+// Import mood component conditionally to prevent build failures
+let PublicMoodSection: any = null
+try {
+  PublicMoodSection = require('./PublicMoodSection').default
+} catch (error) {
+  console.warn('PublicMoodSection not available:', error)
+}
 import SectionToggleSheet from './SectionToggleSheet'
 import OverviewSection from './OverviewSection'
 import { updateJournalVisibility } from '../lib/actions/profile'
@@ -99,7 +105,7 @@ export default function PublicProfileClient({
       )}
 
       {/* Mood Tracker section */}
-      {currentModules?.mood && publicMoodData.length > 0 && (
+      {currentModules?.mood && publicMoodData.length > 0 && PublicMoodSection && (
         <div id="mood" className="mb-8">
           <PublicMoodSection 
             key={`mood-${publicMoodData.length}-${Date.now()}`}

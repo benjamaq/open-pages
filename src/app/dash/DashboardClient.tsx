@@ -5,8 +5,16 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
-import TodaySnapshot from '../components/mood/TodaySnapshot'
-import EnhancedDayDrawerV2 from '../components/mood/EnhancedDayDrawerV2'
+// Import mood components conditionally to prevent build failures
+let TodaySnapshot: any = null
+let EnhancedDayDrawerV2: any = null
+
+try {
+  TodaySnapshot = require('../components/mood/TodaySnapshot').default
+  EnhancedDayDrawerV2 = require('../components/mood/EnhancedDayDrawerV2').default
+} catch (error) {
+  console.warn('Mood tracking components not available:', error)
+}
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
@@ -1428,25 +1436,32 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   // Load all dashboard data in one optimized call
   const loadDashboardData = async () => {
     try {
-      // Load mood data from optimized API
-      const moodResponse = await fetch('/api/dashboard-optimized')
-      if (moodResponse.ok) {
-        const moodData = await moodResponse.json()
-        if (moodData.success) {
-          // Set mood data
-          setTodayMoodEntry(moodData.data.todayMoodEntry)
-          setMonthlyMoodData(moodData.data.monthlyMoodData)
-          
-          // Set beta status
-          if (moodData.data.betaStatus) {
-            setIsBetaUser(moodData.data.betaStatus.isBetaUser)
-            setBetaExpiration({
-              expiresAt: moodData.data.betaStatus.expiresAt,
-              daysUntilExpiration: moodData.data.betaStatus.daysUntilExpiration,
-              isExpired: moodData.data.betaStatus.isExpired
-            })
+      // Try to load mood data from optimized API (graceful fallback if not available)
+      try {
+        const moodResponse = await fetch('/api/dashboard-optimized')
+        if (moodResponse.ok) {
+          const moodData = await moodResponse.json()
+          if (moodData.success) {
+            // Set mood data
+            setTodayMoodEntry(moodData.data.todayMoodEntry)
+            setMonthlyMoodData(moodData.data.monthlyMoodData)
+            
+            // Set beta status
+            if (moodData.data.betaStatus) {
+              setIsBetaUser(moodData.data.betaStatus.isBetaUser)
+              setBetaExpiration({
+                expiresAt: moodData.data.betaStatus.expiresAt,
+                daysUntilExpiration: moodData.data.betaStatus.daysUntilExpiration,
+                isExpired: moodData.data.betaStatus.isExpired
+              })
+            }
           }
         }
+      } catch (moodError) {
+        console.warn('Mood tracking API not available, skipping mood data:', moodError)
+        // Set empty mood data to prevent errors
+        setTodayMoodEntry(null)
+        setMonthlyMoodData([])
       }
 
       // Load follower data from dashboard API (for real-time updates)
@@ -2157,17 +2172,19 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             
             {/* Row 1 — Today's Supplements (Full Width) */}
             {/* Today Snapshot */}
-            <TodaySnapshot
-              key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
-              todayEntry={todayMoodEntry}
-              onEditToday={() => setShowEnhancedMoodDrawer(true)}
+            {TodaySnapshot && (
+              <TodaySnapshot
+                key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
+                todayEntry={todayMoodEntry}
+                onEditToday={() => setShowEnhancedMoodDrawer(true)}
               onEditDay={(date) => {
                 // For now, just open today's drawer
                 setShowEnhancedMoodDrawer(true);
               }}
               onRefresh={loadTodayMoodEntry}
               streak={streak}
-            />
+              />
+            )}
 
             {/* Helpful Note - Above Supplements */}
             <div className="text-center mb-4">
@@ -2340,17 +2357,19 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         />
 
         {/* Enhanced Mood Tracking Drawer */}
-        <EnhancedDayDrawerV2
-          isOpen={showEnhancedMoodDrawer}
-          onClose={() => {
-            setShowEnhancedMoodDrawer(false)
-            loadTodayMoodEntry() // Refresh data after closing
-            calculateStreak() // Recalculate streak
-          }}
-          date={new Date().toLocaleDateString('sv-SE')}
-          userId={userId}
-          initialData={todayMoodEntry}
-        />
+        {EnhancedDayDrawerV2 && (
+          <EnhancedDayDrawerV2
+            isOpen={showEnhancedMoodDrawer}
+            onClose={() => {
+              setShowEnhancedMoodDrawer(false)
+              loadTodayMoodEntry() // Refresh data after closing
+              calculateStreak() // Recalculate streak
+            }}
+            date={new Date().toLocaleDateString('sv-SE')}
+            userId={userId}
+            initialData={todayMoodEntry}
+          />
+        )}
 
         {/* Welcome Popup */}
         {showWelcomePopup && welcomeType && (
