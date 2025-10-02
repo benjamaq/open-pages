@@ -161,7 +161,7 @@ export default function TodaySnapshot({
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-3">
+        <div className="flex items-center justify-between px-6 pt-4 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <button 
             onClick={onEditToday}
