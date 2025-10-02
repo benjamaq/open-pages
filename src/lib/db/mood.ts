@@ -55,7 +55,6 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_mood: input.mood,
       p_sleep_quality: input.sleep_quality,
       p_pain: input.pain,
-      p_sleep_hours: input.sleep_hours,
       p_night_wakes: input.night_wakes,
       p_tags: input.tags,
       p_journal: input.journal,

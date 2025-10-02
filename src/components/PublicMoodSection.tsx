@@ -142,7 +142,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
         <div className="flex items-center justify-between px-6 pt-2 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <div className="flex items-center space-x-2">
-            <div className="flex flex-col items-center">
+            <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
                 className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
@@ -163,7 +163,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                   }} 
                 />
               </button>
-              <span className="text-xs text-gray-500 mt-1 font-medium">
+              <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
                 {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
               </span>
             </div>

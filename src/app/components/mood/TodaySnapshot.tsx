@@ -173,7 +173,7 @@ export default function TodaySnapshot({
             >
               My Daily Check-in
             </button>
-            <div className="flex flex-col items-center">
+            <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
                 className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
@@ -194,7 +194,7 @@ export default function TodaySnapshot({
                   }} 
                 />
               </button>
-              <span className="text-xs text-gray-500 mt-1 font-medium">
+              <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
                 {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
               </span>
             </div>
