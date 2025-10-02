@@ -2191,7 +2191,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               <TodaySnapshot
                 key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
                 todayEntry={todayMoodEntry}
-                onEditToday={() => setShowEnhancedMoodDrawer(true)}
+                onEditToday={() => {
+                  console.log('🔍 DashboardClient - My Daily Check-in clicked');
+                  setShowEnhancedMoodDrawer(true)
+                }}
               onEditDay={(date) => {
                 // For now, just open today's drawer
                 setShowEnhancedMoodDrawer(true);
@@ -2376,6 +2379,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <EnhancedDayDrawerV2
             isOpen={showEnhancedMoodDrawer}
             onClose={() => {
+              console.log('🔍 DashboardClient - Closing mood drawer');
               setShowEnhancedMoodDrawer(false)
               loadTodayMoodEntry() // Refresh data after closing
               calculateStreak() // Recalculate streak
@@ -2385,6 +2389,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             initialData={todayMoodEntry}
           />
         )}
+        
+        {/* Debug: Show if mood drawer should be visible */}
+        {console.log('🔍 DashboardClient - Mood drawer state:', {
+          FEATURE_FLAGS_MOOD_TRACKING: FEATURE_FLAGS.MOOD_TRACKING,
+          EnhancedDayDrawerV2_loaded: !!EnhancedDayDrawerV2,
+          showEnhancedMoodDrawer,
+          todayMoodEntry: !!todayMoodEntry
+        })}
 
         {/* Welcome Popup */}
         {showWelcomePopup && welcomeType && (
