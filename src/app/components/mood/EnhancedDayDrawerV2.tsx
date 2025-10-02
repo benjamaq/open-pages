@@ -121,22 +121,37 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   }, [isOpen, onClose]);
 
   const handleSave = async () => {
+    console.log('🔍 EnhancedDayDrawerV2 - handleSave called in Safari');
     setIsSaving(true);
     setSaveMessage('');
 
     try {
       // Get completed items from localStorage
-      const today = new Date().toLocaleDateString('sv-SE');
+      const today = new Date().toISOString().split('T')[0]; // More Safari-compatible
       const storageKey = `completedItems-${userId}-${today}`;
-      const saved = localStorage.getItem(storageKey);
-      const completedItems = saved ? JSON.parse(saved) : [];
       
-      console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
-        today,
-        storageKey,
-        saved,
-        completedItems
-      });
+      let completedItems = [];
+      try {
+        const saved = localStorage.getItem(storageKey);
+        completedItems = saved ? JSON.parse(saved) : [];
+        console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
+          today,
+          storageKey,
+          saved,
+          completedItems,
+          localStorageAvailable: true
+        });
+      } catch (error) {
+        console.warn('🔍 EnhancedDayDrawerV2 - localStorage error:', error);
+        console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
+          today,
+          storageKey,
+          saved: null,
+          completedItems: [],
+          localStorageAvailable: false,
+          error: error.message
+        });
+      }
 
       // Debug logging
       console.log('🔍 EnhancedDayDrawerV2 - Saving with data:', {
