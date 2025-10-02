@@ -130,6 +130,13 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       const storageKey = `completedItems-${userId}-${today}`;
       const saved = localStorage.getItem(storageKey);
       const completedItems = saved ? JSON.parse(saved) : [];
+      
+      console.log('🔍 EnhancedDayDrawerV2 - localStorage check:', {
+        today,
+        storageKey,
+        saved,
+        completedItems
+      });
 
       // Debug logging
       console.log('🔍 EnhancedDayDrawerV2 - Saving with data:', {
