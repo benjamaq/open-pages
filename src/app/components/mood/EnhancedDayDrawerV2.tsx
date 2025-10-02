@@ -180,7 +180,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
-    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value);
+    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value, 'isUserEditing:', isUserEditing);
     setIsUserEditing(true); // Mark that user is actively editing
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
@@ -298,7 +298,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                   <div className="space-y-6">
                     {/* Mood */}
                     <div>
-                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-base font-medium text-gray-700 mb-3">
                         Mood
                       </label>
                       <div className="flex items-center space-x-4">
@@ -307,8 +307,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           min="0"
                           max="10"
                           value={formData.mood || 5}
-                          onChange={(e) => updateField('mood', parseInt(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          onChange={(e) => {
+                            console.log('🔍 Mood slider changed:', e.target.value);
+                            updateField('mood', parseInt(e.target.value));
+                          }}
+                          className="flex-1 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
@@ -321,7 +324,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Sleep Quality */}
                     <div>
-                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-base font-medium text-gray-700 mb-3">
                         Sleep Quality
                       </label>
                       <div className="flex items-center space-x-4">
@@ -330,8 +333,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           min="0"
                           max="10"
                           value={formData.sleep_quality || 5}
-                          onChange={(e) => updateField('sleep_quality', parseInt(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          onChange={(e) => {
+                            console.log('🔍 Sleep slider changed:', e.target.value);
+                            updateField('sleep_quality', parseInt(e.target.value));
+                          }}
+                          className="flex-1 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
@@ -344,7 +350,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Pain */}
                     <div>
-                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-base font-medium text-gray-700 mb-3">
                         Pain / Soreness
                       </label>
                       <div className="flex items-center space-x-4">
@@ -353,8 +359,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                           min="0"
                           max="10"
                           value={formData.pain || 0}
-                          onChange={(e) => updateField('pain', parseInt(e.target.value))}
-                          className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
+                          onChange={(e) => {
+                            console.log('🔍 Pain slider changed:', e.target.value);
+                            updateField('pain', parseInt(e.target.value));
+                          }}
+                          className="flex-1 h-4 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
                           }}
