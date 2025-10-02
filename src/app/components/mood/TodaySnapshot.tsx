@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Calendar } from 'lucide-react';
+import MonthlyHeatmap from './MonthlyHeatmap';
+import DayDetailView from './DayDetailView';
 
 interface TodaySnapshotProps {
   todayEntry?: {
@@ -75,6 +77,9 @@ export default function TodaySnapshot({
 }: TodaySnapshotProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [collapsed, setCollapsed] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showDayDetail, setShowDayDetail] = useState(false);
 
   // Load monthly data for averages
   useEffect(() => {
@@ -151,6 +156,12 @@ export default function TodaySnapshot({
 
   const { avgMood, avgSleep, avgPain } = calculateAverages();
 
+  // Handle day click from heatmap
+  const handleDayClick = (date: string) => {
+    setSelectedDate(date);
+    setShowDayDetail(true);
+  };
+
   // Debug logging
   console.log('TodaySnapshot - todayEntry:', todayEntry);
   console.log('TodaySnapshot - selectedChips:', selectedChips);
@@ -165,12 +176,20 @@ export default function TodaySnapshot({
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-2 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <button 
               onClick={onEditToday}
-              className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
             >
               My Daily Check-in
+            </button>
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+              aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+              title="Monthly heatmap"
+            >
+              <Calendar className="w-4 h-4" style={{ color: '#A6AFBD' }} />
             </button>
             <button
               onClick={() => setCollapsed(!collapsed)}
@@ -185,6 +204,13 @@ export default function TodaySnapshot({
         {/* Collapsible Content */}
         {!collapsed && (
           <>
+            {/* Monthly Heatmap */}
+            {showHeatmap && (
+              <div className="mb-4">
+                <MonthlyHeatmap onDayClick={handleDayClick} />
+              </div>
+            )}
+
             {/* Chips Row */}
             {displayChips.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2 mb-3">
@@ -244,6 +270,18 @@ export default function TodaySnapshot({
           </>
         )}
       </div>
+
+      {/* Day Detail Modal */}
+      {selectedDate && (
+        <DayDetailView
+          date={selectedDate}
+          isOpen={showDayDetail}
+          onClose={() => {
+            setShowDayDetail(false);
+            setSelectedDate(null);
+          }}
+        />
+      )}
     </div>
   );
 }
