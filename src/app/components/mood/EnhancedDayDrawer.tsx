@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { saveDailyEntry, type SaveDailyEntryInput, CONTEXT_TAGS, ALL_CONTEXT_TAGS } from '@/lib/db/mood';
+import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
+import { CONTEXT_TAGS, ALL_CONTEXT_TAGS } from '@/lib/constants/mood-tags';
 
 type EnhancedDayDrawerProps = {
   isOpen: boolean;
