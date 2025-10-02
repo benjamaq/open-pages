@@ -32,12 +32,12 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
   
   const getPalette = () => {
     if (palette === 'pain') {
-      // Pain: red→orange→green (0=bad/red, 10=good/green) - REVERSED SCALE
-      if (value <= 2) return 'linear-gradient(to right, #EF4444, #EF4444)';
-      if (value <= 4) return 'linear-gradient(to right, #EF4444, #F59E0B)';
+      // Pain: green→orange→red (0=good/green, 10=bad/red) - REVERSED SCALE
+      if (value <= 2) return 'linear-gradient(to right, #22C55E, #22C55E)';
+      if (value <= 4) return 'linear-gradient(to right, #22C55E, #F59E0B)';
       if (value <= 6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
-      if (value <= 8) return 'linear-gradient(to right, #F59E0B, #22C55E)';
-      return 'linear-gradient(to right, #22C55E, #22C55E)';
+      if (value <= 8) return 'linear-gradient(to right, #F59E0B, #EF4444)';
+      return 'linear-gradient(to right, #EF4444, #EF4444)';
     } else {
       // Mood/Sleep: red→amber→green (0=bad/red, 10=good/green) - NORMAL SCALE
       if (value <= 2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
@@ -117,9 +117,32 @@ export default function TodaySnapshot({
     console.log('Sleep values:', sleepValues);
     console.log('Pain values:', painValues);
 
-    const avgMood = moodValues.length > 0 ? (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1) : '—';
-    const avgSleep = sleepValues.length > 0 ? (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1) : '—';
-    const avgPain = painValues.length > 0 ? (painValues.reduce((a, b) => a + b, 0) / painValues.length).toFixed(1) : '—';
+    // If no historical data, use today's values as fallback
+    let avgMood, avgSleep, avgPain;
+    
+    if (moodValues.length > 0) {
+      avgMood = (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1);
+    } else if (todayEntry?.mood !== null && todayEntry?.mood !== undefined) {
+      avgMood = todayEntry.mood.toString();
+    } else {
+      avgMood = '—';
+    }
+    
+    if (sleepValues.length > 0) {
+      avgSleep = (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1);
+    } else if (todayEntry?.sleep_quality !== null && todayEntry?.sleep_quality !== undefined) {
+      avgSleep = todayEntry.sleep_quality.toString();
+    } else {
+      avgSleep = '—';
+    }
+    
+    if (painValues.length > 0) {
+      avgPain = (painValues.reduce((a, b) => a + b, 0) / painValues.length).toFixed(1);
+    } else if (todayEntry?.pain !== null && todayEntry?.pain !== undefined) {
+      avgPain = todayEntry.pain.toString();
+    } else {
+      avgPain = '—';
+    }
 
     return { avgMood, avgSleep, avgPain };
   };
