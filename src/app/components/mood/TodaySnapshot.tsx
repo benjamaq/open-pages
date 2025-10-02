@@ -119,23 +119,9 @@ export default function TodaySnapshot({
       {/* Single Column Layout */}
       <div className="w-full">
         
-        {/* Top Row - Chips + Daily Check-in Button */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          {/* Chips */}
-          {displayChips.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {displayChips.map((chip, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
-                >
-                  {chip?.icon} {chip?.label}
-                </span>
-              ))}
-            </div>
-          )}
-          
-          {/* Daily Check-in Button */}
+          <h3 className="text-lg font-semibold text-gray-800">Mood Tracker</h3>
           <button 
             onClick={onEditToday}
             className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
@@ -143,6 +129,20 @@ export default function TodaySnapshot({
             My Daily Check-in
           </button>
         </div>
+
+        {/* Chips Row */}
+        {displayChips.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {displayChips.map((chip, index) => (
+              <span
+                key={index}
+                className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+              >
+                {chip?.icon} {chip?.label}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Mood, Sleep, Pain Row */}
         <div className="flex justify-around items-center mb-4">
