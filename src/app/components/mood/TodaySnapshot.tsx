@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 import { ChevronDown, Calendar } from 'lucide-react';
 import MonthlyHeatmap from './MonthlyHeatmap';
@@ -81,7 +81,7 @@ export default function TodaySnapshot({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayDetail, setShowDayDetail] = useState(false);
 
-  // Load monthly data for averages
+  // Load monthly data for averages (only once on mount)
   useEffect(() => {
     const loadMonthlyData = async () => {
       try {
@@ -96,7 +96,7 @@ export default function TodaySnapshot({
     };
 
     loadMonthlyData();
-  }, [todayEntry]); // Refresh when todayEntry changes
+  }, []); // Only load once on mount
 
 
   // Get selected chips (max 4)
@@ -106,23 +106,13 @@ export default function TodaySnapshot({
 
   const displayChips = selectedChips.slice(0, 4);
 
-  // Calculate 7-day averages
-  const calculateAverages = () => {
+  // Calculate 7-day averages (memoized for performance)
+  const { avgMood, avgSleep, avgPain } = useMemo(() => {
     const last7Days = monthlyData.slice(-7);
-    console.log('Last 7 days for averages:', last7Days);
-    
-    // Check what fields are actually available in the data
-    if (last7Days.length > 0) {
-      console.log('Sample day data structure:', last7Days[0]);
-    }
     
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
     const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
-
-    console.log('Mood values:', moodValues);
-    console.log('Sleep values:', sleepValues);
-    console.log('Pain values:', painValues);
 
     // If no historical data, use today's values as fallback
     let avgMood, avgSleep, avgPain;
@@ -152,9 +142,7 @@ export default function TodaySnapshot({
     }
 
     return { avgMood, avgSleep, avgPain };
-  };
-
-  const { avgMood, avgSleep, avgPain } = calculateAverages();
+  }, [monthlyData, todayEntry]);
 
   // Handle day click from heatmap
   const handleDayClick = (date: string) => {
