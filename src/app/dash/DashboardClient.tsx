@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
+import EnhancedDayDrawer from '../../components/mood/EnhancedDayDrawer'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
@@ -1787,6 +1788,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     // Load dashboard data including follower count
     loadDashboardData()
     loadDailyCheckIn()
+    loadTodayMoodEntry()
     
     // Set up periodic refresh for follower count (every 30 seconds)
     const refreshInterval = setInterval(() => {
@@ -1872,6 +1874,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       mood: prev?.mood || ''
     }))
   }
+
+  const loadTodayMoodEntry = async () => {
+    try {
+      const response = await fetch('/api/mood/today')
+      if (response.ok) {
+        const data = await response.json()
+        setTodayMoodEntry(data.entry)
+      }
+    } catch (error) {
+      console.error('Error loading today mood entry:', error)
+    }
+  }
   
   const [energyLevel, setEnergyLevel] = useState(1)
   const [activeModal, setActiveModal] = useState<string | null>(null)
@@ -1899,6 +1913,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showNewFollowerToast, setShowNewFollowerToast] = useState(false)
   const [newFollowerCount, setNewFollowerCount] = useState(0)
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
+  const [showEnhancedMoodDrawer, setShowEnhancedMoodDrawer] = useState(false)
+  const [todayMoodEntry, setTodayMoodEntry] = useState(null)
   const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
@@ -2357,17 +2373,20 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   </div>
                   
                   {/* Daily Check-in Energy & Mood Chip */}
-                  {dailyCheckIn && (
+                  {todayMoodEntry && (
                     <button
-                      onClick={() => setShowShareTodayModal(true)}
+                      onClick={() => setShowEnhancedMoodDrawer(true)}
                       className="text-sm font-medium hover:opacity-75 transition-opacity cursor-pointer"
                       style={{ color: '#5C6370' }}
                     >
                       <span className="flex items-center space-x-1">
                         <span>🔋</span>
-                        <span>Energy {dailyCheckIn.energy}/10</span>
-                        {dailyCheckIn.mood && (
-                          <span>• {dailyCheckIn.mood}</span>
+                        <span>Energy {todayMoodEntry.energy || todayMoodEntry.mood}/5</span>
+                        {todayMoodEntry.sleep_quality && (
+                          <span>• Sleep {todayMoodEntry.sleep_quality}/5</span>
+                        )}
+                        {todayMoodEntry.tags && todayMoodEntry.tags.length > 0 && (
+                          <span>• {todayMoodEntry.tags[0]}</span>
                         )}
                       </span>
                     </button>
@@ -2389,9 +2408,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
                   {/* My Daily Check-in Button */}
                         <button
-                    onClick={() => setShowShareTodayModal(true)}
-                    className="group px-2 sm:px-3 lg:px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap flex-shrink-0"
-                    title="Share today's health update"
+                    onClick={() => setShowEnhancedMoodDrawer(true)}
+                    className="group px-2 sm:px-3 lg:px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:brightness-110 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap flex-shrink-0"
+                    title="Track your mood, energy, and sleep"
                         >
                     <span className="flex items-center">
                       <span>My daily check-in</span>
@@ -2733,6 +2752,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           todayItems={todayItems}
           userId={userId}
           profileSlug={profile.slug}
+        />
+
+        {/* Enhanced Mood Tracking Drawer */}
+        <EnhancedDayDrawer
+          isOpen={showEnhancedMoodDrawer}
+          onClose={() => {
+            setShowEnhancedMoodDrawer(false)
+            loadTodayMoodEntry() // Refresh data after closing
+          }}
+          date={new Date().toISOString().split('T')[0]}
+          initialData={todayMoodEntry}
         />
 
         {/* Welcome Popup */}
