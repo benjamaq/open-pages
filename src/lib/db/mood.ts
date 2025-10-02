@@ -233,6 +233,92 @@ export type TrendsData = {
   }>;
 };
 
+// Public mood data for profiles (no auth required)
+export async function getPublicMoodData(profileId: string, days: number = 30): Promise<DayDatum[]> {
+  try {
+    const supabase = await createClient();
+    
+    // Calculate date range
+    const endDate = new Date().toLocaleDateString('sv-SE');
+    const startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toLocaleDateString('sv-SE');
+
+    // Get daily entries for the profile
+    const { data: dailyEntries, error: entriesError } = await supabase
+      .from('daily_entries')
+      .select('*')
+      .eq('user_id', (await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', profileId)
+        .single()
+      ).data?.user_id)
+      .gte('local_date', startDate)
+      .lte('local_date', endDate)
+      .order('local_date');
+
+    if (entriesError) {
+      console.error('Error fetching public mood data:', entriesError);
+      return [];
+    }
+
+    // Transform data
+    const dayData: DayDatum[] = [];
+    const entriesMap = new Map(dailyEntries?.map(entry => [entry.local_date, entry]) || []);
+
+    // Generate all days in the range
+    const currentDate = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    while (currentDate <= endDateObj) {
+      const dateStr = currentDate.toLocaleDateString('sv-SE');
+      const entry = entriesMap.get(dateStr);
+      
+      if (entry) {
+        dayData.push({
+          date: dateStr,
+          mood: entry.mood,
+          energy: entry.energy,
+          sleep_quality: entry.sleep_quality,
+          pain: entry.pain,
+          sleep_hours: entry.sleep_hours,
+          night_wakes: entry.night_wakes,
+          tags: entry.tags,
+          journal: entry.journal,
+          meds: entry.meds,
+          protocols: entry.protocols,
+          activity: entry.activity,
+          devices: entry.devices,
+          wearables: entry.wearables
+        });
+      } else {
+        dayData.push({
+          date: dateStr,
+          mood: null,
+          energy: null,
+          sleep_quality: null,
+          pain: null,
+          sleep_hours: null,
+          night_wakes: null,
+          tags: null,
+          journal: null,
+          meds: null,
+          protocols: null,
+          activity: null,
+          devices: null,
+          wearables: null
+        });
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dayData;
+  } catch (error) {
+    console.error('Error in getPublicMoodData:', error);
+    return [];
+  }
+}
+
 export async function getTrends(days: 30 | 90): Promise<TrendsData> {
   try {
     const supabase = await createClient();

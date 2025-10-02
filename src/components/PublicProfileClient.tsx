@@ -9,6 +9,7 @@ import MindfulnessSection from './MindfulnessSection'
 import GearSection from './GearSection'
 import PublicLibrarySection from './PublicLibrarySection'
 import PublicShopMyGearSection from './PublicShopMyGearSection'
+import PublicMoodSection from './PublicMoodSection'
 import SectionToggleSheet from './SectionToggleSheet'
 import OverviewSection from './OverviewSection'
 import { updateJournalVisibility } from '../lib/actions/profile'
@@ -35,6 +36,7 @@ interface PublicProfileClientProps {
   publicUploads: any[]
   publicLibraryItems: LibraryItem[]
   publicJournalEntries: JournalEntry[]
+  publicMoodData: any[]
   publicShopGearItems: any[]
   publicModules: PublicModules
   isOwnProfile: boolean
@@ -51,6 +53,7 @@ export default function PublicProfileClient({
   publicUploads,
   publicLibraryItems,
   publicJournalEntries,
+  publicMoodData,
   publicShopGearItems,
   publicModules,
   isOwnProfile,
@@ -104,6 +107,16 @@ export default function PublicProfileClient({
             onToggleVisibility={handleJournalVisibilityToggle}
             isOwnProfile={isOwnProfile && !isSharedPublicLink}
             profileId={profile.id}
+          />
+        </div>
+      )}
+
+      {/* Mood Tracker section */}
+      {currentModules?.mood && publicMoodData.length > 0 && (
+        <div id="mood" className="mb-8">
+          <PublicMoodSection 
+            moodData={publicMoodData}
+            profileName={profile.display_name || 'this user'}
           />
         </div>
       )}

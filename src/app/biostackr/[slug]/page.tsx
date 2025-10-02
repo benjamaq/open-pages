@@ -131,7 +131,8 @@ export default async function ProfilePage({ params, searchParams }: {
     gear: (profile as any).show_gear_public ?? true,
     uploads: (profile as any).show_uploads_public ?? true,
     library: (profile as any).show_library_public ?? true,
-    journal: (profile as any).show_journal_public ?? false
+    journal: (profile as any).show_journal_public ?? false,
+    mood: (profile as any).show_mood_public ?? true
   }
 
   // Fetch public data for each module
@@ -142,6 +143,7 @@ export default async function ProfilePage({ params, searchParams }: {
   let publicGear: any[] = []
   let publicUploads: any[] = []
   let publicJournalEntries: any[] = []
+  let publicMoodData: any[] = []
 
   // Fetch supplements
   if (publicModules.supplements) {
@@ -255,6 +257,17 @@ export default async function ProfilePage({ params, searchParams }: {
     } catch (error) {
       console.error('Failed to fetch journal entries:', error)
       publicJournalEntries = []
+    }
+  }
+
+  // Fetch mood data
+  if (publicModules.mood) {
+    try {
+      const { getPublicMoodData } = await import('@/lib/db/mood')
+      publicMoodData = await getPublicMoodData((profile as any).id, 30)
+    } catch (error) {
+      console.error('Failed to fetch mood data:', error)
+      publicMoodData = []
     }
   }
 
@@ -431,6 +444,7 @@ export default async function ProfilePage({ params, searchParams }: {
         publicUploads={publicUploads}
         publicLibraryItems={publicLibraryItems}
         publicJournalEntries={publicJournalEntries}
+        publicMoodData={publicMoodData}
         publicShopGearItems={[]}
         publicModules={publicModules}
         isOwnProfile={isOwnProfile}

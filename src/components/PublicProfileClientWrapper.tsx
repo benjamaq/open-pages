@@ -13,6 +13,7 @@ interface PublicProfileClientWrapperProps {
   publicUploads: any[]
   publicLibraryItems: any[]
   publicJournalEntries: any[]
+  publicMoodData: any[]
   publicShopGearItems: any[]
   publicModules: any
   isOwnProfile: boolean
