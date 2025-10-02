@@ -946,6 +946,12 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
         </div>
       </div>
 
+      {/* Helpful Note */}
+      <div className="text-center px-6 pb-2">
+        <div className="text-sm text-gray-400">
+          Your dashboard only shows items scheduled for today. view complete stack in public profile
+        </div>
+      </div>
 
       {!collapsed && (
         <div className="px-6 pb-6">
@@ -2460,9 +2466,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             <div className="flex justify-between items-center -mb-6 relative z-10">
               <div className="text-sm text-gray-400">
                 {getFormattedDate()}
-              </div>
-              <div className="text-sm text-gray-400">
-                Your dashboard only shows items scheduled for today. view complete stack in public profile
               </div>
             </div>
             
