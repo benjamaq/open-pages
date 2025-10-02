@@ -167,6 +167,8 @@ export default function TodaySnapshot({
   console.log('TodaySnapshot - selectedChips:', selectedChips);
   console.log('TodaySnapshot - monthlyData:', monthlyData);
   console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
+  console.log('TodaySnapshot - collapsed:', collapsed);
+  console.log('TodaySnapshot - showHeatmap:', showHeatmap);
 
   return (
     <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
@@ -185,11 +187,15 @@ export default function TodaySnapshot({
             </button>
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}
-              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                showHeatmap 
+                  ? 'bg-indigo-100 text-indigo-600' 
+                  : 'hover:bg-gray-200 text-gray-600'
+              }`}
               aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
               title="Monthly heatmap"
             >
-              <Calendar className="w-4 h-4" style={{ color: '#A6AFBD' }} />
+              <Calendar className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCollapsed(!collapsed)}
