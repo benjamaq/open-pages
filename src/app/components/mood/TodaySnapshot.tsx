@@ -52,14 +52,14 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
-      <div className="text-sm font-medium text-gray-700 mb-2">{label}</div>
+      <div className="text-lg font-semibold text-gray-800 mb-3">{label}</div>
       <div className="flex items-center">
         <div
-          className="h-3 w-32 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-4 w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="ml-3 text-base font-semibold text-gray-900">{value}/{max}</div>
+        <div className="ml-4 text-xl font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -115,19 +115,19 @@ export default function TodaySnapshot({
   const { avgMood, avgSleep, avgPain } = calculateAverages();
 
   return (
-    <div className="bg-gray-50 rounded-xl border border-gray-200/60 p-6 mb-6">
+    <div className="bg-gray-50 rounded-xl border border-gray-200/60 p-4 mb-6">
       {/* Single Column Layout */}
       <div className="w-full">
         
         {/* Top Row - Chips + Daily Check-in Button */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           {/* Chips */}
           {displayChips.length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {displayChips.map((chip, index) => (
                 <span
                   key={index}
-                  className="px-4 py-2 text-base bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                  className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
                 >
                   {chip?.icon} {chip?.label}
                 </span>
@@ -138,14 +138,14 @@ export default function TodaySnapshot({
           {/* Daily Check-in Button */}
           <button 
             onClick={onEditToday}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-base font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+            className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
           >
             My Daily Check-in
           </button>
         </div>
 
         {/* Mood, Sleep, Pain Row */}
-        <div className="flex justify-around items-center mb-6">
+        <div className="flex justify-around items-center mb-4">
           <MetricPill 
             label="Mood" 
             value={todayEntry?.mood || 0} 
@@ -173,7 +173,7 @@ export default function TodaySnapshot({
         </div>
 
         {/* Weekly Averages */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3">
           <div className="text-sm text-gray-500">
             This Week: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
           </div>
