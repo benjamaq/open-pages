@@ -49,14 +49,14 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      <div className="text-sm font-medium text-gray-700 min-w-[60px]">{label}</div>
-      <div className="flex items-center space-x-2">
+      <div className="text-xs sm:text-sm font-medium text-gray-700 min-w-[50px] sm:min-w-[60px]">{label}</div>
+      <div className="flex items-center space-x-1 sm:space-x-2">
         <div
-          className="h-4 w-32 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 sm:h-4 w-20 sm:w-24 md:w-32 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="text-lg font-bold text-gray-900">{value}/{max}</div>
+        <div className="text-sm sm:text-base font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -192,14 +192,14 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             </div>
 
             {/* Mood, Sleep, Pain Row - Horizontal Layout */}
-            <div className="flex justify-around items-center mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-2 mb-5">
               {todayEntry.mood !== null && (
                 <MetricPill
                   label="Mood"
                   value={todayEntry.mood}
                   max={10}
                   palette="mood"
-                  className="flex-1 max-w-[200px]"
+                  className="w-full"
                 />
               )}
               {todayEntry.sleep_quality !== null && (
@@ -208,7 +208,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                   value={todayEntry.sleep_quality}
                   max={10}
                   palette="sleep"
-                  className="flex-1 max-w-[200px]"
+                  className="w-full"
                 />
               )}
               {todayEntry.pain !== null && (
@@ -217,7 +217,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                   value={todayEntry.pain}
                   max={10}
                   palette="pain"
-                  className="flex-1 max-w-[200px]"
+                  className="w-full"
                 />
               )}
             </div>

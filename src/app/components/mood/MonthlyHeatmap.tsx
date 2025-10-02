@@ -159,7 +159,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Day headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="text-xs text-gray-500 text-center py-1 font-medium">
@@ -173,7 +173,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
             key={index}
             onClick={() => onDayClick(day.date)}
             className={`
-              w-8 h-8 rounded text-xs font-medium transition-all hover:scale-110
+              w-6 h-6 sm:w-8 sm:h-8 rounded text-xs font-medium transition-all hover:scale-110
               ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'}
               ${day.isToday ? 'ring-2 ring-blue-500' : ''}
             `}

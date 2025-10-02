@@ -226,15 +226,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       
       {/* Drawer */}
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Daily Check-in
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {formatDate(date)}
                 </p>
               </div>
@@ -257,7 +257,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                   <div className="space-y-6">
                     {/* Mood */}
                     <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Mood
                       </label>
                       <div className="flex items-center space-x-4">
@@ -280,7 +280,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Sleep Quality */}
                     <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Sleep Quality
                       </label>
                       <div className="flex items-center space-x-4">
@@ -303,7 +303,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Pain */}
                     <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Pain / Soreness
                       </label>
                       <div className="flex items-center space-x-4">
@@ -328,7 +328,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
             {/* Context Tags - All Chips in Scrollable Box */}
             <div className="mt-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Elements</h3>
+              <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-4">Today's Elements</h3>
               <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-3">
                   {/* All chips organized by category */}
@@ -416,7 +416,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
             {/* Notes */}
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+              <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-4">Notes</h3>
               <textarea
                 value={formData.journal || ''}
                 onChange={(e) => updateField('journal', e.target.value || null)}
@@ -442,7 +442,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
               <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
                 <summary className="cursor-pointer text-base text-gray-700 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Daily Log Summary</h3>
+                    <h3 className="text-sm sm:text-base font-medium text-gray-900">Daily Log Summary</h3>
                     <p className="text-sm text-gray-500 mt-1">
                       Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
                     </p>

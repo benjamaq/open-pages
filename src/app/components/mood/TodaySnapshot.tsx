@@ -55,14 +55,14 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
-      <div className="text-lg font-semibold text-gray-800 mb-3">{label}</div>
+      <div className="text-sm sm:text-base font-semibold text-gray-800 mb-2">{label}</div>
       <div className="flex items-center">
         <div
-          className="h-4 w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 sm:h-4 w-24 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="ml-4 text-xl font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-2 sm:ml-4 text-sm sm:text-lg font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -228,14 +228,14 @@ export default function TodaySnapshot({
             )}
 
             {/* Mood, Sleep, Pain Row */}
-            <div className="flex justify-around items-center mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-2 mb-5">
               <MetricPill 
                 label="Mood" 
                 value={todayEntry?.mood || 0} 
                 max={10} 
                 palette="mood" 
                 onClick={onEditToday}
-                className="flex-1 max-w-[200px]"
+                className="w-full"
               />
               <MetricPill 
                 label="Sleep Quality" 
@@ -243,7 +243,7 @@ export default function TodaySnapshot({
                 max={10} 
                 palette="sleep" 
                 onClick={onEditToday}
-                className="flex-1 max-w-[200px]"
+                className="w-full"
               />
               <MetricPill 
                 label="Pain" 
@@ -251,7 +251,7 @@ export default function TodaySnapshot({
                 max={10} 
                 palette="pain" 
                 onClick={onEditToday}
-                className="flex-1 max-w-[200px]"
+                className="w-full"
               />
             </div>
 
