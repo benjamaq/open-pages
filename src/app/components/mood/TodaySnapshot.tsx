@@ -102,6 +102,8 @@ export default function TodaySnapshot({
   // Debug logging
   console.log('TodaySnapshot - todayEntry:', todayEntry);
   console.log('TodaySnapshot - selectedChips:', selectedChips);
+  console.log('TodaySnapshot - monthlyData:', monthlyData);
+  console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
 
   // Calculate 7-day averages
   const calculateAverages = () => {
@@ -125,7 +127,7 @@ export default function TodaySnapshot({
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between p-6 pb-4">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <button 
             onClick={onEditToday}
