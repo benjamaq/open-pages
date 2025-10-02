@@ -121,7 +121,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   }, [isOpen, onClose]);
 
   const handleSave = async () => {
-    console.log('🔍 EnhancedDayDrawerV2 - handleSave called in Safari');
+    console.log('🔍 EnhancedDayDrawerV2 - handleSave called!');
+    console.log('🔍 EnhancedDayDrawerV2 - Current formData:', formData);
     setIsSaving(true);
     setSaveMessage('');
 
@@ -129,6 +130,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       // Get completed items from localStorage
       const today = new Date().toLocaleDateString('sv-SE'); // Match dashboard format
       const storageKey = `completedItems-${userId}-${today}`;
+      
+      // Debug: Check ALL localStorage keys to see what's actually there
+      const allKeys = Object.keys(localStorage).filter(key => key.includes('completedItems'));
+      console.log('🔍 EnhancedDayDrawerV2 - All completedItems keys in localStorage:', allKeys);
       
       let completedItems = [];
       try {
@@ -139,6 +144,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
           storageKey,
           saved,
           completedItems,
+          allKeys,
           localStorageAvailable: true
         });
       } catch (error) {
@@ -148,6 +154,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
           storageKey,
           saved: null,
           completedItems: [],
+          allKeys,
           localStorageAvailable: false,
           error: error.message
         });
