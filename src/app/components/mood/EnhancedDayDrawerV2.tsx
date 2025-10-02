@@ -246,11 +246,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           <div className="px-6 py-6 space-y-6">
             {/* Core Metrics - 0-10 scales - Stacked */}
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-4">Today's Feel</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Feel</h3>
               <div className="space-y-6">
                 {/* Mood */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-base font-medium text-gray-700 mb-3">
                     Mood (0-10)
                   </label>
                   <div className="flex items-center space-x-4">
@@ -275,7 +275,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                 {/* Sleep Quality */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-base font-medium text-gray-700 mb-3">
                     Sleep Quality (0-10)
                   </label>
                   <div className="flex items-center space-x-4">
@@ -300,7 +300,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                 {/* Pain */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-base font-medium text-gray-700 mb-3">
                     Pain / Soreness (0-10)
                   </label>
                   <div className="flex items-center space-x-4">
@@ -327,7 +327,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
             {/* Context Tags - All Chips in Scrollable Box */}
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-4">Happened Today</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Happened Today</h3>
               <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-3">
                   {/* All chips organized by category */}
@@ -337,13 +337,13 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                     return acc;
                   }, {} as Record<string, any[]>)).map(([category, chips]) => (
                     <div key={category}>
-                      <p className="text-xs text-gray-500 mb-2 capitalize">{category}:</p>
+                      <p className="text-sm text-gray-500 mb-2 capitalize">{category}:</p>
                       <div className="flex flex-wrap gap-2">
                         {chips.map(chip => (
                           <button
                             key={chip.slug}
                             onClick={() => toggleTag(chip.slug)}
-                            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                            className={`px-3 py-1 text-sm rounded-full border transition-colors ${
                               selectedTags.includes(chip.slug)
                                 ? 'bg-blue-100 border-blue-300 text-blue-800'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -362,7 +362,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
             {/* Wearables */}
             <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
               <summary 
-                className="cursor-pointer text-sm text-gray-700 flex items-center justify-between"
+                className="cursor-pointer text-base text-gray-700 flex items-center justify-between"
                 onClick={() => setShowAdvanced(!showAdvanced)}
               >
                 <span>Wearables</span>
@@ -380,7 +380,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                 <div className="mt-3 space-y-4">
                   {/* Recovery Score */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base font-medium text-gray-700 mb-2">
                       Recovery Score (0-100)
                     </label>
                     <input
@@ -396,7 +396,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
                   {/* Sleep Score */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base font-medium text-gray-700 mb-2">
                       Sleep Score (0-100)
                     </label>
                     <input
@@ -413,6 +413,18 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
               )}
             </details>
 
+            {/* Notes */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+              <textarea
+                value={formData.journal || ''}
+                onChange={(e) => updateField('journal', e.target.value || null)}
+                placeholder="Any additional notes about your day?"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base"
+              />
+            </div>
+
             {/* Save Message */}
             {saveMessage && (
               <div className={`p-3 rounded-lg text-sm ${
@@ -427,10 +439,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
             {/* Daily Log Summary - Collapsible */}
             <div>
               <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-                <summary className="cursor-pointer text-sm text-gray-700 flex items-center justify-between">
+                <summary className="cursor-pointer text-base text-gray-700 flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-medium text-gray-900">Daily Log Summary</h3>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <h3 className="text-lg font-medium text-gray-900">Daily Log Summary</h3>
+                    <p className="text-sm text-gray-500 mt-1">
                       Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
                     </p>
                   </div>
@@ -450,9 +462,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       {/* Supplements */}
                       {snapshotData.supplements_taken_count > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Supplements ({snapshotData.supplements_taken_count})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            {snapshotData.supplements_taken_count} supplements taken today
+                          <h4 className="text-base font-medium text-gray-700 mb-2">Supplements ({snapshotData.supplements_taken_count})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                            {snapshotData.supplements && snapshotData.supplements.length > 0 ? (
+                              <ul className="space-y-1">
+                                {snapshotData.supplements.map((supp: any, index: number) => (
+                                  <li key={index} className="flex justify-between">
+                                    <span>{supp.name}</span>
+                                    <span className="text-gray-500">{supp.dose} {supp.unit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              `${snapshotData.supplements_taken_count} supplements taken today`
+                            )}
                           </div>
                         </div>
                       )}
@@ -460,9 +483,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       {/* Medications */}
                       {snapshotData.meds_taken_count > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Medications ({snapshotData.meds_taken_count})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            {snapshotData.meds_taken_count} medications taken today
+                          <h4 className="text-base font-medium text-gray-700 mb-2">Medications ({snapshotData.meds_taken_count})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                            {snapshotData.meds && snapshotData.meds.length > 0 ? (
+                              <ul className="space-y-1">
+                                {snapshotData.meds.map((med: any, index: number) => (
+                                  <li key={index} className="flex justify-between">
+                                    <span>{med.name}</span>
+                                    <span className="text-gray-500">{med.dose} {med.unit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              `${snapshotData.meds_taken_count} medications taken today`
+                            )}
                           </div>
                         </div>
                       )}
@@ -470,9 +504,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       {/* Movement */}
                       {snapshotData.movement_minutes > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Movement</h4>
-                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            {snapshotData.movement_minutes} minutes of movement
+                          <h4 className="text-base font-medium text-gray-700 mb-2">Movement</h4>
+                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                            {snapshotData.activity && snapshotData.activity.length > 0 ? (
+                              <ul className="space-y-1">
+                                {snapshotData.activity.map((act: any, index: number) => (
+                                  <li key={index} className="flex justify-between">
+                                    <span>{act.name}</span>
+                                    <span className="text-gray-500">{act.duration_min} min</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              `${snapshotData.movement_minutes} minutes of movement`
+                            )}
                           </div>
                         </div>
                       )}
@@ -480,9 +525,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       {/* Mindfulness */}
                       {snapshotData.mindfulness_minutes > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Mindfulness</h4>
-                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            {snapshotData.mindfulness_minutes} minutes of mindfulness
+                          <h4 className="text-base font-medium text-gray-700 mb-2">Mindfulness</h4>
+                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                            {snapshotData.mindfulness && snapshotData.mindfulness.length > 0 ? (
+                              <ul className="space-y-1">
+                                {snapshotData.mindfulness.map((mind: any, index: number) => (
+                                  <li key={index} className="flex justify-between">
+                                    <span>{mind.name}</span>
+                                    <span className="text-gray-500">{mind.duration_min} min</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              `${snapshotData.mindfulness_minutes} minutes of mindfulness`
+                            )}
                           </div>
                         </div>
                       )}
@@ -490,9 +546,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       {/* Protocols */}
                       {snapshotData.protocols_active > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Active Protocols ({snapshotData.protocols_active})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
-                            {snapshotData.protocols_active} protocols active today
+                          <h4 className="text-base font-medium text-gray-700 mb-2">Active Protocols ({snapshotData.protocols_active})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                            {snapshotData.protocols && snapshotData.protocols.length > 0 ? (
+                              <ul className="space-y-1">
+                                {snapshotData.protocols.map((protocol: any, index: number) => (
+                                  <li key={index} className="flex justify-between">
+                                    <span>{protocol.name}</span>
+                                    <span className="text-gray-500">{protocol.frequency}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              `${snapshotData.protocols_active} protocols active today`
+                            )}
                           </div>
                         </div>
                       )}
@@ -532,9 +599,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #10b981;
+          background: #ffffff;
           cursor: pointer;
-          border: 2px solid #ffffff;
+          border: 2px solid #374151;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
@@ -542,9 +609,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #10b981;
+          background: #ffffff;
           cursor: pointer;
-          border: 2px solid #ffffff;
+          border: 2px solid #374151;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
       `}</style>
