@@ -16,14 +16,11 @@ interface DayData {
   pain: number | null;
   tags: string[] | null;
   journal: string | null;
-  actions_snapshot: {
-    supplements: any[];
-    meds: any[];
-    protocols: any[];
-    activity: any[];
-    devices: any[];
-    wearables: any;
-  } | null;
+  meds: any[] | null;
+  protocols: any[] | null;
+  activity: any[] | null;
+  devices: any[] | null;
+  wearables: any | null;
 }
 
 export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewProps) {
@@ -201,19 +198,19 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
               )}
 
               {/* Daily Snapshot */}
-              {dayData.actions_snapshot && (
+              {(dayData.meds?.length > 0 || dayData.protocols?.length > 0 || dayData.activity?.length > 0 || dayData.devices?.length > 0 || (dayData.wearables && Object.keys(dayData.wearables).length > 0)) && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Daily Snapshot</h3>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    {/* Supplements */}
-                    {dayData.actions_snapshot.supplements?.length > 0 && (
+                    {/* Supplements & Medications */}
+                    {dayData.meds?.length > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Supplements & Medications</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.actions_snapshot.supplements.map((item: any, index: number) => (
+                          {dayData.meds.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
-                              <span className="text-gray-500">{item.dose} {item.unit}</span>
+                              <span className="text-gray-500">{item.dose} {item.timing}</span>
                             </div>
                           ))}
                         </div>
@@ -221,14 +218,14 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Protocols */}
-                    {dayData.actions_snapshot.protocols?.length > 0 && (
+                    {dayData.protocols?.length > 0 && (
                       <div>
-                        <h4 className="text-xs font-medium text-gray-600 mb-1">Protocols</h4>
+                        <h4 className="text-xs font-medium text-gray-600 mb-1">Protocols & Recovery</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.actions_snapshot.protocols.map((item: any, index: number) => (
+                          {dayData.protocols.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
-                              <span className="text-gray-500">{item.frequency}</span>
+                              <span className="text-gray-500">{item.duration}</span>
                             </div>
                           ))}
                         </div>
@@ -236,14 +233,29 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Activity */}
-                    {dayData.actions_snapshot.activity?.length > 0 && (
+                    {dayData.activity?.length > 0 && (
                       <div>
-                        <h4 className="text-xs font-medium text-gray-600 mb-1">Movement</h4>
+                        <h4 className="text-xs font-medium text-gray-600 mb-1">Training & Rehab</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.actions_snapshot.activity.map((item: any, index: number) => (
+                          {dayData.activity.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
-                              <span className="text-gray-500">{item.duration_min}min</span>
+                              <span className="text-gray-500">{item.duration}min</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Devices */}
+                    {dayData.devices?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-600 mb-1">Devices & Tools</h4>
+                        <div className="text-sm text-gray-700">
+                          {dayData.devices.map((item: any, index: number) => (
+                            <div key={index} className="flex justify-between">
+                              <span>{item.name}</span>
+                              <span className="text-gray-500">{item.duration}min</span>
                             </div>
                           ))}
                         </div>
@@ -251,11 +263,11 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Wearables */}
-                    {dayData.actions_snapshot.wearables && Object.keys(dayData.actions_snapshot.wearables).length > 0 && (
+                    {dayData.wearables && Object.keys(dayData.wearables).length > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Wearables</h4>
                         <div className="text-sm text-gray-700">
-                          {Object.entries(dayData.actions_snapshot.wearables).map(([key, value]: [string, any]) => (
+                          {Object.entries(dayData.wearables).map(([key, value]: [string, any]) => (
                             <div key={key} className="flex justify-between">
                               <span className="capitalize">{key.replace('_', ' ')}</span>
                               <span className="text-gray-500">{value}</span>
@@ -269,7 +281,7 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
               )}
 
               {/* No data message */}
-              {!dayData.mood && !dayData.sleep_quality && !dayData.pain && !dayData.journal && !dayData.actions_snapshot && (
+              {!dayData.mood && !dayData.sleep_quality && !dayData.pain && !dayData.journal && !dayData.meds?.length && !dayData.protocols?.length && !dayData.activity?.length && !dayData.devices?.length && !(dayData.wearables && Object.keys(dayData.wearables).length > 0) && (
                 <div className="text-center py-8 text-gray-500">
                   <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>No data recorded for this day</p>
