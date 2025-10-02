@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
-import { Heart, Moon, Zap, Calendar } from 'lucide-react';
+import { Heart, Moon, Zap, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import MonthlyHeatmap from '../mood/MonthlyHeatmap';
 
 interface PublicMoodSectionProps {
   moodData: any[];
@@ -57,6 +58,7 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
 
 export default function PublicMoodSection({ moodData, profileName }: PublicMoodSectionProps) {
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Get today's entry (most recent)
   const todayEntry = moodData.length > 0 ? moodData[moodData.length - 1] : null;
@@ -122,114 +124,113 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Mood Tracker</h2>
-        <button
-          onClick={() => setShowHeatmap(!showHeatmap)}
-          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
-        >
-          <Calendar 
-            className="w-4 h-4 inline mr-2"
-            style={{ 
-              color: 'white',
-              fill: 'none',
-              stroke: 'white',
-              strokeWidth: '2'
-            }} 
-          />
-          {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
-        </button>
-      </div>
+    <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
+      {/* Single Column Layout */}
+      <div className="w-full">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-2 pb-3">
+          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                showHeatmap 
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
+                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
+              }`}
+              aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+              title="Monthly heatmap"
+            >
+              <Calendar 
+                className="w-4 h-4"
+                style={{ 
+                  color: 'white',
+                  fill: 'none',
+                  stroke: 'white',
+                  strokeWidth: '2'
+                }} 
+              />
+            </button>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              aria-label={collapsed ? 'Expand' : 'Collapse'}
+            >
+              {collapsed ? (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              )}
+            </button>
+          </div>
+        </div>
 
-      {/* Today's Metrics */}
-      <div className="space-y-4 mb-6">
-        {/* Chips */}
-        {displayChips.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-center">
-            {displayChips.map((chip, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
-              >
-                {chip?.icon} {chip?.label}
-              </span>
-            ))}
+        {/* Collapsible Content */}
+        {!collapsed && (
+          <div className="px-6 pb-4">
+            {/* Top Row: Chips */}
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+              {displayChips.map((chip, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full"
+                >
+                  {chip?.icon} {chip?.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Mood, Sleep, Pain Pills */}
+            <div className="flex flex-col space-y-3 mb-4">
+              {todayEntry.mood !== null && (
+                <MetricPill
+                  label="Mood"
+                  value={todayEntry.mood}
+                  max={10}
+                  palette="mood"
+                />
+              )}
+              {todayEntry.sleep_quality !== null && (
+                <MetricPill
+                  label="Sleep"
+                  value={todayEntry.sleep_quality}
+                  max={10}
+                  palette="sleep"
+                />
+              )}
+              {todayEntry.pain !== null && (
+                <MetricPill
+                  label="Pain"
+                  value={todayEntry.pain}
+                  max={10}
+                  palette="pain"
+                />
+              )}
+            </div>
+
+            {/* Weekly Averages */}
+            <div className="text-center text-sm text-gray-600">
+              <span className="font-medium">This week's average:</span>{' '}
+              {avgMood !== '—' && <span>Mood {avgMood}</span>}
+              {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
+              {avgSleep !== '—' && <span>Sleep {avgSleep}</span>}
+              {avgSleep !== '—' && avgPain !== '—' && <span> • </span>}
+              {avgPain !== '—' && <span>Pain {avgPain}</span>}
+            </div>
           </div>
         )}
 
-        {/* Mood, Sleep, Pain Pills */}
-        <div className="flex flex-col space-y-3">
-          {todayEntry.mood !== null && (
-            <MetricPill
-              label="Mood"
-              value={todayEntry.mood}
-              max={10}
-              palette="mood"
+        {/* Heatmap */}
+        {showHeatmap && (
+          <div className="px-6 pb-4">
+            <MonthlyHeatmap 
+              monthlyData={moodData}
+              onDayClick={() => {}} // No day detail for public profiles
             />
-          )}
-          {todayEntry.sleep_quality !== null && (
-            <MetricPill
-              label="Sleep"
-              value={todayEntry.sleep_quality}
-              max={10}
-              palette="sleep"
-            />
-          )}
-          {todayEntry.pain !== null && (
-            <MetricPill
-              label="Pain"
-              value={todayEntry.pain}
-              max={10}
-              palette="pain"
-            />
-          )}
-        </div>
-
-        {/* Weekly Averages */}
-        <div className="text-center text-sm text-gray-600 pt-2">
-          <span className="font-medium">This week's average:</span>{' '}
-          {avgMood !== '—' && <span>Mood {avgMood}</span>}
-          {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
-          {avgSleep !== '—' && <span>Sleep {avgSleep}</span>}
-          {avgSleep !== '—' && avgPain !== '—' && <span> • </span>}
-          {avgPain !== '—' && <span>Pain {avgPain}</span>}
-        </div>
-      </div>
-
-      {/* Heatmap */}
-      {showHeatmap && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">14-Day Trend</h3>
-          <div className="grid grid-cols-14 gap-1">
-            {heatmapData.map((day, index) => {
-              const hasMood = day.mood !== null;
-              const hasPain = day.pain !== null;
-              const intensity = hasMood ? (day.mood! / 10) : (hasPain ? (day.pain! / 10) : 0);
-              
-              return (
-                <div
-                  key={index}
-                  className={`h-6 w-6 rounded-sm ${
-                    hasMood || hasPain
-                      ? intensity < 0.3
-                        ? 'bg-red-200'
-                        : intensity < 0.6
-                        ? 'bg-yellow-200'
-                        : 'bg-green-200'
-                      : 'bg-gray-100'
-                  }`}
-                  title={`${day.date}: ${hasMood ? `Mood ${day.mood}` : ''}${hasMood && hasPain ? ', ' : ''}${hasPain ? `Pain ${day.pain}` : ''}`}
-                />
-              );
-            })}
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Click on a day to see details
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

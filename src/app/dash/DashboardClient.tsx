@@ -1425,6 +1425,33 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     isExpired: false
   })
 
+  // Load all dashboard data in one optimized call
+  const loadDashboardData = async () => {
+    try {
+      const response = await fetch('/api/dashboard-optimized')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Set mood data
+          setTodayMoodEntry(data.data.todayMoodEntry)
+          setMonthlyMoodData(data.data.monthlyMoodData)
+          
+          // Set beta status
+          if (data.data.betaStatus) {
+            setIsBetaUser(data.data.betaStatus.isBetaUser)
+            setBetaExpiration({
+              expiresAt: data.data.betaStatus.expiresAt,
+              daysUntilExpiration: data.data.betaStatus.daysUntilExpiration,
+              isExpired: data.data.betaStatus.isExpired
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    }
+  }
+
   // Load completed items from localStorage on mount
   useEffect(() => {
     const today = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD format in local timezone
@@ -1439,24 +1466,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       }
     }
 
-    // Check if user is beta user
-    const checkBetaStatus = async () => {
-      try {
-        const response = await fetch('/api/beta/status')
-        if (response.ok) {
-          const data = await response.json()
-          setIsBetaUser(data.isBetaUser || false)
-          setBetaExpiration({
-            expiresAt: data.expiresAt,
-            daysUntilExpiration: data.daysUntilExpiration,
-            isExpired: data.isExpired || false
-          })
-        }
-      } catch (error) {
-        console.error('Failed to check beta status:', error)
-      }
-    }
-    checkBetaStatus()
+    // Load all dashboard data
+    loadDashboardData()
     
     // Check for welcome parameter
     const welcomeParam = searchParams.get('welcome')
@@ -1471,8 +1482,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     
     // Load dashboard data including follower count
     loadDashboardData()
-    loadDailyCheckIn()
-    loadTodayMoodEntry()
     calculateStreak()
     
     // Set up periodic refresh for follower count (every 30 seconds)
