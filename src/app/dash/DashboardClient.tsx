@@ -1423,6 +1423,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const router = useRouter()
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
+  
+  // Debug today's items
+  console.log('🔍 DashboardClient - todayItems:', {
+    supplements: todayItems.supplements?.length || 0,
+    protocols: todayItems.protocols?.length || 0,
+    movement: todayItems.movement?.length || 0,
+    mindfulness: todayItems.mindfulness?.length || 0
+  });
   const [isBetaUser, setIsBetaUser] = useState(false)
   const [betaExpiration, setBetaExpiration] = useState<{
     expiresAt: string | null
@@ -1569,7 +1577,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const calculateStreak = async () => {
     try {
-      const response = await fetch('/api/mood/month')
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const response = await fetch(`/api/mood/month?month=${currentMonth}`)
       if (response.ok) {
         const data = await response.json()
         const entries = data.data || []
