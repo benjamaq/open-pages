@@ -2469,7 +2469,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Row 1 — Today's Supplements (Full Width) */}
             {/* Today Snapshot */}
             <TodaySnapshot
-              key={todayMoodEntry?.id || 'no-entry'}
+              key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
               todayEntry={todayMoodEntry}
               onEditToday={() => setShowEnhancedMoodDrawer(true)}
               onEditDay={(date) => {

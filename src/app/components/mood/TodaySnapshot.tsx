@@ -102,9 +102,15 @@ export default function TodaySnapshot({
   // Calculate 7-day averages
   const calculateAverages = () => {
     const last7Days = monthlyData.slice(-7);
+    console.log('Last 7 days for averages:', last7Days);
+    
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
     const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
+
+    console.log('Mood values:', moodValues);
+    console.log('Sleep values:', sleepValues);
+    console.log('Pain values:', painValues);
 
     const avgMood = moodValues.length > 0 ? (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1) : '—';
     const avgSleep = sleepValues.length > 0 ? (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1) : '—';
