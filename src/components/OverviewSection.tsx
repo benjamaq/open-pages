@@ -49,12 +49,6 @@ export default function OverviewSection({
           <h3 className="text-sm font-medium text-gray-900 mb-2">Today at a Glance</h3>
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
-              Energy {dailyCheckIn?.energy || 7}/10
-            </span>
-            <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
-              Mood: {dailyCheckIn?.mood || 'Dialed in'}
-            </span>
-            <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
               Fasting today 16h
             </span>
           </div>

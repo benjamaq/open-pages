@@ -16,46 +16,9 @@ interface PublicProfileHeaderProps {
 }
 
 export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true, isSharedPublicLink = false, isBetaUser = false, onFollowSuccess }: PublicProfileHeaderProps) {
-  const [dailyCheckIn, setDailyCheckIn] = useState<{energy: number, mood: string} | null>(null)
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
 
-  useEffect(() => {
-    if (isOwnProfile) {
-      loadDailyCheckIn()
-      
-      // Set up interval to check for updates
-      const interval = setInterval(loadDailyCheckIn, 3000)
-      return () => clearInterval(interval)
-    }
-  }, [isOwnProfile])
-
-  const loadDailyCheckIn = () => {
-    const saved = localStorage.getItem(`biostackr_last_daily_checkin_${profile.user_id}`)
-    if (saved) {
-      try {
-        const data = JSON.parse(saved)
-        const today = new Date().toISOString().split('T')[0]
-        
-        if (data.date === today) {
-          setDailyCheckIn({
-            energy: data.energy,
-            mood: data.mood
-          })
-        }
-      } catch (error) {
-        console.error('Error loading daily check-in:', error)
-      }
-    }
-  }
-
-  const getEnergyLabel = (energy: number) => {
-    if (energy <= 2) return "Empty"
-    if (energy <= 4) return "Low"
-    if (energy <= 6) return "Stable"
-    if (energy <= 8) return "Charged"
-    return "Full"
-  }
 
   const handleHeaderSave = async (data: {
     displayName: string
@@ -112,16 +75,6 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </div>
         
-        {/* Daily Check-in Display - Smaller */}
-        {dailyCheckIn ? (
-          <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
-            🔋 {dailyCheckIn.energy}/10{dailyCheckIn.mood && ` • ${dailyCheckIn.mood}`}
-          </div>
-        ) : (
-          <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
-            🔋 7/10 • Dialed in
-          </div>
-        )}
 
         {/* Eating Style Pill - Only show if user has set one, or if it's their own profile */}
         {eatingStyle && (
