@@ -2407,16 +2407,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     </span>
                         </button>
 
-                  {/* My Daily Check-in Button */}
-                        <button
-                    onClick={() => setShowEnhancedMoodDrawer(true)}
-                    className="group px-2 sm:px-3 lg:px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:brightness-110 text-white rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap flex-shrink-0"
-                    title="Track your mood, energy, and sleep"
-                        >
-                    <span className="flex items-center">
-                      <span>My daily check-in</span>
-                    </span>
-                        </button>
                       </div>
                     </div>
             </div>
