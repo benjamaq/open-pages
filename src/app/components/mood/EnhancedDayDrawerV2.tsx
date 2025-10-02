@@ -244,90 +244,84 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
 
           {/* Content */}
           <div className="px-6 py-6 space-y-6">
-            {/* Core Metrics - 0-10 scales - Stacked */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Feel</h3>
-              <div className="space-y-6">
-                {/* Mood */}
+                {/* Core Metrics - 0-10 scales - Stacked */}
                 <div>
-                  <label className="block text-base font-medium text-gray-700 mb-3">
-                    Mood (0-10)
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={formData.mood || 5}
-                      onChange={(e) => updateField('mood', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
-                      style={{
-                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
-                      }}
-                    />
-                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
-                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
-                      {formData.mood || 5}
-                    </span>
-                  </div>
-                </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Feel</h3>
+                  <div className="space-y-6">
+                    {/* Mood */}
+                    <div>
+                      <label className="block text-base font-medium text-gray-700 mb-3">
+                        Mood
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={formData.mood || 5}
+                          onChange={(e) => updateField('mood', parseInt(e.target.value))}
+                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          style={{
+                            background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                          }}
+                        />
+                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                          {formData.mood || 5} out of 10
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Sleep Quality */}
-                <div>
-                  <label className="block text-base font-medium text-gray-700 mb-3">
-                    Sleep Quality (0-10)
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={formData.sleep_quality || 5}
-                      onChange={(e) => updateField('sleep_quality', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
-                      style={{
-                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
-                      }}
-                    />
-                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
-                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
-                      {formData.sleep_quality || 5}
-                    </span>
-                  </div>
-                </div>
+                    {/* Sleep Quality */}
+                    <div>
+                      <label className="block text-base font-medium text-gray-700 mb-3">
+                        Sleep Quality
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={formData.sleep_quality || 5}
+                          onChange={(e) => updateField('sleep_quality', parseInt(e.target.value))}
+                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          style={{
+                            background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                          }}
+                        />
+                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                          {formData.sleep_quality || 5} out of 10
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Pain */}
-                <div>
-                  <label className="block text-base font-medium text-gray-700 mb-3">
-                    Pain / Soreness (0-10)
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500 min-w-[20px]">0</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={formData.pain || 0}
-                      onChange={(e) => updateField('pain', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
-                      style={{
-                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
-                      }}
-                    />
-                    <span className="text-sm text-gray-500 min-w-[20px]">10</span>
-                    <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
-                      {formData.pain || 0}
-                    </span>
+                    {/* Pain */}
+                    <div>
+                      <label className="block text-base font-medium text-gray-700 mb-3">
+                        Pain / Soreness
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={formData.pain || 0}
+                          onChange={(e) => updateField('pain', parseInt(e.target.value))}
+                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          style={{
+                            background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                          }}
+                        />
+                        <span className="text-xl font-semibold text-gray-900 min-w-[4rem] text-center">
+                          {formData.pain || 0} out of 10
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
             {/* Context Tags - All Chips in Scrollable Box */}
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Happened Today</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Elements</h3>
               <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                 <div className="space-y-3">
                   {/* All chips organized by category */}
@@ -593,28 +587,28 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
         </div>
       </div>
 
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #ffffff;
-          cursor: pointer;
-          border: 2px solid #374151;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+          <style jsx>{`
+            .slider::-webkit-slider-thumb {
+              appearance: none;
+              height: 24px;
+              width: 24px;
+              border-radius: 50%;
+              background: #ffffff;
+              cursor: pointer;
+              border: 2px solid #374151;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
 
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #ffffff;
-          cursor: pointer;
-          border: 2px solid #374151;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
+            .slider::-moz-range-thumb {
+              height: 24px;
+              width: 24px;
+              border-radius: 50%;
+              background: #ffffff;
+              cursor: pointer;
+              border: 2px solid #374151;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+          `}</style>
     </div>
   );
 }
