@@ -261,7 +261,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       max="10"
                       value={formData.mood || 5}
                       onChange={(e) => updateField('mood', parseInt(e.target.value))}
-                      className="flex-1 h-3 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                      style={{
+                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                      }}
                     />
                     <span className="text-sm text-gray-500 min-w-[20px]">10</span>
                     <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
@@ -283,7 +286,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       max="10"
                       value={formData.sleep_quality || 5}
                       onChange={(e) => updateField('sleep_quality', parseInt(e.target.value))}
-                      className="flex-1 h-3 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                      style={{
+                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                      }}
                     />
                     <span className="text-sm text-gray-500 min-w-[20px]">10</span>
                     <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
@@ -305,7 +311,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
                       max="10"
                       value={formData.pain || 0}
                       onChange={(e) => updateField('pain', parseInt(e.target.value))}
-                      className="flex-1 h-3 bg-gradient-to-r from-red-200 via-red-400 to-red-600 rounded-lg appearance-none cursor-pointer slider"
+                      className="flex-1 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                      style={{
+                        background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
+                      }}
                     />
                     <span className="text-sm text-gray-500 min-w-[20px]">10</span>
                     <span className="text-xl font-semibold text-gray-900 min-w-[3rem] text-center">
@@ -316,35 +325,37 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
               </div>
             </div>
 
-            {/* Context Tags - All Chips */}
+            {/* Context Tags - All Chips in Scrollable Box */}
             <div>
               <h3 className="text-base font-medium text-gray-900 mb-4">Happened Today</h3>
-              <div className="space-y-3">
-                {/* All chips organized by category */}
-                {Object.entries(CHIP_CATALOG.reduce((acc, chip) => {
-                  if (!acc[chip.category]) acc[chip.category] = [];
-                  acc[chip.category].push(chip);
-                  return acc;
-                }, {} as Record<string, any[]>)).map(([category, chips]) => (
-                  <div key={category}>
-                    <p className="text-xs text-gray-500 mb-2 capitalize">{category}:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {chips.map(chip => (
-                        <button
-                          key={chip.slug}
-                          onClick={() => toggleTag(chip.slug)}
-                          className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                            selectedTags.includes(chip.slug)
-                              ? 'bg-blue-100 border-blue-300 text-blue-800'
-                              : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {chip.icon} {chip.label}
-                        </button>
-                      ))}
+              <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
+                <div className="space-y-3">
+                  {/* All chips organized by category */}
+                  {Object.entries(CHIP_CATALOG.reduce((acc, chip) => {
+                    if (!acc[chip.category]) acc[chip.category] = [];
+                    acc[chip.category].push(chip);
+                    return acc;
+                  }, {} as Record<string, any[]>)).map(([category, chips]) => (
+                    <div key={category}>
+                      <p className="text-xs text-gray-500 mb-2 capitalize">{category}:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {chips.map(chip => (
+                          <button
+                            key={chip.slug}
+                            onClick={() => toggleTag(chip.slug)}
+                            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                              selectedTags.includes(chip.slug)
+                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {chip.icon} {chip.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -413,31 +424,86 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
               </div>
             )}
 
-            {/* Actions Snapshot - Always at bottom */}
+            {/* Daily Log Summary - Collapsible */}
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-4">Today's Actions Snapshot</h3>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="includeSnapshot"
-                    checked={includeSnapshot}
-                    onChange={(e) => setIncludeSnapshot(e.target.checked)}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <label htmlFor="includeSnapshot" className="text-sm text-gray-700">
-                    Include snapshot
-                  </label>
-                </div>
-                {includeSnapshot && snapshotData && (
-                  <div className="text-sm text-gray-600">
-                    {snapshotData.supplements_taken_count && `${snapshotData.supplements_taken_count} supps`}
-                    {snapshotData.meds_taken_count && ` • ${snapshotData.meds_taken_count} med`}
-                    {snapshotData.movement_minutes && ` • ${snapshotData.movement_minutes}m move`}
-                    {snapshotData.mindfulness_minutes && ` • ${snapshotData.mindfulness_minutes}m mind`}
+              <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+                <summary className="cursor-pointer text-sm text-gray-700 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900">Daily Log Summary</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
+                    </p>
                   </div>
-                )}
-              </div>
+                  <svg 
+                    className="w-4 h-4 transition-transform" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                
+                <div className="mt-4 space-y-3">
+                  {snapshotData ? (
+                    <div className="space-y-3">
+                      {/* Supplements */}
+                      {snapshotData.supplements_taken_count > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Supplements ({snapshotData.supplements_taken_count})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            {snapshotData.supplements_taken_count} supplements taken today
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Medications */}
+                      {snapshotData.meds_taken_count > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Medications ({snapshotData.meds_taken_count})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            {snapshotData.meds_taken_count} medications taken today
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Movement */}
+                      {snapshotData.movement_minutes > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Movement</h4>
+                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            {snapshotData.movement_minutes} minutes of movement
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Mindfulness */}
+                      {snapshotData.mindfulness_minutes > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Mindfulness</h4>
+                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            {snapshotData.mindfulness_minutes} minutes of mindfulness
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Protocols */}
+                      {snapshotData.protocols_active > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Active Protocols ({snapshotData.protocols_active})</h4>
+                          <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                            {snapshotData.protocols_active} protocols active today
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 italic">
+                      No activity logged yet for today
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
 
             {/* Actions */}
@@ -466,22 +532,23 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, initialData
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #10b981;
           cursor: pointer;
           border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .slider::-moz-range-thumb {
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #10b981;
           cursor: pointer;
           border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
       `}</style>
     </div>
+    </>
   );
 }
