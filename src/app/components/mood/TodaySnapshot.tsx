@@ -47,15 +47,15 @@ const MiniMeter = ({ label, value, variant = 'mood' }: MiniMeterProps) => {
   };
 
   return (
-    <div className="flex items-center gap-4">
-      <span className="text-base font-medium text-gray-700 min-w-[60px]">{label}</span>
-      <div className="relative w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+    <div className="flex flex-col items-center space-y-2">
+      <span className="text-sm font-medium text-gray-700">{label}</span>
+      <div className="relative w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div 
           className={`absolute inset-0 bg-gradient-to-r ${getGradient()} rounded-full`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-base font-semibold text-gray-900 min-w-[32px] text-right">{value}/10</span>
+      <span className="text-sm font-semibold text-gray-900">{value}/10</span>
     </div>
   );
 };
@@ -73,7 +73,7 @@ interface HeatmapProps {
 
 const Heatmap = ({ data, mode, onDayClick }: HeatmapProps) => {
   const getDayColor = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'bg-gray-100';
+    if (value === null || value === undefined) return 'bg-gray-200'; // Neutral color for no data
     
     const percentage = (value / 10) * 100;
     if (mode === 'pain') {
@@ -92,12 +92,36 @@ const Heatmap = ({ data, mode, onDayClick }: HeatmapProps) => {
     }
   };
 
+  // Generate 14 days of data, filling missing days with neutral colors
+  const generate14Days = () => {
+    const days = [];
+    const today = new Date();
+    
+    for (let i = 13; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const existingDay = data.find(d => d.date === dateStr);
+      days.push({
+        date: dateStr,
+        mood: existingDay?.mood || null,
+        pain: existingDay?.pain || null,
+        hasJournal: existingDay?.hasJournal || false
+      });
+    }
+    
+    return days;
+  };
+
+  const fourteenDays = generate14Days();
+
   return (
     <div className="flex gap-1">
-      {data.slice(-14).map((day, index) => (
+      {fourteenDays.map((day, index) => (
         <button
           key={index}
-          onClick={() => onDayClick(day.date)}
+          onClick={() => onEditDay(day.date)}
           className={`w-4 h-4 rounded-sm ${getDayColor(day[mode])} hover:ring-1 hover:ring-indigo-400 transition-all`}
           title={`${new Date(day.date).toLocaleDateString()} - ${mode}: ${day[mode] || 'N/A'}`}
         />
@@ -111,12 +135,12 @@ const TogglePills = ({ options, selected, onSelect }: {
   selected: string; 
   onSelect: (option: string) => void; 
 }) => (
-  <div className="flex gap-2">
+  <div className="flex gap-1">
     {options.map(option => (
       <button
         key={option}
         onClick={() => onSelect(option)}
-        className={`px-3 py-1 text-sm rounded-full transition-colors ${
+        className={`px-2 py-1 text-xs rounded-full transition-colors ${
           selected === option 
             ? 'bg-indigo-100 text-indigo-700' 
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -154,14 +178,6 @@ export default function TodaySnapshot({
 
     loadFourteenDayData();
   }, []);
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
 
   const getSnapshotText = () => {
     if (!todayEntry?.actions_snapshot) return 'No actions logged yet.';
@@ -209,12 +225,9 @@ export default function TodaySnapshot({
   return (
     <div className="rounded-xl border border-gray-200/60 bg-white shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-4">
+      <div className="flex items-center justify-between px-6 pt-4 pb-2">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Today's Mood</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {formatDate(new Date())} • Day {streak}
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900">Today</h2>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -233,25 +246,23 @@ export default function TodaySnapshot({
       </div>
 
       {/* Content */}
-      <div className="px-6 py-4 space-y-6">
-        {/* Selected Chips */}
+      <div className="px-6 pb-4 space-y-4">
+        {/* Selected Chips - Full Width */}
         {selectedChips.length > 0 && (
-          <div>
-            <div className="flex flex-wrap gap-2">
-              {selectedChips.map((chip, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 text-sm rounded-full border border-gray-200 bg-gray-50 text-gray-700"
-                >
-                  {chip?.icon} {chip?.label}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedChips.map((chip, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 text-sm rounded-full border border-gray-200 bg-gray-50 text-gray-700"
+              >
+                {chip?.icon} {chip?.label}
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Meters */}
-        <div className="space-y-4">
+        {/* Meters - Horizontal Layout */}
+        <div className="flex justify-between items-center py-2">
           <MiniMeter 
             label="Mood" 
             value={todayEntry?.mood || 5} 
@@ -269,8 +280,8 @@ export default function TodaySnapshot({
           />
         </div>
 
-        {/* Heatmap */}
-        <div className="space-y-3">
+        {/* Heatmap - Full Width */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <TogglePills 
               options={['Mood', 'Pain']} 
@@ -288,15 +299,15 @@ export default function TodaySnapshot({
           />
         </div>
 
-        {/* Weekly Averages */}
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">This Week:</span>{' '}
-          Avg Mood {averages.avgMood} • Avg Sleep {averages.avgSleep} • Avg Pain {averages.avgPain}
-        </div>
-
-        {/* Snapshot */}
-        <div className="text-sm text-gray-700">
-          <span className="font-medium">Snapshot:</span> {getSnapshotText()}
+        {/* Weekly Averages and Snapshot - Horizontal */}
+        <div className="flex justify-between items-center text-sm text-gray-600">
+          <div>
+            <span className="font-medium">This Week:</span>{' '}
+            Avg Mood {averages.avgMood} • Avg Sleep {averages.avgSleep} • Avg Pain {averages.avgPain}
+          </div>
+          <div className="text-gray-700">
+            <span className="font-medium">Snapshot:</span> {getSnapshotText()}
+          </div>
         </div>
       </div>
     </div>
