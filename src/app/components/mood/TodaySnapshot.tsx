@@ -24,20 +24,22 @@ interface MiniMeterProps {
   label: string;
   value: number;
   variant?: 'mood' | 'pain';
+  onClick?: () => void;
 }
 
-const MiniMeter = ({ label, value, variant = 'mood' }: MiniMeterProps) => {
+const MiniMeter = ({ label, value, variant = 'mood', onClick }: MiniMeterProps) => {
   const percentage = (value / 10) * 100;
   
   const getGradient = () => {
     if (variant === 'pain') {
-      // Pain: red ramp (0-2: #FEE2E2, 3-5: #FCA5A5, 6-8: #EF4444, 9-10: #B91C1C)
-      if (value <= 2) return 'from-red-200 to-red-300';
-      if (value <= 5) return 'from-red-300 to-red-400';
-      if (value <= 8) return 'from-red-400 to-red-500';
-      return 'from-red-600 to-red-700';
+      // Pain: blue-grey→orange→red (inverse feel)
+      if (value <= 2) return 'from-slate-300 to-slate-400';
+      if (value <= 4) return 'from-slate-400 to-orange-300';
+      if (value <= 6) return 'from-orange-300 to-orange-400';
+      if (value <= 8) return 'from-orange-400 to-red-400';
+      return 'from-red-400 to-red-500';
     } else {
-      // Mood/Sleep: BioStackr gradient (red → amber → green)
+      // Mood/Sleep: red→amber→green
       if (value <= 2) return 'from-red-400 to-red-500';
       if (value <= 4) return 'from-red-500 to-amber-400';
       if (value <= 6) return 'from-amber-400 to-amber-500';
@@ -47,15 +49,15 @@ const MiniMeter = ({ label, value, variant = 'mood' }: MiniMeterProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-2">
-      <span className="text-sm font-medium text-gray-700">{label}</span>
+    <div className="flex items-center gap-2" onClick={onClick}>
+      <span className="text-sm font-medium text-gray-700 min-w-[50px]">{label}</span>
       <div className="relative w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div 
-          className={`absolute inset-0 bg-gradient-to-r ${getGradient()} rounded-full`}
+          className={`absolute inset-0 bg-gradient-to-r ${getGradient()} rounded-full transition-all duration-200`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-sm font-semibold text-gray-900">{value}/10</span>
+      <span className="text-sm font-semibold text-gray-900 min-w-[28px] text-right">{value}/10</span>
     </div>
   );
 };
@@ -73,17 +75,18 @@ interface HeatmapProps {
 
 const Heatmap = ({ data, mode, onDayClick }: HeatmapProps) => {
   const getDayColor = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'bg-gray-200'; // Neutral color for no data
+    if (value === null || value === undefined) return 'bg-gray-200'; // Faint neutral for empty days
     
     const percentage = (value / 10) * 100;
     if (mode === 'pain') {
-      // Pain: red ramp (0-2: #FEE2E2, 3-5: #FCA5A5, 6-8: #EF4444, 9-10: #B91C1C)
-      if (percentage <= 20) return 'bg-red-200';
-      if (percentage <= 50) return 'bg-red-300';
-      if (percentage <= 80) return 'bg-red-500';
-      return 'bg-red-700';
+      // Pain: blue-grey→orange→red (inverse feel)
+      if (percentage <= 20) return 'bg-slate-300';
+      if (percentage <= 40) return 'bg-slate-400';
+      if (percentage <= 60) return 'bg-orange-300';
+      if (percentage <= 80) return 'bg-orange-400';
+      return 'bg-red-400';
     } else {
-      // Mood: BioStackr gradient (red → amber → green)
+      // Mood: red→amber→green
       if (percentage <= 20) return 'bg-red-500';
       if (percentage <= 40) return 'bg-red-500';
       if (percentage <= 60) return 'bg-amber-400';
@@ -115,17 +118,23 @@ const Heatmap = ({ data, mode, onDayClick }: HeatmapProps) => {
   };
 
   const fourteenDays = generate14Days();
+  const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="flex gap-1">
-      {fourteenDays.map((day, index) => (
-        <button
-          key={index}
-          onClick={() => onEditDay(day.date)}
-          className={`w-4 h-4 rounded-sm ${getDayColor(day[mode])} hover:ring-1 hover:ring-indigo-400 transition-all`}
-          title={`${new Date(day.date).toLocaleDateString()} - ${mode}: ${day[mode] || 'N/A'}`}
-        />
-      ))}
+    <div className="grid grid-cols-14 gap-1.5">
+      {fourteenDays.map((day, index) => {
+        const isToday = day.date === today;
+        return (
+          <button
+            key={index}
+            onClick={() => onDayClick(day.date)}
+            className={`w-3 h-3 rounded-sm ${getDayColor(day[mode])} hover:ring-1 hover:ring-indigo-400 transition-all ${
+              isToday ? 'ring-2 ring-indigo-500' : ''
+            }`}
+            title={`${new Date(day.date).toLocaleDateString()} - ${mode}: ${day[mode] || 'N/A'}`}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -179,108 +188,106 @@ export default function TodaySnapshot({
     loadFourteenDayData();
   }, []);
 
-  const getSnapshotText = () => {
-    if (!todayEntry?.actions_snapshot) return 'No actions logged yet.';
-    
-    const { actions_snapshot } = todayEntry;
-    const parts = [];
-    
-    if (actions_snapshot.supplements_taken_count) {
-      parts.push(`${actions_snapshot.supplements_taken_count} supps`);
-    }
-    if (actions_snapshot.meds_taken_count) {
-      parts.push(`${actions_snapshot.meds_taken_count} med`);
-    }
-    if (actions_snapshot.movement_minutes) {
-      parts.push(`${actions_snapshot.movement_minutes}m move`);
-    }
-    if (actions_snapshot.mindfulness_minutes) {
-      parts.push(`${actions_snapshot.mindfulness_minutes}m mind`);
-    }
-    
-    return parts.length > 0 ? parts.join(' • ') : 'No actions logged yet.';
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
-  // Get selected chips
+  // Get selected chips (max 4, then +N)
   const selectedChips = todayEntry?.tags?.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
-  // Calculate weekly averages
-  const weeklyAverages = () => {
+  const displayChips = selectedChips.slice(0, 4);
+  const remainingCount = selectedChips.length - 4;
+
+  // Calculate 7-day average
+  const sevenDayAverage = () => {
     const last7Days = fourteenDayData.slice(-7);
-    const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
-    const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
-    const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
+    const values = last7Days.map(day => day[heatmapMode]).filter(val => val !== null && val !== undefined);
     
-    const avgMood = moodValues.length > 0 ? (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1) : 'N/A';
-    const avgSleep = sleepValues.length > 0 ? (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1) : 'N/A';
-    const avgPain = painValues.length > 0 ? (painValues.reduce((a, b) => a + b, 0) / painValues.length).toFixed(1) : 'N/A';
-    
-    return { avgMood, avgSleep, avgPain };
+    if (values.length === 0) return 'N/A';
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    return avg.toFixed(1);
   };
 
-  const averages = weeklyAverages();
+  const average = sevenDayAverage();
 
   return (
     <div className="rounded-xl border border-gray-200/60 bg-white shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-2">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Today</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Today — {formatDate(new Date())}
+          </h2>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={onEditToday}
-            className="text-base text-indigo-600 hover:text-indigo-700 font-medium"
+            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
           >
-            Edit today
+            Edit today ▸
           </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-base text-gray-600 hover:text-gray-800 font-medium"
+            className="text-sm text-gray-600 hover:text-gray-800 font-medium"
           >
-            {isExpanded ? 'Collapse ▴' : 'Expand ▾'}
+            {isExpanded ? 'Collapse ▲' : 'Expand ▾'}
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-6 pb-4 space-y-4">
-        {/* Selected Chips - Full Width */}
-        {selectedChips.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {selectedChips.map((chip, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 text-sm rounded-full border border-gray-200 bg-gray-50 text-gray-700"
-              >
-                {chip?.icon} {chip?.label}
-              </span>
-            ))}
+      <div className="px-4 pb-4 space-y-2">
+        {/* Meters + Chips Row */}
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Meters */}
+          <div className="flex items-center gap-4">
+            <MiniMeter 
+              label="Mood" 
+              value={todayEntry?.mood || 5} 
+              variant="mood"
+              onClick={onEditToday}
+            />
+            <MiniMeter 
+              label="SleepQ" 
+              value={todayEntry?.sleep_quality || 5} 
+              variant="mood"
+              onClick={onEditToday}
+            />
+            <MiniMeter 
+              label="Pain" 
+              value={todayEntry?.pain || 0} 
+              variant="pain"
+              onClick={onEditToday}
+            />
           </div>
-        )}
 
-        {/* Meters - Horizontal Layout */}
-        <div className="flex justify-between items-center py-2">
-          <MiniMeter 
-            label="Mood" 
-            value={todayEntry?.mood || 5} 
-            variant="mood" 
-          />
-          <MiniMeter 
-            label="Sleep" 
-            value={todayEntry?.sleep_quality || 5} 
-            variant="mood" 
-          />
-          <MiniMeter 
-            label="Pain" 
-            value={todayEntry?.pain || 0} 
-            variant="pain" 
-          />
+          {/* Chips */}
+          {displayChips.length > 0 && (
+            <div className="flex flex-wrap gap-2 ml-auto">
+              {displayChips.map((chip, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 text-xs rounded-md border border-gray-200 bg-gray-50 text-gray-700 h-7 flex items-center"
+                >
+                  {chip?.icon} {chip?.label}
+                </span>
+              ))}
+              {remainingCount > 0 && (
+                <span className="px-2 py-1 text-xs rounded-md border border-gray-200 bg-gray-100 text-gray-600 h-7 flex items-center">
+                  +{remainingCount}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Heatmap - Full Width */}
+        {/* 14-day Strip */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <TogglePills 
@@ -288,7 +295,7 @@ export default function TodaySnapshot({
               selected={heatmapMode === 'mood' ? 'Mood' : 'Pain'}
               onSelect={(option) => setHeatmapMode(option.toLowerCase() as 'mood' | 'pain')}
             />
-            <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+            <button className="text-xs text-indigo-600 hover:text-indigo-700">
               View month →
             </button>
           </div>
@@ -299,14 +306,10 @@ export default function TodaySnapshot({
           />
         </div>
 
-        {/* Weekly Averages and Snapshot - Horizontal */}
-        <div className="flex justify-between items-center text-sm text-gray-600">
+        {/* Caption Line */}
+        <div className="flex items-center justify-between text-xs text-gray-500">
           <div>
-            <span className="font-medium">This Week:</span>{' '}
-            Avg Mood {averages.avgMood} • Avg Sleep {averages.avgSleep} • Avg Pain {averages.avgPain}
-          </div>
-          <div className="text-gray-700">
-            <span className="font-medium">Snapshot:</span> {getSnapshotText()}
+            Avg {heatmapMode} last 7 days: {average}
           </div>
         </div>
       </div>
