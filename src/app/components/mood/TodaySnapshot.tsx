@@ -55,8 +55,10 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
-      <div className="text-base sm:text-lg font-semibold text-gray-800 mb-2 text-center w-full">{label}</div>
-      <div className="flex items-center justify-center w-full">
+      <div className="text-base sm:text-lg font-semibold text-gray-800 mb-2 text-center w-24 sm:w-32 md:w-40">
+        {label}
+      </div>
+      <div className="flex items-center">
         <div
           className="h-3 sm:h-4 w-24 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
