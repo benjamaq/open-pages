@@ -156,12 +156,12 @@ export default function TodaySnapshot({
   console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
 
   return (
-    <div className="bg-gray-50 rounded-xl border border-gray-200/60 p-4 mb-6">
+    <div className="bg-gray-100 rounded-xl border border-gray-200/60 p-4 mb-6">
       {/* Single Column Layout */}
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center justify-between p-6 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <button 
             onClick={onEditToday}
@@ -173,7 +173,7 @@ export default function TodaySnapshot({
 
         {/* Chips Row */}
         {displayChips.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-3">
             {displayChips.map((chip, index) => (
               <span
                 key={index}
@@ -186,7 +186,7 @@ export default function TodaySnapshot({
         )}
 
         {/* Mood, Sleep, Pain Row */}
-        <div className="flex justify-around items-center mb-4">
+        <div className="flex justify-around items-center mb-3">
           <MetricPill 
             label="Mood" 
             value={todayEntry?.mood || 0} 
@@ -213,19 +213,16 @@ export default function TodaySnapshot({
           />
         </div>
 
-        {/* Weekly Averages */}
-        <div className="text-center mb-3">
-          <div className="text-sm text-gray-500">
-            This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+        {/* Weekly Averages and Edit Button */}
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1">
+            <div className="text-sm text-gray-500">
+              This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+            </div>
           </div>
-        </div>
-
-
-        {/* Edit Button - Bottom Right */}
-        <div className="flex justify-end">
           <button 
             onClick={onEditToday}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-gray-500 hover:text-gray-700 ml-4"
           >
             Edit
           </button>
