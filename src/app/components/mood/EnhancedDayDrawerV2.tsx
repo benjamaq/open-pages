@@ -42,23 +42,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
     recovery_score: null as number | null,
     sleep_score: null as number | null
   });
-  const [isUserEditing, setIsUserEditing] = useState(false);
 
-  // Initialize form data - only reset when not actively editing
+  // Initialize form data
   useEffect(() => {
-    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date, isUserEditing });
-    
-    // Reset editing flag when drawer opens
-    if (isOpen) {
-      setIsUserEditing(false);
-    }
-    
-    // Don't reset form data if user is actively editing
-    if (isUserEditing) {
-      console.log('🔍 EnhancedDayDrawerV2 - Skipping form reset - user is editing');
-      return;
-    }
-    
+    console.log('🔍 EnhancedDayDrawerV2 - useEffect triggered with:', { initialData, date });
     if (initialData) {
       const newFormData = {
         localDate: date,
@@ -89,7 +76,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       setSnapshotData(null);
     }
     setSaveMessage('');
-  }, [date, initialData, isUserEditing]);
+  }, [date, initialData]);
 
   // Load snapshot data
   useEffect(() => {
@@ -180,8 +167,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
-    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value, 'isUserEditing:', isUserEditing);
-    setIsUserEditing(true); // Mark that user is actively editing
+    console.log(`🔍 EnhancedDayDrawerV2 - Updating ${field}:`, value);
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       console.log(`🔍 EnhancedDayDrawerV2 - New formData:`, newData);
@@ -190,7 +176,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   };
 
   const toggleTag = (tag: string) => {
-    setIsUserEditing(true); // Mark that user is actively editing
     setSelectedTags(prev => {
       if (prev.includes(tag)) {
         // Remove tag if already selected
@@ -298,7 +283,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                   <div className="space-y-6">
                     {/* Mood */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Mood
                       </label>
                       <div className="flex items-center space-x-4">
@@ -311,7 +296,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                             console.log('🔍 Mood slider changed:', e.target.value);
                             updateField('mood', parseInt(e.target.value));
                           }}
-                          className="flex-1 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
@@ -324,7 +309,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Sleep Quality */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Sleep Quality
                       </label>
                       <div className="flex items-center space-x-4">
@@ -337,7 +322,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                             console.log('🔍 Sleep slider changed:', e.target.value);
                             updateField('sleep_quality', parseInt(e.target.value));
                           }}
-                          className="flex-1 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                          className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                           }}
@@ -350,7 +335,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
 
                     {/* Pain */}
                     <div>
-                      <label className="block text-base font-medium text-gray-700 mb-3">
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                         Pain / Soreness
                       </label>
                       <div className="flex items-center space-x-4">
@@ -363,7 +348,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                             console.log('🔍 Pain slider changed:', e.target.value);
                             updateField('pain', parseInt(e.target.value));
                           }}
-                          className="flex-1 h-4 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
+                          className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
                           style={{
                             background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
                           }}
