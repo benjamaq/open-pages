@@ -48,7 +48,7 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
     }
   };
 
-  const bg = value === 0 ? '#F3F4F6' : getPalette();
+  const bg = value === 0 ? '#16A34A' : getPalette();
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
