@@ -123,8 +123,12 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
     return null; // Don't show section if no mood data
   }
 
+  // Debug logging
+  console.log('PublicMoodSection rendering with:', { todayEntry, moodData: moodData.length });
+
   return (
     <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
+      {/* Updated layout v2 - matches dashboard exactly */}
       {/* Single Column Layout */}
       <div className="w-full">
         
