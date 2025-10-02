@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendDailyReminder } from '../../../lib/email/resend'
+import { sendEmail } from '../../../lib/email/resend'
 import { createAdminClient } from '../../../utils/supabase/admin'
 
 export async function GET(request: NextRequest) {
@@ -25,115 +25,64 @@ async function handleTestEmail(request: NextRequest) {
       // Ignore JSON parsing errors for GET requests
     }
     
-    console.log('🔍 Looking up user data for:', userEmail)
+    console.log('📧 Sending test email to:', userEmail)
     
-    // Try to fetch real user data
-    const supabaseAdmin = createAdminClient()
-    let testData = {
-      userName: 'Test User',
-      userEmail: userEmail,
-      supplements: [],
-      protocols: [],
-      movement: [],
-      mindfulness: []
-    }
+    // Send a simple test email instead of a daily reminder
+    const testEmailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Test Email from Biostackr</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+          .content { padding: 32px 24px; }
+          .success { background: #d4edda; color: #155724; padding: 16px; border-radius: 8px; margin: 16px 0; }
+          .footer { background: #f7fafc; padding: 24px; text-align: center; font-size: 14px; color: #718096; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Biostackr</h1>
+          </div>
+          
+          <div class="content">
+            <div class="success">
+              <strong>✅ Test Email Successful!</strong>
+            </div>
+            
+            <h2>Your email settings are working correctly!</h2>
+            <p>This is a test email to confirm that your email notifications are set up properly.</p>
+            
+            <p><strong>Test Details:</strong></p>
+            <ul>
+              <li>Email sent to: ${userEmail}</li>
+              <li>Timestamp: ${new Date().toLocaleString()}</li>
+              <li>Domain: notifications@biostackr.io</li>
+            </ul>
+            
+            <p>You should receive daily reminder emails at your scheduled time.</p>
+          </div>
+          
+          <div class="footer">
+            <p>This is a test email from Biostackr</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
     
     try {
-      // Find user by email in auth.users
-      const { data: users } = await supabaseAdmin.auth.admin.listUsers()
-      const user = users.users.find(u => u.email === userEmail)
-      
-      if (user) {
-        console.log('👤 Found user:', user.id)
-        
-        // Find profile by user_id
-        const { data: profile } = await supabaseAdmin
-          .from('profiles')
-          .select('id, display_name, user_id')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (profile) {
-          console.log('📋 Found profile:', profile.id)
-          testData.userName = profile.display_name || 'User'
-          
-          // Fetch real stack data
-          const [supplements, allProtocols, movement, mindfulness] = await Promise.all([
-            supabaseAdmin.from('stack_items').select('name, dose, timing, brand, notes').eq('profile_id', profile.id).eq('item_type', 'supplements'),
-            supabaseAdmin.from('protocols').select('name, frequency, schedule_days').eq('profile_id', profile.id),
-            supabaseAdmin.from('stack_items').select('name, dose, timing, notes').eq('profile_id', profile.id).eq('item_type', 'movement'),
-            supabaseAdmin.from('stack_items').select('name, dose, timing, notes').eq('profile_id', profile.id).eq('item_type', 'mindfulness')
-          ])
-          
-          // Filter protocols that are due today (0=Sunday, 1=Monday, etc.)
-          const today = new Date().getDay()
-          const protocols = allProtocols.data?.filter(protocol => {
-            if (!protocol.schedule_days || protocol.schedule_days.length === 0) {
-              return true // If no schedule specified, include it
-            }
-            return protocol.schedule_days.includes(today)
-          }) || []
-          
-          testData.supplements = supplements.data || []
-          testData.protocols = protocols
-          testData.movement = movement.data || []
-          testData.mindfulness = mindfulness.data || []
-          
-          console.log('📊 Real data found:', {
-            supplements: testData.supplements.length,
-            protocols: testData.protocols.length,
-            movement: testData.movement.length,
-            mindfulness: testData.mindfulness.length
-          })
-        } else {
-          console.log('⚠️ No profile found for user')
-        }
-      } else {
-        console.log('⚠️ No user found with email:', userEmail)
-      }
-    } catch (error) {
-      console.error('❌ Error fetching user data:', error)
-      // Fall back to placeholder data
-      testData = {
-        userName: 'Test User',
-        userEmail: userEmail,
-        supplements: [
-          { name: 'Vitamin D', dose: '2000 IU', timing: 'morning' },
-          { name: 'Omega-3', dose: '1000mg', timing: 'with food' }
-        ],
-        protocols: [
-          { name: 'Cold shower', frequency: 'daily' },
-          { name: 'Intermittent fasting', frequency: '16:8' }
-        ],
-        movement: [
-          { name: 'Morning walk', duration: '30 min' },
-          { name: 'Strength training', duration: '45 min' }
-        ],
-        mindfulness: [
-          { name: 'Meditation', duration: '10 min' },
-          { name: 'Breathing exercises', duration: '5 min' }
-        ]
-      }
-    }
-    
-    console.log('📧 Sending test email to:', testData.userEmail)
-    
-    // Send the test email with proper data structure
-    const emailData = {
-      userName: testData.userName,
-      userEmail: testData.userEmail,
-      supplements: testData.supplements,
-      protocols: testData.protocols,
-      movement: testData.movement,
-      mindfulness: testData.mindfulness,
-      profileUrl: 'https://biostackr.io/dash',
-      unsubscribeUrl: 'https://biostackr.io/dash/settings'
-    }
-    
-    console.log('📧 Sending test email with data:', emailData)
-    
-    try {
-      const result = await sendDailyReminder(emailData)
+      const result = await sendEmail({
+        to: userEmail,
+        subject: '✅ Biostackr Test Email - Settings Working!',
+        html: testEmailHTML
+      })
       console.log('📧 Email send result:', result)
       
       if (result.success) {
@@ -143,7 +92,7 @@ async function handleTestEmail(request: NextRequest) {
         throw new Error(result.error || 'Email send failed')
       }
     } catch (error) {
-      console.error('❌ Error in sendDailyReminder:', error)
+      console.error('❌ Error sending test email:', error)
       throw error
     }
     
