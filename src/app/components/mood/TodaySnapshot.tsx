@@ -156,12 +156,12 @@ export default function TodaySnapshot({
   console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
 
   return (
-    <div className="bg-gray-100 rounded-xl border border-gray-200/60 p-4 mb-6">
+    <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
       {/* Single Column Layout */}
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-4 pb-3">
+        <div className="flex items-center justify-between px-6 pt-2 pb-3">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <button 
             onClick={onEditToday}
