@@ -665,7 +665,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                   console.log('🔍 EnhancedDayDrawerV2 - isSaving:', isSaving);
                   handleSave();
                 }}
-                disabled={isSaving || !hasChanges()}
+                disabled={isSaving}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
                 {isSaving ? 'Saving...' : 'Save Check-in'}
