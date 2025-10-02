@@ -91,12 +91,17 @@ export default function TodaySnapshot({
     loadMonthlyData();
   }, [todayEntry]); // Refresh when todayEntry changes
 
+
   // Get selected chips (max 4)
   const selectedChips = todayEntry?.tags?.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
   const displayChips = selectedChips.slice(0, 4);
+
+  // Debug logging
+  console.log('TodaySnapshot - todayEntry:', todayEntry);
+  console.log('TodaySnapshot - selectedChips:', selectedChips);
 
   // Calculate 7-day averages
   const calculateAverages = () => {
@@ -132,7 +137,7 @@ export default function TodaySnapshot({
 
         {/* Chips Row */}
         {displayChips.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
             {displayChips.map((chip, index) => (
               <span
                 key={index}
@@ -144,10 +149,10 @@ export default function TodaySnapshot({
           </div>
         )}
 
-        {/* Mood, Sleep, Pain Row */}
+        {/* This Week's Average Row */}
         <div className="flex justify-around items-center mb-4">
           <MetricPill 
-            label="Mood" 
+            label={`This Week's Average - Mood ${avgMood}`}
             value={todayEntry?.mood || 0} 
             max={10} 
             palette="mood" 
@@ -155,7 +160,7 @@ export default function TodaySnapshot({
             className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label="Sleep Quality" 
+            label={`This Week's Average - Sleep ${avgSleep}`}
             value={todayEntry?.sleep_quality || 0} 
             max={10} 
             palette="sleep" 
@@ -163,7 +168,7 @@ export default function TodaySnapshot({
             className="flex-1 max-w-[200px]"
           />
           <MetricPill 
-            label="Pain" 
+            label={`This Week's Average - Pain ${avgPain}`}
             value={todayEntry?.pain || 0} 
             max={10} 
             palette="pain" 
@@ -172,12 +177,6 @@ export default function TodaySnapshot({
           />
         </div>
 
-        {/* Weekly Averages */}
-        <div className="text-center mb-3">
-          <div className="text-sm text-gray-500">
-            This Week: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
-          </div>
-        </div>
 
         {/* Edit Button - Bottom Right */}
         <div className="flex justify-end">
