@@ -118,6 +118,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
   }, [isOpen, onClose]);
 
   const handleSave = async () => {
+    console.log('🔍 SAVE BUTTON CLICKED!');
     setIsSaving(true);
     setSaveMessage('');
 
@@ -126,10 +127,17 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
       const today = new Date().toLocaleDateString('sv-SE'); // Match dashboard format
       const storageKey = `completedItems-${userId}-${today}`;
       
+      // Debug: Check what's in localStorage
+      const allKeys = Object.keys(localStorage).filter(key => key.includes('completedItems'));
+      console.log('🔍 All localStorage keys:', allKeys);
+      console.log('🔍 Looking for key:', storageKey);
+      
       let completedItems = [];
       try {
         const saved = localStorage.getItem(storageKey);
+        console.log('🔍 Raw localStorage value:', saved);
         completedItems = saved ? JSON.parse(saved) : [];
+        console.log('🔍 Parsed completedItems:', completedItems);
       } catch (error) {
         console.warn('localStorage error:', error);
       }
