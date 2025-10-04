@@ -53,12 +53,12 @@ export default function Home() {
           
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
             <div className="lg:col-span-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight max-w-[22ch] text-left">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight max-w-[25ch] text-left">
                 <span className="block">What's Actually</span>
-                <span className="block">Working?</span>
+                <span className="block">Working for You?</span>
               </h1>
               <p className="mt-5 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[70ch] text-left">
-                Track <span className="font-semibold">mood, sleep, and pain</span> alongside your supplements & meds and protocols. A <span className="font-semibold">monthly heatmap</span> reveals patterns—share your profile with <span className="font-semibold">one link</span>.
+                Track <span className="font-semibold">mood, sleep, and pain</span> alongside your supplements, meds, and protocols. A <span className="font-semibold">monthly heatmap</span> reveals patterns—share your profile with <span className="font-semibold">one link</span>.
               </p>
               <div className="mt-8">
                 <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
