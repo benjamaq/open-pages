@@ -49,16 +49,16 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <div className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
+      <div className="text-[10px] sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
         {label}
       </div>
       <div className="flex items-center justify-center w-full">
         <div
-          className="h-3 w-16 sm:h-4 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 w-12 sm:h-4 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="ml-1 text-xs font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-1 text-[10px] sm:text-xs font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -188,11 +188,11 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
           <div className="px-6 pb-4">
             {/* Chips Row - Mobile 2x2 grid, Desktop side-by-side */}
             {displayChips.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
+              <div className="grid grid-cols-2 gap-1 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
                 {displayChips.map((chip, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight whitespace-nowrap"
+                    className="px-1.5 py-0.5 text-[10px] sm:px-4 sm:py-2 sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight truncate"
                   >
                     {chip?.icon} {chip?.label}
                   </span>
@@ -201,7 +201,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             )}
 
             {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
-            <div className="flex justify-between items-center mb-5 max-w-2xl mx-auto px-4 sm:max-w-6xl sm:px-16">
+            <div className="flex justify-between items-center mb-5 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
               {todayEntry.mood !== null && todayEntry.mood !== undefined && (
                 <MetricPill
                   label="Mood"
