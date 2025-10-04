@@ -425,7 +425,7 @@ export default async function ProfilePage({ params, searchParams }: {
 
       {/* Profile content with exact module alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-8">
           <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
             {/* Profile Photo */}
             <div className="flex-shrink-0">
