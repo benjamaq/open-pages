@@ -58,7 +58,7 @@ export default function Home() {
               </h1>
               <p className="mt-6 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[60ch]">
                 Track your mood, sleep, and pain<br />
-                alongside your supplements and protocols.<br /><br />
+                alongside your supplements, medications, and protocols.<br /><br />
                 Monthly heatmap reveals patterns.<br />
                 Share your profile with one link.
               </p>
