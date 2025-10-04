@@ -53,17 +53,15 @@ export default function Home() {
           
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
             <div className="lg:col-span-6">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                <span className="block">WHAT'S ACTUALLY WORKING?</span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight max-w-[22ch] text-left">
+                <span className="block">What's Actually</span>
+                <span className="block">Working?</span>
               </h1>
-              <p className="mt-6 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[60ch]">
-                Track your mood, sleep, and pain<br />
-                alongside your supplements, medications, and protocols.<br /><br />
-                Monthly heatmap reveals patterns.<br />
-                Share your profile with one link.
+              <p className="mt-5 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[70ch] text-left">
+                Track <span className="font-semibold">mood, sleep, and pain</span> alongside your supplements & meds and protocols. A <span className="font-semibold">monthly heatmap</span> reveals patterns—share your profile with <span className="font-semibold">one link</span>.
               </p>
               <div className="mt-8">
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
                 <Link 
                   href="/auth/signup" 
                     className="bg-gray-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-black transition-colors w-full sm:w-auto text-center"
@@ -79,9 +77,9 @@ export default function Home() {
                   </div>
                   
                   {/* Micro-trust elements */}
-                  <div className="mt-6 text-center">
+                  <div className="mt-6 text-left">
                     <p className="text-sm text-gray-500">
-                      Private by default • Share only what you choose • Works great on mobile
+                      Private by default • Share only what you choose
                     </p>
                   </div>
                       </div>
