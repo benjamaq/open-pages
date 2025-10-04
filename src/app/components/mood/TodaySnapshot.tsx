@@ -295,7 +295,8 @@ export default function TodaySnapshot({
             {/* Weekly Averages and Wearables */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
               <div className="text-sm sm:text-base text-gray-500 text-center">
-                This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
+                <div className="font-medium">This week's average:</div>
+                <div>Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
               </div>
               
               <div className="text-sm sm:text-base text-gray-500 text-center">

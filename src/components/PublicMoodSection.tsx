@@ -231,14 +231,27 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
               )}
             </div>
 
-            {/* Weekly Averages */}
-            <div className="text-center text-sm sm:text-base text-gray-500">
-              <span className="font-medium">This week's average:</span>{' '}
-              {avgMood !== '—' && <span>Mood {avgMood}</span>}
-              {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
-              {avgSleep !== '—' && <span>Sleep {avgSleep}</span>}
-              {avgSleep !== '—' && avgPain !== '—' && <span> • </span>}
-              {avgPain !== '—' && <span>Pain {avgPain}</span>}
+            {/* Weekly Averages and Wearables */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
+              <div className="text-sm sm:text-base text-gray-500 text-center">
+                <div className="font-medium">This week's average:</div>
+                <div>
+                  {avgMood !== '—' && <span>Mood {avgMood}</span>}
+                  {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
+                  {avgSleep !== '—' && <span>Sleep {avgSleep}</span>}
+                  {avgSleep !== '—' && avgPain !== '—' && <span> • </span>}
+                  {avgPain !== '—' && <span>Pain {avgPain}</span>}
+                </div>
+              </div>
+              
+              <div className="text-sm sm:text-base text-gray-500 text-center">
+                {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
+                {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
+                {!todayEntry?.wearables?.device && avgRecovery !== '—' && `Recovery ${avgRecovery}`}
+                {!todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
+              </div>
             </div>
           </div>
         )}
