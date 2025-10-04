@@ -54,7 +54,7 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
       </div>
       <div className="flex items-center justify-center w-full">
         <div
-          className="h-4 w-32 sm:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 w-16 sm:h-4 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
@@ -186,13 +186,13 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
         {/* Collapsible Content */}
         {!collapsed && (
           <div className="px-6 pb-4">
-            {/* Chips Row - Side-by-side layout like dashboard */}
+            {/* Chips Row - Mobile 2x2 grid, Desktop side-by-side */}
             {displayChips.length > 0 && (
-              <div className="flex flex-wrap gap-3 mb-6 justify-center mt-4">
+              <div className="grid grid-cols-2 gap-2 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
                 {displayChips.map((chip, index) => (
                   <span
                     key={index}
-                    className="px-4 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight whitespace-nowrap"
+                    className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight whitespace-nowrap"
                   >
                     {chip?.icon} {chip?.label}
                   </span>
@@ -200,8 +200,8 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
               </div>
             )}
 
-            {/* Mood, Sleep, Pain Row - Evenly spaced like dashboard */}
-            <div className="flex justify-between items-center mb-5 max-w-6xl mx-auto px-16">
+            {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
+            <div className="flex justify-between items-center mb-5 max-w-2xl mx-auto px-4 sm:max-w-6xl sm:px-16">
               {todayEntry.mood !== null && todayEntry.mood !== undefined && (
                 <MetricPill
                   label="Mood"
