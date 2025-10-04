@@ -79,15 +79,17 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
   const displayChips = selectedChips.slice(0, 4);
 
   // Calculate 7-day averages (memoized for performance)
-  const { avgMood, avgSleep, avgPain } = useMemo(() => {
+  const { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep } = useMemo(() => {
     const last7Days = moodData.slice(-7);
     
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
     const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
+    const recoveryValues = last7Days.map(day => day.wearables?.recovery_score).filter(val => val !== null && val !== undefined);
+    const wearableSleepValues = last7Days.map(day => day.wearables?.sleep_score).filter(val => val !== null && val !== undefined);
 
     // If no historical data, use today's values as fallback
-    let avgMood, avgSleep, avgPain;
+    let avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep;
     
     if (moodValues.length > 0) {
       avgMood = (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1);
@@ -113,7 +115,23 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
       avgPain = '—';
     }
 
-    return { avgMood, avgSleep, avgPain };
+    if (recoveryValues.length > 0) {
+      avgRecovery = (recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length).toFixed(0);
+    } else if (todayEntry?.wearables?.recovery_score !== null && todayEntry?.wearables?.recovery_score !== undefined) {
+      avgRecovery = todayEntry.wearables.recovery_score.toString();
+    } else {
+      avgRecovery = '—';
+    }
+
+    if (wearableSleepValues.length > 0) {
+      avgWearableSleep = (wearableSleepValues.reduce((a, b) => a + b, 0) / wearableSleepValues.length).toFixed(0);
+    } else if (todayEntry?.wearables?.sleep_score !== null && todayEntry?.wearables?.sleep_score !== undefined) {
+      avgWearableSleep = todayEntry.wearables.sleep_score.toString();
+    } else {
+      avgWearableSleep = '—';
+    }
+
+    return { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep };
   }, [moodData, todayEntry]);
 
   // Generate heatmap data (last 14 days)
