@@ -38,6 +38,14 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
         console.log('Day data meds:', data.entry?.meds);
         console.log('Day data protocols:', data.entry?.protocols);
         console.log('Day data activity:', data.entry?.activity);
+        console.log('Day data devices:', data.entry?.devices);
+    console.log('=== WEARABLES DEBUG ===');
+    console.log('Day data wearables:', data.entry?.wearables);
+    console.log('Wearables device name:', data.entry?.wearables?.device);
+    console.log('Wearables keys:', data.entry?.wearables ? Object.keys(data.entry.wearables) : 'No wearables');
+    console.log('Wearables type:', typeof data.entry?.wearables);
+    console.log('========================');
+        console.log('Full entry data:', JSON.stringify(data.entry, null, 2));
         setDayData(data.entry);
       } else {
         console.error('Failed to load day data:', response.status, response.statusText);
@@ -181,7 +189,7 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     {getSelectedChips().map((chip, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
+                        className="px-3 py-1 text-[10px] xs:text-sm bg-gray-100 text-gray-700 rounded-full"
                       >
                         {chip?.icon} {chip?.label}
                       </span>
@@ -201,16 +209,16 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
               )}
 
               {/* Daily Snapshot */}
-              {(dayData.meds?.length > 0 || dayData.protocols?.length > 0 || dayData.activity?.length > 0 || dayData.devices?.length > 0 || (dayData.wearables && Object.keys(dayData.wearables).length > 0)) && (
+              {((dayData.meds?.length || 0) > 0 || (dayData.protocols?.length || 0) > 0 || (dayData.activity?.length || 0) > 0 || (dayData.devices?.length || 0) > 0 || (dayData.wearables && Object.keys(dayData.wearables).length > 0)) && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Daily Snapshot</h3>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     {/* Supplements & Medications */}
-                    {dayData.meds?.length > 0 && (
+                    {(dayData.meds?.length || 0) > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Supplements & Medications</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.meds.map((item: any, index: number) => (
+                          {dayData.meds?.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
                               <span className="text-gray-500">{item.dose} {item.timing}</span>
@@ -221,11 +229,11 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Protocols */}
-                    {dayData.protocols?.length > 0 && (
+                    {(dayData.protocols?.length || 0) > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Protocols & Recovery</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.protocols.map((item: any, index: number) => (
+                          {dayData.protocols?.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
                               <span className="text-gray-500">{item.duration}</span>
@@ -236,11 +244,11 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Activity */}
-                    {dayData.activity?.length > 0 && (
+                    {(dayData.activity?.length || 0) > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Training & Rehab</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.activity.map((item: any, index: number) => (
+                          {dayData.activity?.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
                               <span className="text-gray-500">{item.duration}min</span>
@@ -251,11 +259,11 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     )}
 
                     {/* Devices */}
-                    {dayData.devices?.length > 0 && (
+                    {(dayData.devices?.length || 0) > 0 && (
                       <div>
                         <h4 className="text-xs font-medium text-gray-600 mb-1">Devices & Tools</h4>
                         <div className="text-sm text-gray-700">
-                          {dayData.devices.map((item: any, index: number) => (
+                          {dayData.devices?.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{item.name}</span>
                               <span className="text-gray-500">{item.duration}min</span>
@@ -268,9 +276,19 @@ export default function DayDetailView({ date, isOpen, onClose }: DayDetailViewPr
                     {/* Wearables */}
                     {dayData.wearables && Object.keys(dayData.wearables).length > 0 && (
                       <div>
-                        <h4 className="text-xs font-medium text-gray-600 mb-1">Wearables</h4>
+                        <h4 className="text-xs font-medium text-gray-600 mb-1">
+                          {dayData.wearables?.device || dayData.wearables?.Device || dayData.wearables?.wearable_device || 'Wearables'}
+                        </h4>
                         <div className="text-sm text-gray-700">
-                          {Object.entries(dayData.wearables).map(([key, value]: [string, any]) => (
+                          {Object.entries(dayData.wearables)
+                            .filter(([key, value]) => 
+                              key !== 'device' && 
+                              key !== 'Device' && 
+                              key !== 'wearable_device' && 
+                              value !== null && 
+                              value !== undefined
+                            )
+                            .map(([key, value]: [string, any]) => (
                             <div key={key} className="flex justify-between">
                               <span className="capitalize">{key.replace('_', ' ')}</span>
                               <span className="text-gray-500">{value}</span>

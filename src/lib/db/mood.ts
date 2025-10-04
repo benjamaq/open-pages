@@ -34,6 +34,7 @@ export type SaveDailyEntryInput = {
   tags?: string[] | null;
   journal?: string | null;
   completedItems?: string[] | null; // Array of completed item keys from localStorage
+  wearables?: any | null; // Wearables data (recovery_score, sleep_score, etc.)
 };
 
 // Context tag options - moved to separate file to avoid server action issues
@@ -58,7 +59,8 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_night_wakes: input.night_wakes,
       p_tags: input.tags,
       p_journal: input.journal,
-      p_completed_items: input.completedItems
+      p_completed_items: input.completedItems,
+      p_wearables: input.wearables
     });
     
     const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
@@ -70,7 +72,8 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_night_wakes: input.night_wakes,
       p_tags: input.tags,
       p_journal: input.journal,
-      p_completed_items: input.completedItems
+      p_completed_items: input.completedItems,
+      p_wearables: input.wearables
     })
 
     // Handle function not found error gracefully
@@ -88,7 +91,8 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
           sleep_hours: input.sleep_hours,
           night_wakes: input.night_wakes,
           tags: input.tags,
-          journal: input.journal
+          journal: input.journal,
+          wearables: input.wearables
         }, { onConflict: 'user_id,local_date' })
         .select()
         .single()

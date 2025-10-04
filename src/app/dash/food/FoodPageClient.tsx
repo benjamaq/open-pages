@@ -373,10 +373,9 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
               {/* Add Food Item */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-1 bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Food Item</span>
+                <span>Add</span>
               </button>
             </div>
           </div>
@@ -466,7 +465,7 @@ export default function FoodPageClient({ foodItems, profile }: FoodPageClientPro
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
-                + Add Food Item
+                Add
               </button>
             </div>
           )}

@@ -18,6 +18,7 @@ interface PublicProfileClientWrapperProps {
   publicModules: any
   isOwnProfile: boolean
   isSharedPublicLink: boolean
+  isMoodTrackingEnabled: boolean
 }
 
 export default function PublicProfileClientWrapper(props: PublicProfileClientWrapperProps) {

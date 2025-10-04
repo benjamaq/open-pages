@@ -156,7 +156,7 @@ export default function DashboardHeaderEditor({
                       className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     >
                       <Upload className="w-4 h-4" />
-                      {isUploading ? 'Uploading...' : 'Upload Photo'}
+                      {isUploading ? 'Uploading...' : 'Upload'}
                     </button>
                     
                     {avatarUrl && (
@@ -274,7 +274,7 @@ export default function DashboardHeaderEditor({
               onClick={handleSave}
               className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
             >
-              Save Changes
+              Save
             </button>
           </div>
         </div>

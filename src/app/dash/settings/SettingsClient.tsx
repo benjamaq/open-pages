@@ -738,9 +738,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               </div>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+                className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center space-x-1.5"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3 h-3" />
                 <span>Sign Out</span>
               </button>
             </div>

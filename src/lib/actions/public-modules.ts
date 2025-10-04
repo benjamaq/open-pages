@@ -9,8 +9,10 @@ export interface PublicModules {
   movement?: boolean
   mindfulness?: boolean
   gear?: boolean
+  uploads?: boolean
   library?: boolean
   journal?: boolean
+  mood?: boolean
 }
 
 export async function updatePublicModules(modules: PublicModules) {
@@ -56,8 +58,10 @@ export async function updatePublicModules(modules: PublicModules) {
     movement: true,
     mindfulness: true,
     gear: true,
+    uploads: true,
     library: true,
-    journal: true
+    journal: true,
+    mood: true
   }
 
   const updatedModules = { ...currentModules, ...modules }
@@ -112,8 +116,10 @@ export async function getPublicModules(profileId: string): Promise<PublicModules
       movement: true,
       mindfulness: true,
       gear: true,
+      uploads: true,
       library: true,
-      journal: true
+      journal: true,
+      mood: true
     }
   }
 
@@ -123,7 +129,9 @@ export async function getPublicModules(profileId: string): Promise<PublicModules
     movement: true,
     mindfulness: true,
     gear: true,
+    uploads: true,
     library: true,
-    journal: true
+    journal: true,
+    mood: true
   }
 }

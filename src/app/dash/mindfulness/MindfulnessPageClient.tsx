@@ -293,9 +293,9 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1 sm:space-x-2"
+            className="bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3" />
             <span>Add Practice</span>
           </button>
         </div>

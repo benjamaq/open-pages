@@ -19,7 +19,7 @@ export default function ProtocolCard({ name, frequency, scheduleDays, note }: Pr
         
         <div className="flex items-center gap-2">
           {frequency && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
               {formatFrequencyDisplay(frequency, scheduleDays)}
             </span>
           )}

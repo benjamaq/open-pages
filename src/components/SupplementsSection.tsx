@@ -73,12 +73,12 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
                       {/* Frequency and timing pills */}
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         {item.frequency && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                             {formatFrequencyDisplay(item.frequency, item.schedule_days)}
                           </span>
                         )}
                         {item.timing && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                             {item.timing}
                           </span>
                         )}
@@ -93,17 +93,6 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
                         )}
                       </div>
                       
-                      {/* See other stacks link */}
-                      {compoundSlug && (
-                        <div className="mt-3 pt-2 border-t border-gray-200">
-                          <Link
-                            href={`/c/${compoundSlug}`}
-                            className="text-xs text-blue-600 hover:text-blue-700 underline"
-                          >
-                            See other stacks →
-                          </Link>
-                        </div>
-                      )}
                     </div>
                   )
                 })}

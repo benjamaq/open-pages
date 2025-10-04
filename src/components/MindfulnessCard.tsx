@@ -21,17 +21,17 @@ export default function MindfulnessCard({ name, duration, timing, frequency, sch
         
         <div className="flex items-center gap-2 flex-wrap">
           {duration && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
               {duration}
             </span>
           )}
           {timing && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
               {timing}
             </span>
           )}
           {frequency && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
               {formatFrequencyDisplay(frequency, scheduleDays)}
             </span>
           )}

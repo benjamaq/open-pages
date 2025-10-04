@@ -248,10 +248,30 @@ export default function DailyCheckinModal({
     setMessage('')
 
     try {
-      // Save to localStorage
       const today = new Date().toISOString().split('T')[0]
       
-      // Save daily check-in state for dashboard
+      // Save to database via mood API
+      const moodData = {
+        mood: draft.energy, // Map energy to mood score
+        sleep_quality: draft.wearable?.sleepScore || null,
+        pain: null, // Not collected in this modal
+        tags: draft.mood ? [draft.mood] : [],
+        journal: draft.moodComment || null
+      }
+
+      const moodResponse = await fetch('/api/mood/today', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(moodData)
+      })
+
+      if (!moodResponse.ok) {
+        throw new Error('Failed to save mood data')
+      }
+
+      // Save to localStorage for backward compatibility
       localStorage.setItem(`biostackr_last_daily_checkin_${userId}`, JSON.stringify({
         energy: draft.energy,
         mood: draft.mood,
@@ -704,7 +724,7 @@ export default function DailyCheckinModal({
                   disabled={isSaving}
                   className="px-6 py-2 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 font-medium"
                 >
-                  {isSaving ? 'Saving...' : 'Save Check-in'}
+                  {isSaving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

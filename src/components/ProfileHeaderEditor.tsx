@@ -419,7 +419,7 @@ export default function ProfileHeaderEditor({
             disabled={isSaving || !displayName.trim()}
             className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

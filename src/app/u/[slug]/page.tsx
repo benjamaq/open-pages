@@ -557,11 +557,12 @@ export default async function ProfilePage({ params, searchParams }: {
                 </>
               )}
 
-              {/* Follow Button - Only show to visitors or in shared public links */}
-              {!isOwnProfile && (
+              {/* Follow Button - Show for visitors or when viewing someone else's profile */}
+              {(!isOwnProfile || isSharedPublicLink) && (
                 <>
                   {console.log('🔍 About to render FollowButton with:', {
                     isOwnProfile,
+                    isSharedPublicLink,
                     ownerUserId: (profile as any).user_id,
                     ownerName: (profile as any).display_name || 'this user',
                     allowsFollowing: (profile as any).allow_stack_follow ?? true,
@@ -585,10 +586,10 @@ export default async function ProfilePage({ params, searchParams }: {
         {/* Health Stack Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
           <h2 className="text-3xl font-bold text-gray-900">
-            My Health Stack
+            human upgrade
           </h2>
           <p className="text-sm text-gray-400 mt-2">
-            Everything I use & track..supplements, protocols, movement, mindfulness, gear & labs
+            Mood • Sleep • Pain • Supps/Meds • Protocols • Journal — with heatmap + day snapshots
           </p>
         </div>
       </div>

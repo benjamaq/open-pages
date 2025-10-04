@@ -140,29 +140,21 @@ export default function ProfileActionButtons({ isOwnProfile, profileName, profil
 
   return (
     <>
-      <div className="flex flex-wrap gap-3 lg:flex-shrink-0">
+      <div>
         {isOwnProfile ? (
           <button 
             onClick={handleCopyLink}
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+            className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
           >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                Copy Public Link
-              </>
-            )}
+            {copied ? 'Copied!' : 'Link'}
           </button>
         ) : (
           <button 
             onClick={handleFollow}
-            className="px-4 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="px-2 sm:px-4 py-1.5 sm:py-2.5 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
           >
-            Follow my stack
+            <span className="hidden sm:inline">Follow my stack</span>
+            <span className="sm:hidden">Follow</span>
           </button>
         )}
       </div>

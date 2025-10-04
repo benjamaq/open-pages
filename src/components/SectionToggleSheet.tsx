@@ -109,7 +109,7 @@ export default function SectionToggleSheet({ currentModules, onUpdate }: Section
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
               >
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

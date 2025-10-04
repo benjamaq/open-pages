@@ -212,7 +212,7 @@ export default function TodayPageClient({
               {/* Dashboard Button */}
               <Link 
                 href="/dash" 
-                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Dashboard
               </Link>
@@ -224,7 +224,7 @@ export default function TodayPageClient({
                   await supabase.auth.signOut()
                   window.location.href = '/'
                 }}
-                className="text-sm font-medium hover:text-gray-700 transition-colors"
+                className="text-xs sm:text-sm font-medium hover:text-gray-700 transition-colors"
                 style={{ color: '#5C6370' }}
               >
                 Sign Out

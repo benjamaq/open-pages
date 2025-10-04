@@ -48,6 +48,7 @@ interface PublicProfileClientProps {
   publicModules: PublicModules
   isOwnProfile: boolean
   isSharedPublicLink: boolean
+  isMoodTrackingEnabled: boolean
 }
 
 export default function PublicProfileClient({
@@ -64,7 +65,8 @@ export default function PublicProfileClient({
   publicShopGearItems,
   publicModules,
   isOwnProfile,
-  isSharedPublicLink
+  isSharedPublicLink,
+  isMoodTrackingEnabled
 }: PublicProfileClientProps) {
   const [showJournalPublic, setShowJournalPublic] = useState(profile.show_journal_public || false)
   const [currentModules, setCurrentModules] = useState<PublicModules>(publicModules || {
@@ -111,9 +113,10 @@ export default function PublicProfileClient({
           currentModulesMood: currentModules?.mood,
           publicMoodDataLength: publicMoodData.length,
           PublicMoodSectionExists: !!PublicMoodSection,
-          publicMoodData: publicMoodData
+          publicMoodData: publicMoodData,
+          isMoodTrackingEnabled: isMoodTrackingEnabled
         })
-        return currentModules?.mood && PublicMoodSection
+        return currentModules?.mood && PublicMoodSection && isMoodTrackingEnabled
       })() && (
         <div id="mood" className="mb-8">
           <PublicMoodSection 

@@ -331,7 +331,6 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm font-medium text-gray-700">Visibility</span>
                   <div className="flex items-center space-x-3">
                     <span className={`text-sm ${!formData.public ? 'text-gray-900' : 'text-gray-400'}`}>
                       Private
@@ -369,7 +368,7 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
                     className="flex-1 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Saving...' : editingEntry ? 'Update Entry' : 'Save Entry'}
+                    {isLoading ? 'Saving...' : editingEntry ? 'Update Entry' : 'Save'}
                   </button>
                 </div>
               </div>

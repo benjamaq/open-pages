@@ -90,10 +90,11 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
         {isOwnProfile && !isSharedPublicLink && !eatingStyle && (
           <button
             onClick={() => setShowHeaderEditor(true)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 cursor-pointer"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium transition-colors border bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 cursor-pointer"
           >
-            <span className="flex items-center gap-1.5">
-              <span>Add eating style</span>
+            <span className="flex items-center gap-1">
+              <span className="hidden sm:inline">Add eating style</span>
+              <span className="sm:hidden">Add style</span>
             </span>
           </button>
         )}
@@ -129,7 +130,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
         {isOwnProfile && !isSharedPublicLink && (
           <button
             onClick={() => setShowHeaderEditor(true)}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-200"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-200"
           >
             <Edit2 className="w-4 h-4 text-gray-600" />
           </button>

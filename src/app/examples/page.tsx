@@ -348,7 +348,7 @@ export default function ExamplesPage() {
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">7-day streak</span>
                   <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors">
-                    Save Check-in
+                    Save
                   </button>
                 </div>
               </div>

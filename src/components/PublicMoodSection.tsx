@@ -45,18 +45,20 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
     }
   };
 
-  const bg = getPalette();
+  const bg = value === 0 ? '#15803D' : getPalette();
 
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
-      <div className="text-xs sm:text-sm font-medium text-gray-700 min-w-[50px] sm:min-w-[60px]">{label}</div>
-      <div className="flex items-center space-x-1 sm:space-x-2">
+    <div className={`flex flex-col items-center ${className}`}>
+      <div className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
+        {label}
+      </div>
+      <div className="flex items-center justify-center w-full">
         <div
-          className="h-3 sm:h-4 w-20 sm:w-24 md:w-32 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-4 w-32 sm:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="text-sm sm:text-base font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-1 text-xs font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -145,7 +147,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg transition-all shadow-sm hover:shadow-md ${
                   showHeatmap 
                     ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                     : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -154,7 +156,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                 title="Monthly heatmap"
               >
                 <Calendar 
-                  className="w-4 h-4"
+                  className="w-3 h-3 sm:w-4 sm:h-4"
                   style={{ 
                     color: 'white',
                     fill: 'none',
@@ -184,21 +186,23 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
         {/* Collapsible Content */}
         {!collapsed && (
           <div className="px-6 pb-4">
-            {/* Top Row: Chips */}
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {displayChips.map((chip, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full"
-                >
-                  {chip?.icon} {chip?.label}
-                </span>
-              ))}
-            </div>
+            {/* Chips Row - Side-by-side layout like dashboard */}
+            {displayChips.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-6 justify-center mt-4">
+                {displayChips.map((chip, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight whitespace-nowrap"
+                  >
+                    {chip?.icon} {chip?.label}
+                  </span>
+                ))}
+              </div>
+            )}
 
-            {/* Mood, Sleep, Pain Row - Horizontal Layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-2 mb-5">
-              {todayEntry.mood !== null && (
+            {/* Mood, Sleep, Pain Row - Evenly spaced like dashboard */}
+            <div className="flex justify-between items-center mb-5 max-w-6xl mx-auto px-16">
+              {todayEntry.mood !== null && todayEntry.mood !== undefined && (
                 <MetricPill
                   label="Mood"
                   value={todayEntry.mood}
@@ -207,16 +211,16 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                   className="w-full"
                 />
               )}
-              {todayEntry.sleep_quality !== null && (
+              {todayEntry.sleep_quality !== null && todayEntry.sleep_quality !== undefined && (
                 <MetricPill
-                  label="Sleep Quality"
+                  label="Sleep"
                   value={todayEntry.sleep_quality}
                   max={10}
                   palette="sleep"
                   className="w-full"
                 />
               )}
-              {todayEntry.pain !== null && (
+              {todayEntry.pain !== null && todayEntry.pain !== undefined && (
                 <MetricPill
                   label="Pain"
                   value={todayEntry.pain}
@@ -228,7 +232,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             </div>
 
             {/* Weekly Averages */}
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm sm:text-base text-gray-500">
               <span className="font-medium">This week's average:</span>{' '}
               {avgMood !== '—' && <span>Mood {avgMood}</span>}
               {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
@@ -244,7 +248,6 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
           <div className="px-6 pb-4">
             {MonthlyHeatmap && (
               <MonthlyHeatmap 
-                monthlyData={moodData}
                 onDayClick={() => {}} // No day detail for public profiles
               />
             )}

@@ -53,3 +53,54 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+    
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { mood, sleep_quality, pain, tags, journal } = body;
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    // Use the upsert function to save mood data
+    const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
+      p_user_id: user.id,
+      p_local_date: today,
+      p_mood: mood || null,
+      p_sleep_quality: sleep_quality || null,
+      p_pain: pain || null,
+      p_tags: tags || [],
+      p_journal: journal || null
+    });
+
+    if (error) {
+      console.error('Error saving mood data:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to save mood data' },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      entry: data
+    });
+  } catch (error) {
+    console.error('Error saving mood data:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to save mood data' },
+      { status: 500 }
+    );
+  }
+}

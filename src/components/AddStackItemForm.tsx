@@ -179,10 +179,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              Add {itemType === 'supplements' ? 'Supplement/Med' : 
-                   itemType === 'movement' ? 'Movement' :
-                   itemType === 'food' ? 'Food Item' :
-                   itemType === 'mindfulness' ? 'Mind & Stress' : 'Stack Item'}
+              Add
             </h2>
             <button
               onClick={onClose}
@@ -197,15 +194,16 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              {error}
-            </div>
-          )}
+          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+            <div className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
 
-          {/* Core Info Section */}
-          <div className="space-y-4">
+            {/* Core Info Section */}
+            <div className="space-y-4">
             <div>
               <input
                 type="text"
@@ -459,27 +457,29 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
             )}
           </div>
 
-          {/* Bottom CTA - Sticky */}
-          <div className="sticky bottom-0 bg-white pt-3 sm:pt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Adding...' : '+ Add to Schedule'}
-              </button>
             </div>
-          </div>
-        </form>
+
+            {/* Bottom CTA - Sticky */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-3 sm:pt-4 px-4 sm:px-6 pb-4 sm:pb-6 mt-4">
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Adding...' : '+ Add to Schedule'}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
 

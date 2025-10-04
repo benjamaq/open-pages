@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, MoreHorizontal, Eye, EyeOff, Copy, Trash2 } from 'lucide-react'
+import { Plus, MoreHorizontal, Eye, EyeOff, Copy, Trash2, Search, Filter, X } from 'lucide-react'
 import AddStackItemForm from '../../../components/AddStackItemForm'
 import EditStackItemForm from '../../../components/EditStackItemForm'
 import { updateStackItem, deleteStackItem } from '../../../lib/actions/stack'
@@ -37,7 +37,41 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<StackItem | null>(null)
   const [showKebab, setShowKebab] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showFilter, setShowFilter] = useState(false)
+  const [filters, setFilters] = useState({
+    visibility: '',
+    category: '',
+    timePreference: ''
+  })
   const router = useRouter()
+
+  // Filter supplements
+  const filteredItems = stackItems.filter(item => {
+    // Search filter
+    if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !item.notes?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !item.brand?.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
+    
+    // Apply other filters
+    if (filters.visibility === 'public' && !item.public) return false
+    if (filters.visibility === 'private' && item.public) return false
+    if (filters.timePreference && item.time_preference !== filters.timePreference) return false
+    
+    return true
+  })
+
+  const clearFilters = () => {
+    setFilters({
+      visibility: '',
+      category: '',
+      timePreference: ''
+    })
+  }
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length
 
   const handleTogglePublic = async (item: StackItem) => {
     try {
@@ -144,24 +178,113 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div className="mb-4 lg:mb-0">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Supplements Management</h1>
           <p className="text-gray-600 mt-1">Manage your supplements and vitamins.</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1 sm:space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Supplement</span>
-        </button>
+        
+        <div className="flex items-center space-x-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search supplements..."
+              className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-48 sm:w-64"
+            />
+          </div>
+
+          {/* Filter */}
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Add Supplement */}
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1"
+          >
+            <span>Add</span>
+          </button>
+        </div>
       </div>
+
+      {/* Filter Panel */}
+      {showFilter && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">Filters</h3>
+            <button
+              onClick={() => setShowFilter(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+              <select
+                value={filters.visibility}
+                onChange={(e) => setFilters(prev => ({ ...prev, visibility: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              >
+                <option value="">All Items</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Time Preference</label>
+              <select
+                value={filters.timePreference}
+                onChange={(e) => setFilters(prev => ({ ...prev, timePreference: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              >
+                <option value="">All Times</option>
+                <option value="morning">Morning</option>
+                <option value="midday">Midday</option>
+                <option value="evening">Evening</option>
+                <option value="anytime">Anytime</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-600 hover:text-gray-800"
+            >
+              Clear all filters
+            </button>
+            <button
+              onClick={() => setShowFilter(false)}
+              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Supplements Grid */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {stackItems.map((item) => (
+          {filteredItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
               {item.dose && <p className="text-sm text-gray-600">Dose: {item.dose}</p>}
@@ -244,6 +367,19 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
           ))}
 
           {/* Empty State */}
+          {filteredItems.length === 0 && stackItems.length > 0 && (
+            <div className="col-span-full text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No supplements found</h3>
+              <p className="text-gray-500 mb-6">Try adjusting your search or filters</p>
+              <button
+                onClick={clearFilters}
+                className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+          
           {stackItems.length === 0 && (
             <div className="col-span-full text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No supplements yet</h3>
@@ -252,7 +388,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
-                + Add Supplement
+                Add
               </button>
             </div>
           )}

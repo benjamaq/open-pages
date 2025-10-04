@@ -308,10 +308,9 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Movement
+            Add
           </button>
         </div>
 
@@ -329,8 +328,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
                   onClick={() => setShowAddForm(true)}
                   className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Movement
+                  Add
                 </button>
               </div>
             ) : (

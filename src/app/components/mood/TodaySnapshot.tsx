@@ -55,16 +55,16 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
-      <div className="text-base sm:text-lg font-semibold text-gray-800 mb-2 text-center w-24 sm:w-32 md:w-40">
+      <div className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
         {label}
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center justify-center w-full">
         <div
-          className="h-3 sm:h-4 w-24 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-4 w-32 sm:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
           aria-label={`${label} ${value} of 10`}
         />
-        <div className="ml-2 sm:ml-4 text-sm sm:text-lg font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-1 text-xs font-bold text-gray-900">{value}/{max}</div>
       </div>
     </div>
   );
@@ -109,15 +109,17 @@ export default function TodaySnapshot({
   const displayChips = selectedChips.slice(0, 4);
 
   // Calculate 7-day averages (memoized for performance)
-  const { avgMood, avgSleep, avgPain } = useMemo(() => {
+  const { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep } = useMemo(() => {
     const last7Days = monthlyData.slice(-7);
     
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
     const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
+    const recoveryValues = last7Days.map(day => day.wearables?.recovery_score).filter(val => val !== null && val !== undefined);
+    const wearableSleepValues = last7Days.map(day => day.wearables?.sleep_score).filter(val => val !== null && val !== undefined);
 
     // If no historical data, use today's values as fallback
-    let avgMood, avgSleep, avgPain;
+    let avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep;
     
     if (moodValues.length > 0) {
       avgMood = (moodValues.reduce((a, b) => a + b, 0) / moodValues.length).toFixed(1);
@@ -143,7 +145,23 @@ export default function TodaySnapshot({
       avgPain = '—';
     }
 
-    return { avgMood, avgSleep, avgPain };
+    if (recoveryValues.length > 0) {
+      avgRecovery = (recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length).toFixed(0);
+    } else if (todayEntry?.wearables?.recovery_score !== null && todayEntry?.wearables?.recovery_score !== undefined) {
+      avgRecovery = todayEntry.wearables.recovery_score.toString();
+    } else {
+      avgRecovery = '—';
+    }
+
+    if (wearableSleepValues.length > 0) {
+      avgWearableSleep = (wearableSleepValues.reduce((a, b) => a + b, 0) / wearableSleepValues.length).toFixed(0);
+    } else if (todayEntry?.wearables?.sleep_score !== null && todayEntry?.wearables?.sleep_score !== undefined) {
+      avgWearableSleep = todayEntry.wearables.sleep_score.toString();
+    } else {
+      avgWearableSleep = '—';
+    }
+
+    return { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep };
   }, [monthlyData, todayEntry]);
 
   // Handle day click from heatmap
@@ -152,13 +170,19 @@ export default function TodaySnapshot({
     setShowDayDetail(true);
   };
 
-  // Debug logging
-  console.log('TodaySnapshot - todayEntry:', todayEntry);
-  console.log('TodaySnapshot - selectedChips:', selectedChips);
-  console.log('TodaySnapshot - monthlyData:', monthlyData);
-  console.log('TodaySnapshot - averages:', { avgMood, avgSleep, avgPain });
-  console.log('TodaySnapshot - collapsed:', collapsed);
-  console.log('TodaySnapshot - showHeatmap:', showHeatmap);
+
+
+  // Debug logging for props and data
+  useEffect(() => {
+    console.log('🔍 TodaySnapshot mounted');
+    console.log('🔍 TodaySnapshot props:', { 
+      todayEntry, 
+      onEditToday: !!onEditToday, 
+      onEditDay: !!onEditDay, 
+      onRefresh: !!onRefresh 
+    });
+    return () => console.log('🔍 TodaySnapshot unmounted');
+  }, [todayEntry]);
 
   return (
     <div className="bg-gray-100 rounded-xl border border-gray-200/60 px-4 pt-4 pb-6 mb-6">
@@ -166,19 +190,19 @@ export default function TodaySnapshot({
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-2 pb-3">
+        <div className="flex items-center justify-between px-6 pt-2 pb-6">
           <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
           <div className="flex items-center space-x-2">
             <button 
               onClick={onEditToday}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+              className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
             >
-              My Daily Check-in
+              Daily Check-in
             </button>
             <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg transition-all shadow-sm hover:shadow-md ${
                   showHeatmap 
                     ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                     : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -187,7 +211,7 @@ export default function TodaySnapshot({
                 title="Monthly heatmap"
               >
                 <Calendar 
-                  className="w-4 h-4"
+                  className="w-3 h-3 sm:w-4 sm:h-4"
                   style={{ 
                     color: 'white',
                     fill: 'none',
@@ -220,13 +244,13 @@ export default function TodaySnapshot({
               </div>
             )}
 
-            {/* Chips Row */}
+            {/* Chips Row - Side-by-side layout like original */}
             {displayChips.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2 mb-3">
+              <div className="flex flex-wrap gap-3 mb-6 justify-center mt-4">
                 {displayChips.map((chip, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1.5 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                    className="px-4 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight whitespace-nowrap"
                   >
                     {chip?.icon} {chip?.label}
                   </span>
@@ -234,47 +258,54 @@ export default function TodaySnapshot({
               </div>
             )}
 
-            {/* Mood, Sleep, Pain Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-2 mb-5">
-              <MetricPill 
-                label="Mood" 
-                value={todayEntry?.mood || 0} 
-                max={10} 
-                palette="mood" 
-                onClick={onEditToday}
-                className="w-full"
-              />
-              <MetricPill 
-                label="Sleep Quality" 
-                value={todayEntry?.sleep_quality || 0} 
-                max={10} 
-                palette="sleep" 
-                onClick={onEditToday}
-                className="w-full"
-              />
-              <MetricPill 
-                label="Pain" 
-                value={todayEntry?.pain || 0} 
-                max={10} 
-                palette="pain" 
-                onClick={onEditToday}
-                className="w-full"
-              />
+            {/* Mood, Sleep, Pain Row - Evenly spaced like original */}
+            <div className="flex justify-between items-center mb-5 max-w-6xl mx-auto px-16">
+              {todayEntry?.mood !== null && todayEntry?.mood !== undefined && (
+                <MetricPill 
+                  label="Mood" 
+                  value={todayEntry.mood} 
+                  max={10} 
+                  palette="mood" 
+                  onClick={onEditToday}
+                  className="w-full"
+                />
+              )}
+              {todayEntry?.sleep_quality !== null && todayEntry?.sleep_quality !== undefined && (
+                <MetricPill 
+                  label="Sleep" 
+                  value={todayEntry.sleep_quality} 
+                  max={10} 
+                  palette="sleep" 
+                  onClick={onEditToday}
+                  className="w-full"
+                />
+              )}
+              {todayEntry?.pain !== null && todayEntry?.pain !== undefined && (
+                <MetricPill 
+                  label="Pain" 
+                  value={todayEntry.pain} 
+                  max={10} 
+                  palette="pain" 
+                  onClick={onEditToday}
+                  className="w-full"
+                />
+              )}
             </div>
 
-            {/* Weekly Averages and Edit Button */}
-            <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <div className="text-sm text-gray-500">
-                  This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
-                </div>
+            {/* Weekly Averages and Wearables */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
+              <div className="text-sm sm:text-base text-gray-500 text-center">
+                This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
               </div>
-              <button 
-                onClick={onEditToday}
-                className="text-sm text-gray-500 hover:text-gray-700 ml-4"
-              >
-                Edit
-              </button>
+              
+              <div className="text-sm sm:text-base text-gray-500 text-center">
+                {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
+                {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
+                {!todayEntry?.wearables?.device && avgRecovery !== '—' && `Recovery ${avgRecovery}`}
+                {!todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
+              </div>
             </div>
           </>
         )}

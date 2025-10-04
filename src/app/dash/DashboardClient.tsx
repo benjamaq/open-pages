@@ -846,7 +846,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Supplement
+                  Add +
                 </button>
                 <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Vitamins, minerals, nootropics—organize by timing and dosage.</p>
               </div>
@@ -958,7 +958,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Protocol
+                  Add +
                 </button>
                 <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Sauna, cold, red light, sleep routine—anything you do regularly.</p>
               </div>
@@ -1428,6 +1428,22 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
   
+  // Load completed items from localStorage on mount
+  useEffect(() => {
+    const today = new Date().toLocaleDateString('sv-SE')
+    const storageKey = `completedItems-${userId}-${today}`
+    const saved = localStorage.getItem(storageKey)
+    if (saved) {
+      try {
+        const savedItems = JSON.parse(saved)
+        setCompletedItems(new Set(savedItems))
+        console.log('🔍 Loaded completed items from localStorage:', savedItems)
+      } catch (error) {
+        console.error('Failed to load completed items:', error)
+      }
+    }
+  }, [userId])
+  
   // Debug today's items
   console.log('🔍 DashboardClient - todayItems:', {
     supplements: todayItems.supplements?.length || 0,
@@ -1492,10 +1508,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         setFollowerCount(data.followers.count || 0)
         console.log('🔄 Dashboard follower count updated:', data.followers.count)
         
-        // Show toast if there are new followers
-        if (data.followers.newSinceLastCheck > 0) {
-          setNewFollowerCount(data.followers.newSinceLastCheck)
+        // Show toast if there are new followers (only if we haven't notified about them yet)
+        if (data.followers.count > lastNotifiedFollowerCount) {
+          const newFollowers = data.followers.count - lastNotifiedFollowerCount
+          setNewFollowerCount(newFollowers)
           setShowNewFollowerToast(true)
+          setLastNotifiedFollowerCount(data.followers.count)
           setTimeout(() => setShowNewFollowerToast(false), 5000)
         }
       } else {
@@ -1515,6 +1533,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       try {
         const savedItems = JSON.parse(saved)
         setCompletedItems(new Set(savedItems))
+        console.log('🔍 Loaded completed items from localStorage:', savedItems)
       } catch (error) {
         console.error('Failed to load completed items:', error)
       }
@@ -1533,9 +1552,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       url.searchParams.delete('welcome')
       window.history.replaceState({}, '', url.toString())
     }
-    
-    // Load dashboard data including follower count
-    loadDashboardData()
     calculateStreak()
     
     // Set up periodic refresh for follower count (every 30 seconds)
@@ -1653,8 +1669,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [followerCount, setFollowerCount] = useState(counts.followers)
   const [showNewFollowerToast, setShowNewFollowerToast] = useState(false)
   const [newFollowerCount, setNewFollowerCount] = useState(0)
+  const [lastNotifiedFollowerCount, setLastNotifiedFollowerCount] = useState(counts.followers)
   const [showShareTodayModal, setShowShareTodayModal] = useState(false)
   const [showEnhancedMoodDrawer, setShowEnhancedMoodDrawer] = useState(false)
+  const [selectedMoodDate, setSelectedMoodDate] = useState<string | null>(null)
   const [todayMoodEntry, setTodayMoodEntry] = useState(null)
   const [monthlyMoodData, setMonthlyMoodData] = useState([])
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
@@ -1935,7 +1953,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Public Profile Button */}
                 <button
                   onClick={() => window.location.href = `/u/${profile.slug}`}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   <span className="hidden sm:inline">Public Profile</span>
                   <span className="sm:hidden">Public Profile</span>
@@ -1989,17 +2007,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                       alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
                     }
                   }}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Copy your public Biostackr link"
                 >
-                  <span className="hidden sm:inline">Copy Public Link</span>
-                  <span className="sm:hidden">Public Link</span>
+                  <span className="hidden sm:inline">Profile link</span>
+                  <span className="sm:hidden">Link</span>
                 </button>
 
                 {/* Notify Followers Button */}
             <button
                   onClick={() => setShowNotifyFollowers(true)}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Send update to your followers"
                 >
                   <span className="hidden sm:inline">Notify Followers</span>
@@ -2009,15 +2027,16 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Journal Link */}
             <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
             >
-                  Journal & Notes
+                  <span className="hidden sm:inline">Journal & Notes</span>
+                  <span className="sm:hidden">Journal</span>
             </button>
 
                 {/* Settings Button */}
                 <button
                   onClick={() => window.location.href = '/dash/settings'}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   Settings
                 </button>
@@ -2028,20 +2047,20 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
       {/* Dashboard Header - Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-start space-x-8 py-8">
+          <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-8 py-4 sm:py-8">
             
             {/* Left: Profile Photo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 mx-auto sm:mx-0">
               <div className="relative group">
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt={displayName}
-                    className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 object-cover rounded-2xl border border-gray-200"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 object-cover rounded-2xl border border-gray-200"
                   />
                 ) : (
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
-                    <span className="text-lg sm:text-xl lg:text-3xl font-bold text-white">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl border border-gray-200 flex items-center justify-center">
+                    <span className="text-sm sm:text-lg md:text-xl lg:text-3xl font-bold text-white">
                       {showDisplayName ? `${firstName.charAt(0)}${lastName.charAt(0)}` : 'AS'}
                     </span>
                   </div>
@@ -2069,7 +2088,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               </div>
 
             {/* Right of Photo: Text + Badges Stack */}
-            <div className="flex-1 flex flex-col justify-between">
+            <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
               
               {/* Top: Display Name + Mission */}
               <div className="space-y-3">
@@ -2078,8 +2097,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onClick={() => setShowHeaderEditor(true)}
                   className="text-left group"
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
                       {displayName}
                     </h1>
                     <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -2089,15 +2108,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                       </div>
                     )}
                   </div>
-                  <p className="text-base text-gray-600 group-hover:text-gray-700 transition-colors">
+                  <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
+                  </p>
+                  <p className="text-xs text-center text-gray-500 mt-1">
+                    Heatmap and daily snapshot
                   </p>
                           </button>
 
                         </div>
                         
                         {/* Trial Status Badge - Small and positioned nicely */}
-                        <div className="mt-4 flex justify-end">
+                        <div className="mt-4 flex justify-center sm:justify-end">
                           <div className="scale-75 origin-top-right">
                             <TrialStatusBadge userId={userId} currentTier={profile.tier || 'free'} />
                           </div>
@@ -2105,12 +2127,12 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
               {/* Bottom: Badge Row - Inline */}
               <div className="mt-6">
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
                   {/* Status Text Items */}
-                  <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
+                  <div className="text-xs sm:text-sm font-medium" style={{ color: '#5C6370' }}>
                     ✅ Today's checklist {completionPercentage}%
                   </div>
-                  <div className="text-sm font-medium" style={{ color: '#5C6370' }}>
+                  <div className="text-xs sm:text-sm font-medium" style={{ color: '#5C6370' }}>
                     🔥 {streak}-day streak
                       </div>
                   
@@ -2118,7 +2140,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   {/* Follower Count Text - Always Show */}
                         <button
                     onClick={() => window.location.href = '/dash/settings#followers'}
-                    className="text-sm font-medium hover:opacity-75 transition-opacity"
+                    className="text-xs sm:text-sm font-medium hover:opacity-75 transition-opacity"
                     style={{ color: '#5C6370' }}
                     title={`${followerCount} ${followerCount === 1 ? 'follower' : 'followers'}`}
                   >
@@ -2187,16 +2209,25 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             
             {/* Row 1 — Today's Supplements (Full Width) */}
             {/* Today Snapshot */}
+            {(() => {
+              console.log('🔍 DashboardClient - Mood tracking check:', {
+                FEATURE_FLAGS_MOOD_TRACKING: FEATURE_FLAGS.MOOD_TRACKING,
+                TodaySnapshot: !!TodaySnapshot,
+                todayMoodEntry,
+                shouldRender: FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot
+              });
+              return null;
+            })()}
             {FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot && (
               <TodaySnapshot
-                key={`${todayMoodEntry?.id || 'no-entry'}-${todayMoodEntry?.mood || 0}-${todayMoodEntry?.sleep_quality || 0}-${todayMoodEntry?.pain || 0}`}
+                key={`${(todayMoodEntry as any)?.id || 'no-entry'}-${(todayMoodEntry as any)?.mood || 0}-${(todayMoodEntry as any)?.sleep_quality || 0}-${(todayMoodEntry as any)?.pain || 0}`}
                 todayEntry={todayMoodEntry}
                 onEditToday={() => {
-                  console.log('🔍 DashboardClient - My Daily Check-in clicked');
                   setShowEnhancedMoodDrawer(true)
                 }}
-              onEditDay={(date) => {
-                // For now, just open today's drawer
+              onEditDay={(date: string) => {
+                console.log('🔍 DashboardClient - Day clicked:', date);
+                setSelectedMoodDate(date);
                 setShowEnhancedMoodDrawer(true);
               }}
               onRefresh={loadTodayMoodEntry}
@@ -2369,6 +2400,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         <DailyCheckinModal
           isOpen={showShareTodayModal}
           onClose={() => setShowShareTodayModal(false)}
+          onEnergyUpdate={(energy: number) => {
+            // Handle energy update if needed
+            console.log('Energy updated:', energy);
+          }}
+          currentEnergy={0}
           todayItems={todayItems}
           userId={userId}
           profileSlug={profile.slug}
@@ -2384,7 +2420,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               loadTodayMoodEntry() // Refresh data after closing
               calculateStreak() // Recalculate streak
             }}
-            date={new Date().toLocaleDateString('sv-SE')}
+            date={selectedMoodDate || new Date().toLocaleDateString('sv-SE')}
             userId={userId}
             initialData={todayMoodEntry}
           />
@@ -2489,10 +2525,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
         {/* Notify Followers Modal */}
         {showNotifyFollowers && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Notify Followers</h3>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-sm sm:max-w-md w-full p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold">Notify Followers</h3>
                 <button
                   onClick={() => setShowNotifyFollowers(false)}
                   className="text-gray-400 hover:text-gray-600 text-xl"
@@ -2501,13 +2537,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 Send an instant update to your followers about recent changes to your stack.
               </p>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Update message (optional)
                   </label>
                   <textarea
@@ -2517,9 +2553,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   />
             </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2">What's Included in Email Notifications:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                  <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-2">What's Included in Email Notifications:</h4>
+                  <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
                     <li>• <strong>Your custom message</strong> (what you type above)</li>
                     <li>• <strong>Your public profile link</strong> (automatically included)</li>
                     <li>• <strong>Recent changes summary</strong> (supplements, protocols, etc.)</li>
@@ -2532,10 +2568,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   </div>
           </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                     onClick={() => setShowNotifyFollowers(false)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -2565,7 +2601,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         alert('Failed to send update. Please try again.')
                       }
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     Send Update
                 </button>

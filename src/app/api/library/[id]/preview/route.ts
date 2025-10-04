@@ -9,7 +9,7 @@ export async function GET(
     const supabase = await createClient()
     const { id } = params
 
-    // Get the library item
+    // Get the library item with service role to bypass RLS for public items
     const { data: item, error: itemError } = await supabase
       .from('library_items')
       .select('*')
@@ -25,12 +25,12 @@ export async function GET(
     
     let hasAccess = false
 
-    // Public items are accessible to everyone
+    // Public items are accessible to everyone (including anonymous users)
     if (item.is_public) {
       hasAccess = true
     }
     
-    // Owner always has access
+    // Owner always has access (if authenticated)
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -47,19 +47,35 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Get signed URL for the file
-    const { data: signedUrlData, error: urlError } = await supabase.storage
+    // Get the file content directly for preview
+    const { data: fileData, error: fileError } = await supabase.storage
       .from('library')
-      .createSignedUrl(item.file_url, 3600) // 1 hour expiry
+      .download(item.file_url)
 
-    if (urlError || !signedUrlData?.signedUrl) {
-      console.error('Failed to create signed URL:', urlError)
+    if (fileError || !fileData) {
+      console.error('Failed to download file:', fileError)
       return NextResponse.json({ error: 'File not accessible' }, { status: 500 })
     }
 
-    // For preview, we want to redirect to the signed URL
-    // This allows the browser to handle the file display
-    return NextResponse.redirect(signedUrlData.signedUrl)
+    // Convert blob to buffer
+    const arrayBuffer = await fileData.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Set appropriate headers based on file type
+    const headers = new Headers()
+    
+    if (item.file_type.startsWith('image/')) {
+      headers.set('Content-Type', item.file_type)
+      headers.set('Cache-Control', 'public, max-age=3600')
+    } else if (item.file_type === 'application/pdf') {
+      headers.set('Content-Type', 'application/pdf')
+      headers.set('Cache-Control', 'public, max-age=3600')
+      // Add headers to allow iframe embedding
+      headers.set('X-Frame-Options', 'SAMEORIGIN')
+    }
+
+    // Return the file content directly
+    return new NextResponse(buffer, { headers })
 
   } catch (error) {
     console.error('Preview API error:', error)

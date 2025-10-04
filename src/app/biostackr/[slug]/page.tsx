@@ -11,6 +11,7 @@ import StickyNavigation from '../../../components/StickyNavigation'
 import PublicProfileHeader from '../../../components/PublicProfileHeader'
 import PublicProfileWithFollow from '../../../components/PublicProfileWithFollow'
 import ProfileActionButtons from '../../../components/ProfileActionButtons'
+import FollowButton from '../../../components/FollowButton'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
 
@@ -132,7 +133,7 @@ export default async function ProfilePage({ params, searchParams }: {
     gear: publicModulesData.gear ?? true,
     uploads: publicModulesData.uploads ?? true,
     library: publicModulesData.library ?? true,
-    journal: publicModulesData.journal ?? false,
+    journal: publicModulesData.journal ?? true,
     mood: publicModulesData.mood ?? true
   }
   
@@ -274,7 +275,10 @@ export default async function ProfilePage({ params, searchParams }: {
     nodeEnv: process.env.NODE_ENV
   })
   
-  if (publicModules.mood) {
+  // Only show mood tracking if feature flag is enabled (development or explicit flag)
+  const isMoodTrackingEnabled = process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true' || process.env.NODE_ENV === 'development'
+  
+  if (publicModules.mood && isMoodTrackingEnabled) {
     try {
       try {
         const { getPublicMoodData } = await import('@/lib/db/mood')
@@ -289,7 +293,7 @@ export default async function ProfilePage({ params, searchParams }: {
       publicMoodData = []
     }
   } else {
-    console.log('Mood tracking disabled - publicModules.mood:', publicModules.mood, 'env:', process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED)
+    console.log('Mood tracking disabled - publicModules.mood:', publicModules.mood, 'env:', process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED, 'isMoodTrackingEnabled:', isMoodTrackingEnabled)
   }
 
   // Fetch public library items
@@ -389,6 +393,17 @@ export default async function ProfilePage({ params, searchParams }: {
                 </>
               )}
 
+              {/* Follow Button - Show for visitors or when viewing someone else's profile */}
+              {(!isOwnProfile || isSharedPublicLink) && (
+                <>
+                  <FollowButton
+                    ownerUserId={(profile as any).user_id}
+                    ownerName={(profile as any).display_name || 'this user'}
+                    allowsFollowing={(profile as any).allow_stack_follow ?? true}
+                  />
+                </>
+              )}
+
               </div>
             </div>
           </div>
@@ -400,10 +415,10 @@ export default async function ProfilePage({ params, searchParams }: {
         {/* Health Stack Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
           <h2 className="text-3xl font-bold text-gray-900">
-            My Health Stack
+            {profile.display_name ? `${profile.display_name}'s Stack` : 'human upgrade'}
           </h2>
           <p className="text-sm text-gray-400 mt-2">
-            Everything I use & track..supplements, protocols, movement, mindfulness, gear & labs
+            Mood • Sleep • Pain • Supps/Meds • Protocols • Journal — with heatmap + day snapshots
           </p>
         </div>
       </div>
@@ -470,6 +485,7 @@ export default async function ProfilePage({ params, searchParams }: {
         publicModules={publicModules}
         isOwnProfile={isOwnProfile}
         isSharedPublicLink={isSharedPublicLink}
+        isMoodTrackingEnabled={isMoodTrackingEnabled}
       />
 
       {/* Footer - Biostackr Branding */}

@@ -202,7 +202,7 @@ export default function UnifiedHeaderEditor({
             disabled={isSaving || !displayName.trim()}
             className="flex-1 px-3 sm:px-6 py-2 sm:py-2.5 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

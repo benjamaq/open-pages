@@ -383,7 +383,7 @@ export default function EditStackItemForm({ item, onClose }: EditStackItemFormPr
                 className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 disabled={isLoading}
               >
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

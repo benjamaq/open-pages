@@ -54,12 +54,13 @@ export default function Home() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
             <div className="lg:col-span-6">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Your Health Hub.
-                <br />
-                <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Organised Shareable Intentional</span>
-          </h1>
+                <span className="block">Your health one link</span>
+                <span className="block text-center text-4xl sm:text-5xl lg:text-6xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent font-extrabold">simple.</span>
+              </h1>
               <p className="mt-6 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[60ch]">
-                Track supplements, protocols, training, labs—and the story behind your journey. Share your link with your coach, your doctor, your community. People can follow along and see what's working.
+                Mood • Sleep • Pain • Supplements/Meds • Protocols • Journal — beautifully organized and shareable.
+                <br />
+                <span className="text-base sm:text-lg text-gray-500">Monthly heatmap & day snapshots.</span>
               </p>
               <div className="mt-8">
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -67,7 +68,7 @@ export default function Home() {
                   href="/auth/signup" 
                     className="bg-gray-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-black transition-colors w-full sm:w-auto text-center"
                 >
-                    Create your hub
+                    Start Free
                 </Link>
                 <Link 
                   href="/examples"
@@ -77,90 +78,270 @@ export default function Home() {
                 </Link>
                   </div>
                   
+                  {/* Micro-trust elements */}
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-500">
+                      Private by default • Share only what you choose • Works great on mobile
+                    </p>
+                  </div>
                       </div>
                         </div>
             <div className="mt-12 lg:mt-0 lg:col-span-6">
-              {/* Stack Page Preview Card */}
+              {/* Hero Preview Card */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 max-w-md mx-auto">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    AJ
+                {/* Mood Tracker */}
+                <div className="mb-4">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-900">Mood Tracker</h3>
+                      <span className="text-xs text-gray-500">Friday, Dec 15</span>
+                    </div>
+                    
+                    {/* Nude Chips - White background with subtle border */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="px-3 py-1 bg-white border border-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                        😴 Rough sleep
+                      </span>
+                      <span className="px-3 py-1 bg-white border border-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                        🦴 Joint pain
+                      </span>
+                      <span className="px-3 py-1 bg-white border border-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                        🏃 Zone 2 day
+                      </span>
+                    </div>
+                    
+                    {/* Mood Pills with gradient bars */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Mood</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 h-3 rounded-full bg-gradient-to-r from-orange-500 to-green-500 relative">
+                            <div className="absolute left-0 top-0 w-16 h-3 bg-gradient-to-r from-orange-500 to-green-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900">8/10</span>
                         </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Alex J</h3>
-                    <p className="text-sm text-gray-600">Optimizing human potential through science-backed protocols</p>
-                    <div className="mt-1">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">187 followers</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Sleep Quality</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 h-3 rounded-full bg-gradient-to-r from-orange-500 to-green-500 relative">
+                            <div className="absolute left-0 top-0 w-12 h-3 bg-orange-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900">6/10</span>
                         </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs rounded-full px-3 py-1 ring-1 ring-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white cursor-pointer">Follow</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Pain</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 h-3 rounded-full bg-gradient-to-r from-green-500 via-yellow-500 to-orange-500 relative">
+                            <div className="absolute left-0 top-0 w-8 h-3 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900">4/10</span>
+                        </div>
                       </div>
                     </div>
                     
-                {/* Sections Preview */}
-                <div className="space-y-3">
-                  {/* Supplements */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Supplements</h4>
-                    <div className="text-xs text-gray-600 space-y-2">
-                      <div className="bg-gray-50 rounded p-2">
-                        <p className="font-medium text-gray-900">Morning</p>
-                        <p>• Vitamin D3 5000 IU (Thorne) with breakfast</p>
-                        <p>• Omega-3 2000mg EPA (Nordic Naturals) with fat</p>
-                      </div>
-                      <div className="bg-gray-50 rounded p-2">
-                        <p className="font-medium text-gray-900">Mid-day</p>
-                        <p>• B-Complex (Garden of Life) with lunch</p>
-                        <p>• Zinc 15mg (Thorne) with food</p>
-                        </div>
-                      <div className="bg-gray-50 rounded p-2">
-                        <p className="font-medium text-gray-900">Evening</p>
-                        <p>• Magnesium Glycinate 400mg (KAL) before bed</p>
-                        <p>• Probiotics 50B CFU (Seed) on empty stomach</p>
-                        </div>
+                    {/* This Week's Average */}
+                    <div className="bg-white rounded p-2 mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-700">This week's average</span>
+                        <span className="text-xs text-gray-600">Mood 7 • Sleep 8 • Pain 3</span>
                       </div>
                     </div>
                     
-                  {/* Protocols */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Protocols & Recovery</h4>
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>• Ice bath (3 min daily), Red light therapy (20 min)</p>
-                      <p>• Sleep optimization routine, Breathwork (10 min)</p>
-                      </div>
-                    </div>
-                    
-                  {/* Library */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Records & Plans</h4>
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                        <p>📄 Lab Results Q3 2024</p>
-                        <p>📋 Training Plan - Hypertrophy</p>
-                      </div>
-                    </div>
-                    
-                  {/* Movement */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">Movement</h4>
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>• Strength training 4x/week (Push/Pull/Legs/Upper)</p>
-                      <p>• Zone 2 cardio 3x/week, Daily walks 8k+ steps</p>
-                      <p>• Mobility work, Yoga 2x/week</p>
+                    {/* Wearable Scores */}
+                    <div className="bg-white rounded p-2 mb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-700">Oura Ring</span>
+                        <span className="text-xs text-gray-600">Recovery Score 67 • Sleep Score 85</span>
                       </div>
                     </div>
                   </div>
                   
-                {/* Footer */}
-                <div className="text-xs text-gray-500 flex justify-between pt-3 border-t border-gray-100 mt-4">
-                  <span>View full stack ↗</span>
-                  <span>Powered by BioStackr.io</span>
+                  {/* Purple Calendar Button */}
+                  <div className="flex justify-center mb-2">
+                    <button className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      View Heat Map
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stack Preview - 30% of card height */}
+                <div className="space-y-2">
+                  {/* Supplements */}
+                  <div className="bg-gray-50 rounded p-2">
+                    <h4 className="text-xs font-medium text-gray-900 mb-1">Supplements</h4>
+                    <div className="text-xs text-gray-600">
+                      <p>• Vitamin D3 5000 IU (Thorne)</p>
+                      <p>• Omega-3 2000mg EPA (Nordic Naturals)</p>
+                      <p>• Magnesium Glycinate 400mg (KAL)</p>
+                      <p>• B-Complex (Garden of Life)</p>
+                      <p>• Zinc 15mg (Thorne)</p>
+                      <p>• Probiotics 50B CFU (Seed)</p>
                     </div>
+                  </div>
+                  
+                  {/* Protocols */}
+                  <div className="bg-gray-50 rounded p-2">
+                    <h4 className="text-xs font-medium text-gray-900 mb-1">Protocols & Recovery</h4>
+                    <div className="text-xs text-gray-600">
+                      <p>• Sauna 15min @ 180°F</p>
+                      <p>• Ice bath 3min @ 50°F</p>
                     </div>
+                  </div>
+                  
+                  {/* Movement */}
+                  <div className="bg-gray-50 rounded p-2">
+                    <h4 className="text-xs font-medium text-gray-900 mb-1">Movement & Rehab</h4>
+                    <div className="text-xs text-gray-600">
+                      <p>• Long run 8mi @ Zone 2</p>
+                      <p>• Mobility work 20min</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
                     
               {/* Caption */}
-              <p className="text-xs text-gray-500 text-center mt-3">Auto-updates when the owner changes their stack.</p>
+              <p className="text-xs text-gray-500 text-center mt-3">
+                Alt text: "Biostackr preview showing today's mood, sleep, and pain with a heatmap button and a short list of supplements and protocols."
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* See Patterns, Not Just Numbers */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left side - Text */}
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                See Patterns, Not Just Numbers
+              </h2>
+              
+              <p className="text-lg text-gray-600 mb-6">
+                Your wearables give you scores—BioStackr adds context: mood, sleep quality, pain, and what you actually did that day.
+              </p>
+              
+              <p className="text-gray-600 mb-8">
+                Numbers are useful, but they're only half the story. A "72% recovery" or "Readiness 64" doesn't tell you why you felt flat—or what helped you bounce back.
+                BioStackr pairs how you felt with what you did (supps/meds, protocols, training, notes) and shows it on a monthly heatmap. Click any day for a snapshot: scores + actions, side by side.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Daily check-in</h4>
+                    <p className="text-gray-600 text-sm">Log mood, sleep quality, and pain in seconds.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Month heatmap</h4>
+                    <p className="text-gray-600 text-sm">Good runs and rough spells pop at a glance.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl">✓</span>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Day snapshots</h4>
+                    <p className="text-gray-600 text-sm">Open any date to see feelings next to actions.</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-500 mt-6">
+                Private by default • Share only what you choose
+              </p>
+            </div>
+
+            {/* Right side - Visual */}
+            <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Monthly Heatmap</h3>
+              
+              {/* Heatmap */}
+              <div className="mb-6">
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                    <div key={i} className="text-xs text-gray-500 text-center py-1">{day}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({length: 35}, (_, i) => {
+                    // Create a compelling story pattern
+                    const storyPattern = [
+                      // Week 1: Mostly dark green (high performance)
+                      'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700',
+                      // Week 2: A little lighter green, then orange with red in middle
+                      'bg-green-500', 'bg-green-500', 'bg-orange-400', 'bg-red-500', 'bg-orange-400', 'bg-green-500', 'bg-green-500',
+                      // Week 3: Back to green
+                      'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600',
+                      // Week 4: Bit of yellow, back to green
+                      'bg-yellow-400', 'bg-green-500', 'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600',
+                      // Week 5: Mostly green
+                      'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600', 'bg-green-700', 'bg-green-600'
+                    ];
+                    return (
+                      <div key={i} className={`w-8 h-8 rounded ${storyPattern[i]} ${i === 16 ? 'ring-4 ring-black ring-opacity-80 shadow-lg' : ''}`}></div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-3 text-center">Click any day for full snapshot</p>
+              </div>
+
+              {/* Selected Day Details */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">Dec 18 - Selected Day</h4>
+                  <span className="text-xs text-gray-500">Whoop Recovery 92 • Sleep 85</span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">9</div>
+                    <span className="text-xs text-gray-600">Mood</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">8</div>
+                    <span className="text-xs text-gray-600">Sleep</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">3</div>
+                    <span className="text-xs text-gray-600">Pain</span>
+                  </div>
+                </div>
+
+                {/* Elaborate Details */}
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="text-xs font-medium text-gray-900 mb-1">💊 Supplements & Meds (8)</h5>
+                    <p className="text-xs text-gray-600">Vitamin D3 5000IU • Omega-3 2000mg • Magnesium Glycinate 400mg • B-Complex • Zinc 15mg • Probiotics 50B CFU • Creatine 5g • Ashwagandha 600mg</p>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-xs font-medium text-gray-900 mb-1">🔥 Protocols & Recovery (4)</h5>
+                    <p className="text-xs text-gray-600">Sauna 20min @ 185°F • Ice bath 4min @ 45°F • Red light therapy 15min • Breathwork 10min</p>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-xs font-medium text-gray-900 mb-1">🏃‍♂️ Movement & Rehab (3)</h5>
+                    <p className="text-xs text-gray-600">Strength training 75min • Zone 2 cardio 45min • Mobility work 25min</p>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-xs font-medium text-gray-900 mb-1">📝 Notes</h5>
+                    <p className="text-xs text-gray-600">Felt incredible after sauna + ice bath combo. Sleep was deep and restorative. No joint pain today.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -169,66 +350,53 @@ export default function Home() {
       {/* Why this beats scattered files */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Problems */}
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">
-                Why this beats scattered files
-              </h2>
-              
-              <div className="space-y-8">
-                  <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Too Many Places</h3>
-                  <p className="text-gray-600">
-                    Supplements in Notes. Movement in Sheets. Labs in email. Protocols in head. Journal & Notes in five different apps. Finding anything takes 10 minutes.
-                  </p>
-              </div>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+              Why this beats scattered files
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              You don't need more spreadsheets and screenshots—you need clarity.
+            </p>
+          </div>
 
-                  <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Can't Share Easily</h3>
-                  <p className="text-gray-600">
-                    Coach asks for your stack. You type it out. Doctor asks two weeks later. You type it again. Friend asks what you're taking. You give up and say 'I'll send it later.'
-                  </p>
-              </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">One unified dashboard for everything</h3>
+              <p className="text-gray-600 text-sm">All your health data in one place, beautifully organized.</p>
+            </div>
 
-                  <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">No Privacy Control</h3>
-                  <p className="text-gray-600">
-                    You want to share training with gym friends but not supplements. Want to show doctor just medical stuff. Impossible with spreadsheets or screenshots.
-                  </p>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart daily checklist (what to take today)</h3>
+              <p className="text-gray-600 text-sm">Never miss a supplement or protocol again.</p>
+            </div>
 
-            {/* Right side - BioStackr Solution */}
-            <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">BioStackr Solution</h3>
-              
-              <ul className="space-y-4 text-gray-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>One unified dashboard for everything</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Smart daily checklist (what to take today)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Selective sharing with granular control</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Progress journal tracks what's actually working</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Searchable library where nothing gets lost</span>
-                </li>
-              </ul>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Heatmap clarity: how you felt next to what you did</h3>
+              <p className="text-gray-600 text-sm">See patterns and correlations at a glance.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Selective sharing with granular module controls</h3>
+              <p className="text-gray-600 text-sm">Share exactly what you want, with whom you want.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Journal that actually ties to your day</h3>
+              <p className="text-gray-600 text-sm">Context-rich notes linked to your mood and actions.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="text-green-500 text-2xl mb-3">✓</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Searchable library where nothing gets lost</h3>
+              <p className="text-gray-600 text-sm">Find any lab result, protocol, or note instantly.</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* What you can track */}
@@ -236,11 +404,23 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              Everything that matters for your health
+              Everything that matters (modules)
             </h2>
                   </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Mood, Sleep & Pain ✓</h3>
+              </div>
+              <p className="text-gray-600">Fast daily check-in, a monthly heatmap, and day snapshots to see what changed and why.</p>
+            </div>
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -248,9 +428,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Supplements ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Supplements & Meds ✓</h3>
               </div>
-              <p className="text-gray-600">Form, dose, timing, brand, notes</p>
+              <p className="text-gray-600">Timing, dosage, and daily check-offs—keep today tight and the month consistent.</p>
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -262,7 +442,7 @@ export default function Home() {
                       </div>
                 <h3 className="text-lg font-bold text-gray-900">Protocols & Recovery ✓</h3>
                       </div>
-              <p className="text-gray-600">Cold plunges, breath work, fasting windows, sleep hygiene</p>
+              <p className="text-gray-600">Cold exposure, rehab, breathwork, diets—clean, repeatable, and visible.</p>
                     </div>
                     
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -272,23 +452,11 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                       </div>
-                <h3 className="text-lg font-bold text-gray-900">Training ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Training & Movement ✓</h3>
                       </div>
-              <p className="text-gray-600">Programs, splits, exercise selection, progression</p>
+              <p className="text-gray-600">Log what you did (or planned) and relate it to how you felt.</p>
                     </div>
                     
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                      </div>
-                <h3 className="text-lg font-bold text-gray-900">Labs ✓</h3>
-                      </div>
-              <p className="text-gray-600">Upload results, track trends, share with providers</p>
-                </div>
-                
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
@@ -296,9 +464,21 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                     </div>
-                <h3 className="text-lg font-bold text-gray-900">Journal & Notes ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Journal ✓</h3>
                     </div>
-              <p className="text-gray-600">Daily progress updates, how you feel, what's working</p>
+              <p className="text-gray-600">Short notes with real context. Open any day and see mood + actions together.</p>
+                </div>
+                
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                      </div>
+                <h3 className="text-lg font-bold text-gray-900">Labs, Docs & Files ✓</h3>
+                      </div>
+              <p className="text-gray-600">Upload the important stuff—doctor letters, lab results, training plans—in one place.</p>
                 </div>
                 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -312,7 +492,7 @@ export default function Home() {
                     </div>
                 <h3 className="text-lg font-bold text-gray-900">Devices & Tools ✓</h3>
                     </div>
-              <p className="text-gray-600">Equipment, apps, mindfulness practices, anything else</p>
+              <p className="text-gray-600">Keep track of wearables, HBOT, sauna, and other gear you use.</p>
                   </div>
                 </div>
                 
