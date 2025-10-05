@@ -58,7 +58,7 @@ export default function Home() {
                 <span className="block">Working for Your Health?</span>
               </h1>
               <p className="mt-6 text-base sm:text-lg text-gray-900 leading-loose max-w-[70ch] text-left font-light">
-                Stop guessing. BioStackr connects your <span className="font-normal">supplements, meds and protocols</span>, with <span className="font-normal">Mood, Sleep, and Pain tracking</span>, empowering you to see the <span className="font-normal">clear patterns that drive your health</span>.
+                <span className="font-medium">Stop guessing...</span> BioStackr connects your <span className="font-normal">supplements, meds and protocols</span>, with <span className="font-normal">Mood, Sleep, and Pain tracking</span>, empowering you to see the <span className="font-normal">clear patterns that drive your health</span>.
               </p>
               <div className="mt-10">
                 <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
