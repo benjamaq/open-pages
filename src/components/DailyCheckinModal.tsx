@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Download, Copy } from 'lucide-react'
+import { X, Download, Copy, ChevronDown } from 'lucide-react'
 
 // Types
 export type WearableSource = 'WHOOP' | 'Oura' | 'Apple Health' | 'Garmin' | 'Fitbit' | 'Polar' | 'Suunto' | 'Coros' | 'Amazfit' | 'Samsung Health' | 'Google Fit' | 'Strava' | 'MyFitnessPal' | 'Cronometer' | 'Eight Sleep' | 'Other' | 'None'
@@ -173,6 +173,7 @@ export default function DailyCheckinModal({
   })
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [showWearables, setShowWearables] = useState(false)
 
   // Load saved data when modal opens
   useEffect(() => {
@@ -216,6 +217,7 @@ export default function DailyCheckinModal({
           recoveryScore: savedRecovery ? Number(savedRecovery) : undefined
         }
       }))
+      setShowWearables(true) // Auto-expand if we have saved wearable data
     }
 
     // Load today's items
@@ -705,6 +707,85 @@ export default function DailyCheckinModal({
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Wearables Section */}
+              <div className="bg-gray-50 rounded-lg p-5 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-zinc-900">Wearables</h3>
+                  <button
+                    onClick={() => setShowWearables(!showWearables)}
+                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    aria-label={showWearables ? 'Collapse' : 'Expand'}
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+                  </button>
+                </div>
+
+                {showWearables && (
+                  <div className="space-y-4">
+                    {/* Wearable Source */}
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-900 mb-2">Device</label>
+                      <select
+                        value={draft.wearable?.source || 'None'}
+                        onChange={(e) => setDraft(d => ({ 
+                          ...d, 
+                          wearable: { 
+                            ...d.wearable, 
+                            source: e.target.value as WearableSource 
+                          } 
+                        }))}
+                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                      >
+                        <option value="None">Select device...</option>
+                        {(['WHOOP', 'Oura', 'Apple Health', 'Garmin', 'Fitbit', 'Polar', 'Suunto', 'Coros', 'Amazfit', 'Samsung Health', 'Google Fit', 'Strava', 'MyFitnessPal', 'Cronometer', 'Eight Sleep', 'Other'] as WearableSource[]).map(source => (
+                          <option key={source} value={source}>{source}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Sleep Score */}
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-900 mb-2">Sleep Score (0-100)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={draft.wearable?.sleepScore || ''}
+                        onChange={(e) => setDraft(d => ({ 
+                          ...d, 
+                          wearable: { 
+                            ...d.wearable, 
+                            sleepScore: e.target.value ? Number(e.target.value) : undefined 
+                          } 
+                        }))}
+                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                        placeholder="Enter sleep score"
+                      />
+                    </div>
+
+                    {/* Recovery Score */}
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-900 mb-2">Recovery Score (0-100)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={draft.wearable?.recoveryScore || ''}
+                        onChange={(e) => setDraft(d => ({ 
+                          ...d, 
+                          wearable: { 
+                            ...d.wearable, 
+                            recoveryScore: e.target.value ? Number(e.target.value) : undefined 
+                          } 
+                        }))}
+                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                        placeholder="Enter recovery score"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Save Button and Message */}

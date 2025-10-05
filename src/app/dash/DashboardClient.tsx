@@ -2024,6 +2024,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   <span className="sm:hidden">Notify</span>
             </button>
 
+                {/* Share Today's Update Button */}
+                <button
+                  onClick={() => setShowShareTodayModal(true)}
+                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="hidden sm:inline">Share Today's Update</span>
+                  <span className="sm:hidden">Share</span>
+                </button>
+
                 {/* Journal Link */}
             <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
