@@ -7,6 +7,8 @@ interface MonthlyHeatmapProps {
   onDayClick: (date: string) => void;
 }
 
+type MetricType = 'mood' | 'sleep_quality' | 'pain';
+
 interface DayData {
   date: string;
   mood: number | null;
@@ -19,6 +21,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date().toLocaleDateString('sv-SE').slice(0, 7)); // YYYY-MM in local timezone
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>('mood');
 
   // Generate month options (last 12 months)
   const generateMonthOptions = () => {
@@ -63,15 +66,36 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
     setCurrentMonth(newDate.toLocaleDateString('sv-SE').slice(0, 7));
   };
 
-  // Get color for mood value
-  const getMoodColor = (mood: number | null) => {
-    if (mood === null || mood === undefined) return '#f3f4f6'; // Gray for no data
+  // Get color for metric value
+  const getMetricColor = (value: number | null, metric: MetricType) => {
+    if (value === null || value === undefined) return '#f3f4f6'; // Gray for no data
     
-    if (mood <= 2) return '#ef4444'; // Red
-    if (mood <= 4) return '#f59e0b'; // Orange
-    if (mood <= 6) return '#eab308'; // Yellow
-    if (mood <= 8) return '#22c55e'; // Green
-    return '#16a34a'; // Dark green
+    if (metric === 'mood') {
+      if (value <= 2) return '#ef4444'; // Red
+      if (value <= 4) return '#f59e0b'; // Orange
+      if (value <= 6) return '#eab308'; // Yellow
+      if (value <= 8) return '#22c55e'; // Green
+      return '#16a34a'; // Dark green
+    }
+    
+    if (metric === 'sleep_quality') {
+      if (value <= 2) return '#1e40af'; // Dark blue
+      if (value <= 4) return '#3b82f6'; // Blue
+      if (value <= 6) return '#60a5fa'; // Light blue
+      if (value <= 8) return '#93c5fd'; // Lighter blue
+      return '#dbeafe'; // Very light blue
+    }
+    
+    if (metric === 'pain') {
+      // Pain is inverted - lower is better
+      if (value >= 8) return '#ef4444'; // Red
+      if (value >= 6) return '#f59e0b'; // Orange
+      if (value >= 4) return '#eab308'; // Yellow
+      if (value >= 2) return '#22c55e'; // Green
+      return '#16a34a'; // Dark green
+    }
+    
+    return '#f3f4f6'; // Default gray
   };
 
   // Generate calendar grid
@@ -95,7 +119,7 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
       
       days.push({
         date: dateStr,
-        mood: dayData?.mood || null,
+        mood: dayData?.[selectedMetric] || null,
         isCurrentMonth,
         isToday,
         day: currentDate.getDate()
@@ -152,9 +176,29 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
 
       {/* Header and Description */}
       <div className="mb-4 px-1 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Heat map view</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-gray-900">Heat map view</h3>
+          <div className="flex gap-1">
+            {(['mood', 'pain', 'sleep_quality'] as MetricType[]).map((metric) => (
+              <button
+                key={metric}
+                onClick={() => setSelectedMetric(metric)}
+                className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                  selectedMetric === metric
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {metric === 'sleep_quality' ? 'Sleep' : metric.charAt(0).toUpperCase() + metric.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="text-xs text-gray-500 leading-relaxed">
-          Mood across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities. Only items you checked off that day will appear in the historical register.
+          {selectedMetric === 'mood' && 'Mood across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
+          {selectedMetric === 'pain' && 'Pain levels across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
+          {selectedMetric === 'sleep_quality' && 'Sleep quality across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
+          {' Only items you checked off that day will appear in the historical register.'}
         </p>
       </div>
 
@@ -178,9 +222,9 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
               ${day.isToday ? 'ring-2 ring-blue-500' : ''}
             `}
             style={{
-              backgroundColor: getMoodColor(day.mood)
+              backgroundColor: getMetricColor(day.mood, selectedMetric)
             }}
-            title={day.mood !== null ? `Mood: ${day.mood}/10` : 'No data'}
+            title={day.mood !== null ? `${selectedMetric === 'sleep_quality' ? 'Sleep' : selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)}: ${day.mood}/10` : 'No data'}
           >
             {day.day}
           </button>
@@ -189,26 +233,78 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
 
       {/* Legend */}
       <div className="flex items-center justify-center space-x-4 mt-4 text-xs">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-          <span className="text-gray-600">Low (0-2)</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-          <span className="text-gray-600">Med (3-4)</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
-          <span className="text-gray-600">Good (5-6)</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-          <span className="text-gray-600">Great (7-8)</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
-          <span className="text-gray-600">Excellent (9-10)</span>
-        </div>
+        {selectedMetric === 'mood' && (
+          <>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-gray-600">Low (0-2)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-gray-600">Med (3-4)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
+              <span className="text-gray-600">Good (5-6)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
+              <span className="text-gray-600">Great (7-8)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
+              <span className="text-gray-600">Excellent (9-10)</span>
+            </div>
+          </>
+        )}
+        {selectedMetric === 'sleep_quality' && (
+          <>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#1e40af' }}></div>
+              <span className="text-gray-600">Poor (0-2)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+              <span className="text-gray-600">Fair (3-4)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
+              <span className="text-gray-600">Good (5-6)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#93c5fd' }}></div>
+              <span className="text-gray-600">Great (7-8)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#dbeafe' }}></div>
+              <span className="text-gray-600">Excellent (9-10)</span>
+            </div>
+          </>
+        )}
+        {selectedMetric === 'pain' && (
+          <>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
+              <span className="text-gray-600">None (0-1)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
+              <span className="text-gray-600">Mild (2-3)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
+              <span className="text-gray-600">Moderate (4-5)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-gray-600">Severe (6-7)</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-gray-600">Intense (8-10)</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
