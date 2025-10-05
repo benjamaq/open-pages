@@ -244,7 +244,7 @@ export default function Home() {
                   <span className="text-green-500 text-xl">✓</span>
                   <div>
                     <h4 className="font-semibold text-gray-900">Month heatmap</h4>
-                    <p className="text-gray-600 text-sm">Good runs and rough spells pop at a glance.</p>
+                    <p className="text-gray-600 text-sm">Toggle between mood, pain, and sleep views to spot patterns.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -263,7 +263,14 @@ export default function Home() {
 
             {/* Right side - Visual */}
             <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Monthly Heatmap</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Monthly Heatmap</h3>
+                <div className="flex gap-1">
+                  <button className="px-2 py-1 text-xs rounded-full bg-indigo-600 text-white">Mood</button>
+                  <button className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">Pain</button>
+                  <button className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">Sleep</button>
+                </div>
+              </div>
               
               {/* Heatmap */}
               <div className="mb-6">
@@ -292,7 +299,7 @@ export default function Home() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-500 mt-3 text-center">Click any day for full snapshot</p>
+                <p className="text-xs text-gray-500 mt-3 text-center">Toggle between mood, pain, and sleep views</p>
               </div>
 
               {/* Selected Day Details */}
