@@ -158,16 +158,19 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Enhanced Heatmap Button */}
-                  <div className="flex justify-center mb-2">
-                    <div className="text-center">
-                      <button className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        View Heatmap
+                  {/* Heatmap Metric Toggle */}
+                  <div className="text-center mb-3">
+                    <p className="text-sm font-medium text-gray-900 mb-3">View Heatmap</p>
+                    <div className="flex gap-2 justify-center">
+                      <button className="px-3 py-1.5 text-xs rounded-full bg-indigo-600 text-white font-medium">
+                        Mood
                       </button>
-                      <p className="text-xs text-gray-500 mt-1">Mood • Pain • Sleep</p>
+                      <button className="px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
+                        Sleep
+                      </button>
+                      <button className="px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
+                        Pain
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -314,15 +317,15 @@ export default function Home() {
                 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">9</div>
+                    <div className="w-10 h-10 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-base font-bold">9</div>
                     <span className="text-xs text-gray-600">Mood</span>
                   </div>
                   <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">8</div>
+                    <div className="w-10 h-10 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-base font-bold">8</div>
                     <span className="text-xs text-gray-600">Sleep</span>
                   </div>
                   <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 mx-auto mb-1 flex items-center justify-center text-white text-sm font-bold">3</div>
+                    <div className="w-10 h-10 rounded-full bg-orange-500 mx-auto mb-1 flex items-center justify-center text-white text-base font-bold">3</div>
                     <span className="text-xs text-gray-600">Pain</span>
                   </div>
                 </div>
