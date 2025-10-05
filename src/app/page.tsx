@@ -169,8 +169,11 @@ export default function Home() {
                   
                   {/* Heatmap Button */}
                   <div className="mb-3">
-                    <button className="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-                      View 30-Day Mood, Sleep & Pain Map
+                    <button className="w-full bg-indigo-600 text-white px-4 py-4 rounded-lg hover:bg-indigo-700 transition-colors border-2 border-black">
+                      <div className="text-center">
+                        <div className="text-lg font-bold uppercase mb-1">View Heatmap</div>
+                        <div className="text-xs font-normal">Mood • Sleep • Pain</div>
+                      </div>
                     </button>
                   </div>
                 </div>
