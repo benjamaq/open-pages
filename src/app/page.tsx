@@ -167,20 +167,11 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Heatmap Metric Toggle */}
-                  <div className="text-center mb-3">
-                    <p className="text-sm font-medium text-gray-900 mb-3">View Heatmap</p>
-                    <div className="flex gap-2 justify-center">
-                      <button className="px-3 py-1.5 text-xs rounded-full bg-indigo-600 text-white font-medium">
-                        Mood
-                      </button>
-                      <button className="px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
-                        Sleep
-                      </button>
-                      <button className="px-3 py-1.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
-                        Pain
-                      </button>
-                    </div>
+                  {/* Heatmap Button */}
+                  <div className="mb-3">
+                    <button className="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                      View 30-Day Mood, Sleep & Pain Map
+                    </button>
                   </div>
                 </div>
 
