@@ -58,7 +58,7 @@ export default function Home() {
                 <span className="block">Working for Your Health?</span>
               </h1>
               <p className="mt-5 text-lg sm:text-xl text-gray-600 leading-relaxed max-w-[70ch] text-left font-normal">
-                Track <span className="font-medium">mood, sleep, and pain</span> alongside your supplements, meds, and protocols. A <span className="font-medium">30-day heatmap</span> reveals patterns—share your profile with <span className="font-medium">one link</span>.
+                Stop guessing. BioStackr connects your <span className="font-medium">supplements, meds and protocols</span>, with <span className="font-medium">Mood, Sleep, and Pain tracking</span>, empowering you to see the <span className="font-medium">clear patterns that drive your health</span>.
               </p>
               <div className="mt-10">
                 <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
