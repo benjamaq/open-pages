@@ -503,7 +503,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 <img
                   src={profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.display_name || 'User'}&backgroundColor=000000&textColor=ffffff`}
                   alt="Profile"
-                  className="w-20 h-20 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-gray-200"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-200"
                 />
                 {isUploading && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
