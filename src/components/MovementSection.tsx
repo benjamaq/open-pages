@@ -25,7 +25,7 @@ export default function MovementSection({ movementItems }: MovementSectionProps)
     <section className="mb-8">
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900">
             Training & Rehab ({movementItems.length})
           </h2>
           <button

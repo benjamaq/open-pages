@@ -81,7 +81,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           <div className="px-3 py-1.5 rounded-full text-xs font-medium border bg-gray-50 text-gray-700 border-gray-200">
             <span className="flex items-center gap-1.5">
               {styleConfig.icon && <span className="text-sm">{styleConfig.icon}</span>}
-              <span>Eating style: {eatingStyle}</span>
+              <span>Nutrition style: {eatingStyle}</span>
             </span>
           </div>
         )}
@@ -93,8 +93,8 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
             className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium transition-colors border bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 cursor-pointer"
           >
             <span className="flex items-center gap-1">
-              <span className="hidden sm:inline">Add eating style</span>
-              <span className="sm:hidden">Add style</span>
+              <span className="hidden sm:inline">Add nutrition style</span>
+              <span className="sm:hidden">Add nutrition style</span>
             </span>
           </button>
         )}

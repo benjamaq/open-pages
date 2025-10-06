@@ -67,7 +67,7 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
                   return (
                     <div key={item.id} className="bg-gray-50 rounded-lg p-4">
                       <div className="mb-2">
-                        <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
+                        <h3 className="font-medium text-gray-900 text-base break-words">{item.name}</h3>
                       </div>
                       
                       {/* Frequency and timing pills */}

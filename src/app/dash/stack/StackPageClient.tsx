@@ -155,7 +155,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
                 {/* Dashboard Button */}
                 <Link 
                   href="/dash" 
-                  className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -173,15 +173,15 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
             Dashboard
           </Link>
           <span className="text-gray-300">›</span>
-          <span className="text-gray-900 font-medium">Supplements Management</span>
+          <span className="text-gray-900 font-medium">Supplements & Meds Management</span>
         </nav>
       </div>
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
         <div className="mb-4 lg:mb-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Supplements Management</h1>
-          <p className="text-gray-600 mt-1">Manage your supplements and vitamins.</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Supplements & Meds Management</h1>
+          <p className="text-gray-500 mt-1 text-sm">Manage what you take - supplements, medications, peptides, vitamins, nootropics.</p>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -286,10 +286,10 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
-              {item.dose && <p className="text-sm text-gray-600">Dose: {item.dose}</p>}
-              {item.brand && <p className="text-sm text-gray-600">Brand: {item.brand}</p>}
-              {item.timing && <p className="text-sm text-gray-600">Timing: {item.timing}</p>}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 break-words">{item.name}</h3>
+              {item.dose && <p className="text-sm text-gray-600 break-words">Dose: {item.dose}</p>}
+              {item.brand && <p className="text-sm text-gray-600 break-words">Brand: {item.brand}</p>}
+              {item.timing && <p className="text-sm text-gray-600 break-words">Timing: {item.timing}</p>}
               
               <div className="mt-4 flex justify-between items-center">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -382,8 +382,8 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
           
           {stackItems.length === 0 && (
             <div className="col-span-full text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No supplements yet</h3>
-              <p className="text-gray-500 mb-6">Add your first supplement to get started</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No supplements or medications yet</h3>
+              <p className="text-gray-500 mb-6">Add supplements, medications, peptides, vitamins, or nootropics</p>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"

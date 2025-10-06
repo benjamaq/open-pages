@@ -25,7 +25,7 @@ interface MetricPillProps {
 }
 
 const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillProps) => {
-  const pct = (value / max) * 100;
+  const hasData = value > 0;
   
   const getPalette = () => {
     if (palette === 'pain') {
@@ -45,20 +45,23 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
     }
   };
 
-  const bg = value === 0 ? '#15803D' : getPalette();
+  // Show green for empty state (no data recorded)
+  const bg = hasData ? getPalette() : 'linear-gradient(to right, #22C55E, #22C55E)';
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <div className="text-[10px] sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
+      <div className="text-xs sm:text-base font-semibold text-gray-800 mb-1 sm:mb-2 text-center w-full">
         {label}
       </div>
       <div className="flex items-center justify-center w-full">
         <div
-          className="h-3 w-12 sm:h-4 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 w-12 sm:h-5 sm:w-40 md:w-48 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
-          aria-label={`${label} ${value} of 10`}
+          aria-label={`${label} ${hasData ? value : 'not recorded'} of 10`}
         />
-        <div className="ml-1 text-[10px] sm:text-xs font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-1 sm:ml-2 text-xs sm:text-base font-bold text-gray-900">
+          {hasData ? `${value}/${max}` : '—'}
+        </div>
       </div>
     </div>
   );
@@ -145,9 +148,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
     }));
   }, [moodData]);
 
-  if (!todayEntry || (!todayEntry.mood && !todayEntry.sleep_quality && !todayEntry.pain)) {
-    return null; // Don't show section if no mood data
-  }
+  // Always show the section, even without data (matches dashboard behavior)
 
   // Debug logging
   console.log('PublicMoodSection rendering with:', { todayEntry, moodData: moodData.length });
@@ -159,13 +160,13 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-2 pb-3">
-          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between px-3 sm:px-6 pt-2 pb-6">
+          <h3 className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#0F1115' }}>Mood Tracker</h3>
+          <div className="flex items-center space-x-1 sm:space-x-2 ml-2 sm:ml-0">
             <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg transition-all shadow-sm hover:shadow-md ${
                   showHeatmap 
                     ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                     : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -192,18 +193,25 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
               className="p-1 rounded-full hover:bg-gray-200 transition-colors"
               aria-label={collapsed ? 'Expand' : 'Collapse'}
             >
-              {collapsed ? (
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              )}
+              <ChevronDown className={`w-5 h-5 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
             </button>
           </div>
         </div>
 
         {/* Collapsible Content */}
         {!collapsed && (
-          <div className="px-6 pb-4">
+          <>
+            {/* Monthly Heatmap */}
+            {showHeatmap && (
+              <div className="mb-4">
+                {MonthlyHeatmap && (
+                  <MonthlyHeatmap 
+                    onDayClick={() => {}} // No day detail for public profiles
+                  />
+                )}
+              </div>
+            )}
+
             {/* Chips Row - Mobile 2x2 grid, Desktop side-by-side */}
             {displayChips.length > 0 && (
               <div className="grid grid-cols-2 gap-1 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
@@ -220,49 +228,42 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
 
             {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
             <div className="flex justify-between items-center mb-5 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
-              {todayEntry.mood !== null && todayEntry.mood !== undefined && (
-                <MetricPill
-                  label="Mood"
-                  value={todayEntry.mood}
-                  max={10}
-                  palette="mood"
-                  className="w-full"
-                />
-              )}
-              {todayEntry.sleep_quality !== null && todayEntry.sleep_quality !== undefined && (
-                <MetricPill
-                  label="Sleep"
-                  value={todayEntry.sleep_quality}
-                  max={10}
-                  palette="sleep"
-                  className="w-full"
-                />
-              )}
-              {todayEntry.pain !== null && todayEntry.pain !== undefined && (
-                <MetricPill
-                  label="Pain"
-                  value={todayEntry.pain}
-                  max={10}
-                  palette="pain"
-                  className="w-full"
-                />
-              )}
+              <MetricPill 
+                label="Mood" 
+                value={todayEntry?.mood ?? 0} 
+                max={10} 
+                palette="mood" 
+                className="w-full"
+              />
+              <MetricPill 
+                label="Sleep" 
+                value={todayEntry?.sleep_quality ?? 0} 
+                max={10} 
+                palette="sleep" 
+                className="w-full"
+              />
+              <MetricPill 
+                label="Pain" 
+                value={todayEntry?.pain ?? 0} 
+                max={10} 
+                palette="pain" 
+                className="w-full"
+              />
             </div>
 
             {/* Weekly Averages and Wearables */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
-              <div className="text-sm sm:text-base text-gray-500 text-center">
-                <div className="font-medium">This week's average:</div>
-                <div>
-                  {avgMood !== '—' && <span>Mood {avgMood}</span>}
-                  {avgMood !== '—' && avgSleep !== '—' && <span> • </span>}
-                  {avgSleep !== '—' && <span>Sleep {avgSleep}</span>}
-                  {avgSleep !== '—' && avgPain !== '—' && <span> • </span>}
-                  {avgPain !== '—' && <span>Pain {avgPain}</span>}
+              <div className="text-xs sm:text-base text-gray-500 text-center">
+                <div className="sm:hidden">
+                  <div>This week's average:</div>
+                  <div>Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
+                </div>
+                <div className="hidden sm:block">
+                  This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}
                 </div>
               </div>
               
-              <div className="text-sm sm:text-base text-gray-500 text-center">
+              <div className="text-xs sm:text-base text-gray-500 text-center">
                 {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
                 {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
                 {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
@@ -271,19 +272,10 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
                 {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
               </div>
             </div>
-          </div>
+
+          </>
         )}
 
-        {/* Heatmap */}
-        {showHeatmap && (
-          <div className="px-6 pb-4">
-            {MonthlyHeatmap && (
-              <MonthlyHeatmap 
-                onDayClick={() => {}} // No day detail for public profiles
-              />
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

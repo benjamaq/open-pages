@@ -112,13 +112,13 @@ BEGIN
   -- Get active supplements/meds for this user on this date
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
     'id', s.id, 'name', s.name, 'type', 'supplement',
-    'dose', s.dose, 'unit', s.unit, 'schedule', s.timing
+    'dose', s.dose, 'schedule', s.timing
   ) ORDER BY s.name), '[]'::jsonb)
   INTO v_meds
   FROM stack_items s
   JOIN profiles p ON p.id = s.profile_id
   WHERE p.user_id = p_user_id 
-    AND s.item_type = 'supplements'
+    AND (s.item_type = 'supplements' OR s.item_type IS NULL)
     AND s.created_at <= (p_local_date + INTERVAL '1 day')::timestamptz;
 
   -- Get active protocols for this user on this date

@@ -71,7 +71,7 @@ function EatingStyleEditor({ isOpen, onClose, initialStyle, onSave }: EatingStyl
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              My current eating style is:
+              My current nutrition style is:
             </label>
             <div className="space-y-2">
               {EATING_STYLES.map(option => (
@@ -109,11 +109,11 @@ function EatingStyleEditor({ isOpen, onClose, initialStyle, onSave }: EatingStyl
                 {EATING_STYLES.find(s => s.value === style)?.icon && (
                   <span>{EATING_STYLES.find(s => s.value === style)?.icon}</span>
                 )}
-                <span>My eating style is {style}</span>
+                <span>My nutrition style is {style}</span>
               </div>
             ) : (
               <div className="px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-600 border border-gray-200">
-                No eating style set
+                No nutrition style set
               </div>
             )}
           </div>
@@ -179,7 +179,7 @@ export default function EatingStylePill({ profile, isOwner }: EatingStylePillPro
         >
           <span className="flex items-center gap-2">
             {styleConfig.icon && <span>{styleConfig.icon}</span>}
-            <span>{eatingStyle ? `My eating style is ${eatingStyle}` : 'Add eating style'}</span>
+            <span>{eatingStyle ? `My nutrition style is ${eatingStyle}` : 'Add nutrition style'}</span>
           </span>
         </button>
       )}

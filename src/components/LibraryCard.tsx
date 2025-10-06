@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, Download, Edit, Trash2, Calendar, User, Tag, Globe, Lock } from 'lucide-react'
+import { Eye, Download, Edit, Trash2, Calendar, User, Tag } from 'lucide-react'
 import { LibraryItem } from '../lib/actions/library'
 
 interface LibraryCardProps {
@@ -134,13 +134,15 @@ export default function LibraryCard({
             </div>
           </div>
           
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             {/* Privacy indicator */}
-            {item.is_public ? (
-              <Globe className="w-4 h-4 text-green-600" title="Public" />
-            ) : (
-              <Lock className="w-4 h-4 text-gray-400" title="Private" />
-            )}
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+              item.is_public 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-200 text-gray-600'
+            }`}>
+              {item.is_public ? 'Public' : 'Private'}
+            </span>
             
             {/* File type */}
             <span className="text-sm" title={item.file_type}>

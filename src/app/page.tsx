@@ -86,22 +86,23 @@ export default function Home() {
                         </div>
             <div className="mt-12 lg:mt-0 lg:col-span-6">
               {/* Hero Preview Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 max-w-md mx-auto relative">
-                {/* Share Link Button */}
-                <div className="absolute -top-2 -right-2">
-                  <button className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
-                    Share link
-                  </button>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 max-w-md mx-auto relative" style={{ minHeight: '520px' }}>
+                {/* Date */}
+                <div className="text-center mb-1 -mt-4">
+                  <span className="text-xs text-gray-500">Friday, Dec 15</span>
                 </div>
+                
                 {/* Mood Tracker */}
                 <div className="mb-4">
-                  <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-3 relative">
+                    {/* Share Profile Button */}
+                    <div className="absolute top-4 right-4">
+                      <button className="bg-indigo-600 text-white px-2 py-1 rounded text-xs font-medium shadow-sm hover:bg-indigo-700 transition-colors">
+                        Share Profile
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between mb-5">
                       <h3 className="font-semibold text-gray-900">Mood Tracker</h3>
-                      <span className="text-xs text-gray-500">Friday, Dec 15</span>
                     </div>
                     
                     {/* Nude Chips - White background with subtle border */}
@@ -226,7 +227,7 @@ export default function Home() {
       </section>
 
       {/* See Patterns, Not Just Numbers */}
-      <section className="py-20 bg-white">
+      <section className="py-8 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left side - Text */}
@@ -532,7 +533,7 @@ export default function Home() {
               </h2>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Smart privacy controls</h3>
               <p className="text-lg text-gray-600 mb-6">
-                Your health stack is personal. Share your complete profile with your coach, just supplements with friends, or keep everything private. You control exactly what gets shared.
+                Your health stack is personal. Share your complete profile with your healthcare provider, just supplements & meds with fellow biohackers, or keep everything private. You control exactly what gets shared.
               </p>
               
               <ul className="space-y-3 text-gray-700">
@@ -564,7 +565,7 @@ export default function Home() {
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="font-medium text-gray-900">Supplements</span>
+                    <span className="font-medium text-gray-900">Supplements & Meds</span>
               </div>
                   <span className="text-sm text-green-600 font-medium">ON</span>
             </div>
@@ -588,7 +589,7 @@ export default function Home() {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                    <span className="font-medium text-gray-900">Labs</span>
+                    <span className="font-medium text-gray-900">Records & Plans</span>
               </div>
                   <span className="text-sm text-gray-500 font-medium">OFF</span>
                   </div>
@@ -631,7 +632,7 @@ export default function Home() {
                 </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Your Coach</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share your complete profile—supplements, training splits, protocols, labs, and progress journal. Everything they need to guide you.
+                Share your complete profile—supplements & meds, movement, protocols & recovery, records & plans, and progress journal. Everything they need to guide you.
               </p>
               </div>
 
@@ -643,7 +644,7 @@ export default function Home() {
                 </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Your Doctor</h3>
               <p className="text-gray-600 leading-relaxed">
-                Toggle on just labs and supplements. Toggle off training and journal. Give them medical context without the noise.
+                Toggle on just records & plans and supplements & meds. Toggle off movement and journal. Give them medical context without the noise.
               </p>
                 </div>
 
@@ -714,21 +715,22 @@ export default function Home() {
                 <div className="space-y-6">
                   <div className="border-l-4 border-amber-300 pl-6 py-2">
                     <p className="text-gray-800 italic leading-relaxed text-lg">
-                      "Finally hit that 225lb bench press after months of grinding. But more than the number—it's the mental shift. I stopped seeing limits and started seeing possibilities."
+                      "First day back in the gym since surgery. Started with just the bar—45 pounds felt like 200. But the sauna session and red light therapy afterwards made all the difference. Feeling stronger already."
                     </p>
                     <div className="flex items-center gap-3 mt-3">
                       <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Public</span>
-                      <span className="text-xs text-gray-500">Training Victory</span>
+                      <span className="text-xs text-gray-500">Recovery Milestone</span>
                 </div>
               </div>
 
                   <div className="border-l-4 border-gray-300 pl-6 py-2">
+                    <p className="text-sm text-gray-500 mb-2">March 16, 2024</p>
                     <p className="text-gray-700 italic leading-relaxed">
-                      "Meditation before sunrise. The city is still quiet, and for the first time in years, so is my mind. This practice is changing everything."
+                      "Physical therapy session today—managed 10 minutes on the bike without stopping. My therapist said I'm ahead of schedule. The consistency with my supplements and sleep routine is paying off."
                     </p>
                     <div className="flex items-center gap-3 mt-3">
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Private</span>
-                      <span className="text-xs text-gray-500">Mindfulness Journey</span>
+                      <span className="text-xs text-gray-500">Recovery Progress</span>
             </div>
           </div>
         </div>
@@ -801,7 +803,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">How it works</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Modular design—one module for everything. Keep it simple, keep it clear.</p>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Organized modules for every aspect of your health journey. Keep it simple, keep it clear.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -811,7 +813,7 @@ export default function Home() {
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Create</h3>
-                <p className="text-gray-600 leading-relaxed">Add what you're taking, doing, and tracking. Supplements, training programs, labs, protocols, journal entries. Everything in one organized hub.</p>
+                <p className="text-gray-600 leading-relaxed">Add what you're taking, doing, and tracking. Supplements & meds, movement, records & plans, protocols & recovery, journal entries. Everything in one organized hub.</p>
               </div>
             </div>
 
@@ -1056,7 +1058,7 @@ export default function Home() {
           <div className="text-center">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
-                href="/auth/signup" 
+                href="/" 
                 className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Create your stack

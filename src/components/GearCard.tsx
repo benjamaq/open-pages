@@ -29,7 +29,7 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Add gear"
+            aria-label="Add devices & tools"
           >
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
@@ -59,9 +59,9 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                        <h3 className="text-sm font-medium text-gray-900 break-words">{item.name}</h3>
                         {item.brand && (
-                          <p className="text-xs text-gray-500">{item.brand}{item.model && ` ${item.model}`}</p>
+                          <p className="text-xs text-gray-500 break-words">{item.brand}{item.model && ` ${item.model}`}</p>
                         )}
                         <p className="text-xs text-gray-400">{item.category}</p>
                       </div>
@@ -98,7 +98,7 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
                 >
                   Add Gear
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Wearables, recovery tools, kitchen equipment—track what supports your health journey.</p>
+                <p className="text-xs leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Track your health equipment.</p>
               </div>
             </div>
           )}

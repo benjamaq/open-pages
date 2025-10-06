@@ -117,7 +117,7 @@ export default function LibraryClient({ profile, initialItems }: LibraryClientPr
           onAdd={handleAdd}
           isOwner={true}
           showAddButton={true}
-          title="My Records & Plans"
+          title="Records and Plans"
           emptyMessage="Your records & plans are empty"
         />
       </div>

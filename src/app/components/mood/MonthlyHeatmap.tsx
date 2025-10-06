@@ -198,7 +198,6 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
           {selectedMetric === 'mood' && 'Mood across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
           {selectedMetric === 'pain' && 'Pain levels across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
           {selectedMetric === 'sleep_quality' && 'Sleep quality across the month. Click a day for the full snapshot—sleep, pain, meds/supps, activities.'}
-          {' Only items you checked off that day will appear in the historical register.'}
         </p>
       </div>
 
@@ -232,76 +231,76 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center space-x-4 mt-4 text-xs">
+      <div className="flex items-center justify-center space-x-1 sm:space-x-2 md:space-x-4 mt-4 text-xs flex-wrap gap-1 sm:gap-2">
         {selectedMetric === 'mood' && (
           <>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-              <span className="text-gray-600">Low (0-2)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Low (0-2)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-              <span className="text-gray-600">Med (3-4)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Med (3-4)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
-              <span className="text-gray-600">Good (5-6)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Good (5-6)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-              <span className="text-gray-600">Great (7-8)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Great (7-8)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
-              <span className="text-gray-600">Excellent (9-10)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Excellent (9-10)</span>
             </div>
           </>
         )}
         {selectedMetric === 'sleep_quality' && (
           <>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#1e40af' }}></div>
-              <span className="text-gray-600">Poor (0-2)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#1e40af' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Poor (0-2)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-              <span className="text-gray-600">Fair (3-4)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Fair (3-4)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
-              <span className="text-gray-600">Good (5-6)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Good (5-6)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#93c5fd' }}></div>
-              <span className="text-gray-600">Great (7-8)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#93c5fd' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Great (7-8)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#dbeafe' }}></div>
-              <span className="text-gray-600">Excellent (9-10)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#dbeafe' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Excellent (9-10)</span>
             </div>
           </>
         )}
         {selectedMetric === 'pain' && (
           <>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
-              <span className="text-gray-600">None (0-1)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#16a34a' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">None (0-1)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-              <span className="text-gray-600">Mild (2-3)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Mild (2-3)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
-              <span className="text-gray-600">Moderate (4-5)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#eab308' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Moderate (4-5)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-              <span className="text-gray-600">Severe (6-7)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Severe (6-7)</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-              <span className="text-gray-600">Intense (8-10)</span>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-gray-600 text-[10px] sm:text-xs">Intense (8-10)</span>
             </div>
           </>
         )}

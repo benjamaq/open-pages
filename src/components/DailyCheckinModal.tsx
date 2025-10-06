@@ -179,6 +179,9 @@ export default function DailyCheckinModal({
   useEffect(() => {
     if (isOpen) {
       loadSavedData()
+    } else {
+      // Reset state when modal closes
+      setShowWearables(false)
     }
   }, [isOpen])
 
@@ -218,6 +221,10 @@ export default function DailyCheckinModal({
         }
       }))
       setShowWearables(true) // Auto-expand if we have saved wearable data
+    } else {
+      // Only reset if we don't have saved data and the modal just opened
+      // Don't reset if user has manually toggled the section
+      setShowWearables(false)
     }
 
     // Load today's items
@@ -640,9 +647,9 @@ export default function DailyCheckinModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-200">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-200 flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-zinc-900">Daily Check-in</h2>
             <p className="text-sm text-zinc-500">{formatDate(new Date())}</p>
@@ -655,7 +662,8 @@ export default function DailyCheckinModal({
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(85vh-140px)]">
+        {/* Scrollable Content - This div IS the rounded container */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white rounded-b-xl pr-2">
           <div className="p-6 space-y-6">
             {/* Section 1: Personal Check-in - Light Gray Container */}
             <div className="bg-gray-50 rounded-lg p-5">
@@ -664,16 +672,16 @@ export default function DailyCheckinModal({
               {/* Energy and Mood Side-by-Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Energy Slider */}
-                <div>
+                <div className="overflow-hidden">
                   <label className="block text-sm font-medium text-zinc-900 mb-2">Energy</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <input
                       type="range"
                       min={1}
                       max={10}
                       value={draft.energy}
                       onChange={(e) => setDraft(d => ({ ...d, energy: Number(e.target.value) }))}
-                      className="w-full h-3 rounded-lg appearance-none cursor-pointer"
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
                       style={{
                         background: `linear-gradient(to right, 
                           #ef4444 0%, 
@@ -681,10 +689,13 @@ export default function DailyCheckinModal({
                           #eab308 40%, 
                           #84cc16 60%, 
                           #22c55e 80%, 
-                          #16a34a 100%)`
+                          #16a34a 100%)`,
+                        outline: 'none',
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'none'
                       }}
                     />
-                    <span className="w-10 text-right text-sm text-zinc-700 font-medium">{draft.energy}/10</span>
+                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.energy}/10</span>
                   </div>
                 </div>
 
@@ -718,7 +729,7 @@ export default function DailyCheckinModal({
                     className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                     aria-label={showWearables ? 'Collapse' : 'Expand'}
                   >
-                    <ChevronDown className={`w-4 h-4 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+                    <ChevronDown className={`w-5 h-5 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
                   </button>
                 </div>
 
@@ -833,6 +844,21 @@ export default function DailyCheckinModal({
           cursor: pointer;
           border: 3px solid #16a34a;
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 8px 0;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+          border: 2px solid #ffffff;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
       `}</style>
 

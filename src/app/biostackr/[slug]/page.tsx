@@ -386,7 +386,7 @@ export default async function ProfilePage({ params, searchParams }: {
                   />
                   <Link 
                     href="/dash" 
-                    className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                    className="bg-gray-900 text-white px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center gap-1"
                   >
                     Dashboard
                   </Link>
@@ -414,7 +414,7 @@ export default async function ProfilePage({ params, searchParams }: {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Health Stack Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {profile.display_name ? `${profile.display_name}'s Stack` : 'human upgrade'}
           </h2>
           <p className="text-sm text-gray-400 mt-2">
@@ -504,7 +504,7 @@ export default async function ProfilePage({ params, searchParams }: {
             </p>
             <div className="mt-4">
               <Link 
-                href="/auth/signup" 
+                href="/" 
                 className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Create Your Stack

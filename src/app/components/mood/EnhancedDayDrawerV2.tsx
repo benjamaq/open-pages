@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
 import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
 
@@ -9,6 +10,14 @@ type EnhancedDayDrawerV2Props = {
   onClose: () => void;
   date: string; // 'YYYY-MM-DD'
   userId: string;
+  todayItems?: {
+    supplements: any[];
+    protocols: any[];
+    movement: any[];
+    mindfulness: any[];
+    food: any[];
+    gear: any[];
+  };
   initialData?: {
     mood?: number | null;
     energy?: number | null;
@@ -22,7 +31,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -81,19 +90,53 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
     if (isOpen && includeSnapshot) {
       loadSnapshotData();
     }
-  }, [isOpen, includeSnapshot, date]);
+  }, [isOpen, includeSnapshot, date, todayItems]);
 
   const loadSnapshotData = async () => {
     try {
-      // This would call an API to get today's actions snapshot
-      // For now, we'll simulate the data structure
-      setSnapshotData({
-        supplements_taken_count: 12,
-        meds_taken_count: 1,
-        movement_minutes: 30,
-        mindfulness_minutes: 10,
-        protocols_active: 2
-      });
+      if (!todayItems) {
+        setSnapshotData(null);
+        return;
+      }
+
+      // Build snapshot data from todayItems
+      const snapshot = {
+        supplements_taken_count: todayItems.supplements.length,
+        meds_taken_count: todayItems.supplements.filter(item => 
+          item.name?.toLowerCase().includes('medication') || 
+          item.name?.toLowerCase().includes('prescription')
+        ).length,
+        movement_minutes: todayItems.movement.reduce((total, item) => total + (parseInt(item.dose) || 0), 0),
+        mindfulness_minutes: todayItems.mindfulness.reduce((total, item) => total + (parseInt(item.dose) || 0), 0),
+        protocols_active: todayItems.protocols.length,
+        supplements: todayItems.supplements.map(item => ({
+          name: item.name,
+          dose: item.dose || '1',
+          unit: 'unit'
+        })),
+        meds: todayItems.supplements.filter(item => 
+          item.name?.toLowerCase().includes('medication') || 
+          item.name?.toLowerCase().includes('prescription')
+        ).map(item => ({
+          name: item.name,
+          dose: item.dose || '1',
+          unit: 'unit'
+        })),
+        activity: todayItems.movement.map(item => ({
+          name: item.name,
+          duration_min: parseInt(item.dose) || 0
+        })),
+        mindfulness: todayItems.mindfulness.map(item => ({
+          name: item.name,
+          duration_min: parseInt(item.dose) || 0
+        })),
+        protocols: todayItems.protocols.map(item => ({
+          name: item.name,
+          frequency: item.frequency || 'daily'
+        }))
+      };
+
+      setSnapshotData(snapshot);
     } catch (error) {
       console.error('Error loading snapshot data:', error);
     }
@@ -547,14 +590,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, ini
                       Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
                     </p>
                   </div>
-                  <svg 
-                    className="w-4 h-4 transition-transform" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <ChevronDown className="w-6 h-6 sm:w-5 sm:h-5 transition-transform" style={{ color: '#A6AFBD' }} />
                 </summary>
                 
                 <div className="mt-4 space-y-3">

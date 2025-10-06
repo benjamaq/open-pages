@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Download, ExternalLink, Calendar, User, Tag, Globe, Lock, Star } from 'lucide-react'
+import { X, Download, ExternalLink, Calendar, User, Tag, Star } from 'lucide-react'
 import { LibraryItem } from '../lib/actions/library'
 
 interface LibraryViewerProps {
@@ -17,8 +17,15 @@ export default function LibraryViewer({ item, isOpen, onClose, isOwner = false }
 
   useEffect(() => {
     if (isOpen && item) {
-      setLoading(false)
+      setLoading(true)
       setError(null)
+      
+      // Simulate loading time for preview
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 500)
+      
+      return () => clearTimeout(timer)
     }
   }, [isOpen, item])
 
@@ -95,90 +102,115 @@ export default function LibraryViewer({ item, isOpen, onClose, isOwner = false }
   }
 
   const canPreviewInline = () => {
-    return item.file_type.startsWith('image/') || item.file_type === 'application/pdf'
+    const canPreview = item.file_type.startsWith('image/') || item.file_type === 'application/pdf'
+    console.log('LibraryViewer - canPreviewInline:', {
+      fileType: item.file_type,
+      canPreview,
+      itemId: item.id
+    })
+    return canPreview
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         
-        {/* Sidebar - Item Details */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">{getCategoryIcon(item.category)}</span>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {getCategoryLabel(item.category)}
-                  </p>
-                </div>
+        {/* Header - Item Details */}
+        <div className="bg-gray-50 border-b border-gray-200 p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">{getCategoryIcon(item.category)}</span>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-lg leading-tight">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {getCategoryLabel(item.category)}
+                </p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
             </div>
-
-            {/* Featured Badge */}
-            {item.is_featured && item.category === 'training_plan' && (
-              <div className="mt-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  <Star className="w-4 h-4 mr-1" />
-                  Current Plan
-                </span>
-              </div>
-            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <div className="space-y-6">
+          {/* Featured Badge */}
+          {item.is_featured && item.category === 'training_plan' && (
+            <div className="mt-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                <Star className="w-4 h-4 mr-1" />
+                Current Plan
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area - Details and Preview */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Item Details */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="space-y-4">
               {/* Metadata */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDate(item.date)}</span>
-                </div>
-                
-                {item.provider && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <User className="w-4 h-4" />
-                    <span>{item.provider}</span>
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(item.date)}</span>
                   </div>
-                )}
-
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <span className="text-base">{getFileTypeIcon(item.file_type)}</span>
-                  <span>{item.file_type}</span>
-                  {item.file_size && (
-                    <>
-                      <span>•</span>
-                      <span>{formatFileSize(item.file_size)}</span>
-                    </>
+                  
+                  {item.provider && (
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <User className="w-4 h-4" />
+                      <span>{item.provider}</span>
+                    </div>
                   )}
+
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span className="text-base">{getFileTypeIcon(item.file_type)}</span>
+                    <span>{item.file_type}</span>
+                    {item.file_size && (
+                      <>
+                        <span>•</span>
+                        <span>{formatFileSize(item.file_size)}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      item.is_public 
+                        ? 'bg-gray-900 text-white' 
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {item.is_public ? 'Public' : 'Private'}
+                    </span>
+                    {item.is_public && item.allow_download && (
+                      <span className="text-green-600">• Downloads allowed</span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  {item.is_public ? (
-                    <>
-                      <Globe className="w-4 h-4 text-green-600" />
-                      <span className="text-green-600">Public</span>
-                      {item.allow_download && (
-                        <span className="text-green-600">• Downloads allowed</span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>Private</span>
-                    </>
+                {/* Actions */}
+                <div className="space-y-2">
+                  <button
+                    onClick={handleOpenExternal}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open in New Tab</span>
+                  </button>
+                  
+                  {(item.allow_download || isOwner) && (
+                    <button
+                      onClick={handleDownload}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download</span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -225,86 +257,86 @@ export default function LibraryViewer({ item, isOpen, onClose, isOwner = false }
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="p-6 border-t border-gray-200">
-            <div className="space-y-2">
-              <button
-                onClick={handleOpenExternal}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Open in New Tab</span>
-              </button>
-              
-              {(item.allow_download || isOwner) && (
-                <button
-                  onClick={handleDownload}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download</span>
-                </button>
+          {/* File Preview - Rectangle below text */}
+          <div className="p-6">
+            <h4 className="text-sm font-medium text-gray-900 mb-4">Preview</h4>
+            <div className="bg-gray-50 rounded-lg p-4 min-h-[400px] flex items-center justify-center">
+              {loading ? (
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading preview...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center">
+                  <p className="text-red-600 mb-4">{error}</p>
+                  <button
+                    onClick={handleOpenExternal}
+                    className="text-gray-600 hover:text-gray-900 underline"
+                  >
+                    Open file directly
+                  </button>
+                </div>
+              ) : canPreviewInline() ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  {(() => {
+                    const previewUrl = `/api/library/${item.id}/preview`
+                    console.log('LibraryViewer - Preview URL:', previewUrl)
+                    console.log('LibraryViewer - File type:', item.file_type)
+                    
+                    return item.file_type.startsWith('image/') ? (
+                      <img
+                        src={previewUrl}
+                        alt={item.title}
+                        className="max-w-full max-h-[500px] object-contain rounded-lg shadow-lg"
+                        onLoad={() => {
+                          console.log('Image loaded successfully')
+                          setLoading(false)
+                        }}
+                        onError={(e) => {
+                          console.error('Image failed to load:', e)
+                          setLoading(false)
+                          setError('Failed to load image')
+                        }}
+                      />
+                    ) : item.file_type === 'application/pdf' ? (
+                      <iframe
+                        src={previewUrl}
+                        className="w-full h-[500px] border-0 rounded-lg shadow-lg"
+                        title={item.title}
+                        onLoad={() => {
+                          console.log('PDF loaded successfully')
+                          setLoading(false)
+                        }}
+                        onError={(e) => {
+                          console.error('PDF failed to load:', e)
+                          setLoading(false)
+                          setError('Failed to load PDF')
+                        }}
+                      />
+                    ) : null
+                  })()}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-4xl">{getFileTypeIcon(item.file_type)}</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Preview not available
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    This file type cannot be previewed inline.
+                  </p>
+                  <button
+                    onClick={handleOpenExternal}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open File</span>
+                  </button>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Main Content - File Preview */}
-        <div className="flex-1 flex flex-col bg-white">
-          <div className="flex-1 flex items-center justify-center p-8">
-            {loading ? (
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading preview...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center">
-                <p className="text-red-600 mb-4">{error}</p>
-                <button
-                  onClick={handleOpenExternal}
-                  className="text-gray-600 hover:text-gray-900 underline"
-                >
-                  Open file directly
-                </button>
-              </div>
-            ) : canPreviewInline() ? (
-              <div className="w-full h-full flex items-center justify-center">
-                {item.file_type.startsWith('image/') ? (
-                  <img
-                    src={`/api/library/${item.id}/preview`}
-                    alt={item.title}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                    onError={() => setError('Failed to load image')}
-                  />
-                ) : item.file_type === 'application/pdf' ? (
-                  <iframe
-                    src={`/api/library/${item.id}/preview`}
-                    className="w-full h-full border-0 rounded-lg shadow-lg"
-                    title={item.title}
-                    onError={() => setError('Failed to load PDF')}
-                  />
-                ) : null}
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl">{getFileTypeIcon(item.file_type)}</span>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Preview not available
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  This file type cannot be previewed inline.
-                </p>
-                <button
-                  onClick={handleOpenExternal}
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Open File</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>

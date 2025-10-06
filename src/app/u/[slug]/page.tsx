@@ -88,6 +88,7 @@ export default async function ProfilePage({ params, searchParams }: {
 
   // Check if user is authenticated and get their profile
   // Use a fresh supabase client to avoid cached sessions
+  const supabase = await createClient()
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   let currentUserProfile: { slug: string } | null = null
   
@@ -550,7 +551,7 @@ export default async function ProfilePage({ params, searchParams }: {
                   />
                   <Link 
                     href="/dash" 
-                    className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                    className="bg-gray-900 text-white px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center gap-1"
                   >
                     Dashboard
                   </Link>
@@ -664,9 +665,12 @@ export default async function ProfilePage({ params, searchParams }: {
         publicUploads={publicUploads}
         publicLibraryItems={publicLibraryItems}
         publicJournalEntries={publicJournalEntries}
+        publicMoodData={[]}
         publicShopGearItems={[]}
         publicModules={publicModules}
         isOwnProfile={isOwnProfile}
+        isSharedPublicLink={isSharedPublicLink}
+        isMoodTrackingEnabled={true}
       />
 
       {/* Footer - Biostackr Branding */}

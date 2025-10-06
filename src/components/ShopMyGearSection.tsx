@@ -146,7 +146,7 @@ export default function ShopMyGearSection({ profileId, userTier, isOwner, initia
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
+                      <h4 className="font-medium text-gray-900 break-words">{item.name}</h4>
                       {item.featured && (
                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                           Featured
@@ -164,7 +164,7 @@ export default function ShopMyGearSection({ profileId, userTier, isOwner, initia
                     )}
                     
                     {item.brand && (
-                      <p className="text-xs text-gray-500 mb-2">Brand: {item.brand}</p>
+                      <p className="text-xs text-gray-500 mb-2 break-words">Brand: {item.brand}</p>
                     )}
                     
                     {item.commission_rate && (

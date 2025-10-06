@@ -269,7 +269,7 @@ export default function LibraryUploadForm({
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              {mode === 'edit' ? 'Edit Library Item' : 'Add to Library'}
+              {mode === 'edit' ? 'Edit Record' : 'Records and Plans'}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
               {mode === 'edit' ? 'Update your library item' : 'Upload and organize your health documents'}
@@ -643,7 +643,7 @@ export default function LibraryUploadForm({
             >
               {isUploading 
                 ? (mode === 'edit' ? 'Updating...' : 'Uploading...') 
-                : (mode === 'edit' ? 'Update Item' : 'Add to Library')
+                : (mode === 'edit' ? 'Update' : 'Add')
               }
             </button>
           </div>

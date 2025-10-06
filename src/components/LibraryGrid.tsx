@@ -128,135 +128,146 @@ export default function LibraryGrid({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header - Only show if title is provided */}
+      {title && (
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {filteredAndSortedItems.length} of {items.length} items
-            {selectedCategory !== 'all' && (
-              <span className="ml-1">
-                in {CATEGORY_FILTERS.find(f => f.value === selectedCategory)?.label}
-              </span>
-            )}
+          <p className="text-xs text-gray-500 mt-1">
+            Lab results, imaging, clinic reports, training plans, research PDFs
           </p>
         </div>
-        
+      )}
+
+      {/* Add Button and Item Counter */}
+      <div className="flex justify-between items-center">
+        {/* Item Counter */}
+        <div className="text-sm text-gray-600">
+          {filteredAndSortedItems.length} of {items.length} items
+          {selectedCategory !== 'all' && (
+            <span className="ml-1">
+              in {CATEGORY_FILTERS.find(f => f.value === selectedCategory)?.label}
+            </span>
+          )}
+        </div>
+
+        {/* Add Button */}
         {showAddButton && onAdd && (
           <button
             onClick={onAdd}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+            className="px-3 py-1.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-xs font-medium"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Item</span>
+            Add
           </button>
         )}
       </div>
 
       {/* Controls */}
-      <div className="space-y-4">
-        {/* Search and View Toggle */}
-        <div className="flex items-center space-x-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search library items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-          
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors ${
-              showFilters 
-                ? 'bg-gray-900 text-white border-gray-900' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            <span>Filters</span>
-          </button>
-
-          <div className="flex items-center border border-gray-300 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-1 rounded ${viewMode === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1 rounded ${viewMode === 'list' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+      <div className="flex items-center gap-3">
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search records..."
+            className="pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-full"
+          />
         </div>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            {/* Category Filter */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Category</h4>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORY_FILTERS.map(filter => (
-                  <button
-                    key={filter.value}
-                    onClick={() => setSelectedCategory(filter.value)}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      selectedCategory === filter.value
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span>{filter.icon}</span>
-                    <span>{filter.label}</span>
-                    {categoryCounts[filter.value] > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        selectedCategory === filter.value
-                          ? 'bg-white/20 text-white'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        {categoryCounts[filter.value]}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Filter */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="relative flex items-center space-x-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Filter className="w-4 h-4" />
+          <span>Filter</span>
+          {showFilters && (
+            <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              1
+            </span>
+          )}
+        </button>
 
-            {/* Sort Options */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Sort by</h4>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { field: 'date' as SortField, label: 'Date' },
-                  { field: 'title' as SortField, label: 'Title' },
-                  { field: 'category' as SortField, label: 'Category' },
-                  { field: 'created_at' as SortField, label: 'Added' }
-                ].map(option => (
-                  <button
-                    key={option.field}
-                    onClick={() => handleSort(option.field)}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      sortField === option.field
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span>{option.label}</span>
-                    {sortField === option.field && <SortIcon className="w-3 h-3" />}
-                  </button>
-                ))}
-              </div>
+        {/* View Toggle */}
+        <div className="flex items-center border border-gray-300 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1 rounded ${viewMode === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            title="Grid view"
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1 rounded ${viewMode === 'list' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            title="List view"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+          {/* Category Filter */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Category</h4>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_FILTERS.map(filter => (
+                <button
+                  key={filter.value}
+                  onClick={() => setSelectedCategory(filter.value)}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    selectedCategory === filter.value
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>{filter.icon}</span>
+                  <span>{filter.label}</span>
+                  {categoryCounts[filter.value] > 0 && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      selectedCategory === filter.value
+                        ? 'bg-white/20 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {categoryCounts[filter.value]}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Sort Options */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Sort by</h4>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { field: 'date' as SortField, label: 'Date' },
+                { field: 'title' as SortField, label: 'Title' },
+                { field: 'category' as SortField, label: 'Category' },
+                { field: 'created_at' as SortField, label: 'Added' }
+              ].map(option => (
+                <button
+                  key={option.field}
+                  onClick={() => handleSort(option.field)}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    sortField === option.field
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>{option.label}</span>
+                  {sortField === option.field && <SortIcon className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {filteredAndSortedItems.length > 0 ? (
@@ -304,10 +315,9 @@ export default function LibraryGrid({
           {showAddButton && onAdd && (
             <button
               onClick={onAdd}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
             >
-              <Plus className="w-4 h-4" />
-              <span>Add Your First Item</span>
+              Add Your First Item
             </button>
           )}
         </div>

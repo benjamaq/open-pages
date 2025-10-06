@@ -47,13 +47,36 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Get the file content directly for preview
+    // For public items, try to download directly first
+    console.log('Attempting to download file:', item.file_url)
+    console.log('File type:', item.file_type)
+    console.log('Is public:', item.is_public)
+    
     const { data: fileData, error: fileError } = await supabase.storage
       .from('library')
       .download(item.file_url)
 
     if (fileError || !fileData) {
-      console.error('Failed to download file:', fileError)
+      console.error('Direct download failed:', fileError)
+      
+      // If direct download fails and it's public, try signed URL
+      if (item.is_public) {
+        console.log('Trying signed URL approach for public file')
+        const { data: signedUrlData, error: urlError } = await supabase.storage
+          .from('library')
+          .createSignedUrl(item.file_url, 3600)
+
+        if (urlError || !signedUrlData?.signedUrl) {
+          console.error('Failed to create signed URL:', urlError)
+          return NextResponse.json({ error: 'File not accessible' }, { status: 500 })
+        }
+
+        console.log('Signed URL created successfully:', signedUrlData.signedUrl)
+        // Redirect to the signed URL
+        return NextResponse.redirect(signedUrlData.signedUrl)
+      }
+      
+      console.error('All download attempts failed')
       return NextResponse.json({ error: 'File not accessible' }, { status: 500 })
     }
 

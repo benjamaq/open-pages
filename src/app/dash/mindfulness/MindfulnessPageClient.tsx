@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, MoreHorizontal, Eye, EyeOff, Copy, Trash2 } from 'lucide-react'
+import { Plus, MoreHorizontal, Eye, EyeOff, Copy, Trash2, Search, Filter, X } from 'lucide-react'
 import AddStackItemForm from '../../../components/AddStackItemForm'
 import EditStackItemForm from '../../../components/EditStackItemForm'
 import { updateStackItem, deleteStackItem } from '../../../lib/actions/stack'
@@ -179,7 +179,38 @@ const MindfulnessCard = ({
 export default function MindfulnessPageClient({ mindfulnessItems, profile }: MindfulnessPageClientProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<MindfulnessItem | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showFilter, setShowFilter] = useState(false)
+  const [filters, setFilters] = useState({
+    time_preference: '',
+    visibility: ''
+  })
   const router = useRouter()
+
+  // Filter mindfulness items based on search and filters
+  const filteredItems = mindfulnessItems.filter(item => {
+    // Search filter
+    if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !item.notes?.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
+    
+    // Apply other filters
+    if (filters.time_preference && item.time_preference !== filters.time_preference) return false
+    if (filters.visibility === 'public' && !item.public) return false
+    if (filters.visibility === 'private' && item.public) return false
+    
+    return true
+  })
+
+  const clearFilters = () => {
+    setFilters({
+      time_preference: '',
+      visibility: ''
+    })
+  }
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length
 
   const handleTogglePublic = async (item: MindfulnessItem) => {
     try {
@@ -263,7 +294,7 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
               {/* Dashboard Button */}
               <Link 
                 href="/dash" 
-                className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Dashboard
               </Link>
@@ -286,24 +317,113 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
         </div>
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Mind & Stress Management</h1>
-            <p className="text-gray-600 mt-1">Manage your meditation, breathwork, CBT drills, NSDR, gratitude, and mental skills.</p>
+        <div className="flex flex-col space-y-4 mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Mind & Stress Management</h1>
+              <p className="text-gray-500 mt-1 text-sm">Manage your mental practices - meditation, breathing exercises, stress techniques.</p>
+            </div>
           </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1"
-          >
-            <Plus className="w-3 h-3" />
-            <span>Add Practice</span>
-          </button>
+          
+          <div className="flex items-center space-x-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search mindfulness..."
+                className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-48 sm:w-64"
+              />
+            </div>
+
+            {/* Filter */}
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {/* Add Practice */}
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center space-x-1 bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
+            >
+              <span>Add</span>
+            </button>
+          </div>
+
+          {/* Filter Panel */}
+          {showFilter && (
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-900">Filters</h3>
+                <button
+                  onClick={() => setShowFilter(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Time Preference Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Time Preference</label>
+                  <select
+                    value={filters.time_preference}
+                    onChange={(e) => setFilters(prev => ({ ...prev, time_preference: e.target.value }))}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  >
+                    <option value="">All Times</option>
+                    <option value="morning">Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
+                    <option value="anytime">Anytime</option>
+                  </select>
+                </div>
+
+                {/* Visibility Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Visibility</label>
+                  <select
+                    value={filters.visibility}
+                    onChange={(e) => setFilters(prev => ({ ...prev, visibility: e.target.value }))}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  >
+                    <option value="">All Items</option>
+                    <option value="public">Public Only</option>
+                    <option value="private">Private Only</option>
+                  </select>
+                </div>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-gray-600 hover:text-gray-900 underline"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mindfulness Grid */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {mindfulnessItems.map((item) => (
+            {filteredItems.map((item) => (
               <MindfulnessCard
                 key={item.id}
                 item={item}
@@ -317,8 +437,8 @@ export default function MindfulnessPageClient({ mindfulnessItems, profile }: Min
             {/* Empty State */}
             {mindfulnessItems.length === 0 && (
               <div className="col-span-full text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No mindfulness practices yet</h3>
-                <p className="text-gray-500 mb-6">Add your first mindfulness practice to get started</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No mental practices yet</h3>
+                <p className="text-gray-500 mb-6">Add meditation, breathing exercises, or stress techniques</p>
                 <button
                   onClick={() => setShowAddForm(true)}
                   className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"

@@ -116,7 +116,7 @@ export default function LibrarySection({
               <button
                 onClick={onAdd}
                 className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Add to library"
+                aria-label="Add records & plans"
               >
                 <Plus className="w-4 h-4 text-gray-600" />
               </button>

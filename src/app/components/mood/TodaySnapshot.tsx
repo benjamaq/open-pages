@@ -15,6 +15,14 @@ interface TodaySnapshotProps {
     journal?: string | null;
     actions_snapshot?: any;
   } | null;
+  todayItems?: {
+    supplements: any[];
+    protocols: any[];
+    movement: any[];
+    mindfulness: any[];
+    food: any[];
+    gear: any[];
+  };
   onEditToday: () => void;
   onEditDay: (date: string) => void;
   onRefresh?: () => void;
@@ -32,6 +40,7 @@ interface MetricPillProps {
 
 const MetricPill = ({ label, value, max, palette, onClick, className = '' }: MetricPillProps) => {
   const pct = (value / max) * 100;
+  const hasData = value > 0;
   
   const getPalette = () => {
     if (palette === 'pain') {
@@ -51,31 +60,35 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
     }
   };
 
-  const bg = value === 0 ? '#15803D' : getPalette();
+  // Show green for empty state (no data recorded)
+  const bg = hasData ? getPalette() : 'linear-gradient(to right, #22C55E, #22C55E)';
 
   return (
     <div className={`flex flex-col items-center ${className}`} onClick={onClick}>
-      <div className="text-[10px] sm:text-sm font-semibold text-gray-800 mb-1 text-center w-full">
+      <div className="text-xs sm:text-base font-semibold text-gray-800 mb-1 sm:mb-2 text-center w-full">
         {label}
       </div>
       <div className="flex items-center justify-center w-full">
         <div
-          className="h-3 w-12 sm:h-4 sm:w-32 md:w-40 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          className="h-3 w-12 sm:h-5 sm:w-40 md:w-48 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
           style={{ background: bg }}
-          aria-label={`${label} ${value} of 10`}
+          aria-label={`${label} ${hasData ? value : 'not recorded'} of 10`}
         />
-        <div className="ml-1 text-[10px] sm:text-xs font-bold text-gray-900">{value}/{max}</div>
+        <div className="ml-1 sm:ml-2 text-xs sm:text-base font-bold text-gray-900">
+          {hasData ? `${value}/${max}` : '—'}
+        </div>
       </div>
     </div>
   );
 };
 
-export default function TodaySnapshot({ 
-  todayEntry, 
-  onEditToday, 
-  onEditDay, 
+export default function TodaySnapshot({
+  todayEntry,
+  todayItems,
+  onEditToday,
+  onEditDay,
   onRefresh,
-  streak = 0 
+  streak = 0
 }: TodaySnapshotProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [collapsed, setCollapsed] = useState(false);
@@ -190,9 +203,9 @@ export default function TodaySnapshot({
       <div className="w-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-2 pb-6">
-          <h3 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between px-3 sm:px-6 pt-2 pb-6">
+          <h3 className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#0F1115' }}>Mood Tracker</h3>
+          <div className="flex items-center space-x-1 sm:space-x-2 ml-2 sm:ml-0">
             <button 
               onClick={onEditToday}
               className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
@@ -229,7 +242,7 @@ export default function TodaySnapshot({
               className="p-1 rounded-full hover:bg-gray-200 transition-colors"
               aria-label={collapsed ? 'Expand' : 'Collapse'}
             >
-              <ChevronDown className={`w-4 h-4 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+              <ChevronDown className={`w-5 h-5 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
             </button>
           </div>
         </div>
@@ -260,46 +273,39 @@ export default function TodaySnapshot({
 
             {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
             <div className="flex justify-between items-center mb-5 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
-              {todayEntry?.mood !== null && todayEntry?.mood !== undefined && (
-                <MetricPill 
-                  label="Mood" 
-                  value={todayEntry.mood} 
-                  max={10} 
-                  palette="mood" 
-                  onClick={onEditToday}
-                  className="w-full"
-                />
-              )}
-              {todayEntry?.sleep_quality !== null && todayEntry?.sleep_quality !== undefined && (
-                <MetricPill 
-                  label="Sleep" 
-                  value={todayEntry.sleep_quality} 
-                  max={10} 
-                  palette="sleep" 
-                  onClick={onEditToday}
-                  className="w-full"
-                />
-              )}
-              {todayEntry?.pain !== null && todayEntry?.pain !== undefined && (
-                <MetricPill 
-                  label="Pain" 
-                  value={todayEntry.pain} 
-                  max={10} 
-                  palette="pain" 
-                  onClick={onEditToday}
-                  className="w-full"
-                />
-              )}
+              <MetricPill 
+                label="Mood" 
+                value={todayEntry?.mood ?? 0} 
+                max={10} 
+                palette="mood" 
+                onClick={onEditToday}
+                className="w-full"
+              />
+              <MetricPill 
+                label="Sleep" 
+                value={todayEntry?.sleep_quality ?? 0} 
+                max={10} 
+                palette="sleep" 
+                onClick={onEditToday}
+                className="w-full"
+              />
+              <MetricPill 
+                label="Pain" 
+                value={todayEntry?.pain ?? 0} 
+                max={10} 
+                palette="pain" 
+                onClick={onEditToday}
+                className="w-full"
+              />
             </div>
 
             {/* Weekly Averages and Wearables */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
-              <div className="text-sm sm:text-base text-gray-500 text-center">
-                <div className="font-medium">This week's average:</div>
-                <div>Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
+              <div className="text-xs sm:text-base text-gray-500 text-center">
+                <div>This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
               </div>
               
-              <div className="text-sm sm:text-base text-gray-500 text-center">
+              <div className="text-xs sm:text-base text-gray-500 text-center">
                 {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
                 {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
                 {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
@@ -308,6 +314,7 @@ export default function TodaySnapshot({
                 {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
               </div>
             </div>
+
           </>
         )}
       </div>
@@ -321,6 +328,7 @@ export default function TodaySnapshot({
             setShowDayDetail(false);
             setSelectedDate(null);
           }}
+          todayItems={todayItems}
         />
       )}
     </div>

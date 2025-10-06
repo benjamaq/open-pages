@@ -41,12 +41,9 @@ export default function GearSection({ gear }: GearSectionProps) {
   return (
     <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8 overflow-hidden">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <span className="text-2xl">🎧</span>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Devices & Tools</h2>
-            <p className="text-sm text-gray-500">{gear.length} item{gear.length !== 1 ? 's' : ''}</p>
-          </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Devices & Tools</h2>
+          <p className="text-sm text-gray-500">{gear.length} item{gear.length !== 1 ? 's' : ''}</p>
         </div>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -117,9 +114,9 @@ function GearItem({ item, getCategoryIcon, isPast = false }: {
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <span className="text-xl flex-shrink-0">{getCategoryIcon(item.category)}</span>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-medium text-gray-900 truncate">{item.name}</h3>
+            <h3 className="text-base font-medium text-gray-900 break-words">{item.name}</h3>
             {item.brand && (
-              <p className="text-sm text-gray-500 truncate">
+              <p className="text-sm text-gray-500 break-words">
                 {item.brand}{item.model && ` ${item.model}`}
               </p>
             )}

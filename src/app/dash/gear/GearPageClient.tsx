@@ -73,11 +73,11 @@ const GearCard = ({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3 flex-1">
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate" title={gearItem.name}>
+            <h3 className="font-semibold text-gray-900 text-lg leading-tight break-words" title={gearItem.name}>
               {gearItem.name}
             </h3>
             {gearItem.brand && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 break-words">
                 {gearItem.brand}{gearItem.model && ` ${gearItem.model}`}
               </p>
             )}
@@ -104,7 +104,7 @@ const GearCard = ({
         {gearItem.description && (
           <div className="flex flex-col">
             <span className="text-sm text-gray-500 mb-1">Description:</span>
-            <span className="text-sm text-gray-900 leading-relaxed">{gearItem.description}</span>
+            <span className="text-sm text-gray-900 leading-relaxed break-words">{gearItem.description}</span>
           </div>
         )}
         {gearItem.buy_link && (
@@ -336,8 +336,8 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Devices & Tools Management</h1>
-              <p className="text-gray-600 mt-2">
-                Inventory of gear (wearables, sauna, red-light, TENS, cold plunge, CGM, stim devices)
+              <p className="text-xs text-gray-500 mt-2">
+                All your health and recovery tools, including wearables (Oura, Whoop), CGM, PBM panel, PEMF mat, sauna.
               </p>
             </div>
             
@@ -350,7 +350,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search gear..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-64"
+                  className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-48 sm:w-64"
                 />
               </div>
 
@@ -368,13 +368,12 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 )}
               </button>
 
-              {/* Add Gear */}
+              {/* Add Device */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-1 sm:space-x-2 bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                className="bg-gray-900 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center space-x-1"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Device</span>
+                <span>Add</span>
               </button>
             </div>
           </div>

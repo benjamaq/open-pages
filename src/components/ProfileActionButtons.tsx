@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail, Copy, Check } from 'lucide-react'
+import { X, Mail, Copy, Check, Link as LinkIcon } from 'lucide-react'
 
 interface ProfileActionButtonsProps {
   isOwnProfile: boolean
@@ -144,8 +144,9 @@ export default function ProfileActionButtons({ isOwnProfile, profileName, profil
         {isOwnProfile ? (
           <button 
             onClick={handleCopyLink}
-            className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="bg-gray-900 text-white px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors flex items-center gap-1"
           >
+            <LinkIcon className="w-3 h-3" />
             {copied ? 'Copied!' : 'Link'}
           </button>
         ) : (

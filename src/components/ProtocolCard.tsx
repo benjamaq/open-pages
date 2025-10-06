@@ -13,7 +13,7 @@ export default function ProtocolCard({ name, frequency, scheduleDays, note }: Pr
   return (
     <div className="rounded-xl border bg-card hover:shadow-sm transition-shadow p-4">
       <div className="space-y-2">
-        <h3 className="text-base font-medium text-gray-900 line-clamp-2">
+        <h3 className="text-base font-medium text-gray-900 break-words">
           {name}
         </h3>
         
@@ -26,7 +26,7 @@ export default function ProtocolCard({ name, frequency, scheduleDays, note }: Pr
         </div>
         
         {note && (
-          <p className="text-sm text-gray-600 line-clamp-1">
+          <p className="text-sm text-gray-600 break-words">
             {note}
           </p>
         )}

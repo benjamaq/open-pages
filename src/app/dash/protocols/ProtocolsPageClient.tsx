@@ -68,7 +68,7 @@ const ProtocolCard = ({
       {/* Header Row */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate" title={protocol.name}>
+          <h3 className="font-semibold text-gray-900 text-lg leading-tight break-words" title={protocol.name}>
             {protocol.name}
           </h3>
         </div>
@@ -95,7 +95,7 @@ const ProtocolCard = ({
         {protocol.description && (
           <div className="flex flex-col">
             <span className="text-sm text-gray-500 mb-1">Description:</span>
-            <span className="text-sm text-gray-900 leading-relaxed">{protocol.description}</span>
+            <span className="text-sm text-gray-900 leading-relaxed break-words">{protocol.description}</span>
           </div>
         )}
       </div>
@@ -284,7 +284,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
                 {/* Dashboard Button */}
                 <Link 
                   href="/dash" 
-                  className="bg-gray-900 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -310,6 +310,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-4 lg:mb-0">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Protocols & Recovery Management</h1>
+              <p className="text-gray-500 mt-1 text-sm">Manage your recovery activities - sleep routines, ice baths, sauna, red light therapy, intermittent fasting, rehabilitation exercises, physio.</p>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -425,8 +426,8 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Protocols & Recovery yet</h3>
-              <p className="text-gray-600 mb-6">Add your first protocol to build your wellness routine.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No recovery activities yet</h3>
+              <p className="text-gray-600 mb-6">Add sleep routines, ice baths, sauna, red light therapy, or rehabilitation exercises</p>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"

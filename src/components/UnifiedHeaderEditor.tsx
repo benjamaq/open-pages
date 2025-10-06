@@ -73,7 +73,7 @@ export default function UnifiedHeaderEditor({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Edit Header</h2>
-            <p className="text-sm text-gray-600">Update your name, mission, and eating style</p>
+            <p className="text-sm text-gray-600">Update your name, mission, and nutrition style</p>
           </div>
           <button
             onClick={onClose}
@@ -181,7 +181,7 @@ export default function UnifiedHeaderEditor({
                     {selectedStyleConfig.icon && (
                       <span>{selectedStyleConfig.icon}</span>
                     )}
-                    <span>My eating style is {eatingStyle}</span>
+                    <span>My nutrition style is {eatingStyle}</span>
                   </div>
                 )}
               </div>

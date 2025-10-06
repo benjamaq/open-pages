@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { FEATURE_FLAGS } from '@/lib/feature-flags'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Share, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
+import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
 // Import mood components conditionally to prevent build failures
 let TodaySnapshot: any = null
@@ -584,46 +584,19 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-1">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Supplements & Meds</h2>
           <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
             {categoryFilteredItems.length}
           </span>
         </div>
         <div className="flex items-center">
-          {categoryFilteredItems.length > 0 && (
-                <button
-                  onClick={() => {
-                const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
-                const allCompleted = allSupplementIds.every(id => completedItems.has(id))
-                
-                if (allCompleted) {
-                  // Uncheck all
-                  allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
-                } else {
-                  // Check all
-                  allSupplementIds.forEach(id => {
-                    if (!completedItems.has(id)) {
-                      onToggleComplete(id.replace('supplement-', ''), 'supplement')
-                    }
-                  })
-                }
-              }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900 mr-2"
-              aria-label="Check all supplements"
-            >
-              <span className="text-xs">
-                {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? '↶' : '✓'}
-              </span>
-              <span>{categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
-            </button>
-          )}
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             style={{ marginRight: '-4px' }}
-            aria-label="Add supplement"
-            title="Add supplement"
+            aria-label="Add supplements & meds"
+            title="Add supplements & meds"
           >
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
@@ -647,6 +620,36 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
 
       {!collapsed && (
         <div className="px-6 pb-6">
+          {/* Check All Button - moved under header */}
+          {categoryFilteredItems.length > 0 && (
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
+                  const allCompleted = allSupplementIds.every(id => completedItems.has(id))
+                  
+                  if (allCompleted) {
+                    // Uncheck all
+                    allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
+                  } else {
+                    // Check all
+                    allSupplementIds.forEach(id => {
+                      if (!completedItems.has(id)) {
+                        onToggleComplete(id.replace('supplement-', ''), 'supplement')
+                      }
+                    })
+                  }
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-600 hover:text-gray-900"
+                aria-label="Check all supplements"
+              >
+                <span className="text-sm">
+                  {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? '↶' : '✓'}
+                </span>
+                <span>{categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
+              </button>
+            </div>
+          )}
           {categoryFilteredItems.length > 0 ? (
             <div className="max-h-96 overflow-y-auto pr-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -846,9 +849,9 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add +
+                  Add
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Vitamins, minerals, nootropics—organize by timing and dosage.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Supplements, medications, peptides, vitamins, or nootropics</p>
               </div>
             </div>
           )}
@@ -893,8 +896,8 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             style={{ marginRight: '-4px' }}
-            aria-label="Add protocol"
-            title="Add protocol"
+            aria-label="Add protocols & recovery"
+            title="Add protocols & recovery"
           >
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
@@ -958,9 +961,9 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add +
+                  Add
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Sauna, cold, red light, sleep routine—anything you do regularly.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Sleep routines, ice baths, sauna, red light therapy, or rehabilitation exercises</p>
               </div>
             </div>
           )}
@@ -1066,9 +1069,9 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Training
+                  Add Movement
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Strength training, cardio, rehab, sports—whatever keeps you active and healthy.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Yoga, stretching, mobility work, strength training, or cardio</p>
               </div>
             </div>
           )}
@@ -1112,8 +1115,8 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             style={{ marginRight: '-4px' }}
-            aria-label="Add mindfulness"
-            title="Add mindfulness"
+            aria-label="Add mind & stress"
+            title="Add mind & stress"
           >
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
@@ -1174,9 +1177,9 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Mind & Stress
+                  Add
                 </button>
-                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathwork, CBT drills, NSDR, gratitude, mental skills.</p>
+                <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathing exercises, or stress techniques</p>
               </div>
             </div>
           )}
@@ -1597,50 +1600,65 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const calculateStreak = async () => {
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const response = await fetch(`/api/mood/month?month=${currentMonth}`)
-      if (response.ok) {
-        const data = await response.json()
-        const entries = data.data || []
+      // Get current month and previous month to ensure we don't miss entries
+      const today = new Date()
+      const currentMonth = today.toISOString().slice(0, 7)
+      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().slice(0, 7)
+      
+      // Fetch both current and previous month data
+      const [currentResponse, prevResponse] = await Promise.all([
+        fetch(`/api/mood/month?month=${currentMonth}`),
+        fetch(`/api/mood/month?month=${prevMonth}`)
+      ])
+      
+      let entries: any[] = []
+      
+      if (currentResponse.ok) {
+        const currentData = await currentResponse.json()
+        entries = [...(currentData.data || [])]
+      }
+      
+      if (prevResponse.ok) {
+        const prevData = await prevResponse.json()
+        entries = [...entries, ...(prevData.data || [])]
+      }
+      
+      // Sort entries by date (newest first)
+      const sortedEntries = entries.sort((a: any, b: any) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+      
+      let currentStreak = 0
+      today.setHours(0, 0, 0, 0)
+      
+      // Check if today has an entry
+      const todayEntry = sortedEntries.find((entry: any) => {
+        const entryDate = new Date(entry.date)
+        entryDate.setHours(0, 0, 0, 0)
+        return entryDate.getTime() === today.getTime()
+      })
+      
+      if (todayEntry) {
+        currentStreak = 1
         
-        // Sort entries by date (newest first)
-        const sortedEntries = entries.sort((a: any, b: any) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        )
-        
-        let currentStreak = 0
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        
-        // Check if today has an entry
-        const todayEntry = sortedEntries.find((entry: any) => {
-          const entryDate = new Date(entry.date)
+        // Count consecutive days backwards
+        for (let i = 1; i < sortedEntries.length; i++) {
+          const entryDate = new Date(sortedEntries[i].date)
           entryDate.setHours(0, 0, 0, 0)
-          return entryDate.getTime() === today.getTime()
-        })
-        
-        if (todayEntry) {
-          currentStreak = 1
           
-          // Count consecutive days backwards
-          for (let i = 1; i < sortedEntries.length; i++) {
-            const entryDate = new Date(sortedEntries[i].date)
-            entryDate.setHours(0, 0, 0, 0)
-            
-            const expectedDate = new Date(today)
-            expectedDate.setDate(today.getDate() - i)
-            expectedDate.setHours(0, 0, 0, 0)
-            
-            if (entryDate.getTime() === expectedDate.getTime()) {
-              currentStreak++
-            } else {
-              break
-            }
+          const expectedDate = new Date(today)
+          expectedDate.setDate(today.getDate() - i)
+          expectedDate.setHours(0, 0, 0, 0)
+          
+          if (entryDate.getTime() === expectedDate.getTime()) {
+            currentStreak++
+          } else {
+            break
           }
         }
-        
-        setStreak(currentStreak)
       }
+      
+      setStreak(currentStreak)
     } catch (error) {
       console.error('Error calculating streak:', error)
     }
@@ -1666,11 +1684,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showDisplayName, setShowDisplayName] = useState(true)
   const [isEditingDisplayName, setIsEditingDisplayName] = useState(false)
   const [tempDisplayName, setTempDisplayName] = useState(profile.display_name)
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url)
   const [followerCount, setFollowerCount] = useState(counts.followers)
   const [showNewFollowerToast, setShowNewFollowerToast] = useState(false)
   const [newFollowerCount, setNewFollowerCount] = useState(0)
   const [lastNotifiedFollowerCount, setLastNotifiedFollowerCount] = useState(counts.followers)
-  const [showShareTodayModal, setShowShareTodayModal] = useState(false)
   const [showEnhancedMoodDrawer, setShowEnhancedMoodDrawer] = useState(false)
   const [selectedMoodDate, setSelectedMoodDate] = useState<string | null>(null)
   const [todayMoodEntry, setTodayMoodEntry] = useState(null)
@@ -1855,8 +1873,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         throw new Error('Failed to update profile')
       }
 
-      // Refresh the page to show the new avatar
-      window.location.reload()
+      // Update the avatar URL in state to show the new avatar immediately
+      setAvatarUrl(uploadResult.url)
+      
+      // Also refresh the page to ensure all data is synced
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
 
     } catch (error) {
       console.error('Avatar upload failed:', error)
@@ -1879,10 +1902,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     setIsEditingDisplayName(false)
   }
 
-  const handleShareCheckIn = () => {
-    // TODO: Implement PNG export
-    console.log('Share check-in:', { mission, profile })
-  }
 
   const updateHeaderPrefs = (updates: Partial<HeaderPrefs>) => {
     setHeaderPrefs(prev => ({ ...prev, ...updates }))
@@ -1906,6 +1925,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       }
       if (updates.mission !== undefined) {
         setProfileMission(updates.mission)
+      }
+      if (updates.avatarUrl !== undefined) {
+        setAvatarUrl(updates.avatarUrl)
       }
       
       // Refresh the page to get updated data
@@ -1949,11 +1971,11 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           {/* Row 2: Utility Toolbar */}
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-2 overflow-x-auto">
+              <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-1 overflow-x-auto">
                 {/* Public Profile Button */}
                 <button
                   onClick={() => window.location.href = `/u/${profile.slug}`}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   <span className="hidden sm:inline">Public Profile</span>
                   <span className="sm:hidden">Public Profile</span>
@@ -2007,9 +2029,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                       alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
                     }
                   }}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1"
                   title="Copy your public Biostackr link"
                 >
+                  <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Profile link</span>
                   <span className="sm:hidden">Link</span>
                 </button>
@@ -2017,26 +2040,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Notify Followers Button */}
             <button
                   onClick={() => setShowNotifyFollowers(true)}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Send update to your followers"
                 >
                   <span className="hidden sm:inline">Notify Followers</span>
                   <span className="sm:hidden">Notify</span>
             </button>
 
-                {/* Share Today's Update Button */}
-                <button
-                  onClick={() => setShowShareTodayModal(true)}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
-                >
-                  <span className="hidden sm:inline">Share Today's Update</span>
-                  <span className="sm:hidden">Share</span>
-                </button>
 
                 {/* Journal Link */}
             <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
             >
                   <span className="hidden sm:inline">Journal & Notes</span>
                   <span className="sm:hidden">Journal</span>
@@ -2045,7 +2060,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Settings Button */}
                 <button
                   onClick={() => window.location.href = '/dash/settings'}
-                  className="bg-gray-900 text-white px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   Settings
                 </button>
@@ -2061,9 +2076,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Left: Profile Photo */}
             <div className="flex-shrink-0 mx-auto sm:mx-0">
               <div className="relative group">
-                {profile.avatar_url ? (
+                {avatarUrl ? (
                   <img 
-                    src={profile.avatar_url} 
+                    src={avatarUrl} 
                     alt={displayName}
                     className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 object-cover rounded-2xl border border-gray-200"
                   />
@@ -2119,9 +2134,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   </div>
                   <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
-                  </p>
-                  <p className="text-xs text-center text-gray-500 mt-1">
-                    Heatmap and daily snapshot
                   </p>
                           </button>
 
@@ -2231,6 +2243,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               <TodaySnapshot
                 key={`${(todayMoodEntry as any)?.id || 'no-entry'}-${(todayMoodEntry as any)?.mood || 0}-${(todayMoodEntry as any)?.sleep_quality || 0}-${(todayMoodEntry as any)?.pain || 0}`}
                 todayEntry={todayMoodEntry}
+                todayItems={todayItems}
                 onEditToday={() => {
                   setShowEnhancedMoodDrawer(true)
                 }}
@@ -2405,19 +2418,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         </div>
         )}
 
-        {/* Daily Check-in Modal */}
-        <DailyCheckinModal
-          isOpen={showShareTodayModal}
-          onClose={() => setShowShareTodayModal(false)}
-          onEnergyUpdate={(energy: number) => {
-            // Handle energy update if needed
-            console.log('Energy updated:', energy);
-          }}
-          currentEnergy={0}
-          todayItems={todayItems}
-          userId={userId}
-          profileSlug={profile.slug}
-        />
 
         {/* Enhanced Mood Tracking Drawer */}
         {FEATURE_FLAGS.MOOD_TRACKING && EnhancedDayDrawerV2 && (
@@ -2431,6 +2431,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             }}
             date={selectedMoodDate || new Date().toLocaleDateString('sv-SE')}
             userId={userId}
+            todayItems={todayItems}
             initialData={todayMoodEntry}
           />
         )}
@@ -2626,7 +2627,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           onClose={() => setShowHeaderEditor(false)}
           currentName={displayName}
           currentMission={profileMission}
-          currentAvatarUrl={profile.avatar_url}
+          currentAvatarUrl={avatarUrl}
           onUpdate={handleProfileUpdate}
         />
 
