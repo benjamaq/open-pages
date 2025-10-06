@@ -149,16 +149,16 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     }
 
     return {
-      email_enabled: newPrefs.email_enabled,
-      daily_reminder_enabled: newPrefs.daily_reminder_enabled,
-      reminder_time: newPrefs.reminder_time.substring(0, 5), // Convert TIME to HH:MM
-      timezone: newPrefs.timezone,
-      supplements_reminder: newPrefs.supplements_reminder,
-      protocols_reminder: newPrefs.protocols_reminder,
-      movement_reminder: newPrefs.movement_reminder,
-      mindfulness_reminder: newPrefs.mindfulness_reminder,
-      missed_items_reminder: newPrefs.missed_items_reminder,
-      weekly_summary: newPrefs.weekly_summary
+      email_enabled: preferences.email_enabled,
+      daily_reminder_enabled: preferences.daily_reminder_enabled,
+      reminder_time: preferences.reminder_time.substring(0, 5), // Convert TIME to HH:MM
+      timezone: preferences.timezone,
+      supplements_reminder: preferences.supplements_reminder,
+      protocols_reminder: preferences.protocols_reminder,
+      movement_reminder: preferences.movement_reminder,
+      mindfulness_reminder: preferences.mindfulness_reminder,
+      missed_items_reminder: preferences.missed_items_reminder,
+      weekly_summary: preferences.weekly_summary
     }
   }
 
