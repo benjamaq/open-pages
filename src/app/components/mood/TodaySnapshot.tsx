@@ -45,11 +45,12 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
   const getPalette = () => {
     if (palette === 'pain') {
       // Pain: green→orange→red (0=good/green, 10=bad/red) - REVERSED SCALE
-      if (value <= 2) return 'linear-gradient(to right, #22C55E, #22C55E)';
-      if (value <= 4) return 'linear-gradient(to right, #22C55E, #F59E0B)';
-      if (value <= 6) return 'linear-gradient(to right, #F59E0B, #F59E0B)';
-      if (value <= 8) return 'linear-gradient(to right, #F59E0B, #EF4444)';
-      return 'linear-gradient(to right, #EF4444, #EF4444)';
+      if (value <= 1) return 'linear-gradient(to right, #22C55E, #22C55E)'; // Dark green
+      if (value <= 3) return 'linear-gradient(to right, #22C55E, #16A34A)'; // Green to darker green
+      if (value <= 5) return 'linear-gradient(to right, #16A34A, #F59E0B)'; // Green to orange
+      if (value <= 7) return 'linear-gradient(to right, #F59E0B, #F59E0B)'; // Orange
+      if (value <= 9) return 'linear-gradient(to right, #F59E0B, #EF4444)'; // Orange to red
+      return 'linear-gradient(to right, #EF4444, #DC2626)'; // Red to dark red
     } else {
       // Mood/Sleep: red→amber→green (0=bad/red, 10=good/green) - NORMAL SCALE
       if (value <= 2) return 'linear-gradient(to right, #E54D2E, #E54D2E)';
