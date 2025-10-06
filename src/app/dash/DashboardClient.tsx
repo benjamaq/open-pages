@@ -114,55 +114,27 @@ const HeaderCustomizer = ({
     { id: 'circuit', name: 'Circuit Board', url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='100%' height='100%' fill='%23f8f9fa'/><circle cx='100' cy='80' r='20' fill='none' stroke='%23e5e7eb' stroke-width='2'/><circle cx='300' cy='220' r='30' fill='none' stroke='%23e5e7eb' stroke-width='2'/><path d='M50,150 L350,150' stroke='%23e5e7eb' stroke-width='2'/><path d='M200,50 L200,250' stroke='%23e5e7eb' stroke-width='2'/></svg>" },
   ]
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setIsUploading(true)
-      setUploadProgress(0)
-      
-      // Validate file
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB')
-        setIsUploading(false)
-        return
-      }
-      
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        alert('Please upload a JPG, PNG, or WEBP file')
-        setIsUploading(false)
-        return
-      }
-
-      try {
-        // Import the direct upload function for debugging
-        const { uploadFileDirect } = await import('../../lib/storage-direct')
-        
-        setUploadProgress(30)
-        
-        // Upload to storage (direct method)
-        const result = await uploadFileDirect(file, (progress) => {
-          setUploadProgress(30 + (progress * 0.7))
-        })
-        
-        if (result.error) {
-          alert(`❌ Upload failed: ${result.error}`)
-        } else if (result.url) {
-          setUploadProgress(100)
-          // Update header preferences with permanent URL
-          onUpdate({
-            bg_type: 'upload',
-            bg_ref: result.url
-          })
-          alert('✅ Background image updated successfully!')
-          console.log('Background image uploaded successfully:', result.url)
-        }
-      } catch (error) {
-        console.error('Background upload error:', error)
-        alert('❌ Upload failed. Please try again.')
-      } finally {
-        setIsUploading(false)
-        setUploadProgress(0)
-      }
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'upload')
+    formData.append('userId', userId) // Make sure userId variable exists in scope
+    
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    
+    const data = await response.json()
+    if (data.url) {
+      // Update header preferences with permanent URL
+      onUpdate({
+        bg_type: 'upload',
+        bg_ref: data.url
+      })
     }
   }
 
@@ -584,9 +556,9 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Supplements & Meds</h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full ml-2">
             {categoryFilteredItems.length}
           </span>
         </div>
@@ -846,10 +818,10 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
             <div className="text-center py-8">
               <div className="flex flex-col items-center justify-center h-24">
                 <button
-                  onClick={onManage}
+                  onClick={onAdd}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add
+                  Add Supplements & Meds
                 </button>
                 <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Supplements, medications, peptides, vitamins, or nootropics</p>
               </div>
@@ -882,20 +854,16 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Protocols &<br />
-            Recovery
-          </h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          <h2 className="font-bold text-base sm:text-lg md:text-xl" style={{ color: '#0F1115' }}>Protocols & Recovery</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full">
             {items.length}
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-0.5 sm:space-x-1">
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            style={{ marginRight: '-4px' }}
             aria-label="Add protocols & recovery"
             title="Add protocols & recovery"
           >
@@ -903,7 +871,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
           </button>
           <button
             onClick={onManage}
-            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-1.5 sm:px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage protocols & recovery"
             title="Manage protocols & recovery"
           >
@@ -958,10 +926,10 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
             <div className="text-center py-8">
               <div className="flex flex-col items-center justify-center h-24">
                 <button
-                  onClick={onManage}
+                  onClick={onAdd}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add
+                  Add Protocols & Recovery
                 </button>
                 <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Sleep routines, ice baths, sauna, red light therapy, or rehabilitation exercises</p>
               </div>
@@ -994,19 +962,16 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Movement
-          </h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          <h2 className="font-bold text-base sm:text-lg md:text-xl" style={{ color: '#0F1115' }}>Movement</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full">
             {items.length}
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-0.5 sm:space-x-1">
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            style={{ marginRight: '-4px' }}
             aria-label="Add movement"
             title="Add movement"
           >
@@ -1014,7 +979,7 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
           </button>
           <button
             onClick={onManage}
-            className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="px-1.5 sm:px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
             aria-label="Manage movement"
             title="Manage movement"
           >
@@ -1066,7 +1031,7 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
             <div className="text-center py-8">
               <div className="flex flex-col items-center justify-center h-24">
                 <button
-                  onClick={onManage}
+                  onClick={onAdd}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
                   Add Movement
@@ -1102,11 +1067,9 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center space-x-3">
-          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>
-            Mind & Stress
-          </h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+        <div className="flex items-center">
+          <h2 className="font-bold text-lg sm:text-xl" style={{ color: '#0F1115' }}>Mind & Stress</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full ml-2">
             {items.length}
           </span>
         </div>
@@ -1174,10 +1137,10 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
             <div className="text-center py-8">
               <div className="flex flex-col items-center justify-center h-24">
                 <button
-                  onClick={onManage}
+                  onClick={onAdd}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add
+                  Add Mind & Stress
                 </button>
                 <p className="text-sm leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Meditation, breathing exercises, or stress techniques</p>
               </div>
@@ -1431,21 +1394,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
   
-  // Load completed items from localStorage on mount
-  useEffect(() => {
-    const today = new Date().toLocaleDateString('sv-SE')
-    const storageKey = `completedItems-${userId}-${today}`
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
-      try {
-        const savedItems = JSON.parse(saved)
-        setCompletedItems(new Set(savedItems))
-        console.log('🔍 Loaded completed items from localStorage:', savedItems)
-      } catch (error) {
-        console.error('Failed to load completed items:', error)
-      }
-    }
-  }, [userId])
   
   // Debug today's items
   console.log('🔍 DashboardClient - todayItems:', {
@@ -1541,7 +1489,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         console.error('Failed to load completed items:', error)
       }
     }
+  }, [userId])
 
+  // Load dashboard data and check welcome parameter
+  useEffect(() => {
     // Load all dashboard data
     loadDashboardData()
     
@@ -1557,10 +1508,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     }
     calculateStreak()
     
-    // Set up periodic refresh for follower count (every 30 seconds)
+    // Set up periodic refresh for follower count (every 5 minutes instead of 30 seconds)
     const refreshInterval = setInterval(() => {
       loadDashboardData()
-    }, 30000)
+    }, 300000) // 5 minutes
     
     return () => clearInterval(refreshInterval)
   }, [userId, searchParams])
@@ -1842,6 +1793,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       const formData = new FormData()
       formData.append('file', file)
       formData.append('type', 'avatar')
+      formData.append('userId', userId)
 
       // Upload file
       const uploadResponse = await fetch('/api/upload', {
@@ -1851,7 +1803,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Upload failed')
+        const errorText = await uploadResponse.text()
+        throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`)
       }
 
       const uploadResult = await uploadResponse.json()
@@ -1860,29 +1813,34 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         throw new Error(uploadResult.error)
       }
 
-      // Update profile with new avatar URL
-      const updateResponse = await fetch('/api/profile/update', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ avatar_url: uploadResult.url })
-      })
+      if (uploadResult.url) {
+        // Update profile with new avatar URL
+        const updateResponse = await fetch('/api/profile/update', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ avatar_url: uploadResult.url }),
+          credentials: 'include'
+        })
 
-      if (!updateResponse.ok) {
-        throw new Error('Failed to update profile')
+        if (!updateResponse.ok) {
+          const updateError = await updateResponse.text()
+          throw new Error(`Failed to update profile: ${updateError}`)
+        }
+
+        // Update the avatar URL in state to show the new avatar immediately
+        setAvatarUrl(uploadResult.url)
+        
+        // Also refresh the page to ensure all data is synced
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      } else {
+        throw new Error('No URL returned from upload')
       }
 
-      // Update the avatar URL in state to show the new avatar immediately
-      setAvatarUrl(uploadResult.url)
-      
-      // Also refresh the page to ensure all data is synced
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
-
     } catch (error) {
-      console.error('Avatar upload failed:', error)
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }

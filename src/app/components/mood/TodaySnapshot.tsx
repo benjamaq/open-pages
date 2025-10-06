@@ -205,17 +205,17 @@ export default function TodaySnapshot({
         {/* Header */}
         <div className="flex items-center justify-between px-3 sm:px-6 pt-2 pb-6">
           <h3 className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <div className="flex items-center space-x-1 sm:space-x-2 ml-2 sm:ml-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 ml-2 sm:ml-0">
             <button 
               onClick={onEditToday}
-              className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
             >
               Daily Check-in
             </button>
             <div className="relative">
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
                   showHeatmap 
                     ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                     : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -224,7 +224,7 @@ export default function TodaySnapshot({
                 title="Monthly heatmap"
               >
                 <Calendar 
-                  className="w-3 h-3 sm:w-4 sm:h-4"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   style={{ 
                     color: 'white',
                     fill: 'none',
@@ -242,7 +242,7 @@ export default function TodaySnapshot({
               className="p-1 rounded-full hover:bg-gray-200 transition-colors"
               aria-label={collapsed ? 'Expand' : 'Collapse'}
             >
-              <ChevronDown className={`w-5 h-5 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+              <ChevronDown className={`w-5 h-5 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
             </button>
           </div>
         </div>

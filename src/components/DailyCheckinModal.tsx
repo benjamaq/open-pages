@@ -729,7 +729,7 @@ export default function DailyCheckinModal({
                     className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                     aria-label={showWearables ? 'Collapse' : 'Expand'}
                   >
-                    <ChevronDown className={`w-5 h-5 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#A6AFBD' }} />
+                    <ChevronDown className={`w-5 h-5 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
                   </button>
                 </div>
 

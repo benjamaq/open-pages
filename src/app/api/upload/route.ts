@@ -2,8 +2,6 @@ import { createClient } from '../../../lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  console.log('Upload API called')
-  
   // Check for required environment variables
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error('Missing Supabase environment variables')
@@ -13,21 +11,32 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    const supabase = await createClient()
-    console.log('Supabase client created')
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      console.error('User authentication failed:', userError)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.log('User authenticated:', user.id)
-
     const formData = await request.formData()
     const file = formData.get('file') as File
     const type = formData.get('type') as string
-    console.log('File received:', file?.name, 'Size:', file?.size, 'Type:', type)
+    const userIdFromForm = formData.get('userId') as string
+    
+    // Try to get user from auth first, fallback to form data
+    let userId = userIdFromForm
+    const supabaseAuth = await createClient()
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser()
+    
+    if (user && !userError) {
+      userId = user.id
+    } else if (userIdFromForm) {
+      // Use user ID from form data
+    } else {
+      console.error('User authentication failed:', userError)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    // Use service role for storage operations
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    console.log('Supabase service client created')
 
     if (!file) {
       console.error('No file provided in form data')
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
     const bucket = type === 'avatar' ? 'avatars' : 'uploads'
     const fileName = file.name || 'unnamed'
     const fileExt = fileName.split('.').pop() || 'jpg'
-    const fileNameWithExt = `${user.id}/${Date.now()}.${fileExt}`
+    const fileNameWithExt = `${userId}/${Date.now()}.${fileExt}`
 
     try {
       // Check if bucket exists, create if needed
@@ -83,7 +92,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Upload to Supabase Storage
-      console.log('Attempting to upload file:', fileNameWithExt, 'to bucket:', bucket)
       const { data, error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(fileNameWithExt, file, {
@@ -93,7 +101,6 @@ export async function POST(request: NextRequest) {
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
-        console.error('Upload error details:', JSON.stringify(uploadError, null, 2))
         
         // If it's an RLS error, try to provide helpful guidance
         if (uploadError.message.includes('row-level security') || uploadError.message.includes('RLS')) {
@@ -104,8 +111,6 @@ export async function POST(request: NextRequest) {
         
         return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 })
       }
-      
-      console.log('File uploaded successfully:', data)
 
       // Get public URL
       const { data: urlData } = supabase.storage

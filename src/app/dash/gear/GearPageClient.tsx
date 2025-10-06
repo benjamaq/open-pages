@@ -465,7 +465,7 @@ export default function GearPageClient({ gear, profile }: GearPageClientProps) {
                 onClick={() => setShowAddForm(true)}
                 className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors"
               >
-                + Add Device
+                + Add Devices & Tools
               </button>
             </div>
           )}

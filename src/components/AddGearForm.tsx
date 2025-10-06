@@ -69,7 +69,7 @@ export default function AddGearForm({ onClose }: AddGearFormProps) {
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-6 pb-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Add Device</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Add Devices & Tools</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-1"

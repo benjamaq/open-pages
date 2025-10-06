@@ -96,7 +96,7 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
                   onClick={onManage}
                   className="bg-gray-900 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors mb-3"
                 >
-                  Add Gear
+                  Add Devices & Tools
                 </button>
                 <p className="text-xs leading-relaxed max-w-64" style={{ color: '#5C6370' }}>Track your health equipment.</p>
               </div>

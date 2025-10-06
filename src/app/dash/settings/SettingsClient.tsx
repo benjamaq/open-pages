@@ -293,102 +293,51 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     }
   }
 
-  const handleProfilePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleProfilePhotoUpload triggered')
-    const file = event.target.files?.[0]
-    console.log('Selected file:', file?.name, file?.size, file?.type)
-    
-    if (!file) {
-      console.log('No file selected')
-      return
-    }
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    setIsUploading(true)
-    setUploadProgress(0)
-    setSaveMessage('')
-    console.log('Starting upload process...')
-
-      // Validate file
-      if (file.size > 5 * 1024 * 1024) {
-        setSaveMessage('File size must be less than 5MB')
-        setIsUploading(false)
-        return
-      }
-      
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        setSaveMessage('Please upload a JPG, PNG, or WEBP file')
-        setIsUploading(false)
-        return
-      }
-
-      // Create form data
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', 'avatar')
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'avatar')
+    formData.append('userId', profile.user_id)
 
     try {
-      console.log('🚀 Sending request with fetch() to /api/upload')
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
-        credentials: 'include' // Send cookies for auth
+        credentials: 'include'
       })
       
-      console.log('🎯 Fetch response received! Status:', response.status)
-
       if (!response.ok) {
-        throw new Error(`Upload failed (${response.status})`)
+        const errorText = await response.text()
+        alert(`Upload failed: ${response.status} - ${errorText}`)
+        return
       }
-
-      const result = await response.json()
-      console.log('🎯 Parsed result:', result)
-
-          if (result.error) {
-        throw new Error(`Upload failed: ${result.error}`)
-      }
-
-      if (result.url) {
-        console.log('🎯 Upload successful! URL:', result.url)
-            setUploadProgress(100)
-            
-            // Update profile avatar via API route
-        console.log('Updating profile with URL:', result.url)
+      
+      const data = await response.json()
+      
+      if (data.url) {
         const updateResponse = await fetch('/api/profile/update', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ avatar_url: result.url })
+          body: JSON.stringify({ avatar_url: data.url }),
+          credentials: 'include'
         })
         
-        if (!updateResponse.ok) {
-          throw new Error('Failed to update profile')
-        }
-        
-        const updateResult = await updateResponse.json()
-        console.log('Profile update result:', updateResult)
-              
-              setSaveMessage('✅ Profile photo updated successfully!')
-        alert('✅ Profile photo updated successfully!')
-        console.log('Success! Refreshing page in 2 seconds...')
-              setTimeout(() => {
-                console.log('Reloading page...')
-                window.location.reload()
-              }, 2000)
+        if (updateResponse.ok) {
+          window.location.reload()
         } else {
-        throw new Error('No URL returned from upload')
+          const updateError = await updateResponse.text()
+          alert(`Profile update failed: ${updateError}`)
+        }
+      } else {
+        alert('Upload failed: No URL returned')
       }
-
     } catch (error) {
-      console.error('🚨 Upload failed:', error)
-      const errorMsg = `❌ Upload failed: ${error.message}`
-      setSaveMessage(errorMsg)
-      alert(errorMsg)
-    } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
-      // Reset input so same file can be selected again
-      event.target.value = ''
+      alert(`Upload error: ${error.message}`)
     }
   }
 
@@ -500,11 +449,19 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             <h3 className="font-medium text-gray-900 mb-4">Profile Photo</h3>
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <img
-                  src={profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.display_name || 'User'}&backgroundColor=000000&textColor=ffffff`}
-                  alt="Profile"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-200"
-                />
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Profile"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 border-2 border-gray-200 flex items-center justify-center">
+                    <span className="text-white font-bold text-lg sm:text-xl">
+                      {profile.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                    </span>
+                  </div>
+                )}
                 {isUploading && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
                     <div className="text-white text-xs font-medium">{uploadProgress}%</div>
@@ -514,12 +471,11 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               <div>
                 {/* Expert-recommended approach: sync file picker */}
                 <input
-                  ref={(ref) => { window.fileInputRef = ref }} // Store ref globally for debugging
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleProfilePhotoUpload}
                   disabled={isUploading}
-                  className="sr-only" // Screen reader only - keeps in DOM
+                  className="sr-only"
                   id="avatar-file-input"
                 />
                 <label

@@ -136,10 +136,10 @@ export default function DashboardHeaderEditor({
                     <img 
                       src={avatarUrl} 
                       alt="Profile photo"
-                      className="w-20 h-20 object-cover rounded-xl border border-gray-200"
+                      className="w-20 h-20 object-cover rounded-full border border-gray-200"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-800 rounded-xl border border-gray-200 flex items-center justify-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full border border-gray-200 flex items-center justify-center">
                       <span className="text-xl font-bold text-white">
                         {firstName.charAt(0)}{lastName.charAt(0)}
                       </span>

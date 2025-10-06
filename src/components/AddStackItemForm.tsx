@@ -179,7 +179,10 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              Add
+              {itemType === 'supplements' && 'Add Supplements & Meds'}
+              {itemType === 'movement' && 'Add Movement'}
+              {itemType === 'mindfulness' && 'Add Mind & Stress'}
+              {itemType === 'food' && 'Add Food'}
             </h2>
             <button
               onClick={onClose}

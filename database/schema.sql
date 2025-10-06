@@ -13,6 +13,8 @@ CREATE TABLE profiles (
     bio TEXT,
     avatar_url TEXT,
     public BOOLEAN DEFAULT true,
+    referral_code TEXT,
+    referral_source TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

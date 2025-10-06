@@ -62,7 +62,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             const timestamp = Date.now().toString(36)
             const uniqueSlug = `${baseSlug}-${timestamp}`
             
-            const { error: profileError } = await supabase
+            const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .upsert({
                 user_id: data.user.id,
@@ -79,14 +79,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 onConflict: 'user_id',
                 ignoreDuplicates: false
               })
+              .select()
 
             if (profileError) {
-              console.error('Profile upsert error:', profileError)
               // If it's a duplicate key error, that's actually okay - profile already exists
               if (profileError.code === '23505') {
                 console.log('ℹ️ Profile already exists for user:', data.user.id)
               } else {
-                console.error('❌ Unexpected profile error:', profileError)
+                console.error('❌ Profile creation error:', profileError)
               }
             } else {
               console.log('✅ Profile created successfully for user:', data.user.id)

@@ -583,14 +583,14 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
             {/* Daily Log Summary - Collapsible */}
             <div>
               <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-                <summary className="cursor-pointer text-base text-gray-700 flex items-center justify-between">
+                <summary className="cursor-pointer text-base text-gray-700 flex items-center justify-between list-none">
                   <div>
                     <h3 className="text-sm sm:text-base font-medium text-gray-900">Daily Log Summary</h3>
                     <p className="text-sm text-gray-500 mt-1">
                       Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
                     </p>
                   </div>
-                  <ChevronDown className="w-6 h-6 sm:w-5 sm:h-5 transition-transform" style={{ color: '#A6AFBD' }} />
+                  <ChevronDown className="w-5 h-5 transition-transform flex-shrink-0" style={{ color: '#6B7280' }} />
                 </summary>
                 
                 <div className="mt-4 space-y-3">
@@ -750,6 +750,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
               cursor: pointer;
               border: 2px solid #374151;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            /* Hide browser's default summary marker */
+            details summary::-webkit-details-marker {
+              display: none;
+            }
+
+            details summary::marker {
+              display: none;
             }
           `}</style>
     </div>
