@@ -603,8 +603,8 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
           <button
             onClick={onManage}
             className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage supplements"
-            title="Manage supplements"
+            aria-label="Manage supplements & meds"
+            title="Manage supplements & meds"
           >
             Manage
           </button>
@@ -904,8 +904,8 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
           <button
             onClick={onManage}
             className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage protocols"
-            title="Manage protocols"
+            aria-label="Manage protocols & recovery"
+            title="Manage protocols & recovery"
           >
             Manage
           </button>
@@ -1123,8 +1123,8 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
           <button
             onClick={onManage}
             className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage mindfulness"
-            title="Manage mindfulness"
+            aria-label="Manage mind & stress"
+            title="Manage mind & stress"
           >
             Manage
           </button>

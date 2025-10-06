@@ -36,7 +36,7 @@ export default function GearCard({ items = [], onAdd, onManage }: { items?: any[
           <button
             onClick={onManage}
             className="px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Manage gear"
+            aria-label="Manage devices & tools"
           >
             Manage
           </button>
