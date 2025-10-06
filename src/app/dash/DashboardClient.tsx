@@ -1758,8 +1758,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     return today.toLocaleDateString('en-US', options)
   }
 
-  const firstName = profile.display_name.split(' ')[0]
-  const lastName = profile.display_name.split(' ')[1] || ''
+  const firstName = displayName.split(' ')[0]
+  const lastName = displayName.split(' ')[1] || ''
 
   const handleManageModal = (type: string) => {
     setActiveModal(type)
