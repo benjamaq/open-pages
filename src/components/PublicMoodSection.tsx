@@ -11,6 +11,14 @@ try {
   console.warn('MonthlyHeatmap not available:', error)
 }
 
+// Import DayDetailView conditionally to prevent build failures
+let DayDetailView: any = null
+try {
+  DayDetailView = require('@/app/components/mood/DayDetailView').default
+} catch (error) {
+  console.warn('DayDetailView not available:', error)
+}
+
 interface PublicMoodSectionProps {
   moodData: any[];
   profileName: string;
@@ -70,6 +78,8 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
 export default function PublicMoodSection({ moodData, profileName }: PublicMoodSectionProps) {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showDayDetail, setShowDayDetail] = useState(false);
 
   // Get today's entry (most recent)
   const todayEntry = moodData.length > 0 ? moodData[moodData.length - 1] : null;
@@ -148,6 +158,12 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
     }));
   }, [moodData]);
 
+  // Handle day click from heatmap
+  const handleDayClick = (date: string) => {
+    setSelectedDate(date);
+    setShowDayDetail(true);
+  };
+
   // Always show the section, even without data (matches dashboard behavior)
 
   // Debug logging
@@ -206,7 +222,7 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
               <div className="mb-4">
                 {MonthlyHeatmap && (
                   <MonthlyHeatmap 
-                    onDayClick={() => {}} // No day detail for public profiles
+                    onDayClick={handleDayClick}
                   />
                 )}
               </div>
@@ -277,6 +293,19 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
         )}
 
       </div>
+
+      {/* Day Detail Modal */}
+      {selectedDate && DayDetailView && (
+        <DayDetailView
+          date={selectedDate}
+          isOpen={showDayDetail}
+          onClose={() => {
+            setShowDayDetail(false);
+            setSelectedDate(null);
+          }}
+          todayItems={[]} // Empty array for public profiles since we don't have today's items
+        />
+      )}
     </div>
   );
 }
