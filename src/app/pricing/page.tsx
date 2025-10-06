@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase/client'
 
 const freeFeatures = [
-  'Up to 20 stack items (supplements, protocols, movement, mindfulness)',
+  'Up to 12 stack items (supplements, protocols, movement, mindfulness)',
   '5 library files (10 MB each)',
   'Public profile with followers',
   'Daily Check-in & progress tracking'

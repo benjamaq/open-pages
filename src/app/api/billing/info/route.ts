@@ -147,13 +147,13 @@ async function getUserUsage(supabase: ReturnType<typeof createClient>, userId: s
     features: [
       {
         name: 'supplements',
-        limit: isPro ? null : 10,
+        limit: isPro ? null : 12,
         used: stackItems.data?.filter(item => item.item_type === 'supplements').length || 0,
         is_unlimited: isPro
       },
       {
         name: 'protocols',
-        limit: isPro ? null : 3,
+        limit: isPro ? null : 12,
         used: protocols.data?.length || 0,
         is_unlimited: isPro
       },
@@ -165,13 +165,13 @@ async function getUserUsage(supabase: ReturnType<typeof createClient>, userId: s
       },
       {
         name: 'movement',
-        limit: isPro ? null : 5,
+        limit: isPro ? null : 12,
         used: movements.data?.length || 0,
         is_unlimited: isPro
       },
       {
         name: 'mindfulness',
-        limit: isPro ? null : 5,
+        limit: isPro ? null : 12,
         used: mindfulness.data?.length || 0,
         is_unlimited: isPro
       }

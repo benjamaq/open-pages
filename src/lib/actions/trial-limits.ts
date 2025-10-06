@@ -70,8 +70,8 @@ export async function checkItemLimit(itemType: 'supplements' | 'protocols' | 'li
 
     // Define limits for free tier
     const limits = {
-      supplements: 10,
-      protocols: 5,
+      supplements: 12,
+      protocols: 12,
       library: 3
     }
 
@@ -178,7 +178,7 @@ export async function enforceTrialLimits() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
 
-      const exceedsLimits = (supplementCount || 0) > 10 || (protocolCount || 0) > 5 || (libraryCount || 0) > 3
+      const exceedsLimits = (supplementCount || 0) > 12 || (protocolCount || 0) > 12 || (libraryCount || 0) > 3
 
       if (exceedsLimits) {
         // TODO: Send email notification or in-app notification

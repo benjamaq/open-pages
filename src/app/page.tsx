@@ -912,7 +912,7 @@ export default function Home() {
                 <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Up to 20 stack items (supplements, protocols, movement, mindfulness)</span>
+                    <span className="text-gray-700">Up to 12 stack items (supplements, protocols, movement, mindfulness)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>

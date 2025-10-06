@@ -865,8 +865,8 @@ export interface ProfileWithStats extends Profile {
 // User tier limits
 export const TIER_LIMITS = {
   free: {
-    stack_items: 10,
-    protocols: 5,
+    stack_items: 12,
+    protocols: 12,
     uploads: 3,
   },
   pro: {
