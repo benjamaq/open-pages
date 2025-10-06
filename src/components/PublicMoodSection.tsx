@@ -304,6 +304,8 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             setSelectedDate(null);
           }}
           todayItems={[]} // Empty array for public profiles since we don't have today's items
+          moodData={moodData} // Pass the mood data so we can find the specific day's data
+          isPublicProfile={true} // Flag to indicate this is a public profile
         />
       )}
     </div>

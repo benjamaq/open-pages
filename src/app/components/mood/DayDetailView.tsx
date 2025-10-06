@@ -16,6 +16,8 @@ interface DayDetailViewProps {
     food: any[];
     gear: any[];
   };
+  moodData?: any[]; // For public profiles
+  isPublicProfile?: boolean; // Flag to indicate if this is a public profile
 }
 
 interface DayData {
@@ -31,7 +33,7 @@ interface DayData {
   wearables: any | null;
 }
 
-export default function DayDetailView({ date, isOpen, onClose, todayItems }: DayDetailViewProps) {
+export default function DayDetailView({ date, isOpen, onClose, todayItems, moodData, isPublicProfile }: DayDetailViewProps) {
   const [dayData, setDayData] = useState<DayData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +41,16 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems }: Day
   const loadDayData = async () => {
     setLoading(true);
     try {
+      // For public profiles, use the passed mood data instead of making an API call
+      if (isPublicProfile && moodData) {
+        const dayEntry = moodData.find(entry => entry.date === date);
+        console.log('Public profile - Day data from moodData:', dayEntry);
+        setDayData(dayEntry || null);
+        setLoading(false);
+        return;
+      }
+
+      // For authenticated users, make API call
       const response = await fetch(`/api/mood/day?date=${date}`);
       if (response.ok) {
         const data = await response.json();
