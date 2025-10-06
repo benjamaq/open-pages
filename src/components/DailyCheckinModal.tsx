@@ -13,6 +13,8 @@ export type MoodPreset =
   | 'Solid baseline' | 'Back online' | 'Calm & steady' | 'Cruising' | 'Climbing'
   | 'Crisp and clear' | 'Quietly powerful' | 'Renegade mode' | 'Dialed in' | 'Peaking'
   | 'Laser-focused' | 'Flow state' | 'Bulletproof' | 'Angel in the sky' | 'Unstoppable'
+  | '⚡ Dialed in' | '🌧️ Walking storm cloud' | '🧊 Chill & unbothered' | '🤹 Spinning too many plates'
+  | '🐢 Slow but steady' | '🔄 Restart required' | '🫠 Melted but managing' | '🌤️ Quietly optimistic'
 
 export interface DailyCheckinInput {
   dateISO: string
@@ -713,7 +715,9 @@ export default function DailyCheckinModal({
                       'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
                       'Solid baseline', 'Back online', 'Calm & steady', 'Cruising', 'Climbing',
                       'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
-                      'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable'] as MoodPreset[]).map(mood => (
+                      'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
+                      '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
+                      '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic'] as MoodPreset[]).map(mood => (
                       <option key={mood} value={mood}>{mood}</option>
                     ))}
                   </select>
