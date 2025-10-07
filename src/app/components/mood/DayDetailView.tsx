@@ -59,19 +59,21 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
         console.log('Day data protocols:', data.entry?.protocols);
         console.log('Day data activity:', data.entry?.activity);
         console.log('Day data devices:', data.entry?.devices);
-    console.log('=== WEARABLES DEBUG ===');
-    console.log('Day data wearables:', data.entry?.wearables);
-    console.log('Wearables device name:', data.entry?.wearables?.device);
-    console.log('Wearables keys:', data.entry?.wearables ? Object.keys(data.entry.wearables) : 'No wearables');
-    console.log('Wearables type:', typeof data.entry?.wearables);
-    console.log('========================');
+        console.log('=== WEARABLES DEBUG ===');
+        console.log('Day data wearables:', data.entry?.wearables);
+        console.log('Wearables device name:', data.entry?.wearables?.device);
+        console.log('Wearables keys:', data.entry?.wearables ? Object.keys(data.entry.wearables) : 'No wearables');
+        console.log('Wearables type:', typeof data.entry?.wearables);
+        console.log('========================');
         console.log('Full entry data:', JSON.stringify(data.entry, null, 2));
-        setDayData(data.entry);
+        setDayData(data.entry || null);
       } else {
         console.error('Failed to load day data:', response.status, response.statusText);
+        setDayData(null);
       }
     } catch (error) {
       console.error('Error loading day data:', error);
+      setDayData(null);
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
   };
 
   const getSelectedChips = () => {
-    if (!dayData?.tags) return [];
+    if (!dayData?.tags || !Array.isArray(dayData.tags)) return [];
     return dayData.tags.map(tag => 
       CHIP_CATALOG.find(chip => chip.slug === tag)
     ).filter(Boolean);
@@ -141,20 +143,20 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
     if (!isToday() || !todayItems) return null;
     
     return {
-      supplements: todayItems.supplements.map(item => ({
+      supplements: (todayItems.supplements || []).map(item => ({
         name: item.name,
         dose: item.dose || '1',
         timing: item.timing || 'daily'
       })),
-      protocols: todayItems.protocols.map(item => ({
+      protocols: (todayItems.protocols || []).map(item => ({
         name: item.name,
         duration: item.frequency || 'daily'
       })),
-      activity: todayItems.movement.map(item => ({
+      activity: (todayItems.movement || []).map(item => ({
         name: item.name,
         duration: item.dose || '30'
       })),
-      devices: todayItems.gear.map(item => ({
+      devices: (todayItems.gear || []).map(item => ({
         name: item.name,
         duration: 'N/A'
       }))
