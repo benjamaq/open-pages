@@ -6,27 +6,10 @@ export function formatFrequencyDisplay(frequency: string, scheduleDays?: number[
   if (frequency === 'bi-weekly') return 'Bi-weekly'
   if (frequency === 'monthly') return 'Monthly'
   
-  if (frequency === 'custom' && scheduleDays && scheduleDays.length > 0) {
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const selectedDays = scheduleDays.map(day => dayNames[day]).join(', ')
-    
-    // If all days selected, show as "Daily"
-    if (scheduleDays.length === 7) {
-      return 'Daily'
-    }
-    
-    // If weekdays only (Mon-Fri)
-    if (scheduleDays.length === 5 && scheduleDays.every(day => day >= 1 && day <= 5)) {
-      return 'Weekdays'
-    }
-    
-    // If weekends only (Sat-Sun)
-    if (scheduleDays.length === 2 && scheduleDays.includes(0) && scheduleDays.includes(6)) {
-      return 'Weekends'
-    }
-    
-    // Otherwise show the specific days
-    return selectedDays
+  if (frequency === 'custom') {
+    // Custom scheduling should always show as "Custom" regardless of day selection
+    // The user chose "custom" which means they'll decide when to take it
+    return 'Custom'
   }
   
   return frequency || 'As needed'
