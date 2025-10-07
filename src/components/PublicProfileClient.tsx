@@ -123,6 +123,11 @@ export default function PublicProfileClient({
             key={`mood-${publicMoodData.length}-${Date.now()}`}
             moodData={publicMoodData}
             profileName={profile.display_name || 'this user'}
+            publicSupplements={publicSupplements}
+            publicProtocols={publicProtocols}
+            publicMovement={publicMovement}
+            publicMindfulness={publicMindfulness}
+            publicGear={publicGear}
           />
         </div>
       )}

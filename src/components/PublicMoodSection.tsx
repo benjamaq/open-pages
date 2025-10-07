@@ -22,6 +22,11 @@ try {
 interface PublicMoodSectionProps {
   moodData: any[];
   profileName: string;
+  publicSupplements?: any[];
+  publicProtocols?: any[];
+  publicMovement?: any[];
+  publicMindfulness?: any[];
+  publicGear?: any[];
 }
 
 interface MetricPillProps {
@@ -76,7 +81,15 @@ const MetricPill = ({ label, value, max, palette, className = '' }: MetricPillPr
   );
 };
 
-export default function PublicMoodSection({ moodData, profileName }: PublicMoodSectionProps) {
+export default function PublicMoodSection({ 
+  moodData, 
+  profileName, 
+  publicSupplements = [], 
+  publicProtocols = [], 
+  publicMovement = [], 
+  publicMindfulness = [], 
+  publicGear = [] 
+}: PublicMoodSectionProps) {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -304,7 +317,14 @@ export default function PublicMoodSection({ moodData, profileName }: PublicMoodS
             setShowDayDetail(false);
             setSelectedDate(null);
           }}
-          todayItems={[]} // Empty array for public profiles since we don't have today's items
+          todayItems={{
+            supplements: publicSupplements,
+            protocols: publicProtocols,
+            movement: publicMovement,
+            mindfulness: publicMindfulness,
+            gear: publicGear,
+            food: [] // No food data for public profiles
+          }}
           moodData={moodData} // Pass the mood data so we can find the specific day's data
           isPublicProfile={true} // Flag to indicate this is a public profile
         />
