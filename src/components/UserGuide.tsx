@@ -75,7 +75,7 @@ interface UserGuideProps {
   onComplete?: () => void
 }
 
-export default function UserGuide({ isOverlay, onClose, onComplete }: UserGuideProps) {
+export default function UserGuide({ isOpen, onClose, onComplete }: UserGuideProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
