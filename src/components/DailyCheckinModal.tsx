@@ -171,6 +171,11 @@ export default function DailyCheckinModal({
   // Debug: Log when component loads to verify new mood chips
   console.log('🎭 DailyCheckinModal loaded with new emoji mood chips v2.2')
   
+  // Debug: Check if emoji mood chips are in the array
+  const emojiMoods = ['⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates', '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']
+  console.log('🎭 Emoji moods array:', emojiMoods)
+  console.log('🎭 First emoji mood:', emojiMoods[0])
+  
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
     energy: currentEnergy,
@@ -721,7 +726,7 @@ export default function DailyCheckinModal({
                       'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
                       'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
                       '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
-                      '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic'] as MoodPreset[]).map(mood => (
+                      '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']).map(mood => (
                       <option key={mood} value={mood}>{mood}</option>
                     ))}
                   </select>
