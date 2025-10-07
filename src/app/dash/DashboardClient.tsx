@@ -35,7 +35,7 @@ import TrialStatusBadge from '../../components/TrialStatusBadge'
 import LimitChecker from '../../components/LimitChecker'
 import DashboardHeaderEditor from '../../components/DashboardHeaderEditor'
 import BetaFeedbackWidget from '../../components/BetaFeedbackWidget'
-// import UserGuide, { QuickHelp } from '../../components/UserGuide'
+import UserGuide, { QuickHelp } from '../../components/UserGuideSimple'
 
 interface Profile {
   id: string
@@ -2093,13 +2093,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
-                      {/* <button
+                      <button
                         onClick={() => setShowUserGuide(true)}
                         className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full text-xs font-medium hover:brightness-110 transition-all shadow-sm hover:shadow-md"
                         title="Take a quick tour of the dashboard"
                       >
                         Take Tour
-                      </button> */}
+                      </button>
                   </div>
                   <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
@@ -2642,8 +2642,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* User Guide Tour - Temporarily disabled */}
-      {/* <UserGuide 
+      {/* User Guide Tour */}
+      <UserGuide 
         isOpen={showUserGuide} 
         onClose={() => setShowUserGuide(false)}
         onComplete={() => {
@@ -2652,7 +2652,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         }}
       />
 
-      <QuickHelp /> */}
+      {/* Quick Help Button */}
+      <QuickHelp />
     </>
   )
 }
