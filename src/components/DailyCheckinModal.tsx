@@ -710,6 +710,7 @@ export default function DailyCheckinModal({
                     className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
                   >
                     <option value="">Pick a vibe…</option>
+                    {/* v2.1 - Updated mood chips with emojis */}
                     {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
                       'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
                       'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',

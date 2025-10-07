@@ -51,6 +51,8 @@ export default function RootLayout({
             });
             
             console.log('Google Analytics initialized with ID: G-BQJWCVNJH0');
+            console.log('GA Debug - Page loaded:', window.location.href);
+            console.log('GA Debug - DataLayer:', window.dataLayer);
           `}
         </Script>
       </head>
