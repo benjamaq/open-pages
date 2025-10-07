@@ -58,15 +58,15 @@ const tourSteps: TourStep[] = [
     icon: <MousePointer className="w-6 h-6" />,
     action: 'Try clicking on a day in the heatmap!'
   },
-  {
-    id: 'public-profile',
-    title: 'Your Public Profile',
-    description: 'Share your biohacking journey with others! Click "Public Profile" to see your complete stack, movement routines, journal entries, and progress. Click the link button to share your profile with others. People can follow your stack and get weekly email updates when you make changes.',
-    target: '[data-tour="public-profile"]',
-    position: 'left',
-    icon: <Eye className="w-6 h-6" />,
-    action: 'Click "View Public Profile" to see how others see you!'
-  },
+         {
+           id: 'public-profile',
+           title: 'Your Public Profile',
+           description: 'Share your biohacking journey with others! You can share with friends, socials, doctors, or whatever. Click the link button (not the public profile button) to get your shareable link.',
+           target: '[data-tour="public-profile"]',
+           position: 'left',
+           icon: <Eye className="w-6 h-6" />,
+           action: 'Click the link button to get your shareable profile URL!'
+         },
   {
     id: 'settings',
     title: 'Settings & Email',
@@ -298,13 +298,13 @@ export function QuickHelp() {
                     <p className="text-sm text-gray-600">Track daily mood, sleep, and pain. Click heatmap to see detailed day information.</p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <Eye className="w-5 h-5 text-orange-500 mr-2" />
-                      <h4 className="font-medium">Public Profile</h4>
-                    </div>
-                    <p className="text-sm text-gray-600">Share your complete stack, journal, and progress. Others can follow and get email updates.</p>
-                  </div>
+                         <div className="bg-gray-50 rounded-lg p-4">
+                           <div className="flex items-center mb-2">
+                             <Eye className="w-5 h-5 text-orange-500 mr-2" />
+                             <h4 className="font-medium">Public Profile</h4>
+                           </div>
+                           <p className="text-sm text-gray-600">Share with friends, socials, doctors, or whatever. Click the link button to get your shareable URL.</p>
+                         </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center mb-2">
@@ -352,13 +352,13 @@ export function QuickHelp() {
                       <p className="text-sm text-gray-600">Click any day to see detailed information about that day</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Share your public profile</p>
-                      <p className="text-sm text-gray-600">Click "Public Profile" to see your complete stack, or use the link button to share</p>
-                    </div>
-                  </div>
+                         <div className="flex items-start space-x-3">
+                           <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                           <div>
+                             <p className="font-medium">Share your profile</p>
+                             <p className="text-sm text-gray-600">Click the link button (not the public profile button) to get your shareable URL</p>
+                           </div>
+                         </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-gray-500 rounded-full mt-2 flex-shrink-0" />
                     <div>
