@@ -240,6 +240,10 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
               <div className="space-y-4">
                 {/* Entry List/Tabs */}
                 <div className="border-b border-gray-200">
+                  <div className="mb-3">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Journal Entries</h4>
+                    <p className="text-xs text-gray-500">Click on an entry to view its full content</p>
+                  </div>
                   <div className="flex flex-wrap gap-2 pb-2">
                     {displayEntries.map((entry) => (
                       <button
