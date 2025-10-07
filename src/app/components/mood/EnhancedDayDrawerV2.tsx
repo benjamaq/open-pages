@@ -27,6 +27,7 @@ type EnhancedDayDrawerV2Props = {
     night_wakes?: number | null;
     tags?: string[] | null;
     journal?: string | null;
+    moodChip?: string | null;
     actions_snapshot?: any;
   } | null;
 };
@@ -38,7 +39,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
     sleep_quality: null,
     pain: null,
     tags: null,
-    journal: null
+    journal: null,
+    moodChip: null
   });
   
   const [isSaving, setIsSaving] = useState(false);
@@ -62,7 +64,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
         sleep_quality: initialData.sleep_quality,
         pain: initialData.pain,
         tags: initialData.tags,
-        journal: initialData.journal
+        journal: initialData.journal,
+        moodChip: initialData.moodChip
       };
       setFormData(newFormData);
       setSelectedTags(initialData.tags || []);
@@ -75,7 +78,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
         sleep_quality: null,
         pain: null,
         tags: null,
-        journal: null
+        journal: null,
+        moodChip: null
       };
       setFormData(newFormData);
       setSelectedTags([]);
@@ -366,6 +370,34 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                         <span className="text-xs text-gray-500 min-w-[4rem] text-center">
                           {formData.mood || 5} out of 10
                         </span>
+                      </div>
+                      
+                      {/* Expressive Mood Chips */}
+                      <div className="mt-3">
+                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                          Expressive Mood Chips
+                        </label>
+                        <select
+                          value={formData.moodChip || ''}
+                          onChange={(e) => {
+                            updateField('moodChip', e.target.value || null);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="">Pick a vibe…</option>
+                          {/* v2.3 - Updated mood chips with emojis - Enhanced debugging */}
+                          {/* Emoji Test: ⚡🌧️🧊🤹🐢🔄🫠🌤️ */}
+                          {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
+                            'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
+                            'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
+                            'Solid baseline', 'Back online', 'Calm & steady', 'Cruising', 'Climbing',
+                            'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
+                            'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
+                            '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
+                            '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']).map(mood => (
+                            <option key={mood} value={mood}>{mood}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 

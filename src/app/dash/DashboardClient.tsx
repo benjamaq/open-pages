@@ -2079,10 +2079,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               {/* Top: Display Name + Mission */}
               <div className="space-y-3">
                 {/* Clickable Profile Area */}
-                          <button
-                  onClick={() => setShowHeaderEditor(true)}
-                  className="text-left group"
-                >
+                <div className="text-left group">
                   <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
                       {displayName}
@@ -2093,18 +2090,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
-                      <button
-                        onClick={() => setShowUserGuide(true)}
-                        className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full text-xs font-medium hover:brightness-110 transition-all shadow-sm hover:shadow-md"
-                        title="Take a quick tour of the dashboard"
-                      >
-                        Take Tour
-                      </button>
+                    <button
+                      onClick={() => setShowUserGuide(true)}
+                      className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full text-xs font-medium hover:brightness-110 transition-all shadow-sm hover:shadow-md"
+                      title="Take a quick tour of the dashboard"
+                    >
+                      Take Tour
+                    </button>
                   </div>
-                  <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
-                    {profileMission || 'Add your mission statement...'}
-                  </p>
-                          </button>
+                  <button
+                    onClick={() => setShowHeaderEditor(true)}
+                    className="text-left w-full"
+                  >
+                    <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
+                      {profileMission || 'Add your mission statement...'}
+                    </p>
+                  </button>
+                </div>
 
                         </div>
                         
