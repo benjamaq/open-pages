@@ -33,7 +33,6 @@ export type SaveDailyEntryInput = {
   night_wakes?: number | null;
   tags?: string[] | null;
   journal?: string | null;
-  moodChip?: string | null; // Expressive mood chip selection
   completedItems?: string[] | null; // Array of completed item keys from localStorage
   wearables?: any | null; // Wearables data (recovery_score, sleep_score, etc.)
 };
