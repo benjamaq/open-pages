@@ -23,6 +23,24 @@ const tourSteps: TourStep[] = [
     icon: <HelpCircle className="w-6 h-6" />
   },
   {
+    id: 'add-items',
+    title: 'Add Your Stack',
+    description: 'Build your biohacking stack by adding supplements, protocols, movement routines, and mindfulness practices. You can add items directly from the dashboard using the "+" buttons, or click the "Manage" button to go to the full management page.',
+    target: '[data-tour="add-items"]',
+    position: 'bottom',
+    icon: <Plus className="w-6 h-6" />,
+    action: 'Click any "+" button to add an item!'
+  },
+  {
+    id: 'dashboard-overview',
+    title: 'Dashboard Overview',
+    description: 'Your dashboard shows all items scheduled for TODAY. To see all your supplements, protocols, and other items from all time, click "Manage" or visit your public profile. You can check off items throughout the day to track your progress.',
+    target: '[data-tour="add-items"]',
+    position: 'bottom',
+    icon: <BarChart3 className="w-6 h-6" />,
+    action: 'Notice how you can check off items as you take them!'
+  },
+  {
     id: 'mood-tracker',
     title: 'Mood & Health Tracking',
     description: 'Track your daily mood, sleep, and pain levels. Click "Daily Check-in" to log your day, or "Heatmap" to see your progress over time.',
@@ -41,18 +59,9 @@ const tourSteps: TourStep[] = [
     action: 'Try clicking on a day in the heatmap!'
   },
   {
-    id: 'add-items',
-    title: 'Add Your Stack',
-    description: 'Build your biohacking stack by adding supplements, protocols, movement routines, and mindfulness practices. Click the "+" buttons to get started.',
-    target: '[data-tour="add-items"]',
-    position: 'bottom',
-    icon: <Plus className="w-6 h-6" />,
-    action: 'Click any "+" button to add an item!'
-  },
-  {
     id: 'public-profile',
     title: 'Your Public Profile',
-    description: 'Share your biohacking journey with others! Your public profile shows your stack, progress, and insights.',
+    description: 'Share your biohacking journey with others! Click "Public Profile" to see your complete stack, movement routines, journal entries, and progress. Click the link button to share your profile with others. People can follow your stack and get weekly email updates when you make changes.',
     target: '[data-tour="public-profile"]',
     position: 'left',
     icon: <Eye className="w-6 h-6" />,
@@ -60,8 +69,8 @@ const tourSteps: TourStep[] = [
   },
   {
     id: 'settings',
-    title: 'Customize Everything',
-    description: 'Personalize your profile, manage your subscription, and configure your preferences in Settings.',
+    title: 'Settings & Email',
+    description: 'Customize your profile, manage your subscription, and configure email settings. You can schedule daily reminder emails to see what you need to take and do each day. Set up follower notifications and manage your email preferences.',
     target: '[data-tour="settings"]',
     position: 'right',
     icon: <Settings className="w-6 h-6" />,
@@ -267,26 +276,26 @@ export function QuickHelp() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center mb-2">
-                      <BarChart3 className="w-5 h-5 text-blue-500 mr-2" />
-                      <h4 className="font-medium">Mood Tracking</h4>
+                      <Plus className="w-5 h-5 text-purple-500 mr-2" />
+                      <h4 className="font-medium">Build Your Stack</h4>
                     </div>
-                    <p className="text-sm text-gray-600">Track daily mood, sleep, and pain. Click "Daily Check-in" to log your day.</p>
+                    <p className="text-sm text-gray-600">Add supplements, protocols, movement, and mindfulness. Use "+" buttons or "Manage" for full control.</p>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <BarChart3 className="w-5 h-5 text-blue-500 mr-2" />
+                      <h4 className="font-medium">Dashboard</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Shows today's items. Check off as you take them to track progress throughout the day.</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center mb-2">
                       <Calendar className="w-5 h-5 text-green-500 mr-2" />
-                      <h4 className="font-medium">Heatmap</h4>
+                      <h4 className="font-medium">Mood Tracking</h4>
                     </div>
-                    <p className="text-sm text-gray-600">Click any day to see detailed information about your supplements and mood.</p>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <Plus className="w-5 h-5 text-purple-500 mr-2" />
-                      <h4 className="font-medium">Build Your Stack</h4>
-                    </div>
-                    <p className="text-sm text-gray-600">Add supplements, protocols, movement, and mindfulness practices.</p>
+                    <p className="text-sm text-gray-600">Track daily mood, sleep, and pain. Click heatmap to see detailed day information.</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -294,7 +303,23 @@ export function QuickHelp() {
                       <Eye className="w-5 h-5 text-orange-500 mr-2" />
                       <h4 className="font-medium">Public Profile</h4>
                     </div>
-                    <p className="text-sm text-gray-600">Share your biohacking journey with others through your public profile.</p>
+                    <p className="text-sm text-gray-600">Share your complete stack, journal, and progress. Others can follow and get email updates.</p>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <Settings className="w-5 h-5 text-gray-500 mr-2" />
+                      <h4 className="font-medium">Settings & Email</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Schedule daily reminders, manage follower notifications, and customize your experience.</p>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <Share2 className="w-5 h-5 text-indigo-500 mr-2" />
+                      <h4 className="font-medium">Sharing</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">Share your profile link with others. Followers get weekly email updates when you make changes.</p>
                   </div>
                 </div>
               </div>
@@ -307,24 +332,38 @@ export function QuickHelp() {
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Add items to your stack</p>
+                      <p className="text-sm text-gray-600">Use "+" buttons for quick adds, or "Manage" for full control</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Check off items as you take them</p>
+                      <p className="text-sm text-gray-600">Track your daily progress by checking off supplements and protocols</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Click the heatmap</p>
                       <p className="text-sm text-gray-600">Click any day to see detailed information about that day</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Use the "+" buttons</p>
-                      <p className="text-sm text-gray-600">Add new items to your stack in each category</p>
+                      <p className="font-medium">Share your public profile</p>
+                      <p className="text-sm text-gray-600">Click "Public Profile" to see your complete stack, or use the link button to share</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0" />
+                    <div className="w-2 h-2 bg-gray-500 rounded-full mt-2 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">View your public profile</p>
-                      <p className="text-sm text-gray-600">See how others see your biohacking journey</p>
+                      <p className="font-medium">Set up email reminders</p>
+                      <p className="text-sm text-gray-600">Go to Settings to schedule daily emails with your stack</p>
                     </div>
                   </div>
                 </div>
@@ -338,10 +377,13 @@ export function QuickHelp() {
                 </h3>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <ul className="space-y-2 text-sm text-yellow-800">
-                    <li>• Your mood data is private by default - only you can see it</li>
-                    <li>• Use the heatmap to track patterns in your health over time</li>
-                    <li>• Share your public profile to connect with other biohackers</li>
-                    <li>• Set up daily check-ins to build consistent tracking habits</li>
+                    <li>• <strong>Dashboard vs Public Profile:</strong> Dashboard shows today's items, Public Profile shows everything</li>
+                    <li>• <strong>Check off items:</strong> Mark supplements and protocols as taken throughout the day</li>
+                    <li>• <strong>Email reminders:</strong> Set up daily emails in Settings to never miss your stack</li>
+                    <li>• <strong>Followers & Updates:</strong> People can follow your profile and get weekly email updates</li>
+                    <li>• <strong>Mood tracking:</strong> Your mood data is private by default - only you can see it</li>
+                    <li>• <strong>Heatmap insights:</strong> Click any day to see detailed information about that day</li>
+                    <li>• <strong>Sharing:</strong> Use the link button to share your profile with others</li>
                   </ul>
                 </div>
               </div>
