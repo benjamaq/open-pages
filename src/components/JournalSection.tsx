@@ -24,7 +24,7 @@ interface JournalSectionProps {
 
 export default function JournalSection({ journalEntries, showJournalPublic, onToggleVisibility, isOwnProfile = false, profileId }: JournalSectionProps) {
   const [expandedJournal, setExpandedJournal] = useState(false)
-  const [expandedJournalEntries, setExpandedJournalEntries] = useState<Set<string>>(new Set())
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null)
   const [formData, setFormData] = useState({
@@ -134,20 +134,17 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
     return (lastSpace > maxLength * 0.8 ? truncated.slice(0, lastSpace) : truncated).trim() + '...'
   }
 
-  const toggleEntryExpansion = (entryId: string) => {
-    setExpandedJournalEntries(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(entryId)) {
-        newSet.delete(entryId)
-      } else {
-        newSet.add(entryId)
-      }
-      return newSet
-    })
-  }
+  // Set the first entry as selected by default when expanded
+  const mostRecentEntry = displayEntries[0]
+  const selectedEntry = selectedEntryId ? displayEntries.find(entry => entry.id === selectedEntryId) : mostRecentEntry
 
-    const mostRecentEntry = displayEntries[0]
-    const olderEntries = displayEntries.slice(1, 5) // Show up to 4 older entries
+  // Auto-select first entry when expanding
+  const handleExpand = () => {
+    setExpandedJournal(true)
+    if (displayEntries.length > 0 && !selectedEntryId) {
+      setSelectedEntryId(displayEntries[0].id)
+    }
+  }
 
   return (
     <section className="mb-8">
@@ -196,7 +193,7 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
             
             {/* Collapse/Expand Button */}
             <button
-              onClick={() => setExpandedJournal(!expandedJournal)}
+              onClick={expandedJournal ? () => setExpandedJournal(false) : handleExpand}
               className="p-1 rounded-full hover:bg-gray-100 transition-colors"
               aria-label={expandedJournal ? 'Collapse' : 'Expand'}
             >
@@ -225,66 +222,89 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
             </div>
           )
         ) : (
-          /* Expanded State - Show all entries */
-          <div className="px-6 pb-6 max-h-96 overflow-y-auto">
-            <div className="space-y-6">
-              {displayEntries.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 mb-2">
-                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No journal entries yet</h3>
-                  <p className="text-gray-500 text-sm max-w-md mx-auto">
-                    Put your first journal entry here. Talk about your health journey, supplement experiences, workout reflections, or any insights you want to share.
-                  </p>
+          /* Expanded State - Show tabbed interface */
+          <div className="px-6 pb-6">
+            {displayEntries.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-2">
+                  <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
-              ) : (
-                displayEntries.map((entry, index) => (
-                <div key={entry.id} className={`${index > 0 ? 'border-t border-gray-100 pt-6' : ''}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-gray-500">
-                      {formatDate(entry.created_at)}
-                    </div>
-                    {isOwnProfile && !entry.id.startsWith('sample') && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleEdit(entry)}
-                          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                          title="Edit entry"
-                        >
-                          <Edit3 className="w-3 h-3 text-gray-400" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(entry.id)}
-                          disabled={isLoading}
-                          className="p-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
-                          title="Delete entry"
-                        >
-                          <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
-                        </button>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No journal entries yet</h3>
+                <p className="text-gray-500 text-sm max-w-md mx-auto">
+                  Put your first journal entry here. Talk about your health journey, supplement experiences, workout reflections, or any insights you want to share.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Entry List/Tabs */}
+                <div className="border-b border-gray-200">
+                  <div className="flex flex-wrap gap-2 pb-2">
+                    {displayEntries.map((entry) => (
+                      <button
+                        key={entry.id}
+                        onClick={() => setSelectedEntryId(entry.id)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          selectedEntryId === entry.id
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">
+                            {entry.heading || 'Untitled Entry'}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {formatDate(entry.created_at)}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Selected Entry Content */}
+                {selectedEntry && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-sm text-gray-500">
+                        {formatDate(selectedEntry.created_at)}
                       </div>
+                      {isOwnProfile && !selectedEntry.id.startsWith('sample') && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleEdit(selectedEntry)}
+                            className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                            title="Edit entry"
+                          >
+                            <Edit3 className="w-4 h-4 text-gray-500" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(selectedEntry.id)}
+                            disabled={isLoading}
+                            className="p-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {selectedEntry.heading && (
+                      <h3 className="font-semibold text-gray-900 mb-3 text-lg">
+                        {selectedEntry.heading}
+                      </h3>
                     )}
+                    
+                    <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                      {selectedEntry.body}
+                    </div>
                   </div>
-                  {entry.heading && (
-                    <h3 className="font-semibold text-gray-900 mb-2">{entry.heading}</h3>
-                  )}
-                  <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                    {entry.body}
-                  </div>
-                </div>
-                ))
-              )}
-              
-              {displayEntries.length > 10 && (
-                <div className="text-center pt-4 border-t border-gray-100">
-                  <button className="text-sm text-gray-600 hover:text-gray-900 underline transition-colors">
-                    Load more entries →
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
