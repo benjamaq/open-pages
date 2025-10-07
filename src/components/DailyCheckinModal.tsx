@@ -168,6 +168,9 @@ export default function DailyCheckinModal({
   userId,
   profileSlug
 }: DailyCheckinModalProps) {
+  // Debug: Log when component loads to verify new mood chips
+  console.log('🎭 DailyCheckinModal loaded with new emoji mood chips v2.2')
+  
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
     energy: currentEnergy,
@@ -710,7 +713,7 @@ export default function DailyCheckinModal({
                     className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
                   >
                     <option value="">Pick a vibe…</option>
-                    {/* v2.1 - Updated mood chips with emojis */}
+                    {/* v2.2 - Updated mood chips with emojis - Cache bust: 2025-01-07 */}
                     {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
                       'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
                       'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
