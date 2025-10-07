@@ -101,7 +101,16 @@ export default function UserGuide({ isOpen, onClose, onComplete }: UserGuideProp
     }
   }, [isOpen, currentStep])
 
+  // Separate effect for highlighting when step changes
+  useEffect(() => {
+    if (isVisible && typeof window !== 'undefined') {
+      highlightCurrentStep()
+    }
+  }, [currentStep, isVisible])
+
   const highlightCurrentStep = () => {
+    if (typeof window === 'undefined') return
+    
     const step = tourSteps[currentStep]
     if (step.target === 'body') {
       setTargetElement(document.body)
