@@ -2093,13 +2093,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
-                    <button
+                    {/* Take Tour button temporarily disabled for urgent fix */}
+                    {/* <button
                       onClick={() => setShowUserGuide(true)}
                       className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full text-xs font-medium hover:brightness-110 transition-all shadow-sm hover:shadow-md"
                       title="Take a quick tour of the dashboard"
                     >
                       Take Tour
-                    </button>
+                    </button> */}
                   </div>
                   <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
@@ -2642,8 +2643,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* User Guide Tour */}
-      <UserGuide 
+      {/* User Guide Tour - Temporarily disabled for urgent fix */}
+      {/* <UserGuide 
         isOpen={showUserGuide} 
         onClose={() => setShowUserGuide(false)}
         onComplete={() => {
@@ -2652,8 +2653,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         }}
       />
 
-      {/* Quick Help Button */}
-      <QuickHelp />
+      <QuickHelp /> */}
     </>
   )
 }
