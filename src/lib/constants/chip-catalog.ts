@@ -3,62 +3,62 @@ export type Chip = {
   label: string;
   icon?: string;
   category: 
-    | 'expressive' | 'sleep' | 'stress' | 'training' | 'nutrition'
+    | 'expressive' | 'expressive_high' | 'expressive_low' | 'expressive_neutral' | 'sleep' | 'stress' | 'training' | 'nutrition'
     | 'meds' | 'pain' | 'illness' | 'hormones' | 'environment'
     | 'work' | 'biohacker' | 'parenting' | 'digestive' | 'other';
   sentiment?: 'good' | 'neutral' | 'bad';
 };
 
 export const CHIP_CATALOG: Chip[] = [
-  // Expressive (extremes — pick at most 1)
-  { slug: 'on_top_world', label: 'On top of the world', icon: '🚀', category: 'expressive', sentiment: 'good' },
-  { slug: 'high_as_a_kite', label: 'High as a kite', icon: '🌈', category: 'expressive', sentiment: 'good' },
-  { slug: 'unstoppable', label: 'Unstoppable', icon: '🔥', category: 'expressive', sentiment: 'good' },
-  { slug: 'main_character', label: 'Main character energy', icon: '⚡', category: 'expressive', sentiment: 'good' },
-  { slug: 'train_wreck', label: 'Train wreck', icon: '🧯', category: 'expressive', sentiment: 'bad' },
-  { slug: 'completely_cooked', label: 'Completely cooked', icon: '🧟', category: 'expressive', sentiment: 'bad' },
-  { slug: 'in_the_bin', label: 'In the bin', icon: '🕳️', category: 'expressive', sentiment: 'bad' },
-  { slug: 'absolutely_broken', label: 'Absolutely broken', icon: '💥', category: 'expressive', sentiment: 'bad' },
+  // Expressive - High Energy (feeling great, powerful, unstoppable)
+  { slug: 'on_top_world', label: 'On top of the world', icon: '🚀', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'high_as_a_kite', label: 'High as a kite', icon: '🌈', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'unstoppable', label: 'Unstoppable', icon: '🔥', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'main_character', label: 'Main character energy', icon: '⚡', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'dialed_in', label: '⚡ Dialed in', icon: '⚡', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'peaking', label: 'Peaking', icon: '🏔️', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'laser_focused', label: 'Laser-focused', icon: '🔦', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'flow_state', label: 'Flow state', icon: '🌊', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'bulletproof', label: 'Bulletproof', icon: '🛡️', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'angel_sky', label: 'Angel in the sky', icon: '👼', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'renegade_mode', label: 'Renegade mode', icon: '🤘', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'quietly_powerful', label: 'Quietly powerful', icon: '💎', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'crisp_clear', label: 'Crisp and clear', icon: '✨', category: 'expressive_high', sentiment: 'good' },
+  { slug: 'climbing', label: 'Climbing', icon: '⛰️', category: 'expressive_high', sentiment: 'good' },
 
-  // New Emoji Mood Chips (v2.3)
-  { slug: 'fucking_broken', label: 'f—ing broken', icon: '💥', category: 'expressive', sentiment: 'bad' },
-  { slug: 'running_on_fumes', label: 'Running on fumes', icon: '⛽', category: 'expressive', sentiment: 'bad' },
-  { slug: 'under_slept', label: 'Under-slept', icon: '😴', category: 'expressive', sentiment: 'bad' },
-  { slug: 'wired_tired', label: 'Wired & tired', icon: '⚡', category: 'expressive', sentiment: 'bad' },
-  { slug: 'tired_but_trying', label: 'Tired but trying', icon: '💪', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'foggy', label: 'Foggy', icon: '🌫️', category: 'expressive', sentiment: 'bad' },
-  { slug: 'bit_wonky', label: 'A bit wonky', icon: '🤪', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'bit_sore', label: 'A bit sore', icon: '😣', category: 'expressive', sentiment: 'bad' },
-  { slug: 'glassy_eyed', label: 'Glassy-eyed', icon: '👁️', category: 'expressive', sentiment: 'bad' },
-  { slug: 'low_slow', label: 'Low and slow', icon: '🐌', category: 'expressive', sentiment: 'bad' },
-  { slug: 'slow_burn', label: 'Slow burn', icon: '🔥', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'overcaffeinated', label: 'Overcaffeinated', icon: '☕', category: 'expressive', sentiment: 'bad' },
-  { slug: 'bit_spicy', label: 'A bit spicy', icon: '🌶️', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'resetting', label: 'Resetting', icon: '🔄', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'rebuilding', label: 'Rebuilding', icon: '🏗️', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'solid_baseline', label: 'Solid baseline', icon: '📊', category: 'expressive', sentiment: 'good' },
-  { slug: 'back_online', label: 'Back online', icon: '💻', category: 'expressive', sentiment: 'good' },
-  { slug: 'calm_steady', label: 'Calm & steady', icon: '🧘', category: 'expressive', sentiment: 'good' },
-  { slug: 'cruising', label: 'Cruising', icon: '🚗', category: 'expressive', sentiment: 'good' },
-  { slug: 'climbing', label: 'Climbing', icon: '⛰️', category: 'expressive', sentiment: 'good' },
-  { slug: 'crisp_clear', label: 'Crisp and clear', icon: '✨', category: 'expressive', sentiment: 'good' },
-  { slug: 'quietly_powerful', label: 'Quietly powerful', icon: '💎', category: 'expressive', sentiment: 'good' },
-  { slug: 'renegade_mode', label: 'Renegade mode', icon: '🤘', category: 'expressive', sentiment: 'good' },
-  { slug: 'dialed_in', label: 'Dialed in', icon: '🎯', category: 'expressive', sentiment: 'good' },
-  { slug: 'peaking', label: 'Peaking', icon: '🏔️', category: 'expressive', sentiment: 'good' },
-  { slug: 'laser_focused', label: 'Laser-focused', icon: '🔦', category: 'expressive', sentiment: 'good' },
-  { slug: 'flow_state', label: 'Flow state', icon: '🌊', category: 'expressive', sentiment: 'good' },
-  { slug: 'bulletproof', label: 'Bulletproof', icon: '🛡️', category: 'expressive', sentiment: 'good' },
-  { slug: 'angel_sky', label: 'Angel in the sky', icon: '👼', category: 'expressive', sentiment: 'good' },
-  { slug: 'unstoppable_emoji', label: 'Unstoppable', icon: '🚀', category: 'expressive', sentiment: 'good' },
-  { slug: 'dialed_in_emoji', label: '⚡ Dialed in', icon: '⚡', category: 'expressive', sentiment: 'good' },
-  { slug: 'walking_storm_cloud', label: '🌧️ Walking storm cloud', icon: '🌧️', category: 'expressive', sentiment: 'bad' },
-  { slug: 'chill_unbothered', label: '🧊 Chill & unbothered', icon: '🧊', category: 'expressive', sentiment: 'good' },
-  { slug: 'spinning_plates', label: '🤹 Spinning too many plates', icon: '🤹', category: 'expressive', sentiment: 'bad' },
-  { slug: 'slow_steady', label: '🐢 Slow but steady', icon: '🐢', category: 'expressive', sentiment: 'neutral' },
-  { slug: 'restart_required', label: '🔄 Restart required', icon: '🔄', category: 'expressive', sentiment: 'bad' },
-  { slug: 'melted_managing', label: '🫠 Melted but managing', icon: '🫠', category: 'expressive', sentiment: 'bad' },
-  { slug: 'quietly_optimistic', label: '🌤️ Quietly optimistic', icon: '🌤️', category: 'expressive', sentiment: 'good' },
+  // Expressive - Low Energy (struggling, tired, broken)
+  { slug: 'train_wreck', label: 'Train wreck', icon: '🧯', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'completely_cooked', label: 'Completely cooked', icon: '🧟', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'in_the_bin', label: 'In the bin', icon: '🕳️', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'absolutely_broken', label: 'Absolutely broken', icon: '💥', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'fucking_broken', label: 'f—ing broken', icon: '💥', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'running_on_fumes', label: 'Running on fumes', icon: '⛽', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'under_slept', label: 'Under-slept', icon: '😴', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'wired_tired', label: 'Wired & tired', icon: '⚡', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'foggy', label: 'Foggy', icon: '🌫️', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'glassy_eyed', label: 'Glassy-eyed', icon: '👁️', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'low_slow', label: 'Low and slow', icon: '🐌', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'overcaffeinated', label: 'Overcaffeinated', icon: '☕', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'walking_storm_cloud', label: '🌧️ Walking storm cloud', icon: '🌧️', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'spinning_plates', label: '🤹 Spinning too many plates', icon: '🤹', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'restart_required', label: '🔄 Restart required', icon: '🔄', category: 'expressive_low', sentiment: 'bad' },
+  { slug: 'melted_managing', label: '🫠 Melted but managing', icon: '🫠', category: 'expressive_low', sentiment: 'bad' },
+
+  // Expressive - Neutral/Steady (baseline, steady, managing)
+  { slug: 'solid_baseline', label: 'Solid baseline', icon: '📊', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'back_online', label: 'Back online', icon: '💻', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'calm_steady', label: 'Calm & steady', icon: '🧘', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'cruising', label: 'Cruising', icon: '🚗', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'chill_unbothered', label: '🧊 Chill & unbothered', icon: '🧊', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'slow_steady', label: '🐢 Slow but steady', icon: '🐢', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'quietly_optimistic', label: '🌤️ Quietly optimistic', icon: '🌤️', category: 'expressive_neutral', sentiment: 'good' },
+  { slug: 'tired_but_trying', label: 'Tired but trying', icon: '💪', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'bit_wonky', label: 'A bit wonky', icon: '🤪', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'slow_burn', label: 'Slow burn', icon: '🔥', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'bit_spicy', label: 'A bit spicy', icon: '🌶️', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'resetting', label: 'Resetting', icon: '🔄', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'rebuilding', label: 'Rebuilding', icon: '🏗️', category: 'expressive_neutral', sentiment: 'neutral' },
+  { slug: 'bit_sore', label: 'A bit sore', icon: '😣', category: 'expressive_neutral', sentiment: 'bad' },
 
   // Sleep
   { slug: 'good_sleep', label: 'Good sleep', icon: '😴', category: 'sleep', sentiment: 'good' },
@@ -187,6 +187,14 @@ export const CHIP_CATALOG: Chip[] = [
 // Helper functions
 export const getChipsByCategory = (category: Chip['category']) => 
   CHIP_CATALOG.filter(chip => chip.category === category);
+
+// Get all expressive chips (across all subcategories)
+export const getExpressiveChips = () => 
+  CHIP_CATALOG.filter(chip => chip.category.startsWith('expressive'));
+
+// Get expressive chips by energy level
+export const getExpressiveChipsByEnergy = (energy: 'high' | 'low' | 'neutral') => 
+  CHIP_CATALOG.filter(chip => chip.category === `expressive_${energy}`);
 
 export const getRecentChips = (limit = 6) => 
   CHIP_CATALOG.slice(0, limit);
