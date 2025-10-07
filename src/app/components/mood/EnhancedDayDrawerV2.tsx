@@ -324,7 +324,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
       
       {/* Drawer */}
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0" style={{ 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: '#d1d5db #f3f4f6',
+          boxSizing: 'border-box'
+        }}>
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
@@ -443,7 +447,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                   You can choose up to 4 mood chips
                 </p>
               </div>
-              <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
+              <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto w-full" style={{ 
+                scrollbarWidth: 'thin', 
+                scrollbarColor: '#d1d5db #f3f4f6',
+                boxSizing: 'border-box'
+              }}>
                 <div className="space-y-3">
                   {/* All chips organized by category */}
                   {Object.entries(CHIP_CATALOG.reduce((acc, chip) => {

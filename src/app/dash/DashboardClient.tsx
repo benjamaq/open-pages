@@ -202,7 +202,11 @@ const HeaderCustomizer = ({
           </nav>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto max-h-[60vh] w-full" style={{ 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: '#d1d5db #f3f4f6',
+          boxSizing: 'border-box'
+        }}>
           {activeTab === 'background' && (
             <div className="space-y-6">
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">

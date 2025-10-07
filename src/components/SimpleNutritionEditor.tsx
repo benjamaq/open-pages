@@ -122,7 +122,11 @@ export default function SimpleNutritionEditor({
         </div>
 
         {/* Form */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] w-full" style={{ 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: '#d1d5db #f3f4f6',
+          boxSizing: 'border-box'
+        }}>
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-gray-700">Select statements ({selectedStatements.length}/3)</h3>

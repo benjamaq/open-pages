@@ -284,7 +284,11 @@ export default function LibraryUploadForm({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] w-full" style={{ 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: '#d1d5db #f3f4f6',
+          boxSizing: 'border-box'
+        }}>
           <div className="space-y-6">
             {/* File Upload (only for create mode or if editing without existing file) */}
             {(mode === 'create' || !editItem?.file_url) && (
