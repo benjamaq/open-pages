@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ChevronRight, ChevronLeft, HelpCircle, MapPin, MousePointer, BarChart3, Calendar, Plus, Eye, Share2, BookOpen } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, HelpCircle, MapPin, MousePointer, BarChart3, Calendar, Plus, Eye, Share2, BookOpen, Settings } from 'lucide-react'
 
 interface TourStep {
   id: string
