@@ -2093,13 +2093,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
-                    <button
+                    {/* Take Tour button temporarily disabled */}
+                    {/* <button
                       onClick={() => setShowUserGuide(true)}
                       className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-medium hover:bg-blue-600 transition-colors"
                       title="Take a quick tour of the dashboard"
                     >
                       Take Tour
-                    </button>
+                    </button> */}
                   </div>
                   <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
