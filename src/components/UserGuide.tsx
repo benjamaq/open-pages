@@ -61,7 +61,7 @@ const tourSteps: TourStep[] = [
          {
            id: 'public-profile',
            title: 'Your Public Profile',
-           description: 'Share your biohacking journey with others! You can share with friends, socials, doctors, or whatever. Click the link button (not the public profile button) to get your shareable link.',
+           description: 'Share your biohacking journey with others! You can share with friends, socials, doctors, or whatever. Click the profile link button to get your shareable link.',
            target: '[data-tour="public-profile"]',
            position: 'left',
            icon: <Eye className="w-6 h-6" />,
@@ -303,7 +303,7 @@ export function QuickHelp() {
                              <Eye className="w-5 h-5 text-orange-500 mr-2" />
                              <h4 className="font-medium">Public Profile</h4>
                            </div>
-                           <p className="text-sm text-gray-600">Share with friends, socials, doctors, or whatever. Click the link button to get your shareable URL.</p>
+                           <p className="text-sm text-gray-600">Share with friends, socials, doctors, or whatever. Click the profile link button to get your shareable URL.</p>
                          </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -356,7 +356,7 @@ export function QuickHelp() {
                            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
                            <div>
                              <p className="font-medium">Share your profile</p>
-                             <p className="text-sm text-gray-600">Click the link button (not the public profile button) to get your shareable URL</p>
+                             <p className="text-sm text-gray-600">Click the profile link button to get your shareable URL</p>
                            </div>
                          </div>
                   <div className="flex items-start space-x-3">
