@@ -253,7 +253,7 @@ export default function TodaySnapshot({
           <>
             {/* Monthly Heatmap */}
             {showHeatmap && (
-              <div className="mb-4">
+              <div className="mb-4" data-tour="heatmap">
                 <MonthlyHeatmap onDayClick={handleDayClick} />
               </div>
             )}

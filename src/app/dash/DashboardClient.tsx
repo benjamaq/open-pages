@@ -35,6 +35,7 @@ import TrialStatusBadge from '../../components/TrialStatusBadge'
 import LimitChecker from '../../components/LimitChecker'
 import DashboardHeaderEditor from '../../components/DashboardHeaderEditor'
 import BetaFeedbackWidget from '../../components/BetaFeedbackWidget'
+import UserGuide, { QuickHelp } from '../../components/UserGuide'
 
 interface Profile {
   id: string
@@ -1672,6 +1673,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }
   
   const [showHeroAvatar, setShowHeroAvatar] = useState(true)
+  const [showUserGuide, setShowUserGuide] = useState(false)
 
   const handleToggleComplete = (itemId: string, type: string) => {
     const key = `${type}-${itemId}`
@@ -1932,6 +1934,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-1 overflow-x-auto">
                 {/* Public Profile Button */}
                 <button
+                  data-tour="public-profile"
                   onClick={() => window.location.href = `/u/${profile.slug}`}
                   className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
@@ -2017,6 +2020,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
                 {/* Settings Button */}
                 <button
+                  data-tour="settings"
                   onClick={() => window.location.href = '/dash/settings'}
                   className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
@@ -2089,6 +2093,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
+                    <button
+                      onClick={() => setShowUserGuide(true)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-medium hover:bg-blue-600 transition-colors"
+                      title="Take a quick tour of the dashboard"
+                    >
+                      Take Tour
+                    </button>
                   </div>
                   <p className="text-sm text-black group-hover:text-gray-700 transition-colors">
                     {profileMission || 'Add your mission statement...'}
@@ -2198,21 +2209,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               return null;
             })()}
             {FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot && (
-              <TodaySnapshot
-                key={`${(todayMoodEntry as any)?.id || 'no-entry'}-${(todayMoodEntry as any)?.mood || 0}-${(todayMoodEntry as any)?.sleep_quality || 0}-${(todayMoodEntry as any)?.pain || 0}`}
-                todayEntry={todayMoodEntry}
-                todayItems={todayItems}
-                onEditToday={() => {
-                  setShowEnhancedMoodDrawer(true)
+              <div data-tour="mood-tracker">
+                <TodaySnapshot
+                  key={`${(todayMoodEntry as any)?.id || 'no-entry'}-${(todayMoodEntry as any)?.mood || 0}-${(todayMoodEntry as any)?.sleep_quality || 0}-${(todayMoodEntry as any)?.pain || 0}`}
+                  todayEntry={todayMoodEntry}
+                  todayItems={todayItems}
+                  onEditToday={() => {
+                    setShowEnhancedMoodDrawer(true)
+                  }}
+                onEditDay={(date: string) => {
+                  console.log('🔍 DashboardClient - Day clicked:', date);
+                  setSelectedMoodDate(date);
+                  setShowEnhancedMoodDrawer(true);
                 }}
-              onEditDay={(date: string) => {
-                console.log('🔍 DashboardClient - Day clicked:', date);
-                setSelectedMoodDate(date);
-                setShowEnhancedMoodDrawer(true);
-              }}
-              onRefresh={loadTodayMoodEntry}
-              streak={streak}
-              />
+                onRefresh={loadTodayMoodEntry}
+                streak={streak}
+                />
+              </div>
             )}
 
             {/* Helpful Note - Above Supplements */}
@@ -2222,13 +2235,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               </div>
             </div>
 
-            <SupplementsCard
-              items={todayItems.supplements}
-              onToggleComplete={handleToggleComplete}
-              completedItems={completedItems}
-              onManage={() => router.push('/dash/stack')}
-              onAdd={() => setShowAddSupplement(true)}
-            />
+            <div data-tour="add-items">
+              <SupplementsCard
+                items={todayItems.supplements}
+                onToggleComplete={handleToggleComplete}
+                completedItems={completedItems}
+                onManage={() => router.push('/dash/stack')}
+                onAdd={() => setShowAddSupplement(true)}
+              />
+            </div>
 
             {/* Row 2 — Three Equal Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -2626,6 +2641,19 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
+
+      {/* User Guide Tour */}
+      <UserGuide 
+        isOpen={showUserGuide} 
+        onClose={() => setShowUserGuide(false)}
+        onComplete={() => {
+          // Mark tour as completed in localStorage
+          localStorage.setItem('biostackr-tour-completed', 'true')
+        }}
+      />
+
+      {/* Quick Help Button */}
+      <QuickHelp />
     </>
   )
 }
