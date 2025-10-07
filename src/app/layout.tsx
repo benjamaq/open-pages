@@ -38,7 +38,19 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-BQJWCVNJH0');
+            gtag('config', 'G-BQJWCVNJH0', {
+              page_title: document.title,
+              page_location: window.location.href
+            });
+            
+            // Send initial page view
+            gtag('event', 'page_view', {
+              page_title: document.title,
+              page_location: window.location.href,
+              page_path: window.location.pathname
+            });
+            
+            console.log('Google Analytics initialized with ID: G-BQJWCVNJH0');
           `}
         </Script>
       </head>
