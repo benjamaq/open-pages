@@ -2642,8 +2642,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* User Guide Tour */}
-      <UserGuide 
+      {/* User Guide Tour - Temporarily disabled for debugging */}
+      {/* <UserGuide 
         isOpen={showUserGuide} 
         onClose={() => setShowUserGuide(false)}
         onComplete={() => {
@@ -2652,8 +2652,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         }}
       />
 
-      {/* Quick Help Button */}
-      <QuickHelp />
+      <QuickHelp /> */}
     </>
   )
 }
