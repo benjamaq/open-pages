@@ -140,10 +140,22 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
       replyTo: emailPayload.replyTo
     })
     
+    console.log('📧 Attempting to send via Resend API...')
     const result = await resend.emails.send(emailPayload)
     console.log('✅ Resend API response:', result)
     
-    console.log('✅ Welcome email sent successfully to:', data.email)
+    // Check if the result has an error
+    if (result.error) {
+      console.error('❌ Resend API returned error:', result.error)
+      throw new Error(`Resend API error: ${result.error.message || JSON.stringify(result.error)}`)
+    }
+    
+    if (!result.data || !result.data.id) {
+      console.error('❌ Resend API response missing data/id:', result)
+      throw new Error('Resend API response missing email ID')
+    }
+    
+    console.log('✅ Welcome email sent successfully to:', data.email, 'with ID:', result.data.id)
   } catch (error) {
     console.error('❌ Failed to send welcome email:', error)
     // Don't throw - we don't want signup to fail if email fails
