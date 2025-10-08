@@ -237,7 +237,8 @@ export default function OnboardingModal({
       if (response.ok) {
         // Send welcome email
         try {
-          await fetch('/api/send-welcome-email', {
+          console.log('📧 Triggering welcome email for:', userProfile?.display_name, userProfile?.slug)
+          const emailResponse = await fetch('/api/send-welcome-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -245,7 +246,15 @@ export default function OnboardingModal({
               slug: userProfile?.slug
             })
           })
-          console.log('✅ Welcome email triggered')
+          
+          const emailResult = await emailResponse.json()
+          console.log('📧 Welcome email response:', emailResult)
+          
+          if (emailResponse.ok) {
+            console.log('✅ Welcome email sent successfully')
+          } else {
+            console.error('❌ Welcome email failed:', emailResult)
+          }
         } catch (emailError) {
           console.error('❌ Welcome email failed (non-blocking):', emailError)
           // Don't block onboarding completion if email fails
