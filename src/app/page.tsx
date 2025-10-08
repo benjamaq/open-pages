@@ -1097,14 +1097,79 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-gray-600">Quick answers to common questions. <Link href="/faq" className="text-indigo-600 hover:text-indigo-700">See full FAQ →</Link></p>
+          </div>
+
+          <div className="space-y-8">
+            {/* Question 1 */}
+            <div className="border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">How is this different from other apps?</h3>
+              <p className="text-gray-700 leading-relaxed">
+                Most apps track ONE thing (mood OR supplements). BioStackr connects them all—how you feel, what you take, 
+                what you do—then shows patterns. Click into any day on your heatmap and see exactly what you were taking/doing 
+                differently. Plus, you get a shareable link for your doctor or support community.
+              </p>
+              <Link href="/faq#difference" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-2 inline-block">
+                Learn more →
+              </Link>
+            </div>
+
+            {/* Question 2 */}
+            <div className="border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Is my data private?</h3>
+              <p className="text-gray-700 leading-relaxed">
+                Everything is private by default. You get a shareable public link, but YOU control exactly what appears on it. 
+                Every supplement, protocol, journal entry, and note can be toggled private/public individually. If you never 
+                share your link, no one sees anything.
+              </p>
+              <Link href="/faq#privacy" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-2 inline-block">
+                Learn more →
+              </Link>
+            </div>
+
+            {/* Question 3 */}
+            <div className="pb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Does it work on mobile?</h3>
+              <p className="text-gray-700 leading-relaxed">
+                Yes! Works perfectly in mobile browsers (Safari, Chrome, etc.). Just open the site on your phone—no app download 
+                needed. The mobile web version is fully responsive and optimized for quick daily check-ins.
+              </p>
+              <Link href="/faq#mobile" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-2 inline-block">
+                Learn more →
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link 
+              href="/faq"
+              className="inline-block bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            >
+              View Full FAQ
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
             <p>&copy; 2024 BioStackr. Built for people who believe health is a craft.</p>
-            <div className="mt-4">
-              <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm">
-                Contact Us
+            <div className="mt-4 flex justify-center space-x-6">
+              <Link href="/faq" className="text-gray-400 hover:text-gray-600 transition-colors text-sm">
+                FAQ
+              </Link>
+              <Link href="/contact" className="text-gray-400 hover:text-gray-600 transition-colors text-sm">
+                Contact
+              </Link>
+              <Link href="/examples" className="text-gray-400 hover:text-gray-600 transition-colors text-sm">
+                Examples
               </Link>
             </div>
           </div>

@@ -132,8 +132,8 @@ export default function PublicProfileClient({
         </div>
       )}
 
-      {/* Journal section */}
-      {(currentModules?.journal && (publicJournalEntries.length > 0 || (isOwnProfile && !isSharedPublicLink))) && (
+      {/* Journal section - Show if enabled, even if empty */}
+      {currentModules?.journal && (
         <div id="journal">
           <JournalSection 
             journalEntries={publicJournalEntries} 

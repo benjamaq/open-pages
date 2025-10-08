@@ -35,7 +35,11 @@ import TrialStatusBadge from '../../components/TrialStatusBadge'
 import LimitChecker from '../../components/LimitChecker'
 import DashboardHeaderEditor from '../../components/DashboardHeaderEditor'
 import BetaFeedbackWidget from '../../components/BetaFeedbackWidget'
-import UserGuide, { QuickHelp } from '../../components/UserGuideSimple'
+import OnboardingModal from '../../components/OnboardingModal'
+import OnboardingBanner from '../../components/OnboardingBanner'
+import WhatsNextCard from '../../components/WhatsNextCard'
+import FirstTimeTooltip from '../../components/FirstTimeTooltip'
+import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep } from '@/lib/onboarding'
 
 interface Profile {
   id: string
@@ -1677,7 +1681,83 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }
   
   const [showHeroAvatar, setShowHeroAvatar] = useState(true)
-  const [showUserGuide, setShowUserGuide] = useState(false)
+  
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [onboardingStep, setOnboardingStep] = useState(1)
+
+  // Check if user needs onboarding
+  useEffect(() => {
+    console.log('🔍 Onboarding check:', {
+      profile: profile ? {
+        id: profile.id,
+        display_name: profile.display_name,
+        onboarding_completed: profile.onboarding_completed,
+        onboarding_step: profile.onboarding_step,
+        first_checkin_completed: profile.first_checkin_completed,
+        first_supplement_added: profile.first_supplement_added,
+        profile_created: profile.profile_created,
+        public_page_viewed: profile.public_page_viewed
+      } : null,
+      shouldShow: profile ? shouldShowOnboarding(profile) : false,
+      nextStep: profile ? getNextOnboardingStep(profile) : null
+    })
+    
+    if (profile && shouldShowOnboarding(profile)) {
+      const nextStep = getNextOnboardingStep(profile)
+      console.log('🎯 Showing onboarding modal for step:', nextStep)
+      setOnboardingStep(nextStep)
+      setShowOnboarding(true)
+    }
+  }, [profile])
+
+  const handleOnboardingStepComplete = async (step: number) => {
+    try {
+      await updateOnboardingStep(step, userId)
+      setOnboardingStep(step + 1)
+    } catch (error) {
+      console.error('Error updating onboarding step:', error)
+    }
+  }
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false)
+    // Refresh profile data to update onboarding status
+    window.location.reload()
+  }
+
+  const handleStartOnboarding = () => {
+    setShowOnboarding(true)
+  }
+
+  const handleOnboardingSkip = async (step: number) => {
+    try {
+      if (step === 3) {
+        // When skipping step 3, advance to step 4 (don't close modal)
+        await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profile_created: false,
+            onboarding_step: 3
+          })
+        })
+        setOnboardingStep(4)
+      } else if (step === 4) {
+        // When skipping step 4, close modal
+        await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            public_page_viewed: false
+          })
+        })
+        setShowOnboarding(false)
+      }
+    } catch (error) {
+      console.error('Error skipping onboarding step:', error)
+    }
+  }
 
   const handleToggleComplete = (itemId: string, type: string) => {
     const key = `${type}-${itemId}`
@@ -1947,60 +2027,67 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 </button>
 
                 {/* Copy Public Link Button */}
-                <button
-                  onClick={async () => {
-                    const linkText = `${window.location.origin}/biostackr/${profile.slug}?public=true`
-                    
-                    try {
-                      // Check if clipboard API is available and secure context (HTTPS)
-                      if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-                        await navigator.clipboard.writeText(linkText)
-                        setShowCopyToast(true)
-                        setTimeout(() => setShowCopyToast(false), 2000)
-                      } else {
-                        // Fallback for mobile Safari and other browsers without clipboard API
-                        const textArea = document.createElement('textarea')
-                        textArea.value = linkText
-                        textArea.style.position = 'fixed'
-                        textArea.style.left = '-999999px'
-                        textArea.style.top = '-999999px'
-                        textArea.style.opacity = '0'
-                        textArea.style.pointerEvents = 'none'
-                        textArea.setAttribute('readonly', '')
-                        document.body.appendChild(textArea)
-                        
-                        // Focus and select for mobile compatibility
-                        textArea.focus()
-                        textArea.select()
-                        textArea.setSelectionRange(0, 99999) // For mobile devices
-                        
-                        try {
-                          const successful = document.execCommand('copy')
-                          if (successful) {
-                            setShowCopyToast(true)
-                            setTimeout(() => setShowCopyToast(false), 2000)
-                          } else {
-                            throw new Error('execCommand failed')
-                          }
-                        } catch (fallbackErr) {
-                          console.error('Fallback copy failed:', fallbackErr)
-                          alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
-                        } finally {
-                          document.body.removeChild(textArea)
-                        }
-                      }
-                    } catch (err) {
-                      console.error('Failed to copy: ', err)
-                      alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
-                    }
-                  }}
-                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1"
-                  title="Copy your public Biostackr link"
+                <FirstTimeTooltip
+                  id="profile-link-hover"
+                  message="This is your shareable link - send it to doctors, friends, or your community"
+                  trigger="hover"
+                  position="bottom"
                 >
-                  <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Profile link</span>
-                  <span className="sm:hidden">Link</span>
-                </button>
+                  <button
+                    onClick={async () => {
+                      const linkText = `${window.location.origin}/biostackr/${profile.slug}?public=true`
+                      
+                      try {
+                        // Check if clipboard API is available and secure context (HTTPS)
+                        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                          await navigator.clipboard.writeText(linkText)
+                          setShowCopyToast(true)
+                          setTimeout(() => setShowCopyToast(false), 2000)
+                        } else {
+                          // Fallback for mobile Safari and other browsers without clipboard API
+                          const textArea = document.createElement('textarea')
+                          textArea.value = linkText
+                          textArea.style.position = 'fixed'
+                          textArea.style.left = '-999999px'
+                          textArea.style.top = '-999999px'
+                          textArea.style.opacity = '0'
+                          textArea.style.pointerEvents = 'none'
+                          textArea.setAttribute('readonly', '')
+                          document.body.appendChild(textArea)
+                          
+                          // Focus and select for mobile compatibility
+                          textArea.focus()
+                          textArea.select()
+                          textArea.setSelectionRange(0, 99999) // For mobile devices
+                          
+                          try {
+                            const successful = document.execCommand('copy')
+                            if (successful) {
+                              setShowCopyToast(true)
+                              setTimeout(() => setShowCopyToast(false), 2000)
+                            } else {
+                              throw new Error('execCommand failed')
+                            }
+                          } catch (fallbackErr) {
+                            console.error('Fallback copy failed:', fallbackErr)
+                            alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
+                          } finally {
+                            document.body.removeChild(textArea)
+                          }
+                        }
+                      } catch (err) {
+                        console.error('Failed to copy: ', err)
+                        alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
+                      }
+                    }}
+                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1"
+                    title="Copy your public Biostackr link"
+                  >
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Profile link</span>
+                    <span className="sm:hidden">Link</span>
+                  </button>
+                </FirstTimeTooltip>
 
                 {/* Notify Followers Button */}
             <button
@@ -2023,13 +2110,22 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             </button>
 
                 {/* Settings Button */}
-                <button
-                  data-tour="settings"
-                  onClick={() => window.location.href = '/dash/settings'}
-                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                <FirstTimeTooltip
+                  id="settings-click"
+                  message="Control privacy, email reminders, and what's visible on your public page"
+                  trigger="click"
+                  position="bottom"
                 >
-                  Settings
-                </button>
+                  <button
+                    data-tour="settings"
+                    onClick={() => {
+                      window.location.href = '/dash/settings'
+                    }}
+                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  >
+                    Settings
+                  </button>
+                </FirstTimeTooltip>
               </div>
             </div>
           </div>
@@ -2094,13 +2190,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         BETA
                       </div>
                     )}
-                    <button
-                      onClick={() => setShowUserGuide(true)}
-                      className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full text-xs font-medium hover:brightness-110 transition-all shadow-sm hover:shadow-md"
-                      title="Take a quick tour of the dashboard"
-                    >
-                      Take Tour
-                    </button>
                   </div>
                   <button
                     onClick={() => setShowHeaderEditor(true)}
@@ -2153,8 +2242,20 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           </div>
                 </div>
                 
+        {/* Onboarding Banner */}
+        {profile && shouldShowOnboarding(profile) && (
+          <OnboardingBanner 
+            profile={profile} 
+            onStartOnboarding={handleStartOnboarding}
+          />
+        )}
+        
+
         {/* Main Content - Modular Cards */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          {/* What's Next Card - Show after onboarding */}
+          <WhatsNextCard profile={profile} />
+          
           {/* Trial Notifications */}
           <TrialNotification userId={userId} currentTier={profile.tier || 'free'} />
           {/* Only show limit checker if not showing welcome popup */}
@@ -2241,7 +2342,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               </div>
             </div>
 
-            <div data-tour="add-items">
+            <div data-tour="add-items" data-section="supplements">
               <SupplementsCard
                 items={todayItems.supplements}
                 onToggleComplete={handleToggleComplete}
@@ -2648,18 +2749,16 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* User Guide Tour */}
-      <UserGuide 
-        isOpen={showUserGuide} 
-        onClose={() => setShowUserGuide(false)}
-        onComplete={() => {
-          // Mark tour as completed in localStorage
-          localStorage.setItem('biostackr-tour-completed', 'true')
-        }}
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        currentStep={onboardingStep}
+        onStepComplete={handleOnboardingStepComplete}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+        userProfile={profile}
       />
-
-      {/* Quick Help Button */}
-      <QuickHelp />
     </>
   )
 }

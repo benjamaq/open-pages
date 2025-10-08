@@ -2,7 +2,7 @@ import { createClient } from '../../../../lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 
-export async function PATCH(request: NextRequest) {
+async function handleUpdate(request: NextRequest) {
   try {
     const supabase = await createClient()
     
@@ -16,7 +16,19 @@ export async function PATCH(request: NextRequest) {
     console.log('Profile update request:', updates)
     
     // Validate allowed fields
-    const allowedFields = ['display_name', 'bio', 'avatar_url']
+    const allowedFields = [
+      'display_name', 
+      'bio', 
+      'avatar_url',
+      'onboarding_completed',
+      'onboarding_step',
+      'first_checkin_completed',
+      'first_supplement_added',
+      'profile_created',
+      'public_page_viewed',
+      'mission_statement',
+      'allow_stack_follow'
+    ]
     const filteredUpdates = Object.keys(updates)
       .filter(key => allowedFields.includes(key))
       .reduce((obj, key) => {
@@ -63,4 +75,13 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Export both PATCH and POST to support different calling methods
+export async function PATCH(request: NextRequest) {
+  return handleUpdate(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handleUpdate(request)
 }

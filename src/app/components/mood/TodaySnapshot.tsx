@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 import { ChevronDown, Calendar } from 'lucide-react';
+import FirstTimeTooltip from '../../../components/FirstTimeTooltip';
 import MonthlyHeatmap from './MonthlyHeatmap';
 import DayDetailView from './DayDetailView';
 
@@ -213,31 +214,44 @@ export default function TodaySnapshot({
             >
               Daily Check-in
             </button>
-            <div className="relative">
-              <button
-                onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
-                  showHeatmap 
-                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
-                    : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
-                }`}
-                aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                title="Monthly heatmap"
-              >
-                <Calendar 
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  style={{ 
-                    color: 'white',
-                    fill: 'none',
-                    stroke: 'white',
-                    strokeWidth: '2'
-                  }} 
-                />
-              </button>
-              <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
-                {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
-              </span>
-            </div>
+            <FirstTimeTooltip
+              id="heatmap-hover"
+              message="Click any day to see what you were taking and how you felt"
+              trigger="hover"
+              position="bottom"
+            >
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setShowHeatmap(!showHeatmap)
+                    // Mark heatmap as explored for WhatsNextCard
+                    if (!showHeatmap) {
+                      localStorage.setItem('heatmapExplored', 'true')
+                    }
+                  }}
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                    showHeatmap 
+                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
+                      : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
+                  }`}
+                  aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                  title="Monthly heatmap"
+                >
+                  <Calendar 
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    style={{ 
+                      color: 'white',
+                      fill: 'none',
+                      stroke: 'white',
+                      strokeWidth: '2'
+                    }} 
+                  />
+                </button>
+                <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
+                  {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
+                </span>
+              </div>
+            </FirstTimeTooltip>
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="p-1 rounded-full hover:bg-gray-200 transition-colors"

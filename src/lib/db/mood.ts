@@ -285,16 +285,23 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
     const endDate = new Date().toISOString().split('T')[0];
     const startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+    // Get the user_id for this profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('id', profileId)
+      .single()
+
+    if (profileError || !profileData) {
+      console.warn('Profile not found for mood data:', profileId);
+      return [];
+    }
+
     // Get daily entries for the profile
     const { data: dailyEntries, error: entriesError } = await supabase
       .from('daily_entries')
       .select('*')
-      .eq('user_id', (await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', profileId)
-        .single()
-      ).data?.user_id)
+      .eq('user_id', profileData.user_id)
       .gte('local_date', startDate)
       .lte('local_date', endDate)
       .order('local_date');

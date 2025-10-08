@@ -20,6 +20,10 @@ interface ProfilePageProps {
   }>
 }
 
+// Disable caching for public profiles to always show latest data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Generate metadata for social sharing
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -79,11 +83,7 @@ export default async function ProfilePage({ params, searchParams }: {
   const { slug } = await params
   const search = await searchParams
   
-  // Redirect to new BioStackr-branded URL
-  const redirect = (await import('next/navigation')).redirect
-  const searchParamsString = search ? new URLSearchParams(search as Record<string, string>).toString() : ''
-  const redirectUrl = `/biostackr/${slug}${searchParamsString ? `?${searchParamsString}` : ''}`
-  redirect(redirectUrl)
+  // No redirect - this IS the external shareable page
   
 
   // Check if user is authenticated and get their profile
