@@ -256,9 +256,15 @@ export default function OnboardingModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-3 rounded-t-xl text-center">
+          <h1 className="text-lg font-bold">Welcome to BioStackr!</h1>
+          <p className="text-xs text-gray-300 mt-0.5">Let's get you set up in 4 quick steps</p>
+        </div>
+        
         {/* Progress Bar */}
-        <div className="bg-gray-100 p-3 rounded-t-xl">
+        <div className="bg-gray-100 p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1">
               <span className="text-xs font-medium text-gray-600">
@@ -291,17 +297,17 @@ export default function OnboardingModal({
 
         {/* Step 1: First Check-In */}
         {step === 1 && (
-          <div className="p-6">
-            <div className="mb-4 text-center">
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">
+          <div className="p-5">
+            <div className="mb-3 text-center">
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">
                 How are you feeling today?
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600">
                 Let's create your first data point. Track your mood, sleep quality, and pain levels.
               </p>
             </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 mb-4">
               {/* Mood Slider */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-2">Mood</label>
@@ -366,14 +372,14 @@ export default function OnboardingModal({
               </div>
               
               {/* Mood Chips */}
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-medium text-gray-900">How are you feeling?</label>
                   <span className="text-xs text-gray-500">
                     Choose up to 4
                   </span>
                 </div>
-                <div className="border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg p-2.5 max-h-28 overflow-y-auto">
                   <div className="flex flex-wrap gap-1.5">
                     {moodChips.map((chip: any) => {
                       const isSelected = selectedMoodChips.includes(chip.slug)
@@ -383,7 +389,7 @@ export default function OnboardingModal({
                           key={chip.slug}
                           onClick={() => toggleMoodChip(chip.slug)}
                           disabled={isDisabled}
-                          className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                          className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
                             isSelected
                               ? 'bg-indigo-50 border-indigo-300 text-indigo-800'
                               : isDisabled
@@ -403,7 +409,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep1Complete}
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               {isLoading ? 'Logging...' : 'Continue'}
             </button>
@@ -412,17 +418,17 @@ export default function OnboardingModal({
 
         {/* Step 2: Add First Supplement */}
         {step === 2 && (
-          <div className="p-6">
-            <div className="mb-4 text-center">
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">
+          <div className="p-5">
+            <div className="mb-3 text-center">
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">
                 Add Your First Supplement or Medication
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600">
                 Start building your stack with one supplement, medication, or protocol
               </p>
             </div>
             
-            <div className="space-y-3 mb-5">
+            <div className="space-y-2.5 mb-4">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Name</label>
                 <input
