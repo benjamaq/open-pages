@@ -256,15 +256,15 @@ export default function OnboardingModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto">
         {/* Progress Bar */}
-        <div className="bg-gray-100 p-4 rounded-t-2xl">
+        <div className="bg-gray-100 p-3 rounded-t-xl">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1">
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-xs font-medium text-gray-600">
                 Step {step} of 4
               </span>
-              <span className="text-sm text-gray-500 ml-2">
+              <span className="text-xs text-gray-500 ml-2 hidden sm:inline">
                 {step === 1 && 'Complete your first check-in'}
                 {step === 2 && 'Add your first supplement'}
                 {step === 3 && 'Create your profile (optional)'}
@@ -277,13 +277,13 @@ export default function OnboardingModal({
                 onClick={() => onSkip(step)}
                 className="text-gray-400 hover:text-gray-600 transition-colors ml-2"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+              className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${(step / 4) * 100}%` }}
             />
           </div>
@@ -291,90 +291,90 @@ export default function OnboardingModal({
 
         {/* Step 1: First Check-In */}
         {step === 1 && (
-          <div className="p-8">
-            <div className="mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <div className="p-6">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 How are you feeling today?
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm text-gray-600">
                 Let's create your first data point. Track your mood, sleep quality, and pain levels.
               </p>
             </div>
             
-            <div className="space-y-6 mb-8">
+            <div className="space-y-4 mb-6">
               {/* Mood Slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Mood</label>
-                <div className="flex items-center space-x-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">Mood</label>
+                <div className="flex items-center space-x-3">
                   <input 
                     type="range" 
                     min="0" 
                     max="10" 
                     value={mood} 
                     onChange={(e) => setMood(parseInt(e.target.value))}
-                    className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                    className="flex-1 h-2.5 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                     style={{
                       background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                     }}
                   />
-                  <span className="text-xs text-gray-500 min-w-[4rem] text-center">
-                    {mood} out of 10
+                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
+                    {mood}/10
                   </span>
                 </div>
               </div>
               
               {/* Sleep Quality Slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Sleep Quality</label>
-                <div className="flex items-center space-x-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">Sleep Quality</label>
+                <div className="flex items-center space-x-3">
                   <input 
                     type="range" 
                     min="0" 
                     max="10" 
                     value={sleepQuality}
                     onChange={(e) => setSleepQuality(parseInt(e.target.value))}
-                    className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
+                    className="flex-1 h-2.5 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                     style={{
                       background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
                     }}
                   />
-                  <span className="text-xs text-gray-500 min-w-[4rem] text-center">
-                    {sleepQuality} out of 10
+                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
+                    {sleepQuality}/10
                   </span>
                 </div>
               </div>
               
               {/* Pain Level Slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Pain Level</label>
-                <div className="flex items-center space-x-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">Pain Level</label>
+                <div className="flex items-center space-x-3">
                   <input 
                     type="range" 
                     min="0" 
                     max="10" 
                     value={pain}
                     onChange={(e) => setPain(parseInt(e.target.value))}
-                    className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
+                    className="flex-1 h-2.5 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
                     style={{
                       background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
                     }}
                   />
-                  <span className="text-xs text-gray-500 min-w-[4rem] text-center">
-                    {pain} out of 10
+                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
+                    {pain}/10
                   </span>
                 </div>
               </div>
               
               {/* Mood Chips */}
-              <div className="mt-8">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-900">How are you feeling?</label>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-900">How are you feeling?</label>
                   <span className="text-xs text-gray-500">
-                    Choose up to 4 chips
+                    Choose up to 4
                   </span>
                 </div>
-                <div className="border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
-                  <div className="flex flex-wrap gap-2">
+                <div className="border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5">
                     {moodChips.map((chip: any) => {
                       const isSelected = selectedMoodChips.includes(chip.slug)
                       const isDisabled = !isSelected && selectedMoodChips.length >= 4
@@ -383,7 +383,7 @@ export default function OnboardingModal({
                           key={chip.slug}
                           onClick={() => toggleMoodChip(chip.slug)}
                           disabled={isDisabled}
-                          className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                          className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                             isSelected
                               ? 'bg-indigo-50 border-indigo-300 text-indigo-800'
                               : isDisabled
@@ -403,7 +403,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep1Complete}
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               {isLoading ? 'Logging...' : 'Continue'}
             </button>
@@ -412,45 +412,45 @@ export default function OnboardingModal({
 
         {/* Step 2: Add First Supplement */}
         {step === 2 && (
-          <div className="p-8">
-            <div className="mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <div className="p-6">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 Add Your First Supplement or Medication
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm text-gray-600">
                 Start building your stack with one supplement, medication, or protocol
               </p>
             </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Name</label>
                 <input
                   type="text"
                   value={supplementName}
                   onChange={(e) => setSupplementName(e.target.value)}
                   placeholder="e.g., Magnesium 400mg, BPC-157 peptide, Metformin"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dose <span className="text-gray-500">(optional)</span></label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Dose <span className="text-gray-500">(optional)</span></label>
                 <input
                   type="text"
                   value={supplementDose}
                   onChange={(e) => setSupplementDose(e.target.value)}
                   placeholder="e.g., 400mg, 1 capsule, 250mcg"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Time of day</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Time of day</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setSupplementTiming('morning')}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors border ${
+                    className={`py-2 rounded-lg text-xs font-medium transition-colors border ${
                       supplementTiming === 'morning'
                         ? 'bg-gray-900 text-white border-gray-900'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -460,7 +460,7 @@ export default function OnboardingModal({
                   </button>
                   <button
                     onClick={() => setSupplementTiming('midday')}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors border ${
+                    className={`py-2 rounded-lg text-xs font-medium transition-colors border ${
                       supplementTiming === 'midday'
                         ? 'bg-gray-900 text-white border-gray-900'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -470,7 +470,7 @@ export default function OnboardingModal({
                   </button>
                   <button
                     onClick={() => setSupplementTiming('afternoon')}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors border ${
+                    className={`py-2 rounded-lg text-xs font-medium transition-colors border ${
                       supplementTiming === 'afternoon'
                         ? 'bg-gray-900 text-white border-gray-900'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -485,7 +485,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep2Complete}
               disabled={!supplementName.trim() || isLoading}
-              className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               {isLoading ? 'Adding...' : 'Continue'}
             </button>
@@ -494,43 +494,43 @@ export default function OnboardingModal({
 
         {/* Step 3: Create Profile */}
         {step === 3 && (
-          <div className="p-8">
-            <div className="mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <div className="p-6">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 Want to share your journey?
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm text-gray-600">
                 Create your profile to share with doctors, coaches, or friends. Takes 30 seconds.
               </p>
             </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo <span className="text-gray-500">(optional)</span></label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Profile Photo <span className="text-gray-500">(optional)</span></label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setProfilePhoto(e.target.files?.[0] || null)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">What are you optimizing for?</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">What are you optimizing for?</label>
                 <textarea
                   value={missionStatement}
                   onChange={(e) => setMissionStatement(e.target.value)}
                   placeholder="e.g., Managing chronic pain and improving sleep quality"
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
               {onSkip && (
                 <button
                   onClick={() => handleSkip(3)}
-                  className="w-full sm:w-auto text-gray-600 py-2 px-6 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors order-2 sm:order-1"
+                  className="w-full sm:w-auto text-gray-600 py-1.5 px-4 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors order-2 sm:order-1"
                 >
                   Skip for now
                 </button>
@@ -538,7 +538,7 @@ export default function OnboardingModal({
               <button
                 onClick={handleStep3Complete}
                 disabled={!missionStatement.trim() || isLoading}
-                className="w-full sm:flex-1 bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors order-1 sm:order-2"
+                className="w-full sm:flex-1 bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors order-1 sm:order-2"
               >
                 {isLoading ? 'Creating...' : 'Create Profile'}
               </button>
@@ -548,49 +548,49 @@ export default function OnboardingModal({
 
         {/* Step 4: View Public Page */}
         {step === 4 && (
-          <div className="p-8">
-            <div className="mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <div className="p-6">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 Your profile is ready!
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 mb-3">
                 View your profile page by clicking the link below. You can share it with your doctor, coach, friends, or support network to follow your health journey.
               </p>
             </div>
             
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
-              <div className="flex items-center space-x-2 mb-3">
-                <ExternalLink className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Your shareable link</span>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5">
+              <div className="flex items-center space-x-2 mb-2">
+                <ExternalLink className="w-4 h-4 text-gray-600" />
+                <span className="text-xs font-medium text-gray-700">Your shareable link</span>
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
                   value={publicLink}
                   readOnly
-                  className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-600"
+                  className="flex-1 px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-600"
                 />
                 <button
                   onClick={copyPublicLink}
-                  className={`p-2.5 rounded-lg transition-colors ${
+                  className={`p-2 rounded-lg transition-colors ${
                     copied 
                       ? 'bg-green-600 text-white' 
                       : 'bg-gray-900 text-white hover:bg-gray-800'
                   }`}
                   title={copied ? 'Copied!' : 'Copy link'}
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
                 <button
                   onClick={openPublicPage}
-                  className="p-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                   title="Open your public page"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </button>
               </div>
               {copied && (
-                <p className="text-green-600 text-sm font-medium mt-3">
+                <p className="text-green-600 text-xs font-medium mt-2">
                   Link copied to clipboard
                 </p>
               )}
@@ -599,7 +599,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep4Complete}
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               Go to Dashboard
             </button>
