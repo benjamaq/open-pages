@@ -121,12 +121,9 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     
     const template = emailTemplates.welcome(data)
     
-    // Use Resend's onboarding domain if no custom domain is configured
-    // To use your own domain, add RESEND_FROM_EMAIL to environment variables
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-    
+    // Use the same verified domain as daily reminder emails
     const emailPayload = {
-      from: `Ben from BioStackr <${fromEmail}>`,
+      from: 'Ben from BioStackr <notifications@biostackr.io>',
       to: data.email,
       subject: template.subject,
       html: template.html,

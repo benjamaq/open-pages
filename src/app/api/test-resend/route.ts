@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
     
     console.log('🧪 Resend client created')
     
-    // Try to send a simple test email
+    // Try to send a simple test email using the verified domain
     const testPayload = {
-      from: 'onboarding@resend.dev',
-      to: 'ben09@mac.com', // Changed to the verified email
+      from: 'notifications@biostackr.io', // Use the same domain as daily emails
+      to: 'ben09@mac.com',
       subject: 'Test from BioStackr',
       html: '<p>This is a test email from BioStackr to verify Resend is working.</p>'
     }
