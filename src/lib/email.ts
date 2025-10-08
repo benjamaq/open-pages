@@ -229,7 +229,7 @@ export const emailTemplates = {
         
         <div style="background: #f9fafb; border-left: 3px solid #4f46e5; padding: 16px; margin: 24px 0;">
           <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0;">
-            <strong style="color: #374151;">P.S.</strong> Your shareable link is always available in the top nav - send it to your doctor before appointments so they can see what's been happening.
+            <strong style="color: #374151;">P.S.</strong> Your shareable link is always available in the top nav - send it to your doctor, share it with friends, or post it on social media to let others follow your journey.
           </p>
         </div>
         
