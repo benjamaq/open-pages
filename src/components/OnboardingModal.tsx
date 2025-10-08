@@ -272,7 +272,11 @@ export default function OnboardingModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto" style={{
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#d1d5db #f3f4f6',
+        boxSizing: 'border-box'
+      }}>
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 rounded-t-xl text-center">
           <h1 className="text-xl font-bold">Welcome to BioStackr!</h1>
@@ -395,7 +399,11 @@ export default function OnboardingModal({
                     Choose up to 4
                   </span>
                 </div>
-                <div className="border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto w-full" style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#d1d5db #f3f4f6',
+                  boxSizing: 'border-box'
+                }}>
                   <div className="flex flex-wrap gap-2">
                     {moodChips.map((chip: any) => {
                       const isSelected = selectedMoodChips.includes(chip.slug)
