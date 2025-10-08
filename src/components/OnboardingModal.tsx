@@ -33,7 +33,7 @@ export default function OnboardingModal({
   // Step 1 - Check-in values
   const [mood, setMood] = useState(5)
   const [sleepQuality, setSleepQuality] = useState(5)
-  const [pain, setPain] = useState(1)
+  const [pain, setPain] = useState(5)
   
   // Copy feedback
   const [copied, setCopied] = useState(false)
