@@ -107,7 +107,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
             )}
 
         {/* Follower Count - Show if enabled and (not own profile OR is shared public link) */}
-        {showFollowerCount && (!isOwnProfile || isSharedPublicLink) && followerCount > 0 && (
+        {showFollowerCount && (!isOwnProfile || isSharedPublicLink) && (
           <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
             👥 {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
           </div>
