@@ -121,13 +121,27 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     
     const template = emailTemplates.welcome(data)
     
-    await resend.emails.send({
-      from: 'Ben from BioStackr <ben09@mac.com>',
+    // Use Resend's onboarding domain if no custom domain is configured
+    // To use your own domain, add RESEND_FROM_EMAIL to environment variables
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    
+    const emailPayload = {
+      from: `Ben from BioStackr <${fromEmail}>`,
       to: data.email,
       subject: template.subject,
       html: template.html,
       replyTo: 'ben09@mac.com'
+    }
+    
+    console.log('📧 Sending welcome email with payload:', {
+      from: emailPayload.from,
+      to: emailPayload.to,
+      subject: emailPayload.subject,
+      replyTo: emailPayload.replyTo
     })
+    
+    const result = await resend.emails.send(emailPayload)
+    console.log('✅ Resend API response:', result)
     
     console.log('✅ Welcome email sent successfully to:', data.email)
   } catch (error) {
