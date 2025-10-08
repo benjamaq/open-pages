@@ -1712,9 +1712,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }, [profile])
 
   const handleOnboardingStepComplete = async (step: number) => {
+    console.log('🎯 DashboardClient - handleOnboardingStepComplete called for step:', step)
     try {
+      // Update database first
       await updateOnboardingStep(step, userId)
+      console.log('✅ Database updated for step:', step)
+      
+      // Then update UI state
       setOnboardingStep(step + 1)
+      console.log('✅ UI state updated to step:', step + 1)
     } catch (error) {
       console.error('Error updating onboarding step:', error)
     }

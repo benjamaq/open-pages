@@ -22,7 +22,6 @@ export default function OnboardingModal({
   onSkip,
   userProfile 
 }: OnboardingModalProps) {
-  const [step, setStep] = useState(currentStep)
   const [isLoading, setIsLoading] = useState(false)
   const [supplementName, setSupplementName] = useState('')
   const [supplementDose, setSupplementDose] = useState('')
@@ -59,7 +58,6 @@ export default function OnboardingModal({
 
   useEffect(() => {
     console.log('🎯 OnboardingModal - Current step changed:', currentStep)
-    setStep(currentStep)
     
     // Generate public link when component mounts or step changes
     if (userProfile?.slug && !publicLink) {
@@ -99,6 +97,15 @@ export default function OnboardingModal({
       const result = await saveDailyEntry(entryData)
       
       console.log('✅ Check-in saved successfully:', result)
+      
+      // Enable follow stack by default
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          allow_stack_follow: true
+        })
+      })
       
       // Let parent handler update the database (avoid double updates)
       onStepComplete(1)
@@ -288,19 +295,19 @@ export default function OnboardingModal({
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1">
               <span className="text-xs font-medium text-gray-600">
-                Step {step} of 4
+                Step {currentStep} of 4
               </span>
               <span className="text-xs text-gray-500 ml-2 hidden sm:inline">
-                {step === 1 && 'Complete your first check-in'}
-                {step === 2 && 'Add your first supplement'}
-                {step === 3 && 'Create your profile (optional)'}
-                {step === 4 && 'View your public page (optional)'}
+                {currentStep === 1 && 'Complete your first check-in'}
+                {currentStep === 2 && 'Add your first supplement'}
+                {currentStep === 3 && 'Create your profile (optional)'}
+                {currentStep === 4 && 'View your public page (optional)'}
               </span>
             </div>
             {/* Only show X button for steps 3-4 */}
-            {(step === 3 || step === 4) && onSkip && (
+            {(currentStep === 3 || currentStep === 4) && onSkip && (
               <button
-                onClick={() => onSkip(step)}
+                onClick={() => onSkip(currentStep)}
                 className="text-gray-400 hover:text-gray-600 transition-colors ml-2"
               >
                 <X className="w-4 h-4" />
@@ -310,13 +317,13 @@ export default function OnboardingModal({
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
               className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 4) * 100}%` }}
+              style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Step 1: First Check-In */}
-        {step === 1 && (
+        {currentStep === 1 && (
           <div className="p-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -441,7 +448,7 @@ export default function OnboardingModal({
         )}
 
         {/* Step 2: Add First Supplement */}
-        {step === 2 && (
+        {currentStep === 2 && (
           <div className="p-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -523,7 +530,7 @@ export default function OnboardingModal({
         )}
 
         {/* Step 3: Create Profile */}
-        {step === 3 && (
+        {currentStep === 3 && (
           <div className="p-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -577,7 +584,7 @@ export default function OnboardingModal({
         )}
 
         {/* Step 4: View Public Page */}
-        {step === 4 && (
+        {currentStep === 4 && (
           <div className="p-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -637,14 +644,14 @@ export default function OnboardingModal({
         )}
 
         {/* Success Messages */}
-        {step > 1 && (
+        {currentStep > 1 && (
           <div className="px-8 pb-4">
             <div className="flex items-center space-x-2 text-green-600">
               <Check className="w-4 h-4" />
               <span className="text-sm font-medium">
-                {step === 2 && 'First check-in logged!'}
-                {step === 3 && 'Supplement added to your stack!'}
-                {step === 4 && 'Profile created successfully!'}
+                {currentStep === 2 && 'First check-in logged!'}
+                {currentStep === 3 && 'Supplement added to your stack!'}
+                {currentStep === 4 && 'Profile created successfully!'}
               </span>
             </div>
           </div>
