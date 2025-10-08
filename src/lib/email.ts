@@ -16,6 +16,12 @@ interface AutoReplyEmailData {
   name: string
 }
 
+interface WelcomeEmailData {
+  email: string
+  name: string
+  slug: string
+}
+
 interface EmailData {
   to: string
   subject: string
@@ -100,6 +106,36 @@ export async function sendAutoReplyEmail(data: AutoReplyEmailData): Promise<void
   }
 }
 
+export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
+  console.log('📧 Sending welcome email to:', data.email)
+
+  // Check if Resend API key is configured
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not configured, skipping welcome email')
+    return
+  }
+
+  try {
+    const { Resend } = require('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    const template = emailTemplates.welcome(data)
+    
+    await resend.emails.send({
+      from: 'BioStackr <noreply@biostackr.io>',
+      to: data.email,
+      subject: template.subject,
+      html: template.html
+    })
+    
+    console.log('✅ Welcome email sent successfully to:', data.email)
+  } catch (error) {
+    console.error('❌ Failed to send welcome email:', error)
+    // Don't throw - we don't want signup to fail if email fails
+    console.error('Welcome email error details:', error)
+  }
+}
+
 // Email templates
 export const emailTemplates = {
   contactForm: (data: ContactEmailData) => ({
@@ -141,6 +177,68 @@ export const emailTemplates = {
         <p style="font-size: 12px; color: #666;">
           This is an automated response. Please do not reply to this email.
         </p>
+      </div>
+    `
+  }),
+  
+  welcome: (data: WelcomeEmailData) => ({
+    subject: 'Welcome to BioStackr! 🎉',
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #111827; font-size: 28px; margin-bottom: 10px;">Welcome to BioStackr! 🎉</h1>
+          <p style="color: #6b7280; font-size: 16px;">Track your health journey, share with your network</p>
+        </div>
+        
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            Hi ${data.name},
+          </p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            Thanks for joining BioStackr! You've just created your account and completed the setup. Here's what you can do now:
+          </p>
+          
+          <div style="margin: 20px 0;">
+            <div style="margin-bottom: 16px;">
+              <strong style="color: #111827;">📊 Track Your Progress</strong>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
+                Log your daily mood, sleep, and pain. Add supplements, protocols, and activities to see what works.
+              </p>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+              <strong style="color: #111827;">🗓️ Explore Your Heatmap</strong>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
+                Click any day to see patterns in your health data. Discover what makes you feel better.
+              </p>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+              <strong style="color: #111827;">🔗 Share Your Journey</strong>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
+                Your public profile: <a href="https://biostackr.io/biostackr/${data.slug}?public=true" style="color: #4f46e5;">biostackr.io/biostackr/${data.slug}</a>
+              </p>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
+                Share this with your doctor, coach, or support network so they can follow your progress.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://biostackr.io/dash" style="display: inline-block; background: #111827; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+            Go to Dashboard
+          </a>
+        </div>
+        
+        <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px;">
+          <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+            <strong>Need help?</strong> Check out our <a href="https://biostackr.io/faq" style="color: #4f46e5;">FAQ</a> or reply to this email.
+          </p>
+          <p style="color: #9ca3af; font-size: 12px; margin-top: 16px;">
+            You're receiving this because you signed up for BioStackr. If you didn't create this account, please contact us immediately.
+          </p>
+        </div>
       </div>
     `
   })

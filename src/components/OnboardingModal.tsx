@@ -228,6 +228,22 @@ export default function OnboardingModal({
       })
       
       if (response.ok) {
+        // Send welcome email
+        try {
+          await fetch('/api/send-welcome-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: userProfile?.display_name || 'there',
+              slug: userProfile?.slug
+            })
+          })
+          console.log('✅ Welcome email triggered')
+        } catch (emailError) {
+          console.error('❌ Welcome email failed (non-blocking):', emailError)
+          // Don't block onboarding completion if email fails
+        }
+        
         onStepComplete(4)
         onComplete()
       }
