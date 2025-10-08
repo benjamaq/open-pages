@@ -122,10 +122,11 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     const template = emailTemplates.welcome(data)
     
     await resend.emails.send({
-      from: 'BioStackr <noreply@biostackr.io>',
+      from: 'Ben from BioStackr <ben09@mac.com>',
       to: data.email,
       subject: template.subject,
-      html: template.html
+      html: template.html,
+      replyTo: 'ben09@mac.com'
     })
     
     console.log('✅ Welcome email sent successfully to:', data.email)
@@ -182,47 +183,31 @@ export const emailTemplates = {
   }),
   
   welcome: (data: WelcomeEmailData) => ({
-    subject: 'Welcome to BioStackr! 🎉',
+    subject: 'Welcome to BioStackr 👋',
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #111827; font-size: 28px; margin-bottom: 10px;">Welcome to BioStackr! 🎉</h1>
-          <p style="color: #6b7280; font-size: 16px;">Track your health journey, share with your network</p>
+        <div style="margin-bottom: 24px;">
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            Hey ${data.name},
+          </p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            Thanks for trying BioStackr!
+          </p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            <strong>Quick tip:</strong> the real magic happens after 5-7 days of tracking when patterns start to emerge in your monthly heatmap. Don't worry about perfection - just log your check-in daily (takes 10 seconds) and the patterns will show themselves.
+          </p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            If anything is confusing or you hit any issues, just reply to this email. I read every message.
+          </p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 0;">
+            -Ben
+          </p>
         </div>
         
-        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-            Hi ${data.name},
+        <div style="background: #f9fafb; border-left: 3px solid #4f46e5; padding: 16px; margin: 24px 0;">
+          <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0;">
+            <strong style="color: #374151;">P.S.</strong> Your shareable link is always available in the top nav - send it to your doctor before appointments so they can see what's been happening.
           </p>
-          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-            Thanks for joining BioStackr! You've just created your account and completed the setup. Here's what you can do now:
-          </p>
-          
-          <div style="margin: 20px 0;">
-            <div style="margin-bottom: 16px;">
-              <strong style="color: #111827;">📊 Track Your Progress</strong>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
-                Log your daily mood, sleep, and pain. Add supplements, protocols, and activities to see what works.
-              </p>
-            </div>
-            
-            <div style="margin-bottom: 16px;">
-              <strong style="color: #111827;">🗓️ Explore Your Heatmap</strong>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
-                Click any day to see patterns in your health data. Discover what makes you feel better.
-              </p>
-            </div>
-            
-            <div style="margin-bottom: 16px;">
-              <strong style="color: #111827;">🔗 Share Your Journey</strong>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
-                Your public profile: <a href="https://biostackr.io/biostackr/${data.slug}?public=true" style="color: #4f46e5;">biostackr.io/biostackr/${data.slug}</a>
-              </p>
-              <p style="color: #6b7280; font-size: 14px; margin-top: 4px;">
-                Share this with your doctor, coach, or support network so they can follow your progress.
-              </p>
-            </div>
-          </div>
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
@@ -232,10 +217,7 @@ export const emailTemplates = {
         </div>
         
         <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px;">
-          <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-            <strong>Need help?</strong> Check out our <a href="https://biostackr.io/faq" style="color: #4f46e5;">FAQ</a> or reply to this email.
-          </p>
-          <p style="color: #9ca3af; font-size: 12px; margin-top: 16px;">
+          <p style="color: #9ca3af; font-size: 12px; line-height: 1.5;">
             You're receiving this because you signed up for BioStackr. If you didn't create this account, please contact us immediately.
           </p>
         </div>
