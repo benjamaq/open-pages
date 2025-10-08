@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Try to send a simple test email
     const testPayload = {
       from: 'onboarding@resend.dev',
-      to: 'ben09@icloud.com',
+      to: 'ben09@mac.com', // Changed to the verified email
       subject: 'Test from BioStackr',
       html: '<p>This is a test email from BioStackr to verify Resend is working.</p>'
     }
