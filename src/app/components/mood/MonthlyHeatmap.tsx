@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface MonthlyHeatmapProps {
   onDayClick: (date: string) => void;
+  data?: DayData[]; // Optional prop for pre-loaded data
 }
 
 type MetricType = 'mood' | 'sleep_quality' | 'pain';
@@ -17,8 +18,8 @@ interface DayData {
   tags: string[] | null;
 }
 
-export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date().toLocaleDateString('sv-SE').slice(0, 7)); // YYYY-MM in local timezone
+export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps) {
+  const [currentMonth, setCurrentMonth] = useState('2025-09'); // Start with September 2025
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('mood');
@@ -54,10 +55,16 @@ export default function MonthlyHeatmap({ onDayClick }: MonthlyHeatmapProps) {
     }
   };
 
-  // Load data when month changes
+  // Load data when month changes or when data prop changes
   useEffect(() => {
-    loadMonthData(currentMonth);
-  }, [currentMonth]);
+    if (data && data.length > 0) {
+      // Use passed data instead of fetching
+      setMonthData(data);
+    } else {
+      // Fallback to API fetch
+      loadMonthData(currentMonth);
+    }
+  }, [currentMonth, data]);
 
   // Navigate months
   const navigateMonth = (direction: 'prev' | 'next') => {

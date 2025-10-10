@@ -96,6 +96,30 @@ export default function AuthForm({ mode }: AuthFormProps) {
             // Don't fail the signup if profile creation fails
           }
 
+          // Check if referral code is actually a beta code
+          if (referralCode.trim()) {
+            try {
+              const betaResponse = await fetch('/api/beta/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: referralCode.trim() })
+              })
+
+              if (betaResponse.ok) {
+                // Beta code activated! User gets Pro access
+                setMessage('Beta code activated! You now have 6 months of free Pro access! 🎉 Redirecting...')
+                setTimeout(() => {
+                  router.push('/dash')
+                  router.refresh()
+                }, 2000)
+                return
+              }
+              // If not a valid beta code, continue as normal (it's just a referral code)
+            } catch (betaError) {
+              console.log('Not a beta code, treating as referral code:', betaError)
+              // Continue as normal - it's just a referral code
+            }
+          }
 
           // Redirect to dashboard for new users
           const successMessage = referralCode.trim() === 'redditgo' 
@@ -189,7 +213,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {isSignUp && (
               <div>
                 <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
-                  Referral Code <span className="text-gray-400 font-normal">(optional)</span>
+                  Referral or Beta Code <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -199,11 +223,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
-                    placeholder="Enter referral code"
+                    placeholder="Enter beta or referral code"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  Got a referral code? Enter it here to get special benefits!
+                  Have a beta code? Enter it here to unlock 6 months of free Pro access!
                 </p>
               </div>
             )}

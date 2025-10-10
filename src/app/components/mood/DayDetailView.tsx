@@ -45,6 +45,10 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
       if (isPublicProfile && moodData) {
         const dayEntry = moodData.find(entry => entry.date === date);
         console.log('Public profile - Day data from moodData:', dayEntry);
+        console.log('Public profile - meds:', dayEntry?.meds);
+        console.log('Public profile - protocols:', dayEntry?.protocols);
+        console.log('Public profile - activity:', dayEntry?.activity);
+        console.log('Public profile - devices:', dayEntry?.devices);
         setDayData(dayEntry || null);
         setLoading(false);
         return;
@@ -294,8 +298,10 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                           <div className="text-sm text-gray-700">
                             {dayData.meds?.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span className="text-gray-500">{item.dose} {item.timing}</span>
+                                <span>{typeof item === 'string' ? item : item.name}</span>
+                                {typeof item === 'object' && item.dose && (
+                                  <span className="text-gray-500">{item.dose} {item.timing}</span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -321,8 +327,10 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                           <div className="text-sm text-gray-700">
                             {dayData.protocols?.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span className="text-gray-500">{item.duration}</span>
+                                <span>{typeof item === 'string' ? item : item.name}</span>
+                                {typeof item === 'object' && item.duration && (
+                                  <span className="text-gray-500">{item.duration}</span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -348,8 +356,10 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                           <div className="text-sm text-gray-700">
                             {dayData.activity?.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span className="text-gray-500">{item.duration}min</span>
+                                <span>{typeof item === 'string' ? item : item.name}</span>
+                                {typeof item === 'object' && item.duration && (
+                                  <span className="text-gray-500">{item.duration}min</span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -375,8 +385,10 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                           <div className="text-sm text-gray-700">
                             {dayData.devices?.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span className="text-gray-500">{item.duration}min</span>
+                                <span>{typeof item === 'string' ? item : item.name}</span>
+                                {typeof item === 'object' && item.duration && (
+                                  <span className="text-gray-500">{item.duration}min</span>
+                                )}
                               </div>
                             ))}
                           </div>

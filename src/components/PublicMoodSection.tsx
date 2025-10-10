@@ -112,8 +112,9 @@ export default function PublicMoodSection({
     const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
     const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
     const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
-    const recoveryValues = last7Days.map(day => day.wearables?.recovery_score).filter(val => val !== null && val !== undefined);
-    const wearableSleepValues = last7Days.map(day => day.wearables?.sleep_score).filter(val => val !== null && val !== undefined);
+    // Check both Oura Ring (top-level) and Whoop (nested) recovery scores
+    const recoveryValues = last7Days.map(day => day.wearables?.recovery_score || day.wearables?.whoop?.recovery_score).filter(val => val !== null && val !== undefined);
+    const wearableSleepValues = last7Days.map(day => day.wearables?.sleep_score || day.wearables?.whoop?.sleep_score).filter(val => val !== null && val !== undefined);
 
     // If no historical data, use today's values as fallback
     let avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep;
@@ -146,6 +147,8 @@ export default function PublicMoodSection({
       avgRecovery = (recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length).toFixed(0);
     } else if (todayEntry?.wearables?.recovery_score !== null && todayEntry?.wearables?.recovery_score !== undefined) {
       avgRecovery = todayEntry.wearables.recovery_score.toString();
+    } else if (todayEntry?.wearables?.whoop?.recovery_score !== null && todayEntry?.wearables?.whoop?.recovery_score !== undefined) {
+      avgRecovery = todayEntry.wearables.whoop.recovery_score.toString();
     } else {
       avgRecovery = '—';
     }
@@ -154,6 +157,8 @@ export default function PublicMoodSection({
       avgWearableSleep = (wearableSleepValues.reduce((a, b) => a + b, 0) / wearableSleepValues.length).toFixed(0);
     } else if (todayEntry?.wearables?.sleep_score !== null && todayEntry?.wearables?.sleep_score !== undefined) {
       avgWearableSleep = todayEntry.wearables.sleep_score.toString();
+    } else if (todayEntry?.wearables?.whoop?.sleep_score !== null && todayEntry?.wearables?.whoop?.sleep_score !== undefined) {
+      avgWearableSleep = todayEntry.wearables.whoop.sleep_score.toString();
     } else {
       avgWearableSleep = '—';
     }
@@ -237,6 +242,7 @@ export default function PublicMoodSection({
                 {MonthlyHeatmap && (
                   <MonthlyHeatmap 
                     onDayClick={handleDayClick}
+                    data={moodData}
                   />
                 )}
               </div>
@@ -294,12 +300,16 @@ export default function PublicMoodSection({
               </div>
               
               <div className="text-xs sm:text-base text-gray-500 text-center">
-                {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
-                {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
-                {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
-                {!todayEntry?.wearables?.device && avgRecovery !== '—' && `Recovery ${avgRecovery}`}
-                {!todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
-                {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
+                {/* Show Whoop data if available, otherwise Oura Ring */}
+                {todayEntry?.wearables?.whoop && avgRecovery !== '—' && `Whoop Recovery ${avgRecovery}%`}
+                {todayEntry?.wearables?.whoop && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {todayEntry?.wearables?.whoop && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}%`}
+                {!todayEntry?.wearables?.whoop && todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
+                {!todayEntry?.wearables?.whoop && todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {!todayEntry?.wearables?.whoop && todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
+                {!todayEntry?.wearables?.whoop && !todayEntry?.wearables?.device && avgRecovery !== '—' && `Recovery ${avgRecovery}`}
+                {!todayEntry?.wearables?.whoop && !todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
+                {!todayEntry?.wearables?.whoop && !todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
               </div>
             </div>
 

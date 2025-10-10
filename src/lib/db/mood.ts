@@ -277,13 +277,29 @@ export type TrendsData = {
 };
 
 // Public mood data for profiles (no auth required)
-export async function getPublicMoodData(profileId: string, days: number = 30): Promise<DayDatum[]> {
+export async function getPublicMoodData(profileId: string, days: number = 30, month?: string): Promise<DayDatum[]> {
   try {
-    const supabase = await createClient();
+    // Use service role key for public data fetching to bypass RLS
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
-    // Calculate date range (use UTC to avoid timezone issues)
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    let startDate: string;
+    let endDate: string;
+    
+    if (month) {
+      // If month is specified (e.g., "2025-09"), fetch that entire month
+      const year = parseInt(month.split('-')[0]);
+      const monthNum = parseInt(month.split('-')[1]);
+      startDate = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
+      endDate = new Date(year, monthNum, 0).toISOString().split('T')[0]; // Last day of month
+    } else {
+      // Default behavior: calculate date range (use UTC to avoid timezone issues)
+      endDate = new Date().toISOString().split('T')[0];
+      startDate = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
 
     // Get the user_id for this profile
     const { data: profileData, error: profileError } = await supabase
@@ -291,6 +307,7 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
       .select('user_id')
       .eq('id', profileId)
       .single()
+
 
     if (profileError || !profileData) {
       console.warn('Profile not found for mood data:', profileId);
@@ -306,11 +323,23 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
       .lte('local_date', endDate)
       .order('local_date');
 
+
     // Handle table not found error gracefully
     if (entriesError && entriesError.code === 'PGRST205') {
       console.warn('daily_entries table not found, returning empty data');
       return [];
     }
+
+    // DEBUG: Log what we're working with
+    console.log('getPublicMoodData DEBUG:', {
+      profileId,
+      month,
+      startDate,
+      endDate,
+      entriesCount: dailyEntries?.length,
+      firstEntry: dailyEntries?.[0]?.local_date,
+      lastEntry: dailyEntries?.[dailyEntries?.length - 1]?.local_date
+    });
 
     if (entriesError) {
       console.error('Error fetching public mood data:', entriesError);
@@ -367,7 +396,6 @@ export async function getPublicMoodData(profileId: string, days: number = 30): P
       
       currentDate.setDate(currentDate.getDate() + 1);
     }
-
     return dayData;
   } catch (error) {
     console.error('Error in getPublicMoodData:', error);

@@ -54,11 +54,10 @@ export default function Home() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
             <div className="lg:col-span-6">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight max-w-[28ch] text-left">
-                <span className="block">What's Actually</span>
-                <span className="block">Working for Your Health?</span>
+                Track how you feel. See what actually works
               </h1>
               <p className="mt-6 text-base sm:text-lg text-gray-900 leading-loose max-w-[70ch] text-left font-light">
-                <span className="font-medium">Stop guessing...</span> BioStackr connects your <span className="font-normal">supplements, meds and protocols</span>, with <span className="font-normal">Mood, Sleep, and Pain tracking</span>, empowering you to see the <span className="font-normal">clear patterns that drive your health</span>.
+                BioStackr connects your supplements, meds, and protocols with mood, sleep, and pain tracking—empowering you to see the patterns that drive your health.
               </p>
               <div className="mt-10">
                 <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
@@ -340,7 +339,7 @@ export default function Home() {
                 {/* Elaborate Details */}
                 <div className="space-y-3">
                   <div>
-                    <h5 className="text-xs font-medium text-gray-900 mb-1">💊 Supplements & Meds (8)</h5>
+                    <h5 className="text-xs font-medium text-gray-900 mb-1">💊 Supplements & Protocols (8)</h5>
                     <p className="text-xs text-gray-600">Vitamin D3 5000IU • Omega-3 2000mg • Magnesium Glycinate 400mg • B-Complex • Zinc 15mg • Probiotics 50B CFU • Creatine 5g • Ashwagandha 600mg</p>
                   </div>
                   
@@ -446,7 +445,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Supplements & Meds ✓</h3>
+                <h3 className="text-lg font-bold text-gray-900">Supplements & Protocols ✓</h3>
               </div>
               <p className="text-gray-600">Timing, dosage, and daily check-offs—keep today tight and the month consistent.</p>
             </div>
@@ -565,7 +564,7 @@ export default function Home() {
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="font-medium text-gray-900">Supplements & Meds</span>
+                    <span className="font-medium text-gray-900">Supplements & Protocols</span>
               </div>
                   <span className="text-sm text-green-600 font-medium">ON</span>
             </div>

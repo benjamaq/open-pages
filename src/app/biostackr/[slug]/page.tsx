@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/server'
 import { FileText, Image as ImageIcon, File, Edit2 } from 'lucide-react'
@@ -79,6 +80,9 @@ export default async function ProfilePage({ params, searchParams }: {
   params: Promise<{ slug: string }>
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  // Force fresh data on every request - bypass all caching
+  noStore()
+  
   const { slug } = await params
   const search = await searchParams
   const supabase = await createClient()
@@ -286,8 +290,21 @@ export default async function ProfilePage({ params, searchParams }: {
     try {
       try {
         const { getPublicMoodData } = await import('@/lib/db/mood')
-        publicMoodData = await getPublicMoodData((profile as any).id, 30)
-        console.log('Mood data loaded:', publicMoodData.length, 'entries')
+        // Special handling for Mum's profile - fetch specific date range (July 27 - Sept 6)
+        if (slug === 'mum-chronic-pain') {
+          // Use month parameter to fetch August 2025, then manually extend the range
+          const augustData = await getPublicMoodData((profile as any).id, 31, '2025-08')
+          const julyData = await getPublicMoodData((profile as any).id, 5, '2025-07')
+          const septemberData = await getPublicMoodData((profile as any).id, 6, '2025-09')
+          publicMoodData = [...julyData, ...augustData, ...septemberData]
+          console.log('Mum extended mood data loaded:', publicMoodData.length, 'entries (July + August + September)')
+        } else {
+          // Fetch last 45 days without month restriction to get September + October data
+          // This ensures we capture the full progression including October dates
+          publicMoodData = await getPublicMoodData((profile as any).id, 45)
+          console.log('Mood data loaded:', publicMoodData.length, 'entries')
+        }
+        console.log('Date range:', publicMoodData[0]?.date, 'to', publicMoodData[publicMoodData.length - 1]?.date)
       } catch (error) {
         console.warn('Mood tracking not available for public profile:', error)
         publicMoodData = []
