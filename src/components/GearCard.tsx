@@ -5,7 +5,7 @@ import { ChevronDown, Plus } from 'lucide-react'
 
 // Row 4 — Gear Card (Full Width)
 export default function GearCard({ items = [], onAdd, onManage }: { items?: any[]; onAdd: () => void; onManage: () => void }) {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true) // Collapse by default
 
 
   return (
