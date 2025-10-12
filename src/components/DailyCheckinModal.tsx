@@ -1,7 +1,35 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Download, Copy, ChevronDown } from 'lucide-react'
+import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
+
+// Constants for symptom tracking
+const coreSymptoms = [
+  { id: 'brain_fog', label: 'Brain fog', category: 'cognitive' },
+  { id: 'fatigue', label: 'Fatigue', category: 'physical' },
+  { id: 'headache', label: 'Headache', category: 'physical' },
+  { id: 'muscle_pain', label: 'Muscle pain', category: 'physical' },
+  { id: 'joint_pain', label: 'Joint pain', category: 'physical' },
+  { id: 'anxiety', label: 'Anxiety', category: 'emotional' },
+  { id: 'irritability', label: 'Irritability', category: 'emotional' },
+  { id: 'nausea', label: 'Nausea', category: 'physical' },
+  { id: 'hot_flashes', label: 'Hot flashes', category: 'physical' },
+  { id: 'nerve_pain', label: 'Nerve pain', category: 'physical' },
+  { id: 'stiffness', label: 'Stiffness', category: 'physical' },
+  { id: 'racing_thoughts', label: 'Racing thoughts', category: 'cognitive' },
+  { id: 'overwhelm', label: 'Overwhelm', category: 'emotional' },
+  { id: 'low_mood', label: 'Low mood', category: 'emotional' },
+  { id: 'inflammation', label: 'Inflammation', category: 'physical' }
+]
+
+const painLocations = [
+  { id: 'head', label: 'Head' },
+  { id: 'neck', label: 'Neck' },
+  { id: 'back', label: 'Back' },
+  { id: 'joints', label: 'Joints' },
+  { id: 'full_body', label: 'Full body' },
+  { id: 'other', label: 'Other' }
+]
 
 // Types
 export type WearableSource = 'WHOOP' | 'Oura' | 'Apple Health' | 'Garmin' | 'Fitbit' | 'Polar' | 'Suunto' | 'Coros' | 'Amazfit' | 'Samsung Health' | 'Google Fit' | 'Strava' | 'MyFitnessPal' | 'Cronometer' | 'Eight Sleep' | 'Other' | 'None'
@@ -21,6 +49,11 @@ export interface DailyCheckinInput {
   energy: number
   mood?: MoodPreset | string
   moodComment?: string
+  pain?: number
+  sleep?: number
+  symptoms?: string[]
+  painLocations?: string[]
+  customSymptoms?: string[]
   wearable?: {
     source: WearableSource
     customName?: string // For when source is 'Other'
@@ -182,11 +215,19 @@ export default function DailyCheckinModal({
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
     energy: currentEnergy,
+    pain: 0,
+    sleep: 5,
+    symptoms: [],
+    painLocations: [],
+    customSymptoms: [],
     publicUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/daily/${new Date().toISOString().split('T')[0]}`
   })
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [showWearables, setShowWearables] = useState(false)
+  const [showSymptoms, setShowSymptoms] = useState(false)
+  const [customSymptomInput, setCustomSymptomInput] = useState('')
+  const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
 
   // Load saved data when modal opens
   useEffect(() => {
@@ -198,6 +239,49 @@ export default function DailyCheckinModal({
     }
   }, [isOpen])
 
+
+  // Symptom handling functions
+  const toggleSymptom = (symptomId: string) => {
+    setDraft(prev => {
+      const currentSymptoms = prev.symptoms || []
+      return {
+        ...prev,
+        symptoms: currentSymptoms.includes(symptomId)
+          ? currentSymptoms.filter(s => s !== symptomId)
+          : [...currentSymptoms, symptomId]
+      }
+    })
+  }
+
+  const togglePainLocation = (locationId: string) => {
+    setDraft(prev => {
+      const currentLocations = prev.painLocations || []
+      return {
+        ...prev,
+        painLocations: currentLocations.includes(locationId)
+          ? currentLocations.filter(l => l !== locationId)
+          : [...currentLocations, locationId]
+      }
+    })
+  }
+
+  const handleAddCustomSymptom = () => {
+    if (customSymptomInput.trim()) {
+      setDraft(prev => ({
+        ...prev,
+        customSymptoms: [...(prev.customSymptoms || []), customSymptomInput.trim()]
+      }))
+      setCustomSymptomInput('')
+      setShowCustomSymptomInput(false)
+    }
+  }
+
+  const removeCustomSymptom = (symptom: string) => {
+    setDraft(prev => ({
+      ...prev,
+      customSymptoms: (prev.customSymptoms || []).filter(s => s !== symptom)
+    }))
+  }
 
   const loadSavedData = () => {
     // Load daily check-in data
@@ -211,7 +295,12 @@ export default function DailyCheckinModal({
           setDraft(prev => ({
             ...prev,
             energy: data.energy,
-            mood: data.mood || undefined
+            mood: data.mood || undefined,
+            pain: data.pain || 0,
+            sleep: data.sleep || 5,
+            symptoms: data.symptoms || [],
+            painLocations: data.painLocations || [],
+            customSymptoms: data.customSymptoms || []
           }))
         }
       } catch (error) {
@@ -275,10 +364,13 @@ export default function DailyCheckinModal({
       // Save to database via mood API
       const moodData = {
         mood: draft.energy, // Map energy to mood score
-        sleep_quality: draft.wearable?.sleepScore || null,
-        pain: null, // Not collected in this modal
+        sleep_quality: draft.sleep || 5,
+        pain: draft.pain || 0,
         tags: draft.mood ? [draft.mood] : [],
-        journal: draft.moodComment || null
+        journal: draft.moodComment || null,
+        symptoms: draft.symptoms || [],
+        pain_locations: draft.painLocations || [],
+        custom_symptoms: draft.customSymptoms || []
       }
 
       const moodResponse = await fetch('/api/mood/today', {
@@ -297,6 +389,11 @@ export default function DailyCheckinModal({
       localStorage.setItem(`biostackr_last_daily_checkin_${userId}`, JSON.stringify({
         energy: draft.energy,
         mood: draft.mood,
+        pain: draft.pain,
+        sleep: draft.sleep,
+        symptoms: draft.symptoms,
+        painLocations: draft.painLocations,
+        customSymptoms: draft.customSymptoms,
         date: today,
         userId: userId
       }))
@@ -682,15 +779,15 @@ export default function DailyCheckinModal({
             <div className="bg-gray-50 rounded-lg p-5">
               <h3 className="text-lg font-semibold text-zinc-900 mb-4">Personal Check-in</h3>
               
-              {/* Energy and Mood Side-by-Side */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* Energy Slider */}
+              {/* Three Sliders: Mood, Pain, Sleep */}
+              <div className="space-y-4 mb-4">
+                {/* Mood Slider */}
                 <div className="overflow-hidden">
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Energy</label>
+                  <label className="block text-sm font-medium text-zinc-900 mb-2">Mood</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
-                      min={1}
+                      min={0}
                       max={10}
                       value={draft.energy}
                       onChange={(e) => setDraft(d => ({ ...d, energy: Number(e.target.value) }))}
@@ -712,29 +809,213 @@ export default function DailyCheckinModal({
                   </div>
                 </div>
 
-                {/* Mood Selector */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Mood</label>
-                  <select
-                    value={draft.mood ?? ''}
-                    onChange={(e) => setDraft(d => ({ ...d, mood: e.target.value || undefined }))}
-                    className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                  >
-                    <option value="">Pick a vibe…</option>
-                    {/* v2.3 - Updated mood chips with emojis - Enhanced debugging */}
-                    {/* Emoji Test: ⚡🌧️🧊🤹🐢🔄🫠🌤️ */}
-                    {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
-                      'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
-                      'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
-                      'Solid baseline', 'Back online', 'Calm & steady', 'Cruising', 'Climbing',
-                      'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
-                      'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
-                      '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
-                      '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']).map(mood => (
-                      <option key={mood} value={mood}>{mood}</option>
-                    ))}
-                  </select>
+                {/* Pain Slider */}
+                <div className="overflow-hidden">
+                  <label className="block text-sm font-medium text-zinc-900 mb-2">Pain</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={10}
+                      value={draft.pain || 0}
+                      onChange={(e) => setDraft(d => ({ ...d, pain: Number(e.target.value) }))}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
+                      style={{
+                        background: `linear-gradient(to right, 
+                          #16a34a 0%, 
+                          #22c55e 20%, 
+                          #eab308 40%, 
+                          #f97316 60%, 
+                          #ef4444 80%, 
+                          #dc2626 100%)`,
+                        outline: 'none',
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'none'
+                      }}
+                    />
+                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.pain || 0}/10</span>
+                  </div>
                 </div>
+
+                {/* Sleep Slider */}
+                <div className="overflow-hidden">
+                  <label className="block text-sm font-medium text-zinc-900 mb-2">Sleep</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={10}
+                      value={draft.sleep || 5}
+                      onChange={(e) => setDraft(d => ({ ...d, sleep: Number(e.target.value) }))}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
+                      style={{
+                        background: `linear-gradient(to right, 
+                          #ef4444 0%, 
+                          #f97316 20%, 
+                          #eab308 40%, 
+                          #84cc16 60%, 
+                          #22c55e 80%, 
+                          #16a34a 100%)`,
+                        outline: 'none',
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'none'
+                      }}
+                    />
+                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.sleep || 5}/10</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mood Preset Selector */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-zinc-900 mb-2">Mood Vibe (optional)</label>
+                <select
+                  value={draft.mood ?? ''}
+                  onChange={(e) => setDraft(d => ({ ...d, mood: e.target.value || undefined }))}
+                  className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                >
+                  <option value="">Pick a vibe…</option>
+                  {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
+                    'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
+                    'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
+                    'Solid baseline', 'Back online', 'Calm & steady', 'Cruising', 'Climbing',
+                    'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
+                    'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
+                    '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
+                    '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']).map(mood => (
+                    <option key={mood} value={mood}>{mood}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Symptom Tracking Section - Collapsible */}
+              <div className="bg-white rounded-lg p-4 mb-4 border border-zinc-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-base font-medium text-zinc-900">Symptoms today (optional)</h4>
+                  <button
+                    onClick={() => setShowSymptoms(!showSymptoms)}
+                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    aria-label={showSymptoms ? 'Collapse' : 'Expand'}
+                  >
+                    <ChevronDown className={`w-5 h-5 transition-transform ${showSymptoms ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
+                  </button>
+                </div>
+
+                {showSymptoms && (
+                  <div className="space-y-4">
+                    {/* Core Symptoms - Tag Style */}
+                    <div>
+                      <p className="text-xs text-zinc-500 mb-2">Select all that apply</p>
+                      <div className="flex flex-wrap gap-2">
+                        {coreSymptoms.map(symptom => (
+                          <button
+                            key={symptom.id}
+                            onClick={() => toggleSymptom(symptom.id)}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              (draft.symptoms || []).includes(symptom.id)
+                                ? 'bg-zinc-900 text-white'
+                                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                            }`}
+                          >
+                            {symptom.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Symptoms */}
+                    <div>
+                      {(draft.customSymptoms || []).length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {(draft.customSymptoms || []).map(symptom => (
+                            <div
+                              key={symptom}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-900"
+                            >
+                              <span>{symptom}</span>
+                              <button
+                                onClick={() => removeCustomSymptom(symptom)}
+                                className="ml-1 hover:text-blue-700"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {!showCustomSymptomInput ? (
+                        <button
+                          onClick={() => setShowCustomSymptomInput(true)}
+                          className="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Add custom symptom</span>
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={customSymptomInput}
+                            onChange={(e) => setCustomSymptomInput(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddCustomSymptom()}
+                            placeholder="Type your symptom..."
+                            className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleAddCustomSymptom}
+                            className="px-4 py-2 rounded-md bg-zinc-900 text-white text-sm hover:bg-zinc-800"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowCustomSymptomInput(false)
+                              setCustomSymptomInput('')
+                            }}
+                            className="px-4 py-2 rounded-md bg-zinc-100 text-zinc-700 text-sm hover:bg-zinc-200"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pain Locations - Only show if pain > 0 */}
+                    {(draft.pain || 0) > 0 && (
+                      <div className="pt-3 border-t border-zinc-200">
+                        <label className="block text-sm font-medium text-zinc-900 mb-2">Where's your pain?</label>
+                        <div className="flex flex-wrap gap-2">
+                          {painLocations.map(location => (
+                            <button
+                              key={location.id}
+                              onClick={() => togglePainLocation(location.id)}
+                              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                                (draft.painLocations || []).includes(location.id)
+                                  ? 'bg-red-600 text-white'
+                                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                              }`}
+                            >
+                              {location.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes Field */}
+                    <div className="pt-3 border-t border-zinc-200">
+                      <label className="block text-sm font-medium text-zinc-900 mb-2">Notes (optional)</label>
+                      <textarea
+                        value={draft.moodComment || ''}
+                        onChange={(e) => setDraft(d => ({ ...d, moodComment: e.target.value }))}
+                        placeholder="How are you feeling? Any observations?"
+                        className="w-full rounded-md border border-zinc-300 bg-white p-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Wearables Section */}

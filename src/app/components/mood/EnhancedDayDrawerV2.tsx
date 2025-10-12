@@ -4,12 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
 import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
+import { useFirstCheckIn } from '@/hooks/useFirstCheckIn';
+import { generateFirstInsight } from '@/app/actions/generate-first-insight';
+import PostCheckinModal from '@/components/onboarding/post-checkin-modal';
 
 type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
   onClose: () => void;
   date: string; // 'YYYY-MM-DD'
   userId: string;
+  isFirstCheckIn?: boolean; // NEW: Flag for onboarding flow
   todayItems?: {
     supplements: any[];
     protocols: any[];
@@ -31,7 +35,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isFirstCheckIn = false, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -40,6 +44,13 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
     tags: null,
     journal: null
   });
+
+  // Post-check-in modal state
+  const [showPostCheckinModal, setShowPostCheckinModal] = useState(false);
+  const [postCheckinData, setPostCheckinData] = useState<any>(null);
+  
+  // Check if this is the user's first check-in
+  const { isFirstCheckIn, loading: firstCheckInLoading } = useFirstCheckIn(userId);
 
   // 🎭 DEBUG: State Check
   console.log("🎭 EnhancedDrawerV2 State Check:", { 
@@ -75,8 +86,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false);
   const [showMoreSymptoms, setShowMoreSymptoms] = useState(false);
 
-  // Collapsible section states (default CLOSED for reduced cognitive load)
-  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(true);
+  // Collapsible section states
+  // For first check-in (onboarding), all optional sections are collapsed by default
+  // For regular check-ins, Today's Vibe is open by default
+  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(!isFirstCheckIn);
   const [isContextSectionOpen, setIsContextSectionOpen] = useState(false);
   const [isSymptomsSectionOpen, setIsSymptomsSectionOpen] = useState(false);
   const [isNotesSectionOpen, setIsNotesSectionOpen] = useState(false);
@@ -437,9 +450,43 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
       if (result.ok) {
         setSaveMessage('✅ Check-in saved!');
         console.log('✅ Save successful:', result.data);
-        setTimeout(() => {
-          onClose();
-        }, 1000);
+        
+        // Check if this is the first check-in and show post-check-in modal
+        if (isFirstCheckIn && !firstCheckInLoading) {
+          try {
+            const insightData = await generateFirstInsight({
+              mood: formData.mood,
+              sleep_quality: formData.sleep_quality,
+              pain: formData.pain
+            });
+            
+            setPostCheckinData({
+              dayOneData: {
+                mood: formData.mood,
+                sleep_quality: formData.sleep_quality,
+                pain: formData.pain
+              },
+              communityStats: insightData.communityStats,
+              personalizedInsight: {
+                message: insightData.message,
+                type: insightData.type
+              }
+            });
+            
+            setShowPostCheckinModal(true);
+          } catch (error) {
+            console.error('Error generating first insight:', error);
+            // Fallback to normal close behavior
+            setTimeout(() => {
+              onClose();
+            }, 1000);
+          }
+        } else {
+          // Normal behavior for subsequent check-ins
+          setTimeout(() => {
+            onClose();
+          }, 1000);
+        }
       } else {
         setSaveMessage(`❌ ${result.error}`);
         console.error('❌ Save failed:', result.error);
@@ -726,6 +773,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">✨</span>
                   <h3 className="text-base font-medium text-gray-900">Today's Vibe</h3>
+                  {isFirstCheckIn && (
+                    <span className="text-xs text-gray-400 font-normal">Optional</span>
+                  )}
                   {selectedTags.length > 0 && (
                     <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                       {selectedTags.length} selected
@@ -826,6 +876,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🌍</span>
                   <h3 className="text-base font-medium text-gray-900">Contextual Triggers</h3>
+                  {isFirstCheckIn && (
+                    <span className="text-xs text-gray-400 font-normal">Optional</span>
+                  )}
                   {selectedContextChips.length > 0 && (
                     <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
                       {selectedContextChips.length} selected
@@ -944,6 +997,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">💭</span>
                   <h3 className="text-base font-medium text-gray-900">How I'm feeling</h3>
+                  {isFirstCheckIn && (
+                    <span className="text-xs text-gray-400 font-normal">Optional</span>
+                  )}
                   {(() => {
                     const totalSelected = selectedSymptoms.length + customSymptoms.length + selectedPainLocations.length + selectedPainTypes.length;
                     return totalSelected > 0 && (
@@ -1367,7 +1423,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                 disabled={isSaving}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? (isFirstCheckIn ? 'Processing...' : 'Saving...') : (isFirstCheckIn ? 'Next' : 'Save')}
               </button>
             </div>
           </div>
@@ -1405,6 +1461,24 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
               display: none;
             }
           `}</style>
+
+      {/* Post-Check-in Modal - Shown after first check-in */}
+      {showPostCheckinModal && postCheckinData && (
+        <PostCheckinModal
+          isOpen={showPostCheckinModal}
+          onClose={() => {
+            setShowPostCheckinModal(false);
+            onClose(); // Close the main check-in modal too
+          }}
+          onContinue={() => {
+            setShowPostCheckinModal(false);
+            onClose(); // Close the main check-in modal and proceed to next step
+          }}
+          dayOneData={postCheckinData.dayOneData}
+          communityStats={postCheckinData.communityStats}
+          personalizedInsight={postCheckinData.personalizedInsight}
+        />
+      )}
     </div>
   );
 }
