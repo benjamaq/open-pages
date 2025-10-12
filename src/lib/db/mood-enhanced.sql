@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS daily_entries (
   night_wakes smallint,                            -- optional
   tags text[],                                     -- array of context tags
   journal text,                                    -- free text notes
+  symptoms text[] default '{}'::text[],            -- array of symptom slugs
+  pain_locations text[] default '{}'::text[],      -- array of pain location slugs
+  pain_types text[] default '{}'::text[],          -- array of pain type slugs
+  custom_symptoms text[] default '{}'::text[],     -- array of custom symptom strings
   
   -- frozen point-in-time context (snapshot of what was active that day)
   meds jsonb NOT NULL DEFAULT '[]'::jsonb,         -- [{id,name,type,dose,unit,schedule}]
@@ -97,7 +101,11 @@ CREATE OR REPLACE FUNCTION upsert_daily_entry_and_snapshot(
   p_sleep_hours numeric DEFAULT NULL,
   p_night_wakes smallint DEFAULT NULL,
   p_tags text[] DEFAULT NULL,
-  p_journal text DEFAULT NULL
+  p_journal text DEFAULT NULL,
+  p_symptoms text[] DEFAULT '{}'::text[],
+  p_pain_locations text[] DEFAULT '{}'::text[],
+  p_pain_types text[] DEFAULT '{}'::text[],
+  p_custom_symptoms text[] DEFAULT '{}'::text[]
 ) RETURNS daily_entries
 LANGUAGE plpgsql
 AS $$
@@ -146,11 +154,11 @@ BEGIN
   -- Upsert the daily entry
   INSERT INTO daily_entries AS de (
     user_id, local_date, mood, energy, sleep_quality, pain, 
-    sleep_hours, night_wakes, tags, journal,
+    sleep_hours, night_wakes, tags, journal, symptoms, pain_locations, pain_types, custom_symptoms,
     meds, protocols, activity, devices, wearables, updated_at
   ) VALUES (
     p_user_id, p_local_date, p_mood, p_energy, p_sleep_quality, p_pain,
-    p_sleep_hours, p_night_wakes, p_tags, p_journal,
+    p_sleep_hours, p_night_wakes, p_tags, p_journal, p_symptoms, p_pain_locations, p_pain_types, p_custom_symptoms,
     v_meds, v_protocols, v_activity, v_devices, v_wearables, now()
   )
   ON CONFLICT (user_id, local_date)
@@ -163,6 +171,10 @@ BEGIN
     night_wakes = EXCLUDED.night_wakes,
     tags = EXCLUDED.tags,
     journal = EXCLUDED.journal,
+    symptoms = EXCLUDED.symptoms,
+    pain_locations = EXCLUDED.pain_locations,
+    pain_types = EXCLUDED.pain_types,
+    custom_symptoms = EXCLUDED.custom_symptoms,
     meds = EXCLUDED.meds,
     protocols = EXCLUDED.protocols,
     activity = EXCLUDED.activity,

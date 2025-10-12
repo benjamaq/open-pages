@@ -19,7 +19,13 @@ interface DayData {
 }
 
 export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps) {
-  const [currentMonth, setCurrentMonth] = useState('2025-09'); // Start with September 2025
+  // Initialize with current month
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return now.toLocaleDateString('sv-SE').slice(0, 7); // Format: YYYY-MM
+  };
+  
+  const [currentMonth, setCurrentMonth] = useState(getCurrentMonth());
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('mood');

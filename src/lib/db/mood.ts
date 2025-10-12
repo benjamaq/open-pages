@@ -15,6 +15,10 @@ export type DailyEntry = {
   night_wakes?: number | null;
   tags?: string[] | null;
   journal?: string | null;
+  symptoms?: string[] | null;
+  pain_locations?: string[] | null;
+  pain_types?: string[] | null;
+  custom_symptoms?: string[] | null;
   meds?: any[] | null;
   protocols?: any[] | null;
   activity?: any[] | null;
@@ -33,6 +37,10 @@ export type SaveDailyEntryInput = {
   night_wakes?: number | null;
   tags?: string[] | null;
   journal?: string | null;
+  symptoms?: string[] | null;
+  pain_locations?: string[] | null;
+  pain_types?: string[] | null;
+  custom_symptoms?: string[] | null;
   completedItems?: string[] | null; // Array of completed item keys from localStorage
   wearables?: any | null; // Wearables data (recovery_score, sleep_score, etc.)
 };
@@ -72,6 +80,10 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_night_wakes: input.night_wakes,
       p_tags: input.tags,
       p_journal: input.journal,
+      p_symptoms: input.symptoms || [],
+      p_pain_locations: input.pain_locations || [],
+      p_pain_types: input.pain_types || [],
+      p_custom_symptoms: input.custom_symptoms || [],
       p_completed_items: input.completedItems,
       p_wearables: input.wearables
     })
@@ -92,6 +104,10 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
           night_wakes: input.night_wakes,
           tags: input.tags,
           journal: input.journal,
+          symptoms: input.symptoms || [],
+          pain_locations: input.pain_locations || [],
+          pain_types: input.pain_types || [],
+          custom_symptoms: input.custom_symptoms || [],
           wearables: input.wearables
         }, { onConflict: 'user_id,local_date' })
         .select()

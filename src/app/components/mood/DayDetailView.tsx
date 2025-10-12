@@ -26,6 +26,10 @@ interface DayData {
   pain: number | null;
   tags: string[] | null;
   journal: string | null;
+  symptoms: string[] | null;
+  pain_locations: string[] | null;
+  pain_types: string[] | null;
+  custom_symptoms: string[] | null;
   meds: any[] | null;
   protocols: any[] | null;
   activity: any[] | null;
@@ -44,10 +48,11 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
       // For public profiles, use the passed mood data instead of making an API call
       if (isPublicProfile && moodData) {
         const dayEntry = moodData.find(entry => entry.date === date);
-        console.log('Public profile - Day data from moodData:', dayEntry);
-        console.log('Public profile - meds:', dayEntry?.meds);
-        console.log('Public profile - protocols:', dayEntry?.protocols);
-        console.log('Public profile - activity:', dayEntry?.activity);
+        console.log('🔍 DayDetailView - Public profile - Day data from moodData:', dayEntry);
+        console.log('🔍 DayDetailView - Public profile - tags:', dayEntry?.tags);
+        console.log('🔍 DayDetailView - Public profile - meds:', dayEntry?.meds);
+        console.log('🔍 DayDetailView - Public profile - protocols:', dayEntry?.protocols);
+        console.log('🔍 DayDetailView - Public profile - activity:', dayEntry?.activity);
         console.log('Public profile - devices:', dayEntry?.devices);
         setDayData(dayEntry || null);
         setLoading(false);
@@ -58,11 +63,12 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
       const response = await fetch(`/api/mood/day?date=${date}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('Day data loaded:', data);
-        console.log('Day data meds:', data.entry?.meds);
-        console.log('Day data protocols:', data.entry?.protocols);
-        console.log('Day data activity:', data.entry?.activity);
-        console.log('Day data devices:', data.entry?.devices);
+        console.log('🔍 DayDetailView - Day data loaded:', data);
+        console.log('🔍 DayDetailView - API tags:', data.entry?.tags);
+        console.log('🔍 DayDetailView - Day data meds:', data.entry?.meds);
+        console.log('🔍 DayDetailView - Day data protocols:', data.entry?.protocols);
+        console.log('🔍 DayDetailView - Day data activity:', data.entry?.activity);
+        console.log('🔍 DayDetailView - Day data devices:', data.entry?.devices);
         console.log('=== WEARABLES DEBUG ===');
         console.log('Day data wearables:', data.entry?.wearables);
         console.log('Wearables device name:', data.entry?.wearables?.device);
@@ -101,11 +107,93 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
     });
   };
 
-  const getSelectedChips = () => {
+  const getMoodChips = () => {
+    if (!dayData?.tags || !Array.isArray(dayData.tags)) {
+      console.log('🔍 DayDetailView - No tags data:', dayData?.tags);
+      return [];
+    }
+    console.log('🔍 DayDetailView - dayData.tags:', dayData.tags);
+    console.log('🔍 DayDetailView - dayData full:', dayData);
+    
+    const chips = dayData.tags.map(tag => {
+      const chip = CHIP_CATALOG.find(c => c.slug === tag);
+      console.log(`🔍 DayDetailView - Looking for tag "${tag}":`, chip);
+      return chip;
+    }).filter(Boolean);
+    
+    console.log('🔍 DayDetailView - all found chips:', chips);
+    
+    // Filter for expressive mood chips only
+    const moodChips = chips.filter(chip => {
+      const isExpressive = chip?.category?.startsWith('expressive');
+      console.log(`🔍 DayDetailView - Chip "${chip?.label}" (${chip?.slug}) - category: ${chip?.category}, isExpressive: ${isExpressive}`);
+      return isExpressive;
+    });
+    console.log('🔍 DayDetailView - mood chips (expressive only):', moodChips);
+    console.log('🔍 DayDetailView - chip categories:', chips.map(c => ({ label: c?.label, category: c?.category })));
+    return moodChips;
+  };
+
+  const getPainChips = () => {
     if (!dayData?.tags || !Array.isArray(dayData.tags)) return [];
-    return dayData.tags.map(tag => 
+    const chips = dayData.tags.map(tag => 
       CHIP_CATALOG.find(chip => chip.slug === tag)
     ).filter(Boolean);
+    
+    // Filter for pain/symptom chips
+    const painChips = chips.filter(chip => 
+      chip?.category === 'pain' || chip?.category === 'illness'
+    );
+    console.log('🔍 DayDetailView - pain chips:', painChips);
+    return painChips;
+  };
+
+  const getContextualChips = () => {
+    if (!dayData?.tags || !Array.isArray(dayData.tags)) return [];
+    const chips = dayData.tags.map(tag => 
+      CHIP_CATALOG.find(chip => chip.slug === tag)
+    ).filter(Boolean);
+    
+    // Filter for contextual chips (everything except expressive and pain)
+    const contextualChips = chips.filter(chip => 
+      chip?.category && 
+      !chip.category.startsWith('expressive') && 
+      chip.category !== 'pain' && 
+      chip.category !== 'illness'
+    );
+    console.log('🔍 DayDetailView - contextual chips:', contextualChips);
+    return contextualChips;
+  };
+
+  // Helper functions for pain descriptors
+  const formatSymptom = (symptom: string) => {
+    return symptom.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  const formatPainLocation = (location: string) => {
+    return location.charAt(0).toUpperCase() + location.slice(1);
+  };
+
+  const formatPainType = (type: string) => {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  // Calculate daily readiness score
+  const calculateReadinessScore = () => {
+    if (!dayData) return 0;
+    const mood = dayData.mood ?? 5;
+    const sleep = dayData.sleep_quality ?? 5;
+    const pain = dayData.pain ?? 0;
+    const painInverted = 10 - pain;
+    const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4);
+    return Math.round(score * 10) / 10;
+  };
+
+  const getReadinessDisplay = (score: number) => {
+    if (score >= 8) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excellent', emoji: '🚀' };
+    if (score >= 6) return { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Good', emoji: '👍' };
+    if (score >= 4) return { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Fair', emoji: '⚡' };
+    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Poor', emoji: '😴' };
   };
 
   const getMoodColor = (mood: number | null) => {
@@ -196,41 +284,60 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
             </div>
           ) : dayData ? (
             <div className="space-y-6">
-              {/* Mood Metrics */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Heart className="w-4 h-4 text-gray-600 mr-1" />
-                    <span className="text-sm font-medium text-gray-700">Mood</span>
+              {/* Daily Readiness Score */}
+              <div className="text-center py-4">
+                <div className="flex items-center justify-center space-x-3">
+                  <span className={`text-3xl font-bold ${getReadinessDisplay(calculateReadinessScore()).color}`}>
+                    {calculateReadinessScore()}
+                  </span>
+                  <span className="text-xl text-gray-400">/10</span>
+                  <div className="text-base font-medium text-gray-700">
+                    Daily Readiness Score
+                  </div>
+                  <div className="text-2xl">
+                    {getReadinessDisplay(calculateReadinessScore()).emoji}
+                  </div>
+                </div>
+                <div className={`text-sm font-medium mt-1 ${getReadinessDisplay(calculateReadinessScore()).color}`}>
+                  {getReadinessDisplay(calculateReadinessScore()).label}
+                </div>
+              </div>
+
+              {/* Mood Metrics - Smaller */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-center mb-1">
+                    <Heart className="w-3 h-3 text-gray-600 mr-1" />
+                    <span className="text-xs font-medium text-gray-700">Mood</span>
                   </div>
                   <div 
-                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-lg"
+                    className="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm"
                     style={{ backgroundColor: getMoodColor(dayData.mood) }}
                   >
                     {dayData.mood || '—'}
                   </div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Moon className="w-4 h-4 text-gray-600 mr-1" />
-                    <span className="text-sm font-medium text-gray-700">Sleep</span>
+                <div className="text-center bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-center mb-1">
+                    <Moon className="w-3 h-3 text-gray-600 mr-1" />
+                    <span className="text-xs font-medium text-gray-700">Sleep</span>
                   </div>
                   <div 
-                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-lg"
+                    className="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm"
                     style={{ backgroundColor: getSleepColor(dayData.sleep_quality) }}
                   >
                     {dayData.sleep_quality || '—'}
                   </div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Zap className="w-4 h-4 text-gray-600 mr-1" />
-                    <span className="text-sm font-medium text-gray-700">Pain</span>
+                <div className="text-center bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-center mb-1">
+                    <Zap className="w-3 h-3 text-gray-600 mr-1" />
+                    <span className="text-xs font-medium text-gray-700">Pain</span>
                   </div>
                   <div 
-                    className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-lg"
+                    className="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm"
                     style={{ backgroundColor: getPainColor(dayData.pain) }}
                   >
                     {dayData.pain || '—'}
@@ -238,15 +345,136 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                 </div>
               </div>
 
-              {/* Tags */}
-              {getSelectedChips().length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Context</h3>
+              {/* How I was Feeling - Mood Chips */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <span className="text-lg mr-2">✨</span>
+                  How I was Feeling
+                </h3>
+                {getMoodChips().length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {getSelectedChips().map((chip, index) => (
+                    {getMoodChips().map((chip, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 text-[10px] xs:text-sm bg-gray-100 text-gray-700 rounded-full"
+                        className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                      >
+                        {chip?.icon} {chip?.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic">
+                    No mood chips selected for this day
+                  </div>
+                )}
+              </div>
+
+              {/* Pain & Symptoms */}
+              {(getPainChips().length > 0 || dayData?.symptoms?.length || dayData?.pain_locations?.length || dayData?.pain_types?.length || dayData?.custom_symptoms?.length) && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <span className="text-lg mr-2">🩹</span>
+                    Pain & Symptoms
+                  </h3>
+                  
+                  {/* Pain chips from CHIP_CATALOG */}
+                  {getPainChips().length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {getPainChips().map((chip, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-2 text-sm bg-red-50 border border-red-200 text-red-800 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            {chip?.icon} {chip?.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Symptoms */}
+                  {dayData?.symptoms && dayData.symptoms.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Symptoms</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {dayData.symptoms.map((symptom, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                          >
+                            {formatSymptom(symptom)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Symptoms */}
+                  {dayData?.custom_symptoms && dayData.custom_symptoms.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Custom Symptoms</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {dayData.custom_symptoms.map((symptom, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                          >
+                            {symptom}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pain Locations */}
+                  {dayData?.pain_locations && dayData.pain_locations.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Pain Locations</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {dayData.pain_locations.map((location, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                          >
+                            {formatPainLocation(location)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pain Types */}
+                  {dayData?.pain_types && dayData.pain_types.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Pain Types</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {dayData.pain_types.map((type, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
+                          >
+                            {formatPainType(type)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Contextual Elements */}
+              {getContextualChips().length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <span className="text-lg mr-2">🌍</span>
+                    Contextual Elements
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {getContextualChips().map((chip, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm"
                       >
                         {chip?.icon} {chip?.label}
                       </span>
@@ -257,9 +485,9 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
 
               {/* Journal */}
               {dayData.journal && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Journal & Notes</h3>
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Journal & Notes</h3>
+                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-sm text-gray-700">
                     {dayData.journal}
                   </div>
                 </div>

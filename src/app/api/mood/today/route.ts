@@ -68,7 +68,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { mood, sleep_quality, pain, tags, journal } = body;
+    const { mood, sleep_quality, pain, tags, journal, symptoms, pain_locations, pain_types, custom_symptoms } = body;
+    
+    console.log('🔍 API - Received tags:', tags);
+    console.log('🔍 API - Full body:', body);
 
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
@@ -81,7 +84,11 @@ export async function POST(request: Request) {
       p_sleep_quality: sleep_quality || null,
       p_pain: pain || null,
       p_tags: tags || [],
-      p_journal: journal || null
+      p_journal: journal || null,
+      p_symptoms: symptoms || [],
+      p_pain_locations: pain_locations || [],
+      p_pain_types: pain_types || [],
+      p_custom_symptoms: custom_symptoms || []
     });
 
     if (error) {

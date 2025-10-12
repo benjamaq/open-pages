@@ -116,12 +116,42 @@ export default function TodaySnapshot({
   }, []); // Only load once on mount
 
 
-  // Get selected chips (max 4)
+  // Get selected chips (max 4) - tags are now in slug format
   const selectedChips = todayEntry?.tags?.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
   const displayChips = selectedChips.slice(0, 4);
+  
+  // Debug logging to see what's happening
+  console.log('🔍 TodaySnapshot - todayEntry.tags:', todayEntry?.tags);
+  console.log('🔍 TodaySnapshot - selectedChips:', selectedChips);
+  console.log('🔍 TodaySnapshot - displayChips:', displayChips);
+
+  // 🎯 Calculate Readiness Score (Mood 20%, Sleep 40%, Pain 40%)
+  const readinessScore = useMemo(() => {
+    const mood = todayEntry?.mood ?? 5;
+    const sleep = todayEntry?.sleep_quality ?? 5;
+    const pain = todayEntry?.pain ?? 0;
+    
+    // Pain is inverted (0 = best, 10 = worst)
+    const painInverted = 10 - pain;
+    
+    // Calculate weighted score
+    const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4);
+    
+    // Round to 1 decimal place
+    return Math.round(score * 10) / 10;
+  }, [todayEntry?.mood, todayEntry?.sleep_quality, todayEntry?.pain]);
+
+  // Get color and label for readiness score
+  const getReadinessDisplay = (score: number) => {
+    if (score >= 8) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excellent', emoji: '🚀' };
+    if (score >= 6.5) return { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Good', emoji: '✨' };
+    if (score >= 5) return { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Moderate', emoji: '😐' };
+    if (score >= 3.5) return { color: 'text-orange-600', bg: 'bg-orange-50', label: 'Low', emoji: '⚠️' };
+    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Rest Day', emoji: '🛌' };
+  };
 
   // Calculate 7-day averages (memoized for performance)
   const { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep } = useMemo(() => {
@@ -204,63 +234,6 @@ export default function TodaySnapshot({
       {/* Single Column Layout */}
       <div className="w-full">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 sm:px-6 pt-2 pb-6">
-          <h3 className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#0F1115' }}>Mood Tracker</h3>
-          <div className="flex items-center space-x-2 sm:space-x-3 ml-2 sm:ml-0">
-            <button 
-              onClick={onEditToday}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
-            >
-              Daily Check-in
-            </button>
-            <FirstTimeTooltip
-              id="heatmap-hover"
-              message="Click any day to see what you were taking and how you felt"
-              trigger="hover"
-              position="bottom"
-            >
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowHeatmap(!showHeatmap)
-                    // Mark heatmap as explored for WhatsNextCard
-                    if (!showHeatmap) {
-                      localStorage.setItem('heatmapExplored', 'true')
-                    }
-                  }}
-                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
-                    showHeatmap 
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
-                      : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
-                  }`}
-                  aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                  title="Monthly heatmap"
-                >
-                  <Calendar 
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    style={{ 
-                      color: 'white',
-                      fill: 'none',
-                      stroke: 'white',
-                      strokeWidth: '2'
-                    }} 
-                  />
-                </button>
-                <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
-                  {showHeatmap ? 'Hide Heatmap' : 'Heatmap'}
-                </span>
-              </div>
-            </FirstTimeTooltip>
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-              aria-label={collapsed ? 'Expand' : 'Collapse'}
-            >
-              <ChevronDown className={`w-5 h-5 transition-transform ${!collapsed ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
-            </button>
-          </div>
-        </div>
 
         {/* Collapsible Content */}
         {!collapsed && (
@@ -272,22 +245,79 @@ export default function TodaySnapshot({
               </div>
             )}
 
-            {/* Chips Row - Mobile 2x2 grid, Desktop side-by-side */}
+            {/* Header Row: Title + Buttons */}
+            <div className="flex items-center justify-between mb-4">
+              {/* Mood Tracker Title - Left */}
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Mood Tracker</h2>
+              
+              {/* Buttons - Right Side */}
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <button
+                  onClick={onEditToday}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                >
+                  Daily Check-in
+                </button>
+                
+                <FirstTimeTooltip
+                  id="heatmap-hover"
+                  message="Click any day to see what you were taking and how you felt"
+                  trigger="hover"
+                  position="bottom"
+                >
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setShowHeatmap(!showHeatmap)
+                        // Mark heatmap as explored for WhatsNextCard
+                        if (!showHeatmap) {
+                          localStorage.setItem('heatmapExplored', 'true')
+                        }
+                      }}
+                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                        showHeatmap 
+                          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
+                          : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
+                      }`}
+                      aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                      title="Monthly heatmap"
+                    >
+                      <Calendar 
+                        className="w-3 h-3 sm:w-4 sm:h-4"
+                        style={{ 
+                          color: 'white',
+                          fill: 'none',
+                          stroke: 'white',
+                          strokeWidth: '2'
+                        }} 
+                      />
+                    </button>
+                    <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
+                      {showHeatmap ? 'Hide' : 'Heatmap'}
+                    </span>
+                  </div>
+                </FirstTimeTooltip>
+              </div>
+            </div>
+
+            {/* Mood Chips Row - Centered */}
             {displayChips.length > 0 && (
-              <div className="grid grid-cols-2 gap-1 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
-                {displayChips.map((chip, index) => (
-                  <span
-                    key={index}
-                    className="px-1.5 py-0.5 text-[10px] sm:px-4 sm:py-2 sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight truncate"
-                  >
-                    {chip?.icon} {chip?.label}
-                  </span>
-                ))}
+              <div className="mb-4 flex justify-center">
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {displayChips.map((chip, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {chip?.icon} {chip?.label}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
-            <div className="flex justify-between items-center mb-5 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
+            <div className="flex justify-between items-center mb-3 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
               <MetricPill 
                 label="Mood" 
                 value={todayEntry?.mood ?? 0} 
@@ -313,20 +343,51 @@ export default function TodaySnapshot({
                 className="w-full"
               />
             </div>
+            
+            {/* Description under sliders */}
+            <div className="text-xs text-gray-500 text-center mb-5">
+              These metrics and your contextual factors will appear in your daily summary when you click on your heatmap as a record of what was happening that day.
+            </div>
 
-            {/* Weekly Averages and Wearables */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-16">
-              <div className="text-xs sm:text-base text-gray-500 text-center">
-                <div>This week's average: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
+            {/* Bottom Row: Today's Averages + Readiness Score + Wearables */}
+            <div className="flex items-center justify-between mt-6">
+              {/* Today's Averages - Left (small grey text) */}
+              <div className="text-xs text-gray-500">
+                <div>Today's average: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
               </div>
               
-              <div className="text-xs sm:text-base text-gray-500 text-center">
-                {todayEntry?.wearables?.device && avgRecovery !== '—' && `${todayEntry.wearables.device} Recovery ${avgRecovery}`}
-                {todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
-                {todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep ${avgWearableSleep}`}
-                {!todayEntry?.wearables?.device && avgRecovery !== '—' && `Recovery ${avgRecovery}`}
-                {!todayEntry?.wearables?.device && avgRecovery !== '—' && avgWearableSleep !== '—' && ' • '}
-                {!todayEntry?.wearables?.device && avgWearableSleep !== '—' && `Sleep Score ${avgWearableSleep}`}
+              {/* Readiness Score - Center (compact with black outline) */}
+              <div className="flex items-center space-x-3" onClick={onEditToday}>
+                <div className="border-2 border-black rounded-lg p-3 bg-white cursor-pointer hover:shadow-md transition-all">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
+                      {readinessScore}
+                    </span>
+                    <span className="text-lg text-gray-400">/10</span>
+                  </div>
+                </div>
+                <div className="text-sm font-medium text-gray-700">
+                  Daily Readiness Score
+                </div>
+              </div>
+              
+              {/* Wearables - Right (small grey text) */}
+              <div className="text-xs text-gray-500 text-right">
+                {todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                  <div>
+                    <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
+                    {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                  </div>
+                )}
+                {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                  <div>
+                    <div>Recovery: {avgRecovery}</div>
+                    {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                  </div>
+                )}
+                {!todayEntry?.wearables?.device && avgRecovery === '—' && (
+                  <div>No wearables data</div>
+                )}
               </div>
             </div>
 

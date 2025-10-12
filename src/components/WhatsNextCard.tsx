@@ -22,11 +22,8 @@ export default function WhatsNextCard({ profile }: WhatsNextCardProps) {
     // Check if card was previously dismissed
     const wasDismissed = localStorage.getItem('whatsNextDismissed') === 'true'
     
-    // On localhost, ignore dismiss status for testing
-    const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    
-    // Show card only if onboarding is complete AND not previously dismissed (except on localhost)
-    setIsVisible(hasCompletedOnboarding && (!wasDismissed || isLocalhost))
+    // Show card only if onboarding is complete AND not previously dismissed
+    setIsVisible(hasCompletedOnboarding && !wasDismissed)
   }, [profile])
 
   const handleDismiss = () => {
