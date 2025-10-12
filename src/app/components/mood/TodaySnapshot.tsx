@@ -344,50 +344,95 @@ export default function TodaySnapshot({
               />
             </div>
             
-            {/* Description under sliders */}
-            <div className="text-xs text-gray-500 text-center mb-5">
+            {/* Description under sliders - Hidden on mobile */}
+            <div className="hidden sm:block text-xs text-gray-500 text-center mb-5">
               These metrics and your contextual factors will appear in your daily summary when you click on your heatmap as a record of what was happening that day.
             </div>
 
             {/* Bottom Row: Today's Averages + Readiness Score + Wearables */}
-            <div className="flex items-center justify-between mt-6">
-              {/* Today's Averages - Left (small grey text) */}
-              <div className="text-xs text-gray-500">
-                <div>Today's average: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
-              </div>
-              
-              {/* Readiness Score - Center (compact with black outline) */}
-              <div className="flex items-center space-x-3" onClick={onEditToday}>
-                <div className="border-2 border-black rounded-lg p-3 bg-white cursor-pointer hover:shadow-md transition-all">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                      {readinessScore}
-                    </span>
-                    <span className="text-lg text-gray-400">/10</span>
+            <div className="mt-6">
+              {/* Desktop Layout */}
+              <div className="hidden sm:flex items-center justify-between">
+                {/* Today's Averages - Left (small grey text) */}
+                <div className="text-xs text-gray-500">
+                  <div>Today's average: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
+                </div>
+                
+                {/* Readiness Score - Center (compact with black outline) */}
+                <div className="flex items-center space-x-3" onClick={onEditToday}>
+                  <div className="border-2 border-black rounded-lg p-3 bg-white cursor-pointer hover:shadow-md transition-all">
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
+                        {readinessScore}
+                      </span>
+                      <span className="text-lg text-gray-400">/10</span>
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium text-gray-700">
+                    Daily Readiness Score
                   </div>
                 </div>
-                <div className="text-sm font-medium text-gray-700">
-                  Daily Readiness Score
+                
+                {/* Wearables - Right (small grey text) */}
+                <div className="text-xs text-gray-500 text-right">
+                  {todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                    <div>
+                      <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
+                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                    </div>
+                  )}
+                  {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                    <div>
+                      <div>Recovery: {avgRecovery}</div>
+                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                    </div>
+                  )}
+                  {!todayEntry?.wearables?.device && avgRecovery === '—' && (
+                    <div>No wearables data</div>
+                  )}
                 </div>
               </div>
-              
-              {/* Wearables - Right (small grey text) */}
-              <div className="text-xs text-gray-500 text-right">
-                {todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                  <div>
-                    <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
-                    {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+
+              {/* Mobile Layout */}
+              <div className="sm:hidden space-y-3">
+                {/* Readiness Score - Top on mobile */}
+                <div className="flex items-center justify-center space-x-2" onClick={onEditToday}>
+                  <div className="border-2 border-black rounded-lg p-2 bg-white cursor-pointer hover:shadow-md transition-all">
+                    <div className="flex items-center space-x-1">
+                      <span className={`text-xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
+                        {readinessScore}
+                      </span>
+                      <span className="text-sm text-gray-400">/10</span>
+                    </div>
                   </div>
-                )}
-                {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                  <div>
-                    <div>Recovery: {avgRecovery}</div>
-                    {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                  <div className="text-xs font-medium text-gray-700">
+                    Daily Readiness
                   </div>
-                )}
-                {!todayEntry?.wearables?.device && avgRecovery === '—' && (
-                  <div>No wearables data</div>
-                )}
+                </div>
+                
+                {/* Today's Averages - Center on mobile */}
+                <div className="text-xs text-gray-500 text-center">
+                  <div>Today: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
+                </div>
+                
+                {/* Wearables - Bottom on mobile */}
+                <div className="text-xs text-gray-500 text-center">
+                  {todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                    <div>
+                      <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
+                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                    </div>
+                  )}
+                  {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
+                    <div>
+                      <div>Recovery: {avgRecovery}</div>
+                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
+                    </div>
+                  )}
+                  {!todayEntry?.wearables?.device && avgRecovery === '—' && (
+                    <div>No wearables data</div>
+                  )}
+                </div>
               </div>
             </div>
 

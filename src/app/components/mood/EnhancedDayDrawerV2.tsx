@@ -502,15 +502,22 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
   };
 
   const toggleTag = (tag: string) => {
+    console.log('🔍 toggleTag called with:', tag);
     setSelectedTags(prev => {
+      console.log('🔍 toggleTag - current selectedTags:', prev);
       if (prev.includes(tag)) {
         // Remove tag if already selected
-        return prev.filter(t => t !== tag);
+        const newTags = prev.filter(t => t !== tag);
+        console.log('🔍 toggleTag - removing tag, new tags:', newTags);
+        return newTags;
       } else if (prev.length < 4) {
         // Add tag if under limit
-        return [...prev, tag];
+        const newTags = [...prev, tag];
+        console.log('🔍 toggleTag - adding tag, new tags:', newTags);
+        return newTags;
       } else {
         // Already at limit, don't add
+        console.log('🔍 toggleTag - at limit, no change');
         return prev;
       }
     });
@@ -724,6 +731,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
                       {selectedTags.length} selected
                     </span>
                   )}
+                  {/* Debug logging */}
+                  {console.log('🔍 Today\'s Vibe - selectedTags:', selectedTags, 'length:', selectedTags.length)}
                 </div>
                 <ChevronDown 
                   className={`w-5 h-5 text-gray-500 transition-transform ${isVibeSectionOpen ? 'rotate-180' : ''}`}
