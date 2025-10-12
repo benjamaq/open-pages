@@ -274,19 +274,23 @@ export default function OnboardingModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto" style={{
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0" style={{
         scrollbarWidth: 'thin',
         scrollbarColor: '#d1d5db #f3f4f6',
         boxSizing: 'border-box'
       }}>
         {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 rounded-t-xl text-center">
-          <h1 className="text-xl font-bold">Welcome to BioStackr!</h1>
-          <p className="text-sm text-gray-300 mt-1">Let's get you set up in 4 quick steps</p>
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Welcome to BioStackr!</h1>
+              <p className="text-xs sm:text-sm text-gray-600">Let's get you set up in 4 quick steps</p>
+            </div>
+          </div>
         </div>
         
         {/* Progress Bar */}
-        <div className="bg-gray-100 p-3">
+        <div className="bg-gray-50 px-6 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1">
               <span className="text-xs font-medium text-gray-600">
@@ -319,7 +323,7 @@ export default function OnboardingModal({
 
         {/* Step 1: First Check-In - Uses Enhanced Check-in Drawer */}
         {currentStep === 1 && (
-          <div className="p-6">
+          <div className="px-6 py-6">
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">📊</span>
@@ -336,7 +340,7 @@ export default function OnboardingModal({
 
         {/* Step 2: Add First Supplement */}
         {currentStep === 2 && (
-          <div className="p-6">
+          <div className="px-6 py-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 Add Your First Supplement or Medication
@@ -418,7 +422,7 @@ export default function OnboardingModal({
 
         {/* Step 3: Create Profile */}
         {currentStep === 3 && (
-          <div className="p-6">
+          <div className="px-6 py-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 Want to share your journey?
@@ -472,7 +476,7 @@ export default function OnboardingModal({
 
         {/* Step 4: View Public Page */}
         {currentStep === 4 && (
-          <div className="p-6">
+          <div className="px-6 py-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 Your profile is ready!
