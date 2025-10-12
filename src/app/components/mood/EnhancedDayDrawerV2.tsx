@@ -196,7 +196,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
   const readinessScore = useMemo(() => {
     const mood = formData.mood ?? 5;
     const sleep = formData.sleep_quality ?? 5;
-    const pain = formData.pain ?? 0;
+    const pain = formData.pain ?? 5;
     
     // Pain is inverted (0 = best, 10 = worst), so we convert it
     const painInverted = 10 - pain;
@@ -720,7 +720,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                       type="range"
                       min="0"
                       max="10"
-                      value={formData.pain || 0}
+                      value={formData.pain || 5}
                       onChange={(e) => {
                         updateField('pain', parseInt(e.target.value));
                       }}
@@ -737,30 +737,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               </div>
             </div>
 
-            {/* 🎯 Readiness Score Display */}
-            <div className={`rounded-xl p-6 border-2 transition-all ${getReadinessDisplay(readinessScore).bg} border-gray-200`}>
+            {/* 🎯 Readiness Score Display - Compact */}
+            <div className={`rounded-lg p-3 border transition-all ${getReadinessDisplay(readinessScore).bg} border-gray-200`}>
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-gray-600 mb-1">Your Readiness Score</div>
-                  <div className="flex items-baseline space-x-2">
-                    <span className={`text-4xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                      {readinessScore}
-                    </span>
-                    <span className="text-lg text-gray-400">/10</span>
-                  </div>
-                  <div className={`text-sm font-medium mt-1 ${getReadinessDisplay(readinessScore).color}`}>
-                    {getReadinessDisplay(readinessScore).label}
-                  </div>
-                </div>
-                <div className="text-6xl">
-                  {getReadinessDisplay(readinessScore).emoji}
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-200/50">
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Mood: {formData.mood ?? 5}/10</div>
-                  <div>Sleep: {formData.sleep_quality ?? 5}/10</div>
-                  <div>Pain: {formData.pain ?? 0}/10</div>
+                <div className="text-sm font-medium text-gray-700">Today's Readiness Score</div>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
+                    {readinessScore}
+                  </span>
+                  <span className="text-sm text-gray-400">/10</span>
+                  <span className="text-xl ml-1">{getReadinessDisplay(readinessScore).emoji}</span>
                 </div>
               </div>
             </div>
@@ -868,7 +854,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               )}
             </div>
 
-            {/* Contextual Triggers - Collapsible */}
+            {/* Life Factors - Collapsible */}
             <div className="border border-gray-200 rounded-lg">
               <button
                 onClick={() => setIsContextSectionOpen(!isContextSectionOpen)}
@@ -876,7 +862,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🌍</span>
-                  <h3 className="text-base font-medium text-gray-900">Contextual Triggers</h3>
+                  <h3 className="text-base font-medium text-gray-900">Life Factors</h3>
                   {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
                   )}
@@ -989,7 +975,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               )}
             </div>
 
-            {/* Symptoms & Changes - Collapsible */}
+            {/* Symptoms - Collapsible */}
             <div className="border border-gray-200 rounded-lg">
               <button
                 onClick={() => setIsSymptomsSectionOpen(!isSymptomsSectionOpen)}
@@ -997,7 +983,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">💭</span>
-                  <h3 className="text-base font-medium text-gray-900">How I'm feeling</h3>
+                  <h3 className="text-base font-medium text-gray-900">Symptoms</h3>
                   {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
                   )}
