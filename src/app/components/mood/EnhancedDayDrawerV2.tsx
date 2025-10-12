@@ -710,9 +710,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, tod
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200/50">
                 <div className="text-xs text-gray-500 space-y-1">
-                  <div>Mood: {formData.mood ?? 5}/10 (20% weight)</div>
-                  <div>Sleep: {formData.sleep_quality ?? 5}/10 (40% weight)</div>
-                  <div>Pain: {formData.pain ?? 0}/10 (40% weight, inverted)</div>
+                  <div>Mood: {formData.mood ?? 5}/10</div>
+                  <div>Sleep: {formData.sleep_quality ?? 5}/10</div>
+                  <div>Pain: {formData.pain ?? 0}/10</div>
                 </div>
               </div>
             </div>
