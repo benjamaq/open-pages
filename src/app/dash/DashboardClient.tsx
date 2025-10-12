@@ -457,7 +457,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
   onManage: () => void
   onAdd: () => void
 }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(items.length === 0) // Collapse only if empty
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['morning']))
   // Use all items directly (no category filtering)
   const categoryFilteredItems = items
@@ -850,7 +850,7 @@ const ProtocolsCard = ({ items, onToggleComplete, completedItems, onManage, onAd
   onManage: () => void
   onAdd: () => void
 }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true) // Collapse by default
 
   return (
     <div 
@@ -958,7 +958,7 @@ const MovementCard = ({ items = [], onToggleComplete, completedItems, onManage, 
   onManage: () => void; 
   onAdd: () => void 
 }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true) // Collapse by default
 
   return (
     <div 
@@ -1063,7 +1063,7 @@ const MindfulnessCard = ({ items = [], onToggleComplete, completedItems, onManag
   onManage: () => void; 
   onAdd: () => void 
 }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true) // Collapse by default
 
   return (
     <div 
@@ -1653,7 +1653,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [selectedMoodDate, setSelectedMoodDate] = useState<string | null>(null)
   const [todayMoodEntry, setTodayMoodEntry] = useState(null)
   const [monthlyMoodData, setMonthlyMoodData] = useState([])
-  const [libraryCollapsed, setLibraryCollapsed] = useState(false)
+  const [libraryCollapsed, setLibraryCollapsed] = useState(true) // Collapse by default
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [profileMission, setProfileMission] = useState(profile.bio || '')
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)

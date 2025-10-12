@@ -33,6 +33,7 @@ export default function OnboardingModal({
   
   // Step 1 - Check-in drawer state
   const [showCheckinDrawer, setShowCheckinDrawer] = useState(false)
+  const [checkinCompleted, setCheckinCompleted] = useState(false)
   
   // Copy feedback
   const [copied, setCopied] = useState(false)
@@ -79,6 +80,9 @@ export default function OnboardingModal({
 
   const handleCheckinComplete = async () => {
     console.log('🎯 OnboardingModal - Check-in completed')
+    
+    // Mark check-in as completed
+    setCheckinCompleted(true)
     
     // Close the check-in drawer
     setShowCheckinDrawer(false)
@@ -322,7 +326,7 @@ export default function OnboardingModal({
         </div>
 
         {/* Step 1: First Check-In - Uses Enhanced Check-in Drawer */}
-        {currentStep === 1 && (
+        {currentStep === 1 && !checkinCompleted && (
           <div className="px-6 py-6">
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
