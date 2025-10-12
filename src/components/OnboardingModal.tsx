@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Check, Copy, ExternalLink } from 'lucide-react'
+import EnhancedDayDrawerV2 from '@/app/components/mood/EnhancedDayDrawerV2'
 
 interface OnboardingModalProps {
   isOpen: boolean
@@ -30,10 +31,8 @@ export default function OnboardingModal({
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null)
   const [publicLink, setPublicLink] = useState('')
   
-  // Step 1 - Check-in values
-  const [mood, setMood] = useState(5)
-  const [sleepQuality, setSleepQuality] = useState(5)
-  const [pain, setPain] = useState(5)
+  // Step 1 - Check-in drawer state
+  const [showCheckinDrawer, setShowCheckinDrawer] = useState(false)
   
   // Copy feedback
   const [copied, setCopied] = useState(false)
@@ -59,6 +58,11 @@ export default function OnboardingModal({
   useEffect(() => {
     console.log('🎯 OnboardingModal - Current step changed:', currentStep)
     
+    // Show check-in drawer when on Step 1
+    if (currentStep === 1) {
+      setShowCheckinDrawer(true)
+    }
+    
     // Generate public link when component mounts or step changes
     if (userProfile?.slug && !publicLink) {
       setPublicLink(`${window.location.origin}/biostackr/${userProfile.slug}?public=true`)
@@ -73,31 +77,13 @@ export default function OnboardingModal({
     }
   }
 
-  const handleStep1Complete = async () => {
-    setIsLoading(true)
+  const handleCheckinComplete = async () => {
+    console.log('🎯 OnboardingModal - Check-in completed')
+    
+    // Close the check-in drawer
+    setShowCheckinDrawer(false)
+    
     try {
-      // Save the daily entry using the mood API
-      const { saveDailyEntry } = await import('@/lib/db/mood')
-      
-      const entryData = {
-        localDate: new Date().toISOString().split('T')[0],
-        mood,
-        sleep_quality: sleepQuality,
-        pain,
-        sleep_hours: null,
-        night_wakes: null,
-        tags: selectedMoodChips,
-        journal: null,
-        completedItems: null,
-        wearables: null
-      }
-      
-      console.log('🎯 Onboarding Step 1 - Saving check-in:', entryData)
-      
-      const result = await saveDailyEntry(entryData)
-      
-      console.log('✅ Check-in saved successfully:', result)
-      
       // Enable follow stack by default
       await fetch('/api/profile/update', {
         method: 'POST',
@@ -107,12 +93,12 @@ export default function OnboardingModal({
         })
       })
       
-      // Let parent handler update the database (avoid double updates)
+      // Move to Step 2
       onStepComplete(1)
     } catch (error) {
-      console.error('❌ Error completing step 1:', error)
-    } finally {
-      setIsLoading(false)
+      console.error('❌ Error updating profile:', error)
+      // Still proceed to next step even if this fails
+      onStepComplete(1)
     }
   }
 
@@ -331,128 +317,20 @@ export default function OnboardingModal({
           </div>
         </div>
 
-        {/* Step 1: First Check-In */}
+        {/* Step 1: First Check-In - Uses Enhanced Check-in Drawer */}
         {currentStep === 1 && (
           <div className="p-6">
-            <div className="mb-4 text-center">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📊</span>
+              </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                How are you feeling today?
+                Complete Your First Check-In
               </h2>
-              <p className="text-sm text-gray-600">
-                Let's create your first data point. Track your mood, sleep quality, and pain levels.
+              <p className="text-sm text-gray-600 max-w-md mx-auto">
+                The check-in modal will open automatically. You only need to complete the 3 sliders (Mood, Sleep, Pain). All other sections are optional!
               </p>
             </div>
-            
-            <div className="space-y-4 mb-5">
-              {/* Mood Slider */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Mood</label>
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="10" 
-                    value={mood} 
-                    onChange={(e) => setMood(parseInt(e.target.value))}
-                    className="flex-1 h-2.5 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
-                    }}
-                  />
-                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
-                    {mood}/10
-                  </span>
-                </div>
-              </div>
-              
-              {/* Sleep Quality Slider */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Sleep Quality</label>
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="10" 
-                    value={sleepQuality}
-                    onChange={(e) => setSleepQuality(parseInt(e.target.value))}
-                    className="flex-1 h-2.5 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`
-                    }}
-                  />
-                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
-                    {sleepQuality}/10
-                  </span>
-                </div>
-              </div>
-              
-              {/* Pain Level Slider */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Pain Level</label>
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="10" 
-                    value={pain}
-                    onChange={(e) => setPain(parseInt(e.target.value))}
-                    className="flex-1 h-2.5 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
-                    }}
-                  />
-                  <span className="text-xs text-gray-500 min-w-[3.5rem] text-center">
-                    {pain}/10
-                  </span>
-                </div>
-              </div>
-              
-              {/* Mood Chips */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-900">How are you feeling?</label>
-                  <span className="text-xs text-gray-500">
-                    Choose up to 4
-                  </span>
-                </div>
-                <div className="border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto w-full" style={{
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: '#d1d5db #f3f4f6',
-                  boxSizing: 'border-box'
-                }}>
-                  <div className="flex flex-wrap gap-2">
-                    {moodChips.map((chip: any) => {
-                      const isSelected = selectedMoodChips.includes(chip.slug)
-                      const isDisabled = !isSelected && selectedMoodChips.length >= 4
-                      return (
-                        <button
-                          key={chip.slug}
-                          onClick={() => toggleMoodChip(chip.slug)}
-                          disabled={isDisabled}
-                          className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
-                            isSelected
-                              ? 'bg-indigo-50 border-indigo-300 text-indigo-800'
-                              : isDisabled
-                              ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {chip.icon} {chip.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleStep1Complete}
-              disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
-            >
-              {isLoading ? 'Logging...' : 'Continue'}
-            </button>
           </div>
         )}
 
@@ -666,6 +544,26 @@ export default function OnboardingModal({
           </div>
         )}
       </div>
+
+      {/* Enhanced Check-in Drawer - For First Check-In */}
+      {showCheckinDrawer && userProfile?.id && (
+        <EnhancedDayDrawerV2
+          isOpen={showCheckinDrawer}
+          onClose={handleCheckinComplete}
+          date={new Date().toISOString().split('T')[0]}
+          userId={userProfile.id}
+          isFirstCheckIn={true}
+          todayItems={{
+            supplements: [],
+            protocols: [],
+            movement: [],
+            mindfulness: [],
+            food: [],
+            gear: []
+          }}
+          initialData={null}
+        />
+      )}
     </div>
   )
 }
