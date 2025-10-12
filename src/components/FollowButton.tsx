@@ -69,20 +69,20 @@ export default function FollowButton({
 
       if (!response.ok) {
         console.error('🔍 API failed:', result)
-        setMessage(`❌ Failed to follow ${ownerName}'s stack. Please try again.`)
+        setMessage(`❌ Failed to follow ${ownerName}. Please try again.`)
         setIsLoading(false)
         return
       }
 
       // Only show success if API actually succeeded
       if (result.status === 'already_following') {
-        setMessage(`✅ You're already following ${ownerName}'s stack!`)
+        setMessage(`✅ You're already following ${ownerName}!`)
       } else if (result.status === 'pending') {
-        setMessage(`✅ Check your email to confirm following ${ownerName}'s stack!`)
+        setMessage(`✅ Check your email to confirm following ${ownerName}!`)
       } else if (result.status === 'following') {
-        setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
+        setMessage(`✅ You're now following ${ownerName}! You'll receive updates when they share changes.`)
       } else {
-        setMessage(`✅ You're now following ${ownerName}'s stack! You'll receive updates when they make changes.`)
+        setMessage(`✅ You're now following ${ownerName}! You'll receive updates when they share changes.`)
       }
 
       setShowEmailForm(false)
@@ -102,7 +102,7 @@ export default function FollowButton({
 
     } catch (error) {
       console.error('Email follow error:', error)
-      setMessage(`❌ Failed to follow ${ownerName}'s stack. Please try again.`)
+      setMessage(`❌ Failed to follow ${ownerName}. Please try again.`)
       setShowEmailForm(false)
       setIsLoading(false)
       
@@ -130,7 +130,7 @@ export default function FollowButton({
           className={`inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors ${className}`}
         >
           <Heart className="w-4 h-4 mr-2" />
-          {isLoading ? 'Following...' : 'Follow Stack'}
+          {isLoading ? 'Following...' : `Follow ${ownerName}`}
         </button>
       )}
 
@@ -139,7 +139,7 @@ export default function FollowButton({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Follow {ownerName}'s Stack</h3>
+              <h3 className="text-lg font-semibold">Follow {ownerName}</h3>
               <button
                 onClick={() => setShowEmailForm(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl"
@@ -149,7 +149,7 @@ export default function FollowButton({
             </div>
 
             <p className="text-sm text-gray-600 mb-4">
-              Enter your email to receive weekly updates when {ownerName} changes their public stack.
+              Enter your email to receive weekly updates when {ownerName} shares changes to their health journey.
             </p>
 
             <div className="space-y-4">

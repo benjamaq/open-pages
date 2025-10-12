@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const profileData = profile as any
-  const title = `${profileData.display_name}'s Health Stack`
+  const title = `${profileData.display_name}'s Health Journey`
   const description = profileData.bio || `Check out ${profileData.display_name}'s health and wellness journey, including their supplement stack, protocols, and daily routines.`
   const image = profileData.avatar_url || '/og-default.png'
   const url = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/biostackr/${slug}`
@@ -433,10 +433,10 @@ export default async function ProfilePage({ params, searchParams }: {
 
       {/* Profile Header - Clean Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Health Stack Heading - Centered and Prominent */}
+        {/* Health Journey Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            {profile.display_name ? `${profile.display_name}'s Stack` : 'My Stack'}
+            {profile.display_name ? `${profile.display_name}'s Health Journey` : 'My Health Journey'}
           </h2>
           <p className="text-sm text-gray-400 mt-2">
             Mood • Sleep • Pain • Supps/Meds • Protocols • Journal — with heatmap + day snapshots
