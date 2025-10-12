@@ -1088,7 +1088,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 </div>
 
                 {/* Pain details - only show if pain > 0 */}
-                {formData.pain && formData.pain > 0 && (
+                {(formData.pain || 5) > 0 && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
                     {/* Pain locations */}
                     <div>
