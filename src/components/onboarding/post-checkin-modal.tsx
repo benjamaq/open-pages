@@ -122,8 +122,8 @@ export default function PostCheckinModal({
           {/* Timeline Section */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
             <div className="flex items-center mb-3">
-              <Calendar className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="font-semibold text-gray-900">📅 What Happens Next</h3>
+              <span className="text-xl mr-2">📅</span>
+              <h3 className="font-semibold text-gray-900">What Happens Next</h3>
             </div>
             
             <div className="space-y-3">
@@ -176,7 +176,7 @@ export default function PostCheckinModal({
                 {getInsightIcon(personalizedInsight.type)}
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold mb-2">✏️ Today's Pain</h4>
+                <h4 className="font-semibold mb-2">💙 Today's Pain</h4>
                 <p className="text-sm leading-relaxed">
                   {getPainMessage(dayOneData.pain)}
                 </p>
@@ -188,7 +188,7 @@ export default function PostCheckinModal({
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <div className="flex items-center mb-2">
               <Users className="w-5 h-5 text-amber-600 mr-2" />
-              <h4 className="font-semibold text-amber-800">👥 You're Not Alone</h4>
+              <h4 className="font-semibold text-amber-800">You're Not Alone</h4>
             </div>
             <p className="text-sm text-amber-700">
               {getCommunityMessage(dayOneData.pain, communityStats.usersWithSimilarCondition)}
@@ -225,7 +225,7 @@ export default function PostCheckinModal({
             onClick={onContinue}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
           >
-            <span>Continue to Dashboard</span>
+            <span>Add Your First Supplement</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
