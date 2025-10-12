@@ -69,6 +69,17 @@ export default function OnboardingModal({
       setPublicLink(`${window.location.origin}/biostackr/${userProfile.slug}?public=true`)
     }
   }, [currentStep, userProfile, publicLink])
+
+  // Auto-advance to Step 2 when check-in drawer is closed on Step 1
+  useEffect(() => {
+    if (currentStep === 1 && !showCheckinDrawer && !checkinCompleted) {
+      console.log('🎯 OnboardingModal - Check-in drawer closed on Step 1, auto-advancing to Step 2')
+      // Auto-advance to Step 2 after a short delay
+      setTimeout(() => {
+        onStepComplete(1)
+      }, 500) // 500ms delay to ensure smooth transition
+    }
+  }, [currentStep, showCheckinDrawer, checkinCompleted, onStepComplete])
   
   const handleSkip = (stepToSkip: number) => {
     console.log('🎯 OnboardingModal - Skipping step:', stepToSkip)
