@@ -656,9 +656,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
 
           {/* Content */}
           <div className="px-6 py-6 space-y-6">
-            {/* How I feel (today) */}
+            {/* Sliders */}
             <div>
-              <h3 className="text-base font-medium text-gray-900 mb-4">How I feel (today)</h3>
               <div className="space-y-6">
                 {/* Mood */}
                 <div>
@@ -737,17 +736,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               </div>
             </div>
 
-            {/* 🎯 Readiness Score Display - Compact */}
-            <div className={`rounded-lg p-3 border transition-all ${getReadinessDisplay(readinessScore).bg} border-gray-200`}>
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-gray-700">Today's Readiness Score</div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                    {readinessScore}
-                  </span>
-                  <span className="text-sm text-gray-400">/10</span>
-                  <span className="text-xl ml-1">{getReadinessDisplay(readinessScore).emoji}</span>
-                </div>
+            {/* 🎯 Readiness Score Display - Standalone */}
+            <div className="text-center py-2">
+              <div className="flex items-center justify-center space-x-3">
+                <span className={`text-3xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
+                  {readinessScore}
+                </span>
+                <span className="text-lg text-gray-400">/10</span>
+                <span className="text-sm font-medium text-gray-700 ml-2">Today's Readiness Score</span>
+                <span className="text-2xl">{getReadinessDisplay(readinessScore).emoji}</span>
               </div>
             </div>
 
@@ -982,7 +979,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg">💭</span>
+                  <span className="text-lg">🏥</span>
                   <h3 className="text-base font-medium text-gray-900">Symptoms</h3>
                   {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
@@ -1159,12 +1156,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               )}
             </div>
 
-            {/* Save hint */}
-            <div className="text-xs text-gray-500 text-center py-2">
-              This will save: mood {formData.mood || 5}, sleep {formData.sleep_quality || 5}, pain {formData.pain || 0} • 
-              context {selectedContextChips.length} items • 
-              {selectedSymptoms.length + customSymptoms.length} symptoms
-            </div>
 
             {/* Wearables */}
             <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
@@ -1251,10 +1242,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               )}
             </details>
 
-            {/* Snapshot helper */}
-            <div className="text-xs text-gray-500 text-center py-2 border-t border-gray-100">
-              Auto-saves what you did (supps, meds, training, mindfulness) so you can compare against mood/sleep/pain later.
-            </div>
 
             {/* Save Message */}
             {saveMessage && (
