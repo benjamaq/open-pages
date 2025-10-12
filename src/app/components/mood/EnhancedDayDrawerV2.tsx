@@ -49,8 +49,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
   const [showPostCheckinModal, setShowPostCheckinModal] = useState(false);
   const [postCheckinData, setPostCheckinData] = useState<any>(null);
   
-  // Check if this is the user's first check-in
-  const { isFirstCheckIn, loading: firstCheckInLoading } = useFirstCheckIn(userId);
+  // Check if this is the user's first check-in (use hook only if not explicitly passed as prop)
+  const { isFirstCheckIn: isFirstCheckInFromHook, loading: firstCheckInLoading } = useFirstCheckIn(userId);
+  const isActuallyFirstCheckIn = isFirstCheckIn || isFirstCheckInFromHook;
 
   // 🎭 DEBUG: State Check
   console.log("🎭 EnhancedDrawerV2 State Check:", { 
@@ -89,7 +90,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
   // Collapsible section states
   // For first check-in (onboarding), all optional sections are collapsed by default
   // For regular check-ins, Today's Vibe is open by default
-  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(!isFirstCheckIn);
+  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(!isActuallyFirstCheckIn);
   const [isContextSectionOpen, setIsContextSectionOpen] = useState(false);
   const [isSymptomsSectionOpen, setIsSymptomsSectionOpen] = useState(false);
   const [isNotesSectionOpen, setIsNotesSectionOpen] = useState(false);
@@ -452,7 +453,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
         console.log('✅ Save successful:', result.data);
         
         // Check if this is the first check-in and show post-check-in modal
-        if (isFirstCheckIn && !firstCheckInLoading) {
+        if (isActuallyFirstCheckIn && !firstCheckInLoading) {
           try {
             const insightData = await generateFirstInsight({
               mood: formData.mood,
@@ -773,7 +774,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">✨</span>
                   <h3 className="text-base font-medium text-gray-900">Today's Vibe</h3>
-                  {isFirstCheckIn && (
+                  {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
                   )}
                   {selectedTags.length > 0 && (
@@ -876,7 +877,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🌍</span>
                   <h3 className="text-base font-medium text-gray-900">Contextual Triggers</h3>
-                  {isFirstCheckIn && (
+                  {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
                   )}
                   {selectedContextChips.length > 0 && (
@@ -997,7 +998,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">💭</span>
                   <h3 className="text-base font-medium text-gray-900">How I'm feeling</h3>
-                  {isFirstCheckIn && (
+                  {isActuallyFirstCheckIn && (
                     <span className="text-xs text-gray-400 font-normal">Optional</span>
                   )}
                   {(() => {
@@ -1423,7 +1424,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 disabled={isSaving}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                {isSaving ? (isFirstCheckIn ? 'Processing...' : 'Saving...') : (isFirstCheckIn ? 'Next' : 'Save')}
+                {isSaving ? (isActuallyFirstCheckIn ? 'Processing...' : 'Saving...') : (isActuallyFirstCheckIn ? 'Next' : 'Save')}
               </button>
             </div>
           </div>
