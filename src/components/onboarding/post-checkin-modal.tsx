@@ -88,10 +88,10 @@ export default function PostCheckinModal({
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Day 1 Complete! 🎉
+              First Check-In Complete! 🎉
             </h2>
             <p className="text-gray-600">
-              You've taken the first step toward understanding your patterns
+              Great start! Let's build your health stack
             </p>
           </div>
         </div>
