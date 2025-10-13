@@ -654,6 +654,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
             </div>
           </div>
 
+          {/* Welcome Message - Only for First Check-in */}
+          {isActuallyFirstCheckIn && (
+            <div className="px-6 pt-6 pb-2">
+              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 rounded-lg p-4 sm:p-5">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                  Welcome to BioStackr! 🎉
+                </h3>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                  We're really happy you're here. You've just taken the first step towards understanding your health patterns and finding what works for you. Let's get started with your first daily check-in.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           <div className="px-6 py-6 space-y-6">
             {/* Sliders */}
