@@ -2337,6 +2337,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 }}
                 onRefresh={loadTodayMoodEntry}
                 streak={streak}
+                userName={profile.display_name || 'User'}
                 />
               </div>
             )}

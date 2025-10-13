@@ -28,6 +28,7 @@ interface TodaySnapshotProps {
   onEditDay: (date: string) => void;
   onRefresh?: () => void;
   streak?: number;
+  userName?: string;
 }
 
 interface MetricPillProps {
@@ -90,7 +91,8 @@ export default function TodaySnapshot({
   onEditToday,
   onEditDay,
   onRefresh,
-  streak = 0
+  streak = 0,
+  userName = 'User'
 }: TodaySnapshotProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [collapsed, setCollapsed] = useState(false);
@@ -265,37 +267,35 @@ export default function TodaySnapshot({
                   trigger="hover"
                   position="bottom"
                 >
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setShowHeatmap(!showHeatmap)
-                        // Mark heatmap as explored for WhatsNextCard
-                        if (!showHeatmap) {
-                          localStorage.setItem('heatmapExplored', 'true')
-                        }
-                      }}
-                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
-                        showHeatmap 
-                          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
-                          : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
-                      }`}
-                      aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                      title="Monthly heatmap"
-                    >
-                      <Calendar 
-                        className="w-3 h-3 sm:w-4 sm:h-4"
-                        style={{ 
-                          color: 'white',
-                          fill: 'none',
-                          stroke: 'white',
-                          strokeWidth: '2'
-                        }} 
-                      />
-                    </button>
-                    <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-medium whitespace-nowrap">
-                      {showHeatmap ? 'Hide' : 'Heatmap'}
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => {
+                      setShowHeatmap(!showHeatmap)
+                      // Mark heatmap as explored for WhatsNextCard
+                      if (!showHeatmap) {
+                        localStorage.setItem('heatmapExplored', 'true')
+                      }
+                    }}
+                    className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-2 ${
+                      showHeatmap 
+                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
+                        : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
+                    }`}
+                    aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                    title="My Last 30 Days"
+                  >
+                    <Calendar 
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      style={{ 
+                        color: 'white',
+                        fill: 'none',
+                        stroke: 'white',
+                        strokeWidth: '2'
+                      }} 
+                    />
+        <span className="text-sm font-medium whitespace-nowrap">
+          {showHeatmap ? 'Hide' : 'My Last 30 Days'}
+        </span>
+                  </button>
                 </FirstTimeTooltip>
               </div>
             </div>

@@ -214,6 +214,16 @@ export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps
         </p>
       </div>
 
+      {/* Instruction Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div className="flex items-center space-x-2">
+          <span className="text-blue-600 text-lg">💡</span>
+          <p className="text-sm text-blue-800 leading-relaxed">
+            Click any day to see pain, mood, sleep, supplements, and notes from that day
+          </p>
+        </div>
+      </div>
+
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Day headers */}
