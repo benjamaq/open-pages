@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { X, Calendar, TrendingUp, Users, ArrowRight, CheckCircle } from 'lucide-react';
+import { saveUserCondition } from '@/lib/db/userCondition';
 
 interface PostCheckinModalProps {
   isOpen: boolean;
   onClose: () => void;
   onContinue: () => void;
+  userId: string;
+  userName: string;
   dayOneData: {
     mood: number | null;
     sleep_quality: number | null;
@@ -23,23 +26,65 @@ interface PostCheckinModalProps {
   };
 }
 
+const CONDITIONS = [
+  'Chronic pain',
+  'Fibromyalgia',
+  'CFS / ME',
+  'Autoimmune condition',
+  'ADHD',
+  'Perimenopause',
+  'Other / Not sure',
+];
+
 export default function PostCheckinModal({ 
   isOpen, 
   onClose, 
   onContinue, 
+  userId,
+  userName,
   dayOneData, 
   communityStats, 
   personalizedInsight 
 }: PostCheckinModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
+  const [conditionDetails, setConditionDetails] = useState('');
+  const [skipped, setSkipped] = useState(false);
+  const [showTypingAnimation, setShowTypingAnimation] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(0);
+      setSelectedCondition(null);
+      setConditionDetails('');
+      setSkipped(false);
+      setShowTypingAnimation(true);
+      
+      // Show typing animation for 1.5 seconds
+      const timer = setTimeout(() => {
+        setShowTypingAnimation(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // Generate Elli's welcome message based on pain level
+  const getElliWelcomeMessage = (pain: number | null) => {
+    if (pain === null) {
+      return `I can see you've completed your first check-in. That takes courage.\n\nI'm here to help you spot patterns and find what works for you.`;
+    }
+    
+    if (pain >= 7) {
+      return `I can see you're dealing with pain at ${pain}/10 today. That's brutal, and I'm sorry you're going through this.\n\nThe fact that you're here? That takes courage.`;
+    } else if (pain >= 4) {
+      return `I can see you logged pain at ${pain}/10 today. Managing, but not easy.\n\nThe fact that you're here? That takes courage.`;
+    } else {
+      return `I can see today's a lighter pain day at ${pain}/10. I'll watch what's different.\n\nThe fact that you're here? That takes courage.`;
+    }
+  };
 
   // Generate pain-specific message
   const getPainMessage = (pain: number | null) => {
@@ -52,6 +97,28 @@ export default function PostCheckinModal({
     } else {
       return `You logged pain at ${pain}/10 today—a lighter day. Tomorrow we'll start watching what kept it low. Small patterns. That's all we need.`;
     }
+  };
+
+  // Handle continue button click
+  const handleContinue = async () => {
+    // Save condition if provided
+    if (!skipped && selectedCondition) {
+      try {
+        await saveUserCondition(userId, {
+          primary: selectedCondition,
+          details: conditionDetails || null,
+        });
+      } catch (error) {
+        console.error('Failed to save condition:', error);
+        // Continue anyway - don't block user flow
+      }
+    }
+    
+    onContinue();
+  };
+
+  const handleSkip = () => {
+    setSkipped(true);
   };
 
   // Generate community message based on pain level
@@ -104,21 +171,83 @@ export default function PostCheckinModal({
             <X className="w-5 h-5 text-gray-500" />
           </button>
           
+          {/* Elli Avatar and Welcome */}
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              First Check-In Done 🎉
+            <div className="text-5xl mb-4">💙</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Hi {userName}, I'm Elli 💙
             </h2>
-            <p className="text-gray-600">
-              You just did the hardest part—showing up.
-            </p>
+            
+            {/* Typing animation effect */}
+            {showTypingAnimation ? (
+              <div className="flex items-center justify-center space-x-1 text-gray-500 h-20">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            ) : (
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {getElliWelcomeMessage(dayOneData.pain)}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Condition Capture Section */}
+          {!skipped && (
+            <div className="border-t border-gray-200 pt-6 -mt-6">
+              <p className="text-gray-800 font-medium mb-4 text-center">
+                Mind if I ask - what brings you here?
+              </p>
+
+              {/* Quick Select Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {CONDITIONS.map((condition) => (
+                  <button
+                    key={condition}
+                    onClick={() => setSelectedCondition(condition)}
+                    className={`
+                      px-3 py-2.5 rounded-lg border-2 transition-all text-sm font-medium
+                      ${selectedCondition === condition
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-purple-300'
+                      }
+                    `}
+                  >
+                    {condition}
+                  </button>
+                ))}
+              </div>
+
+              {/* Optional Details Field */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-600 mb-2">
+                  Want to add more details? (optional)
+                </label>
+                <input
+                  type="text"
+                  value={conditionDetails}
+                  onChange={(e) => setConditionDetails(e.target.value)}
+                  placeholder="e.g., diagnosed 2019, mostly joint pain"
+                  maxLength={200}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm"
+                />
+              </div>
+
+              {/* Skip Button */}
+              <div className="text-center mb-4">
+                <button
+                  onClick={handleSkip}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Skip for now
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Timeline Section */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
             <div className="flex items-center mb-3">
@@ -218,15 +347,19 @@ export default function PostCheckinModal({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-100">
-          <p className="text-sm text-gray-500 text-center mb-3">
-            Tomorrow takes 10 seconds. Same 3 sliders.
-          </p>
+          <div className="text-center mb-4">
+            <p className="text-gray-700 mb-1">
+              Now let's add what you're taking so I can watch for patterns.
+            </p>
+            <p className="text-sm text-gray-500">
+              Tomorrow takes 10 seconds. Same 3 sliders.
+            </p>
+          </div>
           <button
-            onClick={onContinue}
+            onClick={handleContinue}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
           >
-            <span>Add Your First Supplement</span>
-            <ArrowRight className="w-5 h-5" />
+            <span>Add What You're Taking →</span>
           </button>
         </div>
       </div>

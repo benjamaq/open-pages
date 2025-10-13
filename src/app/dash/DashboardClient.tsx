@@ -2518,6 +2518,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             }}
             date={selectedMoodDate || new Date().toLocaleDateString('sv-SE')}
             userId={userId}
+            userName={profile.display_name || 'User'}
             todayItems={todayItems}
             initialData={todayMoodEntry}
           />

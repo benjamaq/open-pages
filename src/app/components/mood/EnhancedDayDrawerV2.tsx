@@ -13,6 +13,7 @@ type EnhancedDayDrawerV2Props = {
   onClose: () => void;
   date: string; // 'YYYY-MM-DD'
   userId: string;
+  userName?: string; // Optional: User's display name for Elli's personalization
   isFirstCheckIn?: boolean; // NEW: Flag for onboarding flow
   todayItems?: {
     supplements: any[];
@@ -35,7 +36,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isFirstCheckIn = false, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'User', isFirstCheckIn = false, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -1177,7 +1178,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
                 className="cursor-pointer text-base text-gray-700 flex items-center justify-between"
                 onClick={() => setShowAdvanced(!showAdvanced)}
               >
-                <span>Wearables</span>
+                <div className="flex items-center space-x-2">
+                  <span>Wearables</span>
+                  <span className="text-xs text-gray-400 font-normal">Optional</span>
+                </div>
                 <svg 
                   className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
                   fill="none" 
@@ -1268,135 +1272,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
               </div>
             )}
 
-            {/* Daily Log Summary - Collapsible */}
-            <div>
-              <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
-                <summary className="cursor-pointer text-base text-gray-700 flex items-center justify-between list-none">
-                  <div>
-                    <h3 className="text-sm sm:text-base font-medium text-gray-900">Daily Log Summary</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Auto-saves what you did (supps, meds, training, mindfulness) so future-you can compare with mood/pain.
-                    </p>
-                  </div>
-                  <ChevronDown className="w-5 h-5 transition-transform flex-shrink-0" style={{ color: '#6B7280' }} />
-                </summary>
-                
-                <div className="mt-4 space-y-3">
-                  {snapshotData ? (
-                    <div className="space-y-3">
-                      {/* Supplements */}
-                      {snapshotData.supplements_taken_count > 0 && (
-                        <div>
-                          <h4 className="text-base font-medium text-gray-700 mb-2">Supplements ({snapshotData.supplements_taken_count})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                            {snapshotData.supplements && snapshotData.supplements.length > 0 ? (
-                              <ul className="space-y-1">
-                                {snapshotData.supplements.map((supp: any, index: number) => (
-                                  <li key={index} className="flex justify-between">
-                                    <span>{supp.name}</span>
-                                    <span className="text-gray-500">{supp.dose} {supp.unit}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              `${snapshotData.supplements_taken_count} supplements taken today`
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Medications */}
-                      {snapshotData.meds_taken_count > 0 && (
-                        <div>
-                          <h4 className="text-base font-medium text-gray-700 mb-2">Medications ({snapshotData.meds_taken_count})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                            {snapshotData.meds && snapshotData.meds.length > 0 ? (
-                              <ul className="space-y-1">
-                                {snapshotData.meds.map((med: any, index: number) => (
-                                  <li key={index} className="flex justify-between">
-                                    <span>{med.name}</span>
-                                    <span className="text-gray-500">{med.dose} {med.unit}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              `${snapshotData.meds_taken_count} medications taken today`
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Movement */}
-                      {snapshotData.movement_minutes > 0 && (
-                        <div>
-                          <h4 className="text-base font-medium text-gray-700 mb-2">Movement</h4>
-                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                            {snapshotData.activity && snapshotData.activity.length > 0 ? (
-                              <ul className="space-y-1">
-                                {snapshotData.activity.map((act: any, index: number) => (
-                                  <li key={index} className="flex justify-between">
-                                    <span>{act.name}</span>
-                                    <span className="text-gray-500">{act.duration_min} min</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              `${snapshotData.movement_minutes} minutes of movement`
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Mindfulness */}
-                      {snapshotData.mindfulness_minutes > 0 && (
-                        <div>
-                          <h4 className="text-base font-medium text-gray-700 mb-2">Mindfulness</h4>
-                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                            {snapshotData.mindfulness && snapshotData.mindfulness.length > 0 ? (
-                              <ul className="space-y-1">
-                                {snapshotData.mindfulness.map((mind: any, index: number) => (
-                                  <li key={index} className="flex justify-between">
-                                    <span>{mind.name}</span>
-                                    <span className="text-gray-500">{mind.duration_min} min</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              `${snapshotData.mindfulness_minutes} minutes of mindfulness`
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Protocols */}
-                      {snapshotData.protocols_active > 0 && (
-                        <div>
-                          <h4 className="text-base font-medium text-gray-700 mb-2">Active Protocols ({snapshotData.protocols_active})</h4>
-                          <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                            {snapshotData.protocols && snapshotData.protocols.length > 0 ? (
-                              <ul className="space-y-1">
-                                {snapshotData.protocols.map((protocol: any, index: number) => (
-                                  <li key={index} className="flex justify-between">
-                                    <span>{protocol.name}</span>
-                                    <span className="text-gray-500">{protocol.frequency}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              `${snapshotData.protocols_active} protocols active today`
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 italic">
-                      No activity logged yet for today
-                    </div>
-                  )}
-                </div>
-              </details>
-            </div>
 
             {/* Actions */}
             <div className="flex space-x-3 pt-4">
@@ -1462,6 +1337,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, isF
             setShowPostCheckinModal(false);
             onClose(); // Close the main check-in modal and proceed to next step
           }}
+          userId={userId}
+          userName={userName}
           dayOneData={postCheckinData.dayOneData}
           communityStats={postCheckinData.communityStats}
           personalizedInsight={postCheckinData.personalizedInsight}
