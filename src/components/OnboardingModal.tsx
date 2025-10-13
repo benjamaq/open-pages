@@ -373,7 +373,7 @@ export default function OnboardingModal({
                   value={supplementName}
                   onChange={(e) => setSupplementName(e.target.value)}
                   placeholder="e.g., Magnesium 400mg, BPC-157 peptide, Metformin"
-                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               
@@ -384,7 +384,7 @@ export default function OnboardingModal({
                   value={supplementDose}
                   onChange={(e) => setSupplementDose(e.target.value)}
                   placeholder="e.g., 400mg, 1 capsule, 250mcg"
-                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               
@@ -428,7 +428,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep2Complete}
               disabled={!supplementName.trim() || isLoading}
-              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
             >
               {isLoading ? 'Adding...' : 'Continue'}
             </button>
@@ -454,7 +454,7 @@ export default function OnboardingModal({
                   type="file"
                   accept="image/*"
                   onChange={(e) => setProfilePhoto(e.target.files?.[0] || null)}
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
@@ -464,7 +464,7 @@ export default function OnboardingModal({
                   onChange={(e) => setMissionStatement(e.target.value)}
                   placeholder="e.g., Managing chronic pain and improving sleep quality"
                   rows={2}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -481,7 +481,7 @@ export default function OnboardingModal({
               <button
                 onClick={handleStep3Complete}
                 disabled={!missionStatement.trim() || isLoading}
-                className="w-full sm:flex-1 bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors order-1 sm:order-2"
+                className="w-full sm:flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm order-1 sm:order-2"
               >
                 {isLoading ? 'Creating...' : 'Create Profile'}
               </button>
@@ -542,7 +542,7 @@ export default function OnboardingModal({
             <button
               onClick={handleStep4Complete}
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-2.5 px-6 rounded-lg text-sm font-medium hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
             >
               Go to Dashboard
             </button>
