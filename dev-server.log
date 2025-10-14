@@ -1,0 +1,1362 @@
+
+> open-pages@0.1.0 dev
+> next dev --port 3009
+
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3009
+   - Network:      http://192.168.0.145:3009
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1439ms
+ ○ Compiling /dash ...
+ ✓ Compiled /dash in 4.5s (1635 modules)
+ ✓ Compiled in 910ms (540 modules)
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+🔍 DashboardClient - Mood components loaded: { TodaySnapshot: true, EnhancedDayDrawerV2: true }
+🔍 DashboardClient - todayItems: { supplements: 0, protocols: 0, movement: 0, mindfulness: 0 }
+🔍 DashboardClient - Mood tracking check: {
+  FEATURE_FLAGS_MOOD_TRACKING: true,
+  TodaySnapshot: true,
+  todayMoodEntry: null,
+  shouldRender: [Function: TodaySnapshot]
+}
+🔍 TodaySnapshot - todayEntry.tags: undefined
+🔍 TodaySnapshot - selectedChips: []
+🔍 TodaySnapshot - displayChips: []
+🎭 EnhancedDrawerV2 State Check: {
+  isLoaded: true,
+  formDataKeys: [ 'localDate', 'mood', 'sleep_quality', 'pain', 'tags', 'journal' ],
+  isOpen: false,
+  date: '2025-10-13',
+  userId: '25264cf8-7cea-4979-88be-bd874724fe1e'
+}
+ GET /dash 200 in 6329ms
+ ○ Compiling /api/mood/month ...
+ ✓ Compiled /api/mood/month in 840ms (1638 modules)
+ GET /api/mood/month?month=2025-10 200 in 1240ms
+ GET /api/trial-status 200 in 1274ms
+ GET /api/mood/month?month=2025-08 200 in 1277ms
+ POST /dash 200 in 1261ms
+ GET /api/dashboard-optimized 200 in 1353ms
+ GET /api/usage-status 200 in 1616ms
+ ✓ Compiled /api/profile/update in 319ms (1649 modules)
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+ GET /api/mood/month?month=2025-08 200 in 616ms
+ GET /api/trial-status 200 in 667ms
+ GET /api/mood/month?month=2025-10 200 in 677ms
+ ✓ Compiled /api/dashboard in 272ms (1651 modules)
+🔍 Dashboard API called: 2025-10-13T17:54:45.178Z
+Profile update result: {
+  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
+  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
+  slug: 'hhkdskk-mgpbnfcn',
+  display_name: 'johnny',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T16:02:30.647+00:00',
+  updated_at: '2025-10-13T17:54:45.207811+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: false,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 1071ms
+Profile update result: {
+  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
+  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
+  slug: 'hhkdskk-mgpbnfcn',
+  display_name: 'johnny',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T16:02:30.647+00:00',
+  updated_at: '2025-10-13T17:54:45.20909+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: false,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 1080ms
+ POST /dash 200 in 826ms
+ GET /api/dashboard-optimized 200 in 492ms
+🔍 Fetching followers for user: 25264cf8-7cea-4979-88be-bd874724fe1e
+🔍 Dashboard API called: 2025-10-13T17:54:45.421Z
+✅ Follower count fetched: 0
+📈 New followers since yesterday: 0
+ GET /api/dashboard?t=1760378084205 200 in 679ms
+ GET /api/trial-status 200 in 295ms
+ POST /dash 200 in 217ms
+🔍 Fetching followers for user: 25264cf8-7cea-4979-88be-bd874724fe1e
+ GET /api/usage-status 200 in 870ms
+✅ Follower count fetched: 0
+📈 New followers since yesterday: 0
+ GET /api/dashboard?t=1760378085316 200 in 392ms
+ GET /api/trial-status 200 in 214ms
+ POST /dash 200 in 307ms
+ POST /dash 200 in 127ms
+ POST /dash 200 in 121ms
+ POST /dash 200 in 133ms
+ POST /dash 200 in 132ms
+🔍 saveDailyEntry - Calling RPC with: {
+  p_user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
+  p_local_date: '2025-10-13',
+  p_mood: 8,
+  p_sleep_quality: 4,
+  p_pain: 7,
+  p_night_wakes: undefined,
+  p_tags: null,
+  p_journal: null,
+  p_completed_items: null,
+  p_wearables: null
+}
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+Error fetching recent check-ins: {
+  code: '42703',
+  details: null,
+  hint: null,
+  message: 'column daily_entries.date does not exist'
+}
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ POST /dash 200 in 1220ms
+Error saving Elli message: {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy for table "elli_messages"'
+}
+Error generating Elli message: {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy for table "elli_messages"'
+}
+ POST /dash 200 in 2996ms
+ POST /dash 200 in 304ms
+ POST /dash 200 in 142ms
+Profile update request: { allow_stack_follow: true }
+Filtered updates: { allow_stack_follow: true }
+Profile update result: {
+  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
+  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
+  slug: 'hhkdskk-mgpbnfcn',
+  display_name: 'johnny',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T16:02:30.647+00:00',
+  updated_at: '2025-10-13T17:55:42.110643+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: true,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 375ms
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+Profile update result: {
+  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
+  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
+  slug: 'hhkdskk-mgpbnfcn',
+  display_name: 'johnny',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T16:02:30.647+00:00',
+  updated_at: '2025-10-13T17:55:42.31789+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: true,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 191ms
+ ○ Compiling /auth/signup ...
+ ✓ Compiled /auth/signup in 953ms (1659 modules)
+ GET /auth/signup 200 in 1045ms
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ GET /dash 200 in 903ms
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ GET /dash 200 in 807ms
+ POST /dash 200 in 284ms
+ GET /api/trial-status 200 in 317ms
+ GET /api/mood/month?month=2025-10 200 in 314ms
+ GET /api/mood/month?month=2025-08 200 in 313ms
+ GET /api/dashboard-optimized 200 in 429ms
+ GET /api/trial-status 200 in 184ms
+ GET /api/mood/month?month=2025-08 200 in 214ms
+ GET /api/mood/month?month=2025-10 200 in 217ms
+🔍 Dashboard API called: 2025-10-13T17:56:01.391Z
+ GET /api/usage-status 200 in 592ms
+ POST /dash 200 in 317ms
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
+ GET /api/dashboard-optimized 200 in 441ms
+Profile update result: {
+  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
+  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
+  slug: 'iiiiiii-mgpfpcgv',
+  display_name: 'hjfjjjf',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T17:55:58.688+00:00',
+  updated_at: '2025-10-13T17:56:01.725332+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: false,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 336ms
+Profile update result: {
+  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
+  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
+  slug: 'iiiiiii-mgpfpcgv',
+  display_name: 'hjfjjjf',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T17:55:58.688+00:00',
+  updated_at: '2025-10-13T17:56:01.7249+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: false,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 339ms
+🔍 Dashboard API called: 2025-10-13T17:56:01.754Z
+✅ Follower count fetched: 0
+📈 New followers since yesterday: 0
+ GET /api/dashboard?t=1760378161266 200 in 449ms
+ GET /api/trial-status 200 in 365ms
+ POST /dash 200 in 131ms
+🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
+ GET /api/trial-status 200 in 160ms
+✅ Follower count fetched: 0
+📈 New followers since yesterday: 0
+ GET /api/dashboard?t=1760378161709 200 in 273ms
+ GET /api/usage-status 200 in 616ms
+ POST /dash 200 in 295ms
+ POST /dash 200 in 131ms
+ POST /dash 200 in 125ms
+ POST /dash 200 in 109ms
+ POST /dash 200 in 102ms
+ POST /dash 200 in 98ms
+🔍 saveDailyEntry - Calling RPC with: {
+  p_user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
+  p_local_date: '2025-10-13',
+  p_mood: 8,
+  p_sleep_quality: 8,
+  p_pain: 6,
+  p_night_wakes: undefined,
+  p_tags: null,
+  p_journal: null,
+  p_completed_items: null,
+  p_wearables: null
+}
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+Error fetching recent check-ins: {
+  code: '42703',
+  details: null,
+  hint: null,
+  message: 'column daily_entries.date does not exist'
+}
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ POST /dash 200 in 957ms
+Error saving Elli message: {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy for table "elli_messages"'
+}
+Error generating Elli message: {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy for table "elli_messages"'
+}
+ POST /dash 200 in 3068ms
+ POST /dash 200 in 277ms
+ POST /dash 200 in 106ms
+ GET /api/dashboard-optimized 200 in 618ms
+🔍 Dashboard API called: 2025-10-13T17:57:42.513Z
+🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
+✅ Follower count fetched: 0
+📈 New followers since yesterday: 0
+ GET /api/dashboard?t=1760378262467 200 in 318ms
+ GET /api/mood/month?month=2025-10 200 in 210ms
+ GET /api/mood/month?month=2025-10 200 in 209ms
+Error saving expanded condition: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.user_usage'",
+  message: "Could not find the table 'public.users' in the schema cache"
+}
+ ⨯ [Error: {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.user_usage'","message":"Could not find the table 'public.users' in the schema cache"}] {
+  digest: '2917940259'
+}
+ POST /dash 500 in 448ms
+Profile update request: { allow_stack_follow: true }
+Filtered updates: { allow_stack_follow: true }
+Profile update result: {
+  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
+  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
+  slug: 'iiiiiii-mgpfpcgv',
+  display_name: 'hjfjjjf',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T17:55:58.688+00:00',
+  updated_at: '2025-10-13T17:58:09.300035+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: true,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 235ms
+Profile update request: { onboarding_step: 1, first_checkin_completed: true }
+Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
+Profile update result: {
+  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
+  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
+  slug: 'iiiiiii-mgpfpcgv',
+  display_name: 'hjfjjjf',
+  bio: null,
+  avatar_url: null,
+  public: true,
+  created_at: '2025-10-13T17:55:58.688+00:00',
+  updated_at: '2025-10-13T17:58:09.478958+00:00',
+  show_journal_public: true,
+  show_library: true,
+  nutrition_signature: {},
+  tier: 'free',
+  custom_logo_url: null,
+  custom_branding_enabled: false,
+  allow_stack_follow: true,
+  show_public_followers: true,
+  beta_code_used_at: null,
+  referral_code: null,
+  referral_source: null,
+  onboarding_completed: false,
+  onboarding_step: 1,
+  first_checkin_completed: true,
+  first_supplement_added: false,
+  profile_created: false,
+  public_page_viewed: false,
+  condition_primary: null,
+  condition_details: null,
+  condition_provided_at: null
+}
+Cache invalidated for /dash
+ POST /api/profile/update 200 in 175ms
+ ✓ Compiled in 1422ms (1669 modules)
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ GET /dash 200 in 222ms
+ POST /dash 200 in 346ms
+ ✓ Compiled in 500ms (1649 modules)
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ○ Compiling /_not-found ...
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ GET /api/dashboard-optimized 500 in 3223ms
+ GET /dash 500 in 735ms
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ GET /api/dashboard?t=1760378464049 500 in 281ms
+ GET /dash 500 in 279ms
+ GET /dash 500 in 27ms
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ GET /api/dashboard-optimized 500 in 354ms
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ GET /api/dashboard?t=1760378562091 500 in 158ms
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
+ [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
+ [2m536[0m |     
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += ' - that's really severe';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+ [2m541[0m |     } else if (pain >= 4) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:540:1]
+ [2m537[0m |     if (pain >= 8) {
+ [2m538[0m |       reference += " - that's really severe";
+ [2m539[0m |     } else if (pain >= 6) {
+ [2m540[0m |       reference += ' - that's definitely challenging';
+     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
+     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m541[0m |     } else if (pain >= 4) {
+ [2m542[0m |       reference += ' - managing, but not easy';
+ [2m543[0m |     }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
+ [2m547[0m |   if (mood !== null && mood <= 3) {
+ [2m548[0m |     reference += '. I can also see your mood is quite low today';
+ [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
+ [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
+     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
+     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m551[0m |   }
+ [2m552[0m | 
+ [2m553[0m |   reference += '.';
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
+ [2m547[0m |   if (mood !== null && mood <= 3) {
+ [2m548[0m |     reference += '. I can also see your mood is quite low today';
+ [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
+ [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
+     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
+     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m551[0m |   }
+ [2m552[0m | 
+ [2m553[0m |   reference += '.';
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ⨯ ./src/lib/constants/expanded-categories.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
+ [2m547[0m |   if (mood !== null && mood <= 3) {
+ [2m548[0m |     reference += ". I can also see your mood is quite low today";
+ [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
+ [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
+     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
+     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m551[0m |   }
+ [2m552[0m | 
+ [2m553[0m |   reference += '.';
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/constants/expanded-categories.ts
+./src/components/onboarding/post-checkin-modal-expanded.tsx
+./src/components/onboarding/post-checkin-modal.tsx
+./src/app/components/mood/EnhancedDayDrawerV2.tsx
+./src/app/dash/DashboardClient.tsx
+ ✓ Compiled /api/dashboard in 304ms (1961 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
+  page: '/dash'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
+  page: '/dash'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
+  page: '/dash'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
+  page: '/dash'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
+}
+ GET /dash 500 in 1445ms
+ GET /dash 500 in 337ms
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '1959690638'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '14159150'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '14159150'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '14159150'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '1959690638'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '1959690638'
+}
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  digest: '3879456399'
+}
+ ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '1959690638'
+}
+[TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  page: '/dash'
+}
+ GET /dash 500 in 2005ms
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ ✓ Compiled in 819ms (1975 modules)
+ ✓ Compiled in 507ms (1975 modules)
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  digest: '294470296'
+}
+[TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  page: '/dash'
+}
+ GET /dash 500 in 793ms
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  digest: '294470296'
+}
+[TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
+  page: '/dash'
+}
+ GET /dash 500 in 604ms
+🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 1 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0

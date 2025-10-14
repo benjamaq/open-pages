@@ -6,7 +6,10 @@ import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
 import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
 import { useFirstCheckIn } from '@/hooks/useFirstCheckIn';
 import { generateFirstInsight } from '@/app/actions/generate-first-insight';
+import { generateAndSaveElliMessage } from '@/app/actions/generate-elli-message';
 import PostCheckinModal from '@/components/onboarding/post-checkin-modal';
+import { TypeAnimation } from 'react-type-animation';
+import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
 type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
@@ -14,7 +17,9 @@ type EnhancedDayDrawerV2Props = {
   date: string; // 'YYYY-MM-DD'
   userId: string;
   userName?: string; // Optional: User's display name for Elli's personalization
-  isFirstCheckIn?: boolean; // NEW: Flag for onboarding flow
+  isFirstCheckIn?: boolean; // Flag for onboarding flow
+  isOnboarding?: boolean; // NEW: If true, we're in orchestrated onboarding flow
+  onOnboardingComplete?: (data: any) => void; // NEW: Callback for orchestrator
   todayItems?: {
     supplements: any[];
     protocols: any[];
@@ -36,7 +41,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'User', isFirstCheckIn = false, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'User', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -49,6 +54,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   // Post-check-in modal state
   const [showPostCheckinModal, setShowPostCheckinModal] = useState(false);
   const [postCheckinData, setPostCheckinData] = useState<any>(null);
+  
+  // Elli welcome message state
+  const [showElliTyping, setShowElliTyping] = useState(false);
+  const [showElliMessage, setShowElliMessage] = useState(false);
   
   // Check if this is the user's first check-in (use hook only if not explicitly passed as prop)
   const { isFirstCheckIn: isFirstCheckInFromHook, loading: firstCheckInLoading } = useFirstCheckIn(userId);
@@ -95,6 +104,21 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   const [isContextSectionOpen, setIsContextSectionOpen] = useState(false);
   const [isSymptomsSectionOpen, setIsSymptomsSectionOpen] = useState(false);
   const [isNotesSectionOpen, setIsNotesSectionOpen] = useState(false);
+
+  // Handle Elli welcome typing animation for first check-in (onboarding only)
+  useEffect(() => {
+    if (isOpen && isOnboarding && isActuallyFirstCheckIn) {
+      setShowElliTyping(true);
+      setShowElliMessage(false);
+      
+      const timer = setTimeout(() => {
+        setShowElliTyping(false);
+        setShowElliMessage(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, isOnboarding, isActuallyFirstCheckIn]);
 
   // Core symptoms from the brief
   const coreSymptoms = [
@@ -453,8 +477,43 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         setSaveMessage('✅ Check-in saved!');
         console.log('✅ Save successful:', result.data);
         
-        // Check if this is the first check-in and show post-check-in modal
-        if (isActuallyFirstCheckIn && !firstCheckInLoading) {
+        // If in orchestrated onboarding, pass data to orchestrator
+        if (isOnboarding && onOnboardingComplete) {
+          console.log('🎯 Onboarding check-in complete, passing data to orchestrator');
+          
+          onOnboardingComplete({
+            mood: formData.mood,
+            sleep: formData.sleep_quality,
+            pain: formData.pain,
+            symptoms: selectedSymptoms,
+            pain_locations: selectedPainLocations,
+            pain_types: selectedPainTypes,
+            custom_symptoms: customSymptoms,
+            tags: selectedTags,
+            journal: formData.journal
+          });
+          
+          return; // Exit early - orchestrator handles the rest
+        }
+        
+        // Generate Elli message after successful save (non-onboarding flow)
+        try {
+          console.log('💙 Generating Elli message (always replace today on new check-in)...');
+          // Always generate a fresh post_checkin message on any same-day check-in
+          await generateAndSaveElliMessage(userId, 'post_checkin', {
+            pain: formData.pain || 0,
+            mood: formData.mood || 0,
+            sleep: formData.sleep_quality || 0
+          });
+          
+          console.log('💙 Elli message generated successfully');
+        } catch (error) {
+          console.error('💙 Error generating Elli message:', error);
+          // Don't block user flow if Elli fails
+        }
+        
+        // Show post-check-in modal ONLY during orchestrated onboarding
+        if (isOnboarding && isActuallyFirstCheckIn && !firstCheckInLoading) {
           try {
             const insightData = await generateFirstInsight({
               mood: formData.mood,
@@ -466,7 +525,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               dayOneData: {
                 mood: formData.mood,
                 sleep_quality: formData.sleep_quality,
-                pain: formData.pain
+                pain: formData.pain,
+                symptoms: selectedSymptoms || [],
+                pain_locations: selectedPainLocations || [],
+                pain_types: selectedPainTypes || [],
+                custom_symptoms: customSymptoms || []
               },
               communityStats: insightData.communityStats,
               personalizedInsight: {
@@ -655,16 +718,31 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             </div>
           </div>
 
-          {/* Welcome Message - Only for First Check-in */}
-          {isActuallyFirstCheckIn && (
-            <div className="px-6 pt-6 pb-2">
-              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 rounded-lg p-4 sm:p-5">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  Welcome to BioStackr! 🎉
-                </h3>
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                  We're really happy you're here. You've just taken the first step towards understanding your health patterns and finding what works for you. Let's get started with your first daily check-in.
-                </p>
+          {/* Elli Introduction - Only for First Check-in */}
+          {isOnboarding && isActuallyFirstCheckIn && (
+            <div className="px-6 pt-6 pb-4">
+              <div className="bg-white border border-purple-200 rounded-xl p-6">
+                {/* Elli Avatar */}
+                <div className="text-center mb-4">
+                  <span className="text-5xl">💙</span>
+                </div>
+
+                {/* Typing indicator or message */}
+                {showElliTyping ? (
+                  <div className="flex items-center justify-center py-8">
+                    <TypingIndicator />
+                  </div>
+                ) : showElliMessage ? (
+                  <TypeAnimation
+                    sequence={[
+                      `Hey ${userName} 💙\n\nLet's see where you're at today. Move the sliders to how you're feeling right now - no wrong answers, just be honest with yourself.`
+                    ]}
+                    speed={35}
+                    wrapper="div"
+                    className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
+                    cursor={false}
+                  />
+                ) : null}
               </div>
             </div>
           )}

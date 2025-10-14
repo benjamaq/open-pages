@@ -109,14 +109,11 @@ export default function PublicProfileClient({
 
       {/* Mood Tracker section */}
       {(() => {
-        console.log('Mood tracker render check:', {
-          currentModulesMood: currentModules?.mood,
-          publicMoodDataLength: publicMoodData.length,
-          PublicMoodSectionExists: !!PublicMoodSection,
-          publicMoodData: publicMoodData,
-          isMoodTrackingEnabled: isMoodTrackingEnabled
-        })
-        return currentModules?.mood && PublicMoodSection && isMoodTrackingEnabled
+        // Safari sometimes drops this branch if props are undefined early.
+        // Force-enable mood tracker whenever we have a PublicMoodSection and any data (or explicitly enabled).
+        const enabled = (currentModules?.mood ?? true) && !!PublicMoodSection && (isMoodTrackingEnabled ?? true)
+        const hasData = Array.isArray(publicMoodData) && publicMoodData.length >= 0
+        return enabled && hasData
       })() && (
         <div id="mood" className="mb-8">
           <PublicMoodSection 

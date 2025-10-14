@@ -32,6 +32,18 @@ export function shouldShowOnboarding(profile: any): boolean {
   return !profile?.first_checkin_completed || !profile?.first_supplement_added
 }
 
+/**
+ * Determine if user needs NEW orchestrated onboarding flow
+ * (with category selection BEFORE check-in)
+ */
+export function needsOrchestratedOnboarding(profile: any): boolean {
+  // User needs orchestrated onboarding if:
+  // 1. They haven't completed first check-in, OR
+  // 2. They don't have a tone_profile set (even if they completed check-in)
+  // This ensures all users get the new flow with proper tone-aware messaging
+  return !profile?.first_checkin_completed || !profile?.tone_profile;
+}
+
 export function shouldShowProfileBanner(profile: any): boolean {
   // Show banner if steps 1-2 are done but 3-4 are incomplete
   const mandatoryComplete = profile?.first_checkin_completed && profile?.first_supplement_added

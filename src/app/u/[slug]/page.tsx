@@ -13,6 +13,7 @@ import PublicProfileHeader from '../../../components/PublicProfileHeader'
 import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
+import { getPublicMoodData } from '../../../lib/db/mood'
 
 interface ProfilePageProps {
   params: Promise<{
@@ -558,8 +559,8 @@ export default async function ProfilePage({ params, searchParams }: {
                 </>
               )}
 
-              {/* Follow Button - Show for visitors or when viewing someone else's profile */}
-              {(!isOwnProfile || isSharedPublicLink) && (
+              {/* Follow Button - Always show for visitors; also show on share links */}
+              {(!isOwnProfile) && (
                 <>
                   {console.log('🔍 About to render FollowButton with:', {
                     isOwnProfile,
@@ -572,7 +573,7 @@ export default async function ProfilePage({ params, searchParams }: {
                   <FollowButton
                     ownerUserId={(profile as any).user_id}
                     ownerName={(profile as any).display_name || 'this user'}
-                    allowsFollowing={(profile as any).allow_stack_follow ?? true}
+                    allowsFollowing={isSharedPublicLink ? true : ((profile as any).allow_stack_follow ?? true)}
                   />
                 </>
               )}
@@ -584,13 +585,13 @@ export default async function ProfilePage({ params, searchParams }: {
 
       {/* Profile Header - Clean Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Health Stack Heading - Centered and Prominent */}
+        {/* Health Profile Heading - Centered and Prominent */}
         <div className="text-center py-6 pb-8">
           <h2 className="text-3xl font-bold text-gray-900">
-            human upgrade
+            {profileWithData.display_name}'s Health Profile
           </h2>
           <p className="text-sm text-gray-400 mt-2">
-            Mood • Sleep • Pain • Supps/Meds • Protocols • Journal — with heatmap + day snapshots
+            Mood • Sleep • Pain • Supplements • Protocols • Journal — with heatmap + day snapshots
           </p>
         </div>
       </div>
@@ -655,6 +656,9 @@ export default async function ProfilePage({ params, searchParams }: {
       </div>
 
       {/* Main Content */}
+      {/* Fetch public mood data for the heatmap/summary */}
+      {/** Using server-side call so we pass real data into the client wrapper */}
+      {/** Defaults to last 30 days */}
       <PublicProfileClientWrapper
         profile={profile}
         publicSupplements={publicSupplements}
@@ -665,7 +669,7 @@ export default async function ProfilePage({ params, searchParams }: {
         publicUploads={publicUploads}
         publicLibraryItems={publicLibraryItems}
         publicJournalEntries={publicJournalEntries}
-        publicMoodData={[]}
+        publicMoodData={await getPublicMoodData((profile as any).id, 30)}
         publicShopGearItems={[]}
         publicModules={publicModules}
         isOwnProfile={isOwnProfile}

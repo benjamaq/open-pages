@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Check, Copy, ExternalLink } from 'lucide-react'
 import EnhancedDayDrawerV2 from '@/app/components/mood/EnhancedDayDrawerV2'
+import PostSupplementModal from '@/components/elli/PostSupplementModal'
 
 interface OnboardingModalProps {
   isOpen: boolean
@@ -34,6 +35,9 @@ export default function OnboardingModal({
   // Step 1 - Check-in drawer state
   const [showCheckinDrawer, setShowCheckinDrawer] = useState(false)
   const [checkinCompleted, setCheckinCompleted] = useState(false)
+  
+  // Step 2 - Post-supplement modal state
+  const [showPostSupplementModal, setShowPostSupplementModal] = useState(false)
   
   // Copy feedback
   const [copied, setCopied] = useState(false)
@@ -139,8 +143,8 @@ export default function OnboardingModal({
       if (response.ok) {
         console.log('✅ Supplement saved to database')
         
-        // Let parent handler update the database (avoid double updates)
-        onStepComplete(2)
+        // Show Elli's post-supplement modal
+        setShowPostSupplementModal(true)
       } else {
         console.error('❌ Failed to save supplement')
       }
@@ -149,6 +153,12 @@ export default function OnboardingModal({
     } finally {
       setIsLoading(false)
     }
+  }
+  
+  const handlePostSupplementContinue = () => {
+    setShowPostSupplementModal(false)
+    // Complete step 2 and move to next
+    onStepComplete(2)
   }
 
   const handleStep3Complete = async () => {
@@ -348,10 +358,10 @@ export default function OnboardingModal({
           <div className="px-6 py-6">
             <div className="mb-4 text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Add Your First Supplement or Medication
+                Add One Supplement or Medication
               </h2>
               <p className="text-sm text-gray-600">
-                Start building your stack with one supplement, medication, or protocol
+                Just add one thing you're taking right now. You can add everything else from your dashboard after this.
               </p>
             </div>
             
@@ -574,6 +584,15 @@ export default function OnboardingModal({
           initialData={null}
         />
       )}
+
+      {/* Post-Supplement Elli Modal */}
+      <PostSupplementModal
+        isOpen={showPostSupplementModal}
+        onClose={() => setShowPostSupplementModal(false)}
+        onContinue={handlePostSupplementContinue}
+        supplement={{ name: supplementName }}
+        userName={userProfile?.display_name || 'there'}
+      />
     </div>
   )
 }

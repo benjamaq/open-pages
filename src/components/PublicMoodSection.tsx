@@ -98,12 +98,12 @@ export default function PublicMoodSection({
   // Get today's entry (most recent)
   const todayEntry = moodData.length > 0 ? moodData[moodData.length - 1] : null;
 
-  // Get selected chips (max 4)
+  // Get selected chips (max 7)
   const selectedChips = todayEntry?.tags?.map((tag: string) => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
-  const displayChips = selectedChips.slice(0, 4);
+  const displayChips = selectedChips.slice(0, 7);
 
   // Calculate 7-day averages (memoized for performance)
   const { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep } = useMemo(() => {
@@ -200,7 +200,7 @@ export default function PublicMoodSection({
           <div className="flex items-center space-x-1 sm:space-x-2 ml-2 sm:ml-0">
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-2 ${
+              className={`px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-2 text-xs sm:text-sm ${
                 showHeatmap 
                   ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                   : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -217,9 +217,14 @@ export default function PublicMoodSection({
                   strokeWidth: '2'
                 }} 
               />
-              <span className="text-sm font-medium whitespace-nowrap">
-                {showHeatmap ? 'Hide' : `${profileName}'s Last 30 Days`}
-              </span>
+              {showHeatmap ? (
+                <span className="font-medium whitespace-nowrap">Hide</span>
+              ) : (
+                <>
+                  <span className="font-medium whitespace-nowrap sm:hidden">Last 30 Days</span>
+                  <span className="hidden sm:inline font-medium whitespace-nowrap">{`${profileName}'s Last 30 Days`}</span>
+                </>
+              )}
             </button>
             <button
               onClick={() => setCollapsed(!collapsed)}

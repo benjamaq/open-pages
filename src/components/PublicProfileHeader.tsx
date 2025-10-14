@@ -113,18 +113,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           </div>
         )}
 
-        {/* Follow Stack Button - Only show for non-owners */}
-        {!isOwnProfile && (
-          <div className="ml-auto">
-            <FollowButton
-              ownerUserId={profile.user_id}
-              ownerName={profile.display_name || 'this user'}
-              allowsFollowing={profile.allow_stack_follow ?? true}
-              onFollowSuccess={onFollowSuccess}
-              className=""
-            />
-          </div>
-        )}
+        {/* Follow Stack Button - Disabled here to avoid duplicates; shown in page toolbar */}
 
         {/* Edit Button for Owner - Only show if not shared public link */}
         {isOwnProfile && !isSharedPublicLink && (

@@ -10,30 +10,28 @@ export function useFirstCheckIn(userId: string | null) {
   useEffect(() => {
     async function checkFirstCheckIn() {
       if (!userId) {
+        setIsFirstCheckIn(false);
         setLoading(false);
         return;
       }
 
       try {
         const supabase = createClient();
-        
-        // Check if user has any previous daily entries
-        const { data, error } = await supabase
+        // Lightweight count-only query (no payload), more robust under RLS
+        const { count, error } = await supabase
           .from('daily_entries')
-          .select('id')
-          .eq('user_id', userId)
-          .limit(1);
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId);
 
         if (error) {
-          console.error('Error checking first check-in:', error);
-          setIsFirstCheckIn(true); // Default to true if error
+          console.warn('useFirstCheckIn count error:', (error as any)?.message || error);
+          setIsFirstCheckIn(false);
         } else {
-          // If no entries found, this is the first check-in
-          setIsFirstCheckIn(data?.length === 0);
+          setIsFirstCheckIn((count || 0) === 0);
         }
-      } catch (error) {
-        console.error('Error in useFirstCheckIn:', error);
-        setIsFirstCheckIn(true); // Default to true if error
+      } catch (err) {
+        console.warn('useFirstCheckIn exception:', (err as any)?.message || err);
+        setIsFirstCheckIn(false);
       } finally {
         setLoading(false);
       }

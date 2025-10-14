@@ -186,3 +186,6 @@ Please provide:
 
 **The goal is to have Emma's demo account showcase the complete chronic pain recovery journey with proper color progression in the heatmap.**
 
+
+
+

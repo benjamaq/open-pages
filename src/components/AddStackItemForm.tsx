@@ -9,9 +9,11 @@ import UpgradeModal from './UpgradeModal'
 interface AddStackItemFormProps {
   onClose: () => void
   itemType?: 'supplements' | 'movement' | 'food' | 'mindfulness'
+  onSuccess?: (itemName: string) => void // Optional callback when item is successfully added
+  isOnboarding?: boolean // When true, show onboarding-specific header and purple buttons
 }
 
-export default function AddStackItemForm({ onClose, itemType = 'supplements' }: AddStackItemFormProps) {
+export default function AddStackItemForm({ onClose, itemType = 'supplements', onSuccess, isOnboarding = false }: AddStackItemFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     dose: '',
@@ -81,6 +83,14 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
 
     try {
       await addStackItem({ ...formData, itemType })
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(formData.name)
+        // Don't call onClose() when onSuccess is provided - let the parent handle the flow
+        return
+      }
+      
       onClose()
       router.refresh()
     } catch (err) {
@@ -176,14 +186,15 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md max-h-[90vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 p-4 sm:p-6 pb-3 sm:pb-4">
+        <div className="bg-white rounded-t-2xl border-b border-gray-100 p-2 sm:p-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              {itemType === 'supplements' && 'Add Supplements & Meds'}
-              {itemType === 'movement' && 'Add Movement'}
-              {itemType === 'mindfulness' && 'Add Mind & Stress'}
-              {itemType === 'food' && 'Add Food'}
-            </h2>
+            {itemType !== 'supplements' && (
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                {itemType === 'movement' && 'Add Movement'}
+                {itemType === 'mindfulness' && 'Add Mind & Stress'}
+                {itemType === 'food' && 'Add Food'}
+              </h2>
+            )}
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-1"
@@ -198,7 +209,14 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           <form onSubmit={handleSubmit} className="flex flex-col h-full">
-            <div className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className={`flex-1 ${itemType === 'supplements' ? 'pt-2 sm:pt-3 px-4 sm:px-6' : 'p-4 sm:p-6'} space-y-4 sm:space-y-6`}>
+            {itemType === 'supplements' && isOnboarding && (
+              <div className="text-center">
+                <div className="text-3xl mb-2">💙</div>
+                <h3 className="text-base font-semibold text-gray-800">Add your first medication or supplement</h3>
+                <p className="text-sm text-gray-500">You can edit or add more later.</p>
+              </div>
+            )}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 {error}
@@ -468,14 +486,14 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements' }: 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${isOnboarding ? 'border border-purple-200 text-purple-700 hover:bg-purple-50' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                   disabled={isLoading}
                 >
                   {isLoading ? 'Adding...' : '+ Add to Schedule'}

@@ -1,9 +1,16 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getToneProfileType } from '@/lib/elli/toneProfiles';
 
 export interface UserCondition {
   primary: string | null;
+  details: string | null;
+}
+
+export interface ExpandedUserCondition {
+  category: string | null;
+  specific: string | null;
   details: string | null;
 }
 
@@ -31,6 +38,34 @@ export async function saveUserCondition(userId: string, condition: UserCondition
 }
 
 /**
+ * Save user's expanded condition information (category + specific) + tone profile
+ */
+export async function saveExpandedUserCondition(userId: string, condition: ExpandedUserCondition) {
+  const supabase = await createClient();
+  
+  // Determine tone profile based on category and specific
+  const toneProfile = getToneProfileType(condition.category, condition.specific);
+  
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      condition_category: condition.category,
+      condition_specific: condition.specific,
+      condition_details: condition.details || null,
+      condition_provided_at: new Date().toISOString(),
+      tone_profile: toneProfile, // NEW: Set tone profile
+    })
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error saving expanded condition:', error);
+    throw error;
+  }
+
+  return { success: true };
+}
+
+/**
  * Get user's condition information from their profile
  */
 export async function getUserCondition(userId: string): Promise<UserCondition | null> {
@@ -48,6 +83,29 @@ export async function getUserCondition(userId: string): Promise<UserCondition | 
 
   return {
     primary: data.condition_primary,
+    details: data.condition_details,
+  };
+}
+
+/**
+ * Get user's expanded condition information from profiles table
+ */
+export async function getExpandedUserCondition(userId: string): Promise<ExpandedUserCondition | null> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('condition_category, condition_specific, condition_details')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    category: data.condition_category,
+    specific: data.condition_specific,
     details: data.condition_details,
   };
 }

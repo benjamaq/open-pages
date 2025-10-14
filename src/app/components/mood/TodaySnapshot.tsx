@@ -6,14 +6,22 @@ import { ChevronDown, Calendar } from 'lucide-react';
 import FirstTimeTooltip from '../../../components/FirstTimeTooltip';
 import MonthlyHeatmap from './MonthlyHeatmap';
 import DayDetailView from './DayDetailView';
+import SymptomAnalysisCard from '../../../components/elli/SymptomAnalysisCard';
+import { getAllElliMessages } from '../../../lib/db/elliMessages';
+import { getMonthData } from '../../../lib/db/mood';
 
 interface TodaySnapshotProps {
+  userId?: string;
   todayEntry?: {
     mood?: number | null;
     sleep_quality?: number | null;
     pain?: number | null;
     tags?: string[] | null;
     journal?: string | null;
+    symptoms?: string[] | null;
+    pain_locations?: string[] | null;
+    pain_types?: string[] | null;
+    custom_symptoms?: string[] | null;
     actions_snapshot?: any;
   } | null;
   todayItems?: {
@@ -86,6 +94,7 @@ const MetricPill = ({ label, value, max, palette, onClick, className = '' }: Met
 };
 
 export default function TodaySnapshot({
+  userId,
   todayEntry,
   todayItems,
   onEditToday,
@@ -99,6 +108,49 @@ export default function TodaySnapshot({
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayDetail, setShowDayDetail] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<any[] | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [quickStats, setQuickStats] = useState<{ avgMood: string; avgSleep: string; avgPain: string } | null>(null);
+
+  async function loadHistory() {
+    if (loadingHistory || history) return;
+    setLoadingHistory(true);
+    try {
+      if (!userId) {
+        setHistory([]);
+      } else {
+        const messages = await getAllElliMessages(userId, 10);
+        setHistory(messages);
+      }
+    } catch (err) {
+      console.error('Failed to load Elli history:', err);
+      setHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+
+  // Compute lightweight quick stats (7-day averages) for a “lively” feel without AI
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const monthStr = new Date().toISOString().slice(0, 7);
+        const res = await fetch('/api/mood/month?month=' + monthStr, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const data = json.data || [];
+          const last7 = data.slice(-7);
+          const m = last7.map((d: any) => d.mood).filter((v: any) => v != null);
+          const s = last7.map((d: any) => d.sleep_quality).filter((v: any) => v != null);
+          const p = last7.map((d: any) => d.pain).filter((v: any) => v != null);
+          const avg = (arr: number[]) => arr.length ? (Math.round((arr.reduce((a,b)=>a+b,0)/arr.length)*10)/10).toFixed(1) : '—';
+          setQuickStats({ avgMood: avg(m), avgSleep: avg(s), avgPain: avg(p) });
+        }
+      } catch {}
+    };
+    loadStats();
+  }, []);
 
   // Load monthly data for averages (only once on mount)
   useEffect(() => {
@@ -154,6 +206,33 @@ export default function TodaySnapshot({
     if (score >= 3.5) return { color: 'text-orange-600', bg: 'bg-orange-50', label: 'Low', emoji: '⚠️' };
     return { color: 'text-red-600', bg: 'bg-red-50', label: 'Rest Day', emoji: '🛌' };
   };
+
+  // Memoize checkInData to prevent unnecessary re-renders in child components
+  const checkInData = useMemo(() => {
+    if (!todayEntry) return null;
+    
+    return {
+      mood: todayEntry.mood || 5,
+      sleep: todayEntry.sleep_quality || 5,
+      pain: todayEntry.pain || 0,
+      tags: todayEntry.tags || [],
+      journal: todayEntry.journal || undefined,
+      symptoms: todayEntry.symptoms || [],
+      painLocations: todayEntry.pain_locations || [],
+      painTypes: todayEntry.pain_types || [],
+      customSymptoms: todayEntry.custom_symptoms || []
+    };
+  }, [
+    todayEntry?.mood,
+    todayEntry?.sleep_quality,
+    todayEntry?.pain,
+    todayEntry?.tags?.join(','),
+    todayEntry?.journal,
+    todayEntry?.symptoms?.join(','),
+    todayEntry?.pain_locations?.join(','),
+    todayEntry?.pain_types?.join(','),
+    todayEntry?.custom_symptoms?.join(',')
+  ]);
 
   // Calculate 7-day averages (memoized for performance)
   const { avgMood, avgSleep, avgPain, avgRecovery, avgWearableSleep } = useMemo(() => {
@@ -253,12 +332,12 @@ export default function TodaySnapshot({
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Mood Tracker</h2>
               
               {/* Buttons - Right Side */}
-              <div className="flex items-center space-x-1 sm:space-x-2">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={onEditToday}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
                 >
-                  Daily Check-in
+                  Check in
                 </button>
                 
                 <FirstTimeTooltip
@@ -275,7 +354,7 @@ export default function TodaySnapshot({
                         localStorage.setItem('heatmapExplored', 'true')
                       }
                     }}
-                    className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-2 ${
+                    className={`px-2 sm:px-3 py-2 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-1 sm:space-x-2 ${
                       showHeatmap 
                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
                         : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
@@ -284,7 +363,7 @@ export default function TodaySnapshot({
                     title="My Last 30 Days"
                   >
                     <Calendar 
-                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      className="w-4 h-4"
                       style={{ 
                         color: 'white',
                         fill: 'none',
@@ -292,8 +371,8 @@ export default function TodaySnapshot({
                         strokeWidth: '2'
                       }} 
                     />
-        <span className="text-sm font-medium whitespace-nowrap">
-          {showHeatmap ? 'Hide' : 'My Last 30 Days'}
+        <span className="hidden xs:inline sm:inline text-sm font-medium whitespace-nowrap">
+          {showHeatmap ? 'Hide' : 'Last 30 Days'}
         </span>
                   </button>
                 </FirstTimeTooltip>
@@ -344,6 +423,67 @@ export default function TodaySnapshot({
               />
             </div>
             
+            {/* Elli's Commentary Section */}
+            {checkInData && (todayEntry?.mood !== null || todayEntry?.sleep_quality !== null || todayEntry?.pain !== null) && (
+              <div className="px-2 sm:px-16 mt-6">
+                {/* Elli Header - Single header for all Elli sections */}
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">💙</span>
+                    <span className="text-base font-medium text-gray-700">Elli says...</span>
+                  </div>
+                  <button
+                    onClick={() => { setShowHistory(prev => !prev); if (!history) loadHistory(); }}
+                    className="text-sm text-gray-900 font-medium underline underline-offset-2"
+                  >
+                    See history
+                  </button>
+                </div>
+                
+
+                {/* Quick Stats strip (no AI) */}
+                {quickStats && (
+                  <div className="mb-3 text-sm text-gray-600 flex items-center gap-4">
+                    {/* Removed labels per request; keep space minimal */}
+                  </div>
+                )}
+
+                {/* AI Symptom Analysis */}
+                <SymptomAnalysisCard 
+                  checkInData={checkInData}
+                  userName={userName}
+                />
+
+                {/* Inline history drawer under header, above message box */}
+                {showHistory && (
+                  <div className="mt-4 mb-2 border border-purple-200 rounded-lg bg-purple-50/60">
+                    <div className="p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-800">Recent messages</p>
+                        {loadingHistory && <span className="text-xs text-gray-500">Loading…</span>}
+                      </div>
+                      {history && history.length === 0 && (
+                        <p className="text-sm text-gray-500 mt-2">No history yet.</p>
+                      )}
+                      {history && history.length > 0 && (
+                        <ul className="space-y-2 max-h-56 overflow-auto mt-2">
+                          {history.map((msg: any) => (
+                            <li key={msg.id} className="p-3 bg-white rounded-md border border-purple-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">{new Date(msg.created_at).toLocaleString()}</span>
+                                <span className="text-[10px] uppercase tracking-wide text-gray-400">{msg.message_type}</span>
+                              </div>
+                              <p className="mt-1 text-sm text-gray-700 whitespace-pre-line">{msg.message_text}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* Description under sliders - Hidden on mobile */}
             <div className="hidden sm:block text-xs text-gray-500 text-center mb-5">
               These metrics and your contextual factors will appear in your daily summary when you click on your heatmap as a record of what was happening that day.
@@ -353,8 +493,8 @@ export default function TodaySnapshot({
             <div className="mt-6">
               {/* Desktop Layout */}
               <div className="hidden sm:flex items-center justify-between">
-                {/* Today's Averages - Left (small grey text) */}
-                <div className="text-xs text-gray-500">
+                {/* Today's Averages - Left */}
+                <div className="text-sm text-gray-600">
                   <div>Today's average: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
                 </div>
                 
@@ -373,8 +513,8 @@ export default function TodaySnapshot({
                   </div>
                 </div>
                 
-                {/* Wearables - Right (small grey text) */}
-                <div className="text-xs text-gray-500 text-right">
+                {/* Wearables - Right */}
+                <div className="text-sm text-gray-600 text-right">
                   {todayEntry?.wearables?.device && avgRecovery !== '—' && (
                     <div>
                       <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
@@ -411,12 +551,12 @@ export default function TodaySnapshot({
                 </div>
                 
                 {/* Today's Averages - Center on mobile */}
-                <div className="text-xs text-gray-500 text-center">
+                <div className="text-sm text-gray-600 text-center">
                   <div>Today: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
                 </div>
                 
                 {/* Wearables - Bottom on mobile */}
-                <div className="text-xs text-gray-500 text-center">
+                <div className="text-sm text-gray-600 text-center">
                   {todayEntry?.wearables?.device && avgRecovery !== '—' && (
                     <div>
                       <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>

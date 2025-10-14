@@ -6,20 +6,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
-// Import mood components conditionally to prevent build failures
-let TodaySnapshot: any = null
-let EnhancedDayDrawerV2: any = null
-
-try {
-  TodaySnapshot = require('../components/mood/TodaySnapshot').default
-  EnhancedDayDrawerV2 = require('../components/mood/EnhancedDayDrawerV2').default
-  console.log('🔍 DashboardClient - Mood components loaded:', {
-    TodaySnapshot: !!TodaySnapshot,
-    EnhancedDayDrawerV2: !!EnhancedDayDrawerV2
-  })
-} catch (error) {
-  console.warn('Mood tracking components not available:', error)
-}
+// Import mood components
+import TodaySnapshot from '../components/mood/TodaySnapshot'
+import EnhancedDayDrawerV2 from '../components/mood/EnhancedDayDrawerV2'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
@@ -39,7 +28,9 @@ import OnboardingModal from '../../components/OnboardingModal'
 import OnboardingBanner from '../../components/OnboardingBanner'
 import WhatsNextCard from '../../components/WhatsNextCard'
 import FirstTimeTooltip from '../../components/FirstTimeTooltip'
-import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep } from '@/lib/onboarding'
+import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, needsOrchestratedOnboarding } from '@/lib/onboarding'
+import { ElliCard } from '../../components/elli/ElliCard'
+import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
 
 interface Profile {
   id: string
@@ -50,6 +41,16 @@ interface Profile {
   tier?: 'free' | 'pro' | 'creator'
   custom_logo_url?: string
   custom_branding_enabled?: boolean
+  // Onboarding fields
+  onboarding_completed?: boolean
+  onboarding_step?: number
+  first_checkin_completed?: boolean
+  first_supplement_added?: boolean
+  profile_created?: boolean
+  public_page_viewed?: boolean
+  tone_profile?: string
+  condition_category?: string
+  condition_specific?: string
 }
 
 interface Counts {
@@ -1685,6 +1686,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState(1)
+  const [showOrchestratedOnboarding, setShowOrchestratedOnboarding] = useState(false) // NEW: For new flow
 
   // Check if user needs onboarding
   useEffect(() => {
@@ -1697,15 +1699,25 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         first_checkin_completed: profile.first_checkin_completed,
         first_supplement_added: profile.first_supplement_added,
         profile_created: profile.profile_created,
-        public_page_viewed: profile.public_page_viewed
+        public_page_viewed: profile.public_page_viewed,
+        tone_profile: profile.tone_profile // NEW
       } : null,
       shouldShow: profile ? shouldShowOnboarding(profile) : false,
+      needsOrchestrated: profile ? needsOrchestratedOnboarding(profile) : false, // NEW
       nextStep: profile ? getNextOnboardingStep(profile) : null
     })
     
+    // NEW: Check if user needs orchestrated onboarding (category before check-in)
+    if (profile && needsOrchestratedOnboarding(profile)) {
+      console.log('🎯 Showing NEW orchestrated onboarding flow');
+      setShowOrchestratedOnboarding(true);
+      return; // Don't show old onboarding
+    }
+    
+    // OLD: Existing onboarding for users who already have tone_profile
     if (profile && shouldShowOnboarding(profile)) {
       const nextStep = getNextOnboardingStep(profile)
-      console.log('🎯 Showing onboarding modal for step:', nextStep)
+      console.log('🎯 Showing old onboarding modal for step:', nextStep)
       setOnboardingStep(nextStep)
       setShowOnboarding(true)
     }
@@ -1730,6 +1742,30 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     setShowOnboarding(false)
     // Refresh profile data to update onboarding status
     window.location.reload()
+  }
+
+  // NEW: Handler for orchestrated onboarding completion
+  const handleOrchestratedOnboardingComplete = async () => {
+    console.log('🎯 DashboardClient - Orchestrated onboarding complete');
+    
+    // Update profile to mark first check-in and supplement as complete
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_checkin_completed: true,
+          first_supplement_added: true, // Assuming they added supplement in orchestrator
+          onboarding_step: 2
+        })
+      });
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+    }
+    
+    setShowOrchestratedOnboarding(false);
+    setShowOnboarding(false); // Prevent old onboarding modal from showing
+    window.location.reload(); // Refresh to show dashboard
   }
 
   const handleStartOnboarding = () => {
@@ -2310,34 +2346,29 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               </div>
             </div>
             
+            {/* Elli Card removed per design: summary lives within Mood Tracker */}
+
             {/* Row 1 — Today's Supplements (Full Width) */}
             {/* Today Snapshot */}
-            {(() => {
-              console.log('🔍 DashboardClient - Mood tracking check:', {
-                FEATURE_FLAGS_MOOD_TRACKING: FEATURE_FLAGS.MOOD_TRACKING,
-                TodaySnapshot: !!TodaySnapshot,
-                todayMoodEntry,
-                shouldRender: FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot
-              });
-              return null;
-            })()}
-            {FEATURE_FLAGS.MOOD_TRACKING && TodaySnapshot && (
+            {/* Mood Tracking Section */}
+            {FEATURE_FLAGS.MOOD_TRACKING && (
               <div data-tour="mood-tracker">
                 <TodaySnapshot
+                  userId={userId}
                   key={`${(todayMoodEntry as any)?.id || 'no-entry'}-${(todayMoodEntry as any)?.mood || 0}-${(todayMoodEntry as any)?.sleep_quality || 0}-${(todayMoodEntry as any)?.pain || 0}`}
                   todayEntry={todayMoodEntry}
                   todayItems={todayItems}
                   onEditToday={() => {
                     setShowEnhancedMoodDrawer(true)
                   }}
-                onEditDay={(date: string) => {
-                  console.log('🔍 DashboardClient - Day clicked:', date);
-                  setSelectedMoodDate(date);
-                  setShowEnhancedMoodDrawer(true);
-                }}
-                onRefresh={loadTodayMoodEntry}
-                streak={streak}
-                userName={profile.display_name || 'User'}
+                  onEditDay={(date: string) => {
+                    console.log('🔍 DashboardClient - Day clicked:', date);
+                    setSelectedMoodDate(date);
+                    setShowEnhancedMoodDrawer(true);
+                  }}
+                  onRefresh={loadTodayMoodEntry}
+                  streak={streak}
+                  userName={profile.display_name || 'User'}
                 />
               </div>
             )}
@@ -2507,7 +2538,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
 
         {/* Enhanced Mood Tracking Drawer */}
-        {FEATURE_FLAGS.MOOD_TRACKING && EnhancedDayDrawerV2 && (
+        {FEATURE_FLAGS.MOOD_TRACKING && (
           <EnhancedDayDrawerV2
             isOpen={showEnhancedMoodDrawer}
             onClose={() => {
@@ -2757,16 +2788,28 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        isOpen={showOnboarding}
-        onClose={() => setShowOnboarding(false)}
-        currentStep={onboardingStep}
-        onStepComplete={handleOnboardingStepComplete}
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingSkip}
-        userProfile={profile}
-      />
+      {/* NEW: Orchestrated Onboarding (Category before check-in) */}
+      {showOrchestratedOnboarding && (
+        <OnboardingOrchestrator
+          isOpen={true}
+          onComplete={handleOrchestratedOnboardingComplete}
+          userId={userId}
+          userName={profile.display_name || 'User'}
+        />
+      )}
+
+      {/* OLD: Onboarding Modal (for existing users without tone_profile) */}
+      {!showOrchestratedOnboarding && (
+        <OnboardingModal
+          isOpen={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+          currentStep={onboardingStep}
+          onStepComplete={handleOnboardingStepComplete}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+          userProfile={profile}
+        />
+      )}
     </>
   )
 }
