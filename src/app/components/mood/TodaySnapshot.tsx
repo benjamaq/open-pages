@@ -111,7 +111,7 @@ export default function TodaySnapshot({
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<any[] | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [quickStats, setQuickStats] = useState<{ avgMood: string; avgSleep: string; avgPain: string } | null>(null);
+  const [quickStats, setQuickStats] = useState<{ avgMood: string; avgSleep: string; avgPain: string; readinessAvg?: string; readinessDelta?: string } | null>(null);
 
   async function loadHistory() {
     if (loadingHistory || history) return;
@@ -141,11 +141,25 @@ export default function TodaySnapshot({
           const json = await res.json();
           const data = json.data || [];
           const last7 = data.slice(-7);
+          const prev7 = data.slice(-14, -7);
           const m = last7.map((d: any) => d.mood).filter((v: any) => v != null);
           const s = last7.map((d: any) => d.sleep_quality).filter((v: any) => v != null);
           const p = last7.map((d: any) => d.pain).filter((v: any) => v != null);
+          const readiness = (rows: any[]) => rows.map((d: any) => {
+            const mood = d.mood ?? 5; const sleep = d.sleep_quality ?? 5; const pain = d.pain ?? 0;
+            return Math.round(((mood*0.2)+(sleep*0.4)+((10-pain)*0.4))*10);
+          });
           const avg = (arr: number[]) => arr.length ? (Math.round((arr.reduce((a,b)=>a+b,0)/arr.length)*10)/10).toFixed(1) : '—';
-          setQuickStats({ avgMood: avg(m), avgSleep: avg(s), avgPain: avg(p) });
+          const avgPct = (arr: number[]) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length).toString() + '%' : '—';
+          const rLast = readiness(last7); const rPrev = readiness(prev7);
+          const readinessAvg = avgPct(rLast);
+          const readinessDelta = (rLast.length && rPrev.length) ? (()=>{
+            const avgLast = Math.round(rLast.reduce((a,b)=>a+b,0)/rLast.length);
+            const avgPrev = Math.round(rPrev.reduce((a,b)=>a+b,0)/rPrev.length);
+            const diff = avgLast - avgPrev; const sign = diff>0?'+':'';
+            return `${sign}${diff}%`;
+          })() : '—';
+          setQuickStats({ avgMood: avg(m), avgSleep: avg(s), avgPain: avg(p), readinessAvg, readinessDelta });
         }
       } catch {}
     };
@@ -182,7 +196,7 @@ export default function TodaySnapshot({
   console.log('🔍 TodaySnapshot - selectedChips:', selectedChips);
   console.log('🔍 TodaySnapshot - displayChips:', displayChips);
 
-  // 🎯 Calculate Readiness Score (Mood 20%, Sleep 40%, Pain 40%)
+  // 🎯 Calculate Readiness Score (Mood 20%, Sleep 40%, Pain 40%) → convert to %
   const readinessScore = useMemo(() => {
     const mood = todayEntry?.mood ?? 5;
     const sleep = todayEntry?.sleep_quality ?? 5;
@@ -194,8 +208,8 @@ export default function TodaySnapshot({
     // Calculate weighted score
     const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4);
     
-    // Round to 1 decimal place
-    return Math.round(score * 10) / 10;
+    // Convert to percentage (0–100) and round
+    return Math.round(score * 10);
   }, [todayEntry?.mood, todayEntry?.sleep_quality, todayEntry?.pain]);
 
   // Get color and label for readiness score
@@ -441,12 +455,7 @@ export default function TodaySnapshot({
                 </div>
                 
 
-                {/* Quick Stats strip (no AI) */}
-                {quickStats && (
-                  <div className="mb-3 text-sm text-gray-600 flex items-center gap-4">
-                    {/* Removed labels per request; keep space minimal */}
-                  </div>
-                )}
+                {/* Quick Stats strip removed per request */}
 
                 {/* AI Symptom Analysis */}
                 <SymptomAnalysisCard 
@@ -502,14 +511,13 @@ export default function TodaySnapshot({
                 <div className="flex items-center space-x-3" onClick={onEditToday}>
                   <div className="border-2 border-black rounded-lg p-3 bg-white cursor-pointer hover:shadow-md transition-all">
                     <div className="flex items-center space-x-2">
-                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                        {readinessScore}
+                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore / 10).color}`}>
+                        {readinessScore}%
                       </span>
-                      <span className="text-lg text-gray-400">/10</span>
                     </div>
                   </div>
                   <div className="text-sm font-medium text-gray-700">
-                    Daily Readiness Score
+                    Daily Readiness
                   </div>
                 </div>
                 

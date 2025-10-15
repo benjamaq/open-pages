@@ -2798,18 +2798,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         />
       )}
 
-      {/* OLD: Onboarding Modal (for existing users without tone_profile) */}
-      {!showOrchestratedOnboarding && (
-        <OnboardingModal
-          isOpen={showOnboarding}
-          onClose={() => setShowOnboarding(false)}
-          currentStep={onboardingStep}
-          onStepComplete={handleOnboardingStepComplete}
-          onComplete={handleOnboardingComplete}
-          onSkip={handleOnboardingSkip}
-          userProfile={profile}
-        />
-      )}
+      {/* OLD ONBOARDING REMOVED: Always use orchestrated flow */}
     </>
   )
 }

@@ -66,7 +66,7 @@ export function buildUserPrompt(
 }
 
 function buildDashboardPrompt(context: any): string {
-  const { userName, condition, checkIn, previousCheckIns, daysOfTracking } = context;
+  const { userName, condition, checkIn, previousCheckIns, daysOfTracking, readinessToday, readinessYesterday } = context;
   
   // Calculate simple stats
   const avgPain = previousCheckIns && previousCheckIns.length > 0
@@ -94,6 +94,10 @@ TODAY'S CHECK-IN:
 - Mood: ${checkIn.mood}/10
 - Sleep: ${checkIn.sleep}/10
 
+READINESS (headline metric):
+- Today: ${readinessToday ?? ''}%
+- Yesterday: ${readinessYesterday ?? ''}%
+
 RECENT PATTERN (last ${previousCheckIns?.length || 0} days):
 - Average pain: ${avgPain.toFixed(1)}/10
 ${avgPainHighSleep !== null ? `- Pain on high sleep days (7+ hrs): ${avgPainHighSleep.toFixed(1)}/10` : ''}
@@ -101,9 +105,9 @@ ${avgPainLowSleep !== null ? `- Pain on low sleep days (<7 hrs): ${avgPainLowSle
 
 TASK:
 Write a warm, supportive message (4–6 sentences) that:
-1. Acknowledges where they are today
-2. Notices any patterns (if meaningful)
-3. Offers gentle insight or encouragement
+1. Leads with readiness (today vs yesterday if available)
+2. Identifies the biggest driver of change (sleep, pain, or mood delta)
+3. Offers one actionable encouragement
 
 Reference their condition naturally if relevant. Be warm, direct, honest.
 
@@ -116,7 +120,18 @@ IMPORTANT SEVERITY RULES:
 }
 
 function buildMilestonePrompt(context: any): string {
-  const { userName, condition, streak, daysOfTracking } = context;
+  const { userName, condition, streak, daysOfTracking, previousCheckIns = [], readinessToday, readinessYesterday } = context;
+  // Compute simple readiness averages by week windows (last 7 vs prior 7)
+  const readiness = (rows: any[]) => rows.map((d: any) => {
+    const mood = d.mood ?? 5; const sleep = d.sleep_quality ?? 5; const pain = d.pain ?? 0;
+    return Math.round(((mood*0.2)+(sleep*0.4)+((10-pain)*0.4))*10);
+  });
+  const last14 = previousCheckIns.slice(0, 14); // latest first
+  const w1 = readiness(last14.slice(0, 7));
+  const w2 = readiness(last14.slice(7, 14));
+  const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const lastWeek = avg(w1);
+  const prevWeek = avg(w2);
   
   return `
 You are writing a milestone message for ${userName}.
@@ -127,17 +142,17 @@ MILESTONE: Day ${daysOfTracking}
 ${streak ? `Current streak: ${streak} days in a row` : ''}
 
 TASK:
-Write a warm celebration message (2-4 sentences, max 60 words) that:
-1. Celebrates their consistency
-2. Acknowledges the effort it takes
-3. Sets expectations for what comes next (patterns, insights, etc.)
+Write a warm celebration message (4–6 sentences) that:
+1. Leads with readiness trend (e.g., last week ${lastWeek ?? ''}% vs prior week ${prevWeek ?? ''}%) or today (${readinessToday ?? ''}%).
+2. Celebrates consistency and calls out the biggest driver (sleep/pain/mood changes).
+3. Sets expectations for what comes next (what we will watch next week).
 
-Be warm, genuine, not overly enthusiastic. Reference their condition if relevant.
+Be warm, genuine, and specific. Avoid over-claiming if data is sparse (≤7 days).
   `.trim();
 }
 
 function buildPostCheckInPrompt(context: any): string {
-  const { userName, checkIn, condition } = context;
+  const { userName, checkIn, condition, readinessToday, readinessYesterday } = context;
   
   return `
 You are responding to ${userName}'s first check-in.
@@ -148,12 +163,13 @@ CHECK-IN DATA:
 - Pain: ${checkIn.pain}/10
 - Mood: ${checkIn.mood}/10
 - Sleep: ${checkIn.sleep}/10
+ - Readiness: ${readinessToday ?? ''}% ${readinessYesterday != null ? `(yesterday ${readinessYesterday}%)` : ''}
 
 TASK:
 Write a warm welcome message (4–6 sentences) that:
-1. Adapts tone to today’s severity (see rules below)
-2. Validates their courage in showing up
-3. Sets a gentle, supportive tone
+1. Leads with readiness% and (if available) how it changed vs yesterday
+2. Names the biggest driver (sleep/pain/mood) that explains the change
+3. Adapts tone to severity (see rules) and ends with gentle encouragement
 
 Reference their condition if relevant. Be warm, direct, validating.
 

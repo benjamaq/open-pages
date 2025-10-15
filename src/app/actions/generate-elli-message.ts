@@ -49,6 +49,15 @@ export async function generateAndSaveElliMessage(
       checkIn: checkInData,
       daysOfTracking: checkInCount,
       previousCheckIns: recentCheckIns,
+    readinessToday: Math.round(((checkInData.mood * 0.2) + (checkInData.sleep * 0.4) + ((10 - checkInData.pain) * 0.4)) * 10),
+    readinessYesterday: (() => {
+      const yesterday = recentCheckIns[1];
+      if (!yesterday) return null;
+      const mood = yesterday.mood ?? 5;
+      const sleep = yesterday.sleep_quality ?? 5;
+      const pain = yesterday.pain ?? 0;
+      return Math.round(((mood * 0.2) + (sleep * 0.4) + ((10 - pain) * 0.4)) * 10);
+    })(),
     };
     
     // Generate the message (with OpenAI or templates)

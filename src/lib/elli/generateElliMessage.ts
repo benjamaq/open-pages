@@ -27,6 +27,8 @@ export interface ElliContext {
     mood: number;
     sleep: number;
   };
+  readinessToday?: number; // 0-100
+  readinessYesterday?: number | null; // 0-100 or null when none
   supplements?: Array<{ name: string }>;
   streak?: number;
   previousCheckIns?: any[];
