@@ -502,9 +502,9 @@ export default function TodaySnapshot({
             <div className="mt-6">
               {/* Desktop Layout */}
               <div className="hidden sm:flex items-center justify-between">
-                {/* Today's Averages - Left */}
+                {/* Weekly Averages - Left */}
                 <div className="text-sm text-gray-600">
-                  <div>Today's average: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
+                  <div>This week's averages: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
                 </div>
                 
                 {/* Readiness Score - Center (compact with black outline) */}
@@ -547,20 +547,19 @@ export default function TodaySnapshot({
                 <div className="flex items-center justify-center space-x-2" onClick={onEditToday}>
                   <div className="border-2 border-black rounded-lg p-2 bg-white cursor-pointer hover:shadow-md transition-all">
                     <div className="flex items-center space-x-1">
-                      <span className={`text-xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                        {readinessScore}
+                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore / 10).color}`}>
+                        {readinessScore}%
                       </span>
-                      <span className="text-sm text-gray-400">/10</span>
                     </div>
                   </div>
-                  <div className="text-xs font-medium text-gray-700">
+                  <div className="text-sm font-medium text-gray-700">
                     Daily Readiness
                   </div>
                 </div>
                 
-                {/* Today's Averages - Center on mobile */}
+                {/* Weekly Averages - Center on mobile */}
                 <div className="text-sm text-gray-600 text-center">
-                  <div>Today: Mood {todayEntry?.mood || '—'} • Sleep {todayEntry?.sleep_quality || '—'} • Pain {todayEntry?.pain || '—'}</div>
+                  <div>This week: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
                 </div>
                 
                 {/* Wearables - Bottom on mobile */}
