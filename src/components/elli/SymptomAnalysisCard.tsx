@@ -192,9 +192,11 @@ export default function SymptomAnalysisCard({
           {/* Gentle suggestions - show only when severity warrants or pain is elevated */}
           {showSuggestions && analysis.suggestions.length > 0 && ((analysis.severity !== 'low') || ((memoizedCheckInData?.pain ?? 0) >= 4)) && (
             <div className="border-t border-purple-200 pt-3 mt-3">
-              <p className="text-sm text-gray-600 mb-2">Some things that might help:</p>
+                <p className="text-sm text-gray-600 mb-2">Some things that might help:</p>
               <ul className="space-y-1">
-                {analysis.suggestions.map((suggestion, index) => (
+                {analysis.suggestions
+                  .filter(s => !/best day|best so far|today was your best|oct\s*\d{1,2}/i.test(s))
+                  .map((suggestion, index) => (
                   <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
                     <span className="text-purple-400 mt-1">•</span>
                     <span>{suggestion}</span>

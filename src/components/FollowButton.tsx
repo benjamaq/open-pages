@@ -115,10 +115,9 @@ export default function FollowButton({
   }
 
 
-  // Don't show button if owner doesn't allow following
-  if (!allowsFollowing) {
-    return null
-  }
+  // Always show on public link pages (?public=true)
+  const isPublicLink = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('public') === 'true'
+  if (!allowsFollowing && !isPublicLink) return null
 
   return (
     <>

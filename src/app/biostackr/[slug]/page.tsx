@@ -414,15 +414,21 @@ export default async function ProfilePage({ params, searchParams }: {
                 </>
               )}
 
-              {/* Follow Button - Show for visitors or when viewing someone else's profile */}
-              {(!isOwnProfile || isSharedPublicLink) && (
-                <>
+              {/* Follow Button - ALWAYS show on share links */}
+              {isSharedPublicLink ? (
+                <FollowButton
+                  ownerUserId={(profile as any).user_id}
+                  ownerName={(profile as any).display_name || 'this user'}
+                  allowsFollowing={true}
+                />
+              ) : (
+                !isOwnProfile && (
                   <FollowButton
                     ownerUserId={(profile as any).user_id}
                     ownerName={(profile as any).display_name || 'this user'}
                     allowsFollowing={(profile as any).allow_stack_follow ?? true}
                   />
-                </>
+                )
               )}
 
               </div>

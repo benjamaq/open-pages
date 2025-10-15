@@ -66,8 +66,8 @@ export async function generateElliMessage(
         { role: 'system', content: ELLI_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 150,
-      temperature: 0.9, // Higher for more personality variation
+      max_tokens: 450,
+      temperature: 0.8, // Warm but stable
     });
     
     let message = response.choices[0]?.message?.content || '';
@@ -78,7 +78,9 @@ export async function generateElliMessage(
     }
     
     message = message.trim();
-    return sanitizeMessage(ensurePainMention(message, context), context);
+    message = sanitizeMessage(ensurePainMention(message, context), context);
+    message = ensureMinimumSentences(message, context);
+    return message;
     
   } catch (error) {
     console.error('Error generating Elli message with OpenAI:', error);
@@ -96,19 +98,31 @@ function getTemplateFallback(
 ): string {
   
   if (messageType === 'post_checkin') {
-    return sanitizeMessage(ensurePainMention(getPostCheckInTemplate(context), context), context);
+    return ensureMinimumSentences(
+      sanitizeMessage(ensurePainMention(getPostCheckInTemplate(context), context), context),
+      context
+    );
   }
   
   if (messageType === 'milestone') {
-    return sanitizeMessage(getMilestoneTemplate(context), context);
+    return ensureMinimumSentences(
+      sanitizeMessage(getMilestoneTemplate(context), context),
+      context
+    );
   }
   
   if (messageType === 'dashboard' || messageType === 'post_supplement') {
-    return sanitizeMessage(ensurePainMention(getDashboardTemplate(context), context), context);
+    return ensureMinimumSentences(
+      sanitizeMessage(ensurePainMention(getDashboardTemplate(context), context), context),
+      context
+    );
   }
   
   // Ultimate fallback
-  return sanitizeMessage(ensurePainMention("I'm here watching your journey.", context), context);
+  return ensureMinimumSentences(
+    sanitizeMessage(ensurePainMention("I'm here watching your journey.", context), context),
+    context
+  );
 }
 
 /**
@@ -130,6 +144,38 @@ function ensurePainMention(message: string, context: ElliContext): string {
 }
 
 /**
+ * Ensure message is at least ~4 sentences; append gentle, empathetic lines if too short.
+ */
+function ensureMinimumSentences(message: string, context: ElliContext): string {
+  try {
+    const sentences = message
+      .replace(/\n+/g, ' ')
+      .split(/(?<=[.!?])\s+/)
+      .filter(Boolean);
+    if (sentences.length >= 4) return message;
+
+    const { pain, mood, sleep } = context.checkIn || { pain: 0, mood: 0, sleep: 0 };
+    const extras: string[] = [];
+    if (typeof pain === 'number') {
+      extras.push(`I'm tracking how pain at ${pain}/10 interacts with your sleep and mood.`);
+    }
+    if (typeof sleep === 'number') {
+      extras.push(`Sleep at ${sleep}/10 can shift how the whole day feels; I'll watch for what improves it.`);
+    }
+    if (typeof mood === 'number') {
+      extras.push(`Mood at ${mood}/10 matters too—I'll note what lifts it on better days.`);
+    }
+    extras.push(`Keep tracking—each day adds signal, and together we'll see what actually helps you.`);
+
+    const needed = Math.max(0, 4 - sentences.length);
+    const toAppend = extras.slice(0, needed).join(' ');
+    return toAppend ? `${message.trim()} ${toAppend}` : message;
+  } catch {
+    return message;
+  }
+}
+
+/**
  * Sanitize content based on context to avoid incorrect claims (first day, chat invites, absolute dates)
  */
 function sanitizeMessage(message: string, context: ElliContext): string {
@@ -145,7 +191,8 @@ function sanitizeMessage(message: string, context: ElliContext): string {
         .replace(/[^.!?]*best day[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*best\s+so\s+far[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*\bbest\b[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*pattern[s]?[^.!?]*[.!?]/gi, '');
+        .replace(/[^.!?]*pattern[s]?[^.!?]*[.!?]/gi, '')
+        .replace(/[^.!?]*(came\s+back|back\s+today|back\s+again|kept\s+showing\s+up|most\s+people\s+quit)[^.!?]*[.!?]/gi, '');
     }
 
     // Never invite chat or sharing details (no chat UI yet)
