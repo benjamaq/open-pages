@@ -1,7 +1,7 @@
 // Minimal service worker for installability and conservative offline support
 // Cache only safe GET requests; exclude /api/ by default
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const OFFLINE_FALLBACK_URL = '/offline';
 
@@ -9,7 +9,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(RUNTIME_CACHE).then((cache) => cache.addAll([OFFLINE_FALLBACK_URL]))
   );
-  // Do not skip waiting automatically; we'll prompt the client to activate
+  // Activate new SW immediately to purge old caches
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
