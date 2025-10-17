@@ -46,7 +46,7 @@ export default async function PatternsPage() {
         <div className="mb-8">
           <Link href="/dash" className="text-sm text-gray-600 hover:text-gray-900 mb-3 inline-block">← Back to dashboard</Link>
           <h1 className="text-3xl font-bold text-center">What's Working For You</h1>
-          <p className="text-sm text-gray-500 text-center mt-2">
+          <p className="text-base text-gray-900 text-center mt-2">
             {(daysTracked || 0)} days tracked • {uniquePatterns.length} patterns found • {confirmed.length} confirmed
           </p>
         </div>
@@ -62,7 +62,7 @@ export default async function PatternsPage() {
 
         {confirmed.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">✅ Confirmed (Seen 3+ times reliably)</h2>
+            <h2 className="text-xl font-semibold mb-4">✅ Confirmed <span className="text-gray-500">(Seen 3+ times reliably)</span></h2>
             <div className="space-y-3">
               {confirmed.map((p: any) => (
                 <div
