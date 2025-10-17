@@ -1,6 +1,6 @@
 {
-  "name": "Open Pages",
-  "short_name": "OpenPages",
+  "name": "BioStackr",
+  "short_name": "BioStackr",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

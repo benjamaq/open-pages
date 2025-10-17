@@ -20,7 +20,7 @@ export default function PWAInstallFab() {
         onClick={() => void promptInstall()}
         className="px-3 py-2 rounded-full shadow-lg bg-gray-900 text-white text-xs font-medium"
       >
-        Install app
+        Install BioStackr
       </button>
       {isiOS && (
         <div className="mt-1 text-[11px] text-gray-500 bg-white/90 backdrop-blur rounded-md px-2 py-1 border border-gray-200">
