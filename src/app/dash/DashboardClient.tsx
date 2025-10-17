@@ -1405,6 +1405,28 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
   
+  // Ensure PWA registration runs on dashboard
+  useEffect(() => {
+    try {
+      console.log('🔵 PWA(dash): effect start');
+      if (typeof window === 'undefined') return;
+      if (!('serviceWorker' in navigator)) {
+        console.log('❌ PWA(dash): SW unsupported');
+        return;
+      }
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        console.log('🔵 PWA(dash): existing registration:', reg);
+        if (!reg) {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((r) => console.log('✅ PWA(dash): registered', r))
+            .catch((e) => console.error('❌ PWA(dash): register failed', e));
+        }
+      });
+    } catch (e) {
+      console.warn('⚠️ PWA(dash): error', e);
+    }
+  }, [])
+  
   
   // Debug today's items
   console.log('🔍 DashboardClient - todayItems:', {

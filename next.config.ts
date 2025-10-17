@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Add headers for better Chrome compatibility
+  // Add headers for better Chrome compatibility and PWA support
   async headers() {
     return [
       {
@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: https://www.google-analytics.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: https://www.google-analytics.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self';"
           },
           {
             key: 'X-Content-Type-Options',
