@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <mask id="maskable">
+      <rect x="0" y="0" width="192" height="192" fill="white"/>
+    </mask>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="#111827" mask="url(#maskable)"/>
+  <g transform="translate(16,16)">
+    <circle cx="80" cy="80" r="64" fill="#8b5cf6"/>
+    <rect x="72" y="40" width="16" height="80" rx="8" fill="#ffffff"/>
+    <rect x="40" y="72" width="80" height="16" rx="8" fill="#ffffff"/>
+  </g>
+</svg>
+
+
