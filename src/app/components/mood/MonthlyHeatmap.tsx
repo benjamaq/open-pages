@@ -128,13 +128,16 @@ export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps
       const dateStr = currentDate.toLocaleDateString('sv-SE');
       const dayData = monthData.find(d => d.date === dateStr);
       const isCurrentMonth = currentDate.getMonth() === month;
-      const isToday = dateStr === new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD format in local timezone
+      const todayStr = new Date().toLocaleDateString('sv-SE');
+      const isToday = dateStr === todayStr; // YYYY-MM-DD format in local timezone
+      const isFuture = currentDate > new Date();
       
       days.push({
         date: dateStr,
         mood: dayData?.[selectedMetric] || null,
         isCurrentMonth,
         isToday,
+        isFuture,
         day: currentDate.getDate()
       });
       
@@ -236,7 +239,7 @@ export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps
         {/* Calendar days */}
         {calendarDays.map((day, index) => {
           const hasData = day.mood !== null && day.mood !== undefined
-          const bg = getMetricColor(day.mood, selectedMetric)
+          const bg = day.isFuture ? '#ffffff' : getMetricColor(day.mood, selectedMetric)
           const baseClasses = `w-6 h-6 sm:w-8 sm:h-8 rounded text-xs font-medium transition-all ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'} ${day.isToday ? 'ring-2 ring-blue-500' : ''}`
           return (
             <button
@@ -245,9 +248,9 @@ export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps
               className={`${baseClasses} ${hasData ? 'hover:scale-110' : 'hover:opacity-90'}`}
               style={{
                 backgroundColor: bg,
-                border: hasData ? '1px solid rgba(0,0,0,0.06)' : '1px solid #e5e7eb'
+                border: hasData ? '1px solid rgba(0,0,0,0.06)' : (day.isFuture ? '1px solid #e5e7eb' : '1px solid #e5e7eb')
               }}
-              title={hasData ? `${selectedMetric === 'sleep_quality' ? 'Sleep' : selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)}: ${day.mood}/10` : 'No check-in'}
+              title={hasData ? `${selectedMetric === 'sleep_quality' ? 'Sleep' : selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)}: ${day.mood}/10` : (day.isFuture ? 'Future date' : 'No check-in')}
             >
               {day.day}
             </button>

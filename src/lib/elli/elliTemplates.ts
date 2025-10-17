@@ -25,10 +25,16 @@ interface TemplateContext {
  * Post-check-in welcome message templates
  */
 export function getPostCheckInTemplate(context: TemplateContext): string {
-  const { checkIn, condition, userName } = context;
-  const { pain } = checkIn;
+  const { checkIn, condition, userName, daysOfTracking, previousCheckIns } = context;
+  const { pain, mood, sleep } = checkIn;
   const name = userName || 'there';
+  const isFirstDay = !previousCheckIns || previousCheckIns.length === 0 || !daysOfTracking || daysOfTracking <= 1;
   
+  // First day: warm baseline message (no “best day” claims)
+  if (isFirstDay) {
+    return `Hey ${name} — first check‑in saved. Pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. Great baseline. I’ll watch the next few days and surface what actually moves the needle for you.`;
+  }
+
   // High pain (8-10) - truly severe
   if (pain >= 8) {
     if (condition?.primary === 'Fibromyalgia') {
