@@ -16,7 +16,8 @@ export async function generateAndSaveElliMessage(
     pain: number;
     mood: number;
     sleep: number;
-  }
+  },
+  options?: { tzOffsetMinutes?: number }
 ) {
   try {
     console.log('🔵 generateAndSaveElliMessage:start', { userId, messageType, checkInData });
@@ -69,8 +70,14 @@ export async function generateAndSaveElliMessage(
     const safeMood = isFiniteNum(checkInData?.mood) ? checkInData.mood : 5;
     const safeSleep = isFiniteNum(checkInData?.sleep) ? checkInData.sleep : 5;
 
-    // Determine time of day for greeting
-    const hour = new Date().getHours();
+    // Determine time of day for greeting (use client tz offset if provided)
+    let hour: number;
+    if (options && typeof options.tzOffsetMinutes === 'number' && Number.isFinite(options.tzOffsetMinutes)) {
+      const ms = Date.now() - (options.tzOffsetMinutes as number) * 60 * 1000;
+      hour = new Date(ms).getHours();
+    } else {
+      hour = new Date().getHours();
+    }
     const timeOfDay: 'morning' | 'afternoon' | 'evening' = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
 
     // Build context for Elli
@@ -129,55 +136,8 @@ export async function generateAndSaveElliMessage(
       };
     } catch {}
     
-    // Determine if today's factors connect to any CONFIRMED insights (seen 3+ times)
-    let linked: { key: string; topLine: string } | null = null;
-    try {
-      const { data: pastInsights } = await supabase
-        .from('elli_messages')
-        .select('context, created_at')
-        .eq('user_id', userId)
-        .eq('message_type', 'insight')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      const counts: Record<string, number> = {};
-      (pastInsights || []).forEach((i:any) => {
-        const k = i?.context?.insight_key; if (!k) return; counts[k] = (counts[k]||0)+1;
-      });
-      const confirmedKeys = new Set(Object.keys(counts).filter(k => counts[k] >= 3));
-      const todaysSymptoms: string[] = (context.factors?.symptoms as string[] | undefined) || [];
-      const todaysLifestyle: string[] = (context.factors?.lifestyle_factors as string[] | undefined) || [];
-      const exerciseType: string | undefined = (todayEntry as any)?.exercise_type || undefined;
-      const protocols: string[] = (todayEntry as any)?.protocols || [];
-      const tryMatch = (ins: any): string | null => {
-        const key: string = ins?.context?.insight_key || '';
-        if (!confirmedKeys.has(key)) return null;
-        if (key.startsWith('lifestyle_')) {
-          const slug = key.replace('lifestyle_', '');
-          if (todaysLifestyle.includes(slug)) return key;
-        } else if (key.startsWith('symptom_')) {
-          const slug = key.replace('symptom_', '');
-          if (todaysSymptoms.includes(slug)) return key;
-        } else if (key.startsWith('exercise_')) {
-          const slug = key.replace('exercise_', '');
-          if (exerciseType && exerciseType === slug) return key;
-        } else if (key.startsWith('protocol_')) {
-          const slug = key.replace('protocol_', '');
-          if (Array.isArray(protocols) && protocols.includes(slug)) return key;
-        }
-        return null;
-      };
-      const match = (pastInsights || []).find((i:any) => tryMatch(i));
-      if (match) {
-        linked = { key: match.context.insight_key, topLine: match.context.topLine };
-      }
-    } catch {}
-
     // Generate the message (with OpenAI or templates)
     let message = await generateElliMessage(messageType, context);
-    if (linked) {
-      const linkUrl = `/patterns#insight-${linked.key}`;
-      message = `${message}\n\n💡 This connects to a pattern we've confirmed:\n${linked.topLine}\n→ View insight: ${linkUrl}`;
-    }
     console.log('🔵 generateAndSaveElliMessage:message_length', typeof message === 'string' ? message.length : 0);
     
     // Save to database
@@ -185,8 +145,6 @@ export async function generateAndSaveElliMessage(
       checkIn: checkInData,
       daysOfTracking: checkInCount,
       condition: condition?.primary,
-      linked_insight_key: linked?.key,
-      linked_insight_topLine: linked?.topLine,
     });
     console.log('🔵 generateAndSaveElliMessage:saved');
     
