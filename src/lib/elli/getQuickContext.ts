@@ -168,15 +168,15 @@ export async function getTodaysCheckIn(userId: string): Promise<QuickContextChec
   
   const { data } = await supabase
     .from('daily_entries')
-    .select('date, mood, sleep_quality, pain, tags, journal')
+    .select('local_date, mood, sleep_quality, pain, tags, journal')
     .eq('user_id', userId)
-    .eq('date', today)
+    .eq('local_date', today)
     .single();
 
   if (!data) return null;
 
   return {
-    date: data.date,
+    date: data.local_date,
     mood: data.mood,
     sleep_quality: data.sleep_quality,
     pain: data.pain,

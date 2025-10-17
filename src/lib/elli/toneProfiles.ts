@@ -103,15 +103,15 @@ This person is exhausted and in pain. Show you see them. Be warm, honest, valida
       welcome: "Hey! I'm Elli 💙. I'm here to help you figure out YOUR patterns - what's helping, what's not, and what's actually going on with your body. First, let me understand what brings you here.",
       
       postCheckin: (pain, mood, sleep, userName) => {
-        // Simple response for onboarding - just pain/mood/sleep scores
+        // Empathetic, concise variants by severity
         if (pain >= 8) {
-          return `${userName}, pain at ${pain}/10, mood at ${mood}/10, sleep at ${sleep}/10. That's brutal, and I'm really sorry you're going through this. Thank you for checking in even when it's this hard. I'm watching everything - what makes pain worse, what gives you relief, what's connected to your sleep and mood. We'll figure out YOUR patterns together.`;
+          return `${userName}, I’m really sorry—pain ${pain}/10 with mood ${mood}/10 and sleep ${sleep}/10 is brutal. You still showed up, and that matters. I’m watching what worsens days like this and what brings even small relief. We’ll keep learning from today so we can soften the next one.`;
         } else if (pain >= 6) {
-          return `${userName}, pain at ${pain}/10, mood at ${mood}/10, sleep at ${sleep}/10. Managing, but not easy. I know you're pushing through even when it's hard like this. The fact that you're here tracking? That takes real courage. I'm watching for patterns - what helps on days like this, what makes it worse, and what's worth trying differently.`;
+          return `${userName}, I see pain ${pain}/10 today with mood ${mood}/10 and sleep ${sleep}/10—manageable, not easy. Thank you for checking in. I’m tracking what shifts on days like this so we can find the small levers that help.`;
         } else if (pain >= 4) {
-          return `${userName}, pain at ${pain}/10, mood at ${mood}/10, sleep at ${sleep}/10. This is what I'd call a moderate day - not great, but you're managing. I'm watching what's different on days like this compared to your harder days. Every data point helps me understand YOUR body better.`;
+          return `${userName}, I’m noticing pain ${pain}/10 with mood ${mood}/10 and sleep ${sleep}/10—a middling day. I’ll compare this against your tougher days to see what looks different. Every data point helps me understand YOUR body better.`;
         } else {
-          return `${userName}, today's a lighter pain day - pain at ${pain}/10, mood at ${mood}/10, sleep at ${sleep}/10. I'm really glad. Days like this matter because I can see what made today different - what you did, what you took, how you slept. Let's figure out how to get you more days like this.`;
+          return `${userName}, lighter day noted—pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. I’m paying attention to what likely helped today so we can build more days like this. Thank you for tracking—this is how patterns emerge.`;
         }
       },
       
@@ -219,8 +219,14 @@ This journey is emotional. Acknowledge that while staying forward-focused and ho
       welcome: "Hey! I'm Elli 💙. I'm here to help you understand YOUR body, YOUR patterns, YOUR cycle. Let's figure this out together.",
       
       postCheckin: (pain, mood, sleep, userName) => {
-        // Simple response for onboarding - just scores
-        return `${userName}, thank you for checking in. You're feeling ${mood >= 7 ? 'good' : 'okay'} today - mood ${mood}/10, sleep ${sleep}/10. I'm tracking everything about your cycle.`;
+        // Warmer, specific, and empathetic (no grand claims on early days)
+        if (pain >= 7) {
+          return `${userName}, that’s a hard day — pain ${pain}/10 with mood ${mood}/10 and sleep ${sleep}/10. Thank you for checking in. I’ll watch the next few days to notice what steadies you and what makes days feel heavier.`;
+        }
+        if (mood >= 7 || sleep >= 7) {
+          return `${userName}, I’m noticing mood ${mood}/10 and sleep ${sleep}/10 today. That’s a better footing. I’ll pay attention to what likely helped so we can build on it.`;
+        }
+        return `${userName}, I see how today feels — mood ${mood}/10, sleep ${sleep}/10${pain ? `, pain ${pain}/10` : ''}. Thanks for sharing this honestly. I’ll look for gentle levers over the next few days and keep it grounded in your data.`;
       },
       
       milestone: (days, userName) => {
@@ -500,7 +506,7 @@ This person wants to feel better. Be supportive, practical, encouraging.`,
       welcome: "Hey! I'm Elli 💙. I'm here to help you optimize YOUR health - tracking what works, what doesn't, and finding YOUR patterns.",
       
       postCheckin: (pain, mood, sleep, userName) => {
-        return `${userName}, check-in complete. Mood ${mood}/10, sleep ${sleep}/10 today. I'm tracking YOUR patterns to help you optimize.`;
+        return `${userName}, I’m noticing pain ${pain}/10 today with mood ${mood}/10 and sleep ${sleep}/10. That gives me a clear snapshot of how today feels. Thank you for checking in — every data point helps me see what truly supports you. I’ll keep watching what shifts on days like this so we can steadily build more of the good ones.`;
       },
       
       milestone: (days, userName) => {

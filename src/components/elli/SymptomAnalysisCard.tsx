@@ -57,25 +57,32 @@ export default function SymptomAnalysisCard({
               const ageMs = now.getTime() - created.getTime();
               const within24h = ageMs >= 0 && ageMs < 24 * 60 * 60 * 1000;
               if (within24h) {
-                const prefilled: SymptomAnalysis = {
-                  detectedSymptoms: [],
-                  primaryConcern: null,
-                  severity: 'low',
+                // Defensive: ensure it's a post_checkin message, never insight
+                if (msg?.message_type && msg.message_type !== 'post_checkin') {
+                  console.warn('⚠️ Latest Elli message is not post_checkin, ignoring for main card:', msg.message_type)
+                } else {
+                // Compute structured chips/suggestions even when using saved message text
+                const computed = await analyzeSymptomsAction(memoizedCheckInData, userName);
+                const merged: SymptomAnalysis = {
+                  detectedSymptoms: computed?.detectedSymptoms || [],
+                  primaryConcern: computed?.primaryConcern || null,
+                  severity: computed?.severity || 'low',
                   empatheticResponse: msg.message_text,
-                  suggestions: []
+                  suggestions: computed?.suggestions || []
                 };
                 if (mounted) {
-          setAnalysis(prefilled);
-          setIsAnalyzing(false);
-          setFromSavedToday(true); // render statically without typing
-          setTimeout(() => {
-            if (mounted) {
-              const painScore = memoizedCheckInData?.pain ?? 0;
-              const allow = prefilled.severity !== 'low' || painScore >= 4;
-              if (allow && prefilled.suggestions.length > 0) setShowSuggestions(true);
-            }
-          }, 3000);
-                  return; // Use saved message
+                  setAnalysis(merged);
+                  setIsAnalyzing(false);
+                  setFromSavedToday(true); // render statically without typing
+                  setTimeout(() => {
+                    if (mounted) {
+                      const painScore = memoizedCheckInData?.pain ?? 0;
+                      const allow = merged.severity !== 'low' || painScore >= 4;
+                      if (allow && merged.suggestions.length > 0) setShowSuggestions(true);
+                    }
+                  }, 1200);
+                  return; // Use saved message with computed structure
+                }
                 }
               }
             }
@@ -150,18 +157,18 @@ export default function SymptomAnalysisCard({
   return (
     <div className={`bg-purple-50 border border-purple-200 rounded-xl p-4 ${className}`}>
       <div className="flex items-start gap-3">
-        <span className="text-2xl">💙</span>
+        <span className="text-3xl sm:text-4xl">💙</span>
         <div className="flex-1">
           {/* Main empathetic response */}
           <div className="mb-3">
             {fromSavedToday ? (
-              <p className="text-gray-700 leading-relaxed">{analysis.empatheticResponse}</p>
+              <p className="text-gray-700 leading-relaxed text-[15px] sm:text-base">{analysis.empatheticResponse}</p>
             ) : (
               <TypeAnimation
                 sequence={[analysis.empatheticResponse]}
                 speed={35}
                 wrapper="p"
-                className="text-gray-700 leading-relaxed"
+                className="text-gray-700 leading-relaxed text-[15px] sm:text-base"
                 cursor={false}
               />
             )}
@@ -170,7 +177,7 @@ export default function SymptomAnalysisCard({
           {/* Detected symptoms (if any) */}
           {analysis.detectedSymptoms.length > 0 && (
             <div className="mb-3">
-              <p className="text-sm text-gray-600 mb-2">I noticed you mentioned:</p>
+              {/* Removed label per request */}
               <div className="flex flex-wrap gap-1">
                 {analysis.detectedSymptoms.slice(0, 5).map((symptom, index) => (
                   <span
@@ -192,13 +199,22 @@ export default function SymptomAnalysisCard({
           {/* Gentle suggestions - show only when severity warrants or pain is elevated */}
           {showSuggestions && analysis.suggestions.length > 0 && ((analysis.severity !== 'low') || ((memoizedCheckInData?.pain ?? 0) >= 4)) && (
             <div className="border-t border-purple-200 pt-3 mt-3">
-                <p className="text-sm text-gray-600 mb-2">Some things that might help:</p>
-              <ul className="space-y-1">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Some things that might help:</p>
+              <ul className="space-y-1.5">
                 {analysis.suggestions
                   .filter(s => !/best day|best so far|today was your best|oct\s*\d{1,2}/i.test(s))
                   .map((suggestion, index) => (
-                  <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
+                  <li key={index} className="text-sm text-gray-800 flex items-start gap-2">
+                    <span className="mt-0.5">
+                      {/^travel|airport|flight/i.test(suggestion) ? '🛫️' :
+                       /^sleep|bed|rest/i.test(suggestion) ? '🛌' :
+                       /^stress|breathe|calm|meditat/i.test(suggestion) ? '🧘' :
+                       /^hydrate|water|drink/i.test(suggestion) ? '💧' :
+                       /^food|meal|protein|carb|sugar/i.test(suggestion) ? '🍽️' :
+                       /^walk|move|stretch|yoga|exercise/i.test(suggestion) ? '🏃' :
+                       /^sauna|cold|ice|heat/i.test(suggestion) ? '🧊' :
+                       '🔸'}
+                    </span>
                     <span>{suggestion}</span>
                   </li>
                 ))}

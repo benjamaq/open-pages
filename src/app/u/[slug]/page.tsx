@@ -601,15 +601,15 @@ export default async function ProfilePage({ params, searchParams }: {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
           <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
             {/* Profile Photo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden border border-gray-200">
               {profileWithData.avatar_url ? (
                 <img 
                   src={profileWithData.avatar_url} 
                   alt={profileWithData.display_name}
-                  className="w-32 h-32 object-cover rounded-full border border-gray-200"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-32 h-32 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full border border-gray-200 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
                   <span className="text-3xl font-bold text-white">
                     {profileWithData.display_name.charAt(0).toUpperCase()}
                   </span>

@@ -40,6 +40,7 @@ interface PostCheckinResponseModalProps {
   category: string | null;
   specific: string | null;
   toneProfile: string; // CRITICAL - determines Elli's personality
+  isFirstCheckIn?: boolean;
 }
 
 export default function PostCheckinResponseModal({
@@ -50,7 +51,8 @@ export default function PostCheckinResponseModal({
   checkInData,
   category,
   specific,
-  toneProfile
+  toneProfile,
+  isFirstCheckIn = false
 }: PostCheckinResponseModalProps) {
   const [showTyping, setShowTyping] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
@@ -82,10 +84,17 @@ export default function PostCheckinResponseModal({
     checkInData
   });
 
-  // Generate tone-aware response using fallback template, enforcing pain mention when pain > 0
+  // Generate tone-aware response. For first check-in, use a curated welcome
   const { pain, mood, sleep } = checkInData;
-  let response = profile.fallbackTemplates.postCheckin(pain, mood, sleep, userName);
-  if (typeof pain === 'number' && pain > 0 && !/\bpain\b/i.test(response)) {
+  let response = '';
+  if (isFirstCheckIn) {
+    response = `Perfect, ${userName}. Your first check-in is saved.
+
+Keep showing up each day and I'll start spotting what works for you.`;
+  } else {
+    response = profile.fallbackTemplates.postCheckin(pain, mood, sleep, userName);
+  }
+  if (!isFirstCheckIn && typeof pain === 'number' && pain > 0 && !/\bpain\b/i.test(response)) {
     response = `Pain at ${pain}/10. ${response}`;
   }
 

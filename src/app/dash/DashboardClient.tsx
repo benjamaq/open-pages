@@ -31,6 +31,7 @@ import FirstTimeTooltip from '../../components/FirstTimeTooltip'
 import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, needsOrchestratedOnboarding } from '@/lib/onboarding'
 import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
+import { PatternsCard } from './components/PatternsCard'
 
 interface Profile {
   id: string
@@ -1639,7 +1640,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showAddMovement, setShowAddMovement] = useState(false)
   const [showAddMindfulness, setShowAddMindfulness] = useState(false)
   const [showAddFood, setShowAddFood] = useState(false)
-  const [showNotifyFollowers, setShowNotifyFollowers] = useState(false)
+  // Removed manual Notify Followers UI from dashboard
   const [isHoveringHero, setIsHoveringHero] = useState(false)
   const [displayName, setDisplayName] = useState(profile.display_name)
   const [showDisplayName, setShowDisplayName] = useState(true)
@@ -2058,14 +2059,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-1 overflow-x-auto">
-                {/* Public Profile Button */}
+                {/* My Health Button (Public page) */}
                 <button
                   data-tour="public-profile"
                   onClick={() => window.location.href = `/u/${profile.slug}`}
                   className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
-                  <span className="hidden sm:inline">Public Profile</span>
-                  <span className="sm:hidden">Public Profile</span>
+                  <span className="hidden sm:inline">My Health</span>
+                  <span className="sm:hidden">My Health</span>
                 </button>
 
                 {/* Copy Public Link Button */}
@@ -2126,20 +2127,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     title="Copy your public Biostackr link"
                   >
                     <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Profile link</span>
+                    <span className="hidden sm:inline">Share link</span>
                     <span className="sm:hidden">Link</span>
                   </button>
                 </FirstTimeTooltip>
-
-                {/* Notify Followers Button */}
-            <button
-                  onClick={() => setShowNotifyFollowers(true)}
-                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
-                  title="Send update to your followers"
-                >
-                  <span className="hidden sm:inline">Notify Followers</span>
-                  <span className="sm:hidden">Notify</span>
-            </button>
 
 
                 {/* Journal Link */}
@@ -2372,6 +2363,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 />
               </div>
             )}
+            {/* Patterns (separate card, 24px gap below) */}
+            <PatternsCard userId={userId} />
 
             {/* Helpful Note - Above Supplements */}
             <div className="text-center mb-4">
@@ -2600,6 +2593,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 )}
               </div>
             </div>
+
           </div>
         )}
 
@@ -2652,93 +2646,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           />
         )}
 
-        {/* Notify Followers Modal */}
-        {showNotifyFollowers && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-sm sm:max-w-md w-full p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-semibold">Notify Followers</h3>
-                <button
-                  onClick={() => setShowNotifyFollowers(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                Send an instant update to your followers about recent changes to your stack.
-              </p>
-
-              <div className="space-y-3 sm:space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Update message (optional)
-                  </label>
-                  <textarea
-                    placeholder="e.g., 'Starting a new supplement protocol' or 'Added sauna to my routine'"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    rows={3}
-                  />
-            </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                  <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-2">What's Included in Email Notifications:</h4>
-                  <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
-                    <li>• <strong>Your custom message</strong> (what you type above)</li>
-                    <li>• <strong>Your public profile link</strong> (automatically included)</li>
-                    <li>• <strong>Recent changes summary</strong> (supplements, protocols, etc.)</li>
-                    <li>• <strong>Unsubscribe link</strong> (followers can opt out anytime)</li>
-                  </ul>
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <p className="text-xs text-blue-700">
-                      <strong>Frequency:</strong> 1 instant notification per day max • Weekly digest every Sunday at 5pm with ALL changes
-                    </p>
-                  </div>
-          </div>
-
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button
-                    onClick={() => setShowNotifyFollowers(false)}
-                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                    onClick={async () => {
-                      try {
-                        const message = document.querySelector('textarea')?.value || ''
-                        
-                        const response = await fetch('/api/notify-followers', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ message }),
-                        })
-
-                        const result = await response.json()
-
-                        if (response.ok) {
-                          alert(`✅ Instant notification sent to ${result.followersNotified} follower(s)!\n\nRemember: They'll also get a weekly digest every Sunday with ALL your changes.`)
-                          setShowNotifyFollowers(false)
-                        } else {
-                          throw new Error(result.error || 'Failed to send update')
-                        }
-                      } catch (error) {
-                        console.error('Failed to notify followers:', error)
-                        alert('Failed to send update. Please try again.')
-                      }
-                    }}
-                    className="w-full sm:flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    Send Update
-                </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Manual Notify Followers removed from dashboard */}
 
         {/* Dashboard Header Editor */}
         <DashboardHeaderEditor

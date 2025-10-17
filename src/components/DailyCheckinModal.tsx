@@ -215,7 +215,7 @@ export default function DailyCheckinModal({
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
     energy: currentEnergy,
-    pain: 0,
+    pain: 5,
     sleep: 5,
     symptoms: [],
     painLocations: [],
@@ -228,6 +228,10 @@ export default function DailyCheckinModal({
   const [showSymptoms, setShowSymptoms] = useState(false)
   const [customSymptomInput, setCustomSymptomInput] = useState('')
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
+  const [selectedLifestyleFactors, setSelectedLifestyleFactors] = useState<string[]>([])
+  const [selectedExercise, setSelectedExercise] = useState<string>('none')
+  const [exerciseIntensity, setExerciseIntensity] = useState<string>('')
+  const [selectedProtocols, setSelectedProtocols] = useState<string[]>([])
 
   // Load saved data when modal opens
   useEffect(() => {
@@ -302,6 +306,10 @@ export default function DailyCheckinModal({
             painLocations: data.painLocations || [],
             customSymptoms: data.customSymptoms || []
           }))
+          setSelectedLifestyleFactors(Array.isArray(data.lifestyleFactors) ? data.lifestyleFactors : [])
+          setSelectedExercise(typeof data.exerciseType === 'string' ? data.exerciseType : 'none')
+          setExerciseIntensity(typeof data.exerciseIntensity === 'string' ? data.exerciseIntensity : '')
+          setSelectedProtocols(Array.isArray(data.protocols) ? data.protocols : [])
         }
       } catch (error) {
         console.error('Error loading saved check-in:', error)
@@ -363,14 +371,18 @@ export default function DailyCheckinModal({
       
       // Save to database via mood API
       const moodData = {
-        mood: draft.energy, // Map energy to mood score
-        sleep_quality: draft.sleep || 5,
-        pain: draft.pain || 0,
+        mood: typeof draft.energy === 'number' ? draft.energy : 5, // Map energy to mood score
+        sleep_quality: typeof draft.sleep === 'number' ? draft.sleep : 5,
+        pain: typeof draft.pain === 'number' ? draft.pain : 5,
         tags: draft.mood ? [draft.mood] : [],
         journal: draft.moodComment || null,
         symptoms: draft.symptoms || [],
         pain_locations: draft.painLocations || [],
-        custom_symptoms: draft.customSymptoms || []
+        custom_symptoms: draft.customSymptoms || [],
+        lifestyle_factors: selectedLifestyleFactors,
+        exercise_type: selectedExercise,
+        exercise_intensity: exerciseIntensity || null,
+        protocols: selectedProtocols
       }
 
       const moodResponse = await fetch('/api/mood/today', {
@@ -394,6 +406,10 @@ export default function DailyCheckinModal({
         symptoms: draft.symptoms,
         painLocations: draft.painLocations,
         customSymptoms: draft.customSymptoms,
+        lifestyleFactors: selectedLifestyleFactors,
+        exerciseType: selectedExercise,
+        exerciseIntensity: exerciseIntensity,
+        protocols: selectedProtocols,
         date: today,
         userId: userId
       }))
@@ -1003,19 +1019,141 @@ export default function DailyCheckinModal({
                       </div>
                     )}
 
-                    {/* Notes Field */}
-                    <div className="pt-3 border-t border-zinc-200">
-                      <label className="block text-sm font-medium text-zinc-900 mb-2">Notes (optional)</label>
-                      <textarea
-                        value={draft.moodComment || ''}
-                        onChange={(e) => setDraft(d => ({ ...d, moodComment: e.target.value }))}
-                        placeholder="How are you feeling? Any observations?"
-                        className="w-full rounded-md border border-zinc-300 bg-white p-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                        rows={3}
-                      />
-                    </div>
+                    {/* Notes Field moved outside dropdown */}
                   </div>
                 )}
+              </div>
+
+              {/* Lifestyle Factors (optional) */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-3">Anything unusual today? (optional)</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'alcohol', icon: '🍷', label: 'Alcohol' },
+                    { id: 'high_carb_meal', icon: '🍝', label: 'High-carb meal' },
+                    { id: 'high_stress', icon: '😰', label: 'High stress' },
+                    { id: 'work_deadline', icon: '📅', label: 'Work deadline' },
+                    { id: 'sitting_all_day', icon: '💺', label: 'Sitting all day' },
+                    { id: 'too_much_caffeine', icon: '☕', label: 'Too much caffeine' },
+                    { id: 'dehydrated', icon: '💧', label: 'Dehydrated' },
+                    { id: 'ate_out', icon: '🍔', label: 'Ate out' },
+                    { id: 'poor_sleep_last_night', icon: '😴', label: 'Slept poorly' },
+                    { id: 'no_exercise', icon: '🛋️', label: 'No movement' }
+                  ].map(factor => (
+                    <button
+                      key={factor.id}
+                      type="button"
+                      onClick={() => setSelectedLifestyleFactors(prev => prev.includes(factor.id) ? prev.filter(id => id !== factor.id) : [...prev, factor.id])}
+                      className={`
+                        flex items-center gap-1 px-3 py-1.5 rounded-full text-sm
+                        ${selectedLifestyleFactors.includes(factor.id)
+                          ? 'bg-purple-100 text-purple-700 border-2 border-purple-400'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                        }
+                        hover:bg-purple-50 transition-colors
+                      `}
+                    >
+                      <span>{factor.icon}</span>
+                      <span>{factor.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Tap any that apply. This helps us find what affects your pain.</p>
+              </div>
+
+              {/* Exercise (optional) */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-2">Did you exercise today? (optional)</p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {[
+                    { id: 'none', icon: '🛋️', label: 'Rest day' },
+                    { id: 'walking', icon: '🚶', label: 'Walking' },
+                    { id: 'running', icon: '🏃', label: 'Running' },
+                    { id: 'gym', icon: '🏋️', label: 'Gym/Weights' },
+                    { id: 'yoga', icon: '🧘', label: 'Yoga/Stretch' },
+                    { id: 'swimming', icon: '🏊', label: 'Swimming' }
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setSelectedExercise(type.id)}
+                      className={`
+                        px-3 py-1.5 rounded-full text-sm
+                        ${selectedExercise === type.id
+                          ? 'bg-green-100 text-green-700 border-2 border-green-400'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                        }
+                      `}
+                    >
+                      {type.icon} {type.label}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedExercise && selectedExercise !== 'none' && (
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-600 mr-2">Intensity:</p>
+                    {['light', 'moderate', 'intense'].map(intensity => (
+                      <button
+                        key={intensity}
+                        type="button"
+                        onClick={() => setExerciseIntensity(intensity)}
+                        className={`
+                          px-2 py-1 rounded text-xs
+                          ${exerciseIntensity === intensity
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-200 text-gray-600'
+                          }
+                        `}
+                      >
+                        {intensity}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Protocols (optional) */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-3">Any recovery protocols today? (optional)</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'ice_bath', icon: '🧊', label: 'Ice bath' },
+                    { id: 'sauna', icon: '🔥', label: 'Sauna' },
+                    { id: 'meditation', icon: '🧘', label: 'Meditation' },
+                    { id: 'massage', icon: '💆', label: 'Massage' },
+                    { id: 'stretching', icon: '🤸', label: 'Stretching' },
+                    { id: 'red_light', icon: '💡', label: 'Red light therapy' }
+                  ].map(protocol => (
+                    <button
+                      key={protocol.id}
+                      type="button"
+                      onClick={() => setSelectedProtocols(prev => prev.includes(protocol.id) ? prev.filter(id => id !== protocol.id) : [...prev, protocol.id])}
+                      className={`
+                        flex items-center gap-1 px-3 py-1.5 rounded-full text-sm
+                        ${selectedProtocols.includes(protocol.id)
+                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-400'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                        }
+                      `}
+                    >
+                      <span>{protocol.icon}</span>
+                      <span>{protocol.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes Field (outside of Symptoms) */}
+              <div className="bg-white rounded-lg p-4 mt-4 border border-zinc-200">
+                <label className="block text-sm font-medium text-zinc-900 mb-2">Notes (optional)</label>
+                <textarea
+                  value={draft.moodComment || ''}
+                  onChange={(e) => setDraft(d => ({ ...d, moodComment: e.target.value }))}
+                  placeholder="How are you feeling? Any observations?"
+                  className="w-full rounded-md border border-zinc-300 bg-white p-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
+                  rows={3}
+                />
               </div>
 
               {/* Wearables Section */}

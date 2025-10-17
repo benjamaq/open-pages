@@ -455,15 +455,15 @@ export default async function ProfilePage({ params, searchParams }: {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-8">
           <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
             {/* Profile Photo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100">
               {profileWithData.avatar_url ? (
                 <img 
                   src={profileWithData.avatar_url} 
                   alt={profileWithData.display_name || 'Profile'} 
-                  className="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-100">
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                   <span className="text-2xl font-bold text-gray-400">
                     {(profileWithData.display_name || 'U').charAt(0).toUpperCase()}
                   </span>

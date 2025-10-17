@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('user_id', user.id)
       .eq('dismissed', false)
+      .eq('message_type', 'post_checkin')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

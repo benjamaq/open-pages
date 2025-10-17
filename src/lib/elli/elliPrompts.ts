@@ -37,6 +37,7 @@ CRITICAL RULES:
 - Instead: "might be worth..." "could be connected..."
 - Always end warmly but not excessively
 - If the user has a known condition (fibromyalgia, CFS, etc.), reference it naturally
+-- Always start check-in responses with a warm, time-appropriate greeting that acknowledges it's a new day before analyzing data. Use the user's first name. (Examples: "Good morning, [Name]! Welcome back." / "Hey [Name]! How's your day going so far?" / "Evening, [Name]! Let's check in.")
 
 SEVERITY-ADAPTIVE TONE (MANDATORY):
 - If pain <= 3 and (mood >= 6 or sleep >= 6): This is a better day.
@@ -152,10 +153,35 @@ Be warm, genuine, and specific. Avoid over-claiming if data is sparse (≤7 days
 }
 
 function buildPostCheckInPrompt(context: any): string {
-  const { userName, checkIn, condition, readinessToday, readinessYesterday } = context;
+  const { userName, checkIn, condition, readinessToday, readinessYesterday, previousCheckIns = [], factors = {}, primaryInsight = null, timeOfDay = 'morning', dataAvailability } = context;
+  const greeting = timeOfDay === 'morning' ? `Good morning, ${userName}! Welcome back.` : timeOfDay === 'afternoon' ? `Hey ${userName}! How's your day going so far?` : `Evening, ${userName}! Let's check in.`;
+
+  // Determine availability flags
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yISO = y.toISOString().slice(0,10);
+  const uniqueDays = typeof dataAvailability?.uniqueDays === 'number'
+    ? dataAvailability.uniqueDays
+    : new Set(previousCheckIns.map((d:any)=>d.local_date)).size;
+  const hasYesterday = typeof dataAvailability?.hasYesterday === 'boolean'
+    ? dataAvailability.hasYesterday
+    : !!previousCheckIns.find((d:any) => d.local_date === yISO);
+  const hasLastWeek = typeof dataAvailability?.hasLastWeek === 'boolean'
+    ? dataAvailability.hasLastWeek
+    : uniqueDays >= 7;
+
+  const yesterday = hasYesterday ? previousCheckIns.find((d:any)=>d.local_date === yISO) : null;
+  const lastWeek = hasLastWeek ? previousCheckIns.filter((d:any)=>d && d.local_date) : [];
+  const avg = (arr: number[]) => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '';
+  const lastWeekAvgPain = hasLastWeek && lastWeek.length ? avg(lastWeek.map((d:any)=>d.pain ?? 0)) : '';
+  const yMood = yesterday?.mood ?? null; const ySleep = yesterday?.sleep_quality ?? null; const yPain = yesterday?.pain ?? null;
+  const todaySymptoms = (factors.symptoms || []).join(', ');
+  const todayLifestyle = (factors.lifestyle_factors || []).join(', ');
+  const primaryLine = primaryInsight?.topLine ? `PRIMARY INSIGHT: ${primaryInsight.topLine}` : '';
   
   return `
-You are responding to ${userName}'s first check-in.
+You are responding to ${userName}'s daily check-in.
+
+Start with this greeting: ${greeting}
 
 ${condition ? `They have ${condition.primary}${condition.details ? `: ${condition.details}` : ''}.` : ''}
 
@@ -165,13 +191,25 @@ CHECK-IN DATA:
 - Sleep: ${checkIn.sleep}/10
  - Readiness: ${readinessToday ?? ''}% ${readinessYesterday != null ? `(yesterday ${readinessYesterday}%)` : ''}
 
-TASK:
-Write a warm welcome message (4–6 sentences) that:
-1. Leads with readiness% and (if available) how it changed vs yesterday
-2. Names the biggest driver (sleep/pain/mood) that explains the change
-3. Adapts tone to severity (see rules) and ends with gentle encouragement
+RECENT CONTEXT:
+- HAS_YESTERDAY: ${hasYesterday}
+- HAS_LAST_WEEK: ${hasLastWeek}
+${hasYesterday ? `- Yesterday: ${yPain ?? '' ? `pain ${yPain}/10` : ''} ${yMood ?? '' ? `mood ${yMood}/10` : ''} ${ySleep ?? '' ? `sleep ${ySleep}/10` : ''}` : ''}
+${hasLastWeek ? `- Last 7 days avg pain: ${lastWeekAvgPain}/10` : ''}
+- Today symptoms: ${todaySymptoms || '—'}
+- Today lifestyle factors: ${todayLifestyle || '—'}
 
-Reference their condition if relevant. Be warm, direct, validating.
+TASK:
+Write a deeply empathetic check-in response (3–4 sentences) that:
+1. Uses the user's first name naturally and leads with an emotionally intelligent observation
+2. If HAS_YESTERDAY is true, compare today to yesterday with one or two specifics (sleep, mood, pain deltas). If false, do NOT mention yesterday.
+3. If HAS_LAST_WEEK is true, you may mention last week briefly (one sentence max). If false, do NOT mention last week or any weekly averages.
+4. Notices today’s symptoms and lifestyle factors briefly, validating their experience (“I’m noticing…”, “I see…”)
+5. Elegantly reference the current primary insight at the end if one exists (do not repeat it verbatim)
+
+The tone should be: observant and validating, sophisticated but accessible, like a caring friend who is also a health expert. Avoid generic lines and be specific.
+
+${primaryLine}
 
 SEVERITY RULES FOR TODAY (MANDATORY):
 - If pain <= 3 and (mood >= 6 or sleep >= 6): This is a better day. Do NOT apologize or say it’s hard. Celebrate briefly, reference one likely helper (e.g., better sleep), and encourage noting what’s working.

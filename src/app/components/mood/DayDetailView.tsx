@@ -178,22 +178,22 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
-  // Calculate daily readiness score
-  const calculateReadinessScore = () => {
+  // Calculate daily readiness score as a percentage (0-100) to match dashboard
+  const calculateReadinessPct = () => {
     if (!dayData) return 0;
     const mood = dayData.mood ?? 5;
     const sleep = dayData.sleep_quality ?? 5;
     const pain = dayData.pain ?? 0;
     const painInverted = 10 - pain;
-    const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4);
-    return Math.round(score * 10) / 10;
+    const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4); // 0-10
+    return Math.round(score * 10); // 0-100
   };
 
-  const getReadinessDisplay = (score: number) => {
-    if (score >= 8) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excellent', emoji: '🚀' };
-    if (score >= 6) return { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Good', emoji: '👍' };
-    if (score >= 4) return { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Fair', emoji: '⚡' };
-    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Poor', emoji: '😴' };
+  // Match dashboard descriptors
+  const getReadinessMeta = (pct: number) => {
+    if (pct >= 80) return { color: 'text-[#22c55e]', emoji: '☀️', message: 'Optimal capacity. Great day to tackle what matters most.' };
+    if (pct >= 50) return { color: 'text-[#f59e0b]', emoji: '⛵', message: 'Balanced energy. Listen to your body and move thoughtfully today.' };
+    return { color: 'text-[#ef4444]', emoji: '🏖️', message: 'Recovery focus. Prioritize rest and essential tasks only.' };
   };
 
   const getMoodColor = (mood: number | null) => {
@@ -284,22 +284,21 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
             </div>
           ) : dayData ? (
             <div className="space-y-6">
-              {/* Daily Readiness Score */}
+              {/* Daily Readiness Score (match dashboard: percentage + descriptor) */}
               <div className="text-center py-4">
                 <div className="flex items-center justify-center space-x-3">
-                  <span className={`text-3xl font-bold ${getReadinessDisplay(calculateReadinessScore()).color}`}>
-                    {calculateReadinessScore()}
+                  <span className={`text-3xl font-bold ${getReadinessMeta(calculateReadinessPct()).color}`}>
+                    {calculateReadinessPct()}%
                   </span>
-                  <span className="text-xl text-gray-400">/10</span>
+                  <div className="text-2xl">
+                    {getReadinessMeta(calculateReadinessPct()).emoji}
+                  </div>
                   <div className="text-base font-medium text-gray-700">
                     Daily Readiness Score
                   </div>
-                  <div className="text-2xl">
-                    {getReadinessDisplay(calculateReadinessScore()).emoji}
-                  </div>
                 </div>
-                <div className={`text-sm font-medium mt-1 ${getReadinessDisplay(calculateReadinessScore()).color}`}>
-                  {getReadinessDisplay(calculateReadinessScore()).label}
+                <div className="mt-1 text-sm text-gray-900 text-center">
+                  {getReadinessMeta(calculateReadinessPct()).message}
                 </div>
               </div>
 

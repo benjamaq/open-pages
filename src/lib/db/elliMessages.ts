@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 export interface ElliMessage {
   id: string;
   user_id: string;
-  message_type: 'welcome' | 'post_checkin' | 'dashboard' | 'milestone' | 'post_supplement';
+  message_type: 'welcome' | 'post_checkin' | 'dashboard' | 'milestone' | 'post_supplement' | 'insight';
   message_text: string;
   context: any;
   created_at: string;
@@ -40,6 +40,58 @@ export async function saveElliMessage(
   } catch (err) {
     console.warn('Elli message save error (fallback to console):', err);
     console.log('Elli message generated:', { userId, messageType, messageText, context });
+  }
+}
+
+/**
+ * Save or update an INSIGHT message while preserving created_at
+ * We identify insights by (user_id, context.insight_key). If one exists,
+ * we update message_text/context but keep the original created_at so
+ * timestamps remain stable across recomputations.
+ */
+export async function saveOrUpdateInsightMessage(
+  userId: string,
+  messageText: string,
+  context: any
+): Promise<void> {
+  const supabase = await createClient();
+  const insightKey = context?.insight_key;
+  if (!insightKey) {
+    // Fallback to regular insert if no key provided
+    await saveElliMessage(userId, 'insight', messageText, context);
+    return;
+  }
+
+  try {
+    // Find the most recent existing insight with same key
+    const { data: existing } = await supabase
+      .from('elli_messages')
+      .select('id, created_at')
+      .eq('user_id', userId)
+      .eq('message_type', 'insight')
+      .contains('context', { insight_key: insightKey } as any)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      // Update in place (preserve created_at)
+      const { error: updErr } = await supabase
+        .from('elli_messages')
+        .update({ message_text: messageText, context })
+        .eq('id', existing.id);
+      if (updErr) {
+        console.warn('Insight update failed; inserting new instead:', updErr.message);
+        await saveElliMessage(userId, 'insight', messageText, context);
+      }
+      return;
+    }
+
+    // No existing: insert new
+    await saveElliMessage(userId, 'insight', messageText, context);
+  } catch (err) {
+    console.warn('saveOrUpdateInsightMessage error, falling back to insert:', err);
+    await saveElliMessage(userId, 'insight', messageText, context);
   }
 }
 

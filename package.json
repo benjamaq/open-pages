@@ -6,7 +6,8 @@
     "dev": "next dev --port 3009",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:test": "tsx scripts/seedTestData.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.5.4",
@@ -34,10 +35,12 @@
     "@types/react-dom": "^19",
     "@types/stripe": "^8.0.416",
     "autoprefixer": "^10.4.21",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }

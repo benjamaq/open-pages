@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { computeAndPersistInsights } from '@/app/actions/insights'
+import { computeAndPersistSupplementInsights } from '@/app/actions/supplementsEffectiveness'
 
 export type DailyEntry = {
   id: string;
@@ -124,6 +126,31 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
     if (error) {
       console.error('Error saving daily entry:', error);
       return { ok: false, error: error.message };
+    }
+
+    // Compute and persist insights (sleep-pain, trend, best/worst)
+    let createdToday: Array<{ insight_key: string; type?: string }> = []
+    try {
+      const result = await computeAndPersistInsights(user.id)
+      // Re-fetch latest insights to compute novelty flags
+      const { data: recentInsights } = await supabase
+        .from('elli_messages')
+        .select('id, created_at, context')
+        .eq('user_id', user.id)
+        .eq('message_type', 'insight')
+        .order('created_at', { ascending: false })
+        .limit(10)
+      const todayISO = new Date().toISOString().split('T')[0]
+      createdToday = (recentInsights as any[] | null)?.filter((i) => (i.created_at || '').startsWith(todayISO)).map((i:any)=>({ insight_key: i.context?.insight_key, type: i.context?.type })) || []
+    } catch (e) {
+      console.warn('Insights computation/novelty failed (continuing):', e)
+    }
+
+    // Compute supplement effectiveness insights
+    try {
+      await computeAndPersistSupplementInsights(user.id)
+    } catch (e) {
+      console.warn('Supplement effectiveness computation failed (continuing):', e)
     }
 
     // Revalidate relevant paths

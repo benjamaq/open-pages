@@ -234,23 +234,25 @@ export default function MonthlyHeatmap({ onDayClick, data }: MonthlyHeatmapProps
         ))}
         
         {/* Calendar days */}
-        {calendarDays.map((day, index) => (
-          <button
-            key={index}
-            onClick={() => onDayClick(day.date)}
-            className={`
-              w-6 h-6 sm:w-8 sm:h-8 rounded text-xs font-medium transition-all hover:scale-110
-              ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'}
-              ${day.isToday ? 'ring-2 ring-blue-500' : ''}
-            `}
-            style={{
-              backgroundColor: getMetricColor(day.mood, selectedMetric)
-            }}
-            title={day.mood !== null ? `${selectedMetric === 'sleep_quality' ? 'Sleep' : selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)}: ${day.mood}/10` : 'No data'}
-          >
-            {day.day}
-          </button>
-        ))}
+        {calendarDays.map((day, index) => {
+          const hasData = day.mood !== null && day.mood !== undefined
+          const bg = getMetricColor(day.mood, selectedMetric)
+          const baseClasses = `w-6 h-6 sm:w-8 sm:h-8 rounded text-xs font-medium transition-all ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-300'} ${day.isToday ? 'ring-2 ring-blue-500' : ''}`
+          return (
+            <button
+              key={index}
+              onClick={() => onDayClick(day.date)}
+              className={`${baseClasses} ${hasData ? 'hover:scale-110' : 'hover:opacity-90'}`}
+              style={{
+                backgroundColor: bg,
+                border: hasData ? '1px solid rgba(0,0,0,0.06)' : '1px solid #e5e7eb'
+              }}
+              title={hasData ? `${selectedMetric === 'sleep_quality' ? 'Sleep' : selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)}: ${day.mood}/10` : 'No check-in'}
+            >
+              {day.day}
+            </button>
+          )
+        })}
       </div>
 
       {/* Legend */}

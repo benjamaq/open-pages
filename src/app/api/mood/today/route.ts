@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { generateAndSaveElliMessage } from '@/app/actions/generate-elli-message';
+import { computeAndPersistInsights } from '@/app/actions/insights';
 
 export async function GET() {
   try {
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { mood, sleep_quality, pain, tags, journal, symptoms, pain_locations, pain_types, custom_symptoms } = body;
+    const { mood, sleep_quality, pain, tags, journal, symptoms, pain_locations, pain_types, custom_symptoms, lifestyle_factors, exercise_type, exercise_intensity, protocols } = body;
     
     console.log('🔍 API - Received tags:', tags);
     console.log('🔍 API - Full body:', body);
@@ -98,11 +100,64 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    
-    return NextResponse.json({
-      success: true,
-      entry: data
-    });
+
+    // Fallback: if RPC doesn't handle new columns yet, ensure they're set via direct update
+    if ((Array.isArray(lifestyle_factors) && lifestyle_factors.length >= 0) || exercise_type !== undefined || exercise_intensity !== undefined || Array.isArray(protocols)) {
+      try {
+        await supabase
+          .from('daily_entries')
+          .update({ 
+            lifestyle_factors: Array.isArray(lifestyle_factors) ? lifestyle_factors : undefined,
+            exercise_type: typeof exercise_type === 'string' ? exercise_type : undefined,
+            exercise_intensity: typeof exercise_intensity === 'string' ? exercise_intensity : undefined,
+            protocols: Array.isArray(protocols) ? protocols : undefined,
+          })
+          .eq('user_id', user.id)
+          .eq('local_date', today);
+      } catch (e) {
+        console.warn('Could not persist additional fields via fallback:', e);
+      }
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Generate Elli post_checkin message immediately (bulletproof flow)
+    // ───────────────────────────────────────────────────────────────
+    try {
+      console.log('🔵 Check-in saved:', { userId: user.id, date: today });
+
+      const safeNum = (n: any, fallback: number) => (typeof n === 'number' && Number.isFinite(n) ? n : fallback);
+      const todayData = {
+        mood: safeNum(mood, 5),
+        sleep: safeNum(sleep_quality, 5),
+        pain: safeNum(pain, 5),
+      };
+
+      console.log('🔵 Generating Elli message for user:', user.id, 'with todayData:', todayData);
+      const result = await generateAndSaveElliMessage(user.id, 'post_checkin', todayData);
+      if (!result || !(result as any).message) {
+        console.error('❌ Check-in message generation failed');
+      } else {
+        const msg: string = (result as any).message as string;
+        if (typeof msg === 'string') {
+          console.log('🔵 OpenAI/template response received:', msg.length, 'chars');
+          console.log('🔵 Message saved for user:', user.id);
+        }
+      }
+    } catch (e) {
+      console.error('❌ Failed to generate/save Elli message after check-in:', e);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Compute insights separately and asynchronously (no coupling in UI)
+    // ───────────────────────────────────────────────────────────────
+    try {
+      const res = await computeAndPersistInsights(user.id);
+      console.log('🔵 Insights recomputed after check-in:', res);
+    } catch (e) {
+      console.warn('Insights recompute failed (continuing):', e);
+    }
+
+    return NextResponse.json({ success: true, entry: data });
   } catch (error) {
     console.error('Error saving mood data:', error);
     return NextResponse.json(

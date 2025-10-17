@@ -231,10 +231,44 @@ function extractSymptomsFromText(text: string): string[] {
     'stiff', 'sore', 'ache', 'cramp', 'spasm', 'inflammation',
     'swelling', 'numb', 'tingling', 'burning', 'throbbing'
   ];
+
+  // Contextual/lifestyle signals
+  const contextMap: Record<string, string> = {
+    'travel': 'travel_day',
+    'airport': 'travel_day',
+    'flight': 'travel_day',
+    'alcohol': 'alcohol_last_night',
+    'hungover': 'alcohol_last_night',
+    'deadline': 'work_deadline',
+    'work': 'work_deadline',
+    'stress': 'high_stress',
+    'stressed': 'high_stress',
+    'overwhelmed': 'overwhelm',
+    "i'm fucked": 'overwhelm',
+    'fuck': 'overwhelm',
+    'fucked': 'overwhelm',
+    'period': 'pms_pmdd',
+    'ovulation': 'ovulation_window',
+    'screen': 'screen_time',
+    'screens': 'screen_time',
+    'coffee': 'too_much_caffeine',
+    'caffeine': 'too_much_caffeine',
+    'dehydrated': 'dehydrated',
+    'no lunch': 'skipped_meal',
+    'skipped meal': 'skipped_meal',
+    'nauseous': 'nausea'
+  };
   
   symptomKeywords.forEach(keyword => {
     if (lowerText.includes(keyword)) {
       symptoms.push(keyword);
+    }
+  });
+
+  // Map context/lifestyle terms into canonical chip slugs
+  Object.keys(contextMap).forEach(key => {
+    if (lowerText.includes(key)) {
+      symptoms.push(contextMap[key]);
     }
   });
   

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { TypeAnimation } from 'react-type-animation';
 import { CHIP_CATALOG } from '@/lib/constants/chip-catalog';
 import { ChevronDown, Calendar } from 'lucide-react';
 import FirstTimeTooltip from '../../../components/FirstTimeTooltip';
@@ -8,7 +9,10 @@ import MonthlyHeatmap from './MonthlyHeatmap';
 import DayDetailView from './DayDetailView';
 import SymptomAnalysisCard from '../../../components/elli/SymptomAnalysisCard';
 import { getAllElliMessages } from '../../../lib/db/elliMessages';
+import { createClient } from '@/lib/supabase/client';
+import { InsightsSection } from '../../dash/components/InsightsSection';
 import { getMonthData } from '../../../lib/db/mood';
+import SupplementsTodayChecklist from './SupplementsTodayChecklist';
 
 interface TodaySnapshotProps {
   userId?: string;
@@ -213,12 +217,10 @@ export default function TodaySnapshot({
   }, [todayEntry?.mood, todayEntry?.sleep_quality, todayEntry?.pain]);
 
   // Get color and label for readiness score
-  const getReadinessDisplay = (score: number) => {
-    if (score >= 8) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excellent', emoji: '🚀' };
-    if (score >= 6.5) return { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Good', emoji: '✨' };
-    if (score >= 5) return { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Moderate', emoji: '😐' };
-    if (score >= 3.5) return { color: 'text-orange-600', bg: 'bg-orange-50', label: 'Low', emoji: '⚠️' };
-    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Rest Day', emoji: '🛌' };
+  const getReadinessMeta = (pct: number) => {
+    if (pct >= 80) return { color: 'text-[#22c55e]', emoji: '☀️', message: 'Optimal capacity. Great day to tackle what matters most.' };
+    if (pct >= 50) return { color: 'text-[#f59e0b]', emoji: '⛵', message: 'Balanced energy. Listen to your body and move thoughtfully today.' };
+    return { color: 'text-[#ef4444]', emoji: '🏖️', message: 'Recovery focus. Prioritize rest and essential tasks only.' };
   };
 
   // Memoize checkInData to prevent unnecessary re-renders in child components
@@ -329,6 +331,8 @@ export default function TodaySnapshot({
       {/* Single Column Layout */}
       <div className="w-full">
         
+        {/* (Welcome moved to Elli section when no check-in today) */}
+
 
         {/* Collapsible Content */}
         {!collapsed && (
@@ -342,54 +346,15 @@ export default function TodaySnapshot({
 
             {/* Header Row: Title + Buttons */}
             <div className="flex items-center justify-between mb-4">
-              {/* Mood Tracker Title - Left */}
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Mood Tracker</h2>
-              
-              {/* Buttons - Right Side */}
-              <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-bold text-gray-900">Mood Tracker</h2>
+              <div className="flex items-center gap-2">
+                <button onClick={onEditToday} className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm">Check in</button>
                 <button
-                  onClick={onEditToday}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  className={`px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm ${showHeatmap ? 'bg-gray-100 text-gray-700 border border-gray-300' : 'bg-purple-50 text-purple-700 border-2 border-purple-300 hover:bg-purple-100'}`}
                 >
-                  Check in
+                  {showHeatmap ? 'Hide' : 'Last 30 Days'}
                 </button>
-                
-                <FirstTimeTooltip
-                  id="heatmap-hover"
-                  message="Click any day to see what you were taking and how you felt"
-                  trigger="hover"
-                  position="bottom"
-                >
-                  <button
-                    onClick={() => {
-                      setShowHeatmap(!showHeatmap)
-                      // Mark heatmap as explored for WhatsNextCard
-                      if (!showHeatmap) {
-                        localStorage.setItem('heatmapExplored', 'true')
-                      }
-                    }}
-                    className={`px-2 sm:px-3 py-2 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-1 sm:space-x-2 ${
-                      showHeatmap 
-                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' 
-                        : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110'
-                    }`}
-                    aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                    title="My Last 30 Days"
-                  >
-                    <Calendar 
-                      className="w-4 h-4"
-                      style={{ 
-                        color: 'white',
-                        fill: 'none',
-                        stroke: 'white',
-                        strokeWidth: '2'
-                      }} 
-                    />
-        <span className="hidden xs:inline sm:inline text-sm font-medium whitespace-nowrap">
-          {showHeatmap ? 'Hide' : 'Last 30 Days'}
-        </span>
-                  </button>
-                </FirstTimeTooltip>
               </div>
             </div>
 
@@ -409,8 +374,9 @@ export default function TodaySnapshot({
               </div>
             )}
 
-            {/* Mood, Sleep, Pain Row - Mobile compact, Desktop spaced */}
-            <div className="flex justify-between items-center mb-3 px-2 sm:max-w-6xl sm:mx-auto sm:px-16">
+            {/* SECTION 1: METRICS */}
+            {/* Sliders */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
               <MetricPill 
                 label="Mood" 
                 value={todayEntry?.mood ?? 0} 
@@ -436,152 +402,95 @@ export default function TodaySnapshot({
                 className="w-full"
               />
             </div>
-            
-            {/* Elli's Commentary Section */}
-            {checkInData && (todayEntry?.mood !== null || todayEntry?.sleep_quality !== null || todayEntry?.pain !== null) && (
-              <div className="px-2 sm:px-16 mt-6">
-                {/* Elli Header - Single header for all Elli sections */}
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">💙</span>
-                    <span className="text-base font-medium text-gray-700">Elli says...</span>
-                  </div>
-                  <button
-                    onClick={() => { setShowHistory(prev => !prev); if (!history) loadHistory(); }}
-                    className="text-sm text-gray-900 font-medium underline underline-offset-2"
-                  >
-                    See history
-                  </button>
+            {/* Weekly Averages + Readiness + Wearables (3-column grid) */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">This week's averages</div>
+                <div className="text-sm text-gray-700">Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Daily Readiness Score</div>
+                <div className="border-2 border-black rounded-lg p-3 bg-white">
+                  <div className={`text-3xl font-bold leading-none ${getReadinessMeta(readinessScore).color}`}>{readinessScore}%</div>
                 </div>
-                
+                <div className="mt-2 text-sm text-gray-900 text-center w-full px-2">
+                  <span className="mr-1 text-base">{getReadinessMeta(readinessScore).emoji}</span>
+                  {getReadinessMeta(readinessScore).message}
+                </div>
+              </div>
+              <div className="text-right text-xs text-gray-500">
+                {todayEntry?.wearables?.device ? `${todayEntry.wearables.device} connected` : 'No wearables data'}
+              </div>
+            </div>
 
-                {/* Quick Stats strip removed per request */}
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-6"></div>
 
-                {/* AI Symptom Analysis */}
-                <SymptomAnalysisCard 
-                  checkInData={checkInData}
-                  userName={userName}
-                />
-
-                {/* Inline history drawer under header, above message box */}
-                {showHistory && (
-                  <div className="mt-4 mb-2 border border-purple-200 rounded-lg bg-purple-50/60">
-                    <div className="p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-800">Recent messages</p>
-                        {loadingHistory && <span className="text-xs text-gray-500">Loading…</span>}
+            {/* SECTION 2: ELLI */}
+            {(() => {
+              const hasCheckinToday = !!(todayEntry && (todayEntry.mood != null || todayEntry.sleep_quality != null || todayEntry.pain != null));
+              return (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-500">💙</span>
+                      <span className="text-base sm:text-lg font-semibold text-gray-800">Elli says...</span>
+                    </div>
+                    <button onClick={() => { setShowHistory(prev => !prev); if (!history) loadHistory(); }} className="text-xs text-purple-700 hover:text-purple-900">Daily Summaries</button>
+                  </div>
+                  {hasCheckinToday && checkInData ? (
+                    <SymptomAnalysisCard checkInData={checkInData} userName={userName} />
+                  ) : (
+                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">💙</span>
+                        <div className="flex-1">
+                          <TypeAnimation
+                            sequence={[(() => { const h=new Date().getHours(); const greet = h<12?`Good morning, ${userName}! Welcome back.`: h<18?`Good afternoon, ${userName}! Welcome back.`:`Good evening, ${userName}! Welcome back.`; return `${greet}\n\nReady to check in? Let's see how today's treating you—every check-in helps us spot what's working.`; })()]}
+                            speed={35}
+                            wrapper="p"
+                            className="text-[15px] sm:text-base text-gray-800 leading-relaxed"
+                            cursor={false}
+                          />
+                        </div>
                       </div>
-                      {history && history.length === 0 && (
-                        <p className="text-sm text-gray-500 mt-2">No history yet.</p>
-                      )}
-                      {history && history.length > 0 && (
-                        <ul className="space-y-2 max-h-56 overflow-auto mt-2">
-                          {history.map((msg: any) => (
-                            <li key={msg.id} className="p-3 bg-white rounded-md border border-purple-100">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">{new Date(msg.created_at).toLocaleString()}</span>
-                                <span className="text-[10px] uppercase tracking-wide text-gray-400">{msg.message_type}</span>
-                              </div>
-                              <p className="mt-1 text-sm text-gray-700 whitespace-pre-line">{msg.message_text}</p>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Description under sliders - Hidden on mobile */}
-            <div className="hidden sm:block text-xs text-gray-500 text-center mb-5">
-              These metrics and your contextual factors will appear in your daily summary when you click on your heatmap as a record of what was happening that day.
-            </div>
+                  )}
+                  {showHistory && (
+                    <div className="mt-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="p-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-800">Recent messages</p>
+                          {loadingHistory && <span className="text-xs text-gray-500">Loading…</span>}
+                        </div>
+                        {history && history.length === 0 && <p className="text-sm text-gray-500 mt-2">No history yet.</p>}
+                        {history && history.length > 0 && (
+                          <ul className="space-y-2 max-h-56 overflow-auto mt-2">
+                            {history.map((msg: any) => (
+                              <li key={msg.id} className="p-3 bg-white rounded-md border border-gray-100">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-500">{new Date(msg.created_at).toLocaleString()}</span>
+                                  <span className="text-[10px] uppercase tracking-wide text-gray-400">{msg.message_type}</span>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-700 whitespace-pre-line">{msg.message_text}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
-            {/* Bottom Row: Today's Averages + Readiness Score + Wearables */}
-            <div className="mt-6">
-              {/* Desktop Layout */}
-              <div className="hidden sm:flex items-center justify-between">
-                {/* Weekly Averages - Left */}
-                <div className="text-sm text-gray-600">
-                  <div>This week's averages: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
-                </div>
-                
-                {/* Readiness Score - Center (compact with black outline) */}
-                <div className="flex items-center space-x-3" onClick={onEditToday}>
-                  <div className="border-2 border-black rounded-lg p-3 bg-white cursor-pointer hover:shadow-md transition-all">
-                    <div className="flex items-center space-x-2">
-                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore / 10).color}`}>
-                        {readinessScore}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">
-                    Daily Readiness
-                  </div>
-                </div>
-                
-                {/* Wearables - Right */}
-                <div className="text-sm text-gray-600 text-right">
-                  {todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                    <div>
-                      <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
-                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
-                    </div>
-                  )}
-                  {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                    <div>
-                      <div>Recovery: {avgRecovery}</div>
-                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
-                    </div>
-                  )}
-                  {!todayEntry?.wearables?.device && avgRecovery === '—' && (
-                    <div>No wearables data</div>
-                  )}
-                </div>
-              </div>
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-6"></div>
 
-              {/* Mobile Layout */}
-              <div className="sm:hidden space-y-3">
-                {/* Readiness Score - Top on mobile */}
-                <div className="flex items-center justify-center space-x-2" onClick={onEditToday}>
-                  <div className="border-2 border-black rounded-lg p-2 bg-white cursor-pointer hover:shadow-md transition-all">
-                    <div className="flex items-center space-x-1">
-                      <span className={`text-2xl font-bold ${getReadinessDisplay(readinessScore / 10).color}`}>
-                        {readinessScore}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">
-                    Daily Readiness
-                  </div>
-                </div>
-                
-                {/* Weekly Averages - Center on mobile */}
-                <div className="text-sm text-gray-600 text-center">
-                  <div>This week: Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
-                </div>
-                
-                {/* Wearables - Bottom on mobile */}
-                <div className="text-sm text-gray-600 text-center">
-                  {todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                    <div>
-                      <div>{todayEntry.wearables.device} Recovery: {avgRecovery}</div>
-                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
-                    </div>
-                  )}
-                  {!todayEntry?.wearables?.device && avgRecovery !== '—' && (
-                    <div>
-                      <div>Recovery: {avgRecovery}</div>
-                      {avgWearableSleep !== '—' && <div>Sleep: {avgWearableSleep}</div>}
-                    </div>
-                  )}
-                  {!todayEntry?.wearables?.device && avgRecovery === '—' && (
-                    <div>No wearables data</div>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* SECTION 3: PATTERNS */}
+            <InsightsFetcher userId={userId} />
+
+            {/* Patterns moved to separate card below per new hierarchy */}
 
           </>
         )}
@@ -601,4 +510,28 @@ export default function TodaySnapshot({
       )}
     </div>
   );
+}
+
+function InsightsFetcher({ userId }: { userId?: string }) {
+  const [insights, setInsights] = useState<any[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      if (!userId) return
+      const supabase = createClient()
+      const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      const { data } = await supabase
+        .from('elli_messages')
+        .select('id, created_at, context, is_primary')
+        .eq('user_id', userId)
+        .eq('message_type', 'insight')
+        .gte('created_at', sevenDaysAgo.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(25)
+      setInsights(data || [])
+    }
+    load()
+  }, [userId])
+
+  return <InsightsSection insights={insights} />
 }

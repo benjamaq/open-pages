@@ -98,9 +98,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   const [showMoreSymptoms, setShowMoreSymptoms] = useState(false);
 
   // Collapsible section states
-  // For first check-in (onboarding), all optional sections are collapsed by default
-  // For regular check-ins, Today's Vibe is open by default
-  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(!isActuallyFirstCheckIn);
+  // Collapse Today's Vibe by default (both first and subsequent check-ins)
+  const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(false);
   const [isContextSectionOpen, setIsContextSectionOpen] = useState(false);
   const [isSymptomsSectionOpen, setIsSymptomsSectionOpen] = useState(false);
   const [isNotesSectionOpen, setIsNotesSectionOpen] = useState(false);
@@ -119,6 +118,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       return () => clearTimeout(timer);
     }
   }, [isOpen, isOnboarding, isActuallyFirstCheckIn]);
+
+  // Ensure collapsible sections start closed whenever a new day opens the drawer
+  useEffect(() => {
+    if (isOpen) {
+      setIsVibeSectionOpen(false);
+      setIsContextSectionOpen(false);
+      setIsSymptomsSectionOpen(false);
+      setIsNotesSectionOpen(false);
+    }
+  }, [isOpen, date]);
 
   // Core symptoms from the brief
   const coreSymptoms = [
@@ -229,9 +238,29 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     // Calculate weighted score
     const score = (mood * 0.2) + (sleep * 0.4) + (painInverted * 0.4);
     
-    // Round to 1 decimal place
-    return Math.round(score * 10) / 10;
+    // Convert to percentage 0-100
+    return Math.round(((score / 10) * 100));
   }, [formData.mood, formData.sleep_quality, formData.pain]);
+
+  // Meta (color, emoji, message) for readiness percent
+  const readinessMeta = useMemo(() => {
+    const pct = readinessScore || 0;
+    if (pct >= 80) return {
+      colorClass: 'text-[#22c55e]',
+      emoji: '☀️',
+      message: 'Optimal capacity. Great day to tackle what matters most.'
+    };
+    if (pct >= 50) return {
+      colorClass: 'text-[#f59e0b]',
+      emoji: '⛵',
+      message: 'Balanced energy. Listen to your body and move thoughtfully today.'
+    };
+    return {
+      colorClass: 'text-[#ef4444]',
+      emoji: '🏖️',
+      message: 'Recovery focus. Prioritize rest and essential tasks only.'
+    };
+  }, [readinessScore]);
 
   // Get color and label for readiness score
   const getReadinessDisplay = (score: number) => {
@@ -832,12 +861,14 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             {/* 🎯 Readiness Score Display - Standalone */}
             <div className="text-center py-2">
               <div className="flex items-center justify-center space-x-3">
-                <span className={`text-3xl font-bold ${getReadinessDisplay(readinessScore).color}`}>
-                  {readinessScore}
+                <span className={`text-3xl font-bold ${readinessMeta.colorClass}`}>
+                  {readinessScore}%
                 </span>
-                <span className="text-lg text-gray-400">/10</span>
-                <span className="text-sm font-medium text-gray-700 ml-2">Today's Readiness Score</span>
-                <span className="text-2xl">{getReadinessDisplay(readinessScore).emoji}</span>
+                <span className="text-2xl">{readinessMeta.emoji}</span>
+                <span className="text-sm font-medium text-gray-700 ml-2">Today's Readiness</span>
+              </div>
+              <div className="mt-1 text-sm text-gray-900 text-center">
+                {readinessMeta.message}
               </div>
             </div>
 

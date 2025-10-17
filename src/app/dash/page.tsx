@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 // Force fresh data on every request to prevent caching issues
 export const dynamic = 'force-dynamic'
 import DashboardClient from './DashboardClient'
+import SupplementsEffectivenessCard from './components/SupplementsEffectivenessCard'
 import type { Metadata } from 'next'
 
 // Add cache-busting metadata for Safari
@@ -227,6 +228,9 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardClient profile={profileWithTier} counts={counts} todayItems={todayItems} userId={user.id} />
+    <>
+      <DashboardClient profile={profileWithTier} counts={counts} todayItems={todayItems} userId={user.id} />
+      <SupplementsEffectivenessCard userId={user.id} />
+    </>
   )
 }

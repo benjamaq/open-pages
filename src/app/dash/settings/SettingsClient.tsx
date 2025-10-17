@@ -448,16 +448,16 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           <div>
             <h3 className="font-medium text-gray-900 mb-4">Profile Photo</h3>
             <div className="flex items-center space-x-4">
-              <div className="relative">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-gray-200">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt="Profile"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-200"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 border-2 border-gray-200 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg sm:text-xl">
+                  <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
+                    <span className="text-white font-bold text-base sm:text-lg">
                       {profile.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                     </span>
                   </div>
@@ -491,13 +491,10 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   JPG, PNG or WEBP. Max 5MB.
                 </p>
                 
-                {/* Browser compatibility notice */}
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-xs text-yellow-800">
-                    ⚠️ <strong>Chrome users:</strong> If file picker doesn't open, try Safari or use HTTPS. 
-                    Chrome blocks file uploads on HTTP localhost for security.
-                  </p>
-                </div>
+                {/* Browser compatibility note (subtle) */}
+                <p className="mt-2 text-xs text-gray-500">
+                  Note for Chrome on localhost: if the file picker doesn’t open, try Safari or use HTTPS.
+                </p>
               </div>
             </div>
           </div>
@@ -1106,11 +1103,11 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3">
                 <span className="text-lg">💊</span>
                 <div>
-                            <h5 className="font-medium text-gray-900">Supplements</h5>
-                            <p className="text-xs text-gray-500">Daily supplement stack</p>
+                            <h5 className="font-medium text-gray-900">Supplements & Meds</h5>
+                            <p className="text-xs text-gray-500">Daily supplements and medications</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -1125,11 +1122,11 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             </div>
 
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3">
                 <span className="text-lg">📋</span>
                 <div>
-                            <h5 className="font-medium text-gray-900">Protocols</h5>
-                            <p className="text-xs text-gray-500">Health protocols</p>
+                            <h5 className="font-medium text-gray-900">Protocols & Recovery</h5>
+                            <p className="text-xs text-gray-500">Recovery protocols</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -1144,11 +1141,11 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             </div>
 
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3">
                 <span className="text-lg">🏃‍♂️</span>
                 <div>
-                            <h5 className="font-medium text-gray-900">Movement</h5>
-                            <p className="text-xs text-gray-500">Exercise & recovery activities</p>
+                            <h5 className="font-medium text-gray-900">Training & Rehab</h5>
+                            <p className="text-xs text-gray-500">Training and rehab activities</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -1163,11 +1160,11 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             </div>
 
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3">
                 <span className="text-lg">🧘‍♀️</span>
                 <div>
-                            <h5 className="font-medium text-gray-900">Mindfulness</h5>
-                            <p className="text-xs text-gray-500">Meditation practices</p>
+                            <h5 className="font-medium text-gray-900">Mind & Stress</h5>
+                            <p className="text-xs text-gray-500">Mind and stress support</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

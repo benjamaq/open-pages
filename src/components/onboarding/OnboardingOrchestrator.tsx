@@ -210,6 +210,7 @@ export default function OnboardingOrchestrator({
           category={selectedCategory}
           specific={selectedSpecific}
           toneProfile={toneProfile} // CRITICAL - tone profile passed here
+          isFirstCheckIn={true}
         />
       )}
 
@@ -217,7 +218,7 @@ export default function OnboardingOrchestrator({
       {currentStep === 'add_supplement' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-xl font-semibold mb-4 text-center">Add what you're taking</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-center tracking-tight">Add what you're taking</h2>
             <p className="text-gray-600 text-sm mb-6 text-center">
               Add your first supplement, medication, or anything you're trying. We'll add the rest on your dashboard.
             </p>
@@ -234,6 +235,7 @@ export default function OnboardingOrchestrator({
               }}
               itemType="supplements"
               isOnboarding={true}
+              buttonColor="purple"
             />
           </div>
         </div>
