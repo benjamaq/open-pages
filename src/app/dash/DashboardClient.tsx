@@ -28,6 +28,7 @@ import OnboardingModal from '../../components/OnboardingModal'
 import OnboardingBanner from '../../components/OnboardingBanner'
 import WhatsNextCard from '../../components/WhatsNextCard'
 import FirstTimeTooltip from '../../components/FirstTimeTooltip'
+import PWAInstallButton from '../components/PWAInstallButton'
 import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, needsOrchestratedOnboarding } from '@/lib/onboarding'
 import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
@@ -2085,15 +2086,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-1 overflow-x-auto">
                 {/* Install PWA Button (shows until installed) */}
-                {typeof window !== 'undefined' && (
-                  <>
-                    {/* dynamic import to avoid SSR issues */}
-                    {(() => {
-                      const Btn = require('../components/PWAInstallButton').default;
-                      return <Btn />;
-                    })()}
-                  </>
-                )}
+                <PWAInstallButton />
                 {/* My Health Button (Public page) */}
                 <button
                   data-tour="public-profile"
