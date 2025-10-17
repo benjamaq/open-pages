@@ -26,6 +26,25 @@ export default function SymptomAnalysisCard({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [fromSavedToday, setFromSavedToday] = useState(false);
 
+  // Map tags/symptoms to domain-specific suggestions (max 3 overall later)
+  const deriveSuggestionsFromTags = (tags: string[] = []): string[] => {
+    const recs: string[] = [];
+    const has = (slug: string) => tags.includes(slug);
+    if (has('getting_sick') || has('fever_chills') || has('cold_flu')) {
+      recs.push('Prioritize rest and fluids today; lighten non‑essential tasks');
+      recs.push('Aim for an earlier bedtime to support recovery (7–9 hours)');
+    }
+    if (has('gi_upset') || has('nausea') || has('stomach_pain') || has('gi_upset')) {
+      recs.push('Keep meals simple (bland/low‑fat) and hydrate with electrolytes');
+      recs.push('Skip alcohol and heavy foods until symptoms settle');
+    }
+    if (has('alcohol_last_night') || has('hangover')) {
+      recs.push('Extra water + electrolytes this morning; gentle movement only');
+      recs.push('Protect tonight’s sleep (7+ hrs) to normalize tomorrow’s readiness');
+    }
+    return Array.from(new Set(recs));
+  };
+
   // Memoize checkInData to prevent unnecessary re-renders
   const memoizedCheckInData = useMemo(() => checkInData, [
     checkInData.mood,
@@ -63,12 +82,15 @@ export default function SymptomAnalysisCard({
                 } else {
                 // Compute structured chips/suggestions even when using saved message text
                 const computed = await analyzeSymptomsAction(memoizedCheckInData, userName);
+                // Ensure we always have 2–3 practical suggestions by merging tag‑based recs
+                const tagRecs = deriveSuggestionsFromTags(memoizedCheckInData.tags || computed?.detectedSymptoms as any);
+                const mergedRecs = Array.from(new Set([...(computed?.suggestions || []), ...tagRecs])).slice(0, 3);
                 const merged: SymptomAnalysis = {
                   detectedSymptoms: computed?.detectedSymptoms || [],
                   primaryConcern: computed?.primaryConcern || null,
                   severity: computed?.severity || 'low',
                   empatheticResponse: msg.message_text,
-                  suggestions: computed?.suggestions || []
+                  suggestions: mergedRecs
                 };
                 if (mounted) {
                   setAnalysis(merged);
@@ -93,9 +115,11 @@ export default function SymptomAnalysisCard({
 
         // 2) Fallback: analyze on the fly (e.g., first ever load without saved message)
         const result = await analyzeSymptomsAction(memoizedCheckInData, userName);
+        const tagRecs = deriveSuggestionsFromTags(memoizedCheckInData.tags || result?.detectedSymptoms as any);
+        const mergedRecs = Array.from(new Set([...(result?.suggestions || []), ...tagRecs])).slice(0, 3);
         
         if (mounted) {
-          setAnalysis(result);
+          setAnalysis({ ...result, suggestions: mergedRecs });
           setIsAnalyzing(false);
           
           // Show suggestions after a delay (only if meaningful)

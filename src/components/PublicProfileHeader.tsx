@@ -74,6 +74,12 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
         <div className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium" style={{ color: '#5C6370' }}>
           {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </div>
+        {/* Readiness Today (if available) */}
+        {typeof currentProfile?.readiness === 'number' && (
+          <div className="px-3 py-1.5 rounded-full text-xs font-medium border bg-white text-gray-900 border-gray-200 flex items-center gap-1">
+            <span>Readiness {currentProfile.readiness}%</span>
+          </div>
+        )}
         
 
         {/* Eating Style Pill - Only show if user has set one, or if it's their own profile */}
