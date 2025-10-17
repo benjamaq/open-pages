@@ -348,10 +348,10 @@ export default function TodaySnapshot({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Mood Tracker</h2>
               <div className="flex items-center gap-2">
-                <button onClick={onEditToday} className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm">Check in</button>
+                <button onClick={onEditToday} className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm h-8 sm:h-9">Check in</button>
                 <button
                   onClick={() => setShowHeatmap(!showHeatmap)}
-                  className={`px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm ${showHeatmap ? 'bg-gray-100 text-gray-700 border border-gray-300' : 'bg-purple-50 text-purple-700 border-2 border-purple-300 hover:bg-purple-100'}`}
+                  className={`px-2 py-1.5 text-xs rounded-md font-medium transition-colors sm:px-3 sm:py-2 sm:text-sm h-8 sm:h-9 ${showHeatmap ? 'bg-gray-100 text-gray-700 border border-gray-300' : 'bg-purple-50 text-purple-700 border-2 border-purple-300 hover:bg-purple-100'}`}
                 >
                   {showHeatmap ? 'Hide' : 'Last 30 Days'}
                 </button>
