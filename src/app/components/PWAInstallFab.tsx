@@ -1,11 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { usePWAInstall } from './usePWAInstall';
 
 export default function PWAInstallFab() {
   const { canInstall, installed, promptInstall } = usePWAInstall();
   const isiOS = useMemo(() => (typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)), []);
+
+  useEffect(() => {
+    console.log('🟣 PWAInstallFab mount', { isiOS, canInstall, installed });
+  }, [isiOS, canInstall, installed]);
 
   if (installed) return null;
   if (!canInstall && !isiOS) return null;

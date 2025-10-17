@@ -7,6 +7,10 @@ export default function PWAInstallButton() {
 
   // Always render on iOS to show fallback instructions
   const isiOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('🟣 PWAInstallButton render', { canInstall, installed, isiOS });
+  }
   if (installed) return null;
   if (!canInstall && !isiOS) return null;
 
