@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import PWARegister from "./components/PWARegister";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import PWAInstallFab from "./components/PWAInstallFab";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,6 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        <link rel="manifest" href="/manifest.json?v=2" />
+        <meta name="theme-color" content="#111827" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-BQJWCVNJH0"
@@ -57,9 +65,17 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+        <PWARegister />
+        <PWAInstallPrompt />
+        <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
           {children}
         </div>
+        <Script id="pwa-marker" strategy="afterInteractive">
+          {`
+            console.log('🔎 PWA marker: data-pwa-client =', document.body?.getAttribute('data-pwa-client'));
+          `}
+        </Script>
       </body>
     </html>
   );

@@ -28,6 +28,7 @@ import OnboardingModal from '../../components/OnboardingModal'
 import OnboardingBanner from '../../components/OnboardingBanner'
 import WhatsNextCard from '../../components/WhatsNextCard'
 import FirstTimeTooltip from '../../components/FirstTimeTooltip'
+import PWAInstallButton from '../components/PWAInstallButton'
 import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, needsOrchestratedOnboarding } from '@/lib/onboarding'
 import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
@@ -1405,6 +1406,31 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
   
+  // Lazy import to avoid large module diff; header button to install PWA
+  // We'll render near the "My Health Profile" button row
+  
+  // Ensure PWA registration runs on dashboard
+  useEffect(() => {
+    try {
+      console.log('🔵 PWA(dash): effect start');
+      if (typeof window === 'undefined') return;
+      if (!('serviceWorker' in navigator)) {
+        console.log('❌ PWA(dash): SW unsupported');
+        return;
+      }
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        console.log('🔵 PWA(dash): existing registration:', reg);
+        if (!reg) {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((r) => console.log('✅ PWA(dash): registered', r))
+            .catch((e) => console.error('❌ PWA(dash): register failed', e));
+        }
+      });
+    } catch (e) {
+      console.warn('⚠️ PWA(dash): error', e);
+    }
+  }, [])
+  
   
   // Debug today's items
   console.log('🔍 DashboardClient - todayItems:', {
@@ -2059,6 +2085,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3 py-1 overflow-x-auto">
+                {/* Install PWA Button (shows until installed) */}
+                <PWAInstallButton />
                 {/* My Health Button (Public page) */}
                 <button
                   data-tour="public-profile"
