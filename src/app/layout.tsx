@@ -5,6 +5,7 @@ import Script from "next/script";
 import PWARegister from "./components/PWARegister";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import PWAInstallFab from "./components/PWAInstallFab";
+import PWAHeaderInstall from "./components/PWAHeaderInstall";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -67,6 +68,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
         <PWARegister />
+        <PWAHeaderInstall />
         <PWAInstallPrompt />
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
