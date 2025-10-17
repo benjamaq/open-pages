@@ -447,13 +447,13 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           {/* Profile Photo */}
           <div>
             <h3 className="font-medium text-gray-900 mb-4">Profile Photo</h3>
-            <div className="flex items-center space-x-4">
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-gray-200">
+              <div className="flex items-center space-x-4">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0" style={{ aspectRatio: '1 / 1' }}>
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt="Profile"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover block"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
