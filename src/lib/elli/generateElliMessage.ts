@@ -242,6 +242,8 @@ function sanitizeMessage(message: string, context: ElliContext): string {
       result = result
         .replace(/[^.!?]*best day[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*best\s+so\s+far[^.!?]*[.!?]/gi, '')
+        .replace(/[^.!?]*best\s+day\s+so\s+far[^.!?]*[.!?]/gi, '')
+        .replace(/[^.!?]*today\s+is\s+(?:your\s+)?best[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*\bbest\b[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*pattern[s]?[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*(came\s+back|back\s+today|back\s+again|kept\s+showing\s+up|most\s+people\s+quit)[^.!?]*[.!?]/gi, '');

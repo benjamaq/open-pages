@@ -128,10 +128,10 @@ This person is exhausted and in pain. Show you see them. Be warm, honest, valida
   },
 
   // ========================================================================
-  // BIOHACKING (Empathy: 5/10)
+  // BIOHACKING (Empathy: 6/10) — slightly warmer onboarding language
   // ========================================================================
   biohacking: {
-    empathyLevel: 5,
+    empathyLevel: 6,
     systemPrompt: `You are Elli speaking to a biohacker.
 
 TONE:
@@ -166,8 +166,8 @@ This person wants signal, not sympathy. Be analytical, direct, focused on perfor
       welcome: "Hey! I'm Elli 💙. I'm here to help you optimize YOUR performance - tracking interventions, finding patterns, and discovering what actually moves the needle for YOU.",
       
       postCheckin: (pain, mood, sleep, userName) => {
-        // Simple response for onboarding - just scores
-        return `${userName}, baseline recorded. Readiness: ${mood}/10. Energy: ${mood}/10, Sleep: ${sleep}/10. Solid starting point. Let's track interventions against outcomes.`;
+        // Warmer first-day language, still data-forward; no "best day" claims
+        return `Hey ${userName} — first check‑in saved. Pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. Great starting baseline. I’ll track how today’s factors impact your next few days and surface what actually moves the needle for you.`;
       },
       
       milestone: (days, userName) => {
