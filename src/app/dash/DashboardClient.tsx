@@ -2065,7 +2065,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onClick={() => window.location.href = `/u/${profile.slug}`}
                   className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
                 >
-                  <span className="hidden sm:inline">My Health</span>
+                  <span className="hidden sm:inline">My Health Profile</span>
                   <span className="sm:hidden">My Health</span>
                 </button>
 
