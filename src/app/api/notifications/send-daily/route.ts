@@ -95,7 +95,7 @@ async function handleSend() {
           continue
         }
 
-        const userName = profile.display_name || 'User'
+        const userName = (profile.display_name || 'there').split(' ')[0]
         
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)

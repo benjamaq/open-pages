@@ -10,6 +10,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { ToneProfileType } from './toneProfiles';
+import { getFirstName } from '@/lib/name';
 
 export interface QuickContextUser {
   id: string;
@@ -70,7 +71,7 @@ export async function getQuickContext(userId: string): Promise<QuickContext> {
 
     const user: QuickContextUser = {
       id: userId,
-      first_name: profile.display_name || 'there',
+      first_name: getFirstName(profile.display_name, 'there'),
       tone_profile: (profile.tone_profile as ToneProfileType) || 'general_wellness',
       condition_category: profile.condition_category,
       condition_specific: profile.condition_specific,
