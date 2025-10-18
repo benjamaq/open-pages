@@ -571,7 +571,7 @@ export default function OnboardingModal({
           onClose={handleCheckinComplete}
           date={new Date().toISOString().split('T')[0]}
           userId={userProfile.id}
-          userName={(userProfile.display_name || displayName || 'there').split(' ')[0]}
+          userName={userProfile.display_name || displayName || 'User'}
           isFirstCheckIn={true}
           todayItems={{
             supplements: [],
@@ -591,7 +591,7 @@ export default function OnboardingModal({
         onClose={() => setShowPostSupplementModal(false)}
         onContinue={handlePostSupplementContinue}
         supplement={{ name: supplementName }}
-        userName={(userProfile?.display_name || 'there').split(' ')[0]}
+        userName={userProfile?.display_name || 'there'}
       />
     </div>
   )

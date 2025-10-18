@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateElliMessage, type ElliContext } from '@/lib/elli/generateElliMessage';
-import { getFirstName } from '@/lib/name';
 import { saveElliMessage, getUserCheckInCount, getRecentCheckIns } from '@/lib/db/elliMessages';
 import { getUserCondition } from '@/lib/db/userCondition';
 
@@ -31,7 +30,7 @@ export async function generateAndSaveElliMessage(
       .eq('user_id', userId)
       .single();
     
-    const userName = getFirstName(profile?.display_name, 'there');
+    const userName = profile?.display_name || 'User';
     
     // Get user's condition
     const condition = profile?.condition_primary ? {

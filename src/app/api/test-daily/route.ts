@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         }
 
         const userEmail = profile.users.email
-        const userName = (profile.name || 'there').split(' ')[0]
+        const userName = profile.name || 'User'
         
         console.log(`👤 Testing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)

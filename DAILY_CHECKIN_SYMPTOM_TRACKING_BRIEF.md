@@ -293,5 +293,3 @@ const painLocations = [
 
 
 
-
-
