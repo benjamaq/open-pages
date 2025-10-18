@@ -584,18 +584,84 @@ export default async function ProfilePage({ params, searchParams }: {
       </div>
 
       {/* Profile Header - Clean Profile Section */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Health Profile Heading - Match dashboard layout on mobile */}
+        <div className="py-6 pb-8">
+          <div className="flex items-start gap-4">
+            {/* Avatar */}
+            <div className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-200">
+              {profileWithData.avatar_url ? (
+                <img src={profileWithData.avatar_url} alt={profileWithData.display_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
+                  <span className="text-xl font-bold text-white">{(profileWithData.display_name || 'U').charAt(0).toUpperCase()}</span>
+                </div>
+              )}
+            </div>
+            {/* Name + Mission */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">{profileWithData.display_name}</h1>
+              <p className="text-sm text-gray-700">{profileWithData.bio || 'No mission set'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Profile content with exact module alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
-          <div className="flex flex-col space-y-6">
-            {/* Core Status Pills - Clean Row (Readiness, date, etc.) */}
-            <PublicProfileHeader 
-              profile={profileWithData}
-              isOwnProfile={isOwnProfile}
-              followerCount={followerCount}
-              showFollowerCount={(profile as any).show_public_followers ?? true}
-            />
+          <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+            {/* Profile Photo */}
+            <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden border border-gray-200">
+              {profileWithData.avatar_url ? (
+                <img 
+                  src={profileWithData.avatar_url} 
+                  alt={profileWithData.display_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {profileWithData.display_name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Content */}
+            <div className="flex-1 lg:flex lg:items-start lg:justify-between lg:gap-8">
+              {/* Left: Core Identity */}
+              <div className="flex-1 text-center lg:text-left">
+                {/* Name and Buttons Row - Level with Photo Top */}
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
+                  <h1 className="text-3xl font-bold mb-3 lg:mb-0" style={{ color: '#0F1115' }}>
+                    {profileWithData.display_name || 'Anonymous Stackr'}
+                  </h1>
+                  
+                </div>
+                
+                {/* Mission */}
+                <div className="mb-4">
+                  {profileWithData.bio ? (
+                    <p className="text-base" style={{ color: '#5C6370' }}>
+                      {profileWithData.bio}
+                    </p>
+                  ) : (
+                    <p className="text-base italic" style={{ color: '#A6AFBD' }}>
+                      No mission set
+                    </p>
+                  )}
+                </div>
+                
+                {/* Core Status Pills - Clean Row */}
+                <PublicProfileHeader 
+                  profile={profileWithData}
+                  isOwnProfile={isOwnProfile}
+                  followerCount={followerCount}
+                  showFollowerCount={(profile as any).show_public_followers ?? true}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
