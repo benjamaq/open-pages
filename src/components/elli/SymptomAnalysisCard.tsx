@@ -30,17 +30,32 @@ export default function SymptomAnalysisCard({
   const deriveSuggestionsFromTags = (tags: string[] = []): string[] => {
     const recs: string[] = [];
     const has = (slug: string) => tags.includes(slug);
+    // Illness context
     if (has('getting_sick') || has('fever_chills') || has('cold_flu')) {
       recs.push('Prioritize rest and fluids today; lighten non‑essential tasks');
       recs.push('Aim for an earlier bedtime to support recovery (7–9 hours)');
     }
-    if (has('gi_upset') || has('nausea') || has('stomach_pain') || has('gi_upset')) {
+    // GI upset
+    if (has('gi_upset') || has('nausea') || has('stomach_pain') || has('vomit') || has('diarrhea')) {
       recs.push('Keep meals simple (bland/low‑fat) and hydrate with electrolytes');
       recs.push('Skip alcohol and heavy foods until symptoms settle');
     }
-    if (has('alcohol_last_night') || has('hangover')) {
+    // Alcohol / dehydration
+    if (has('alcohol_last_night') || has('hangover') || has('dehydrated')) {
       recs.push('Extra water + electrolytes this morning; gentle movement only');
       recs.push('Protect tonight’s sleep (7+ hrs) to normalize tomorrow’s readiness');
+    }
+    // Poor sleep
+    if (has('poor_sleep_last_night') || has('poor_sleep')) {
+      recs.push('Protect tonight’s sleep: consistent wind‑down, dim lights, screens off early');
+    }
+    // Stress / anxiety
+    if (has('high_stress') || has('stress_at_work') || has('anxiety')) {
+      recs.push('Short breathing break (4‑7‑8) or 5‑10 minute walk to reset');
+    }
+    // Food triggers
+    if (has('ate_gluten') || has('ate_dairy') || has('heavy_meal') || has('ate_out')) {
+      recs.push('Keep meals simple today and note any symptom changes');
     }
     return Array.from(new Set(recs));
   };
@@ -120,16 +135,25 @@ export default function SymptomAnalysisCard({
           .filter(s => !/best day|best so far|today was your best|oct\s*\d{1,2}/i.test(s))
           .slice(0, 3);
 
-        // Ensure at least 2 concrete suggestions always show
+        // Add only relevant fallbacks based on what was actually shared (scores/tags)
         if (mergedRecs.length < 2) {
           const mood = memoizedCheckInData?.mood ?? 5;
           const sleep = memoizedCheckInData?.sleep ?? memoizedCheckInData?.sleep_quality ?? 5;
           const pain = memoizedCheckInData?.pain ?? 0;
+          const tags = memoizedCheckInData?.tags || [];
           const fallbacks: string[] = [];
-          if (sleep <= 5) fallbacks.push('Protect tonight’s sleep (consistent wind‑down, screens off early)');
-          if (pain >= 5) fallbacks.push('Gentle movement + heat/ice as tolerated; avoid overexertion');
-          if (mood <= 5) fallbacks.push('Low‑energy self‑care: short walk, text a friend, tea + breathing');
-          fallbacks.push('Hydrate and add electrolytes if you’ve been low on fluids');
+          if (sleep <= 4 || tags.includes('poor_sleep_last_night') || tags.includes('poor_sleep')) {
+            fallbacks.push('Protect tonight’s sleep (wind‑down, consistent bedtime)');
+          }
+          if (pain >= 6 || tags.includes('muscle_pain') || tags.includes('joint_pain')) {
+            fallbacks.push('Gentle movement + heat/ice as tolerated; avoid overexertion');
+          }
+          if (mood <= 4 || tags.includes('high_stress') || tags.includes('anxiety')) {
+            fallbacks.push('Low‑energy self‑care: 5‑10 minute walk or breathing break');
+          }
+          if (tags.includes('alcohol_last_night') || tags.includes('hangover') || tags.includes('dehydrated')) {
+            fallbacks.push('Hydrate with water + electrolytes and keep the day light');
+          }
           mergedRecs = Array.from(new Set([...mergedRecs, ...fallbacks])).slice(0, 3);
         }
         
@@ -137,10 +161,12 @@ export default function SymptomAnalysisCard({
           setAnalysis({ ...result, suggestions: mergedRecs });
           setIsAnalyzing(false);
           
-          // Always show suggestions after a short delay if we have any
+          // Show only when we actually have relevant suggestions
           setTimeout(() => {
             if (mounted && mergedRecs.length > 0) {
-              setShowSuggestions(true);
+              const painScore = memoizedCheckInData?.pain ?? 0;
+              const shouldShow = (result.severity !== 'low') || painScore >= 4 || (tagRecs.length > 0);
+              if (shouldShow) setShowSuggestions(true);
             }
           }, 1500);
         }
