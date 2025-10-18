@@ -583,29 +583,7 @@ export default async function ProfilePage({ params, searchParams }: {
         </div>
       </div>
 
-      {/* Profile Header - Clean Profile Section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Health Profile Heading - Match dashboard layout on mobile */}
-        <div className="py-6 pb-8">
-          <div className="flex items-start gap-4">
-            {/* Avatar */}
-            <div className="flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden border border-gray-200">
-              {profileWithData.avatar_url ? (
-                <img src={profileWithData.avatar_url} alt={profileWithData.display_name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
-                  <span className="text-xl font-bold text-white">{(profileWithData.display_name || 'U').charAt(0).toUpperCase()}</span>
-                </div>
-              )}
-            </div>
-            {/* Name + Mission */}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">{profileWithData.display_name}</h1>
-              <p className="text-sm text-gray-700">{profileWithData.bio || 'No mission set'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* (Removed duplicate subheader block: avatar/name/mission shown again below in main card) */}
 
       {/* Profile content with exact module alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
