@@ -437,13 +437,33 @@ export default async function ProfilePage({ params, searchParams }: {
         </div>
       </div>
 
-      {/* Profile Header - Clean Profile Section */}
+      {/* Profile Header - match dashboard layout */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Health Journey Heading - Centered and Prominent */}
-        <div className="text-center py-6 pb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            {profile.display_name ? `${profile.display_name}'s Health Journey` : 'My Health Journey'}
-          </h2>
+        <div className="flex items-start gap-4 sm:gap-8 py-6">
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border border-gray-200">
+              {profileWithData.avatar_url ? (
+                <img src={profileWithData.avatar_url} alt={profileWithData.display_name || 'Profile'} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
+                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+                    {(profileWithData.display_name || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Name + Mission */}
+          <div className="flex-1 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900">{profileWithData.display_name || 'Anonymous User'}</h1>
+            </div>
+            {profileWithData.bio && (
+              <p className="text-sm text-gray-700">{profileWithData.bio}</p>
+            )}
+          </div>
         </div>
       </div>
 
