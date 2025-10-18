@@ -2194,10 +2194,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
       {/* Dashboard Header - Profile Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-8 py-4 sm:py-8">
+          <div className="flex items-start gap-4 sm:gap-8 py-4 sm:py-8">
             
             {/* Left: Profile Photo */}
-            <div className="flex-shrink-0 mx-auto sm:mx-0">
+            <div className="flex-shrink-0">
               <div className="relative group">
                 {avatarUrl ? (
                   <img 
@@ -2232,17 +2232,22 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onChange={handleHeaderAvatarUpload}
                 />
               </div>
+              {/* Mobile-only: Display name under avatar */}
+              <div className="sm:hidden mt-2 text-left">
+                <h1 className="text-base font-bold text-gray-900">{displayName}</h1>
               </div>
+            </div>
 
             {/* Right of Photo: Text + Badges Stack */}
-            <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
+            <div className="flex-1 flex flex-col justify-between text-left">
               
               {/* Top: Display Name + Mission */}
               <div className="space-y-3">
                 {/* Clickable Profile Area */}
                 <div className="text-left group">
-                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
+                  {/* Name row hidden on mobile; shown on sm+ */}
+                  <div className="hidden sm:flex items-center justify-start gap-2 mb-1">
+                    <h1 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
                       {displayName}
                     </h1>
                     <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -2387,7 +2392,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   }}
                   onRefresh={loadTodayMoodEntry}
                   streak={streak}
-                  userName={profile.display_name || 'User'}
+                  userName={firstName || 'there'}
                 />
               </div>
             )}
@@ -2570,7 +2575,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             }}
             date={selectedMoodDate || new Date().toLocaleDateString('sv-SE')}
             userId={userId}
-            userName={profile.display_name || 'User'}
+            userName={firstName || 'there'}
             todayItems={todayItems}
             initialData={todayMoodEntry}
           />
@@ -2730,7 +2735,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           isOpen={true}
           onComplete={handleOrchestratedOnboardingComplete}
           userId={userId}
-          userName={profile.display_name || 'User'}
+          userName={firstName || 'there'}
         />
       )}
 

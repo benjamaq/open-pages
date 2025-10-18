@@ -13,13 +13,7 @@ export default async function SupplementsEffectivenessCard({ userId }: { userId:
     .limit(1)
 
   const insight = (data as any[] | null)?.[0]?.context
-  if (!insight) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 mt-6">
-        <div className="text-sm text-gray-500">No supplement effectiveness insight yet.</div>
-      </div>
-    )
-  }
+  if (!insight) return null
 
   const { icon, topLine, discovery, action } = insight
 

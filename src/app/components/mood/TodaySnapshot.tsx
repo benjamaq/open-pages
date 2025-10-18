@@ -365,7 +365,7 @@ export default function TodaySnapshot({
                   {displayChips.map((chip, index) => (
                     <span
                       key={index}
-                      className="px-3 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                      className="px-2.5 py-1.5 text-xs sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm hover:shadow-md transition-shadow"
                     >
                       {chip?.icon} {chip?.label}
                     </span>
