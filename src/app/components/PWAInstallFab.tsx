@@ -6,6 +6,7 @@ import { usePWAInstall } from './usePWAInstall';
 export default function PWAInstallFab() {
   const { canInstall, installed, promptInstall } = usePWAInstall();
   const isiOS = useMemo(() => (typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)), []);
+  const isPublicLink = useMemo(() => (typeof window !== 'undefined' && /\/(u|biostackr|share)\//.test(window.location.pathname)), []);
 
   useEffect(() => {
     console.log('🟣 PWAInstallFab mount', { isiOS, canInstall, installed });
@@ -13,6 +14,7 @@ export default function PWAInstallFab() {
 
   if (installed) return null;
   if (!canInstall && !isiOS) return null;
+  if (isPublicLink) return null;
 
   return (
     <div className="fixed right-3 bottom-3 z-[9999] sm:hidden">
