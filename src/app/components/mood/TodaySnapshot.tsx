@@ -402,9 +402,10 @@ export default function TodaySnapshot({
                 className="w-full"
               />
             </div>
-            {/* Weekly Averages + Readiness + Wearables (3-column grid) */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div>
+            {/* Weekly Averages + Readiness + Wearables */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {/* Hide weekly averages on mobile */}
+              <div className="hidden sm:block">
                 <div className="text-xs text-gray-500 mb-1">This week's averages</div>
                 <div className="text-sm text-gray-700">Mood {avgMood} • Sleep {avgSleep} • Pain {avgPain}</div>
               </div>
@@ -413,12 +414,12 @@ export default function TodaySnapshot({
                 <div className="border-2 border-black rounded-lg p-3 bg-white">
                   <div className={`text-3xl font-bold leading-none ${getReadinessMeta(readinessScore).color}`}>{readinessScore}%</div>
                 </div>
-                <div className="mt-2 text-sm text-gray-900 text-center w-full px-2 clamp-2-lines-mobile">
+                <div className="mt-2 text-sm text-gray-900 text-center w-full px-2">
                   <span className="mr-1 text-base">{getReadinessMeta(readinessScore).emoji}</span>
                   {getReadinessMeta(readinessScore).message}
                 </div>
               </div>
-              <div className="text-right text-xs text-gray-500">
+              <div className="text-xs text-gray-500 text-center sm:text-right">
                 {todayEntry?.wearables?.device ? `${todayEntry.wearables.device} connected` : 'No wearables data'}
               </div>
             </div>
