@@ -56,6 +56,62 @@
   text-wrap: balance;
 }
 
+/* Smooth scroll for anchors */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Typography system */
+.section-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 36px;
+  color: #1a1a1a;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subsection-title {
+  font-size: 24px;
+  color: #1a1a1a;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.body-text {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.caption-text {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* Mobile-only 2-line clamp utility */
+@media (max-width: 640px) {
+  .clamp-2-lines-mobile {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.feature-title {
+  font-size: 18px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
 /* Smooth transitions */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;

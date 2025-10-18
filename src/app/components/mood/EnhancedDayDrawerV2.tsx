@@ -41,7 +41,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'User', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'there', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -867,7 +867,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 <span className="text-2xl">{readinessMeta.emoji}</span>
                 <span className="text-sm font-medium text-gray-700 ml-2">Today's Readiness</span>
               </div>
-              <div className="mt-1 text-sm text-gray-900 text-center">
+              <div className="mt-1 text-sm text-gray-900 text-center clamp-2-lines-mobile">
                 {readinessMeta.message}
               </div>
             </div>

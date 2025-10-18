@@ -413,7 +413,7 @@ export default function TodaySnapshot({
                 <div className="border-2 border-black rounded-lg p-3 bg-white">
                   <div className={`text-3xl font-bold leading-none ${getReadinessMeta(readinessScore).color}`}>{readinessScore}%</div>
                 </div>
-                <div className="mt-2 text-sm text-gray-900 text-center w-full px-2">
+                <div className="mt-2 text-sm text-gray-900 text-center w-full px-2 clamp-2-lines-mobile">
                   <span className="mr-1 text-base">{getReadinessMeta(readinessScore).emoji}</span>
                   {getReadinessMeta(readinessScore).message}
                 </div>
