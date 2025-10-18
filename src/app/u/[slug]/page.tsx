@@ -14,6 +14,8 @@ import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
 import { getPublicMoodData } from '../../../lib/db/mood'
+import dynamic from 'next/dynamic'
+const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
 interface ProfilePageProps {
   params: Promise<{
@@ -587,11 +589,9 @@ export default async function ProfilePage({ params, searchParams }: {
 
       {/* Profile content with exact module alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Brief descriptor banner */}
+        {/* Brief descriptor banner (dismissable, client-only) */}
         <div className="mb-4">
-          <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl px-4 py-3 text-sm">
-            <span className="font-medium">Your health, ready to share.</span> This page shows everything you track—exactly how it appears when you share it with your doctor.
-          </div>
+          <MyHealthDescriptorBanner />
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
           <div className="flex items-start gap-4">
