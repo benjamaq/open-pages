@@ -590,9 +590,6 @@ export default async function ProfilePage({ params, searchParams }: {
           <h2 className="text-3xl font-bold text-gray-900">
             {profileWithData.display_name}'s Health Profile
           </h2>
-          <p className="text-sm text-gray-400 mt-2">
-            Mood • Sleep • Pain • Supplements • Protocols • Journal — with heatmap + day snapshots
-          </p>
         </div>
       </div>
 

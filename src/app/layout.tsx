@@ -13,13 +13,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BioStackr - Share Your Health Journey",
-  description: "Create and share your public health and biohacking profile. Showcase your stack, protocols, and wellness journey with a clean, professional profile page.",
-  keywords: ["health", "biohacking", "wellness", "profile", "stack", "protocols"],
+  title: "BioStackr – Understand Your Chronic Pain in 20 Seconds a Day",
+  description: "Track pain, mood and sleep, log what you’re trying, and finally see patterns that help you manage chronic pain. Private by default; share with your doctor when ready.",
+  keywords: ["chronic pain", "fibromyalgia", "autoimmune", "pain tracking", "sleep", "mood", "doctor", "shareable link"],
   authors: [{ name: "Open Pages" }],
   openGraph: {
-    title: "BioStackr - Share Your Health Journey",
-    description: "Create and share your public health and biohacking profile.",
+    title: "BioStackr – Understand Your Chronic Pain",
+    description: "Track pain, mood and sleep against what you’re trying. See patterns and share a timeline with your doctor.",
     type: "website",
   },
 };
@@ -66,9 +66,12 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-sans antialiased text-gray-900 min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+      <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed" style={{ backgroundColor: '#FFFFFF' }}>
         <PWARegister />
-        <PWAHeaderInstall />
+        {/* Hide PWA header on shared link pages and desktop by default via CSS hook */}
+        {!globalThis?.document?.body?.classList?.contains('public-link') && (
+          <PWAHeaderInstall />
+        )}
         <PWAInstallPrompt />
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">

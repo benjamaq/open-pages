@@ -444,9 +444,6 @@ export default async function ProfilePage({ params, searchParams }: {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {profile.display_name ? `${profile.display_name}'s Health Journey` : 'My Health Journey'}
           </h2>
-          <p className="text-sm text-gray-400 mt-2">
-            Mood • Sleep • Pain • Supps/Meds • Protocols • Journal — with heatmap + day snapshots
-          </p>
         </div>
       </div>
 

@@ -6,6 +6,9 @@ import { usePWAInstall } from './usePWAInstall';
 export default function PWAHeaderInstall() {
   const { canInstall, installed, promptInstall } = usePWAInstall();
   const isiOS = useMemo(() => (typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)), []);
+  // Hide on desktop and on public link pages (/u/, /biostackr/, /share/)
+  const isDesktop = useMemo(() => (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 768px)').matches), []);
+  const isPublicLink = useMemo(() => (typeof window !== 'undefined' && /\/(u|biostackr|share)\//.test(window.location.pathname)), []);
   const [dismissed, setDismissed] = useState(false);
   const isiOSChrome = useMemo(() => {
     if (typeof navigator === 'undefined') return false;
@@ -26,6 +29,7 @@ export default function PWAHeaderInstall() {
   };
 
   if (installed || dismissed) return null;
+  if (isDesktop || isPublicLink) return null;
 
   const show = isiOS || canInstall;
   if (!show) return null;

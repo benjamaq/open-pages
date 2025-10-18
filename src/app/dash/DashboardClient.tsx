@@ -2232,10 +2232,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   onChange={handleHeaderAvatarUpload}
                 />
               </div>
-              {/* Mobile-only: Display name under avatar */}
-              <div className="sm:hidden mt-2 text-left">
-                <h1 className="text-base font-bold text-gray-900">{displayName}</h1>
-              </div>
+              {/* Mobile: Name to the right via overall flex; keep only avatar in this column */}
             </div>
 
             {/* Right of Photo: Text + Badges Stack */}
@@ -2245,8 +2242,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
               <div className="space-y-3">
                 {/* Clickable Profile Area */}
                 <div className="text-left group">
-                  {/* Name row hidden on mobile; shown on sm+ */}
-                  <div className="hidden sm:flex items-center justify-start gap-2 mb-1">
+                  {/* Name row */}
+                  <div className="flex items-center justify-start gap-2 mb-1">
                     <h1 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
                       {displayName}
                     </h1>
