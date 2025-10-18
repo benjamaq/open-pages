@@ -146,7 +146,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
       {showFirstVisit && (
         <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
-            <div className="text-sm text-gray-600 mb-3">📋 Your Complete Health Overview</div>
+            <div className="text-sm text-gray-600 mb-3">📋 This is your complete health overview page.</div>
             <p className="text-sm text-gray-700 mb-2">Everything you track—check-ins, supplements, journal, patterns—shown in one place.</p>
             <p className="text-sm text-gray-700">This is also what your doctor sees when you share. Control what's visible in privacy settings.</p>
             <div className="mt-4 text-right">
