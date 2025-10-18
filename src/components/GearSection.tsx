@@ -70,8 +70,8 @@ export default function GearSection({ gear }: GearSectionProps) {
                       <GearItem key={item.id} item={item} getCategoryIcon={getCategoryIcon} />
                     ))}
                   </div>
-                </div>
-              )}
+            </div>
+          )}
 
               {/* Past Gear */}
               {pastGear.length > 0 && (

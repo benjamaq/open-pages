@@ -57,7 +57,7 @@ export default function ProtocolsSection({ protocols }: ProtocolsSectionProps) {
                 ))
               ) : (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-gray-500">No protocols shared yet</p>
+                  <p className="text-gray-500">No protocols & recovery yet</p>
                 </div>
               )}
             </Grid>

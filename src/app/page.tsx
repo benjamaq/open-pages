@@ -51,7 +51,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
+          <div className="grid gap-8 lg:grid lg:grid-cols-12 lg:gap-16 items-center -mt-4 lg:-mt-8">
             <div className="lg:col-span-6">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight max-w-[28ch] text-left">
                 Track how you feel. See what actually works
@@ -59,17 +59,17 @@ export default function Home() {
               <p className="mt-6 text-base sm:text-lg text-gray-900 leading-loose max-w-[70ch] text-left font-light">
                 BioStackr connects your supplements, meds, and protocols with mood, sleep, and pain tracking—empowering you to see the patterns that drive your health.
               </p>
-              <div className="mt-10">
-                <div className="flex flex-col sm:flex-row gap-4 justify-start items-start">
+            <div className="mt-8 sm:mt-10">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start items-stretch sm:items-start w-full sm:w-auto">
                 <Link 
                   href="/auth/signup" 
-                    className="bg-gray-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-black transition-colors w-full sm:w-auto text-center"
+                    className="bg-gray-900 text-white px-5 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-black transition-colors w-full sm:w-auto text-center"
                 >
                     Start Free
                 </Link>
                 <Link 
                   href="/examples"
-                    className="text-gray-600 hover:text-gray-900 px-6 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold transition-colors border border-gray-300 hover:border-gray-400 w-full sm:w-auto text-center"
+                    className="text-gray-600 hover:text-gray-900 px-5 py-3 sm:px-8 sm:py-4 rounded-lg text-base sm:text-lg font-semibold transition-colors border border-gray-300 hover:border-gray-400 w-full sm:w-auto text-center"
                 >
                     See examples
                 </Link>
@@ -228,7 +228,7 @@ export default function Home() {
       {/* See Patterns, Not Just Numbers */}
       <section className="py-8 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-16 items-center">
             {/* Left side - Text */}
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
@@ -321,7 +321,7 @@ export default function Home() {
                   <span className="text-xs text-gray-500">Whoop Recovery 92 • Sleep 85</span>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
                   <div className="text-center">
                     <div className="w-10 h-10 rounded-full bg-green-600 mx-auto mb-1 flex items-center justify-center text-white text-base font-bold">9</div>
                     <span className="text-xs text-gray-600">Mood</span>
@@ -376,7 +376,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="text-green-500 text-2xl mb-3">✓</div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">One unified dashboard for everything</h3>
@@ -425,7 +425,7 @@ export default function Home() {
             </h2>
                   </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -524,7 +524,7 @@ export default function Home() {
       {/* Share what matters. Hide what doesn't. */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-16 items-center">
             {/* Right side - Copy (moved to left for mobile) */}
             <div className="order-1 lg:order-2">
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
@@ -622,7 +622,7 @@ export default function Home() {
             </h2>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -695,7 +695,7 @@ export default function Home() {
             </p>
                     </div>
           
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+          <div className="grid grid-cols-1 gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-20 items-start">
             {/* Left side - Visual */}
             <div className="space-y-8">
               <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl border border-white/50">
@@ -1022,7 +1022,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-12">
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

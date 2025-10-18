@@ -60,7 +60,7 @@ export default function MindfulnessSection({ mindfulnessItems }: MindfulnessSect
                 ))
               ) : (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-gray-500">No mindfulness practices shared yet</p>
+                  <p className="text-gray-500">No mind & stress yet</p>
                 </div>
               )}
             </Grid>

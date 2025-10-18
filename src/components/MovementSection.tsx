@@ -60,7 +60,7 @@ export default function MovementSection({ movementItems }: MovementSectionProps)
                 ))
               ) : (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-gray-500">No movement activities shared yet</p>
+                  <p className="text-gray-500">No training & rehab yet</p>
                 </div>
               )}
             </Grid>

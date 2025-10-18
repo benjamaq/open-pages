@@ -99,7 +99,7 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">No supplements shared yet</p>
+                <p className="text-gray-500">No supplements & meds yet</p>
               </div>
             )}
           </div>
