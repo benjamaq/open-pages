@@ -467,49 +467,17 @@ export default async function ProfilePage({ params, searchParams }: {
         </div>
       </div>
 
-      {/* Profile content with exact module alignment */}
+      {/* Profile content: pills/stats only (header above handles avatar/name/mission) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-8">
-          <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
-            {/* Profile Photo */}
-            <div className="flex-shrink-0 w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100">
-              {profileWithData.avatar_url ? (
-                <img 
-                  src={profileWithData.avatar_url} 
-                  alt={profileWithData.display_name || 'Profile'} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-400">
-                    {(profileWithData.display_name || 'U').charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {profileWithData.display_name || 'Anonymous User'}
-              </h1>
-              {profileWithData.bio && (
-                <p className="text-gray-600 mb-4 max-w-2xl">
-                  {profileWithData.bio}
-                </p>
-              )}
-              
-              {/* Public Profile Header with follower count and other stats */}
-              <PublicProfileWithFollow
-                profile={profileWithData}
-                isOwnProfile={isOwnProfile}
-                initialFollowerCount={followerCount}
-                showFollowerCount={(profile as any).show_public_followers ?? true}
-                isSharedPublicLink={isSharedPublicLink}
-                isBetaUser={false} // TODO: Add beta user detection
-              />
-            </div>
-          </div>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6">
+          <PublicProfileWithFollow
+            profile={profileWithData}
+            isOwnProfile={isOwnProfile}
+            initialFollowerCount={followerCount}
+            showFollowerCount={(profile as any).show_public_followers ?? true}
+            isSharedPublicLink={isSharedPublicLink}
+            isBetaUser={false}
+          />
         </div>
       </div>
 
