@@ -116,20 +116,33 @@ export default function SymptomAnalysisCard({
         // 2) Fallback: analyze on the fly (e.g., first ever load without saved message)
         const result = await analyzeSymptomsAction(memoizedCheckInData, userName);
         const tagRecs = deriveSuggestionsFromTags(memoizedCheckInData.tags || result?.detectedSymptoms as any);
-        const mergedRecs = Array.from(new Set([...(result?.suggestions || []), ...tagRecs])).slice(0, 3);
+        let mergedRecs = Array.from(new Set([...(result?.suggestions || []), ...tagRecs]))
+          .filter(s => !/best day|best so far|today was your best|oct\s*\d{1,2}/i.test(s))
+          .slice(0, 3);
+
+        // Ensure at least 2 concrete suggestions always show
+        if (mergedRecs.length < 2) {
+          const mood = memoizedCheckInData?.mood ?? 5;
+          const sleep = memoizedCheckInData?.sleep ?? memoizedCheckInData?.sleep_quality ?? 5;
+          const pain = memoizedCheckInData?.pain ?? 0;
+          const fallbacks: string[] = [];
+          if (sleep <= 5) fallbacks.push('Protect tonight’s sleep (consistent wind‑down, screens off early)');
+          if (pain >= 5) fallbacks.push('Gentle movement + heat/ice as tolerated; avoid overexertion');
+          if (mood <= 5) fallbacks.push('Low‑energy self‑care: short walk, text a friend, tea + breathing');
+          fallbacks.push('Hydrate and add electrolytes if you’ve been low on fluids');
+          mergedRecs = Array.from(new Set([...mergedRecs, ...fallbacks])).slice(0, 3);
+        }
         
         if (mounted) {
           setAnalysis({ ...result, suggestions: mergedRecs });
           setIsAnalyzing(false);
           
-          // Show suggestions after a delay (only if meaningful)
+          // Always show suggestions after a short delay if we have any
           setTimeout(() => {
-            if (mounted && result) {
-              const painScore = memoizedCheckInData?.pain ?? 0;
-              const allow = result.severity !== 'low' || painScore >= 4;
-              if (allow && result.suggestions.length > 0) setShowSuggestions(true);
+            if (mounted && mergedRecs.length > 0) {
+              setShowSuggestions(true);
             }
-          }, 3000);
+          }, 1500);
         }
       } catch (error) {
         console.error('Error analyzing symptoms:', error);

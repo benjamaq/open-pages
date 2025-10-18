@@ -2091,7 +2091,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 <button
                   data-tour="public-profile"
                   onClick={() => window.location.href = `/u/${profile.slug}`}
-                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 h-8 flex items-center"
                 >
                   <span className="hidden sm:inline">My Health Profile</span>
                   <span className="sm:hidden">My Health</span>
@@ -2151,7 +2151,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                         alert(`Your public link: ${linkText}\n\nPlease copy this link manually.`)
                       }
                     }}
-                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1"
+                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1 h-8"
                     title="Copy your public Biostackr link"
                   >
                     <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -2164,7 +2164,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 {/* Journal Link */}
             <button
                   onClick={() => window.location.href = `/u/${profile.slug}#journal`}
-                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                  className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 h-8 flex items-center"
             >
                   <span className="hidden sm:inline">Journal & Notes</span>
                   <span className="sm:hidden">Journal</span>
@@ -2182,7 +2182,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     onClick={() => {
                       window.location.href = '/dash/settings'
                     }}
-                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
+                    className="bg-gray-900 text-white px-1 sm:px-2 lg:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0 h-8 flex items-center"
                   >
                     Settings
                   </button>
