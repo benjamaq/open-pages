@@ -18,6 +18,7 @@ interface PublicProfileHeaderProps {
 export default function PublicProfileHeader({ profile, isOwnProfile, followerCount = 0, showFollowerCount = true, isSharedPublicLink = false, isBetaUser = false, onFollowSuccess }: PublicProfileHeaderProps) {
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
+  const [showFirstVisit, setShowFirstVisit] = useState(false)
 
 
   const handleHeaderSave = async (data: {
@@ -66,6 +67,15 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
 
   const eatingStyle = getEatingStyle()
   const styleConfig = getEatingStyleConfig(eatingStyle)
+
+  // First-visit one-time modal (owner only)
+  useEffect(() => {
+    if (!isOwnProfile) return;
+    try {
+      const seen = localStorage.getItem('myhealth_intro_seen') === '1'
+      if (!seen) setShowFirstVisit(true)
+    } catch {}
+  }, [isOwnProfile])
 
   return (
     <>
@@ -131,6 +141,25 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
           </button>
         )}
       </div>
+
+      {/* First visit modal */}
+      {showFirstVisit && (
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+            <div className="text-sm text-gray-600 mb-3">📋 Your Complete Health Overview</div>
+            <p className="text-sm text-gray-700 mb-2">Everything you track—check-ins, supplements, journal, patterns—shown in one place.</p>
+            <p className="text-sm text-gray-700">This is also what your doctor sees when you share. Control what's visible in privacy settings.</p>
+            <div className="mt-4 text-right">
+              <button
+                onClick={() => { try { localStorage.setItem('myhealth_intro_seen','1') } catch {}; setShowFirstVisit(false) }}
+                className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Unified Header Editor */}
       {showHeaderEditor && (
