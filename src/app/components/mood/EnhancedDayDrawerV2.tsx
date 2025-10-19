@@ -766,7 +766,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     sequence={[
                       `Hey ${userName} 💙\n\nLet's see where you're at today. Move the sliders to how you're feeling right now - no wrong answers, just be honest with yourself.`
                     ]}
-                    speed={35}
+                    speed={90}
                     wrapper="div"
                     className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
                     cursor={false}

@@ -76,9 +76,9 @@ export default function PostSupplementModal({
                 <TypingIndicator />
               </div>
             ) : (
-              <TypeAnimation
+            <TypeAnimation
                 sequence={[elliMessage]}
-                speed={35}
+              speed={90}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}

@@ -66,9 +66,9 @@ First, let me understand what brings you here.`;
                 <TypingIndicator />
               </div>
             ) : (
-              <TypeAnimation
+            <TypeAnimation
                 sequence={[welcomeMessage]}
-                speed={45}
+              speed={90}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}

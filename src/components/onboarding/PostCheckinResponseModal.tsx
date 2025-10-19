@@ -122,7 +122,7 @@ Keep showing up each day and I'll start spotting what works for you.`;
             ) : showMessage ? (
               <TypeAnimation
                 sequence={[response]}
-                speed={35}
+                speed={90}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}
