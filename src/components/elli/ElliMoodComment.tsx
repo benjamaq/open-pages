@@ -51,7 +51,7 @@ export function ElliMoodComment({ checkIn, previousCheckIn }: ElliMoodCommentPro
         ) : (
           <TypeAnimation
             sequence={[message]}
-            speed={90}
+            speed={60}
             wrapper="p"
             className="text-gray-700"
             cursor={false}

@@ -157,7 +157,7 @@ export default function CategorySelectionModal({
                     300,
                     validationMessage.title + '\n\n' + validationMessage.message
                   ]}
-                  speed={90}
+                  speed={60}
                   wrapper="div"
                   className="text-gray-700 whitespace-pre-line leading-relaxed"
                   cursor={false}

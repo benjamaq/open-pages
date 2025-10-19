@@ -78,7 +78,7 @@ export default function PostSupplementModal({
             ) : (
             <TypeAnimation
                 sequence={[elliMessage]}
-              speed={90}
+              speed={60}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}

@@ -448,7 +448,7 @@ export default function TodaySnapshot({
                         <div className="flex-1">
                           <TypeAnimation
                             sequence={[(() => { const h=new Date().getHours(); const greet = h<12?`Good morning, ${userName}! Welcome back.`: h<18?`Good afternoon, ${userName}! Welcome back.`:`Good evening, ${userName}! Welcome back.`; return `${greet}\n\nReady to check in? Let's see how today's treating you—every check-in helps us spot what's working.`; })()]}
-                            speed={90}
+                            speed={60}
                             wrapper="p"
                             className="text-[15px] sm:text-base text-gray-800 leading-relaxed"
                             cursor={false}
