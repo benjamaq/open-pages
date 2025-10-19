@@ -18,9 +18,7 @@ import dynamic from 'next/dynamic'
 const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
 interface ProfilePageProps {
-  params: Promise<{
-    slug: string
-  }>
+  params: { slug: string }
 }
 
 // Disable caching for public profiles to always show latest data
@@ -28,8 +26,8 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // Generate metadata for social sharing
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params
   const supabase = await createClient()
   
   const { data: profile } = await supabase
@@ -80,11 +78,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function ProfilePage({ params, searchParams }: { 
-  params: Promise<{ slug: string }>
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+  params: { slug: string }
+  searchParams?: { [key: string]: string | string[] | undefined }
 }) {
-  const { slug } = await params
-  const search = await searchParams
+  const { slug } = params
+  const search = searchParams
   
   // No redirect - this IS the external shareable page
   
