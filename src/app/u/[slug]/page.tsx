@@ -17,17 +17,18 @@ import { getPublicMoodData } from '../../../lib/db/mood'
 import dynamic from 'next/dynamic'
 const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
-interface ProfilePageProps {
-  params: { slug: string }
-}
+interface ProfilePageParams { slug: string }
 
 // Disable caching for public profiles to always show latest data
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // Generate metadata for social sharing
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const { slug } = params
+// Next.js 15 can pass params/searchParams as Promises during RSC build
+export async function generateMetadata(
+  props: { params: Promise<ProfilePageParams> }
+): Promise<Metadata> {
+  const { slug } = await props.params
   const supabase = await createClient()
   
   const { data: profile } = await supabase
@@ -77,12 +78,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function ProfilePage({ params, searchParams }: { 
-  params: { slug: string }
-  searchParams?: { [key: string]: string | string[] | undefined }
+export default async function ProfilePage(props: { 
+  params: Promise<ProfilePageParams>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const { slug } = params
-  const search = searchParams
+  const { slug } = await props.params
+  const search = props.searchParams ? await props.searchParams : undefined
   
   // No redirect - this IS the external shareable page
   
