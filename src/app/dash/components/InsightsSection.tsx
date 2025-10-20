@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { trackEvent } from '@/lib/analytics'
 import { formatDistanceToNowStrict } from 'date-fns'
 
 interface Insight {
@@ -66,6 +67,23 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
       return (new Date(b.created_at || '').getTime()) - (new Date(a.created_at || '').getTime())
     })
     .slice(0, 5)
+
+  const trackedInsights = useRef(new Set<string>())
+
+  useEffect(() => {
+    if (!sortedInsights || sortedInsights.length === 0) return
+    sortedInsights.forEach((i) => {
+      const insightId = (i as any).context?.insight_key || i.id
+      if (!trackedInsights.current.has(insightId)) {
+        trackedInsights.current.add(insightId)
+        trackEvent('pattern_detected', {
+          pattern_type: (i as any).context?.type || 'unknown',
+          item_name: (i as any).context?.topLine || 'unknown',
+          location: 'dashboard'
+        })
+      }
+    })
+  }, [sortedInsights])
 
   return (
     <div className="border-t pt-4 mt-4">

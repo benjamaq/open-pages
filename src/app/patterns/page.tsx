@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import InsightsViewTracker from './InsightsViewTracker'
 
 export default async function PatternsPage() {
   const supabase = await createClient()
@@ -50,6 +51,8 @@ export default async function PatternsPage() {
             {(daysTracked || 0)} days tracked • {uniquePatterns.length} patterns found • {confirmed.length} confirmed
           </p>
         </div>
+
+        <InsightsViewTracker insights={[...confirmed, ...emerging]} />
 
         {/* Elli intro (brief accent) */}
         <div className="mb-8 bg-indigo-50 border border-indigo-100 rounded-lg p-3">
