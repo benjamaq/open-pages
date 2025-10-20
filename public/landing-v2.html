@@ -732,8 +732,58 @@
       </p>
     </div>
     
-    <!-- SINGLE COLUMN: Elli response only -->
+    <!-- SINGLE COLUMN: Before/After outcome card, then Elli response -->
     <div style="display:block; max-width: 1000px; margin: 0 auto;">
+
+      <!-- Outcome Before/After card -->
+      <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); max-width: 900px; margin: 0 auto 18px;">
+        <div class="grid-2" style="gap: 18px; align-items: stretch;">
+          <!-- BEFORE -->
+          <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: #f9fafb;">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
+              <strong style="color:#111827;">Before (Day 0)</strong>
+              <span style="font-size:12px; color:#6b7280;">Missed magnesium</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:36px; height:36px; border-radius: 50%; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">8</div>
+              <div>
+                <div style="font-size:13px; color:#374151;">Pain level</div>
+                <div style="font-size:12px; color:#9ca3af;">Sleep 4/10 · Mood 3/10</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: #f9fafb;">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
+              <strong style="color:#111827;">After (Day 3)</strong>
+              <span style="font-size:12px; color:#6b7280;">Magnesium 3/3 days</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:36px; height:36px; border-radius: 50%; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">3</div>
+              <div>
+                <div style="font-size:13px; color:#374151;">Pain level</div>
+                <div style="font-size:12px; color:#9ca3af;">Sleep 7/10 · Mood 6/10</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini timeline with pill streak and pattern tag -->
+        <div style="margin-top: 14px;">
+          <div style="height: 6px; background:#e5e7eb; border-radius: 9999px; position:relative;">
+            <div style="position:absolute; left:45%; width:36%; height:6px; background:rgba(102,126,234,0.25); border-radius:9999px;"></div>
+          </div>
+          <div style="display:flex; justify-content:center; gap:16px; margin-top:8px;">
+            <span style="display:inline-block; width:22px; height:8px; border-radius:9999px; background:#6b46c1;"></span>
+            <span style="display:inline-block; width:22px; height:8px; border-radius:9999px; background:#6b46c1;"></span>
+            <span style="display:inline-block; width:22px; height:8px; border-radius:9999px; background:#6b46c1;"></span>
+          </div>
+          <div style="text-align:center; margin-top:10px;">
+            <span style="display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #e9d5ff; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600;">Pattern detected · Pain drops 8 → 3 when magnesium is taken 3+ days</span>
+          </div>
+        </div>
+      </div>
       
       <!-- Elli's response (prominent) -->
       <div style="margin-top: 18px;">
