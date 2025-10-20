@@ -4,18 +4,18 @@ import { createClient } from '../../../lib/supabase/server'
 import { FileText, Image as ImageIcon, File, Edit2 } from 'lucide-react'
 import { headers } from 'next/headers'
 import ShareButton from '../../../components/ShareButton'
-import SupplementsSection from '../../../components/SupplementsSection'
-import JournalSection from '../../../components/JournalSection'
-import PublicProfileClientWrapper from '../../../components/PublicProfileClientWrapper'
-import FollowButton from '../../../components/FollowButton'
-import StickyNavigation from '../../../components/StickyNavigation'
-import PublicProfileHeader from '../../../components/PublicProfileHeader'
-import ProfileActionButtons from '../../../components/ProfileActionButtons'
+// import SupplementsSection from '../../../components/SupplementsSection'
+// import JournalSection from '../../../components/JournalSection'
+// import PublicProfileClientWrapper from '../../../components/PublicProfileClientWrapper'
+// import FollowButton from '../../../components/FollowButton'
+// import StickyNavigation from '../../../components/StickyNavigation'
+// import PublicProfileHeader from '../../../components/PublicProfileHeader'
+// import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
 import { getPublicMoodData } from '../../../lib/db/mood'
 import dynamic from 'next/dynamic'
-const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
+// const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
 interface ProfilePageParams { slug: string }
 
@@ -340,180 +340,7 @@ export default async function ProfilePage(props: {
     }>
   }
 
-  // Count items for display
-  const stackItemsCount = publicSupplements.length + publicMindfulness.length + publicMovement.length + publicGear.length
-  const protocolsCount = (profile as any)?.protocols?.length || 0
-  const uploadsCount = (profile as any)?.uploads?.length || 0
-
-  // Helper functions for rendering sections
-
-  const renderProtocols = () => {
-    // Show if module is enabled, even if empty
-    if (!publicModules.protocols) return null
-
-    return (
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl font-bold mb-6" style={{ color: '#0F1115' }}>
-            Protocols & Recovery ({publicProtocols.length})
-          </h2>
-          <div className="space-y-4">
-            {publicProtocols.length > 0 ? (
-              publicProtocols.map((protocol: any) => (
-                <div key={protocol.id} className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 text-base">{protocol.name}</h3>
-                  <div className="mt-2 space-y-1">
-                    {protocol.frequency && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>Frequency: {protocol.frequency}</p>
-                    )}
-                    {protocol.details && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>{protocol.details}</p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No protocols or recovery shared yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  const renderMovement = () => {
-    // Show if module is enabled, even if empty
-    if (!publicModules.movement) return null
-
-    return (
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl font-bold mb-6" style={{ color: '#0F1115' }}>
-            Movement ({publicMovement.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicMovement.length > 0 ? (
-              publicMovement.map((item: any) => (
-                <div key={item.id} className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
-                  <div className="mt-2 space-y-1">
-                    {item.dose && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
-                    )}
-                    {item.timing && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
-                    )}
-                    {item.notes && (
-                      <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-gray-500">No training or rehab shared yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  const renderMindfulness = () => {
-    // Show if module is enabled, even if empty
-    if (!publicModules.mindfulness) return null
-
-    return (
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl font-bold mb-6" style={{ color: '#0F1115' }}>
-            Mindfulness ({publicMindfulness.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicMindfulness.length > 0 ? (
-              publicMindfulness.map((item: any) => (
-                <div key={item.id} className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 text-base">{item.name}</h3>
-                  <div className="mt-2 space-y-1">
-                    {item.dose && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>Duration: {item.dose}</p>
-                    )}
-                    {item.timing && (
-                      <p className="text-sm" style={{ color: '#5C6370' }}>Timing: {item.timing}</p>
-                    )}
-                    {item.notes && (
-                      <p className="text-sm" style={{ color: '#A6AFBD' }}>Notes: {item.notes}</p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-gray-500">No mind and stress shared yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-
-  const renderUploads = () => {
-    // Show if module is enabled, even if empty
-    if (!publicModules.uploads) return null
-
-    const getFileIcon = (fileType: string) => {
-      if (fileType.startsWith('image/')) return <ImageIcon className="w-6 h-6" />
-      if (fileType.includes('pdf')) return <FileText className="w-6 h-6" />
-      return <File className="w-6 h-6" />
-    }
-
-    return (
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl font-bold mb-6" style={{ color: '#0F1115' }}>
-            Files & Labs ({publicUploads.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicUploads.length > 0 ? (
-              publicUploads.map((upload: any) => (
-                <div key={upload.id} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 text-gray-500">
-                      {getFileIcon(upload.file_type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 text-sm truncate">{upload.title}</h3>
-                      {upload.description && (
-                        <p className="text-xs mt-1" style={{ color: '#5C6370' }}>{upload.description}</p>
-                      )}
-                      <a
-                        href={upload.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-medium mt-2 inline-block hover:underline"
-                        style={{ color: '#5C6370' }}
-                      >
-                        View File
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-gray-500">No records or plans shared yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    )
-  }
+  // Count items for display (removed unused aggregates and dead helper render functions)
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
@@ -589,9 +416,9 @@ export default async function ProfilePage(props: {
       {/* Profile content with exact module alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Brief descriptor banner (dismissable, client-only) */}
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <MyHealthDescriptorBanner />
-        </div>
+        </div> */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8" style={{ padding: '2rem' }}>
           <div className="flex items-start gap-4">
             {/* Avatar */}
@@ -619,14 +446,14 @@ export default async function ProfilePage(props: {
               )}
 
               {/* Core Status Pills - Clean Row */}
-              <div className="mt-3">
+              {/* <div className="mt-3">
                 <PublicProfileHeader 
                   profile={profileWithData}
                   isOwnProfile={isOwnProfile}
                   followerCount={followerCount}
                   showFollowerCount={(profile as any).show_public_followers ?? true}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -636,7 +463,7 @@ export default async function ProfilePage(props: {
       {/* Fetch public mood data for the heatmap/summary */}
       {/** Using server-side call so we pass real data into the client wrapper */}
       {/** Defaults to last 30 days */}
-      <PublicProfileClientWrapper
+      {/* <PublicProfileClientWrapper
         profile={profile}
         publicSupplements={publicSupplements}
         publicProtocols={publicProtocols}
@@ -652,7 +479,7 @@ export default async function ProfilePage(props: {
         isOwnProfile={isOwnProfile}
         isSharedPublicLink={isSharedPublicLink}
         isMoodTrackingEnabled={true}
-      />
+      /> */}
 
       {/* Footer - Biostackr Branding */}
       <footer className="border-t border-gray-200 bg-gray-50">
