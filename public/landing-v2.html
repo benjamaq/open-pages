@@ -732,152 +732,10 @@
       </p>
     </div>
     
-    <!-- SINGLE COLUMN: Heatmap then Elli response -->
+    <!-- SINGLE COLUMN: Elli response only -->
     <div style="display:block; max-width: 1000px; margin: 0 auto;">
       
-      <!-- Ben's Check-In UI removed per brief -->
-      <div style="display:none;">
-        <h3 style="font-size: 19px; color: #1a1a1a; margin-bottom: 20px; font-weight: 600;">
-          Ben's morning check-in
-        </h3>
-        
-        <div style="background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 15px;">
-          
-          <p style="margin: 0 0 18px 0; font-size: 13px; color: #9ca3af;">Today, 8:42 AM</p>
-          
-          <!-- Pain -->
-          <div style="margin-bottom: 18px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 7px;">
-              <span style="font-size: 14px; color: #374151; font-weight: 500;">Pain level</span>
-              <span style="font-size: 15px; font-weight: 700; color: #ef4444;">8/10</span>
-            </div>
-            <div style="background: #f3f4f6; height: 7px; border-radius: 4px; overflow: hidden;">
-              <div style="background: #ef4444; width: 80%; height: 100%; border-radius: 4px;"></div>
-            </div>
-          </div>
-          
-          <!-- Mood -->
-          <div style="margin-bottom: 18px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 7px;">
-              <span style="font-size: 14px; color: #374151; font-weight: 500;">Mood</span>
-              <span style="font-size: 15px; font-weight: 700; color: #f59e0b;">3/10</span>
-            </div>
-            <div style="background: #f3f4f6; height: 7px; border-radius: 4px; overflow: hidden;">
-              <div style="background: #f59e0b; width: 30%; height: 100%; border-radius: 4px;"></div>
-            </div>
-          </div>
-          
-          <!-- Sleep -->
-          <div style="margin-bottom: 22px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 7px;">
-              <span style="font-size: 14px; color: #374151; font-weight: 500;">Sleep quality</span>
-              <span style="font-size: 15px; font-weight: 700; color: #f59e0b;">4/10</span>
-            </div>
-            <div style="background: #f3f4f6; height: 7px; border-radius: 4px; overflow: hidden;">
-              <div style="background: #f59e0b; width: 40%; height: 100%; border-radius: 4px;"></div>
-            </div>
-          </div>
-          
-          <!-- Symptoms -->
-          <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-bottom: 16px;">
-            <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Symptoms today:</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
-              <span style="background: #fef2f2; border: 1px solid #fecaca; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #991b1b; font-weight: 500;">🧠 Brain fog</span>
-              <span style="background: #fef2f2; border: 1px solid #fecaca; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #991b1b; font-weight: 500;">💪 Muscle pain</span>
-              <span style="background: #fef2f2; border: 1px solid #fecaca; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #991b1b; font-weight: 500;">😴 Fatigue</span>
-            </div>
-          </div>
-          
-          <!-- Context -->
-          <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
-            <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">What's been happening:</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
-              <span style="background: #fef9c3; border: 1px solid #fde047; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #854d0e; font-weight: 500;">⚠️ High stress</span>
-              <span style="background: #fef9c3; border: 1px solid #fde047; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #854d0e; font-weight: 500;">💤 Poor sleep</span>
-              <span style="background: #fee2e2; border: 1px solid #fecaca; padding: 7px 13px; border-radius: 16px; font-size: 13px; color: #991b1b; font-weight: 500;">🧘 Skipped stretching</span>
-            </div>
-          </div>
-          
-        </div>
-        
-        <p style="text-align: center; font-size: 13px; color: #9ca3af; font-style: italic;">
-          20 seconds to log. Then Elli takes over.
-        </p>
-        
-      </div>
-      
-      <!-- Pattern detection heatmap visualization (centered, large) -->
-      <div style="margin-top: 10px;">
-        <h3 style="font-size: 19px; color: #1a1a1a; margin-bottom: 14px; font-weight: 600;">Pattern detection</h3>
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-          <!-- SVG heatmap (responsive) -->
-          <div style="max-width:640px; margin:0 auto;">
-            <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
-              <defs>
-                <filter id="cardShadow2" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.10"/>
-                </filter>
-              </defs>
-              <rect x="20" y="20" rx="12" ry="12" width="480" height="300" fill="#ffffff" stroke="#e5e7eb" filter="url(#cardShadow2)"/>
-              <text x="44" y="50" font-family="Inter, system-ui, -apple-system" font-size="13" fill="#111827" font-weight="700">Your Last 14 Days</text>
-              <g font-family="Inter, system-ui, -apple-system" font-size="11" fill="#6b7280">
-                <text x="80"  y="85">M</text>
-                <text x="150" y="85">T</text>
-                <text x="220" y="85">W</text>
-                <text x="290" y="85">T</text>
-                <text x="360" y="85">F</text>
-                <text x="430" y="85">S</text>
-                <text x="500" y="85">S</text>
-              </g>
-              <!-- Row 1 -->
-              <g>
-                <circle cx="80"  cy="125" r="15" fill="#ef4444"/>
-                <circle cx="150" cy="125" r="15" fill="#ef4444"/>
-                <circle cx="220" cy="125" r="15" fill="#f59e0b"/>
-                <circle cx="290" cy="125" r="15" fill="#10b981"/>
-                <circle cx="360" cy="125" r="15" fill="#10b981"/>
-                <circle cx="430" cy="125" r="15" fill="#10b981"/>
-                <circle cx="500" cy="125" r="15" fill="#10b981"/>
-                <g>
-                  <rect x="282" y="143" width="16" height="6" rx="3" fill="#6b46c1"/>
-                  <rect x="352" y="143" width="16" height="6" rx="3" fill="#6b46c1"/>
-                  <rect x="422" y="143" width="16" height="6" rx="3" fill="#6b46c1"/>
-                  <rect x="492" y="143" width="16" height="6" rx="3" fill="#6b46c1"/>
-                </g>
-              </g>
-              <!-- Row 2 -->
-              <g>
-                <circle cx="80"  cy="195" r="15" fill="#ef4444"/>
-                <circle cx="150" cy="195" r="15" fill="#f59e0b"/>
-                <circle cx="220" cy="195" r="15" fill="#10b981"/>
-                <circle cx="290" cy="195" r="15" fill="#10b981"/>
-                <circle cx="360" cy="195" r="15" fill="#10b981"/>
-                <circle cx="430" cy="195" r="15" fill="#ef4444"/>
-                <circle cx="500" cy="195" r="15" fill="#ef4444"/>
-                <g>
-                  <rect x="212" y="213" width="16" height="6" rx="3" fill="#6b46c1"/>
-                  <rect x="282" y="213" width="16" height="6" rx="3" fill="#6b46c1"/>
-                  <rect x="352" y="213" width="16" height="6" rx="3" fill="#6b46c1"/>
-                </g>
-              </g>
-              <!-- Highlight & annotation -->
-              <rect x="270" y="105" width="270" height="45" rx="10" ry="10" fill="none" stroke="#6b46c1" stroke-width="3"/>
-              <path d="M540,127 L585,127" stroke="#6b46c1" stroke-width="2" fill="none"/>
-              <g>
-                <rect x="585" y="95" width="120" height="64" rx="10" ry="10" fill="#f5f3ff" stroke="#e9d5ff"/>
-                <text x="593" y="115" font-family="Inter, system-ui, -apple-system" font-size="12" fill="#4c1d95" font-weight="700">Pattern detected</text>
-                <text x="593" y="132" font-family="Inter, system-ui, -apple-system" font-size="12" fill="#4c1d95">Pain drops to 3/10</text>
-                <text x="593" y="147" font-family="Inter, system-ui, -apple-system" font-size="12" fill="#4c1d95">when magnesium is</text>
-                <text x="593" y="162" font-family="Inter, system-ui, -apple-system" font-size="12" fill="#4c1d95">taken 3+ days straight</text>
-              </g>
-              <text x="44" y="285" font-family="Inter, system-ui, -apple-system" font-size="11" fill="#6b7280">Green = low pain • Yellow = medium • Red = high • Purple = supplement</text>
-            </svg>
-          </div>
-          
-        </div>
-      </div>
-      
-      <!-- Elli's response (below heatmap) -->
+      <!-- Elli's response (prominent) -->
       <div style="margin-top: 18px;">
         <div style="background: white; border-radius: 14px; padding: 26px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); max-width: 720px; margin: 0 auto;">
           <div style="display: flex; align-items: center; gap: 13px; margin-bottom: 16px;">
@@ -890,12 +748,12 @@
           <div style="background: #f9fafb; border-radius: 13px; padding: 22px; line-height: 1.65;">
             <p style="margin: 0 0 16px 0; font-size: 15px; color: #374151;">Hey Ben, really sorry to see you're having such an intense pain day. That 8/10 sounds exhausting. 💙</p>
             <div style="background: white; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 9px; margin-bottom: 16px;">
-              <p style="margin: 0 0 10px 0; font-size: 13px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">I noticed a pattern:</p>
-              <p style="margin: 0; font-size: 15px; color: #78350f; line-height: 1.6;">Your pain drops to <strong style="color:#451a03;">3–4/10</strong> when you take magnesium consistently for 3+ days — but rises to <strong style="color:#451a03;">7–8/10</strong> within ~48 hours of missing it.</p>
+              <p style="margin: 0 0 10px 0; font-size: 13px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">I NOTICED A PATTERN:</p>
+              <p style="margin: 0; font-size: 15px; color: #78350f; line-height: 1.6;">Your pain drops to <strong style="color:#451a03;">3–4/10</strong> within 48 hours of missing magnesium — but rises to <strong style="color:#451a03;">3–4/10</strong> when you take it consistently for 3+ days.</p>
             </div>
             <p style="margin: 0 0 16px 0; font-size: 15px; color: #374151;">This has happened <strong style="color:#1a1a1a;">5 times over the past month</strong>. The connection is clear.</p>
             <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 9px;">
-              <p style="margin: 0 0 8px 0; font-size: 13px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">What to try:</p>
+              <p style="margin: 0 0 8px 0; font-size: 13px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">WHAT TO TRY:</p>
               <p style="margin: 0; font-size: 15px; color: #1e40af; line-height: 1.6;">Set a daily reminder for evening magnesium. Your body's clearly telling you it needs this consistency. Want me to help you track it better?</p>
             </div>
           </div>
@@ -904,11 +762,6 @@
       
       <!-- Caption below -->
       <p style="text-align: center; font-size: 13px; color: #9ca3af; font-style: italic; margin-top: 12px;">20 seconds to log. Then Elli takes over.</p>
-      
-      <!-- Section footer text below visualization -->
-      <p style="font-size:14px; color:#374151; max-width:640px; margin:12px auto 0; text-align:center;">
-        BioStackr analyzes thousands of data points so you don’t have to. When there’s a clear pattern, we show you exactly what’s working—and what to do next.
-      </p>
       
     </div>
       
