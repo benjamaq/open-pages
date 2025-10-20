@@ -733,10 +733,11 @@
       </p>
     </div>
     
-    <div class="grid-2" style="gap: 50px; align-items: start; margin-bottom: 50px;">
+    <!-- SINGLE COLUMN: Heatmap then Elli response -->
+    <div style="display:block; max-width: 1000px; margin: 0 auto;">
       
-      <!-- LEFT: Ben's Check-In -->
-      <div>
+      <!-- Ben's Check-In UI removed per brief -->
+      <div style="display:none;">
         <h3 style="font-size: 19px; color: #1a1a1a; margin-bottom: 20px; font-weight: 600;">
           Ben's morning check-in
         </h3>
@@ -806,8 +807,8 @@
         
       </div>
       
-      <!-- RIGHT: Pattern detection heatmap visualization -->
-      <div>
+      <!-- Pattern detection heatmap visualization (centered, large) -->
+      <div style="margin-top: 10px;">
         <h3 style="font-size: 19px; color: #1a1a1a; margin-bottom: 14px; font-weight: 600;">Pattern detection</h3>
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
           <!-- SVG heatmap (responsive) -->
@@ -873,11 +874,44 @@
               <text x="44" y="285" font-family="Inter, system-ui, -apple-system" font-size="11" fill="#6b7280">Green = low pain • Yellow = medium • Red = high • Purple = supplement</text>
             </svg>
           </div>
-          <p style="font-size:14px; color:#374151; max-width:640px; margin:12px auto 0; text-align:center;">
-            BioStackr analyzes thousands of data points so you don’t have to. When there’s a clear pattern, we show you exactly what’s working—and what to do next.
-          </p>
+          
         </div>
       </div>
+      
+      <!-- Elli's response (below heatmap) -->
+      <div style="margin-top: 18px;">
+        <div style="background: white; border-radius: 14px; padding: 26px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); max-width: 720px; margin: 0 auto;">
+          <div style="display: flex; align-items: center; gap: 13px; margin-bottom: 16px;">
+            <div style="width: 46px; height: 46px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0;">💜</div>
+            <div>
+              <strong style="font-size: 17px; color: #1a1a1a; display: block; line-height: 1.3;">Elli</strong>
+              <span style="font-size: 13px; color: #9ca3af;">Just now</span>
+            </div>
+          </div>
+          <div style="background: #f9fafb; border-radius: 13px; padding: 22px; line-height: 1.65;">
+            <p style="margin: 0 0 16px 0; font-size: 15px; color: #374151;">Hey Ben, really sorry to see you're having such an intense pain day. That 8/10 sounds exhausting. 💙</p>
+            <div style="background: white; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 9px; margin-bottom: 16px;">
+              <p style="margin: 0 0 10px 0; font-size: 13px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">I noticed a pattern:</p>
+              <p style="margin: 0; font-size: 15px; color: #78350f; line-height: 1.6;">Your pain drops to <strong style="color:#451a03;">3–4/10</strong> when you take magnesium consistently for 3+ days — but rises to <strong style="color:#451a03;">7–8/10</strong> within ~48 hours of missing it.</p>
+            </div>
+            <p style="margin: 0 0 16px 0; font-size: 15px; color: #374151;">This has happened <strong style="color:#1a1a1a;">5 times over the past month</strong>. The connection is clear.</p>
+            <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 9px;">
+              <p style="margin: 0 0 8px 0; font-size: 13px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">What to try:</p>
+              <p style="margin: 0; font-size: 15px; color: #1e40af; line-height: 1.6;">Set a daily reminder for evening magnesium. Your body's clearly telling you it needs this consistency. Want me to help you track it better?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Caption below -->
+      <p style="text-align: center; font-size: 13px; color: #9ca3af; font-style: italic; margin-top: 12px;">20 seconds to log. Then Elli takes over.</p>
+      
+      <!-- Section footer text below visualization -->
+      <p style="font-size:14px; color:#374151; max-width:640px; margin:12px auto 0; text-align:center;">
+        BioStackr analyzes thousands of data points so you don’t have to. When there’s a clear pattern, we show you exactly what’s working—and what to do next.
+      </p>
+      
+    </div>
       
     </div>
     
