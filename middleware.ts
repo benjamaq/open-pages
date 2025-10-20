@@ -7,9 +7,10 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/' || pathname === '') {
     const url = request.nextUrl.clone()
     url.pathname = '/landing-v2.html'
-    // Cache-bust to ensure CDN serves latest landing
-    url.searchParams.set('v', '3')
-    return NextResponse.redirect(url)
+    // Serve the landing content at '/' without changing the URL
+    const res = NextResponse.rewrite(url)
+    res.headers.set('Cache-Control', 'no-store, max-age=0')
+    return res
   }
   return await updateSession(request)
 }
