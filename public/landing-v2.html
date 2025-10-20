@@ -192,6 +192,43 @@
 </head>
 <body>
 
+<!-- Mobile PWA Install Banner (static HTML version) -->
+<div id="pwa-top-banner" style="display:none; position: sticky; top: 0; left: 0; right: 0; z-index: 1000; background: #4f46e5; color: white;">
+  <div style="max-width: 1200px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 10px;">
+    <div style="flex: 1; font-size: 14px; line-height: 1.4;">
+      <strong>Install BioStackr</strong>
+      <span id="pwa-instructions" style="opacity: .9; margin-left: 6px;">Add to your Home Screen for a faster, app-like experience.</span>
+    </div>
+    <button id="pwa-install-dismiss" aria-label="Dismiss" style="background: transparent; border: 1px solid rgba(255,255,255,.35); color: white; border-radius: 6px; padding: 4px 8px; font-size: 12px;">
+      Dismiss
+    </button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    try {
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      var isAndroid = /Android/i.test(ua);
+      var isMobile = isIOS || isAndroid;
+      var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true);
+      var dismissed = localStorage.getItem('pwa_banner_dismissed') === '1';
+      if (isMobile && !isStandalone && !dismissed) {
+        var el = document.getElementById('pwa-top-banner');
+        if (el) el.style.display = 'block';
+        var msg = 'Add to your Home Screen from the browser menu.';
+        if (isIOS) msg = "In Safari: tap the Share icon, then 'Add to Home Screen'.";
+        if (isAndroid) msg = "In Chrome: open the menu •••, then 'Add to Home screen'.";
+        var instr = document.getElementById('pwa-instructions');
+        if (instr) instr.textContent = msg;
+        var btn = document.getElementById('pwa-install-dismiss');
+        if (btn) btn.onclick = function(){ try { localStorage.setItem('pwa_banner_dismissed','1'); } catch(e){}; el && (el.style.display='none'); };
+      }
+    } catch(e) {}
+  })();
+</script>
+
 <!-- ============================================ -->
 <!-- HEADER / NAVIGATION -->
 <!-- ============================================ -->
