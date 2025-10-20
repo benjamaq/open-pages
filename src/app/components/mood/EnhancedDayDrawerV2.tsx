@@ -10,6 +10,7 @@ import { generateAndSaveElliMessage } from '@/app/actions/generate-elli-message'
 import PostCheckinModal from '@/components/onboarding/post-checkin-modal';
 import { TypeAnimation } from 'react-type-animation';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
+import { trackEvent } from '@/lib/analytics';
 
 type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
@@ -505,6 +506,18 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       if (result.ok) {
         setSaveMessage('✅ Check-in saved!');
         console.log('✅ Save successful:', result.data);
+
+        // Track first check-in
+        try {
+          if (isActuallyFirstCheckIn) {
+            const supplementCount = todayItems?.supplements?.length || 0;
+            const protocolCount = todayItems?.protocols?.length || 0;
+            trackEvent('first_check_in', {
+              has_supplements: supplementCount > 0,
+              has_protocols: protocolCount > 0
+            });
+          }
+        } catch {}
         
         // If in orchestrated onboarding, pass data to orchestrator
         if (isOnboarding && onOnboardingComplete) {
@@ -536,6 +549,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           });
           
           console.log('💙 Elli message generated successfully');
+          // Track a simple pattern detection placeholder if needed
+          // Real tracking should happen where patterns are actually computed/shown
+          // trackEvent('pattern_detected', { pattern_type: 'supplement', confidence: 'high' })
         } catch (error) {
           console.error('💙 Error generating Elli message:', error);
           // Don't block user flow if Elli fails

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { trackEvent } from '@/lib/analytics'
 
 interface ShareButtonProps {
   profileSlug: string
@@ -19,6 +20,7 @@ export default function ShareButton({ profileSlug, className = "" }: ShareButton
       
       await navigator.clipboard.writeText(`${baseUrl}/u/${profileSlug}?public=true`)
       setShowToast(true)
+      trackEvent('profile_shared', { share_method: 'copy_link' })
       setTimeout(() => setShowToast(false), 2000)
     } catch (err) {
       // Fallback for older browsers

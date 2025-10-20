@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { trackEvent } from '@/lib/analytics'
 
 interface AuthFormProps {
   mode: 'signin' | 'signup'
@@ -55,6 +56,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else if (data.user) {
+          // Track signup event (production only)
+          trackEvent('sign_up', { method: 'email' })
           // Create profile with name and referral code - handles race conditions atomically
           try {
             // Generate a unique slug
