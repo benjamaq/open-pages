@@ -1,7 +1,14 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './src/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // Redirect root (/) to the static landing page in all environments
+  const { pathname } = request.nextUrl
+  if (pathname === '/' || pathname === '') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/landing-v2.html'
+    return NextResponse.redirect(url)
+  }
   return await updateSession(request)
 }
 

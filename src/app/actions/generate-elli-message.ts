@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateElliMessage, type ElliContext } from '@/lib/elli/generateElliMessage';
+import type { ToneProfileType } from '@/lib/elli/toneProfiles';
 import { saveElliMessage, getUserCheckInCount, getRecentCheckIns } from '@/lib/db/elliMessages';
 import { getUserCondition } from '@/lib/db/userCondition';
 
@@ -26,11 +27,13 @@ export async function generateAndSaveElliMessage(
     // Get user's display name
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, condition_primary, condition_details')
+      .select('display_name, condition_primary, condition_details, tone_profile')
       .eq('user_id', userId)
       .single();
     
-    const userName = profile?.display_name || 'User';
+    // Always prefer first name for a warmer tone
+    const { getFirstName } = await import('@/lib/name');
+    const userName = getFirstName(profile?.display_name, 'there');
     
     // Get user's condition
     const condition = profile?.condition_primary ? {
@@ -88,6 +91,7 @@ export async function generateAndSaveElliMessage(
       timeOfDay,
       daysOfTracking: checkInCount,
       previousCheckIns: recentCheckIns,
+      toneProfile: (profile?.tone_profile as ToneProfileType) || 'general_wellness',
     readinessToday: Math.round(((safeMood * 0.2) + (safeSleep * 0.4) + ((10 - safePain) * 0.4)) * 10),
       readinessYesterday: (() => {
       const yesterday = recentCheckIns[1];

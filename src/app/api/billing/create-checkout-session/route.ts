@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .single()
 
-    const priceId = getPriceId(plan, period)
+    // Map legacy 'pro' to 'premium' for branding while preserving price IDs
+    const effectivePlan = (plan === 'premium' || plan === 'creator') ? plan : 'premium'
+    const priceId = getPriceId(effectivePlan as any, period)
     
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -47,18 +49,18 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${origin}/dash?welcome=pro`,
+      success_url: `${origin}/dash?welcome=premium`,
       cancel_url: `${origin}/pricing`,
       metadata: {
         user_id: userId,
-        plan: plan,
+        plan: effectivePlan,
         period: period,
         profile_slug: profile?.slug || '',
       },
       subscription_data: {
         metadata: {
           user_id: userId,
-          plan: plan,
+          plan: effectivePlan,
           period: period,
         },
       },

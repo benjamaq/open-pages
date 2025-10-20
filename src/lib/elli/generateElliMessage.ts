@@ -5,6 +5,7 @@
 
 import OpenAI from 'openai';
 import { ELLI_SYSTEM_PROMPT, buildUserPrompt } from './elliPrompts';
+import type { ToneProfileType } from './toneProfiles';
 import { 
   getPostCheckInTemplate, 
   getDashboardTemplate, 
@@ -52,6 +53,7 @@ export interface ElliContext {
     icon?: string;
     insight_key?: string;
   } | null;
+  toneProfile?: ToneProfileType;
 }
 
 /**
@@ -62,6 +64,12 @@ export async function generateElliMessage(
   context: ElliContext
 ): Promise<string> {
   
+  // For day 1 users, force concise, name-addressed template to avoid over-claims
+  const days = context?.daysOfTracking ?? 0;
+  if ((messageType === 'post_checkin' || messageType === 'milestone') && days <= 1) {
+    return getTemplateFallback('post_checkin', context);
+  }
+
   // If OpenAI is not configured, use templates
   if (!openai) {
     console.log('OpenAI not configured, using template fallback');
@@ -84,11 +92,12 @@ export async function generateElliMessage(
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Using mini for cost efficiency
       messages: [
+        // Balanced default; if toneProfile is extreme, the user prompt already constrains content.
         { role: 'system', content: ELLI_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 450,
-      temperature: 0.8, // Warm but stable
+      max_tokens: 320,
+      temperature: 0.6, // Slightly steadier, reduces over-empathy verbosity
     });
     
     let message = response.choices[0]?.message?.content || '';
@@ -100,7 +109,7 @@ export async function generateElliMessage(
     
     message = message.trim();
     message = sanitizeMessage(ensurePainMention(maybePrependGreeting(message, context), context), context);
-    message = ensureMinimumSentences(message, context);
+    message = enforceBalancedLength(message, context);
 
     // Append pattern flag as P.S. (non-duplicative and short)
     const flags = context.flags || {};
@@ -133,28 +142,28 @@ function getTemplateFallback(
 ): string {
   
   if (messageType === 'post_checkin') {
-    return ensureMinimumSentences(
+    return enforceBalancedLength(
       sanitizeMessage(ensurePainMention(getPostCheckInTemplate(context), context), context),
       context
     );
   }
   
   if (messageType === 'milestone') {
-    return ensureMinimumSentences(
+    return enforceBalancedLength(
       sanitizeMessage(getMilestoneTemplate(context), context),
       context
     );
   }
   
   if (messageType === 'dashboard' || messageType === 'post_supplement') {
-    return ensureMinimumSentences(
+    return enforceBalancedLength(
       sanitizeMessage(ensurePainMention(getDashboardTemplate(context), context), context),
       context
     );
   }
   
   // Ultimate fallback
-  return ensureMinimumSentences(
+  return enforceBalancedLength(
     sanitizeMessage(ensurePainMention("I'm here watching your journey.", context), context),
     context
   );
@@ -181,26 +190,25 @@ function ensurePainMention(message: string, context: ElliContext): string {
 /**
  * Ensure message is at least ~4 sentences; append gentle, empathetic lines if too short.
  */
-function ensureMinimumSentences(message: string, context: ElliContext): string {
+function enforceBalancedLength(message: string, context: ElliContext): string {
   try {
     const sentences = message
       .replace(/\n+/g, ' ')
       .split(/(?<=[.!?])\s+/)
       .filter(Boolean);
-    if (sentences.length >= 4) return message;
+    // Balanced default: 3–5 sentences. If longer than 5, trim gently. If shorter than 3, append concise, action-forward lines.
+    if (sentences.length > 5) {
+      return sentences.slice(0, 5).join(' ');
+    }
+    if (sentences.length >= 3) return message;
 
     const { pain, mood, sleep } = context.checkIn || { pain: 0, mood: 0, sleep: 0 };
     const extras: string[] = [];
-    if (typeof pain === 'number') {
-      extras.push(`I'm tracking how pain at ${pain}/10 interacts with your sleep and mood.`);
-    }
-    if (typeof sleep === 'number') {
-      extras.push(`Sleep at ${sleep}/10 can shift how the whole day feels; I'll watch for what improves it.`);
-    }
-    if (typeof mood === 'number') {
-      extras.push(`Mood at ${mood}/10 matters too—I'll note what lifts it on better days.`);
-    }
-    extras.push(`Keep tracking—each day adds signal, and together we'll see what actually helps you.`);
+    // Action-forward, concise add-ons
+    if (typeof pain === 'number') extras.push(`Noted pain ${pain}/10; I’ll watch what changes it.`);
+    if (typeof sleep === 'number') extras.push(`Sleep ${sleep}/10 is a key lever; I’ll track what improves it.`);
+    if (typeof mood === 'number') extras.push(`Mood ${mood}/10 noted; I’ll look for repeatable lifts.`);
+    extras.push(`One step at a time—I'll surface the clearest next lever.`);
 
     const needed = Math.max(0, 4 - sentences.length);
     const toAppend = extras.slice(0, needed).join(' ');

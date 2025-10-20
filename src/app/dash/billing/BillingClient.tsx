@@ -280,7 +280,7 @@ export default function BillingClient({ userEmail }: BillingClientProps) {
                   disabled={isUpdating}
                   className="bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
                 >
-                  {isUpdating ? 'Processing...' : 'Upgrade to Pro'}
+              {isUpdating ? 'Processing...' : 'Get Started with Premium'}
                 </button>
               )}
             </div>
@@ -334,7 +334,7 @@ export default function BillingClient({ userEmail }: BillingClientProps) {
             )}
 
             {/* Subscription Actions */}
-            {billingInfo.subscription.plan_name === 'Pro' && !billingInfo.subscription.cancel_at_period_end && (
+            {(billingInfo.subscription.plan_name === 'Pro' || billingInfo.subscription.plan_name === 'Premium') && !billingInfo.subscription.cancel_at_period_end && (
               <div className="border-t border-gray-200 pt-6">
                 <button
                   onClick={() => setShowCancelModal(true)}
@@ -354,7 +354,7 @@ export default function BillingClient({ userEmail }: BillingClientProps) {
               disabled={isUpdating}
               className="bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
-              {isUpdating ? 'Processing...' : 'Upgrade to Pro - $9.99/month'}
+              {isUpdating ? 'Processing...' : 'Get Started with Premium'}
             </button>
           </div>
         )}

@@ -69,7 +69,7 @@ async function handleCheckoutCompleted(
   supabase: ReturnType<typeof createClient>
 ) {
   const userId = session.metadata?.user_id
-  const plan = session.metadata?.plan as 'pro' | 'creator'
+  const plan = session.metadata?.plan as 'pro' | 'premium' | 'creator'
   const customerId = session.customer as string
 
   if (!userId || !plan) {
@@ -117,7 +117,7 @@ async function handleSubscriptionChange(
   supabase: ReturnType<typeof createClient>
 ) {
   const userId = subscription.metadata?.user_id
-  const plan = subscription.metadata?.plan as 'pro' | 'creator'
+  const plan = subscription.metadata?.plan as 'pro' | 'premium' | 'creator'
 
   if (!userId) {
     console.error('Missing user_id in subscription metadata')

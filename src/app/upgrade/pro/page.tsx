@@ -34,7 +34,7 @@ export default function UpgradeProPage() {
         },
         credentials: 'include', // Important for Safari
         body: JSON.stringify({
-          plan: 'pro',
+          plan: 'premium',
           period: billingPeriod,
           promoCode: promoCode,
           userId: user.id,
@@ -99,25 +99,19 @@ export default function UpgradeProPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Hero */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center space-x-2 mb-6">
-            <span className="text-2xl">⚡</span>
-            <h1 className="text-4xl font-bold text-gray-900">Upgrade to Pro</h1>
-          </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Unlock unlimited supplements, protocols, movement, mindfulness, gear & files. 
-            Build the complete health optimization system you've been waiting for.
-          </p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Premium</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Everything in Free, plus unlimited tracking.</p>
         </div>
 
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
-          <div className="bg-gray-100 p-1 rounded-lg">
+          <div className="bg-purple-100 p-1 rounded-lg">
             <button
               onClick={() => setBillingPeriod('monthly')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === 'monthly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-purple-900 shadow-sm'
+                  : 'text-purple-700 hover:text-purple-900'
               }`}
             >
               Monthly
@@ -126,8 +120,8 @@ export default function UpgradeProPage() {
               onClick={() => setBillingPeriod('yearly')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === 'yearly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-purple-900 shadow-sm'
+                  : 'text-purple-700 hover:text-purple-900'
               }`}
             >
               Yearly (Save 2 months!)
@@ -137,37 +131,28 @@ export default function UpgradeProPage() {
 
         {/* Pricing Card */}
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-purple-700 p-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2 mb-4">
-                <span>Pro</span>
-                <span className="text-gray-600">⚡</span>
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Premium</h2>
               <div className="mb-2">
                 <span className="text-4xl font-bold text-gray-900">
-                  ${billingPeriod === 'monthly' ? '9.99' : '99.90'}
+                  ${billingPeriod === 'monthly' ? '9.99' : '99'}
                 </span>
                 <span className="text-gray-600">
                   /{billingPeriod === 'monthly' ? 'month' : 'year'}
                 </span>
               </div>
-              {billingPeriod === 'yearly' && (
-                <div className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Save $19.98 per year
-                </div>
-              )}
             </div>
 
             <div className="space-y-4 mb-8">
               {[
                 'Everything in Free',
-                'Unlimited supplements, protocols, movement, mindfulness, gear & files',
-                'Featured Current Plan on public profile',
-                'Priority support',
-                'Enhanced progress tracking'
+                'Unlimited supplements & medications',
+                'Doctor-ready shareable summaries',
+                'Priority support'
               ].map((feature, index) => (
                 <div key={index} className="flex items-start space-x-3">
-                  <span className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0">✓</span>
+                  <span className="w-5 h-5 text-purple-700 mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-gray-700">{feature}</span>
                 </div>
               ))}
@@ -184,15 +169,13 @@ export default function UpgradeProPage() {
             <button
               onClick={handleUpgrade}
               disabled={loading}
-              className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg"
+              className="w-full bg-purple-700 hover:bg-purple-800 disabled:bg-purple-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg"
             >
-              {loading ? 'Processing...' : promoCode ? 'Start Free Trial' : `Upgrade to Pro - $${billingPeriod === 'monthly' ? '9.99' : '99'}`}
+              {loading ? 'Processing...' : `Get Started with Premium - $${billingPeriod === 'monthly' ? '9.99' : '99'}`}
             </button>
 
             <div className="text-center mt-4 space-y-2">
-              <p className="text-sm text-gray-600">
-                14-day trial included • Cancel anytime
-              </p>
+              <p className="text-sm text-gray-600">Cancel anytime</p>
               <p className="text-xs text-gray-500">
                 Secure payment powered by Stripe
               </p>
@@ -206,19 +189,15 @@ export default function UpgradeProPage() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🚀</span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlimited Everything</h3>
-            <p className="text-gray-600">
-              Add as many supplements, protocols, movement routines, mindfulness practices, and gear as you want. No limits.
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Doctor-ready Summaries</h3>
+            <p className="text-gray-600">Share clean, simple summaries your doctor can scan in seconds.</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⭐</span>
+              <span className="text-2xl">🔒</span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Featured Profile</h3>
-            <p className="text-gray-600">
-              Your "Current Plan" gets highlighted on your public profile, showing followers what you're actively working on.
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Privacy First</h3>
+            <p className="text-gray-600">Your data stays yours. Share only what you choose.</p>
           </div>
         </div>
 
@@ -241,16 +220,14 @@ export default function UpgradeProPage() {
                 Can I cancel anytime?
               </h3>
               <p className="text-gray-600">
-                Yes, cancel anytime from your account settings. You'll keep Pro features until the end of your billing period.
+                Yes, cancel anytime from your account settings. You'll keep Premium features until the end of your billing period.
               </p>
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">
-                Is there a free trial?
+                What’s included?
               </h3>
-              <p className="text-gray-600">
-                Yes! Every new user gets a 14-day Pro trial. You can try all Pro features before deciding.
-              </p>
+              <p className="text-gray-600">Unlimited medications & supplements tracking, priority support, and enhanced progress tracking.</p>
             </div>
           </div>
         </div>

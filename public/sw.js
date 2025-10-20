@@ -1,7 +1,7 @@
 // Minimal service worker for installability and conservative offline support
 // Cache only safe GET requests; exclude /api/ by default
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v4';
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const OFFLINE_FALLBACK_URL = '/offline';
 

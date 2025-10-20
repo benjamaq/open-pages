@@ -13,8 +13,7 @@ const freeFeatures = [
 
 const proFeatures = [
   'Everything in Free',
-  'Unlimited supplements, protocols, movement, mindfulness, gear & files',
-  'Featured Current Plan on public profile',
+  'Unlimited medications & supplements (and related items)',
   'Priority support',
   'Enhanced progress tracking'
 ]
@@ -210,7 +209,7 @@ export default function PricingPage() {
                 Do you offer yearly pricing?
               </h3>
               <p className="text-gray-600">
-                Yes—save 2 months with annual: Pro $99.90/yr.
+                Annual billed at $99/yr.
               </p>
             </div>
           </div>

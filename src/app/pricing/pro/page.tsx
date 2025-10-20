@@ -26,10 +26,7 @@ export default function ProPricingPage() {
   }, [])
 
   const getCtaText = () => {
-    if (isLoggedIn) {
-      return 'Get started with Pro'
-    }
-    return 'Get started with Pro'
+    return 'Get started with Premium'
   }
 
   const getCtaHref = () => {
@@ -64,16 +61,15 @@ export default function ProPricingPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Hero */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <span>⚡</span>
-            <span>Pro Plan</span>
+            <span>Premium Plan</span>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Unlimited Health Optimization
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track unlimited supplements, protocols, and gear. Get priority support and 
-            advanced progress tracking to optimize your health journey.
+            Track your medications and supplements without limits. Priority support and enhanced progress tracking to help you understand what works.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
             <span>🔑</span>
@@ -83,13 +79,13 @@ export default function ProPricingPage() {
 
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
-          <div className="bg-gray-100 p-1 rounded-lg">
+          <div className="bg-purple-100 p-1 rounded-lg">
             <button
               onClick={() => setBillingPeriod('monthly')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === 'monthly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-purple-900 shadow-sm'
+                  : 'text-purple-700 hover:text-purple-900'
               }`}
             >
               Monthly
@@ -98,8 +94,8 @@ export default function ProPricingPage() {
               onClick={() => setBillingPeriod('yearly')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === 'yearly'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-purple-900 shadow-sm'
+                  : 'text-purple-700 hover:text-purple-900'
               }`}
             >
               Yearly <span className="text-gray-600 ml-1">(Save 17%)</span>
@@ -109,43 +105,40 @@ export default function ProPricingPage() {
 
         {/* Pricing Card */}
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-purple-700 p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-              <span className="bg-gray-900 text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
-                Recommended
+              <span className="bg-purple-700 text-white px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                Premium
               </span>
             </div>
             
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-900">Pro</h3>
+              <h3 className="text-2xl font-bold text-gray-900">Premium</h3>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">
-                  ${billingPeriod === 'monthly' ? '9.99' : '99.90'}
+                  ${billingPeriod === 'monthly' ? '9.99' : '99'}
                 </span>
                 <span className="text-gray-600">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
               </div>
               {billingPeriod === 'yearly' && (
                 <p className="mt-2 text-gray-600 text-sm">Billed annually (Save $20)</p>
               )}
-              <p className="mt-2 text-gray-600">For serious health optimizers</p>
+              <p className="mt-2 text-gray-600">Everything in Free, plus unlimited tracking and priority support</p>
             </div>
 
             <div className="mt-8">
               <ul className="space-y-3">
                 <li className="flex items-start space-x-3">
-                  <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                  <span className="w-5 h-5 text-purple-700 mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-gray-700">Unlimited supplements, protocols, movement, mindfulness, gear & files</span>
                 </li>
+                {/* Removed Featured profile per request */}
                 <li className="flex items-start space-x-3">
-                  <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                  <span className="text-gray-700">Featured Current Plan on public profile</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                  <span className="w-5 h-5 text-purple-700 mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-gray-700">Priority support</span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
+                  <span className="w-5 h-5 text-purple-700 mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-gray-700">Enhanced progress tracking</span>
                 </li>
               </ul>
@@ -154,7 +147,7 @@ export default function ProPricingPage() {
             <div className="mt-8">
               <Link
                 href={getCtaHref()}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+                className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
               >
                 {getCtaText()}
               </Link>
@@ -171,7 +164,7 @@ export default function ProPricingPage() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Unlimited Everything</h3>
-            <p className="text-gray-600">Track as many supplements, protocols, and gear items as you need without restrictions.</p>
+            <p className="text-gray-600">Track as many medications, supplements, and related items as you need without restrictions.</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -201,7 +194,7 @@ export default function ProPricingPage() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What's included in the Pro plan?</h3>
-              <p className="text-gray-600">Unlimited tracking of all health items, priority support, featured profile status, and enhanced progress tracking.</p>
+            <p className="text-gray-600">Unlimited tracking of medications and supplements, priority support, and enhanced progress tracking.</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I get started?</h3>

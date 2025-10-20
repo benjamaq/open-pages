@@ -15,10 +15,23 @@ console.log('PRO_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID)
 console.log('PRO_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID)
 console.log('CREATOR_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID)
 console.log('CREATOR_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID)
+console.log('PREMIUM_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID)
+console.log('PREMIUM_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID)
 
 // Stripe product configuration
 export const STRIPE_CONFIG = {
   products: {
+    premium: {
+      monthly: {
+        // Prefer dedicated Premium price if present; otherwise fallback to Pro price
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
+        amount: 999,
+      },
+      yearly: {
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID!,
+        amount: 9990,
+      },
+    },
     pro: {
       monthly: {
         priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
@@ -46,7 +59,7 @@ export const STRIPE_CONFIG = {
   },
 } as const
 
-export type PlanType = 'pro' | 'creator'
+export type PlanType = 'pro' | 'premium' | 'creator'
 export type BillingPeriod = 'monthly' | 'yearly'
 
 // Helper function to get price ID

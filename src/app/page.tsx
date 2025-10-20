@@ -911,7 +911,7 @@ export default function Home() {
                 <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Up to 12 stack items (supplements, protocols, movement, mindfulness)</span>
+                    <span className="text-gray-700">Up to 12 stack items (medications, supplements, movement, mindfulness)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
@@ -948,7 +948,7 @@ export default function Home() {
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-900">Pro</h3>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-gray-900">$9.99</span>
+                <span className="text-4xl font-bold text-gray-900">$9.99</span>
                   <span className="text-gray-600">/month</span>
                 </div>
                 <p className="mt-2 text-gray-600">For serious health optimizers</p>
@@ -961,11 +961,11 @@ export default function Home() {
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Unlimited supplements, protocols, movement, mindfulness, gear & files</span>
+                    <span className="text-gray-700">Unlimited medications & supplements (and related items)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700">Featured Current Plan on stack page</span>
+                    {/* Removed Featured Current Plan per request */}
                   </li>
                   <li className="flex items-start space-x-3">
                     <span className="w-5 h-5 text-gray-900 mt-0.5 flex-shrink-0">✓</span>
@@ -1077,7 +1077,7 @@ export default function Home() {
                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>14-day Pro trial included</span>
+                {/* Removed trial mention */}
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

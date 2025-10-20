@@ -2341,10 +2341,10 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   </p>
                   <div className="flex gap-3">
                     <a
-                      href="/pricing/pro"
+                      href="/upgrade/pro"
                       className="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
                     >
-                      Upgrade to Pro - $9.99/month
+                      Get Started with Premium
                     </a>
                     <a
                       href="/dash/settings"
