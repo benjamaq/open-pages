@@ -188,6 +188,11 @@
       .auth-ctas .signup-cta { padding: 6px 10px; font-size: 12px; border-radius: 7px; }
       .below-nav { justify-content: center; gap: 12px; font-size: 13px; }
     }
+    /* Ensure PWA top banner only shows on mobile when activated */
+    #pwa-top-banner { display: none; }
+    @media (max-width: 768px) {
+      #pwa-top-banner.mobile-active { display: block; }
+    }
   </style>
 </head>
 <body>
@@ -214,9 +219,10 @@
       var isMobile = isIOS || isAndroid;
       var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true);
       var dismissed = localStorage.getItem('pwa_banner_dismissed') === '1';
-      if (isMobile && !isStandalone && !dismissed) {
+      var isNarrow = window.innerWidth <= 768;
+      if (isMobile && isNarrow && !isStandalone && !dismissed) {
         var el = document.getElementById('pwa-top-banner');
-        if (el) el.style.display = 'block';
+        if (el) el.classList.add('mobile-active');
         var msg = 'Add to your Home Screen from the browser menu.';
         if (isIOS) msg = "In Safari: tap the Share icon, then 'Add to Home Screen'.";
         if (isAndroid) msg = "In Chrome: open the menu •••, then 'Add to Home screen'.";
@@ -452,7 +458,7 @@
   </div>
 </section>
 
-<!-- Testimonials Section - Horizontal Scroll (placed below Founder Story) -->
+<!-- Testimonials Section - Horizontal Scroll (final placement) -->
 <section style="background: #f8f9fa; padding: 80px 20px; overflow: hidden;">
   <div style="max-width: 1200px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
@@ -480,16 +486,12 @@
           <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"I don't 'do apps.' This one is simple. Big buttons. No tricks. It tells me what changed, not just numbers."</p>
           <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— marie h., 62</p>
         </div>
-        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
-          <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"Most trackers punish me for missing days. BioStackr didn't. I checked in 4 times and it still found a pattern. That felt… kind."</p>
-          <p style="font-size: 13px; color: #9ca3af; font-style: italic; margin-bottom: 8px;">ADHD + migraines</p>
-          <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— lena a.</p>
-        </div>
       </div>
     </div>
     <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 20px;">← Scroll to see more →</p>
   </div>
 </section>
+<!-- Testimonials relocated below founder story -->
 <!-- testimonials moved below Founder Story -->
 
 <!-- Add custom scrollbar styling for testimonials carousel -->
