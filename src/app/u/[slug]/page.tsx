@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 import ShareButton from '../../../components/ShareButton'
 // import SupplementsSection from '../../../components/SupplementsSection'
 // import JournalSection from '../../../components/JournalSection'
-// import PublicProfileClientWrapper from '../../../components/PublicProfileClientWrapper'
+import PublicProfileClientWrapper from '../../../components/PublicProfileClientWrapper'
 // import FollowButton from '../../../components/FollowButton'
 // import StickyNavigation from '../../../components/StickyNavigation'
 // import PublicProfileHeader from '../../../components/PublicProfileHeader'
@@ -460,11 +460,8 @@ export default async function ProfilePage(props: {
       </div>
 
       {/* Main Content */}
-      {/* Fetch public mood data for the heatmap/summary */}
-      {/** Using server-side call so we pass real data into the client wrapper */}
-      {/** Defaults to last 30 days */}
-      {/* <PublicProfileClientWrapper
-        profile={profile}
+      <PublicProfileClientWrapper
+        profile={profileWithData}
         publicSupplements={publicSupplements}
         publicProtocols={publicProtocols}
         publicMovement={publicMovement}
@@ -479,7 +476,7 @@ export default async function ProfilePage(props: {
         isOwnProfile={isOwnProfile}
         isSharedPublicLink={isSharedPublicLink}
         isMoodTrackingEnabled={true}
-      /> */}
+      />
 
       {/* Footer - Biostackr Branding */}
       <footer className="border-t border-gray-200 bg-gray-50">
