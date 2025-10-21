@@ -575,6 +575,26 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
           </span>
         </div>
         <div className="flex items-center">
+          {categoryFilteredItems.length > 0 && (
+            <div className="flex items-center gap-2 mr-2">
+              <button
+                onClick={() => {
+                  const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
+                  const allCompleted = allSupplementIds.every(id => completedItems.has(id))
+                  if (allCompleted) {
+                    allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
+                  } else {
+                    allSupplementIds.forEach(id => { if (!completedItems.has(id)) onToggleComplete(id.replace('supplement-', ''), 'supplement') })
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black text-white hover:opacity-90"
+                aria-label="Mark everything done today"
+                title="Mark everything done today"
+              >
+                {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck all' : 'Mark everything done today'}
+              </button>
+            </div>
+          )}
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -604,36 +624,6 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
 
       {!collapsed && (
         <div className="px-6 pb-6">
-          {/* Check All Button - moved under header */}
-          {categoryFilteredItems.length > 0 && (
-            <div className="mb-4">
-              <button
-                onClick={() => {
-                  const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
-                  const allCompleted = allSupplementIds.every(id => completedItems.has(id))
-                  
-                  if (allCompleted) {
-                    // Uncheck all
-                    allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
-                  } else {
-                    // Check all
-                    allSupplementIds.forEach(id => {
-                      if (!completedItems.has(id)) {
-                        onToggleComplete(id.replace('supplement-', ''), 'supplement')
-                      }
-                    })
-                  }
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-600 hover:text-gray-900"
-                aria-label="Check all supplements"
-              >
-                <span className="text-sm">
-                  {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? '↶' : '✓'}
-                </span>
-                <span>{categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck All' : 'Check All'}</span>
-              </button>
-            </div>
-          )}
           {categoryFilteredItems.length > 0 ? (
             <div className="max-h-96 overflow-y-auto pr-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
