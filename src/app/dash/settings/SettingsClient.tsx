@@ -445,6 +445,42 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   return (
     <div className="space-y-8">
+      {/* Push Notifications Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <Bell className="w-6 h-6 text-blue-500" />
+          <h2 className="text-xl font-semibold text-gray-900">Push Notifications</h2>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">Enable browser notifications so we can nudge you to check in daily.</p>
+
+        <button
+          onClick={async () => {
+            try {
+              if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                await Notification.requestPermission()
+              }
+              // Kick off the onboarding modal flow if present; otherwise self-register
+              if ('serviceWorker' in navigator) {
+                const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+                const existing = await reg.pushManager.getSubscription()
+                let sub = existing
+                if (!sub) {
+                  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
+                  const appServerKey = vapid ? urlBase64ToUint8Array(vapid) : undefined
+                  sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey })
+                }
+                await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub?.toJSON?.() || sub }) })
+              }
+            } catch (e) {
+              console.error('Push enable error', e)
+            }
+          }}
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+        >
+          Enable Push Notifications
+        </button>
+      </div>
       {/* Profile Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">

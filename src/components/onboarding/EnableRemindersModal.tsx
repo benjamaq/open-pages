@@ -41,6 +41,24 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
         setPermission(result)
       }
 
+      // Register SW and subscribe to push (if supported)
+      try {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          const existing = await reg.pushManager.getSubscription()
+          let sub = existing
+          if (!sub) {
+            const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
+            const appServerKey = vapid ? urlBase64ToUint8Array(vapid) : undefined
+            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey })
+          }
+          // Persist subscription (best-effort)
+          try {
+            await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub?.toJSON?.() || sub }) })
+          } catch {}
+        }
+      } catch {}
+
       // Save preference regardless of push support; we'll use email or client notifications as fallback
       const resp = await fetch('/api/settings/notifications', {
         method: 'POST',
@@ -72,6 +90,15 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
     } finally {
       setSaving(false)
     }
+  }
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = typeof window !== 'undefined' ? window.atob(base64) : Buffer.from(base64, 'base64').toString('binary')
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+    return outputArray
   }
 
   return (
