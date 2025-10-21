@@ -87,6 +87,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     sleep_score: null as number | null
   });
 
+  // Draft persistence key (per user + date)
+  const draftKey = typeof window !== 'undefined' ? `checkinDraft-${userId}-${date}` : '';
+
   // Context chips state (6-8 total limit)
   const [selectedContextChips, setSelectedContextChips] = useState<string[]>([]);
   const [showMoreContext, setShowMoreContext] = useState(false);
@@ -381,6 +384,41 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     setSaveMessage('');
   }, [date, initialData]);
 
+  // Load draft from localStorage when opening (after initialData processing)
+  useEffect(() => {
+    if (!isOpen || !draftKey) return;
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const d = JSON.parse(saved);
+        if (d?.formData) setFormData((prev) => ({ ...prev, ...d.formData }));
+        if (Array.isArray(d?.selectedTags)) setSelectedTags(d.selectedTags);
+        if (Array.isArray(d?.selectedContextChips)) setSelectedContextChips(d.selectedContextChips);
+        if (Array.isArray(d?.selectedSymptoms)) setSelectedSymptoms(d.selectedSymptoms);
+        if (Array.isArray(d?.selectedPainLocations)) setSelectedPainLocations(d.selectedPainLocations);
+        if (Array.isArray(d?.selectedPainTypes)) setSelectedPainTypes(d.selectedPainTypes);
+        if (Array.isArray(d?.customSymptoms)) setCustomSymptoms(d.customSymptoms);
+      }
+    } catch {}
+  }, [isOpen, draftKey]);
+
+  // Persist draft to localStorage while editing (for the day session)
+  useEffect(() => {
+    if (!isOpen || !draftKey) return;
+    try {
+      const payload = {
+        formData,
+        selectedTags,
+        selectedContextChips,
+        selectedSymptoms,
+        selectedPainLocations,
+        selectedPainTypes,
+        customSymptoms
+      };
+      localStorage.setItem(draftKey, JSON.stringify(payload));
+    } catch {}
+  }, [isOpen, draftKey, formData, selectedTags, selectedContextChips, selectedSymptoms, selectedPainLocations, selectedPainTypes, customSymptoms]);
+
   // Load snapshot data
   useEffect(() => {
     if (isOpen && includeSnapshot) {
@@ -559,6 +597,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           // Don't block user flow if Elli fails
         }
         
+        // Clear draft after successful save
+        try { if (draftKey) localStorage.removeItem(draftKey); } catch {}
+
         // Show post-check-in modal ONLY during orchestrated onboarding
         if (isOnboarding && isActuallyFirstCheckIn && !firstCheckInLoading) {
           try {
