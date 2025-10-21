@@ -32,7 +32,40 @@ export function getPostCheckInTemplate(context: TemplateContext): string {
   
   // First day: warm baseline message (no “best day” claims)
   if (isFirstDay) {
-    return `Hey ${name} — first check‑in saved. Pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. Solid baseline. I’ll watch the next few days and surface what actually moves the needle for you.`;
+    // Build specifics from symptoms or lifestyle factors (up to 2)
+    const factors = (context as any)?.factors || {};
+    const symptoms: string[] = Array.isArray(factors.symptoms) ? factors.symptoms : [];
+    const lifestyle: string[] = Array.isArray(factors.lifestyle_factors) ? factors.lifestyle_factors : [];
+
+    const prettify = (s: string) => {
+      const map: Record<string, string> = {
+        high_stress: 'high stress',
+        late_caffeine: 'late caffeine',
+        too_much_caffeine: 'too much caffeine',
+        low_hydration: 'low hydration',
+        new_food: 'new food'
+      };
+      return (map[s] || s || '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (m) => m.toUpperCase())
+        .replace(/\bAnd\b/g, 'and')
+        .toLowerCase();
+    };
+
+    const specifics: string[] = [];
+    if (symptoms.length) specifics.push(...symptoms.slice(0, 2));
+    if (specifics.length < 2 && lifestyle.length) specifics.push(...lifestyle.slice(0, 2 - specifics.length));
+    const prettySpecifics = specifics.map(prettify).filter(Boolean);
+
+    const s1 = `Hey ${name}, thanks for your first check-in. I see pain at ${pain}/10, mood at ${mood}/10, and sleep at ${sleep}/10.`;
+    const s2 = prettySpecifics.length > 0
+      ? `I noticed ${prettySpecifics.length === 1 ? prettySpecifics[0] : `${prettySpecifics[0]} and ${prettySpecifics[1]}`} today.`
+      : '';
+    const s3 = `After 5–7 days of tracking, we'll start seeing patterns in what helps and what doesn't.`;
+    const s4 = `For now, just show up daily. That's all you need to do.`;
+    const s5 = `Keep tracking—the more I know, the more we can find what helps. 💙`;
+
+    return [s1, s2, s3, s4, s5].filter(Boolean).join(' ');
   }
 
   // High pain (8-10) - truly severe

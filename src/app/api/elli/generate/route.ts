@@ -27,6 +27,16 @@ export async function POST(request: NextRequest) {
       messageType: 'post_checkin' | 'post_supplement' | 'dashboard' | 'milestone';
       context: ElliContext;
     };
+    try {
+      const { ELLI_PROMPTS } = require('@/lib/prompts');
+      const pv = (ELLI_PROMPTS?.FIRST_CHECKIN || '').slice(0, 50);
+      console.log('[ELLI] Generating message', {
+        type: messageType,
+        user: user.id,
+        promptVersion: pv,
+        timestamp: new Date().toISOString()
+      });
+    } catch {}
     
     // Validate required fields
     if (!messageType || !context) {
@@ -38,6 +48,16 @@ export async function POST(request: NextRequest) {
     
     // Generate Elli message (with OpenAI or templates)
     const message = await generateElliMessage(messageType, context);
+    try {
+      const hasName = !!context?.userName && typeof message === 'string' && message.includes(context.userName);
+      const painStr = String(context?.checkIn?.pain ?? '');
+      const hasPain = painStr && message.includes(painStr);
+      console.log('[ELLI] Message generated', {
+        length: typeof message === 'string' ? message.length : 0,
+        hasName,
+        hasPain
+      });
+    } catch {}
     
     // Store message in database
     await saveElliMessage(user.id, messageType, message, context);

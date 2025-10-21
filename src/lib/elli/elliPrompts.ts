@@ -154,6 +154,19 @@ Be warm, genuine, and specific. Avoid over-claiming if data is sparse (≤7 days
 
 function buildPostCheckInPrompt(context: any): string {
   const { userName, checkIn, condition, readinessToday, readinessYesterday, previousCheckIns = [], factors = {}, primaryInsight = null, timeOfDay = 'morning', dataAvailability } = context;
+  // Centralized prompt source (for future templating/AB testing)
+  try {
+    const { ELLI_PROMPTS } = require('@/lib/prompts');
+    const symptoms = Array.isArray(factors?.symptoms) ? factors.symptoms.join(', ') : '';
+    const lifestyle = Array.isArray(factors?.lifestyle_factors) ? factors.lifestyle_factors.join(', ') : '';
+    return ELLI_PROMPTS.FIRST_CHECKIN
+      .replace('{name}', userName || 'friend')
+      .replace('{pain}', String(checkIn?.pain ?? ''))
+      .replace('{mood}', String(checkIn?.mood ?? ''))
+      .replace('{sleep}', String(checkIn?.sleep ?? ''))
+      .replace('{symptoms}', symptoms)
+      .replace('{lifestyle}', lifestyle);
+  } catch {}
   const greeting = timeOfDay === 'morning' ? `Good morning, ${userName}! Welcome back.` : timeOfDay === 'afternoon' ? `Hey ${userName}! How's your day going so far?` : `Evening, ${userName}! Let's check in.`;
 
   // Determine availability flags
