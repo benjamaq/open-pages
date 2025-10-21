@@ -575,26 +575,7 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
           </span>
         </div>
         <div className="flex items-center">
-          {categoryFilteredItems.length > 0 && (
-            <div className="flex items-center gap-2 mr-2">
-              <button
-                onClick={() => {
-                  const allSupplementIds = categoryFilteredItems.map(item => `supplement-${item.id}`)
-                  const allCompleted = allSupplementIds.every(id => completedItems.has(id))
-                  if (allCompleted) {
-                    allSupplementIds.forEach(id => onToggleComplete(id.replace('supplement-', ''), 'supplement'))
-                  } else {
-                    allSupplementIds.forEach(id => { if (!completedItems.has(id)) onToggleComplete(id.replace('supplement-', ''), 'supplement') })
-                  }
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black text-white hover:opacity-90"
-                aria-label="Mark everything done today"
-                title="Mark everything done today"
-              >
-                {categoryFilteredItems.every(item => completedItems.has(`supplement-${item.id}`)) ? 'Uncheck all' : 'Mark everything done today'}
-              </button>
-            </div>
-          )}
+          {/* Removed per request: using single global action above the module */}
           <button
             onClick={onAdd}
             className="p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -2427,23 +2408,17 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Patterns (separate card, 24px gap below) */}
             <PatternsCard userId={userId} />
 
-            {/* Helpful Note + Quick Actions */}
+            {/* Helpful Note + Global Quick Action (outside module) */}
             <div className="mb-4">
               <div className="text-sm text-gray-400 text-center">
                 Your dashboard only shows items scheduled for today. View your complete stack in your public profile.
               </div>
-              <div className="mt-3 flex items-center justify-center gap-3">
+              <div className="mt-3 flex items-center justify-end">
                 <button
                   onClick={markAllForToday}
-                  className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  className="px-3 py-1.5 text-sm rounded-lg bg-black text-white hover:opacity-90"
                 >
-                  Mark everything done today
-                </button>
-                <button
-                  onClick={clearAllForToday}
-                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
-                >
-                  Clear all
+                  Check everything done today
                 </button>
               </div>
             </div>
