@@ -51,13 +51,31 @@ export async function generateMetadata({
   const moodScore = search && (search as any).moodScore ? Number((search as any).moodScore) : null
   const sleepScore = search && (search as any).sleep ? Number((search as any).sleep) : (search && (search as any).sleepScore ? Number((search as any).sleepScore) : null)
   const painScore = search && (search as any).pain ? Number((search as any).pain) : (search && (search as any).painScore ? Number((search as any).painScore) : null)
-  const readiness = ((): number | null => {
+  let readiness = ((): number | null => {
     if (moodScore == null && sleepScore == null && painScore == null) return null
     const m = (moodScore ?? 5)
     const s = (sleepScore ?? 5)
     const p = (painScore ?? 0)
     return Math.round(((m * 0.2) + (s * 0.4) + ((10 - p) * 0.4)) * 10)
   })()
+
+  // Fallback: fetch the day's entry from DB if readiness not derivable from URL
+  if (readiness == null) {
+    try {
+      const { data: entry } = await supabase
+        .from('daily_entries')
+        .select('mood, sleep_quality, pain')
+        .eq('user_id', (profile as any).user_id)
+        .eq('local_date', date)
+        .maybeSingle()
+      if (entry && (entry.mood != null || entry.sleep_quality != null || entry.pain != null)) {
+        const m = (entry.mood ?? 5)
+        const s = (entry.sleep_quality ?? 5)
+        const p = (entry.pain ?? 0)
+        readiness = Math.round(((m * 0.2) + (s * 0.4) + ((10 - p) * 0.4)) * 10)
+      }
+    } catch {}
+  }
   const supplementsCount = search?.supplements ? Number(search.supplements) : 0
   const protocols = search?.protocols ? String(search.protocols).split(',') : []
   const movement = search?.movement ? String(search.movement).split(',') : []
