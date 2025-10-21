@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '../../../lib/supabase/client'
 import Link from 'next/link'
 
 interface Profile {
@@ -44,6 +45,42 @@ export default function TodayPageClient({
   currentDate 
 }: TodayPageClientProps) {
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
+  const [userId, setUserId] = useState<string | null>(null)
+
+  const storageKey = useMemo(() => {
+    if (!userId || !currentDate) return null
+    return `completedItems-${userId}-${currentDate}`
+  }, [userId, currentDate])
+
+  // Load user id and any saved selections
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!mounted) return
+        setUserId(user?.id || null)
+        if (user?.id && currentDate) {
+          const key = `completedItems-${user.id}-${currentDate}`
+          const saved = localStorage.getItem(key)
+          if (saved) {
+            const arr: string[] = JSON.parse(saved)
+            setCompletedItems(new Set(arr))
+          }
+        }
+      } catch {}
+    })()
+    return () => { mounted = false }
+  }, [currentDate])
+
+  // Persist selections whenever they change
+  useEffect(() => {
+    try {
+      if (!storageKey) return
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(completedItems)))
+    } catch {}
+  }, [completedItems, storageKey])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -93,6 +130,18 @@ export default function TodayPageClient({
     if (completionPercentage >= 50) return "Nice work! Every step forward counts. 🌱"
     if (completionPercentage >= 25) return "You're making progress! Be kind to yourself. 💚"
     return "Today is a fresh start. Small steps lead to big changes. ✨"
+  }
+
+  const markAllForToday = () => {
+    const allKeys: string[] = [
+      ...stackItems.map(s => `stack-${s.id}`),
+      ...protocols.map(p => `protocol-${p.id}`)
+    ]
+    setCompletedItems(new Set(allKeys))
+  }
+
+  const clearAllForToday = () => {
+    setCompletedItems(new Set())
   }
 
   const ActivityCard = ({ 
@@ -312,6 +361,20 @@ export default function TodayPageClient({
               <p className="text-blue-800 text-sm font-medium">
                 {getEncouragementMessage()}
               </p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                onClick={markAllForToday}
+                className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Mark everything done today
+              </button>
+              <button
+                onClick={clearAllForToday}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+              >
+                Clear all
+              </button>
             </div>
           </div>
         )}
