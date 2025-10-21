@@ -8,6 +8,7 @@ import { useFirstCheckIn } from '@/hooks/useFirstCheckIn';
 import { generateFirstInsight } from '@/app/actions/generate-first-insight';
 import { generateAndSaveElliMessage } from '@/app/actions/generate-elli-message';
 import PostCheckinModal from '@/components/onboarding/post-checkin-modal';
+import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal';
 import { TypeAnimation } from 'react-type-animation';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { trackEvent } from '@/lib/analytics';
@@ -55,6 +56,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   // Post-check-in modal state
   const [showPostCheckinModal, setShowPostCheckinModal] = useState(false);
   const [postCheckinData, setPostCheckinData] = useState<any>(null);
+  const [showReminderPrompt, setShowReminderPrompt] = useState(false);
   
   // Elli welcome message state
   const [showElliTyping, setShowElliTyping] = useState(false);
@@ -594,7 +596,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         } else {
           // Normal behavior for subsequent check-ins
           setTimeout(() => {
-            onClose();
+            try {
+              const hasShown = localStorage.getItem('pushPromptShown');
+              if (!hasShown && isActuallyFirstCheckIn) {
+                setShowReminderPrompt(true);
+              } else {
+                onClose();
+              }
+            } catch {
+              onClose();
+            }
           }, 1000);
         }
       } else {
@@ -1467,6 +1478,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           dayOneData={postCheckinData.dayOneData}
           communityStats={postCheckinData.communityStats}
           personalizedInsight={postCheckinData.personalizedInsight}
+        />
+      )}
+
+      {showReminderPrompt && (
+        <EnableRemindersModal
+          isOpen={showReminderPrompt}
+          onClose={() => {
+            setShowReminderPrompt(false);
+            onClose();
+          }}
         />
       )}
     </div>

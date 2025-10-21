@@ -58,6 +58,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     isExpired: false
   })
   const [isSendingTest, setIsSendingTest] = useState(false)
+  const [permission, setPermission] = useState<NotificationPermission>(typeof Notification !== 'undefined' ? Notification.permission : 'default')
   const [saveMessage, setSaveMessage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -169,6 +170,14 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const requestBrowserPermission = async () => {
+    try {
+      if (typeof Notification === 'undefined') return
+      const result = await Notification.requestPermission()
+      setPermission(result)
+    } catch {}
   }
 
   const handleTestEmail = async () => {

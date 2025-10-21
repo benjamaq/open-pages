@@ -83,3 +83,51 @@ self.addEventListener('fetch', (event) => {
 });
 
 
+// Display notifications from pushes (for completeness during future server push tests)
+self.addEventListener('push', (event) => {
+  try {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || 'BioStackr';
+    const body = data.body || 'Time to check in – it only takes 20 seconds.';
+    const url = data.url || '/dash/today';
+    const options = {
+      body,
+      icon: '/icon-192-v2.png',
+      badge: '/icon-192-v2.png',
+      data: { url },
+      vibrate: [100, 50, 100],
+      tag: 'biostackr-reminder'
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (e) {
+    // fallback if payload isn't JSON
+    event.waitUntil(self.registration.showNotification('BioStackr', {
+      body: 'Time to check in – it only takes 20 seconds.',
+      icon: '/icon-192-v2.png',
+      badge: '/icon-192-v2.png',
+      tag: 'biostackr-reminder'
+    }));
+  }
+});
+
+// Focus/open the app when a notification is clicked
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/dash/today';
+  event.waitUntil(
+    (async () => {
+      const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of allClients) {
+        const url = new URL(client.url);
+        if (url.pathname === targetUrl || url.pathname === '/') {
+          client.focus();
+          client.postMessage({ type: 'OPEN_PATH', path: targetUrl });
+          return;
+        }
+      }
+      await clients.openWindow(targetUrl);
+    })()
+  );
+});
+
+
