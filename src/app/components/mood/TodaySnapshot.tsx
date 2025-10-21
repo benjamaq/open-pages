@@ -412,11 +412,21 @@ export default function TodaySnapshot({
               <div className="flex flex-col items-center">
                 <div className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Daily Readiness Score</div>
                 <div className="border-2 border-black rounded-lg p-3 bg-white">
-                  <div className={`text-3xl font-bold leading-none ${getReadinessMeta(readinessScore).color}`}>{readinessScore}%</div>
+                  <div className={`text-3xl font-bold leading-none ${getReadinessMeta(readinessScore).color}`}>
+                    {todayEntry && (todayEntry.mood != null || todayEntry.sleep_quality != null || todayEntry.pain != null)
+                      ? `${readinessScore}%`
+                      : '—'}
+                  </div>
                 </div>
                 <div className="mt-2 text-sm text-gray-900 text-center w-full px-2">
-                  <span className="mr-1 text-base">{getReadinessMeta(readinessScore).emoji}</span>
-                  {getReadinessMeta(readinessScore).message}
+                  {todayEntry && (todayEntry.mood != null || todayEntry.sleep_quality != null || todayEntry.pain != null) ? (
+                    <>
+                      <span className="mr-1 text-base">{getReadinessMeta(readinessScore).emoji}</span>
+                      {getReadinessMeta(readinessScore).message}
+                    </>
+                  ) : (
+                    <span>—</span>
+                  )}
                 </div>
               </div>
               <div className="text-xs text-gray-500 text-center sm:text-right">
