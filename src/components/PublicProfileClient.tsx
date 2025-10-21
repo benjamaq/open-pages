@@ -19,6 +19,7 @@ try {
 }
 import SectionToggleSheet from './SectionToggleSheet'
 import OverviewSection from './OverviewSection'
+import dayjs from 'dayjs'
 import { updateJournalVisibility } from '../lib/actions/profile'
 import { type PublicModules } from '../lib/actions/public-modules'
 import { LibraryItem } from '../lib/actions/library'
@@ -94,6 +95,29 @@ export default function PublicProfileClient({
     setCurrentModules(updatedModules)
   }
 
+  // Compute latest readiness (0-100) from mood data
+  const latestReadiness: number | null = (() => {
+    try {
+      if (!Array.isArray(publicMoodData) || publicMoodData.length === 0) return null
+      const sorted = [...publicMoodData].sort((a: any, b: any) => {
+        const da = dayjs(a.date || a.local_date || a.created_at)
+        const db = dayjs(b.date || b.local_date || b.created_at)
+        return db.valueOf() - da.valueOf()
+      })
+      const latest = sorted[0]
+      if (!latest) return null
+      if (typeof latest.readiness === 'number' && Number.isFinite(latest.readiness)) return Math.round(latest.readiness)
+      const mood = typeof latest.mood === 'number' ? latest.mood : null
+      const sleep = typeof latest.sleep_quality === 'number' ? latest.sleep_quality : (typeof latest.sleep_hours === 'number' ? Math.min(10, Math.round(latest.sleep_hours)) : null)
+      const pain = typeof latest.pain === 'number' ? latest.pain : null
+      if (mood == null && sleep == null && pain == null) return null
+      const m = mood ?? 5
+      const s = sleep ?? 5
+      const p = pain ?? 0
+      return Math.round(((m * 0.2) + (s * 0.4) + ((10 - p) * 0.4)) * 10)
+    } catch { return null }
+  })()
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
       
@@ -142,6 +166,18 @@ export default function PublicProfileClient({
         </div>
       )}
       
+      {/* Overview (top highlights) */}
+      <OverviewSection 
+        profile={profile}
+        publicSupplements={publicSupplements}
+        publicProtocols={publicProtocols}
+        publicMovement={publicMovement}
+        publicMindfulness={publicMindfulness}
+        publicLibraryItems={[]}
+        publicGear={publicGear}
+        latestReadiness={latestReadiness}
+      />
+
       {/* Other sections - Show if enabled, even if empty */}
       {currentModules?.supplements && (
         <SupplementsSection supplements={publicSupplements} />

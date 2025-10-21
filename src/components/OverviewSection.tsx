@@ -14,6 +14,7 @@ interface OverviewSectionProps {
     energy: number
     mood: string
   }
+  latestReadiness?: number | null
 }
 
 export default function OverviewSection({
@@ -24,7 +25,8 @@ export default function OverviewSection({
   publicMindfulness,
   publicLibraryItems,
   publicGear,
-  dailyCheckIn
+  dailyCheckIn,
+  latestReadiness
 }: OverviewSectionProps) {
   
   // Get current training plan
@@ -48,9 +50,11 @@ export default function OverviewSection({
         <div>
           <h3 className="text-sm font-medium text-gray-900 mb-2">Today at a Glance</h3>
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
-              Fasting today 16h
-            </span>
+            {typeof latestReadiness === 'number' && (
+              <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
+                Readiness {latestReadiness}%
+              </span>
+            )}
           </div>
         </div>
 
