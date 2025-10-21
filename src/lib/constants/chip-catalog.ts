@@ -97,7 +97,7 @@ export const CHIP_CATALOG: Chip[] = [
   { slug: 'mobility_rehab', label: 'Mobility / Rehab', icon: '🧍', category: 'training', sentiment: 'good' },
 
   // Nutrition / Stims / Alcohol
-  { slug: 'late_caffeine', label: 'Too much caffeine', icon: '☕', category: 'nutrition', sentiment: 'bad' },
+  { slug: 'too_much_caffeine', label: 'Too much caffeine', icon: '☕', category: 'nutrition', sentiment: 'bad' },
   { slug: 'alcohol_last_night', label: 'Alcohol last night', icon: '🍺', category: 'nutrition', sentiment: 'bad' },
   { slug: 'alcohol_free', label: 'Alcohol-free day', icon: '🥤', category: 'nutrition', sentiment: 'good' },
   { slug: 'low_carb', label: 'Low carb', icon: '🥗', category: 'nutrition', sentiment: 'neutral' },
@@ -148,7 +148,8 @@ export const CHIP_CATALOG: Chip[] = [
   { slug: 'fertility_treatment', label: 'Fertility treatment', icon: '🧬', category: 'hormones', sentiment: 'neutral' },
 
   // Environment / Travel
-  { slug: 'heat_wave', label: 'Heat wave', icon: '☀️', category: 'environment', sentiment: 'neutral' },
+  { slug: 'too_hot', label: 'Too hot', icon: '🥵', category: 'environment', sentiment: 'neutral' },
+  { slug: 'weather_change', label: 'Weather change', icon: '🌧️', category: 'environment', sentiment: 'neutral' },
   { slug: 'cold_snap', label: 'Cold snap', icon: '❄️', category: 'environment', sentiment: 'neutral' },
   { slug: 'high_altitude', label: 'High altitude', icon: '🏔️', category: 'environment', sentiment: 'neutral' },
   { slug: 'bad_air', label: 'Bad air quality', icon: '🌫️', category: 'environment', sentiment: 'bad' },
