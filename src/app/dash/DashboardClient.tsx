@@ -2247,7 +2247,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                     <h1 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
                       {displayName}
                     </h1>
-                    <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    <button
+                      onClick={() => setShowHeaderEditor(true)}
+                      title="Edit profile"
+                      className="p-1 rounded hover:bg-gray-100 transition-colors"
+                      aria-label="Edit profile"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </button>
                     {isBetaUser && (
                       <div className="px-2 py-1 bg-green-600 text-white rounded-full text-xs font-medium">
                         BETA
