@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import FollowButton from '../../../components/FollowButton'
 import { createClient } from '../../../lib/supabase/server'
 import { FileText, Image as ImageIcon, File, Edit2 } from 'lucide-react'
 import { headers } from 'next/headers'
@@ -10,11 +11,10 @@ import ShareButton from '../../../components/ShareButton'
 // import FollowButton from '../../../components/FollowButton'
 // import StickyNavigation from '../../../components/StickyNavigation'
 // import PublicProfileHeader from '../../../components/PublicProfileHeader'
-// import ProfileActionButtons from '../../../components/ProfileActionButtons'
+import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
 import { getPublicMoodData } from '../../../lib/db/mood'
-import dynamic from 'next/dynamic'
 // const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
 interface ProfilePageParams { slug: string }

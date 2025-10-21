@@ -47,6 +47,17 @@ export async function generateMetadata({
   // Get check-in data from URL parameters
   const energy = search?.energy ? Number(search.energy) : 7
   const mood = search?.mood ? String(search.mood) : ''
+  // Optional numeric sliders for readiness (if provided by sharer)
+  const moodScore = search && (search as any).moodScore ? Number((search as any).moodScore) : null
+  const sleepScore = search && (search as any).sleep ? Number((search as any).sleep) : (search && (search as any).sleepScore ? Number((search as any).sleepScore) : null)
+  const painScore = search && (search as any).pain ? Number((search as any).pain) : (search && (search as any).painScore ? Number((search as any).painScore) : null)
+  const readiness = ((): number | null => {
+    if (moodScore == null && sleepScore == null && painScore == null) return null
+    const m = (moodScore ?? 5)
+    const s = (sleepScore ?? 5)
+    const p = (painScore ?? 0)
+    return Math.round(((m * 0.2) + (s * 0.4) + ((10 - p) * 0.4)) * 10)
+  })()
   const supplementsCount = search?.supplements ? Number(search.supplements) : 0
   const protocols = search?.protocols ? String(search.protocols).split(',') : []
   const movement = search?.movement ? String(search.movement).split(',') : []
@@ -138,6 +149,26 @@ export default async function CheckinSharePage({ params, searchParams }: Checkin
             </div>
             <div className="text-xl text-gray-900">Energy Level</div>
           </div>
+
+          {/* Readiness (if provided) */}
+          {typeof readiness === 'number' && (
+            <div className="text-center mb-6">
+              <div className="text-sm font-semibold text-gray-900 mb-1">Daily Readiness Score</div>
+              <div className="inline-flex items-center gap-2 border-2 border-black rounded-lg px-3 py-2 bg-white">
+                <span className="text-3xl font-bold">{readiness}%</span>
+                <span className="text-xl">{readiness >= 80 ? '☀️' : readiness >= 60 ? '🙂' : readiness >= 40 ? '🫧' : '🛠️'}</span>
+              </div>
+              <div className="mt-2 text-sm text-gray-700">
+                {readiness >= 80
+                  ? 'Optimal capacity.'
+                  : readiness >= 60
+                    ? 'Good capacity.'
+                    : readiness >= 40
+                      ? 'Recovery focus.'
+                      : 'Prioritize rest.'}
+              </div>
+            </div>
+          )}
 
           {/* Mood */}
           {mood && (
