@@ -245,20 +245,19 @@ function sanitizeMessage(message: string, context: ElliContext): string {
     const days = context?.daysOfTracking ?? 0;
     const prevLen = context?.previousCheckIns?.length ?? 0;
 
-    // On Day 1 (or no history), remove claims about "best day", "patterns", and similar
+    // On Day 1 (or no history), remove over-claims and first-day references
     if (days <= 1 || prevLen === 0) {
       result = result
-        .replace(/[^.!?]*best day[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*best\s+so\s+far[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*best\s+day\s+so\s+far[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*today\s+is\s+(?:your\s+)?best[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*\bbest\b[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*pattern[s]?[^.!?]*[.!?]/gi, '')
-        .replace(/[^.!?]*(came\s+back|back\s+today|back\s+again|kept\s+showing\s+up|most\s+people\s+quit)[^.!?]*[.!?]/gi, '');
-      // Also remove any sentence explicitly referencing "first check-in" or "first day"
-      result = result
+        .replace(/[^.!?]*(came\s+back|back\s+today|back\s+again|kept\s+showing\s+up|most\s+people\s+quit)[^.!?]*[.!?]/gi, '')
         .replace(/[^.!?]*first\s+(check[-\s]?in|day)[^.!?]*[.!?]/gi, '');
     }
+
+    // GLOBAL hard block: never allow "best day"/"best so far" claims, ever
+    result = result
+      .replace(/[^.!?]*\b(best\s+day|best\s+so\s+far|best\s+day\s+so\s+far|today\s+(?:is|was)\s+(?:your\s+)?best)[^.!?]*[.!?]/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
 
     // Never invite chat or sharing details (no chat UI yet)
     result = result

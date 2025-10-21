@@ -32,7 +32,7 @@ export function getPostCheckInTemplate(context: TemplateContext): string {
   
   // First day: warm baseline message (no “best day” claims)
   if (isFirstDay) {
-    return `Hey ${name} — first check‑in saved. Pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. Great baseline. I’ll watch the next few days and surface what actually moves the needle for you.`;
+    return `Hey ${name} — first check‑in saved. Pain ${pain}/10, mood ${mood}/10, sleep ${sleep}/10. Solid baseline. I’ll watch the next few days and surface what actually moves the needle for you.`;
   }
 
   // High pain (8-10) - truly severe

@@ -100,11 +100,15 @@ export default function SymptomAnalysisCard({
                 // Ensure we always have 2–3 practical suggestions by merging tag‑based recs
                 const tagRecs = deriveSuggestionsFromTags(memoizedCheckInData.tags || computed?.detectedSymptoms as any);
                 const mergedRecs = Array.from(new Set([...(computed?.suggestions || []), ...tagRecs])).slice(0, 3);
+                const sanitizedText = (msg.message_text as string)
+                  .replace(/[^.!?]*\b(best\s+day|best\s+so\s+far|best\s+day\s+so\s+far|today\s+(?:is|was)\s+(?:your\s+)?best)[^.!?]*[.!?]/gi, '')
+                  .replace(/\s{2,}/g, ' ')
+                  .trim();
                 const merged: SymptomAnalysis = {
                   detectedSymptoms: computed?.detectedSymptoms || [],
                   primaryConcern: computed?.primaryConcern || null,
                   severity: computed?.severity || 'low',
-                  empatheticResponse: msg.message_text,
+                  empatheticResponse: sanitizedText,
                   suggestions: mergedRecs
                 };
                 if (mounted) {
