@@ -92,13 +92,20 @@ export async function getUserUsage(): Promise<UsageInfo[]> {
     const planType = subscription?.plan_type || 'free'
 
     // Get plan limits
-    const { data: limits, error: limitsError } = await supabase
-      .from('plan_limits')
-      .select('feature_name, limit_value')
-      .eq('plan_type', planType)
-
-    if (limitsError) {
-      console.error('Error fetching plan limits:', limitsError)
+    let limits: any[] | null = null
+    try {
+      const res = await supabase
+        .from('plan_limits')
+        .select('feature_name, limit_value')
+        .eq('plan_type', planType)
+      if (res.error) throw res.error
+      limits = res.data || []
+    } catch (err: any) {
+      // If table missing, gracefully default to unlimited usage
+      if (err.message?.includes('relation') || err.message?.includes('table')) {
+        return []
+      }
+      console.error('Error fetching plan limits:', err)
       return []
     }
 

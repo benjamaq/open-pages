@@ -101,7 +101,7 @@ export default async function SettingsPage() {
       {/* Page Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SettingsClient profile={profile} userEmail={user.email!} trialInfo={trialInfo} />
-        <CacheBuster enabled={true} />
+        <CacheBuster enabled={false} />
       </div>
     </div>
   )
