@@ -27,6 +27,15 @@ interface SettingsClientProps {
 }
 
 export default function SettingsClient({ profile, userEmail, trialInfo }: SettingsClientProps) {
+  // Helper placed at top for VAPID key conversion
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
+    const rawData = typeof window !== 'undefined' ? window.atob(base64) : Buffer.from(base64, 'base64').toString('binary')
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+    return outputArray
+  }
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     email_enabled: true,
     daily_reminder_enabled: true,
@@ -65,13 +74,25 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [allowFollowers, setAllowFollowers] = useState(profile.allow_stack_follow ?? true)
   const [followerCount, setFollowerCount] = useState(0)
   const [showPublicFollowers, setShowPublicFollowers] = useState(profile.show_public_followers ?? true)
+  const [isPushLoading, setIsPushLoading] = useState(false)
+  const [isPushEnabled, setIsPushEnabled] = useState(false)
+  const [isPushTesting, setIsPushTesting] = useState(false)
+  const [reminderTime, setReminderTime] = useState('09:00')
+  const [reminderEnabled, setReminderEnabled] = useState(false)
 
   useEffect(() => {
-    loadPreferences()
-    loadFollowerCount()
-    loadFollowerSettings()
-    loadSubscriptionData()
-    checkBetaStatus()
+    let cancelled = false
+    const run = async () => {
+      await Promise.allSettled([
+        (async () => { if (!cancelled) await loadPreferences() })(),
+        (async () => { if (!cancelled) await loadFollowerCount() })(),
+        (async () => { if (!cancelled) loadFollowerSettings() })(),
+        (async () => { if (!cancelled) await loadSubscriptionData() })(),
+        (async () => { if (!cancelled) await checkBetaStatus() })(),
+      ])
+    }
+    run()
+    return () => { cancelled = true }
   }, [])
 
   const checkBetaStatus = async () => {
@@ -135,6 +156,16 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
       const prefs = await getNotificationPreferences()
       if (prefs) {
         setPreferences(prefs)
+        // Initialize local reminder UI state from saved prefs
+        try {
+          if (typeof prefs.reminder_time === 'string') {
+            const t = (prefs.reminder_time || '09:00').slice(0, 5)
+            setReminderTime(t)
+          }
+          if (typeof prefs.daily_reminder_enabled === 'boolean') {
+            setReminderEnabled(!!prefs.daily_reminder_enabled)
+          }
+        } catch {}
       }
     } catch (error) {
       console.error('Error loading preferences:', error)
@@ -452,34 +483,146 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           <h2 className="text-xl font-semibold text-gray-900">Push Notifications</h2>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">Enable browser notifications so we can nudge you to check in daily.</p>
+        <p className="text-sm text-gray-600 mb-2">Enable browser notifications so we can nudge you to check in daily.</p>
+        <p className="text-xs text-gray-500 mb-4">Permission: {typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'}</p>
+
+        <button
+          onClick={async () => {
+            if (isPushLoading) return
+            setIsPushLoading(true)
+            setSaveMessage('')
+            try {
+              // Already subscribed?
+              if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.getRegistration()
+                if (reg) {
+                  const existing = await reg.pushManager.getSubscription()
+                  if (existing) {
+                    setSaveMessage('✅ Push notifications already enabled')
+                    setIsPushEnabled(true)
+                    setIsPushLoading(false)
+                    return
+                  }
+                }
+              }
+
+              // Request permission
+              if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                const result = await Notification.requestPermission()
+                if (result !== 'granted') {
+                  setSaveMessage('❌ Permission denied')
+                  setIsPushLoading(false)
+                  return
+                }
+              }
+
+              // Register and subscribe
+              if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                await reg.update()
+                const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
+                if (!vapidPublicKey) throw new Error('VAPID public key not configured')
+                const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
+                const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })
+                const response = await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ subscription: subscription.toJSON() })
+                })
+                if (!response.ok) throw new Error('Failed to save subscription')
+                setSaveMessage('✅ Push notifications enabled!')
+                setIsPushEnabled(true)
+                setTimeout(() => setSaveMessage(''), 3000)
+              }
+            } catch (error: any) {
+              console.error('Push enable error:', error)
+              setSaveMessage(`❌ Failed: ${error?.message || 'Unknown error'}`)
+            } finally {
+              setIsPushLoading(false)
+            }
+          }}
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isPushLoading || isPushEnabled}
+        >
+          {isPushLoading ? 'Enabling...' : isPushEnabled ? '✓ Push Enabled' : 'Enable Push Notifications'}
+        </button>
 
         <button
           onClick={async () => {
             try {
-              if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-                await Notification.requestPermission()
+              if (isPushTesting) return
+              setIsPushTesting(true)
+              const resp = await fetch('/api/push/test', { method: 'POST' })
+              if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}))
+                alert(`Test push failed: ${data?.error || resp.status}`)
+              } else {
+                alert('Test notification sent. Check your browser notifications.')
               }
-              // Kick off the onboarding modal flow if present; otherwise self-register
-              if ('serviceWorker' in navigator) {
-                const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
-                const existing = await reg.pushManager.getSubscription()
-                let sub = existing
-                if (!sub) {
-                  const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
-                  const appServerKey = vapid ? urlBase64ToUint8Array(vapid) : undefined
-                  sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey })
-                }
-                await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub?.toJSON?.() || sub }) })
-              }
-            } catch (e) {
-              console.error('Push enable error', e)
+            } catch (e: any) {
+              alert(`Test push error: ${e?.message || 'Unknown error'}`)
+            } finally {
+              setIsPushTesting(false)
             }
           }}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+          className="ml-3 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          disabled={typeof Notification !== 'undefined' ? Notification.permission !== 'granted' || isPushLoading || isPushTesting : true}
         >
-          Enable Push Notifications
+          {isPushTesting ? 'Sending…' : 'Send Test Notification'}
         </button>
+      </div>
+
+      {/* Daily Reminder (Push/Email) */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Reminder</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm text-gray-700 font-medium">Send me a daily reminder</p>
+            <p className="text-xs text-gray-500">Get a notification at the same time each day</p>
+          </div>
+          <button
+            onClick={() => {
+              const newState = !reminderEnabled
+              setReminderEnabled(newState)
+              fetch('/api/settings/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ daily_reminder_enabled: newState, reminder_time: reminderTime })
+              }).catch(() => {})
+            }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              reminderEnabled ? 'bg-blue-600' : 'bg-gray-200'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                reminderEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {reminderEnabled && (
+          <div className="ml-0">
+            <label className="block text-sm text-gray-700 mb-2">Reminder time</label>
+            <input
+              type="time"
+              value={reminderTime}
+              onChange={(e) => {
+                setReminderTime(e.target.value)
+                fetch('/api/settings/notifications', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
+                }).catch(() => {})
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              You'll get a reminder at {reminderTime} every day (your local time)
+            </p>
+          </div>
+        )}
       </div>
       {/* Profile Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -1331,4 +1474,14 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
     </div>
   )
+}
+
+// Local helper for VAPID base64 → Uint8Array
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = typeof window !== 'undefined' ? window.atob(base64) : Buffer.from(base64, 'base64').toString('binary')
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+  return outputArray
 }

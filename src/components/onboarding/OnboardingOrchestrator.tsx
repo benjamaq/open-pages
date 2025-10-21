@@ -272,6 +272,7 @@ export default function OnboardingOrchestrator({
         />
       )}
 
+
       {/* Step 7: Profile Setup */}
       {currentStep === 'profile_setup' && (
         <ProfileSetupModal

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import ReminderPromptModal from '@/components/ReminderPromptModal'
 import { createClient } from '../../../lib/supabase/client'
 import Link from 'next/link'
 
@@ -46,13 +47,14 @@ export default function TodayPageClient({
 }: TodayPageClientProps) {
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
   const [userId, setUserId] = useState<string | null>(null)
+  const [showReminderPrompt, setShowReminderPrompt] = useState(false)
 
   const storageKey = useMemo(() => {
     if (!userId || !currentDate) return null
     return `completedItems-${userId}-${currentDate}`
   }, [userId, currentDate])
 
-  // Load user id and any saved selections
+  // Load user id and any saved selections, and decide whether to show reminder prompt
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -68,6 +70,11 @@ export default function TodayPageClient({
             const arr: string[] = JSON.parse(saved)
             setCompletedItems(new Set(arr))
           }
+          try {
+            const seen = localStorage.getItem('reminderPromptSeen') === '1'
+            const granted = typeof Notification !== 'undefined' && Notification.permission === 'granted'
+            if (!seen && !granted) setShowReminderPrompt(true)
+          } catch {}
         }
       } catch {}
     })()
@@ -452,6 +459,38 @@ export default function TodayPageClient({
           </div>
         )}
       </div>
+      <ReminderPromptModal
+        isOpen={showReminderPrompt}
+        onClose={() => {
+          setShowReminderPrompt(false)
+          try { localStorage.setItem('reminderPromptSeen', '1') } catch {}
+        }}
+        onEnable={async (time: string) => {
+          if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            const res = await Notification.requestPermission()
+            if (res !== 'granted') return
+          }
+          if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
+            if (vapid) {
+              const toKey = (str: string) => {
+                const padding = '='.repeat((4 - (str.length % 4)) % 4)
+                const base64 = (str + padding).replace(/\-/g, '+').replace(/_/g, '/')
+                const raw = atob(base64)
+                const out = new Uint8Array(raw.length)
+                for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i)
+                return out
+              }
+              const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(vapid) })
+              await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) })
+            }
+          }
+          await fetch('/api/settings/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ daily_reminder_enabled: true, reminder_time: time }) })
+          try { localStorage.setItem('reminderPromptSeen', '1') } catch {}
+          setShowReminderPrompt(false)
+        }}
+      />
     </div>
   )
 }

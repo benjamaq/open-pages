@@ -505,13 +505,13 @@
 -->
 <!-- testimonials removed from early position -->
 
-<!-- Add custom scrollbar styling for testimonials carousel -->
+<!-- Add custom scrollbar styling for testimonials carousel (scoped) -->
 <style>
-  div[style*="overflow-x: auto"] { scroll-behavior: smooth; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar { height: 8px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-track { background: #e9d5ff; border-radius: 10px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
+  #testimonials-scroll { scroll-behavior: smooth; }
+  #testimonials-scroll::-webkit-scrollbar { height: 8px; }
+  #testimonials-scroll::-webkit-scrollbar-track { background: #e9d5ff; border-radius: 10px; }
+  #testimonials-scroll::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
+  #testimonials-scroll::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
 
   /* Always-visible bar below the carousel */
   .testimonial-scrollbar { height: 8px; background: #e9d5ff; border-radius: 9999px; margin-top: 10px; position: relative; overflow: hidden; }

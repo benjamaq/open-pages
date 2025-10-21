@@ -83,7 +83,7 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
         }
       } catch {}
 
-      try { localStorage.setItem('pushPromptShown', '1') } catch {}
+          try { localStorage.setItem('pushPromptShown', '1') } catch {}
       onClose()
     } catch (e: any) {
       setError(e?.message || 'Failed to enable reminders')

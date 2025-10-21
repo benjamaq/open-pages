@@ -58,6 +58,20 @@ export default function AuthForm({ mode }: AuthFormProps) {
         } else if (data.user) {
           // Track signup event (production only)
           trackEvent('sign_up', { method: 'email' })
+          // Initialize free subscription (idempotent)
+          try {
+            await supabase
+              .from('user_subscriptions')
+              .upsert({
+                user_id: data.user.id,
+                plan_type: 'free',
+                status: 'active',
+                current_period_start: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id', ignoreDuplicates: true })
+          } catch (e) {
+            console.warn('Free tier init failed (non-blocking):', e)
+          }
           // Create profile with name and referral code - handles race conditions atomically
           try {
             // Generate a unique slug
