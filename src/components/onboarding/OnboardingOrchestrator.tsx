@@ -148,7 +148,27 @@ export default function OnboardingOrchestrator({
   const handleProfileSetupComplete = () => {
     console.log('✅ Profile setup complete, onboarding finished!');
     setCurrentStep('complete');
-    onComplete();
+
+    // Send welcome email (non-blocking)
+    (async () => {
+      try {
+        const resp = await fetch('/api/send-welcome-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: userName })
+        });
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          console.error('❌ OnboardingOrchestrator welcome email failed:', json);
+        } else {
+          console.log('✅ OnboardingOrchestrator welcome email sent');
+        }
+      } catch (e) {
+        console.error('❌ OnboardingOrchestrator welcome email error:', e);
+      } finally {
+        onComplete();
+      }
+    })();
   };
 
   // ========================================================================
