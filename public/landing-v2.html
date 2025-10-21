@@ -458,6 +458,31 @@
   </div>
 </section>
 
+<script>
+  // Sync the always-visible testimonial scrollbar with the actual scroll position
+  (function(){
+    var scroller = document.getElementById('testimonials-scroll');
+    var bar = document.querySelector('.testimonial-scrollbar');
+    var thumb = document.querySelector('.testimonial-scrollbar .testimonial-thumb');
+    if (!scroller || !bar || !thumb) return;
+
+    function updateThumb(){
+      var maxScroll = scroller.scrollWidth - scroller.clientWidth;
+      var ratio = maxScroll > 0 ? scroller.scrollLeft / maxScroll : 0;
+      var visibleRatio = scroller.clientWidth / scroller.scrollWidth;
+      var minThumb = 80; // px
+      var thumbWidth = Math.max(minThumb, Math.floor(bar.clientWidth * Math.min(1, visibleRatio)));
+      thumb.style.width = thumbWidth + 'px';
+      var maxTranslate = Math.max(0, bar.clientWidth - thumbWidth);
+      var translateX = Math.floor(maxTranslate * ratio);
+      thumb.style.transform = 'translateX(' + translateX + 'px)';
+    }
+
+    scroller.addEventListener('scroll', updateThumb, { passive: true });
+    window.addEventListener('resize', updateThumb);
+    setTimeout(updateThumb, 0);
+  })();
+</script>
 <!-- removed duplicate testimonials near top (should only exist below Founder Story) -->
 <!--
 <section style="background: #f8f9fa; padding: 80px 20px; overflow: hidden;">
@@ -467,7 +492,7 @@
       <h2 style="font-size: 32px; color: #1a1a1a; font-weight: 700; margin-bottom: 12px; line-height: 1.3;">In their words</h2>
       <p style="font-size: 16px; color: #666; max-width: 600px; margin: 0 auto;">From people living with chronic pain, their caregivers, and the doctors who finally listened.</p>
     </div>
-    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #d1d5db transparent;">
+    <div id="testimonials-scroll" style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #d1d5db transparent;">
       <div style="display: flex; gap: 20px; padding-bottom: 20px; min-width: min-content;">
         <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
           <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"it's 2:07am and i'm up with nerve pain. logged in 15 sec, got a note back about sleep + pain days. not dramatic, just… helpful."</p>
@@ -489,7 +514,11 @@
         </div>
       </div>
     </div>
-    <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 20px;">← Scroll to see more →</p>
+    <!-- Always-visible custom scrollbar -->
+    <div class="testimonial-scrollbar" aria-hidden="true">
+      <div class="testimonial-thumb"></div>
+    </div>
+    <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 10px;">← Scroll to see more →</p>
   </div>
 </section>
 -->
@@ -499,9 +528,19 @@
 <style>
   div[style*="overflow-x: auto"] { scroll-behavior: smooth; }
   div[style*="overflow-x: auto"]::-webkit-scrollbar { height: 8px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  div[style*="overflow-x: auto"]::-webkit-scrollbar-track { background: #e9d5ff; border-radius: 10px; }
+  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
+  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
+
+  /* Always-visible bar below the carousel */
+  .testimonial-scrollbar { height: 8px; background: #e9d5ff; border-radius: 9999px; margin-top: 10px; position: relative; overflow: hidden; }
+  .testimonial-scrollbar .testimonial-thumb { height: 100%; width: 160px; background: linear-gradient(90deg, #a78bfa, #7c3aed); border-radius: 9999px; transition: width 0.2s ease; }
+
+  /* Mobile tweaks */
+  @media (max-width: 768px) {
+    .testimonial-scrollbar { height: 10px; }
+    .testimonial-scrollbar .testimonial-thumb { width: 120px; }
+  }
 </style>
 
 <!-- ============================================ -->
@@ -1193,7 +1232,7 @@
       <h2 style="font-size: 32px; color: #1a1a1a; font-weight: 700; margin-bottom: 12px; line-height: 1.3;">In their words</h2>
       <p style="font-size: 16px; color: #666; max-width: 600px; margin: 0 auto;">From people living with chronic pain, their caregivers, and the doctors who finally listened.</p>
     </div>
-    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #d1d5db transparent;">
+    <div id="testimonials-scroll" style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #d1d5db transparent;">
       <div style="display: flex; gap: 20px; padding-bottom: 20px; min-width: min-content;">
         <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
           <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"it's 2:07am and i'm up with nerve pain. logged in 15 sec, got a note back about sleep + pain days. not dramatic, just… helpful."</p>
@@ -1215,7 +1254,10 @@
         </div>
       </div>
     </div>
-    <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 20px;">← Scroll to see more →</p>
+    <div class="testimonial-scrollbar" aria-hidden="true">
+      <div class="testimonial-thumb"></div>
+    </div>
+    <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 10px;">← Scroll to see more →</p>
   </div>
 </section>
 
