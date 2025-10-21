@@ -466,7 +466,7 @@
 </script>
 <!-- removed duplicate testimonials near top (should only exist below Founder Story) -->
 <!--
-<section style="background: #f8f9fa; padding: 80px 20px; overflow: hidden;">
+<section id="testimonials" style="background: #f8f9fa; padding: 80px 20px; overflow: hidden;">
   <div style="max-width: 1200px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
       <p style="font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600;">WHAT PEOPLE ARE SAYING</p>
@@ -513,14 +513,14 @@
   #testimonials-scroll::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
   #testimonials-scroll::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
 
-  /* Always-visible bar below the carousel */
-  .testimonial-scrollbar { height: 8px; background: #e9d5ff; border-radius: 9999px; margin-top: 10px; position: relative; overflow: hidden; }
-  .testimonial-scrollbar .testimonial-thumb { height: 100%; width: 160px; background: linear-gradient(90deg, #a78bfa, #7c3aed); border-radius: 9999px; transition: width 0.2s ease; }
+  /* Always-visible bar below the carousel (scoped to testimonials section) */
+  #testimonials .testimonial-scrollbar { height: 8px; background: #e9d5ff; border-radius: 9999px; margin-top: 10px; position: relative; overflow: hidden; }
+  #testimonials .testimonial-scrollbar .testimonial-thumb { height: 100%; width: 160px; background: linear-gradient(90deg, #a78bfa, #7c3aed); border-radius: 9999px; transition: width 0.2s ease; }
 
   /* Mobile tweaks */
   @media (max-width: 768px) {
-    .testimonial-scrollbar { height: 10px; }
-    .testimonial-scrollbar .testimonial-thumb { width: 120px; }
+    #testimonials .testimonial-scrollbar { height: 10px; }
+    #testimonials .testimonial-scrollbar .testimonial-thumb { width: 120px; }
   }
 </style>
 
