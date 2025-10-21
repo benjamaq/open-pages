@@ -121,7 +121,7 @@ export default function ProfileSetupModal({
             ) : showContent ? (
               <TypeAnimation
                 sequence={[
-                  `Perfect! Now let's set up your profile, ${userName}.\n\nAdd a photo so people can see who you are, and tell me what you're working on right now.`
+                  `Add profile photo. And let me know what you're working on.\n\nAdd a photo so people can see who you are, and tell me what you're working on right now.`
                 ]}
                 speed={35}
                 wrapper="div"
@@ -138,7 +138,7 @@ export default function ProfileSetupModal({
                 {/* Profile Photo */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Profile Photo (Optional)
+                    Add profile photo
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                     <div className="space-y-2">
@@ -148,8 +148,8 @@ export default function ProfileSetupModal({
                         </svg>
                       </div>
                       <div className="text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                          <span>Upload a photo</span>
+                        <label htmlFor="file-upload" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg cursor-pointer hover:bg-gray-800">
+                          <span>Choose photo</span>
                           <input 
                             id="file-upload" 
                             name="file-upload" 
@@ -159,7 +159,6 @@ export default function ProfileSetupModal({
                             onChange={handleFileChange}
                           />
                         </label>
-                        <p className="pl-1">or drag and drop</p>
                       </div>
                       {profilePhoto && (
                         <p className="text-xs text-green-600 mt-2">✓ {profilePhoto.name}</p>
@@ -171,9 +170,7 @@ export default function ProfileSetupModal({
 
                 {/* Mission/Bio */}
                 <div>
-                  <label htmlFor="mission" className="block text-sm font-medium text-gray-700 mb-2">
-                    What are you working on right now?
-                  </label>
+                  <label htmlFor="mission" className="block text-sm font-medium text-gray-700 mb-2">What you're working on</label>
                   <textarea
                     id="mission"
                     rows={3}

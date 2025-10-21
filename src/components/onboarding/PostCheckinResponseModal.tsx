@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { TypeAnimation } from 'react-type-animation';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
+import { createClient } from '@/lib/supabase/client'
 
 /**
  * PostCheckinResponseModal
@@ -56,6 +57,7 @@ export default function PostCheckinResponseModal({
 }: PostCheckinResponseModalProps) {
   const [showTyping, setShowTyping] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
+  const [resolvedName, setResolvedName] = useState<string>(userName);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +74,29 @@ export default function PostCheckinResponseModal({
     }
   }, [isOpen]);
 
+  // Resolve a friendly first name if the passed userName is missing or placeholder
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = (userName || '').trim();
+        if (raw && raw.toLowerCase() !== 'there') {
+          setResolvedName(raw);
+          return;
+        }
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', userId)
+          .single();
+        const first = (data?.display_name || '').trim().split(' ')[0] || 'friend';
+        setResolvedName(first);
+      } catch {
+        setResolvedName('friend');
+      }
+    })();
+  }, [userId, userName]);
+
   if (!isOpen) return null;
 
   // Get tone profile
@@ -84,19 +109,24 @@ export default function PostCheckinResponseModal({
     checkInData
   });
 
-  // Generate tone-aware response. For first check-in, use a curated welcome
+  // Generate tone-aware response from tone profile (also for first check-in)
   const { pain, mood, sleep } = checkInData;
   let response = '';
-  if (isFirstCheckIn) {
-    response = `Perfect, ${userName}. Your first check-in is saved.
-
-Keep showing up each day and I'll start spotting what works for you.`;
-  } else {
-    response = profile.fallbackTemplates.postCheckin(pain, mood, sleep, userName);
-  }
-  if (!isFirstCheckIn && typeof pain === 'number' && pain > 0 && !/\bpain\b/i.test(response)) {
+  const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
+  response = profile.fallbackTemplates.postCheckin(pain, mood, sleep, nameForMessage);
+  if (typeof pain === 'number' && pain > 0 && !/\bpain\b/i.test(response)) {
     response = `Pain at ${pain}/10. ${response}`;
   }
+
+  // Gentle note if caffeine-related chip/tag was selected
+  try {
+    const tags = Array.isArray(checkInData?.tags) ? checkInData.tags : [];
+    const hasCaffeine = tags.some((t: any) => typeof t === 'string' && t.toLowerCase().includes('caffeine'));
+    if (hasCaffeine) {
+      const suffix = `Noted caffeine today — it can make pain feel sharper and sleep harder. It might be worth easing up or moving it earlier; I’ll watch how it affects the next few days.`;
+      response = response.endsWith('\n') ? `${response}\n${suffix}` : `${response}\n\n${suffix}`;
+    }
+  } catch {}
 
   // Note: Supplement form is now handled by PostSupplementModal in the orchestrator
 
@@ -152,4 +182,5 @@ Keep showing up each day and I'll start spotting what works for you.`;
     </div>
   );
 }
+
 

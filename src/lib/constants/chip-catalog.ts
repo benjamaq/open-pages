@@ -97,7 +97,7 @@ export const CHIP_CATALOG: Chip[] = [
   { slug: 'mobility_rehab', label: 'Mobility / Rehab', icon: '🧍', category: 'training', sentiment: 'good' },
 
   // Nutrition / Stims / Alcohol
-  { slug: 'late_caffeine', label: 'Caffeine late', icon: '☕', category: 'nutrition', sentiment: 'bad' },
+  { slug: 'late_caffeine', label: 'Too much caffeine', icon: '☕', category: 'nutrition', sentiment: 'bad' },
   { slug: 'alcohol_last_night', label: 'Alcohol last night', icon: '🍺', category: 'nutrition', sentiment: 'bad' },
   { slug: 'alcohol_free', label: 'Alcohol-free day', icon: '🥤', category: 'nutrition', sentiment: 'good' },
   { slug: 'low_carb', label: 'Low carb', icon: '🥗', category: 'nutrition', sentiment: 'neutral' },

@@ -19,6 +19,7 @@ export const CHRONIC_ILLNESS_SUBCATEGORIES = [
   'Fibromyalgia',
   'CFS / ME',
   'Chronic pain',
+  'Migraines',
   'Autoimmune condition',
   'ADHD',
   'Perimenopause',
@@ -112,6 +113,24 @@ That's why we're doing this together.
 I'm not here to tell you to "just pace better," {userName}. I'm here to help you figure out YOUR specific triggers, YOUR energy patterns, YOUR thresholds.
 
 I know you've tried everything. I know doctors haven't believed you. But we're going to work it out together - one day at a time.`,
+    buttonText: "Let's learn more about you →"
+  },
+  {
+    category: 'Chronic pain or illness',
+    specific: 'Migraines',
+    title: 'Migraines. I hear you, {userName}.',
+    message: `Migraine days can derail everything. Here's how I can help you track and find patterns:
+
+What we’ll watch:
+- Sleep quality and consistency before attacks
+- Common triggers: stress spikes, skipped meals, dehydration, bright/light exposure
+- Hormone timing (if relevant) and weather changes
+- Supplements and meds (e.g., magnesium, triptans) and how effective they feel
+
+Why it matters:
+- Even small correlations (sleep window, hydration, screen time) often show up within 2–3 weeks of tracking.
+
+We’ll keep it simple, {userName}. Quick check‑ins → surface the strongest suspected triggers → protect what helps. One step at a time.`,
     buttonText: "Let's learn more about you →"
   },
   {
