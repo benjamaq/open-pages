@@ -10,17 +10,35 @@ type BeforeInstallPromptEvent = Event & {
 export default function PWAInstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
+  const [eligible, setEligible] = useState(false);
 
   useEffect(() => {
-    const onBeforeInstall = (e: Event) => {
-      const ev = e as BeforeInstallPromptEvent;
-      ev.preventDefault();
-      console.log('🟣 PWA: beforeinstallprompt captured');
-      setDeferred(ev);
-      setVisible(true);
-    };
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    try {
+      // Only show on mobile and when not already installed
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone;
+      const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isNarrow = window.innerWidth < 768;
+      const canShow = (isMobileUA || isNarrow) && !isStandalone;
+      setEligible(canShow);
+
+      if (!canShow) {
+        setVisible(false);
+        setDeferred(null);
+        return;
+      }
+
+      const onBeforeInstall = (e: Event) => {
+        const ev = e as BeforeInstallPromptEvent;
+        ev.preventDefault();
+        console.log('🟣 PWA: beforeinstallprompt captured');
+        setDeferred(ev);
+        setVisible(true);
+      };
+      window.addEventListener('beforeinstallprompt', onBeforeInstall);
+      return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    } catch {
+      // If anything fails, do nothing (hidden by default)
+    }
   }, []);
 
   const onInstall = async () => {
@@ -38,7 +56,7 @@ export default function PWAInstallPrompt() {
     }
   };
 
-  if (!visible) return null;
+  if (!visible || !eligible) return null;
 
   return (
     <div className="fixed left-1/2 -translate-x-1/2 bottom-4 z-[9999]">
