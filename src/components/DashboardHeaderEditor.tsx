@@ -69,21 +69,30 @@ export default function DashboardHeaderEditor({
     }
 
     try {
-      // Import the direct upload function
-      const { uploadFileDirect } = await import('../lib/storage-direct')
-      
+      // Prefer avatar bucket for profile photos
+      const [{ uploadAvatarDirect }, { createClient }] = await Promise.all([
+        import('../lib/storage-direct'),
+        import('../lib/supabase/client')
+      ])
+
       setUploadProgress(30)
-      
-      // Upload to storage
-      const result = await uploadFileDirect(file, (progress) => {
+
+      // Get user id for a stable filename
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id || 'anon'
+
+      const result = await uploadAvatarDirect(file, userId, (progress) => {
         setUploadProgress(30 + (progress * 0.7))
       })
-      
+
       if (result.error) {
         alert(`❌ Upload failed: ${result.error}`)
       } else if (result.url) {
         setUploadProgress(100)
         setAvatarUrl(result.url)
+        // Persist immediately so closing the modal doesn't lose it
+        try { onUpdate({ avatarUrl: result.url }) } catch {}
         alert('✅ Profile photo updated successfully!')
       }
     } catch (error) {
