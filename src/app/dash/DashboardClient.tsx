@@ -1847,6 +1847,40 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     })
   }
 
+  // Build list of all today item keys for quick actions
+  const getAllTodayKeys = (): string[] => {
+    const keys: string[] = []
+    try {
+      ;(todayItems?.supplements || []).forEach((it: any) => keys.push(`supplement-${it.id}`))
+      ;(todayItems?.protocols || []).forEach((it: any) => keys.push(`protocol-${it.id}`))
+      ;(todayItems?.movement || []).forEach((it: any) => keys.push(`movement-${it.id}`))
+      ;(todayItems?.mindfulness || []).forEach((it: any) => keys.push(`mindfulness-${it.id}`))
+      // Food and gear are informational for now; include if present
+      ;(todayItems?.food || []).forEach((it: any) => keys.push(`food-${it.id}`))
+      ;(todayItems?.gear || []).forEach((it: any) => keys.push(`gear-${it.id}`))
+    } catch {}
+    return keys
+  }
+
+  const markAllForToday = () => {
+    const all = new Set(getAllTodayKeys())
+    setCompletedItems(all)
+    try {
+      const today = new Date().toLocaleDateString('sv-SE')
+      const storageKey = `completedItems-${userId}-${today}`
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(all)))
+    } catch {}
+  }
+
+  const clearAllForToday = () => {
+    setCompletedItems(new Set())
+    try {
+      const today = new Date().toLocaleDateString('sv-SE')
+      const storageKey = `completedItems-${userId}-${today}`
+      localStorage.setItem(storageKey, JSON.stringify([]))
+    } catch {}
+  }
+
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
@@ -2403,10 +2437,24 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             {/* Patterns (separate card, 24px gap below) */}
             <PatternsCard userId={userId} />
 
-            {/* Helpful Note - Above Supplements */}
-            <div className="text-center mb-4">
-              <div className="text-sm text-gray-400">
-                Your dashboard only shows items scheduled for today. view complete stack in public profile
+            {/* Helpful Note + Quick Actions */}
+            <div className="mb-4">
+              <div className="text-sm text-gray-400 text-center">
+                Your dashboard only shows items scheduled for today. View your complete stack in your public profile.
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-3">
+                <button
+                  onClick={markAllForToday}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Mark everything done today
+                </button>
+                <button
+                  onClick={clearAllForToday}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+                >
+                  Clear all
+                </button>
               </div>
             </div>
 
