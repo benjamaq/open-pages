@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '../../../lib/supabase/server'
 import { sendWelcomeEmail, sendNewFollowerNotification } from '../../../lib/email/resend'
+
+// Use a service-role client to bypass RLS for public follow actions
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +18,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // SECURITY: Rate limiting - check if email has made too many follow requests recently
     const { count: recentFollows } = await supabase
