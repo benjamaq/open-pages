@@ -57,7 +57,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setError(error.message)
         } else if (data.user) {
           // Track signup event (production only)
-          trackEvent('sign_up', { method: 'email' })
+          trackEvent('sign_up', { method: 'email', user_id: data.user.id })
           // Initialize free subscription (idempotent)
           try {
             await supabase

@@ -553,6 +553,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             const supplementCount = todayItems?.supplements?.length || 0;
             const protocolCount = todayItems?.protocols?.length || 0;
             trackEvent('first_check_in', {
+              user_id: userId,
               has_supplements: supplementCount > 0,
               has_protocols: protocolCount > 0
             });

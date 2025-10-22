@@ -9,6 +9,7 @@ import AddStackItemForm from '@/components/AddStackItemForm';
 import PostSupplementModal from './PostSupplementModal';
 import ProfileSetupModal from './ProfileSetupModal';
 import { getToneProfileType } from '@/lib/elli/toneProfiles';
+import { trackEvent } from '@/lib/analytics';
 
 /**
  * OnboardingOrchestrator
@@ -166,6 +167,7 @@ export default function OnboardingOrchestrator({
       } catch (e) {
         console.error('❌ OnboardingOrchestrator welcome email error:', e);
       } finally {
+        try { trackEvent('onboarding_complete', { user_id: userId, persona_selected: selectedCategory || 'unknown' }) } catch {}
         onComplete();
       }
     })();
