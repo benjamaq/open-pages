@@ -387,8 +387,8 @@ export default async function ProfilePage(props: {
                 </>
               )}
 
-              {/* Follow Button - only render if owner allows following and viewer isn't owner */}
-              {(!isOwnProfile && (profile as any).allow_stack_follow === true) && (
+              {/* Follow Button - show on share links for owner too; otherwise only for visitors */}
+              {(((isSharedPublicLink) || !isOwnProfile) && (profile as any).allow_stack_follow === true) && (
                 <FollowButton
                   ownerUserId={(profile as any).user_id}
                   ownerName={(profile as any).display_name || 'this user'}
