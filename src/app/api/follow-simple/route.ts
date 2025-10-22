@@ -4,6 +4,8 @@ import { sendWelcomeEmail, sendNewFollowerNotification } from '../../../lib/emai
 // Use a service-role client to bypass RLS for public follow actions
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const { ownerUserId, email } = await request.json()
@@ -18,10 +20,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const supabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !serviceKey) {
+      console.error('Missing Supabase envs', { hasUrl: !!url, hasServiceKey: !!serviceKey })
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+    }
+    const supabase = createServiceClient(url, serviceKey)
 
     // SECURITY: Rate limiting - check if email has made too many follow requests recently
     const { count: recentFollows } = await supabase
