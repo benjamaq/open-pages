@@ -76,13 +76,21 @@ export default function FollowButton({
 
       // Only show success if API actually succeeded
       if (result.status === 'already_following') {
-        setMessage(`✅ You're already following ${ownerName}!`)
+        const msg = `✅ You're already following ${ownerName}!`
+        setMessage(msg)
+        try { alert(msg) } catch {}
       } else if (result.status === 'pending') {
-        setMessage(`✅ Check your email to confirm following ${ownerName}!`)
+        const msg = `✅ Check your email to confirm following ${ownerName}!`
+        setMessage(msg)
+        try { alert(msg) } catch {}
       } else if (result.status === 'following') {
-        setMessage(`✅ You're now following ${ownerName}! You'll receive updates when they share changes.`)
+        const msg = `✅ You're now following ${ownerName}! You'll receive updates when they share changes.`
+        setMessage(msg)
+        try { alert(msg) } catch {}
       } else {
-        setMessage(`✅ You're now following ${ownerName}! You'll receive updates when they share changes.`)
+        const msg = `✅ You're now following ${ownerName}! You'll receive updates when they share changes.`
+        setMessage(msg)
+        try { alert(msg) } catch {}
       }
 
       setShowEmailForm(false)
