@@ -8,7 +8,10 @@ export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    const { ownerUserId, email } = await request.json()
+    console.log('🟢 API /api/follow-simple called')
+    const rawBody = await request.json()
+    console.log('🟢 Request body:', rawBody)
+    const { ownerUserId, email } = rawBody
     
     console.log('🔍 Simple follow API received:', { ownerUserId, email })
 
@@ -34,6 +37,7 @@ export async function POST(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('follower_email', email)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+    console.log('🟢 Rate limit check count:', recentFollows)
 
     if (recentFollows && recentFollows > 10) {
       return NextResponse.json({ error: 'Too many follow requests. Please try again later.' }, { status: 429 })
@@ -45,6 +49,7 @@ export async function POST(request: NextRequest) {
       .select('allow_stack_follow, display_name, slug, user_id')
       .eq('user_id', ownerUserId)
       .single()
+    console.log('🟢 Owner profile result:', ownerProfile, ownerError)
 
     if (ownerError || !ownerProfile) {
       console.error('❌ Profile not found:', ownerError)
@@ -64,6 +69,7 @@ export async function POST(request: NextRequest) {
       .eq('owner_user_id', ownerUserId)
       .eq('follower_email', email)
       .single()
+    console.log('🟢 Existing follow result:', existingFollow, checkError)
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows found
       console.error('❌ Error checking existing follow:', checkError)
@@ -82,6 +88,7 @@ export async function POST(request: NextRequest) {
           .from('stack_followers')
           .update({ verified_at: new Date().toISOString() })
           .eq('id', existingFollow.id)
+        console.log('🟢 Update existing follow error:', updateError)
 
         if (updateError) {
           console.error('Error updating follow:', updateError)
@@ -106,6 +113,7 @@ export async function POST(request: NextRequest) {
       })
       .select('id')
       .single()
+    console.log('🟢 Insert follow result:', newFollow, followError)
 
     if (followError) {
       console.error('Error creating follow:', followError)
@@ -132,6 +140,7 @@ export async function POST(request: NextRequest) {
         follower_id: newFollow.id,
         cadence: 'weekly'
       })
+    console.log('🟢 Insert email_prefs error:', prefsError)
 
     if (prefsError) {
       console.error('Error creating email preferences:', prefsError)
@@ -165,6 +174,7 @@ export async function POST(request: NextRequest) {
     try {
       // Get owner's email from auth
       const { data: ownerAuth } = await supabase.auth.admin.getUserById(ownerUserId)
+      console.log('🟢 Owner auth lookup:', ownerAuth?.user?.email)
       const ownerEmail = ownerAuth?.user?.email
 
       if (ownerEmail) {
@@ -181,6 +191,7 @@ export async function POST(request: NextRequest) {
           ownerProfile.display_name,
           totalFollowers || 1
         )
+        console.log('🟢 Owner notification result:', notificationResult)
         if (notificationResult.success) {
           console.log('✅ New follower notification sent successfully')
         } else {
@@ -194,11 +205,13 @@ export async function POST(request: NextRequest) {
       // Don't fail the follow if notification fails
     }
 
-    return NextResponse.json({ 
+    const payload = { 
       status: 'following',
       message: `You're now following ${ownerProfile.display_name}'s stack!`,
       owner: ownerProfile.display_name
-    })
+    }
+    console.log('🟢 Returning:', payload)
+    return NextResponse.json(payload)
 
   } catch (error) {
     console.error('❌ Simple follow API error:', error)

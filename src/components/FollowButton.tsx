@@ -41,10 +41,12 @@ export default function FollowButton({
 
   const handleFollow = async () => {
     // Show email form popup instead of direct follow
+    try { console.log('🔵 Follow button clicked') } catch {}
     setShowEmailForm(true)
   }
 
   const handleEmailFollow = async () => {
+    try { console.log('🔵 Email entered:', email) } catch {}
     if (!email) {
       setMessage('Please enter your email address')
       return
@@ -54,6 +56,7 @@ export default function FollowButton({
     setMessage('')
 
     try {
+      try { console.log('🔵 Calling API...') } catch {}
       const response = await fetch('/api/follow-simple', {
         method: 'POST',
         headers: {
@@ -65,7 +68,9 @@ export default function FollowButton({
         })
       })
 
+      try { console.log('🔵 API Response status:', response.status) } catch {}
       const result = await response.json()
+      try { console.log('🔵 API Response data:', result) } catch {}
 
       if (!response.ok) {
         console.error('🔍 API failed:', result)
@@ -108,8 +113,9 @@ export default function FollowButton({
         setFollowStatus('not_following')
       }, 5000)
 
-    } catch (error) {
-      console.error('Email follow error:', error)
+    } catch (error: any) {
+      console.error('🔴 API Error:', error)
+      try { alert('Error: ' + (error?.message || 'Unknown error')) } catch {}
       setMessage(`❌ Failed to follow ${ownerName}. Please try again.`)
       setShowEmailForm(false)
       setIsLoading(false)
