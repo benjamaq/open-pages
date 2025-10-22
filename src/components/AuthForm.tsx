@@ -90,6 +90,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 bio: null,
                 avatar_url: null,
                 public: true,
+                allow_stack_follow: true,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               }, {
