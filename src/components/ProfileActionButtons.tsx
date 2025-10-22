@@ -109,9 +109,27 @@ export default function ProfileActionButtons({ isOwnProfile, profileName, profil
   }
 
   const handleFollowSubmit = async (email: string) => {
-    // TODO: Implement follow functionality
-    console.log('Following with email:', email)
-    alert(`✅ You're now following ${profileName}'s stack! Check your email for confirmation.`)
+    try {
+      if (!profileSlug) throw new Error('Missing profile slug')
+      // Resolve owner user id from public profile slug via simple endpoint
+      const resProfile = await fetch(`/api/public/resolve-profile?slug=${encodeURIComponent(profileSlug)}`)
+      const profile = await resProfile.json().catch(() => ({}))
+      const ownerUserId = profile?.user_id
+      if (!ownerUserId) throw new Error('Could not resolve profile owner')
+
+      const resp = await fetch('/api/follow-simple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerUserId, email })
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) throw new Error(data?.error || 'Follow failed')
+      alert(data?.message || `✅ You're now following ${profileName}'s stack! Check your email for confirmation.`)
+    } catch (error: any) {
+      console.error('Failed to follow:', error)
+      alert(error?.message || 'Failed to follow. Please try again.')
+      throw error
+    }
   }
 
   const handleCopyLink = async () => {

@@ -90,43 +90,43 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_wearables: input.wearables
     })
 
-    // Handle function not found error gracefully
-    if (error && error.message?.includes('function') && error.message?.includes('does not exist')) {
-      console.warn('upsert_daily_entry_and_snapshot function not found, falling back to basic insert')
-      // Fallback to basic insert without snapshot
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('daily_entries')
-        .upsert({
-          user_id: user.id,
-          local_date: input.localDate,
-          mood: input.mood,
-          sleep_quality: input.sleep_quality,
-          pain: input.pain,
-          sleep_hours: input.sleep_hours,
-          night_wakes: input.night_wakes,
-          tags: input.tags,
-          journal: input.journal,
-          symptoms: input.symptoms || [],
-          pain_locations: input.pain_locations || [],
-          pain_types: input.pain_types || [],
-          custom_symptoms: input.custom_symptoms || [],
-          wearables: input.wearables
-        }, { onConflict: 'user_id,local_date' })
-        .select()
-        .single()
-      
-      if (fallbackError) {
-        console.error('Fallback insert failed:', fallbackError)
+    // Handle RPC failure by falling back to direct upsert as a safety net
+    if (error) {
+      console.warn('RPC upsert_daily_entry_and_snapshot failed, falling back to basic upsert:', error)
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('daily_entries')
+          .upsert({
+            user_id: user.id,
+            local_date: input.localDate,
+            mood: input.mood,
+            sleep_quality: input.sleep_quality,
+            pain: input.pain,
+            sleep_hours: input.sleep_hours,
+            night_wakes: input.night_wakes,
+            tags: input.tags,
+            journal: input.journal,
+            symptoms: input.symptoms || [],
+            pain_locations: input.pain_locations || [],
+            pain_types: input.pain_types || [],
+            custom_symptoms: input.custom_symptoms || [],
+            wearables: input.wearables
+          }, { onConflict: 'user_id,local_date' })
+          .select()
+          .single()
+
+        if (fallbackError) {
+          console.error('Fallback insert failed:', fallbackError)
+          return { ok: false, error: 'Failed to save daily entry' }
+        }
+        return { ok: true, data: fallbackData }
+      } catch (e) {
+        console.error('Fallback upsert threw an exception:', e)
         return { ok: false, error: 'Failed to save daily entry' }
       }
-      
-      return { ok: true, data: fallbackData }
-    };
-
-    if (error) {
-      console.error('Error saving daily entry:', error);
-      return { ok: false, error: error.message };
     }
+
+    // If no error from RPC, proceed
 
     // Compute and persist insights (sleep-pain, trend, best/worst)
     let createdToday: Array<{ insight_key: string; type?: string }> = []
