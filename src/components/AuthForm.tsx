@@ -58,6 +58,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
         } else if (data.user) {
           // Track signup event (production only)
           trackEvent('sign_up', { method: 'email', user_id: data.user.id })
+          // Fire GA4 event directly for ads attribution (browser only)
+          try {
+            if (typeof window !== 'undefined' && (window as any).gtag) {
+              ;(window as any).gtag('event', 'sign_up', { method: 'email' })
+              // eslint-disable-next-line no-console
+              console.log('✅ GA4: Signup event sent')
+            }
+          } catch {}
           // Initialize free subscription (idempotent)
           try {
             await supabase
