@@ -75,6 +75,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [isPushTesting, setIsPushTesting] = useState(false)
   const [reminderTime, setReminderTime] = useState('09:00')
   const [reminderEnabled, setReminderEnabled] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false)
+  const [notifSaveMessage, setNotifSaveMessage] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -519,7 +522,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                         await existing?.unsubscribe().catch(() => {})
                       }
                       await fetch('/api/push/unsubscribe', { method: 'POST' }).catch(() => {})
-                      await fetch('/api/settings/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ daily_reminder_enabled: false }) }).catch(() => {})
+                      // Mark local state; user must click Save Notifications to persist
+                      setReminderEnabled(false)
+                      setHasUnsavedChanges(true)
                       setIsPushEnabled(false)
                       setSaveMessage('Push disabled')
                       return
@@ -544,8 +549,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: subscription.toJSON() })
                       })
                       if (!response.ok) throw new Error('Failed to save subscription')
-                      // Persist reminder enabled when enabling push (keep existing time)
-                      await fetch('/api/settings/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ daily_reminder_enabled: true, reminder_time: reminderTime }) }).catch(() => {})
+                      // Mark local state; user must click Save Notifications to persist
+                      setReminderEnabled(true)
+                      setHasUnsavedChanges(true)
                       setIsPushEnabled(true)
                       setSaveMessage('✅ Push enabled')
                       setTimeout(() => setSaveMessage(''), 2500)
@@ -578,26 +584,52 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 onChange={(e) => {
                   console.log('[Settings] onChange time ->', e.target.value)
                   setReminderTime(e.target.value)
-                  setReminderEnabled(true)
-                  setPreferences(prev => ({ ...prev, reminder_time: e.target.value, daily_reminder_enabled: true }))
-                  const payload = { reminder_time: e.target.value, daily_reminder_enabled: true }
-                  console.log('[Settings] POST /api/settings/notifications payload', payload)
-                  fetch('/api/settings/notifications', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                  })
-                    .then(async (r) => {
-                      let body: any = null
-                      try { body = await r.clone().json() } catch {}
-                      console.log('[Settings] save time response', r.status, body)
-                    })
-                    .catch((err) => console.error('[Settings] save time error', err))
+                  // Do not auto-save; mark dirty and let user click Save Notifications
+                  setHasUnsavedChanges(true)
                 }}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 disabled={!isPushEnabled}
               />
               <span className="text-xs text-gray-500">Local time</span>
+            </div>
+            {hasUnsavedChanges && (
+              <p className="text-xs text-yellow-600 mt-2">• Unsaved changes</p>
+            )}
+            <div className="mt-3">
+              <button
+                onClick={async () => {
+                  if (isSavingNotifications) return
+                  setNotifSaveMessage('')
+                  setIsSavingNotifications(true)
+                  try {
+                    const payload = { reminder_time: reminderTime, daily_reminder_enabled: reminderEnabled }
+                    console.log('[Settings] Save Notifications payload', payload)
+                    const resp = await fetch('/api/settings/notifications', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                    })
+                    const body = await resp.json().catch(() => ({}))
+                    console.log('[Settings] Save Notifications response', resp.status, body)
+                    if (!resp.ok) throw new Error(body?.error || 'Save failed')
+                    setHasUnsavedChanges(false)
+                    setNotifSaveMessage('✅ Notification settings saved!')
+                    setTimeout(() => setNotifSaveMessage(''), 4000)
+                  } catch (e: any) {
+                    console.error('Save notifications error:', e)
+                    setNotifSaveMessage(`❌ Failed to save: ${e?.message || 'Unknown error'}`)
+                  } finally {
+                    setIsSavingNotifications(false)
+                  }
+                }}
+                disabled={isSavingNotifications || !hasUnsavedChanges}
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${
+                  isSavingNotifications || !hasUnsavedChanges ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}
+              >
+                {isSavingNotifications ? 'Saving…' : 'Save Notifications'}
+              </button>
+              {notifSaveMessage && (
+                <p className={`text-xs mt-2 ${notifSaveMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>{notifSaveMessage}</p>
+              )}
             </div>
           </div>
         </div>
