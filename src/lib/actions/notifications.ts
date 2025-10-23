@@ -226,22 +226,16 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
 
     if (updateError) {
       console.error('Update error:', updateError)
-      // If table doesn't exist, that's okay - preferences will work with defaults
+      // If table doesn't exist, surface explicit error so client can fix schema
       if (updateError.message?.includes('relation') || updateError.message?.includes('table')) {
-        console.warn('Notification preferences table not found, using defaults')
-        return
+        throw new Error('Notification preferences table not found. Please apply database/notifications-schema.sql in your database.')
       }
       throw new Error(`Database update failed: ${updateError.message || 'Unknown database error'}`)
     }
     console.log('Preferences updated successfully')
   } catch (error: any) {
     console.error('Upsert error:', error)
-    // Handle any other database errors gracefully
-    if (error.message?.includes('relation') || error.message?.includes('table')) {
-      console.warn('Notification preferences table not found, using defaults')
-      return
-    }
-    // In production, throw a more descriptive error
+    // Bubble up for API route to return non-200 so UI can show message
     throw new Error(`Database error: ${error.message || 'Unknown error'}`)
   }
 
