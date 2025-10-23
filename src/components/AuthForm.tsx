@@ -135,6 +135,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 // Beta code activated! User gets Pro access
                 setMessage('Beta code activated! You now have 6 months of free Pro access! 🎉 Redirecting...')
                 setTimeout(() => {
+                  try { sessionStorage.setItem('justSignedUp', '1') } catch {}
                   router.push('/dash')
                   router.refresh()
                 }, 2000)
@@ -153,6 +154,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             : 'Account created successfully! Redirecting...'
           setMessage(successMessage)
           setTimeout(() => {
+            try { sessionStorage.setItem('justSignedUp', '1') } catch {}
             router.push('/dash')
             router.refresh()
           }, 1000)
@@ -166,6 +168,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else {
+          try { sessionStorage.setItem('justSignedUp', '1') } catch {}
           router.push('/dash')
           router.refresh()
         }

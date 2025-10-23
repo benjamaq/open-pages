@@ -2067,6 +2067,22 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     return 'rgba(0,0,0,' // Auto defaults to dark
   }
 
+  // Fire Meta Pixel CompleteRegistration once after signup
+  useEffect(() => {
+    try {
+      const flag = sessionStorage.getItem('justSignedUp')
+      if (flag) {
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          try {
+            ;(window as any).fbq('track', 'CompleteRegistration')
+            console.log('Meta Pixel: CompleteRegistration event fired')
+          } catch {}
+        }
+        sessionStorage.removeItem('justSignedUp')
+      }
+    } catch {}
+  }, [])
+
   return (
     <>
       <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
