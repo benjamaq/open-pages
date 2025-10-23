@@ -39,7 +39,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest-v2.json" />
         <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-title" content="BioStackr" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        {/* Removed deprecated apple-mobile-web-app-capable to silence Chrome warning */}
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v2.png" />

@@ -476,153 +476,123 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   return (
     <div className="space-y-8">
-      {/* Push Notifications Section */}
+      {/* Push + Daily Reminder unified section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Bell className="w-6 h-6 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Push Notifications</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Daily Push Reminder</h2>
         </div>
 
-        <p className="text-sm text-gray-600 mb-2">Enable browser notifications so we can nudge you to check in daily.</p>
-        <p className="text-xs text-gray-500 mb-4">Permission: {typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'}</p>
-
-        <button
-          onClick={async () => {
-            if (isPushLoading) return
-            setIsPushLoading(true)
-            setSaveMessage('')
-            try {
-              // Already subscribed?
-              if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.getRegistration()
-                if (reg) {
-                  const existing = await reg.pushManager.getSubscription()
-                  if (existing) {
-                    setSaveMessage('✅ Push notifications already enabled')
-                    setIsPushEnabled(true)
-                    setIsPushLoading(false)
-                    return
-                  }
-                }
-              }
-
-              // Request permission
-              if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-                const result = await Notification.requestPermission()
-                if (result !== 'granted') {
-                  setSaveMessage('❌ Permission denied')
-                  setIsPushLoading(false)
-                  return
-                }
-              }
-
-              // Register and subscribe
-              if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                await reg.update()
-                const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
-                if (!vapidPublicKey) throw new Error('VAPID public key not configured')
-                const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
-                const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })
-                const response = await fetch('/api/push/subscribe', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ subscription: subscription.toJSON() })
-                })
-                if (!response.ok) throw new Error('Failed to save subscription')
-                setSaveMessage('✅ Push notifications enabled!')
-                setIsPushEnabled(true)
-                setTimeout(() => setSaveMessage(''), 3000)
-              }
-            } catch (error: any) {
-              console.error('Push enable error:', error)
-              setSaveMessage(`❌ Failed: ${error?.message || 'Unknown error'}`)
-            } finally {
-              setIsPushLoading(false)
-            }
-          }}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isPushLoading || isPushEnabled}
-        >
-          {isPushLoading ? 'Enabling...' : isPushEnabled ? '✓ Push Enabled' : 'Enable Push Notifications'}
-        </button>
-
-        <button
-          onClick={async () => {
-            try {
-              if (isPushTesting) return
-              setIsPushTesting(true)
-              const resp = await fetch('/api/push/test', { method: 'POST' })
-              if (!resp.ok) {
-                const data = await resp.json().catch(() => ({}))
-                alert(`Test push failed: ${data?.error || resp.status}`)
-              } else {
-                alert('Test notification sent. Check your browser notifications.')
-              }
-            } catch (e: any) {
-              alert(`Test push error: ${e?.message || 'Unknown error'}`)
-            } finally {
-              setIsPushTesting(false)
-            }
-          }}
-          className="ml-3 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-          disabled={typeof Notification !== 'undefined' ? Notification.permission !== 'granted' || isPushLoading || isPushTesting : true}
-        >
-          {isPushTesting ? 'Sending…' : 'Send Test Notification'}
-        </button>
-      </div>
-
-      {/* Daily Reminder (Push/Email) */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Reminder</h3>
-        <div className="flex items-center justify-between mb-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Enable push toggle */}
           <div>
-            <p className="text-sm text-gray-700 font-medium">Send me a daily reminder</p>
-            <p className="text-xs text-gray-500">Get a notification at the same time each day</p>
+            <p className="text-sm text-gray-700 font-medium mb-2">Enable push notifications</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  if (isPushLoading) return
+                  setIsPushLoading(true)
+                  setSaveMessage('')
+                  try {
+                    // Check existing
+                    if ('serviceWorker' in navigator) {
+                      const reg = await navigator.serviceWorker.getRegistration()
+                      const existing = await reg?.pushManager.getSubscription()
+                      if (existing) {
+                        setIsPushEnabled(true)
+                        setSaveMessage('✅ Push already enabled')
+                        return
+                      }
+                    }
+                    // Request permission if needed
+                    if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+                      const result = await Notification.requestPermission()
+                      if (result !== 'granted') {
+                        setSaveMessage('❌ Permission denied')
+                        return
+                      }
+                    }
+                    // Register + subscribe
+                    if ('serviceWorker' in navigator) {
+                      const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+                      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
+                      if (!vapidPublicKey) throw new Error('VAPID public key not configured')
+                      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
+                      const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })
+                      const response = await fetch('/api/push/subscribe', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: subscription.toJSON() })
+                      })
+                      if (!response.ok) throw new Error('Failed to save subscription')
+                      setIsPushEnabled(true)
+                      setSaveMessage('✅ Push enabled')
+                      setTimeout(() => setSaveMessage(''), 2500)
+                    }
+                  } catch (error: any) {
+                    console.error('Push enable error:', error)
+                    setSaveMessage(`❌ Failed: ${error?.message || 'Unknown error'}`)
+                  } finally {
+                    setIsPushLoading(false)
+                  }
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  isPushEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+                aria-pressed={isPushEnabled}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPushEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+              <span className="text-xs text-gray-500">Permission: {typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'}</span>
+            </div>
           </div>
-          <button
-            onClick={() => {
-              const newState = !reminderEnabled
-              setReminderEnabled(newState)
-              fetch('/api/settings/notifications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ daily_reminder_enabled: newState, reminder_time: reminderTime })
-              }).catch(() => {})
-            }}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              reminderEnabled ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                reminderEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
+
+          {/* Time picker */}
+          <div className="opacity-100">
+            <p className="text-sm text-gray-700 font-medium mb-2">Choose reminder time</p>
+            <div className="flex items-center gap-3">
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={(e) => {
+                  setReminderTime(e.target.value)
+                  setReminderEnabled(true)
+                  fetch('/api/settings/notifications', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
+                  }).catch(() => {})
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                disabled={!isPushEnabled}
+              />
+              <span className="text-xs text-gray-500">Local time</span>
+            </div>
+          </div>
         </div>
 
-        {reminderEnabled && (
-          <div className="ml-0">
-            <label className="block text-sm text-gray-700 mb-2">Reminder time</label>
-            <input
-              type="time"
-              value={reminderTime}
-              onChange={(e) => {
-                setReminderTime(e.target.value)
-                fetch('/api/settings/notifications', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
-                }).catch(() => {})
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              You'll get a reminder at {reminderTime} every day (your local time)
-            </p>
-          </div>
-        )}
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={async () => {
+              try {
+                if (isPushTesting) return
+                setIsPushTesting(true)
+                const resp = await fetch('/api/push/test', { method: 'POST' })
+                if (!resp.ok) {
+                  const data = await resp.json().catch(() => ({}))
+                  alert(`Test push failed: ${data?.error || resp.status}`)
+                } else {
+                  alert('Test notification sent. Check your browser notifications.')
+                }
+              } catch (e: any) {
+                alert(`Test push error: ${e?.message || 'Unknown error'}`)
+              } finally {
+                setIsPushTesting(false)
+              }
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            disabled={!isPushEnabled || isPushLoading || isPushTesting}
+          >
+            {isPushTesting ? 'Sending…' : 'Send Test Notification'}
+          </button>
+          <p className="text-xs text-gray-500">You’ll get a reminder at {reminderTime} each day</p>
+        </div>
       </div>
       {/* Profile Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
