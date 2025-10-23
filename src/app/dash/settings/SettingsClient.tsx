@@ -89,6 +89,19 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
         (async () => { if (!cancelled) loadFollowerSettings() })(),
         (async () => { if (!cancelled) await loadSubscriptionData() })(),
         (async () => { if (!cancelled) await checkBetaStatus() })(),
+        // Detect existing push subscription so toggle persists across reloads
+        (async () => {
+          try {
+            if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+              const reg = await navigator.serviceWorker.getRegistration()
+              const existing = await reg?.pushManager.getSubscription()
+              if (existing && !cancelled) setIsPushEnabled(true)
+            }
+            if (typeof Notification !== 'undefined' && !cancelled) {
+              setPermission(Notification.permission)
+            }
+          } catch {}
+        })(),
       ])
     }
     run()
@@ -535,7 +548,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   }
                 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isPushEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  isPushEnabled ? 'bg-gray-900' : 'bg-gray-200'
                 }`}
                 aria-pressed={isPushEnabled}
               >
@@ -556,7 +569,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   setReminderTime(e.target.value)
                   setReminderEnabled(true)
                   fetch('/api/settings/notifications', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
                   }).catch(() => {})
                 }}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
