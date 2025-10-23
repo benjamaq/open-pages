@@ -508,19 +508,34 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   async function scheduleNotification(time: string) {
     try {
-      console.log('[Notifications] Scheduling for', time)
+      console.log('▶ scheduleNotification called with:', time)
       const [hours, minutes] = time.split(':').map((n) => parseInt(n, 10))
+      console.log('▶ Parsed time:', { hours, minutes })
       const now = new Date()
       const scheduled = new Date()
       scheduled.setHours(hours, minutes, 0, 0)
-      if (scheduled <= now) scheduled.setDate(scheduled.getDate() + 1)
-      const delay = scheduled.getTime() - now.getTime()
-      console.log('[Notifications] Next notification in', Math.round(delay / 60000), 'minutes at', scheduled.toString())
-      setTimeout(() => {
+      console.log('▶ Now:', now)
+      console.log('▶ Scheduled for:', scheduled)
+      if (scheduled <= now) {
+        scheduled.setDate(scheduled.getDate() + 1)
+        console.log('▶ Time passed today, moved to tomorrow:', scheduled)
+      }
+      // TEST MODE: fire in 30s regardless of computed delay
+      const delay = 30000 // 30 seconds
+      console.log('▶ [TEST MODE] Firing in 30 seconds instead')
+      const delayMinutes = delay / 60000
+      console.log('▶ Delay:', delay, 'ms')
+      console.log('▶ That is:', delayMinutes, 'minutes')
+      console.log('▶ Will fire at:', new Date(Date.now() + delay).toLocaleString())
+      console.log('▶ Setting setTimeout...')
+      const timeoutId = setTimeout(() => {
+        console.log('🔔 TIMEOUT FIRED! Showing notification now')
         showNotification()
-        // reschedule for next day
+        // reschedule for next day (uses actual schedule next time)
         scheduleNotification(time)
       }, delay)
+      console.log('▶ setTimeout ID:', timeoutId)
+      console.log('▶ Timeout scheduled successfully')
     } catch (e) {
       console.error('[Notifications] scheduleNotification error', e)
     }
@@ -528,16 +543,18 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   function showNotification() {
     try {
-      console.log('[Notifications] Showing notification NOW')
+      console.log('📢 showNotification called')
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('BioStackr Check-In Reminder', {
-          body: 'Time to log your daily check-in (20 seconds)',
+        console.log('📢 Creating notification...')
+        const notification = new Notification('BioStackr Check-In', {
+          body: 'Time to log your daily health check-in',
+          tag: 'daily-reminder',
           icon: '/icon-192-v2.png',
           badge: '/icon-192-v2.png',
-          tag: 'daily-reminder',
-          requireInteraction: false,
-          silent: false,
         })
+        console.log('📢 Notification created:', notification)
+      } else {
+        console.log('📢 Permission not granted:', typeof Notification !== 'undefined' ? Notification.permission : 'unsupported')
       }
     } catch (e) {
       console.error('[Notifications] showNotification error', e)
@@ -656,6 +673,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             <div className="mt-3">
               <button
                 onClick={async () => {
+                  console.log('=== SAVE NOTIFICATION CLICKED ===')
+                  console.log('reminderTime:', reminderTime)
+                  console.log('reminderEnabled:', reminderEnabled)
                   if (isSavingNotifications) return
                   setNotifSaveMessage('')
                   setIsSavingNotifications(true)
@@ -674,8 +694,16 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                         if (permission !== 'granted') throw new Error('Notification permission denied')
                       }
                       if (Notification.permission === 'granted') {
+                        console.log('✓ About to schedule notification')
+                        console.log('✓ Current time:', new Date())
+                        console.log('✓ Target time:', reminderTime)
                         await scheduleNotification(reminderTime)
+                        console.log('✓ scheduleNotification() completed')
                       }
+                    } else {
+                      console.log('✗ NOT scheduling because:')
+                      console.log('  - reminderEnabled:', reminderEnabled)
+                      console.log('  - Permission:', typeof Notification !== 'undefined' ? Notification.permission : 'unsupported')
                     }
                     setHasUnsavedChanges(false)
                     setNotifSaveMessage('✅ Notification settings saved!')
