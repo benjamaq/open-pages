@@ -187,7 +187,7 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
       .upsert({
         profile_id: profile.id,
         ...updateData
-      })
+      }, { onConflict: 'profile_id' })
 
     if (updateError) {
       console.error('Update error:', updateError)
