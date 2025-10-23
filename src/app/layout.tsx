@@ -32,6 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+        <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
+        <link rel="preconnect" href="https://www.facebook.com" crossOrigin="anonymous" />
         <link rel="manifest" href="/manifest-v2.json" />
         <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-title" content="BioStackr" />
@@ -67,17 +71,13 @@ export default function RootLayout({
             console.log('GA Debug - DataLayer:', window.dataLayer);
           `}
         </Script>
-        {/* Meta Pixel */}
+        {/* Meta Pixel loader and init */}
+        <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="beforeInteractive" />
         <Script id="meta-pixel" strategy="afterInteractive">
           {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
+            // Ensure fbq is defined even if the loader hasn't finished
+            window.fbq = window.fbq || function(){(window.fbq.q = window.fbq.q || []).push(arguments)};
+            window.fbq.loaded = true; window.fbq.version = '2.0';
             fbq('init', '704287959370274');
             fbq('track', 'PageView');
           `}

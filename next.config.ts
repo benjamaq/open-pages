@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: https://www.google-analytics.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: https://www.facebook.com; connect-src 'self' https: https://www.google-analytics.com https://www.facebook.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self';"
           },
           {
             key: 'X-Content-Type-Options',
