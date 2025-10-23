@@ -89,49 +89,26 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
   }
 
   if (!preferences) {
-    // Create default preferences
-    const defaultPrefs = {
-      profile_id: profile.id,
-      email_enabled: true,
-      daily_reminder_enabled: true,
-      reminder_time: '09:00:00',
-      timezone: 'UTC',
-      supplements_reminder: true,
-      protocols_reminder: true,
-      movement_reminder: true,
-      mindfulness_reminder: true,
-      missed_items_reminder: true,
-      weekly_summary: false
-    }
-
+    // Ensure a row exists for this profile and rely on DB defaults for values
     try {
-      const { data: newPrefs, error: createError } = await supabase
+      const { data: created, error: createError } = await supabase
         .from('notification_preferences')
-        .insert(defaultPrefs)
-        .select()
+        .insert({ profile_id: profile.id })
+        .select('*')
         .single()
 
       if (createError) {
-        // If table doesn't exist, return defaults
         if (createError.message?.includes('relation') || createError.message?.includes('table')) {
-          return {
-            email_enabled: true,
-            daily_reminder_enabled: true,
-            reminder_time: '09:00',
-            timezone: 'UTC',
-            supplements_reminder: true,
-            protocols_reminder: true,
-            movement_reminder: true,
-            mindfulness_reminder: true,
-            missed_items_reminder: true,
-            weekly_summary: false
-          }
+          // Surface clear instruction when schema is missing (also handled by caller)
+          throw new Error('Notification preferences table not found. Please apply database/notifications-schema.sql in your database.')
         }
         throw createError
       }
+
+      preferences = created
     } catch (error: any) {
-      // If table doesn't exist, return defaults
       if (error.message?.includes('relation') || error.message?.includes('table')) {
+        // Fallback defaults if table truly missing (client will now see error via update endpoint too)
         return {
           email_enabled: true,
           daily_reminder_enabled: true,
@@ -146,19 +123,6 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
         }
       }
       throw error
-    }
-
-    return {
-      email_enabled: preferences.email_enabled,
-      daily_reminder_enabled: preferences.daily_reminder_enabled,
-      reminder_time: preferences.reminder_time.substring(0, 5), // Convert TIME to HH:MM
-      timezone: preferences.timezone,
-      supplements_reminder: preferences.supplements_reminder,
-      protocols_reminder: preferences.protocols_reminder,
-      movement_reminder: preferences.movement_reminder,
-      mindfulness_reminder: preferences.mindfulness_reminder,
-      missed_items_reminder: preferences.missed_items_reminder,
-      weekly_summary: preferences.weekly_summary
     }
   }
 
