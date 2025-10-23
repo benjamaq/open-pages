@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Bell, Mail, Clock, TestTube, User, LogOut, Camera, Upload, Zap, Crown, Edit2 } from 'lucide-react'
-import { 
-  getNotificationPreferences, 
-  updateNotificationPreferences, 
-  type NotificationPreferences 
-} from '../../../lib/actions/notifications'
+import type { NotificationPreferences } from '../../../lib/actions/notifications'
 import { 
   getUserSubscription, 
   getUserUsage,
@@ -166,18 +162,15 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   const loadPreferences = async () => {
     try {
-      const prefs = await getNotificationPreferences()
+      const resp = await fetch('/api/settings/notifications', { cache: 'no-store' })
+      if (!resp.ok) throw new Error('Failed to fetch preferences')
+      const prefs = await resp.json()
       if (prefs) {
         setPreferences(prefs)
-        // Initialize local reminder UI state from saved prefs
         try {
-          if (typeof prefs.reminder_time === 'string') {
-            const t = (prefs.reminder_time || '09:00').slice(0, 5)
-            setReminderTime(t)
-          }
-          if (typeof prefs.daily_reminder_enabled === 'boolean') {
-            setReminderEnabled(!!prefs.daily_reminder_enabled)
-          }
+          const t = (prefs.reminder_time || '09:00').slice(0, 5)
+          setReminderTime(t)
+          setReminderEnabled(!!prefs.daily_reminder_enabled)
         } catch {}
       }
     } catch (error) {
@@ -569,8 +562,8 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   setReminderTime(e.target.value)
                   setReminderEnabled(true)
                   fetch('/api/settings/notifications', {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
                   }).catch(() => {})
                 }}
