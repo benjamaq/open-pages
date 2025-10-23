@@ -104,6 +104,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     return () => { cancelled = true }
   }, [])
 
+  // Keep preferences.reminder_time in sync with the local reminderTime used by push UI,
+  // so that any later saves don’t overwrite the value back to defaults.
+  useEffect(() => {
+    setPreferences(prev => ({ ...prev, reminder_time: reminderTime }))
+  }, [reminderTime])
+
   const checkBetaStatus = async () => {
     try {
       const response = await fetch('/api/beta/status')
@@ -567,6 +573,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 onChange={(e) => {
                   setReminderTime(e.target.value)
                   setReminderEnabled(true)
+                  setPreferences(prev => ({ ...prev, reminder_time: e.target.value, daily_reminder_enabled: true }))
                   fetch('/api/settings/notifications', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
