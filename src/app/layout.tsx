@@ -6,6 +6,7 @@ import PWARegister from "./components/PWARegister";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import PWAInstallFab from "./components/PWAInstallFab";
 import PWAHeaderInstall from "./components/PWAHeaderInstall";
+import { captureAttributionClient } from '@/lib/attribution'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -111,6 +112,23 @@ export default function RootLayout({
         <Script id="pwa-marker" strategy="afterInteractive">
           {`
             console.log('🔎 PWA marker: data-pwa-client =', document.body?.getAttribute('data-pwa-client'));
+          `}
+        </Script>
+        <Script id="attribution-capture" strategy="afterInteractive">
+          {`
+            try {
+              (function(){
+                // inline capture to avoid import timing
+                function g(n){try{const m=document.cookie.match(new RegExp('(?:^|; )'+n.replace(/([.$?*|{}()\[\]\\\/\+^])/g,'\\$1')+'=([^;]*)'));return m?decodeURIComponent(m[1]):null}catch{return null}}
+                function s(n,v,d){const e=new Date(Date.now()+d*864e5).toUTCString();document.cookie=n+'='+encodeURIComponent(v)+'; expires='+e+'; path=/; SameSite=Lax'}
+                var p=new URLSearchParams(location.search||'');
+                var attrib={source:p.get('utm_source')||undefined,medium:p.get('utm_medium')||undefined,campaign:p.get('utm_campaign')||undefined,term:p.get('utm_term')||undefined,content:p.get('utm_content')||undefined,gclid:p.get('gclid')||undefined,fbclid:p.get('fbclid')||undefined,referrer:document.referrer||undefined,landingPath:location.pathname,timestamp:new Date().toISOString()};
+                var hasUtm=attrib.source||attrib.medium||attrib.campaign||attrib.gclid||attrib.fbclid;
+                if(!g('bs_ft')&&hasUtm){s('bs_ft',JSON.stringify(attrib),180)}
+                if(hasUtm){s('bs_lt',JSON.stringify(attrib),30)} else if(!g('bs_ft')){var ro={referrer:attrib.referrer,landingPath:attrib.landingPath,timestamp:attrib.timestamp};s('bs_ft',JSON.stringify(ro),180);s('bs_lt',JSON.stringify(ro),30)}
+                console.log('[Attribution] captured', { first:g('bs_ft'), last:g('bs_lt') });
+              })();
+            } catch (e) { console.warn('[Attribution] capture failed', e); }
           `}
         </Script>
       </body>
