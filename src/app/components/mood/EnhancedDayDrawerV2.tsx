@@ -541,8 +541,25 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       console.log('🔍 Selected wearable:', selectedWearable);
       console.log('🔍 Wearables object structure:', JSON.stringify(savePayload.wearables, null, 2));
 
-      const result = await saveDailyEntry(savePayload);
+      let result = await saveDailyEntry(savePayload);
       
+      // If auth is stale (common after the app sits idle, esp. incognito),
+      // force-refresh the Supabase session on the client and retry once.
+      if (!result.ok && /auth/i.test(result.error || '')) {
+        try {
+          setSaveMessage('Reconnecting…');
+          const { createClient } = await import('@/lib/supabase/client');
+          const supabase = createClient();
+          // Force a session fetch/refresh
+          await supabase.auth.getSession();
+          await supabase.auth.refreshSession();
+          // Retry once
+          result = await saveDailyEntry(savePayload);
+        } catch (e) {
+          console.warn('Auth refresh failed, will show friendly error.', e);
+        }
+      }
+
       if (result.ok) {
         setSaveMessage('✅ Check-in saved!');
         console.log('✅ Save successful:', result.data);
@@ -651,7 +668,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           }, 1000);
         }
       } else {
-        setSaveMessage(`❌ ${result.error}`);
+        const friendly = /auth/i.test(result.error || '')
+          ? '❌ Session expired. Please try again — we just reconnected.'
+          : `❌ ${result.error}`;
+        setSaveMessage(friendly);
         console.error('❌ Save failed:', result.error);
         console.error('❌ Save payload that failed:', savePayload);
         console.error('❌ All scheduled items:', allScheduledItems);
