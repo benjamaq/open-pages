@@ -42,7 +42,7 @@ export default function PricingPage() {
   const getCtaText = (plan: string) => {
     if (loading) return 'Get Started' // Default to Get Started while loading
     if (isLoggedIn) {
-      return plan === 'free' ? 'Continue with Free' : `Get started with ${plan}`
+      return plan === 'free' ? 'Continue with Free' : 'Get started with Premium'
     }
     return 'Get Started'
   }
@@ -136,7 +136,7 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Pro Plan */}
+          {/* Premium Plan */}
           <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium whitespace-nowrap">
@@ -146,7 +146,7 @@ export default function PricingPage() {
 
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
-                <span>Pro</span>
+                <span>Premium</span>
                 <span className="text-gray-600">⚡</span>
               </h2>
               <div className="mt-4 flex items-baseline justify-center">
