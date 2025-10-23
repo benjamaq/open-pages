@@ -50,15 +50,15 @@ export default function PricingPage() {
   const getCtaHref = (plan: string) => {
     if (loading) {
       // Default to new user flow while loading
-      if (plan === 'pro') return '/pricing/pro'
+      if (plan === 'pro') return '/auth/signup/pro'
       return '/auth/signup'
     }
     if (isLoggedIn) {
       return plan === 'free' ? '/dash' : `/pricing/${plan.toLowerCase()}`
     }
-    // For new users, direct them to specific pricing pages
+    // For new users, send Premium directly to signup with premium intent
     if (plan === 'pro') {
-      return '/pricing/pro'
+      return '/auth/signup/pro'
     }
     return '/auth/signup' // Free plan goes directly to signup
   }

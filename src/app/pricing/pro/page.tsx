@@ -29,11 +29,7 @@ export default function ProPricingPage() {
     return 'Get started with Premium'
   }
 
-  const getCtaHref = () => {
-    // Always go to signup page so users can enter beta codes
-    // The signup page will handle redirecting existing users appropriately
-    return '/auth/signup/pro'
-  }
+  const getCtaHref = () => '/auth/signup/pro'
 
   return (
     <div className="min-h-screen bg-white">
@@ -48,12 +44,7 @@ export default function ProPricingPage() {
                 className="h-14 w-auto"
               />
             </Link>
-            <Link 
-              href="/pricing"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Back to Pricing
-            </Link>
+            <Link href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">Back to Pricing</Link>
           </div>
         </div>
       </div>
