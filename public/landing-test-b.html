@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioStackr - Pattern Recognition for Chronic Pain</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <meta name="theme-color" content="#000000">
+  <style>
+    /* ===== MASTER TYPOGRAPHY SYSTEM ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    .section-label { font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 10px; }
+    .section-title { font-size: 36px; color: #1a1a1a; font-weight: 700; line-height: 1.2; margin-bottom: 15px; }
+    .body-text { font-size: 17px; color: #666; line-height: 1.7; }
+    .caption-text { font-size: 14px; color: #9ca3af; line-height: 1.5; }
+
+    /* Responsive grid utility classes */
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 40px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr; gap: 40px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr; gap: 25px; }
+    @media (min-width: 769px) {
+      html, body { width: 100%; }
+      .grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+      .grid-3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; }
+      .grid-4 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; }
+      section .grid-2, section .grid-3, section .grid-4 { width: 100%; }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      body { font-size: 16px; }
+      .body-text, p { line-height: 1.8; }
+      .section-title { font-size: 28px; }
+      .hero-title { font-size: 32px !important; line-height: 1.25 !important; }
+      .hero-subtitle { font-size: 16px !important; }
+    }
+
+    /* Polished header styles */
+    .site-header .brand-logo { height: 54px; width: auto; filter: contrast(125%); }
+    .auth-ctas { display: flex; align-items: center; gap: 12px; }
+    .auth-ctas .signin-link { color: #374151; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .auth-ctas .signup-cta { background: #0f172a; color: #fff; padding: 7px 12px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 600; line-height: 1.1; }
+  </style>
+  </head>
+  <body>
+
+<!-- HEADER / NAVIGATION -->
+<header class="site-header" style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 0;">
+  <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center;">
+      <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" class="brand-logo" />
+    </div>
+    <div class="auth-ctas">
+      <a href="/auth/signin" class="signin-link">Sign In</a>
+      <a href="/auth/signup" class="signup-cta">Sign Up</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO VARIANT B -->
+<section class="hero" style="padding: 60px 20px; background: white; text-align: center;">
+  <div style="max-width: 1100px; margin: 0 auto;">
+    <h1 class="hero-title" style="color: #1a1a1a; font-weight: 700; line-height: 1.25; margin-bottom: 16px;">
+      Finally see what's helping your pain in 20 seconds.
+    </h1>
+
+    <p class="hero-subtitle" style="color: #666; margin-bottom: 20px; line-height: 1.6; max-width: 720px; margin-left: auto; margin-right: auto;">
+      Track for just 20 seconds a day. Our AI reveals what truly 
+      improves your pain, so you can focus on what works—starting today.
+    </p>
+
+    <a href="/auth/signup" class="cta-button primary" style="display: inline-block; background: #1a1a1a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; margin-bottom: 14px;">
+      Start Tracking Free
+    </a>
+
+    <p class="small-text" style="color: #6b7280; font-size: 14px; max-width: 700px; margin: 8px auto 0;">
+      Built for people with chronic pain, fibromyalgia, 
+      autoimmune conditions, and chronic fatigue.
+    </p>
+  </div>
+</section>
+
+<!-- FOUNDER STORY: moved to appear right after the first CTA -->
+<section style="padding: 80px 20px; background: #f9fafb;">
+  <div style="max-width: 900px; margin: 0 auto;">
+    <div style="display: grid; grid-template-columns: 300px 1fr; gap: 40px; align-items: start;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <img src="/mum%20photo.png" alt="Ben and his mum" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);" />
+        <p style="margin: 0; font-size: 12px; color: #9ca3af; text-align: center;">Ben and his mum</p>
+      </div>
+      <div>
+        <h2 class="section-title" style="margin-bottom: 20px;">I built this for my mom</h2>
+        <p class="body-text" style="margin-bottom: 15px;">My mom has dealt with chronic pain and other health challenges throughout her life. She's tried everything—different meds, supplements, lifestyle changes. Sometimes she feels better. Sometimes it all comes back.</p>
+        <p class="body-text" style="margin-bottom: 15px;">But when you're in pain, tracking what helps is almost impossible. You're just trying to get through the day. She never knew what actually helped.</p>
+        <div style="background: #f5f5f4; border-left: 4px solid #78716c; padding: 20px; border-radius: 8px; margin: 30px 0;">
+          <p style="margin: 0; font-size: 17px; color: #44403c; font-style: italic; line-height: 1.6;">"After years of trying everything, she still couldn't answer the basic question: what actually makes it better?"</p>
+        </div>
+        <p class="body-text" style="margin-bottom: 15px;"><strong>So I built BioStackr.</strong></p>
+        <p class="body-text" style="margin-bottom: 15px;">Now she can see patterns. She knows what works. Her doctor listens when she shows them her data.</p>
+        <p class="body-text" style="margin-bottom: 30px;">She's not cured—but she's not guessing anymore. She knows what helps, what makes it worse, and what to do next.</p>
+        <p style="font-size: 15px; color: #9ca3af; font-style: italic;">— Ben, Founder & Son</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Keep the rest of the original sections: testimonials, pricing, FAQs, and footer -->
+<section style="padding: 80px 20px; background: #f8f9fa;">
+  <div style="max-width: 1000px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <p class="section-label" style="color: #6366f1;">Pattern recognition built for chronic pain</p>
+      <h2 class="section-title">Here's what pattern discovery looks like</h2>
+      <p class="body-text" style="text-align: center; font-style: italic;">Not just graphs you decode yourself. Real patterns. Real answers.</p>
+    </div>
+    <div id="testimonials-scroll" style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #d1d5db transparent;">
+      <div style="display: flex; gap: 20px; padding-bottom: 20px; min-width: min-content;">
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
+          <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"it's 2:07am and i'm up with nerve pain. logged in 15 sec, got a note back about sleep + pain days. not dramatic, just… helpful."</p>
+          <p style="font-size: 13px; color: #9ca3af; font-style: italic; margin-bottom: 8px;">Late-night check-in</p>
+          <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— katie s., 34</p>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
+          <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"I'm the one who brings my wife to appointments. BioStackr gave me one page I could show the doctor without a lecture. 'Here's the week. Here's what changed.' He actually nodded."</p>
+          <p style="font-size: 13px; color: #9ca3af; font-style: italic; margin-bottom: 8px;">Caregiver perspective</p>
+          <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— daniel m., caregiver</p>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
+          <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"Small thing: I stopped taking my evening supplement twice and the next day was always worse. Elli caught it. I didn't. That's the kind of nudge I need."</p>
+          <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— riya p.</p>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; min-width: 320px; max-width: 380px; flex-shrink: 0;">
+          <p style="font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px;">"I don't 'do apps.' This one is simple. Big buttons. No tricks. It tells me what changed, not just numbers."</p>
+          <p style="font-size: 14px; color: #1a1a1a; font-weight: 600;">— marie h., 62</p>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-scrollbar" aria-hidden="true">
+      <div class="testimonial-thumb"></div>
+    </div>
+    <p style="text-align: center; color: #9ca3af; font-size: 13px; margin-top: 10px;">← Scroll to see more →</p>
+  </div>
+</section>
+
+<!-- PRICING (unchanged) -->
+<section id="pricing" style="padding: 80px 20px; background: white;">
+  <div style="max-width: 1100px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 60px;">
+      <p class="section-label" style="color: #6366f1;">Simple, honest pricing</p>
+      <h2 class="section-title">Start free. Upgrade when you're ready.</h2>
+      <p class="body-text">No hidden paywalls. Start tracking and seeing patterns today—upgrade for deeper insights when you need them.</p>
+    </div>
+    <div class="grid-2" style="gap: 30px; max-width: 900px; margin: 0 auto;">
+      <div style="background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 16px; padding: 35px; position: relative;">
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 24px; color: #1a1a1a; font-weight: 700; margin-bottom: 10px;">Free</h3>
+          <p style="color: #6b7280; font-size: 16px; margin-bottom: 20px;">Forever</p>
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">Everything you need to find your first patterns</p>
+        </div>
+        <div style="margin-bottom: 30px;">
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: #10b981; font-size: 18px;">✓</span><span style="color: #374151; font-size: 15px; line-height: 1.5;">Track pain, mood, sleep daily</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: #10b981; font-size: 18px;">✓</span><span style="color: #374151; font-size: 15px; line-height: 1.5;"><strong>Up to 10</strong> active tracked items</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: #10b981; font-size: 18px;">✓</span><span style="color: #374151; font-size: 15px; line-height: 1.5;">Pattern discovery & heatmaps</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: #10b981; font-size: 18px;">✓</span><span style="color: #374151; font-size: 15px; line-height: 1.5;">Journal & notes</span></div>
+          <div style="display: flex; align-items: start; gap: 10px;"><span style="color: #10b981; font-size: 18px;">✓</span><span style="color: #374151; font-size: 15px; line-height: 1.5;">Private by default</span></div>
+        </div>
+        <a href="/auth/signup" style="display: block; width: 100%; background: #1a1a1a; color: white; padding: 14px; border-radius: 10px; text-align: center; font-size: 16px; font-weight: 600; text-decoration: none;">Start Free</a>
+      </div>
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 35px; position: relative; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.3);">
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 24px; color: white; font-weight: 700; margin-bottom: 10px;">Premium</h3>
+          <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 5px;">$9.99/month</p>
+          <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 20px;">14-day free trial</p>
+          <p style="color: rgba(255,255,255,0.95); font-size: 15px; line-height: 1.6; margin-bottom: 30px;">Everything in Free, plus unlimited tracking</p>
+        </div>
+        <div style="margin-bottom: 30px;">
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: rgba(255,255,255,0.9); font-size: 18px;">✓</span><span style="color: rgba(255,255,255,0.95); font-size: 15px; line-height: 1.5;">Everything in Free</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: rgba(255,255,255,0.9); font-size: 18px;">✓</span><span style="color: white; font-size: 15px; line-height: 1.5;"><strong>Unlimited</strong> supplements & medications</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: rgba(255,255,255,0.9); font-size: 18px;">✓</span><span style="color: white; font-size: 15px; line-height: 1.5;"><strong>Unlimited</strong> protocols</span></div>
+          <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 12px;"><span style="color: rgba(255,255,255,0.9); font-size: 18px;">✓</span><span style="color: white; font-size: 15px; line-height: 1.5;">Doctor-ready shareable summaries</span></div>
+          <div style="display: flex; align-items: start; gap: 10px;"><span style="color: rgba(255,255,255,0.9); font-size: 18px;">✓</span><span style="color: white; font-size: 15px; line-height: 1.5;">Priority support</span></div>
+        </div>
+        <a href="/pricing/pro" style="display: block; width: 100%; background: white; color: #667eea; padding: 14px; border-radius: 10px; text-align: center; font-size: 16px; font-weight: 600; text-decoration: none;">Get Started with Premium</a>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 40px;"><p style="font-size: 14px; color: #9ca3af;">🔒 Cancel anytime. No questions asked. Your data stays yours.</p></div>
+  </div>
+</section>
+
+<!-- FAQ and FOOTER (unchanged) -->
+<section id="faq" style="padding: 80px 20px; background: white;">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <h2 class="section-title" style="text-align: center; margin-bottom: 50px;">Frequently Asked Questions</h2>
+    <div style="display: flex; flex-direction: column; gap: 30px;">
+      <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 25px;">
+        <h3 style="font-size: 18px; color: #1a1a1a; margin-bottom: 12px; font-weight: 600;">Is my data private?</h3>
+        <p class="body-text" style="font-size: 15px;">Yes. Everything is private by default. Only you see your data unless you choose to share it with your doctor or care team through a secure link you control.</p>
+      </div>
+      <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 25px;">
+        <h3 style="font-size: 18px; color: #1a1a1a; margin-bottom: 12px; font-weight: 600;">Do I need to track every day?</h3>
+        <p class="body-text" style="font-size: 15px;">No. BioStackr works even if you only track a few times a week. The more you track, the clearer patterns become—but life happens. No guilt.</p>
+      </div>
+      <div>
+        <h3 style="font-size: 18px; color: #1a1a1a; margin-bottom: 12px; font-weight: 600;">Will this work on my phone?</h3>
+        <p class="body-text" style="font-size: 15px;">Yes — and you can add BioStackr to your Home Screen so it feels like a real app (no download required).</p>
+        <ul style="margin: 10px 0 0 18px; color: #374151; font-size: 14px; line-height: 1.6;">
+          <li><strong>iPhone/iPad (Safari):</strong> tap the Share icon, then <em>Add to Home Screen</em>. BioStackr opens full‑screen like an app.</li>
+          <li><strong>Android (Chrome):</strong> tap the menu (⋮), then <em>Add to Home screen</em>. You’ll get an app‑style icon.</li>
+        </ul>
+        <p class="body-text" style="font-size: 13px; color:#6b7280; margin-top: 8px;">Tip: You may also see a purple banner at the top offering to install—tap it to add BioStackr instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="background: #1a1a1a; color: white; padding: 60px 20px;">
+  <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+    <div style="font-size: 24px; font-weight: 700; margin-bottom: 30px; letter-spacing: 0.5px;">BIOSTACKR</div>
+    <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; flex-wrap: wrap;">
+      <a href="#how-it-works" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;">How It Works</a>
+      <a href="#pricing" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;">Pricing</a>
+      <a href="#faq" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;">FAQ</a>
+      <a href="/contact" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;">Contact</a>
+    </div>
+    <p style="font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 15px;">© 2024 BioStackr. Built for people who believe health is a craft.</p>
+    <p style="font-size: 13px; color: rgba(255,255,255,0.4);">Powered by pattern recognition technology designed specifically for chronic pain.</p>
+  </div>
+</footer>
+
+  </body>
+</html>
+
+
