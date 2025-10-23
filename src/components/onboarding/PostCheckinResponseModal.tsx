@@ -78,19 +78,34 @@ export default function PostCheckinResponseModal({
   useEffect(() => {
     (async () => {
       try {
-        const raw = (userName || '').trim();
-        if (raw && raw.toLowerCase() !== 'there') {
-          setResolvedName(raw);
+        const candidate = (userName || '').trim();
+        if (candidate && candidate.toLowerCase() !== 'there') {
+          setResolvedName(candidate);
           return;
         }
+
         const supabase = createClient();
-        const { data } = await supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('user_id', userId)
-          .single();
-        const first = (data?.display_name || '').trim().split(' ')[0] || 'friend';
-        setResolvedName(first);
+
+        // 1) Try profiles.display_name
+        let first = '';
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('user_id', userId)
+            .single();
+          first = (data?.display_name || '').trim().split(' ')[0] || '';
+        } catch {}
+
+        // 2) Try auth metadata name, then email local-part
+        if (!first) {
+          const { data: auth } = await supabase.auth.getUser();
+          const metaName = (auth?.user?.user_metadata as any)?.name as string | undefined;
+          const emailLocal = (auth?.user?.email || '')?.split('@')[0] || '';
+          first = (metaName || emailLocal || '').trim().split(' ')[0] || '';
+        }
+
+        setResolvedName(first || 'friend');
       } catch {
         setResolvedName('friend');
       }

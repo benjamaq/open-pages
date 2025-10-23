@@ -43,7 +43,7 @@ type EnhancedDayDrawerV2Props = {
   } | null;
 };
 
-export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = 'there', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = '', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
