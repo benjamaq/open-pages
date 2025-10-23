@@ -71,6 +71,17 @@ export default function RootLayout({
             console.log('GA Debug - DataLayer:', window.dataLayer);
           `}
         </Script>
+        {/* Meta Pixel shim (define fbq queue BEFORE loader to avoid race) */}
+        <Script id="meta-pixel-shim" strategy="beforeInteractive">
+          {`
+            (function(f){
+              if (f.fbq) return;
+              var n = function(){ n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
+              n.queue = []; n.loaded = true; n.version = '2.0';
+              f.fbq = n; f._fbq = n;
+            })(window);
+          `}
+        </Script>
         {/* Meta Pixel loader and init */}
         <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="beforeInteractive" />
         <Script id="meta-pixel" strategy="afterInteractive">
