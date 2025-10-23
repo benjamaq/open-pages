@@ -500,17 +500,21 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   setIsPushLoading(true)
                   setSaveMessage('')
                   try {
-                    // Check existing
-                    if ('serviceWorker' in navigator) {
-                      const reg = await navigator.serviceWorker.getRegistration()
-                      const existing = await reg?.pushManager.getSubscription()
-                      if (existing) {
-                        setIsPushEnabled(true)
-                        setSaveMessage('✅ Push already enabled')
-                        return
+                    if (isPushEnabled) {
+                      // Turn OFF: unsubscribe browser + remove server sub + disable daily reminder
+                      if ('serviceWorker' in navigator) {
+                        const reg = await navigator.serviceWorker.getRegistration()
+                        const existing = await reg?.pushManager.getSubscription()
+                        await existing?.unsubscribe().catch(() => {})
                       }
+                      await fetch('/api/push/unsubscribe', { method: 'POST' }).catch(() => {})
+                      await fetch('/api/settings/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ daily_reminder_enabled: false }) }).catch(() => {})
+                      setIsPushEnabled(false)
+                      setSaveMessage('Push disabled')
+                      return
                     }
-                    // Request permission if needed
+
+                    // Turn ON: ensure permission
                     if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
                       const result = await Notification.requestPermission()
                       if (result !== 'granted') {
@@ -529,12 +533,14 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: subscription.toJSON() })
                       })
                       if (!response.ok) throw new Error('Failed to save subscription')
+                      // Persist reminder enabled when enabling push (keep existing time)
+                      await fetch('/api/settings/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ daily_reminder_enabled: true, reminder_time: reminderTime }) }).catch(() => {})
                       setIsPushEnabled(true)
                       setSaveMessage('✅ Push enabled')
                       setTimeout(() => setSaveMessage(''), 2500)
                     }
                   } catch (error: any) {
-                    console.error('Push enable error:', error)
+                    console.error('Push toggle error:', error)
                     setSaveMessage(`❌ Failed: ${error?.message || 'Unknown error'}`)
                   } finally {
                     setIsPushLoading(false)
