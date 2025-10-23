@@ -7,9 +7,3 @@ export default function SignupPage() {
     <AuthForm mode="signup" />
   )
 }
-
-import AuthForm from '../../../components/AuthForm'
-
-export default function SignUpPage() {
-  return <AuthForm mode="signup" />
-}
