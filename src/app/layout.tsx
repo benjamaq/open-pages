@@ -67,8 +67,26 @@ export default function RootLayout({
             console.log('GA Debug - DataLayer:', window.dataLayer);
           `}
         </Script>
+        {/* Meta Pixel */}
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '704287959370274');
+            fbq('track', 'PageView');
+          `}
+        </Script>
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed" style={{ backgroundColor: '#FFFFFF' }}>
+        <noscript>
+          <img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=704287959370274&ev=PageView&noscript=1" />
+        </noscript>
         <PWARegister />
         {/* Hide PWA header on shared link pages and desktop by default via CSS hook */}
         {!globalThis?.document?.body?.classList?.contains('public-link') && (
