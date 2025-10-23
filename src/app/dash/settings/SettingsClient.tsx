@@ -113,6 +113,18 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setPreferences(prev => ({ ...prev, reminder_time: reminderTime }))
   }, [reminderTime])
 
+  useEffect(() => {
+    try {
+      console.log('[Notifications] Permission status:', typeof Notification !== 'undefined' ? Notification.permission : 'unsupported')
+      console.log('[Notifications] Service worker registered:', typeof navigator !== 'undefined' && 'serviceWorker' in navigator)
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then((reg) => {
+          console.log('[Notifications] SW registration:', reg)
+        })
+      }
+    } catch {}
+  }, [])
+
   const checkBetaStatus = async () => {
     try {
       const response = await fetch('/api/beta/status')
@@ -486,6 +498,44 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setEditingName(false)
   }
 
+  async function scheduleNotification(time: string) {
+    try {
+      console.log('[Notifications] Scheduling for', time)
+      const [hours, minutes] = time.split(':').map((n) => parseInt(n, 10))
+      const now = new Date()
+      const scheduled = new Date()
+      scheduled.setHours(hours, minutes, 0, 0)
+      if (scheduled <= now) scheduled.setDate(scheduled.getDate() + 1)
+      const delay = scheduled.getTime() - now.getTime()
+      console.log('[Notifications] Next notification in', Math.round(delay / 60000), 'minutes at', scheduled.toString())
+      setTimeout(() => {
+        showNotification()
+        // reschedule for next day
+        scheduleNotification(time)
+      }, delay)
+    } catch (e) {
+      console.error('[Notifications] scheduleNotification error', e)
+    }
+  }
+
+  function showNotification() {
+    try {
+      console.log('[Notifications] Showing notification NOW')
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('BioStackr Check-In Reminder', {
+          body: 'Time to log your daily check-in (20 seconds)',
+          icon: '/icon-192-v2.png',
+          badge: '/icon-192-v2.png',
+          tag: 'daily-reminder',
+          requireInteraction: false,
+          silent: false,
+        })
+      }
+    } catch (e) {
+      console.error('[Notifications] showNotification error', e)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -610,6 +660,15 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                     const body = await resp.json().catch(() => ({}))
                     console.log('[Settings] Save Notifications response', resp.status, body)
                     if (!resp.ok) throw new Error(body?.error || 'Save failed')
+                    if (reminderEnabled && typeof Notification !== 'undefined') {
+                      if (Notification.permission === 'default') {
+                        const permission = await Notification.requestPermission()
+                        if (permission !== 'granted') throw new Error('Notification permission denied')
+                      }
+                      if (Notification.permission === 'granted') {
+                        await scheduleNotification(reminderTime)
+                      }
+                    }
                     setHasUnsavedChanges(false)
                     setNotifSaveMessage('✅ Notification settings saved!')
                     setTimeout(() => setNotifSaveMessage(''), 4000)
@@ -630,6 +689,28 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               {notifSaveMessage && (
                 <p className={`text-xs mt-2 ${notifSaveMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>{notifSaveMessage}</p>
               )}
+              <div className="mt-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      if (typeof Notification === 'undefined') return
+                      if (Notification.permission !== 'granted') {
+                        const p = await Notification.requestPermission()
+                        if (p !== 'granted') return
+                      }
+                      new Notification('Test Notification', {
+                        body: 'If you see this, notifications are working!',
+                        icon: '/icon-192-v2.png',
+                      })
+                    } catch (e) {
+                      console.error('[Notifications] test now error', e)
+                    }
+                  }}
+                  className="px-2.5 py-1 border border-gray-300 rounded-md text-xs text-gray-700 hover:bg-gray-50"
+                >
+                  Test Notification Now
+                </button>
+              </div>
             </div>
           </div>
         </div>
