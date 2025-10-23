@@ -375,6 +375,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     formData.append('userId', profile.user_id)
 
     try {
+      console.log('[Avatar] Upload start', { name: file.name, type: file.type, size: file.size })
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
@@ -383,11 +384,13 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
       
       if (!response.ok) {
         const errorText = await response.text()
+        console.error('[Avatar] Upload failed', response.status, errorText)
         alert(`Upload failed: ${response.status} - ${errorText}`)
         return
       }
       
       const data = await response.json()
+      console.log('[Avatar] Upload success', data)
       
       if (data.url) {
         const updateResponse = await fetch('/api/profile/update', {
@@ -400,16 +403,20 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
         })
         
         if (updateResponse.ok) {
+          console.log('[Avatar] Profile updated with new URL')
           window.location.reload()
         } else {
           const updateError = await updateResponse.text()
+          console.error('[Avatar] Profile update failed', updateError)
           alert(`Profile update failed: ${updateError}`)
         }
       } else {
+        console.error('[Avatar] No URL returned after upload')
         alert('Upload failed: No URL returned')
       }
     } catch (error) {
-      alert(`Upload error: ${error.message}`)
+      console.error('[Avatar] Upload error', error)
+      alert(`Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

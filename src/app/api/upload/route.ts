@@ -9,6 +9,12 @@ export async function POST(request: NextRequest) {
       error: 'Server configuration error: Missing Supabase credentials. Please set up your .env.local file.' 
     }, { status: 500 })
   }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Missing SUPABASE_SERVICE_ROLE_KEY')
+    return NextResponse.json({ 
+      error: 'Server configuration error: Missing SUPABASE_SERVICE_ROLE_KEY.' 
+    }, { status: 500 })
+  }
   
   try {
     const formData = await request.formData()
@@ -44,15 +50,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
+    console.log('Upload request file meta:', { name: file?.name, type: file?.type, size: file?.size })
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'Invalid file type. Please use JPG, PNG, WEBP, or GIF.' }, { status: 400 })
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
+      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 })
     }
 
     // Determine bucket and path based on type
