@@ -546,14 +546,36 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     try {
       console.log('📢 showNotification called')
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        console.log('📢 Creating notification...')
-        const notification = new Notification('BioStackr Check-In', {
-          body: 'Time to log your daily health check-in',
-          tag: 'daily-reminder',
-          icon: '/icon-192-v2.png',
-          badge: '/icon-192-v2.png',
-        })
-        console.log('📢 Notification created:', notification)
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then((reg) => {
+            if (reg) {
+              console.log('📢 Showing via ServiceWorkerRegistration.showNotification')
+              reg.showNotification('BioStackr Check-In', {
+                body: 'Time to log your daily health check-in',
+                tag: 'daily-reminder',
+                icon: '/icon-192-v2.png',
+                badge: '/icon-192-v2.png',
+              })
+            } else {
+              console.log('📢 No SW registration, falling back to window Notification')
+              const notification = new Notification('BioStackr Check-In', {
+                body: 'Time to log your daily health check-in',
+                tag: 'daily-reminder',
+                icon: '/icon-192-v2.png',
+                badge: '/icon-192-v2.png',
+              })
+              console.log('📢 Notification created:', notification)
+            }
+          })
+        } else {
+          const notification = new Notification('BioStackr Check-In', {
+            body: 'Time to log your daily health check-in',
+            tag: 'daily-reminder',
+            icon: '/icon-192-v2.png',
+            badge: '/icon-192-v2.png',
+          })
+          console.log('📢 Notification created (no SW available):', notification)
+        }
       } else {
         console.log('📢 Permission not granted:', typeof Notification !== 'undefined' ? Notification.permission : 'unsupported')
       }
