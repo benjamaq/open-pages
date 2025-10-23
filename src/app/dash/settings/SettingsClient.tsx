@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Bell, Mail, Clock, TestTube, User, LogOut, Camera, Upload, Zap, Crown, Edit2 } from 'lucide-react'
 import type { NotificationPreferences } from '../../../lib/actions/notifications'
 import { 
@@ -78,6 +78,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isSavingNotifications, setIsSavingNotifications] = useState(false)
   const [notifSaveMessage, setNotifSaveMessage] = useState('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -784,20 +785,30 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               <div>
                 {/* Expert-recommended approach: sync file picker */}
                 <input
+                  ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*,.heic,.heif"
                   onChange={handleProfilePhotoUpload}
                   disabled={isUploading}
                   className="sr-only"
                   id="avatar-file-input"
                 />
-                <label
-                  htmlFor="avatar-file-input"
-                  className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 cursor-pointer transition-colors"
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      console.log('[Avatar] Trigger file picker click')
+                      fileInputRef.current?.click()
+                    } catch (e) {
+                      console.error('[Avatar] Failed to trigger file picker', e)
+                    }
+                  }}
+                  className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
+                  disabled={isUploading}
                 >
                   <Camera className="w-3 h-3 mr-1" />
                   {isUploading ? 'Uploading...' : 'Upload image'}
-                </label>
+                </button>
                 
                 
                 <p className="text-xs text-gray-500 mt-1">
