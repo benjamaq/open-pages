@@ -621,8 +621,8 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   }
                 }}
                 disabled={isSavingNotifications || !hasUnsavedChanges}
-                className={`px-4 py-2 rounded-lg text-white transition-colors ${
-                  isSavingNotifications || !hasUnsavedChanges ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+                className={`px-3 py-1.5 rounded-md text-sm text-white transition-colors ${
+                  isSavingNotifications || !hasUnsavedChanges ? 'bg-gray-700 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
                 }`}
               >
                 {isSavingNotifications ? 'Saving…' : 'Save Notifications'}
