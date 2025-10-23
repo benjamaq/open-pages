@@ -168,15 +168,18 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
   const loadPreferences = async () => {
     try {
+      console.log('[Settings] loadPreferences: fetching /api/settings/notifications')
       const resp = await fetch('/api/settings/notifications', { cache: 'no-store' })
       if (!resp.ok) throw new Error('Failed to fetch preferences')
       const prefs = await resp.json()
+      console.log('[Settings] loadPreferences: response', { ok: resp.ok, status: resp.status, prefs })
       if (prefs) {
         setPreferences(prefs)
         try {
           const t = (prefs.reminder_time || '09:00').slice(0, 5)
           setReminderTime(t)
           setReminderEnabled(!!prefs.daily_reminder_enabled)
+          console.log('[Settings] loadPreferences: set state reminderTime', t, 'enabled', !!prefs.daily_reminder_enabled)
         } catch {}
       }
     } catch (error) {
@@ -191,6 +194,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     setSaveMessage('')
     
     try {
+      console.log('[Settings] handleSave payload', preferences)
       const response = await fetch('/api/settings/notifications', {
         method: 'POST',
         headers: {
@@ -200,6 +204,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
       })
       
       const result = await response.json()
+      console.log('[Settings] handleSave response', response.status, result)
       
       if (!response.ok) {
         throw new Error(result.details || result.error || 'Failed to save settings')
@@ -571,14 +576,23 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 type="time"
                 value={reminderTime}
                 onChange={(e) => {
+                  console.log('[Settings] onChange time ->', e.target.value)
                   setReminderTime(e.target.value)
                   setReminderEnabled(true)
                   setPreferences(prev => ({ ...prev, reminder_time: e.target.value, daily_reminder_enabled: true }))
+                  const payload = { reminder_time: e.target.value, daily_reminder_enabled: true }
+                  console.log('[Settings] POST /api/settings/notifications payload', payload)
                   fetch('/api/settings/notifications', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reminder_time: e.target.value, daily_reminder_enabled: true })
-                  }).catch(() => {})
+                    body: JSON.stringify(payload)
+                  })
+                    .then(async (r) => {
+                      let body: any = null
+                      try { body = await r.clone().json() } catch {}
+                      console.log('[Settings] save time response', r.status, body)
+                    })
+                    .catch((err) => console.error('[Settings] save time error', err))
                 }}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 disabled={!isPushEnabled}

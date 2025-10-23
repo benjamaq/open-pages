@@ -50,6 +50,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     
     preferences = result.data
     prefsError = result.error
+    console.log('[Actions] getNotificationPreferences select result', { preferences, error: prefsError })
   } catch (error: any) {
     // If table doesn't exist yet, return defaults
     if (error.message?.includes('relation') || error.message?.includes('table')) {
