@@ -79,6 +79,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [isSavingNotifications, setIsSavingNotifications] = useState(false)
   const [notifSaveMessage, setNotifSaveMessage] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [showFallbackPicker, setShowFallbackPicker] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -826,7 +827,13 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   onClick={() => {
                     try {
                       console.log('[Avatar] Trigger file picker click')
-                      fileInputRef.current?.click()
+                      if (fileInputRef.current?.showPicker) {
+                        // Chrome supports showPicker on some channels
+                        // @ts-ignore
+                        fileInputRef.current.showPicker()
+                      } else {
+                        fileInputRef.current?.click()
+                      }
                     } catch (e) {
                       console.error('[Avatar] Failed to trigger file picker', e)
                     }
@@ -837,6 +844,24 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   <Camera className="w-3 h-3 mr-1" />
                   {isUploading ? 'Uploading...' : 'Upload image'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFallbackPicker((v) => !v)}
+                  className="ml-2 inline-flex items-center px-2 py-1 border border-gray-300 rounded-md text-xs text-gray-700 hover:bg-gray-50"
+                >
+                  {showFallbackPicker ? 'Hide fallback' : 'Use fallback picker'}
+                </button>
+                {showFallbackPicker && (
+                  <div className="mt-2">
+                    <input
+                      type="file"
+                      accept="image/*,.heic,.heif"
+                      onChange={handleProfilePhotoUpload}
+                      disabled={isUploading}
+                      className="block text-xs"
+                    />
+                  </div>
+                )}
                 
                 
                 <p className="text-xs text-gray-500 mt-1">
