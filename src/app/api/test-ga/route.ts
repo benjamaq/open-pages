@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  return NextResponse.json({ ok: true })
-}
-
-import { NextResponse } from 'next/server'
-
-export async function GET() {
   const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   
   return NextResponse.json({
