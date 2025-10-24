@@ -155,6 +155,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setMessage(successMessage)
           setTimeout(() => {
             try { sessionStorage.setItem('justSignedUp', '1') } catch {}
+            try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
             router.push('/dash')
             router.refresh()
           }, 1000)

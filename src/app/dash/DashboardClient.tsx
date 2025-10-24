@@ -2071,7 +2071,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   useEffect(() => {
     try {
       const flag = sessionStorage.getItem('justSignedUp')
-      if (flag) {
+      const cookieFlag = document.cookie.match(/(?:^|; )bs_cr=1/) ? true : false
+      if (flag || cookieFlag) {
         if (typeof window !== 'undefined' && (window as any).fbq) {
           try {
             const ft = (() => { try { return document.cookie.match(/(?:^|; )bs_ft=([^;]+)/)?.[1] } catch { return undefined } })()
@@ -2087,6 +2088,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           } catch {}
         }
         sessionStorage.removeItem('justSignedUp')
+        try { document.cookie = 'bs_cr=; Max-Age=0; Path=/; SameSite=Lax' } catch {}
       }
     } catch {}
   }, [])
