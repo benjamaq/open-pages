@@ -99,32 +99,31 @@ async function handleSend() {
         
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
         console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
-        
-        // --- ⏰ SIMPLIFIED TIMEZONE MATCHING (temporary fix) ---
-        const userTimezone = pref.timezone || 'Europe/London'
-        const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
-        
-        // Simple timezone conversion for London (UTC+1 during BST)
-        const isBST = currentUtcTime.getMonth() >= 2 && currentUtcTime.getMonth() <= 9 // Rough BST check
-        const offset = isBST ? 1 : 0
-        const reminderUtcHour = reminderHour - offset
-        
-        // Check if current time matches reminder time (within 5 min window)
-        const currentHour = currentUtcTime.getUTCHours()
-        const currentMinute = currentUtcTime.getUTCMinutes()
-        const reminderMinuteUtc = reminderMinute
-        
-        const inWindow = Math.abs(currentHour - reminderUtcHour) <= 0 && Math.abs(currentMinute - reminderMinuteUtc) <= 2
+
+        // ✅ Proper per-timezone matching using Intl
+        const userTimezone = pref.timezone || 'UTC'
+        const [reminderHour, reminderMinute] = String(pref.reminder_time || '09:00').split(':').map((n: string) => parseInt(n, 10))
+
+        const fmt = new Intl.DateTimeFormat('en-GB', {
+          timeZone: userTimezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        })
+        const parts = fmt.formatToParts(currentUtcTime)
+        const curH = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10)
+        const curM = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10)
+
+        const curTotal = curH * 60 + curM
+        const tgtTotal = reminderHour * 60 + reminderMinute
+        const diff = Math.abs(curTotal - tgtTotal)
+        const inWindow = diff <= 5 // 5-minute window
+
         console.log(`🕐 TIME CHECK for ${userEmail}:`, {
-          user_time: `${reminderHour}:${reminderMinute} ${userTimezone}`,
-          current_utc: currentUtcTime.toISOString(),
+          user_time: `${reminderHour}:${String(reminderMinute).padStart(2, '0')} ${userTimezone}`,
+          current_in_user_tz: `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`,
           in_window: inWindow,
-          current_hour: currentHour,
-          current_minute: currentMinute,
-          reminder_hour: reminderUtcHour,
-          reminder_minute: reminderMinuteUtc,
-          is_bst: isBST,
-          offset: offset
+          minute_diff: diff,
         })
         
         // Check if current time matches reminder time
