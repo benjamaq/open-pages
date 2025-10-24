@@ -39,6 +39,15 @@ export async function POST(request: NextRequest) {
     const effectivePlan = (plan === 'premium' || plan === 'creator') ? plan : 'premium'
     const priceId = getPriceId(effectivePlan as any, period)
     
+    // Read attribution cookies from request for metadata
+    const cookieHeader = request.headers.get('cookie') || ''
+    const read = (name: string) => {
+      const m = cookieHeader.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'))
+      return m ? decodeURIComponent(m[1]) : undefined
+    }
+    const firstTouch = read('bs_ft')
+    const lastTouch = read('bs_lt')
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
@@ -56,12 +65,16 @@ export async function POST(request: NextRequest) {
         plan: effectivePlan,
         period: period,
         profile_slug: profile?.slug || '',
+        first_touch: firstTouch || '',
+        last_touch: lastTouch || '',
       },
       subscription_data: {
         metadata: {
           user_id: userId,
           plan: effectivePlan,
           period: period,
+          first_touch: firstTouch || '',
+          last_touch: lastTouch || '',
         },
       },
       // Add promo code if provided

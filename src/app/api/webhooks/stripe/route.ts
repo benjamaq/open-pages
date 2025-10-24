@@ -25,6 +25,30 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         await handleCheckoutCompleted(session, supabase)
+        // Fire Meta CAPI Purchase (server-to-server) if desired
+        try {
+          const metaToken = process.env.META_ACCESS_TOKEN
+          const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || '704287959370274'
+          if (metaToken && pixelId) {
+            const payload = {
+              data: [{
+                event_name: 'Purchase',
+                event_time: Math.floor(Date.now()/1000),
+                event_source_url: process.env.NEXT_PUBLIC_APP_URL + '/dash',
+                action_source: 'website',
+                custom_data: {
+                  value: 0,
+                  currency: 'EUR',
+                  first_touch: (session.metadata as any)?.first_touch || '',
+                  last_touch: (session.metadata as any)?.last_touch || ''
+                }
+              }]
+            }
+            await fetch(`https://graph.facebook.com/v16.0/${pixelId}/events?access_token=${metaToken}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            })
+          }
+        } catch (e) { console.warn('Meta CAPI send failed', e) }
         break
       }
 
