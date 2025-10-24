@@ -5,7 +5,7 @@ import webpush from 'web-push'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-function isTimeInWindow(timeHHMM: string, timezone: string, windowMinutes = 2) {
+function isTimeInWindow(timeHHMM: string, timezone: string, windowMinutes = 5) {
   try {
     const [hStr, mStr] = (timeHHMM || '09:00').split(':')
     const targetH = parseInt(hStr, 10)
@@ -48,8 +48,8 @@ async function sendToUser(userId: string, payload: any) {
 
   if (!subs || subs.length === 0) return { sent: 0, deleted: 0 }
 
-  const pub = process.env.VAPID_PUBLIC_KEY
-  const priv = process.env.VAPID_PRIVATE_KEY
+  const pub = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const priv = process.env.VAPID_PRIVATE_KEY || process.env.NEXT_PUBLIC_VAPID_PRIVATE_KEY
   if (!pub || !priv) {
     console.warn('[push-cron] VAPID keys not configured; skipping send')
     return { sent: 0, deleted: 0 }

@@ -73,6 +73,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [isPushLoading, setIsPushLoading] = useState(false)
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isPushTesting, setIsPushTesting] = useState(false)
+  const [pushSupportNote, setPushSupportNote] = useState<string>('')
   const [reminderTime, setReminderTime] = useState('09:00')
   const [reminderEnabled, setReminderEnabled] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -101,6 +102,16 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             if (typeof Notification !== 'undefined' && !cancelled) {
               setPermission(Notification.permission)
             }
+            // Detect Safari/iOS limitations
+            try {
+              const ua = navigator.userAgent || ''
+              const isIOS = /iPhone|iPad|iPod/i.test(ua)
+              const isSafari = /^((?!chrome|android).)*safari/i.test(ua)
+              const supportsPush = 'Notification' in window && 'serviceWorker' in navigator
+              if ((!supportsPush || (isSafari && !('PushManager' in window))) && !cancelled) {
+                setPushSupportNote('Notifications are limited on this browser. Try Chrome or add to Home Screen on iOS.')
+              }
+            } catch {}
           } catch {}
         })(),
       ])
@@ -670,6 +681,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               </button>
               <span className="text-xs text-gray-500">Permission: {typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'}</span>
             </div>
+            {pushSupportNote && (
+              <p className="text-xs text-amber-600 mt-1">{pushSupportNote}</p>
+            )}
           </div>
 
           {/* Time picker */}
