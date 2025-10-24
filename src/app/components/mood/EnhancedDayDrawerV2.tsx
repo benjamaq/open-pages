@@ -600,11 +600,12 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         try {
           console.log('💙 Generating Elli message (always replace today on new check-in)...');
           // Always generate a fresh post_checkin message on any same-day check-in
+          const tzOffsetMinutes = (() => { try { return new Date().getTimezoneOffset() } catch { return 0 } })()
           await generateAndSaveElliMessage(userId, 'post_checkin', {
             pain: formData.pain || 0,
             mood: formData.mood || 0,
             sleep: formData.sleep_quality || 0
-          });
+          }, { tzOffsetMinutes });
           
           console.log('💙 Elli message generated successfully');
           // Track a simple pattern detection placeholder if needed

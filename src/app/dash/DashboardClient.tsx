@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FEATURE_FLAGS } from '@/lib/feature-flags'
 import Link from 'next/link'
+import { fireMetaEvent } from '@/lib/analytics'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Edit3, Trash2, X, ExternalLink, Edit2, Check, X as Cancel, Paintbrush, Upload, Image as ImageIcon, Settings, Trash, Crop, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import DailyCheckinModal from '../../components/DailyCheckinModal'
@@ -1853,10 +1854,15 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }
 
   const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 17) return 'Good afternoon'
-    return 'Good evening'
+    try {
+      const now = new Date()
+      const hour = now.getHours()
+      if (hour < 12) return 'Good morning'
+      if (hour < 18) return 'Good afternoon'
+      return 'Good evening'
+    } catch {
+      return 'Hello'
+    }
   }
 
   const getFormattedDate = () => {
@@ -2073,20 +2079,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       const flag = sessionStorage.getItem('justSignedUp')
       const cookieFlag = document.cookie.match(/(?:^|; )bs_cr=1/) ? true : false
       if (flag || cookieFlag) {
-        if (typeof window !== 'undefined' && (window as any).fbq) {
-          try {
-            const ft = (() => { try { return document.cookie.match(/(?:^|; )bs_ft=([^;]+)/)?.[1] } catch { return undefined } })()
-            const lt = (() => { try { return document.cookie.match(/(?:^|; )bs_lt=([^;]+)/)?.[1] } catch { return undefined } })()
-            const attribution = {
-              first_touch: ft ? decodeURIComponent(ft) : undefined,
-              last_touch: lt ? decodeURIComponent(lt) : undefined,
-              value: 0,
-              currency: 'EUR'
-            }
-            ;(window as any).fbq('track', 'CompleteRegistration', attribution)
-            console.log('Meta Pixel: CompleteRegistration event fired with attribution', attribution)
-          } catch {}
-        }
+        try {
+          const ft = (() => { try { return document.cookie.match(/(?:^|; )bs_ft=([^;]+)/)?.[1] } catch { return undefined } })()
+          const lt = (() => { try { return document.cookie.match(/(?:^|; )bs_lt=([^;]+)/)?.[1] } catch { return undefined } })()
+          const attribution = {
+            first_touch: ft ? decodeURIComponent(ft) : undefined,
+            last_touch: lt ? decodeURIComponent(lt) : undefined,
+            value: 0,
+            currency: 'EUR'
+          }
+          const method = fireMetaEvent('CompleteRegistration', attribution)
+          console.log('✅ Meta Pixel: CompleteRegistration SENT to Facebook via', method, 'with attribution', attribution)
+        } catch {}
         sessionStorage.removeItem('justSignedUp')
         try { document.cookie = 'bs_cr=; Max-Age=0; Path=/; SameSite=Lax' } catch {}
       }

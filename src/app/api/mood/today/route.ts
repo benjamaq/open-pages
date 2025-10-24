@@ -133,7 +133,13 @@ export async function POST(request: Request) {
       };
 
       console.log('🔵 Generating Elli message for user:', user.id, 'with todayData:', todayData);
-      const result = await generateAndSaveElliMessage(user.id, 'post_checkin', todayData);
+      // Pass client timezone offset if sent by client (optional)
+      let tzOffsetMinutes: number | undefined = undefined;
+      try {
+        const hdr = (request as any).headers?.get?.('x-client-tz-offset');
+        if (hdr) tzOffsetMinutes = parseInt(hdr, 10);
+      } catch {}
+      const result = await generateAndSaveElliMessage(user.id, 'post_checkin', todayData, tzOffsetMinutes != null ? { tzOffsetMinutes } : undefined);
       if (!result || !(result as any).message) {
         console.error('❌ Check-in message generation failed');
       } else {

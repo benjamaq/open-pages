@@ -703,7 +703,10 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   setNotifSaveMessage('')
                   setIsSavingNotifications(true)
                   try {
-                    const payload = { reminder_time: reminderTime, daily_reminder_enabled: reminderEnabled }
+                    const tz = (() => {
+                      try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } catch { return 'UTC' }
+                    })()
+                    const payload = { reminder_time: reminderTime, daily_reminder_enabled: reminderEnabled, timezone: tz }
                     console.log('[Settings] Save Notifications payload', payload)
                     const resp = await fetch('/api/settings/notifications', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
