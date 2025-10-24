@@ -27,7 +27,14 @@ async function handleUpdate(request: NextRequest) {
       'profile_created',
       'public_page_viewed',
       'mission_statement',
-      'allow_stack_follow'
+      'allow_stack_follow',
+      // Attribution fields
+      'first_touch_source',
+      'last_touch_source',
+      'signup_utm_campaign',
+      'signup_utm_source',
+      'signup_utm_medium',
+      'signup_referrer'
     ]
     const filteredUpdates = Object.keys(updates)
       .filter(key => allowedFields.includes(key))
@@ -41,6 +48,18 @@ async function handleUpdate(request: NextRequest) {
     if (Object.keys(filteredUpdates).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
     }
+
+    // If this looks like first-time attribution write, populate from cookies if present
+    try {
+      const cookieHeader = request.headers.get('cookie') || ''
+      const get = (name: string) => {
+        const m = cookieHeader.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'))
+        return m ? decodeURIComponent(m[1]) : undefined
+      }
+      if (!('first_touch_source' in filteredUpdates)) filteredUpdates.first_touch_source = get('bs_ft')
+      if (!('last_touch_source' in filteredUpdates)) filteredUpdates.last_touch_source = get('bs_lt')
+      if (!('signup_referrer' in filteredUpdates)) filteredUpdates.signup_referrer = get('bs_ft') || get('bs_lt')
+    } catch {}
 
     // Update the profile
     const { data: profiles, error } = await supabase

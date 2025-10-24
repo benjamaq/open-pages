@@ -2067,15 +2067,23 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     return 'rgba(0,0,0,' // Auto defaults to dark
   }
 
-  // Fire Meta Pixel CompleteRegistration once after signup
+  // Fire Meta Pixel CompleteRegistration once after signup with attribution
   useEffect(() => {
     try {
       const flag = sessionStorage.getItem('justSignedUp')
       if (flag) {
         if (typeof window !== 'undefined' && (window as any).fbq) {
           try {
-            ;(window as any).fbq('track', 'CompleteRegistration')
-            console.log('Meta Pixel: CompleteRegistration event fired')
+            const ft = (() => { try { return document.cookie.match(/(?:^|; )bs_ft=([^;]+)/)?.[1] } catch { return undefined } })()
+            const lt = (() => { try { return document.cookie.match(/(?:^|; )bs_lt=([^;]+)/)?.[1] } catch { return undefined } })()
+            const attribution = {
+              first_touch: ft ? decodeURIComponent(ft) : undefined,
+              last_touch: lt ? decodeURIComponent(lt) : undefined,
+              value: 0,
+              currency: 'EUR'
+            }
+            ;(window as any).fbq('track', 'CompleteRegistration', attribution)
+            console.log('Meta Pixel: CompleteRegistration event fired with attribution', attribution)
           } catch {}
         }
         sessionStorage.removeItem('justSignedUp')
