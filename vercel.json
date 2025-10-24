@@ -6,6 +6,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/push/send-daily",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/digest/send",
       "schedule": "0 9 * * *"
     }

@@ -748,56 +748,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               {notifSaveMessage && (
                 <p className={`text-xs mt-2 ${notifSaveMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>{notifSaveMessage}</p>
               )}
-              <div className="mt-2">
-                <button
-                  onClick={async () => {
-                    try {
-                      if (typeof Notification === 'undefined') return
-                      if (Notification.permission !== 'granted') {
-                        const p = await Notification.requestPermission()
-                        if (p !== 'granted') return
-                      }
-                      new Notification('Test Notification', {
-                        body: 'If you see this, notifications are working!',
-                        icon: '/icon-192-v2.png',
-                      })
-                    } catch (e) {
-                      console.error('[Notifications] test now error', e)
-                    }
-                  }}
-                  className="px-2.5 py-1 border border-gray-300 rounded-md text-xs text-gray-700 hover:bg-gray-50"
-                >
-                  Test Notification Now
-                </button>
-              </div>
+              {/* Test Notification button removed for production UI cleanliness */}
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            onClick={async () => {
-              try {
-                if (isPushTesting) return
-                setIsPushTesting(true)
-                const resp = await fetch('/api/push/test', { method: 'POST' })
-                if (!resp.ok) {
-                  const data = await resp.json().catch(() => ({}))
-                  alert(`Test push failed: ${data?.error || resp.status}`)
-                } else {
-                  alert('Test notification sent. Check your browser notifications.')
-                }
-              } catch (e: any) {
-                alert(`Test push error: ${e?.message || 'Unknown error'}`)
-              } finally {
-                setIsPushTesting(false)
-              }
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            disabled={!isPushEnabled || isPushLoading || isPushTesting}
-          >
-            {isPushTesting ? 'Sending…' : 'Send Test Notification'}
-          </button>
+        <div className="mt-4">
           <p className="text-xs text-gray-500">You’ll get a reminder at {reminderTime} each day</p>
         </div>
       </div>
