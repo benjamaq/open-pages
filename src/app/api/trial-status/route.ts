@@ -13,16 +13,11 @@ export async function GET() {
     }
 
     // Get user's trial status from user_usage table
-    const { data: usageData, error: usageError } = await supabase
+    const { data: usageData } = await supabase
       .from('user_usage')
       .select('trial_started_at, trial_ended_at, is_in_trial')
       .eq('user_id', user.id)
-      .single()
-
-    if (usageError) {
-      console.error('Error fetching trial status:', usageError)
-      return NextResponse.json({ error: 'Failed to fetch trial status' }, { status: 500 })
-    }
+      .maybeSingle()
 
     if (!usageData) {
       return NextResponse.json({ 
