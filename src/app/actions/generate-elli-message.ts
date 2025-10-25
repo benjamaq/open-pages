@@ -27,7 +27,7 @@ export async function generateAndSaveElliMessage(
     // Get user's display name
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, condition_primary, condition_details, tone_profile')
+      .select('id, display_name, condition_primary, condition_details, tone_profile')
       .eq('user_id', userId)
       .single();
     
@@ -73,13 +73,37 @@ export async function generateAndSaveElliMessage(
     const safeMood = isFiniteNum(checkInData?.mood) ? checkInData.mood : 5;
     const safeSleep = isFiniteNum(checkInData?.sleep) ? checkInData.sleep : 5;
 
-    // Determine time of day for greeting (use client tz offset if provided)
+    // Determine time of day for greeting, preferring client tz offset, then user's saved IANA timezone, then server time
     let hour: number;
-    if (options && typeof options.tzOffsetMinutes === 'number' && Number.isFinite(options.tzOffsetMinutes)) {
-      const ms = Date.now() - (options.tzOffsetMinutes as number) * 60 * 1000;
+    const hasClientOffset = options && typeof options.tzOffsetMinutes === 'number' && Number.isFinite(options.tzOffsetMinutes);
+    if (hasClientOffset) {
+      const ms = Date.now() - (options!.tzOffsetMinutes as number) * 60 * 1000;
       hour = new Date(ms).getHours();
     } else {
-      hour = new Date().getHours();
+      // Try user's saved timezone from notification_preferences
+      try {
+        const profileId = (profile as any)?.id as string | undefined;
+        if (profileId) {
+          const { data: prefs } = await supabase
+            .from('notification_preferences')
+            .select('timezone')
+            .eq('profile_id', profileId)
+            .maybeSingle();
+          const tz = (prefs as any)?.timezone as string | undefined;
+          if (tz) {
+            const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hour12: false });
+            const parts = fmt.formatToParts(new Date());
+            const hStr = parts.find(p => p.type === 'hour')?.value || '0';
+            hour = parseInt(hStr, 10);
+          } else {
+            hour = new Date().getHours();
+          }
+        } else {
+          hour = new Date().getHours();
+        }
+      } catch {
+        hour = new Date().getHours();
+      }
     }
     const timeOfDay: 'morning' | 'afternoon' | 'evening' = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
 
