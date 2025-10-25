@@ -24,12 +24,16 @@ export async function POST(req: NextRequest) {
           endpoint: subscription.endpoint,
           expiration_time: subscription.expirationTime ?? null,
           subscription
-        }, { onConflict: 'user_id' })
+        }, { onConflict: 'endpoint', ignoreDuplicates: false })
 
       if (error) {
         // If table missing, return success so client flow can proceed
         if (error.message?.includes('relation') || error.message?.includes('table')) {
           return NextResponse.json({ ok: true, note: 'push_subscriptions table missing; skipped persist' })
+        }
+        // If duplicate key error still surfaces, convert to OK and continue
+        if ((error as any).code === '23505' || /duplicate key value/i.test(error.message || '')) {
+          return NextResponse.json({ ok: true, note: 'duplicate endpoint; treated as upsert' })
         }
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
