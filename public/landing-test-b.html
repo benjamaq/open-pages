@@ -182,6 +182,7 @@
     function gtag(){dataLayer.push(arguments);} 
     gtag('js', new Date());
     gtag('config', 'G-BQJWCVNJH0', { page_title: document.title, page_location: window.location.href });
+    gtag('event', 'page_view', { page_location: window.location.href });
   </script>
   <!-- Meta Pixel Code -->
   <script>
@@ -291,7 +292,7 @@
           </p>
         </div>
         <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap;">
-          <a href="/auth/signup" style="background: #1a1a1a; color: white; padding: 14px 24px; border-radius: 12px; font-size: 17px; font-weight: 700; text-decoration: none;">
+          <a id="cta-signup" href="/auth/signup" style="background: #1a1a1a; color: white; padding: 14px 24px; border-radius: 12px; font-size: 17px; font-weight: 700; text-decoration: none;">
             Find My Patterns Free
           </a>
         </div>
@@ -1432,10 +1433,29 @@
 <!-- MOBILE STICKY CTA -->
 <!-- ============================================ -->
 <div class="mobile-sticky-cta">
-  <a href="/auth/signup">
+  <a id="cta-signup-mobile" href="/auth/signup">
     Find My Patterns Free
   </a>
 </div>
+
+<script>
+  (function() {
+    try {
+      var anchors = [document.getElementById('cta-signup'), document.getElementById('cta-signup-mobile')].filter(Boolean);
+      if (!anchors.length) return;
+      var params = new URLSearchParams(window.location.search);
+      // Tag this variant
+      params.set('utm_content', params.get('utm_content') || 'variant_b');
+      params.set('landing_variant', 'variant_b');
+      var qs = params.toString();
+      anchors.forEach(function(a){ a.href = '/auth/signup' + (qs ? ('?' + qs) : ''); });
+      anchors.forEach(function(a){ a.addEventListener('click', function(){
+        try { gtag('event','begin_signup',{ page_location: window.location.href, landing_variant: 'variant_b' }); } catch(e){}
+        try { if (typeof fbq === 'function') fbq('track','Lead'); } catch(e){}
+      });});
+    } catch(e){}
+  })();
+</script>
 
 </body>
 </html>

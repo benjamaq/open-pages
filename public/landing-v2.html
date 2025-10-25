@@ -182,6 +182,7 @@
     function gtag(){dataLayer.push(arguments);} 
     gtag('js', new Date());
     gtag('config', 'G-BQJWCVNJH0', { page_title: document.title, page_location: window.location.href });
+    gtag('event', 'page_view', { page_location: window.location.href });
   </script>
   <!-- Meta Pixel Code -->
   <script>
@@ -301,7 +302,7 @@
     
     <!-- CTAs -->
     <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-      <a href="/auth/signup" style="background: #1a1a1a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none;">Find My Patterns Free</a>
+      <a id="cta-signup" href="/auth/signup" style="background: #1a1a1a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none;">Find My Patterns Free</a>
       <a href="#how-it-works" style="background: white; border: 2px solid #e5e7eb; color: #1a1a1a; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none;">
         See how it works
       </a>
@@ -1462,6 +1463,25 @@
     Find My Patterns Free
   </a>
 </div>
+
+<script>
+  (function() {
+    try {
+      var anchor = document.getElementById('cta-signup') || document.querySelector('a[href="/auth/signup"]');
+      if (!anchor) return;
+      var params = new URLSearchParams(window.location.search);
+      // Tag this variant
+      params.set('utm_content', params.get('utm_content') || 'control');
+      params.set('landing_variant', 'control');
+      var qs = params.toString();
+      anchor.href = '/auth/signup' + (qs ? ('?' + qs) : '');
+      anchor.addEventListener('click', function(){
+        try { gtag('event','begin_signup',{ page_location: window.location.href, landing_variant: 'control' }); } catch(e){}
+        try { if (typeof fbq === 'function') fbq('track','Lead'); } catch(e){}
+      });
+    } catch(e){}
+  })();
+</script>
 
 </body>
 </html>

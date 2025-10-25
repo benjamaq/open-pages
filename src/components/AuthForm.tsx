@@ -66,6 +66,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setError(error.message)
           try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'error', mode, email: cleanEmail, error: error.message, referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
         } else if (data.user) {
+          // Fire GA sign_up with landing_variant
+          try {
+            const urlParams = new URLSearchParams(window.location.search)
+            const landingVariant = urlParams.get('landing_variant') || urlParams.get('utm_content') || 'unknown'
+            if (typeof window !== 'undefined' && (window as any).gtag) {
+              ;(window as any).gtag('event', 'sign_up', { method: 'email', landing_variant: landingVariant })
+            }
+          } catch {}
+          // Fire Meta Pixel CompleteRegistration
+          try { if (typeof window !== 'undefined' && (window as any).fbq) { (window as any).fbq('track','CompleteRegistration') } } catch {}
           try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'success', mode, email: cleanEmail, referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
           // Track signup event (production only)
           trackEvent('sign_up', { method: 'email', user_id: data.user.id })
