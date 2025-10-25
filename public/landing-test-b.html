@@ -1450,25 +1450,44 @@
       var qs = params.toString();
       anchors.forEach(function(a){ a.href = '/auth/signup' + (qs ? ('?' + qs) : ''); });
       anchors.forEach(function(a){ a.addEventListener('click', function(ev){
+        console.log('🔵 CTA CLICKED');
         try { ev.preventDefault(); } catch(e){}
         var targetUrl = a.href;
+        console.log('🔵 Target URL:', targetUrl);
         var navigated = false;
-        var go = function(){ if (navigated) return; navigated = true; window.location.href = targetUrl; };
+        var go = function(){ 
+          if (navigated) return; 
+          navigated = true; 
+          console.log('🔵 NAVIGATING NOW');
+          window.location.href = targetUrl; 
+        };
         try {
+          console.log('🔵 typeof gtag =', typeof gtag);
           if (typeof gtag === 'function') {
+            console.log('🔵 gtag exists, firing begin_signup');
             gtag('event','begin_signup',{
               page_location: window.location.href,
               landing_variant: 'variant_b',
               event_callback: go,
               transport_type: 'beacon'
             });
+            console.log('🔵 gtag event fired');
           } else {
+            console.log('🔴 gtag NOT a function');
             // If GA isn't ready, navigate immediately
             setTimeout(go, 0);
           }
-        } catch(e){}
-        try { if (typeof fbq === 'function') fbq('track','Lead'); } catch(e){}
+        } catch(e){ console.log('🔴 Error firing gtag begin_signup:', e); }
+        try { 
+          if (typeof fbq === 'function') { 
+            console.log('🔵 fbq Lead firing');
+            fbq('track','Lead'); 
+          } else {
+            console.log('🟡 fbq not available');
+          }
+        } catch(e){ console.log('🔴 Error firing fbq Lead:', e); }
         // Fallback navigation if GA callback doesn't fire
+        console.log('⏳ Scheduling fallback navigation in 300ms');
         setTimeout(go, 300);
       });});
     } catch(e){}
