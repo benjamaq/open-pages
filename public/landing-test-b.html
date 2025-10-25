@@ -1469,14 +1469,13 @@
           try {
             console.log('🔵 typeof gtag =', typeof gtag);
             if (typeof gtag === 'function') {
-              console.log('🔵 gtag exists, firing begin_signup');
+              console.log('🔵 gtag exists, firing begin_signup (beacon only)');
               gtag('event','begin_signup',{
                 page_location: window.location.href,
                 landing_variant: 'variant_b',
-                event_callback: go,
                 transport_type: 'beacon'
               });
-              console.log('🔵 gtag event fired');
+              console.log('🔵 gtag event fired with beacon');
             } else {
               console.log('🔴 gtag NOT a function');
               // If GA isn't ready, navigate immediately
@@ -1491,9 +1490,9 @@
               console.log('🟡 fbq not available');
             }
           } catch(e){ console.log('🔴 Error firing fbq Lead:', e); }
-          // Fallback navigation if GA callback doesn't fire
-          console.log('⏳ Scheduling fallback navigation in 300ms');
-          setTimeout(go, 300);
+          // Navigate shortly after to allow beacon to queue
+          console.log('⏳ Scheduling navigation in 100ms for beacon');
+          setTimeout(go, 100);
         });});
       } catch(e){ console.log('🔴 Script error:', e); }
     })();
