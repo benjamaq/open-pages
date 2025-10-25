@@ -48,6 +48,16 @@ async function handleSend() {
     const supabaseAdmin = createAdminClient()
     const currentUtcTime = new Date()
 
+    // Helper: compute YYYY-MM-DD in user's timezone
+    function ymdInTz(date: Date, tz: string): string {
+      try {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+      } catch {
+        return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+      }
+    }
+    function isSameLocalDay(a: Date, b: Date, tz: string): boolean { return ymdInTz(a, tz) === ymdInTz(b, tz) }
+
     // Fetch users with reminders enabled (bypass RLS with admin client)
     const { data: preferences, error: prefsError } = await supabaseAdmin
       .from('notification_preferences')
@@ -126,8 +136,11 @@ async function handleSend() {
           minute_diff: diff,
         })
         
-        // Check if current time matches reminder time
-        if (inWindow) {
+        // Check if current time matches reminder time AND email hasn't been sent already today
+        const lastEmailSentAt: string | null = (pref as any).last_email_sent_at || null
+        const alreadySentToday = lastEmailSentAt ? isSameLocalDay(new Date(lastEmailSentAt), currentUtcTime, userTimezone) : false
+
+        if (inWindow && !alreadySentToday) {
           console.log(`🎯 SENDING EMAIL to ${userEmail} - Time match confirmed`)
           // Get user's actual data
           const { data: supplements } = await supabaseAdmin
@@ -176,10 +189,29 @@ async function handleSend() {
           console.log(`📧 Sending reminder to ${userEmail}`)
           await sendDailyReminder(dailyReminderData)
           console.log(`✅ Email sent to ${userEmail}`)
+          // Mark last_email_sent_at so we do not send again today
+          try {
+            const { error: updErr } = await supabaseAdmin
+              .from('notification_preferences')
+              .update({ last_email_sent_at: new Date().toISOString() })
+              .eq('profile_id', pref.profile_id)
+            if (updErr) {
+              // Ignore unknown column errors (42703) to allow forward-compatible deploys
+              if (!/42703/.test(updErr.code || '') && !/column .* does not exist/i.test(updErr.message || '')) {
+                console.warn('⚠️ Failed to set last_email_sent_at:', updErr)
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ last_email_sent_at update threw', e)
+          }
           
           sentEmails.push(userEmail)
         } else {
-          console.log(`⏰ Not time for ${userEmail} yet`)
+          if (!inWindow) {
+            console.log(`⏰ Not time for ${userEmail} yet`)
+          } else if (alreadySentToday) {
+            console.log(`⏭️ Skipping ${userEmail} - already sent today in ${userTimezone}`)
+          }
         }
       } catch (error: any) {
         console.error(`❌ Error processing user:`, error)

@@ -30,11 +30,24 @@ function isTimeInWindow(timeHHMM: string, timezone: string, windowMinutes = 5) {
   }
 }
 
-async function sendToUser(userId: string, payload: any) {
+function ymdInTz(date: Date, timezone: string): string {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
+    return fmt.format(date) // YYYY-MM-DD
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  }
+}
+
+function isSameLocalDay(a: Date, b: Date, timezone: string): boolean {
+  return ymdInTz(a, timezone) === ymdInTz(b, timezone)
+}
+
+async function sendToUser(userId: string, payload: any, tz: string) {
   const supabase = createAdminClient()
   const { data: subs, error } = await supabase
     .from('push_subscriptions')
-    .select('endpoint, subscription')
+    .select('*')
     .eq('user_id', userId)
 
   if (error) {
@@ -59,9 +72,24 @@ async function sendToUser(userId: string, payload: any) {
 
   let sent = 0
   let deleted = 0
+  let skipped = 0
   for (const row of subs) {
     try {
+      const lastSent = (row as any).last_sent_at ? new Date((row as any).last_sent_at) : null
+      if (lastSent && isSameLocalDay(lastSent, new Date(), tz)) {
+        // Already sent today in user's local timezone
+        skipped += 1
+        continue
+      }
       await webpush.sendNotification(row.subscription, JSON.stringify(payload))
+      // Update last_sent_at for this endpoint
+      try {
+        await supabase
+          .from('push_subscriptions')
+          .update({ last_sent_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('endpoint', (row as any).endpoint)
+      } catch {}
       sent += 1
     } catch (e: any) {
       // Clean up invalid subscriptions (410 Gone, 404 Not Found)
@@ -74,7 +102,7 @@ async function sendToUser(userId: string, payload: any) {
       }
     }
   }
-  return { sent, deleted }
+  return { sent, deleted, skipped }
 }
 
 async function handleSend() {
@@ -84,6 +112,7 @@ async function handleSend() {
   let attempted = 0
   let sent = 0
   let cleaned = 0
+  let skipped = 0
 
   // Read preferences with daily push enabled
   const { data: prefs, error } = await supabase
@@ -114,12 +143,13 @@ async function handleSend() {
       body: 'Time to log your daily health check-in',
       url: '/dash/today'
     }
-    const result = await sendToUser(userId, payload)
+    const result = await sendToUser(userId, payload, tz)
     sent += result.sent
     cleaned += result.deleted
+    skipped += (result as any).skipped || 0
   }
 
-  return NextResponse.json({ ok: true, now, processed, attempted, sent, cleaned })
+  return NextResponse.json({ ok: true, now, processed, attempted, sent, cleaned, skipped })
 }
 
 export async function GET(req: NextRequest) {
