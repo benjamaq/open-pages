@@ -9,7 +9,7 @@ import { generateFirstInsight } from '@/app/actions/generate-first-insight';
 import { generateAndSaveElliMessage } from '@/app/actions/generate-elli-message';
 import PostCheckinModal from '@/components/onboarding/post-checkin-modal';
 import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { trackEvent } from '@/lib/analytics';
 
@@ -852,14 +852,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     <TypingIndicator />
                   </div>
                 ) : showElliMessage ? (
-                  <TypeAnimation
-                    sequence={[
-                      `Hey ${userName} 💙\n\nLet's see where you're at today. Move the sliders to how you're feeling right now - no wrong answers, just be honest with yourself.`
-                    ]}
+                  <SafeType
+                    text={`Hey ${userName} 💙\n\nLet's see where you're at today. Move the sliders to how you're feeling right now - no wrong answers, just be honest with yourself.`}
                     speed={60}
-                    wrapper="div"
                     className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
-                    cursor={false}
                   />
                 ) : null}
               </div>

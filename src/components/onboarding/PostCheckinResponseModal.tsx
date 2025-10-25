@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
 import { createClient } from '@/lib/supabase/client'
@@ -165,13 +165,7 @@ export default function PostCheckinResponseModal({
                 <TypingIndicator />
               </div>
             ) : showMessage ? (
-              <TypeAnimation
-                sequence={[response]}
-                speed={60}
-                wrapper="div"
-                className="text-gray-700 whitespace-pre-line leading-relaxed"
-                cursor={false}
-              />
+              <SafeType text={response} speed={60} className="text-gray-700 whitespace-pre-line leading-relaxed" />
             ) : null}
           </div>
 
