@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
 import { getLatestElliMessage, dismissElliMessage, getAllElliMessages } from '@/lib/db/elliMessages';
 import type { ElliMessage } from '@/lib/db/elliMessages';
@@ -116,12 +116,7 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
         ) : (
           <div className="text-gray-700 whitespace-pre-line">
             {isNewMessage ? (
-              <TypeAnimation
-                sequence={[elliMessage.message_text]}
-                speed={35}
-                wrapper="p"
-                cursor={false}
-              />
+              <SafeType text={elliMessage.message_text} speed={35} className="" />
             ) : (
               <p>{elliMessage.message_text}</p>
             )}
