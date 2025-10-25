@@ -74,6 +74,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isPushTesting, setIsPushTesting] = useState(false)
   const [pushSupportNote, setPushSupportNote] = useState<string>('')
+  const [iosPwaRequired, setIosPwaRequired] = useState(false)
   const [pushDiag, setPushDiag] = useState<any>(null)
   const [reminderTime, setReminderTime] = useState('09:00')
   const [reminderEnabled, setReminderEnabled] = useState(false)
@@ -108,8 +109,13 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               const ua = navigator.userAgent || ''
               const isIOS = /iPhone|iPad|iPod/i.test(ua)
               const isSafari = /^((?!chrome|android).)*safari/i.test(ua)
+              const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true
               const supportsPush = 'Notification' in window && 'serviceWorker' in navigator
-              if ((!supportsPush || (isSafari && !('PushManager' in window))) && !cancelled) {
+              // iOS Safari requires installed PWA for web push
+              if (isIOS && isSafari && !isStandalone) {
+                setIosPwaRequired(true)
+                setPushSupportNote('iOS requires installing BioStackr as an app to enable push notifications. Tap the Share button (↑) in Safari and select \u201CAdd to Home Screen\u201D.')
+              } else if ((!supportsPush || (isSafari && !('PushManager' in window))) && !cancelled) {
                 setPushSupportNote('Notifications are limited on this browser. Try Chrome or add to Home Screen on iOS.')
               }
             } catch {}
@@ -624,6 +630,10 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   setIsPushLoading(true)
                   setSaveMessage('')
                   try {
+                    if (iosPwaRequired) {
+                      setSaveMessage('📱 Install required on iOS: Tap Share (↑) > Add to Home Screen to enable push notifications.')
+                      return
+                    }
                     if (isPushEnabled) {
                       // Turn OFF: unsubscribe browser + remove server sub + disable daily reminder
                       if ('serviceWorker' in navigator) {
