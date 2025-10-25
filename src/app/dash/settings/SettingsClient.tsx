@@ -705,6 +705,9 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               />
               <span className="text-xs text-gray-500">Local time</span>
             </div>
+            <div className="mt-2 text-xs text-gray-500">
+              Timezone: {(function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return 'UTC' } })()}
+            </div>
             {hasUnsavedChanges && (
               <p className="text-xs text-yellow-600 mt-2">• Unsaved changes</p>
             )}
