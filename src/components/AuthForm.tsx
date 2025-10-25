@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, attachAttributionToParams, fireMetaEvent } from '@/lib/analytics'
 
 interface AuthFormProps {
   mode: 'signin' | 'signup'
@@ -42,20 +42,31 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
 
     try {
+      const isInApp = /FBAN|FBAV|Instagram|Line|OKHttp|Twitter/i.test(navigator.userAgent || '')
+      const viewport = { w: typeof window !== 'undefined' ? window.innerWidth : 0, h: typeof window !== 'undefined' ? window.innerHeight : 0 }
+      // Pre-attempt log
+      try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'attempt', mode, email: email.trim(), referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
+
+      const cleanEmail = email.trim()
+      const cleanName = name.trim()
+      const cleanReferral = referralCode.trim()
+
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
           options: {
             data: {
-              name: name.trim()
+              name: cleanName
             }
           }
         })
 
         if (error) {
           setError(error.message)
+          try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'error', mode, email: cleanEmail, error: error.message, referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
         } else if (data.user) {
+          try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'success', mode, email: cleanEmail, referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
           // Track signup event (production only)
           trackEvent('sign_up', { method: 'email', user_id: data.user.id })
           // Fire GA4 event directly for ads attribution (browser only)
@@ -65,6 +76,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
               // eslint-disable-next-line no-console
               console.log('✅ GA4: Signup event sent')
             }
+          } catch {}
+          // Fire Meta Pixel CompleteRegistration immediately with attribution
+          try {
+            const attrib = attachAttributionToParams({ value: 0, currency: 'EUR' })
+            const method = fireMetaEvent('CompleteRegistration', attrib)
+            console.log('✅ Meta Pixel: CompleteRegistration fired (AuthForm) via', method, 'with attribution', attrib)
           } catch {}
           // Initialize free subscription (idempotent)
           try {
@@ -91,9 +108,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
               .from('profiles')
               .upsert({
                 user_id: data.user.id,
-                display_name: name.trim(),
-                referral_code: referralCode.trim() || null,
-                referral_source: referralCode.trim() === 'redditgo' ? 'reddit' : null,
+                display_name: cleanName,
+                referral_code: cleanReferral || null,
+                referral_source: cleanReferral === 'redditgo' ? 'reddit' : null,
                 slug: uniqueSlug,
                 bio: null,
                 avatar_url: null,
@@ -134,8 +151,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
               if (betaResponse.ok) {
                 // Beta code activated! User gets Pro access
                 setMessage('Beta code activated! You now have 6 months of free Pro access! 🎉 Redirecting...')
+                // Fire Meta CompleteRegistration again to be safe before redirect
+                try {
+                  const attrib = attachAttributionToParams({ value: 0, currency: 'EUR' })
+                  const method = fireMetaEvent('CompleteRegistration', attrib)
+                  console.log('✅ Meta Pixel: CompleteRegistration fired (beta path) via', method, 'with attribution', attrib)
+                } catch {}
                 setTimeout(() => {
                   try { sessionStorage.setItem('justSignedUp', '1') } catch {}
+                  try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
                   router.push('/dash')
                   router.refresh()
                 }, 2000)
