@@ -9,17 +9,20 @@ export async function POST(_req: NextRequest) {
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = user.id
+    try { console.log('[TEST] Looking for subscription for user_id:', userId) } catch {}
 
     const { data, error } = await supabase
       .from('push_subscriptions')
       .select('subscription')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle()
 
     if (error && !(error.message?.includes('relation') || error.message?.includes('table'))) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    try { console.log('[TEST] Found subscription:', data?.subscription) } catch {}
     if (!data?.subscription) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }

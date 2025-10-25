@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = user.id
 
     const body = await req.json().catch(() => ({}))
     const subscription = body?.subscription
@@ -17,14 +18,18 @@ export async function POST(req: NextRequest) {
 
     // Attempt to upsert into push_subscriptions; tolerate missing table in early environments
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('push_subscriptions')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           endpoint: subscription.endpoint,
           expiration_time: subscription.expirationTime ?? null,
           subscription
         }, { onConflict: 'endpoint', ignoreDuplicates: false })
+
+      try { console.log('[SUBSCRIBE] user_id:', userId) } catch {}
+      try { console.log('[SUBSCRIBE] endpoint:', subscription.endpoint) } catch {}
+      try { console.log('[SUBSCRIBE] upsert result:', { data, error }) } catch {}
 
       if (error) {
         // If table missing, return success so client flow can proceed
