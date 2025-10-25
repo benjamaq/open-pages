@@ -52,7 +52,7 @@ async function sendToUser(userId: string, payload: any, tz: string) {
 
   if (error) {
     if (error.message?.includes('relation') || error.message?.includes('table')) {
-      console.warn('[push-cron] push_subscriptions table missing; skipping')
+      console.error('[push-cron] push_subscriptions table missing; skipping')
       return { sent: 0, deleted: 0 }
     }
     console.error('[push-cron] read subscriptions error', error)
@@ -64,7 +64,7 @@ async function sendToUser(userId: string, payload: any, tz: string) {
   const pub = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
   const priv = process.env.VAPID_PRIVATE_KEY || process.env.NEXT_PUBLIC_VAPID_PRIVATE_KEY
   if (!pub || !priv) {
-    console.warn('[push-cron] VAPID keys not configured; skipping send')
+    console.error('[push-cron] VAPID keys not configured; skipping send')
     return { sent: 0, deleted: 0 }
   }
 
@@ -98,7 +98,7 @@ async function sendToUser(userId: string, payload: any, tz: string) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', (row as any).endpoint)
         deleted += 1
       } else {
-        console.warn('[push-cron] send failure', { status, message: e?.message })
+        console.error('[push-cron] send failure', { status, message: e?.message })
       }
     }
   }
@@ -108,6 +108,7 @@ async function sendToUser(userId: string, payload: any, tz: string) {
 async function handleSend() {
   const supabase = createAdminClient()
   const now = new Date().toISOString()
+  try { console.error('[push-cron] START', { now }) } catch {}
   let processed = 0
   let attempted = 0
   let sent = 0
@@ -149,6 +150,7 @@ async function handleSend() {
     skipped += (result as any).skipped || 0
   }
 
+  try { console.error('[push-cron] END', { now, processed, attempted, sent, cleaned, skipped }) } catch {}
   return NextResponse.json({ ok: true, now, processed, attempted, sent, cleaned, skipped })
 }
 
