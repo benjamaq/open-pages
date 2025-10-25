@@ -34,7 +34,7 @@ async function sendToUser(userId: string, payload: any) {
   const supabase = createAdminClient()
   const { data: subs, error } = await supabase
     .from('push_subscriptions')
-    .select('id, subscription')
+    .select('endpoint, subscription')
     .eq('user_id', userId)
 
   if (error) {
@@ -67,7 +67,7 @@ async function sendToUser(userId: string, payload: any) {
       // Clean up invalid subscriptions (410 Gone, 404 Not Found)
       const status = e?.statusCode || e?.status || 0
       if (status === 410 || status === 404) {
-        await supabase.from('push_subscriptions').delete().eq('id', row.id)
+        await supabase.from('push_subscriptions').delete().eq('endpoint', (row as any).endpoint)
         deleted += 1
       } else {
         console.warn('[push-cron] send failure', { status, message: e?.message })
