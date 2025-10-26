@@ -47,6 +47,19 @@ export default async function PatternsPage() {
   const confirmed = uniquePatterns.filter((p: any) => p.count >= 3).sort((a: any, b: any) => b.count - a.count)
   const emerging = uniquePatterns.filter((p: any) => p.count < 3).sort((a: any, b: any) => new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime())
 
+  // Fallback: recent insights even if no insightKey present (e.g., single detections or new format)
+  const recentFallback = (allInsights || [])
+    .map((ins: any) => {
+      const key = ins?.context?.insight_key || ins?.context?.insightKey || null
+      const title = ins?.context?.topLine || ins?.context?.title
+      const discovery = ins?.context?.discovery || ins?.context?.message
+      const action = ins?.context?.action || ins?.context?.actionable
+      const icon = ins?.context?.icon
+      return { ...ins, _key: key, _title: title, _discovery: discovery, _action: action, _icon: icon }
+    })
+    .filter((p: any) => !!(p._title || p._discovery || p._action))
+    .slice(0, 10)
+
   const { count: daysTracked } = await supabase
     .from('daily_entries')
     .select('*', { count: 'exact', head: true })
@@ -123,11 +136,45 @@ export default async function PatternsPage() {
         )}
 
         {uniquePatterns.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-4">📊</div>
-            <h3 className="text-xl font-bold mb-2">No patterns yet</h3>
-            <p className="text-gray-600">Keep tracking daily and patterns will appear after 7-10 days</p>
-          </div>
+          <>
+            <div className="text-center py-8">
+              <div className="text-5xl mb-3">📊</div>
+              <h3 className="text-xl font-bold mb-1">No confirmed patterns yet</h3>
+              <p className="text-gray-600">We show confirmed patterns here once they recur a few times. In the meantime, here are your most recent insights.</p>
+            </div>
+
+            {recentFallback.length > 0 ? (
+              <section className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">🕑 Recent insights</h2>
+                <div className="space-y-3">
+                  {recentFallback.map((p: any) => (
+                    <div
+                      key={p.id}
+                      className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{p._icon || p.context?.icon || '💡'}</span>
+                        <div className="flex-1">
+                          <div className="font-bold mb-1">{p._title || p._discovery || 'Insight'}</div>
+                          {p._discovery && (
+                            <div className="text-sm text-gray-700 mb-2">{p._discovery}</div>
+                          )}
+                          {p._action && (
+                            <div className="text-sm font-semibold text-gray-900">→ {p._action}</div>
+                          )}
+                          <div className="text-xs text-gray-400 mt-2">{new Date(p.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Keep tracking daily and patterns will appear after 7-10 days.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
