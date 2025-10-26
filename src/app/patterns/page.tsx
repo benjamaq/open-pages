@@ -16,13 +16,24 @@ export default async function PatternsPage() {
     .select('*')
     .eq('user_id', user.id)
     .eq('message_type', 'insight')
-    .not('context->>insight_key', 'in', '("best_day","seven_day_trend","best_worst_day","worst_day")')
     .order('created_at', { ascending: false })
 
+  // Normalize new/old insight shapes and group by key
+  const EXCLUDED_KEYS = new Set(['best_day','seven_day_trend','best_worst_day','worst_day'])
+  const normalized = (allInsights || [])
+    .map((ins: any) => {
+      const key = ins?.context?.insight_key || ins?.context?.insightKey
+      const title = ins?.context?.topLine || ins?.context?.title
+      const discovery = ins?.context?.discovery || ins?.context?.message
+      const action = ins?.context?.action || ins?.context?.actionable
+      const icon = ins?.context?.icon
+      return { ...ins, _key: key, _title: title, _discovery: discovery, _action: action, _icon: icon }
+    })
+    .filter((ins: any) => ins._key && !EXCLUDED_KEYS.has(ins._key))
+
   const grouped = new Map<string, any>()
-  ;(allInsights || []).forEach((ins: any) => {
-    const key = ins?.context?.insight_key
-    if (!key) return
+  normalized.forEach((ins: any) => {
+    const key = ins._key
     if (!grouped.has(key)) {
       grouped.set(key, { ...ins, count: 1, last_seen: ins.created_at })
     } else {
@@ -70,15 +81,15 @@ export default async function PatternsPage() {
               {confirmed.map((p: any) => (
                 <div
                   key={p.id}
-                  id={`insight-${p.context?.insight_key}`}
+                  id={`insight-${p._key || p.context?.insight_key || p.context?.insightKey}`}
                   className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 border-l-4 border-l-green-500"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-3xl">{p.context?.icon}</span>
+                    <span className="text-3xl">{p._icon || p.context?.icon}</span>
                     <div className="flex-1">
-                      <div className="font-bold text-lg mb-1">{p.context?.topLine}</div>
-                      <div className="text-sm text-gray-700 mb-2">{p.context?.discovery}</div>
-                      <div className="text-sm font-semibold text-gray-900 mb-2">→ {p.context?.action}</div>
+                      <div className="font-bold text-lg mb-1">{p._title || p.context?.topLine}</div>
+                      <div className="text-sm text-gray-700 mb-2">{p._discovery || p.context?.discovery}</div>
+                      <div className="text-sm font-semibold text-gray-900 mb-2">→ {p._action || p.context?.action}</div>
                       <div className="text-xs text-gray-500">Confirmed {p.count} times</div>
                     </div>
                   </div>
@@ -98,10 +109,10 @@ export default async function PatternsPage() {
                   className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 border-l-4 border-l-amber-500"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{p.context?.icon}</span>
+                    <span className="text-2xl">{p._icon || p.context?.icon}</span>
                     <div className="flex-1">
-                      <div className="font-bold mb-1">{p.context?.topLine}</div>
-                      <div className="text-sm text-gray-700 mb-2">{p.context?.discovery}</div>
+                      <div className="font-bold mb-1">{p._title || p.context?.topLine}</div>
+                      <div className="text-sm text-gray-700 mb-2">{p._discovery || p.context?.discovery}</div>
                       <div className="text-xs text-gray-500">Seen {p.count} time{p.count > 1 ? 's' : ''} • Need {3 - p.count} more</div>
                     </div>
                   </div>
