@@ -6,6 +6,8 @@ export function analyzeMetricVsMetric(
   entries: DailyEntry[],
   config: MetricCorrelationConfig
 ): MetricCorrelationResult | null {
+  // Guard: skip self-correlation
+  if (config.metric1 === config.metric2) return null
   const { metric1, metric2 } = config
 
   // Validate entries have both metrics

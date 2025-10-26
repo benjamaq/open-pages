@@ -130,8 +130,37 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
   } catch (diagErr) {
     console.error('[insights] Error logging FDR-passed insights', diagErr)
   }
+  // Remove metric-vs-itself correlations
+  try {
+    passed = passed.filter((r: CorrelationResult) => {
+      if ((r as any).type === 'metric_correlation') {
+        const mr = r as MetricCorrelationResult
+        return mr.metric1 !== mr.metric2
+      }
+      return true
+    })
+    console.log('[insights] After removing self-correlations:', passed.length)
+  } catch (filterErr) {
+    console.error('[insights] Error filtering self-correlations', filterErr)
+  }
+  // Prioritize and limit to top 3 (tag correlations first, then larger effect size)
+  try {
+    passed.sort((a: any, b: any) => {
+      const aIsTag = (a as any).type === 'tag_correlation'
+      const bIsTag = (b as any).type === 'tag_correlation'
+      if (aIsTag && !bIsTag) return -1
+      if (!aIsTag && bIsTag) return 1
+      const aEffect = Math.abs(Number((a as any).cohensD || 0))
+      const bEffect = Math.abs(Number((b as any).cohensD || 0))
+      return bEffect - aEffect
+    })
+    passed = passed.slice(0, 3)
+    console.log('[insights] After prioritization and limiting to 3:', passed.length)
+  } catch (orderErr) {
+    console.error('[insights] Error during prioritization/limiting', orderErr)
+  }
   if (passed.length > 3) {
-    console.error('[insights] SAFETY: Too many insights!', passed.length)
+    console.error('[insights] SAFETY: Should never reach here after limiting to 3!')
     return []
   }
   const formatted = passed.map((r) => formatInsight(r))

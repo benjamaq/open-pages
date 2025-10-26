@@ -10,9 +10,17 @@ export function formatInsight(result: any): FormattedInsight {
 }
 
 export function formatTagInsight(result: TagCorrelationResult): FormattedInsight {
-  const isNegative = result.delta > 0
   const tagDisplay = TAG_DISPLAY_NAMES[result.tag] || result.tag
   const metricDisplay = METRIC_DISPLAY_NAMES[result.metric] || result.metric
+
+  // Determine whether higher values are good or bad for this metric
+  const GOOD_METRICS = new Set<string>(['mood', 'sleep_quality', 'sleep_hours'])
+  const isGoodMetric = GOOD_METRICS.has(result.metric)
+
+  // Prefer using actual means to infer direction to avoid sign confusion
+  const change = (Number(result.avgWithTag) || 0) - (Number(result.avgWithoutTag) || 0) // withTag - withoutTag
+  // For bad metrics (e.g., pain), change > 0 means worse; for good metrics, change < 0 means worse
+  const isWorse = isGoodMetric ? change < 0 : change > 0
 
   const verb = result.confidence === 'high' ? 'is consistently linked to' : result.confidence === 'medium' ? 'appears linked to' : 'might be linked to'
   const magnitude = result.effectSize === 'large' ? 'significantly' : result.effectSize === 'moderate' ? 'noticeably' : ''
@@ -22,14 +30,19 @@ export function formatTagInsight(result: TagCorrelationResult): FormattedInsight
   let message: string
   let actionable: string
 
-  if (isNegative) {
-    title = `${tagDisplay} ${verb} ${magnitude} higher ${metricDisplay}`.trim()
-    message = `On days with ${tagDisplay.toLowerCase()}, your ${metricDisplay} averages ${result.avgWithTag.toFixed(1)}/10, compared to ${result.avgWithoutTag.toFixed(1)}/10 on days without it. That's a ${Math.abs(result.delta).toFixed(1)}-point difference${lagPhrase} (${result.nWith} vs ${result.nWithout} days, 95% CI: ${result.ciLow.toFixed(1)} to ${result.ciHigh.toFixed(1)}).`
-    actionable = `Try reducing or avoiding ${tagDisplay.toLowerCase()} for 7 days and track how you feel.`
+  if (isWorse) {
+    // Tag correlates with worse outcomes for this metric
+    const dirWord = isGoodMetric ? 'lower' : 'higher'
+    title = `${tagDisplay} ${verb} ${magnitude} ${dirWord} ${metricDisplay}`.trim()
+    message = `On days with ${tagDisplay.toLowerCase()}, your ${metricDisplay} averages ${result.avgWithTag.toFixed(1)}/10 vs ${result.avgWithoutTag.toFixed(1)}/10 on days without it. That's a ${Math.abs(change).toFixed(1)}-point difference${lagPhrase} (${result.nWith} vs ${result.nWithout} days).`
+    const effectVerb = isGoodMetric ? 'decreasing' : 'increasing'
+    actionable = `Consider reducing or avoiding ${tagDisplay.toLowerCase()} — it may be ${effectVerb} your ${metricDisplay}.`
   } else {
-    title = `${tagDisplay} ${verb} ${magnitude} lower ${metricDisplay}`.trim()
-    message = `Your ${metricDisplay} averages ${result.avgWithTag.toFixed(1)}/10 on days with ${tagDisplay.toLowerCase()}, compared to ${result.avgWithoutTag.toFixed(1)}/10 without it${lagPhrase} (${result.nWith} vs ${result.nWithout} days, effect size: ${result.cohensD.toFixed(2)}).`
-    actionable = `Keep prioritizing ${tagDisplay.toLowerCase()} - it's making a measurable difference.`
+    // Tag correlates with better outcomes
+    const dirWord = isGoodMetric ? 'higher' : 'lower'
+    title = `${tagDisplay} ${verb} ${magnitude} ${dirWord} ${metricDisplay}`.trim()
+    message = `With ${tagDisplay.toLowerCase()}, your ${metricDisplay} averages ${result.avgWithTag.toFixed(1)}/10 vs ${result.avgWithoutTag.toFixed(1)}/10 without it${lagPhrase} (${result.nWith} vs ${result.nWithout} days).`
+    actionable = `Keep prioritizing ${tagDisplay.toLowerCase()} — it's making a measurable difference.`
   }
 
   return {
