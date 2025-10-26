@@ -72,13 +72,7 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
     })
   }, [sortedInsights])
 
-  const formatFullDate = (iso?: string) => {
-    if (!iso) return ''
-    try {
-      const d = new Date(iso)
-      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-    } catch { return '' }
-  }
+  // Date formatting is inlined at call site to avoid any undefined helper references after minification
 
   return (
     <div className="border-t pt-4 mt-4">
@@ -115,7 +109,11 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
 
 function InsightCard({ insight }: { insight: Insight }) {
   const { type, topLine, discovery, action, icon } = insight.context
-  const ts = formatFullDate(insight.created_at)
+  const ts = (() => {
+    const iso = insight.created_at
+    if (!iso) return ''
+    try { return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) } catch { return '' }
+  })()
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
       <div className="flex items-start gap-3">
