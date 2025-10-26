@@ -82,7 +82,15 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
           <span>Insights Discovered</span>
         </h4>
         <div className="flex items-center gap-3">
-          <a href="/patterns" className="text-xs text-purple-700 hover:text-purple-900">View All</a>
+          <a
+            href="/patterns"
+            className="text-xs text-purple-700 hover:text-purple-900 leading-tight flex flex-col items-end sm:flex-row sm:items-center sm:gap-1"
+            aria-label="View all insights"
+          >
+            <span>View All</span>
+            <span className="sm:inline hidden">insights</span>
+            <span className="sm:hidden">Insights</span>
+          </a>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-xs text-gray-500 hover:text-gray-700"
@@ -114,6 +122,18 @@ function InsightCard({ insight }: { insight: Insight }) {
     if (!iso) return ''
     try { return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) } catch { return '' }
   })()
+  const dayLink = (() => {
+    try {
+      const iso = insight.created_at
+      if (!iso) return '/dash'
+      const d = new Date(iso)
+      const y = d.getUTCFullYear()
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const da = String(d.getUTCDate()).padStart(2, '0')
+      const dateStr = `${y}-${m}-${da}`
+      return `/dash?date=${dateStr}#daily-summaries`
+    } catch { return '/dash' }
+  })()
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
       <div className="flex items-start gap-3">
@@ -136,10 +156,7 @@ function InsightCard({ insight }: { insight: Insight }) {
           {ts && (
             <div className="flex items-center justify-between mt-2">
               <div className="text-xs text-gray-400">{ts}</div>
-              <a
-                href={`/dash#day-${(insight as any)?.context?.date || ''}`}
-                className="text-xs text-purple-700 hover:text-purple-900"
-              >
+              <a href={dayLink} className="text-xs text-purple-700 hover:text-purple-900">
                 View this day in your calendar →
               </a>
             </div>
