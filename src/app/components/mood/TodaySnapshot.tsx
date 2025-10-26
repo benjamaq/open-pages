@@ -9,7 +9,6 @@ import MonthlyHeatmap from './MonthlyHeatmap';
 import DayDetailView from './DayDetailView';
 import SymptomAnalysisCard from '../../../components/elli/SymptomAnalysisCard';
 import { getAllElliMessages } from '../../../lib/db/elliMessages';
-import { createClient } from '@/lib/supabase/client';
 import { getMonthData } from '../../../lib/db/mood';
 import SupplementsTodayChecklist from './SupplementsTodayChecklist';
 
@@ -496,9 +495,7 @@ export default function TodaySnapshot({
             <div className="border-t border-gray-200 my-6"></div>
 
             {/* SECTION 3: PATTERNS */}
-            <InsightsFetcher userId={userId} />
-
-            {/* Patterns moved to separate card below per new hierarchy */}
+            {/* Removed InsightsSection usage; Patterns are displayed via PatternsCard elsewhere */}
 
           </>
         )}
@@ -520,26 +517,4 @@ export default function TodaySnapshot({
   );
 }
 
-function InsightsFetcher({ userId }: { userId?: string }) {
-  const [insights, setInsights] = useState<any[]>([])
-
-  useEffect(() => {
-    const load = async () => {
-      if (!userId) return
-      const supabase = createClient()
-      const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      const { data } = await supabase
-        .from('elli_messages')
-        .select('id, created_at, context, is_primary')
-        .eq('user_id', userId)
-        .eq('message_type', 'insight')
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(25)
-      setInsights(data || [])
-    }
-    load()
-  }, [userId])
-
-  return <InsightsSection insights={insights} />
-}
+// InsightsSection removed from TodaySnapshot; dashboard shows insights via PatternsCard
