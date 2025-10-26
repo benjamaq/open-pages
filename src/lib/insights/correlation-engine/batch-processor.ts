@@ -36,7 +36,7 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
     // Primary query: filter by local_date
     const { data: rawEntries, error } = await supabase
       .from('daily_entries')
-      .select('local_date, pain, mood, sleep_quality, sleep_hours, night_wakes, exercise_minutes, tags, lifestyle_factors, symptoms')
+      .select('local_date, pain, mood, sleep_quality, sleep_hours, tags, lifestyle_factors, symptoms')
       .eq('user_id', userId)
       .gte('local_date', startStr)
       .lte('local_date', endStr)
@@ -111,7 +111,7 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
     passed = nonNull
   }
   console.log('[insights] After FDR:', passed.length)
-  if (passed.length > 5) {
+  if (passed.length > 3) {
     console.error('[insights] SAFETY: Too many insights!', passed.length)
     return []
   }
