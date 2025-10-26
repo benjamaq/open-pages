@@ -24,39 +24,77 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
   )
   console.log('[insights] Service role key loaded:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
   console.log('[insights] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-  const endDate = new Date()
-  const startDate = new Date(endDate.getTime() - 14 * 24 * 60 * 60 * 1000)
-  console.log('[insights] Query date range:', { start: startDate, end: endDate })
+  // --- Robust data fetch with diagnostics and fallback ---
+  let entries: any[] = []
+  try {
+    const endDate = new Date()
+    const startDate = new Date(endDate.getTime() - 14 * 24 * 60 * 60 * 1000)
+    const startStr = startDate.toISOString().split('T')[0]
+    const endStr = endDate.toISOString().split('T')[0]
+    console.log('[insights] Query params:', { userId, startStr, endStr })
 
-  const { data: rawEntries } = await supabase
-    .from('daily_entries')
-    .select('local_date, pain, mood, sleep_quality, sleep_hours, night_wakes, exercise_minutes, tags, lifestyle_factors, symptoms')
-    .eq('user_id', userId)
-    .gte('local_date', startDate.toISOString().split('T')[0])
-    .lte('local_date', endDate.toISOString().split('T')[0])
-    .order('local_date', { ascending: true })
+    // Primary query: filter by local_date
+    const { data: rawEntries, error } = await supabase
+      .from('daily_entries')
+      .select('local_date, pain, mood, sleep_quality, sleep_hours, night_wakes, exercise_minutes, tags, lifestyle_factors, symptoms')
+      .eq('user_id', userId)
+      .gte('local_date', startStr)
+      .lte('local_date', endStr)
+      .order('local_date', { ascending: true })
 
-  const entries = (rawEntries || []).map((e: any) => ({
-    ...e,
-    tags: Array.isArray(e?.tags) && e.tags.length ? e.tags : (Array.isArray(e?.lifestyle_factors) ? e.lifestyle_factors : []),
-  }))
-  console.log('[insights] Entries fetched:', entries.length)
+    console.log('[insights] Query error?', error)
+    console.log('[insights] Raw entries count:', rawEntries?.length || 0)
+    if (rawEntries && rawEntries.length > 0) {
+      console.log('[insights] First entry:', rawEntries[0])
+      console.log('[insights] Last entry:', rawEntries[rawEntries.length - 1])
+    }
+
+    let sourceEntries = rawEntries || []
+
+    // FALLBACK: use created_at if local_date returned 0
+    if (!sourceEntries || sourceEntries.length === 0) {
+      console.log('[insights] FALLBACK: Trying created_at instead of local_date')
+      const { data: fallbackEntries, error: fbErr } = await supabase
+        .from('daily_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (fbErr) console.log('[insights] Fallback query error?', fbErr)
+      console.log('[insights] Fallback entries:', fallbackEntries?.length || 0)
+      sourceEntries = fallbackEntries || []
+    }
+
+    entries = (sourceEntries || []).map((e: any) => ({
+      ...e,
+      tags: Array.isArray(e?.tags) && e.tags.length ? e.tags : (Array.isArray(e?.lifestyle_factors) ? e.lifestyle_factors : []),
+    }))
+    console.log('[insights] Entries fetched:', entries.length)
+  } catch (fetchErr) {
+    console.error('[insights] ERROR during entries fetch:', fetchErr)
+    return []
+  }
 
   const configs = getConfigsByPriority(priority)
   if (!entries || entries.length === 0 || configs.length === 0) return []
 
   const tasks = configs.map(async (cfg) => {
-    if ((cfg as any).type === 'tag') {
-      const tcfg = cfg as TagCorrelationConfig
-      const needsLag = (LAG_ENABLED_TAGS as readonly string[]).includes(tcfg.tag) && typeof tcfg.lagDays === 'number'
-      if (needsLag) {
-        const lag = findBestLag(entries as any, tcfg.tag, tcfg.metric, Math.max(0, tcfg.lagDays || 3))
-        return lag?.result || null
+    try {
+      if ((cfg as any).type === 'tag') {
+        const tcfg = cfg as TagCorrelationConfig
+        const needsLag = (LAG_ENABLED_TAGS as readonly string[]).includes(tcfg.tag) && typeof tcfg.lagDays === 'number'
+        if (needsLag) {
+          const lag = findBestLag(entries as any, tcfg.tag, tcfg.metric, Math.max(0, tcfg.lagDays || 3))
+          return lag?.result || null
+        }
+        return analyzeTagVsMetric(entries as any, tcfg)
+      } else {
+        const mcfg = cfg as MetricCorrelationConfig
+        return analyzeMetricVsMetric(entries as any, mcfg)
       }
-      return analyzeTagVsMetric(entries as any, tcfg)
-    } else {
-      const mcfg = cfg as MetricCorrelationConfig
-      return analyzeMetricVsMetric(entries as any, mcfg)
+    } catch (e) {
+      console.error('[insights] Analyzer error for cfg:', cfg, e)
+      return null
     }
   })
 
@@ -65,7 +103,13 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
   console.log('[insights] Raw results before FDR:', nonNull.length)
   if (nonNull.length === 0) return []
 
-  const passed = applyFDR(nonNull, 0.1)
+  let passed: CorrelationResult[] = []
+  try {
+    passed = applyFDR(nonNull, 0.1)
+  } catch (e) {
+    console.error('[insights] FDR error:', e)
+    passed = nonNull
+  }
   console.log('[insights] After FDR:', passed.length)
   if (passed.length > 5) {
     console.error('[insights] SAFETY: Too many insights!', passed.length)
