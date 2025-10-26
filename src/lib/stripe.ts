@@ -1,22 +1,27 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY
+if (!STRIPE_KEY) {
+  console.warn('STRIPE_SECRET_KEY not set — Stripe features will be disabled at runtime')
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-08-27.basil',
-  typescript: true,
-})
+export const stripe: any = STRIPE_KEY
+  ? new Stripe(STRIPE_KEY, {
+      apiVersion: '2025-08-27.basil',
+      typescript: true,
+    })
+  : null
 
 // Debug environment variables
-console.log('Stripe environment variables:')
-console.log('PRO_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID)
-console.log('PRO_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID)
-console.log('CREATOR_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID)
-console.log('CREATOR_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID)
-console.log('PREMIUM_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID)
-console.log('PREMIUM_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Stripe environment variables:')
+  console.log('PRO_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID)
+  console.log('PRO_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID)
+  console.log('CREATOR_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_MONTHLY_PRICE_ID)
+  console.log('CREATOR_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_CREATOR_YEARLY_PRICE_ID)
+  console.log('PREMIUM_MONTHLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID)
+  console.log('PREMIUM_YEARLY:', process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID)
+}
 
 // Stripe product configuration
 export const STRIPE_CONFIG = {

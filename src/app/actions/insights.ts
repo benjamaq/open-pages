@@ -8,6 +8,9 @@ import { computeSymptomPattern, generateSymptomInsight } from '@/lib/insights/co
 import { computeExerciseCorrelation, computeExerciseTypeCorrelation, generateExerciseInsight } from '@/lib/insights/computeExerciseCorrelation'
 import { computeProtocolEffectiveness, generateProtocolInsight } from '@/lib/insights/computeProtocolEffectiveness'
 import { computeSupplementEffectiveness, generateSupplementInsight } from '@/lib/insights/computeSupplementEffectiveness'
+import { runCorrelationBatch, selectTodaysInsight } from '@/lib/insights/correlation-engine/batch-processor'
+import { analyzeMedicationsForUser } from '@/lib/insights/correlation-engine/med-analyzer'
+import { analyzeSymptomClusters } from '@/lib/insights/correlation-engine/symptom-analyzer'
 
 export async function computeAndPersistInsights(userId: string) {
   const supabase = await createClient()
@@ -357,6 +360,39 @@ export async function computeAndPersistInsights(userId: string) {
 
   // After saving all insights, mark the top one as primary (last 24h window)
   await markPrimaryInsight(userId)
+
+  // New: run high-priority correlation batch and persist top 1 insight
+  try {
+    const formatted = await runCorrelationBatch(userId, 'high')
+    // Include medication effects and symptom clusters (optional additions)
+    try {
+      const medInsights = await analyzeMedicationsForUser(userId)
+      formatted.push(...medInsights)
+    } catch {}
+    try {
+      const symp = analyzeSymptomClusters((entries as any) || [])
+      formatted.push(...symp)
+    } catch {}
+    const top = await selectTodaysInsight(formatted)
+    if (top) {
+      await saveOrUpdateInsightMessage(userId, `${top.title}\n${top.actionable}`, {
+        insight_key: top.insightKey,
+        type: top.type === 'tag_correlation' ? 'PATTERN DISCOVERED' : top.type === 'metric_correlation' ? 'PATTERN DISCOVERED' : 'GREAT NEWS',
+        topLine: top.title,
+        discovery: top.message,
+        action: top.actionable,
+        icon: '🧠',
+        priority: top.priority,
+        metrics: top.data,
+        evidenceLink: top.evidenceLink,
+        algorithmVersion: '2.0.0',
+      } as any)
+      created++
+    }
+  } catch (e) {
+    console.warn('Correlation batch failed (continuing):', e)
+  }
+
   return { created, skipped: 0 }
 }
 

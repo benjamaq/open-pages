@@ -1517,13 +1517,26 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     }
     calculateStreak()
     
-    // Set up periodic refresh for follower count (every 5 minutes instead of 30 seconds)
+    // Set up periodic refresh for follower count (every 15 minutes) and only when tab is visible
     const refreshInterval = setInterval(() => {
-      loadDashboardData()
-    }, 300000) // 5 minutes
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadDashboardData()
+      }
+    }, 900000) // 15 minutes
     
     return () => clearInterval(refreshInterval)
   }, [userId, searchParams])
+
+  // Refresh immediately when the tab becomes visible
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadDashboardData()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
 
 
   const loadDailyCheckIn = async () => {

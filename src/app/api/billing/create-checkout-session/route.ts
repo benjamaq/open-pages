@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
     const lastTouch = read('bs_lt')
 
     // Create checkout session
+    if (!stripe) {
+      return NextResponse.json({ error: 'Billing not configured' }, { status: 503 })
+    }
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: [

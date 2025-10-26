@@ -137,8 +137,22 @@ async function handleSend() {
         })
         
         // Check if current time matches reminder time AND email hasn't been sent already today
-        const lastEmailSentAt: string | null = (pref as any).last_email_sent_at || null
-        const alreadySentToday = lastEmailSentAt ? isSameLocalDay(new Date(lastEmailSentAt), currentUtcTime, userTimezone) : false
+        // Idempotency: check daily_email_sends for a row on this user's local date
+        let alreadySentToday = false
+        try {
+          const localYmd = ymdInTz(currentUtcTime, userTimezone)
+          const { data: sentRow } = await supabaseAdmin
+            .from('daily_email_sends')
+            .select('profile_id')
+            .eq('profile_id', pref.profile_id)
+            .eq('local_date', localYmd)
+            .maybeSingle()
+          alreadySentToday = !!sentRow
+        } catch (e) {
+          // fallback to last_email_sent_at if table missing
+          const lastEmailSentAt: string | null = (pref as any).last_email_sent_at || null
+          alreadySentToday = lastEmailSentAt ? isSameLocalDay(new Date(lastEmailSentAt), currentUtcTime, userTimezone) : false
+        }
 
         if (inWindow && !alreadySentToday) {
           console.log(`🎯 SENDING EMAIL to ${userEmail} - Time match confirmed`)
@@ -189,8 +203,12 @@ async function handleSend() {
           console.log(`📧 Sending reminder to ${userEmail}`)
           await sendDailyReminder(dailyReminderData)
           console.log(`✅ Email sent to ${userEmail}`)
-          // Mark last_email_sent_at so we do not send again today
+          // Idempotency write: insert daily_email_sends row and update last_email_sent_at (best effort)
           try {
+            const localYmd = ymdInTz(currentUtcTime, userTimezone)
+            await supabaseAdmin
+              .from('daily_email_sends')
+              .insert({ profile_id: profile.id, local_date: localYmd })
             const { error: updErr } = await supabaseAdmin
               .from('notification_preferences')
               .update({ last_email_sent_at: new Date().toISOString() })
