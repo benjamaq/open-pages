@@ -111,6 +111,25 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
     passed = nonNull
   }
   console.log('[insights] After FDR:', passed.length)
+  // Detailed diagnostics of FDR-passed insights
+  try {
+    console.log('[insights] FDR-passed insights:')
+    passed.forEach((result: CorrelationResult, i: number) => {
+      if ((result as any).type === 'tag_correlation') {
+        const r = result as TagCorrelationResult
+        console.log(
+          `  ${i + 1}. ${r.tag} → ${r.metric}: delta=${Number(r.delta || 0).toFixed(2)}, d=${Number(r.cohensD || 0).toFixed(2)}, p=${Number((r as any).pValue || 0).toFixed(4)}, ci=[${Number((r as any).ciLow || 0).toFixed(2)}, ${Number((r as any).ciHigh || 0).toFixed(2)}]`
+        )
+      } else {
+        const r = result as MetricCorrelationResult
+        console.log(
+          `  ${i + 1}. ${r.metric1} ↔ ${r.metric2}: delta=${Number(r.delta || 0).toFixed(2)}, d=${Number(r.cohensD || 0).toFixed(2)}, p=${Number((r as any).pValue || 0).toFixed(4)}, ci=[${Number((r as any).ciLow || 0).toFixed(2)}, ${Number((r as any).ciHigh || 0).toFixed(2)}]`
+        )
+      }
+    })
+  } catch (diagErr) {
+    console.error('[insights] Error logging FDR-passed insights', diagErr)
+  }
   if (passed.length > 3) {
     console.error('[insights] SAFETY: Too many insights!', passed.length)
     return []
