@@ -8,20 +8,23 @@ export function analyzeTagVsMetric(
   config: TagCorrelationConfig
 ): TagCorrelationResult | null {
   const { tag, metric } = config
-  const minWith = config.minDaysWithTag ?? 3
-  const minWithout = config.minDaysWithoutTag ?? 5
+  // Production thresholds: 5 days minimum (2+2 minimum per group)
+  // Enables fast pattern detection (3 with + 2 without = insight on day 5)
+  // Safety: Cohen's d ≥ 0.5 and CI checks filter false positives
+  const minWith = config.minDaysWithTag ?? 2
+  const minWithout = config.minDaysWithoutTag ?? 2
   const minDelta = config.minDelta
 
   // Filter entries with required fields
   const validBase = getValidEntries(entries, ['local_date', metric])
-  if (validBase.length < 12) return null
+  if (validBase.length < 5) return null
 
   // Apply lag if requested (shift tag forward as `${tag}_lagged`)
   const effectiveTag = (config.lagDays || 0) > 0 ? `${tag}_lagged` : tag
   const lagged = (config.lagDays || 0) > 0 ? applyLag(validBase, tag, config.lagDays || 0) : validBase
 
   const valid = lagged
-  if (valid.length < 12) return null
+  if (valid.length < 5) return null
 
   // Optional outlier filtering on metric
   const cleaned = filterOutliers(valid, metric)
