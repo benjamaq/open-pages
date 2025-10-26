@@ -368,11 +368,12 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       setShowAdvanced(false);
       setSnapshotData(initialData.actions_snapshot);
     } else {
+      // Default sliders to mid-point (5) when starting a new check-in
       const newFormData = {
         localDate: date,
-        mood: null,
-        sleep_quality: null,
-        pain: null,
+        mood: 5,
+        sleep_quality: 5,
+        pain: 5,
         tags: null,
         journal: null
       };

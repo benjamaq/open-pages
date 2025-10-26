@@ -72,6 +72,14 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
     })
   }, [sortedInsights])
 
+  const formatFullDate = (iso?: string) => {
+    if (!iso) return ''
+    try {
+      const d = new Date(iso)
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+    } catch { return '' }
+  }
+
   return (
     <div className="border-t pt-4 mt-4">
       <div className="flex items-center justify-between w-full">
@@ -107,7 +115,7 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
 
 function InsightCard({ insight }: { insight: Insight }) {
   const { type, topLine, discovery, action, icon } = insight.context
-  const ts = insight.created_at ? formatDistanceToNowStrict(new Date(insight.created_at), { addSuffix: true }) : ''
+  const ts = formatFullDate(insight.created_at)
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
       <div className="flex items-start gap-3">
@@ -128,7 +136,15 @@ function InsightCard({ insight }: { insight: Insight }) {
             <p className="text-base text-gray-900 font-semibold">{action}</p>
           )}
           {ts && (
-            <div className="text-xs text-gray-400 text-right mt-2">{ts}</div>
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-xs text-gray-400">{ts}</div>
+              <a
+                href={`/dash#day-${(insight as any)?.context?.date || ''}`}
+                className="text-xs text-purple-700 hover:text-purple-900"
+              >
+                View this day in your calendar →
+              </a>
+            </div>
           )}
         </div>
       </div>
