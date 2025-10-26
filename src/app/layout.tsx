@@ -5,7 +5,8 @@ import Script from "next/script";
 import PWARegister from "./components/PWARegister";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import PWAInstallFab from "./components/PWAInstallFab";
-import PWAHeaderInstall from "./components/PWAHeaderInstall";
+import dynamic from 'next/dynamic';
+const PWAHeaderInstallGate = dynamic(() => import('./components/PWAHeaderInstallGate'), { ssr: false });
 import { captureAttributionClient } from '@/lib/attribution'
 
 const inter = Inter({
@@ -101,9 +102,7 @@ export default function RootLayout({
         </noscript>
         <PWARegister />
         {/* Hide PWA header on shared link pages and desktop by default via CSS hook */}
-        {!globalThis?.document?.body?.classList?.contains('public-link') && (
-          <PWAHeaderInstall />
-        )}
+        <PWAHeaderInstallGate />
         <PWAInstallPrompt />
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
