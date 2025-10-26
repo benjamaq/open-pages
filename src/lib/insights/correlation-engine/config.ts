@@ -45,6 +45,9 @@ export const HIGH_PRIORITY_CORRELATIONS: Array<TagCorrelationConfig | MetricCorr
   { type: 'tag', tag: 'too_much_caffeine', metric: 'headache', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
   { type: 'tag', tag: 'too_much_caffeine', metric: 'irritability', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
 
+  // Supplements
+  { type: 'tag', tag: 'magnesium', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1.5, lagDays: 0, priority: 'high' },
+
   // Alcohol (with lag)
   { type: 'tag', tag: 'alcohol', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
   { type: 'tag', tag: 'alcohol', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
