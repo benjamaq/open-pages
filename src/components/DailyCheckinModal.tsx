@@ -389,6 +389,7 @@ export default function DailyCheckinModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-client-tz-offset': (() => { try { return String(new Date().getTimezoneOffset()) } catch { return '0' } })(),
         },
         body: JSON.stringify(moodData)
       })
