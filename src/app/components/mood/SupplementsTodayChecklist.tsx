@@ -36,6 +36,23 @@ export default function SupplementsTodayChecklist({ userId, items }: { userId?: 
     await supabase
       .from('supplement_logs')
       .upsert({ user_id: userId, supplement_id: supplementId, local_date: today, taken: next }, { onConflict: 'user_id,supplement_id,local_date' })
+    // Also mirror into daily_entries.tags for correlation engine
+    try {
+      // Fetch supplement name to tagify
+      const { data: item } = await supabase
+        .from('stack_items')
+        .select('name')
+        .eq('id', supplementId)
+        .maybeSingle()
+      const name = (item?.name || '').toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+      if (name) {
+        await fetch('/api/daily-entries/tags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tag: name, taken: next, local_date: today })
+        })
+      }
+    } catch {}
   }
 
   if (!items || items.length === 0) return null

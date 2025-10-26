@@ -10,7 +10,6 @@ import DayDetailView from './DayDetailView';
 import SymptomAnalysisCard from '../../../components/elli/SymptomAnalysisCard';
 import { getAllElliMessages } from '../../../lib/db/elliMessages';
 import { createClient } from '@/lib/supabase/client';
-import { InsightsSection } from '../../dash/components/InsightsSection';
 import { getMonthData } from '../../../lib/db/mood';
 import SupplementsTodayChecklist from './SupplementsTodayChecklist';
 
