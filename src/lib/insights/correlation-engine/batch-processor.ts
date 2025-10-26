@@ -15,10 +15,6 @@ function getConfigsByPriority(priority: 'high' | 'normal' | 'low') {
 }
 
 export async function runCorrelationBatch(userId: string, priority: 'high' | 'normal' | 'low'): Promise<FormattedInsight[]> {
-  if (process.env.ENABLE_INSIGHTS_ENGINE !== 'true') {
-    console.log('[insights] Engine disabled by feature flag')
-    return []
-  }
   const startTs = Date.now()
   console.log('[insights] START', { userId, priority, t: new Date().toISOString() })
   console.log('[insights] Fetching entries for last 14 days')
