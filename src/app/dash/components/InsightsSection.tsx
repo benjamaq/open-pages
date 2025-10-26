@@ -21,20 +21,7 @@ interface Insight {
 
 export function InsightsSection({ insights }: { insights: Insight[] }) {
   const [isExpanded, setIsExpanded] = useState(true)
-  if (!insights || insights.length === 0) {
-    return (
-      <div className="border-t pt-4 mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <span>🔥</span>
-            <span>Insights Discovered</span>
-          </h4>
-          <a href="/patterns" className="text-xs text-purple-700 hover:text-purple-900">View All</a>
-        </div>
-        <p className="text-xs text-gray-600">Track for 1-2 more days to discover your first insights.</p>
-      </div>
-    )
-  }
+  // Note: Avoid early returns before hooks to keep hook order consistent
 
   // Only include last 7 days, then group by insight_key; pick latest clean item
   const byKey = new Map<string, Insight[]>()
@@ -105,9 +92,13 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
 
       {isExpanded && (
         <div className="mt-3 space-y-2">
-          {sortedInsights.map((insight) => (
-            <InsightCard key={insight.id} insight={insight} />
-          ))}
+          {sortedInsights.length === 0 ? (
+            <p className="text-xs text-gray-600">Track for 1-2 more days to discover your first insights.</p>
+          ) : (
+            sortedInsights.map((insight) => (
+              <InsightCard key={insight.id} insight={insight} />
+            ))
+          )}
         </div>
       )}
     </div>
