@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { InsightsSection } from './InsightsSection'
 
 interface Insight {
@@ -15,15 +14,12 @@ export function PatternsCard({ userId }: { userId: string }) {
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('elli_messages')
-        .select('id, created_at, context')
-        .eq('user_id', userId)
-        .eq('message_type', 'insight')
-        .order('created_at', { ascending: false })
-        .limit(5)
-      setInsights((data as any) || [])
+      try {
+        const res = await fetch('/api/insights?limit=10', { cache: 'no-store' })
+        if (!res.ok) return
+        const json = await res.json()
+        setInsights(json.insights || [])
+      } catch {}
     }
     load()
   }, [userId])
