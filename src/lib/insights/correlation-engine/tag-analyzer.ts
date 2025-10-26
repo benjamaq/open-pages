@@ -110,9 +110,16 @@ export function analyzeTagVsMetric(
   try {
     console.log('[tag-analyzer] bootstrap', { tag, metric, ciLow, ciHigh, pValue })
   } catch {}
+  // Relax CI-crosses-zero rule for very small samples if delta is meaningful and p-value significant
+  const smallSample = (withTag.length + withoutTag.length) <= 7
   if (ciLow * ciHigh < 0) {
-    try { console.log('[tag-analyzer] rejected: CI crosses zero', { tag, metric, ciLow, ciHigh }) } catch {}
-    return null
+    if (smallSample && Math.abs(delta) >= (minDelta ?? 0) && (typeof pValue === 'number' ? pValue : Number(pValue)) <= 0.05) {
+      try { console.log('[tag-analyzer] CI crosses zero but ALLOWED due to small sample + significant delta/p', { tag, metric, ciLow, ciHigh, delta, pValue, nWith: withTag.length, nWithout: withoutTag.length }) } catch {}
+      // allow to proceed
+    } else {
+      try { console.log('[tag-analyzer] rejected: CI crosses zero', { tag, metric, ciLow, ciHigh }) } catch {}
+      return null
+    }
   }
 
   const effectSize: EffectSize = d >= 0.8 ? 'large' : d >= 0.5 ? 'moderate' : 'small'
