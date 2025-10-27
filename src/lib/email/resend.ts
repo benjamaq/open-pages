@@ -179,7 +179,7 @@ export async function sendDay2TipsEmail(params: { userEmail: string; userName: s
   const html = generateDay2TipsHTML({ userName: params.userName })
   return sendEmail({
     to: params.userEmail,
-    subject: 'Day 2: Tips to unlock insights faster',
+    subject: 'Day 2: You’re doing great — tips to unlock insights faster',
     html,
     from: 'Biostackr <notifications@biostackr.io>'
   })
@@ -190,10 +190,12 @@ function generateDay2TipsHTML({ userName }: { userName: string }) {
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937;">
       <div style="max-width: 640px; margin: 0 auto; padding: 24px;">
-        <div style="text-align:center; margin-bottom: 16px;">
-          <div style="font-size: 24px; font-weight: 700;">Hi ${safeName} 👋</div>
-          <div style="font-size: 16px; color:#4b5563; margin-top:8px;">You're off to a great start. Here are tips to unlock insights faster.</div>
-        </div>
+    <div style="text-align:center; margin-bottom: 16px;">
+      <div style="font-size: 24px; font-weight: 700;">Hi ${safeName} 👋</div>
+      <div style="font-size: 16px; color:#4b5563; margin-top:8px;">Thanks for joining BioStackr — it means a lot.</div>
+      <div style="font-size: 14px; color:#6b7280; margin-top:6px;">I built this for my mum, so everything here is about finding what actually helps — with kindness and rigor.</div>
+      <div style="font-size: 16px; color:#374151; margin-top:10px;">You’re doing great. Here are a few tips to unlock insights faster.</div>
+    </div>
 
         <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:16px;">
           <div style="font-weight:600; margin-bottom:6px;">What works:</div>
