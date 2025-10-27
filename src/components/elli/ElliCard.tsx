@@ -116,7 +116,7 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
         ) : (
           <div className="text-gray-700 whitespace-pre-line">
             {isNewMessage ? (
-              <SafeType text={elliMessage.message_text} speed={35} className="" />
+              <SafeType text={elliMessage.message_text} speed={15} className="" />
             ) : (
               <p>{elliMessage.message_text}</p>
             )}
