@@ -8,7 +8,7 @@ type SafeTypeProps = {
   className?: string;
 };
 
-class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<React.PropsWithChildren<{ fallback: React.ReactNode }>, { hasError: boolean }> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };
@@ -24,33 +24,51 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { has
 export default function SafeType({ text, speed = 15, className }: SafeTypeProps) {
   const safe = typeof text === 'string' ? text : String(text ?? '');
   const [displayText, setDisplayText] = useState<string>('');
-  const intervalRef = useRef<any>(null);
+  const rafRef = useRef<number | null>(null);
+  const indexRef = useRef<number>(0);
 
   useEffect(() => {
-    try {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setDisplayText('');
+    // Reset state and cancel any existing animation
+    setDisplayText('');
+    indexRef.current = 0;
+    if (rafRef.current) {
+      try { cancelAnimationFrame(rafRef.current); } catch {}
+      rafRef.current = null;
+    }
 
-      const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
-      let currentIndex = 0;
-      intervalRef.current = setInterval(() => {
-        try {
-          if (currentIndex < safe.length) {
-            setDisplayText(safe.substring(0, currentIndex + 1));
-            currentIndex++;
-          } else {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        } catch {
-          if (intervalRef.current) clearInterval(intervalRef.current);
+    const ms = typeof speed === 'number' && speed > 0 ? speed : 15;
+    const now = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now();
+    let lastTime = now();
+
+    const typeChar = (currentTime: number) => {
+      const elapsed = currentTime - lastTime;
+      if (elapsed >= ms) {
+        if (indexRef.current < safe.length) {
+          indexRef.current += 1;
+          setDisplayText(safe.substring(0, indexRef.current));
+          lastTime = currentTime;
+        } else {
+          rafRef.current = null;
+          return; // done
         }
-      }, ms);
+      }
+      rafRef.current = requestAnimationFrame(typeChar);
+    };
 
-      return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    // Start animation (guard for environments without rAF)
+    try {
+      rafRef.current = requestAnimationFrame(typeChar);
     } catch {
+      // Fallback: render instantly
       setDisplayText(safe);
     }
+
+    return () => {
+      if (rafRef.current) {
+        try { cancelAnimationFrame(rafRef.current); } catch {}
+        rafRef.current = null;
+      }
+    };
   }, [safe, speed]);
 
   const fallback = <div className={className}>{safe}</div>;
