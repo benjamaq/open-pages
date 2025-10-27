@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import React, { useEffect, useRef, useState } from 'react';
 
 type SafeTypeProps = {
   text: string;
@@ -24,16 +23,50 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { has
 
 export default function SafeType({ text, speed = 25, className }: SafeTypeProps) {
   const safe = typeof text === 'string' ? text : String(text ?? '');
+  const [displayText, setDisplayText] = useState<string>('');
+  const intervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Manual, deterministic typing to control exact speed
+    try {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setDisplayText('');
+
+      const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
+      console.log('🔍 TYPING SPEED:', ms, 'ms per character');
+
+      let currentIndex = 0;
+      intervalRef.current = setInterval(() => {
+        try {
+          // Debug per tick (kept lightweight; remove if too noisy)
+          // console.log('⏱️ Character delay:', ms);
+          if (currentIndex < safe.length) {
+            setDisplayText(safe.substring(0, currentIndex + 1));
+            currentIndex++;
+          } else {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        } catch {
+          // Ensure we never crash the UI due to typing errors
+          if (intervalRef.current) clearInterval(intervalRef.current);
+        }
+      }, ms);
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
+    } catch {
+      // Fallback: show full text immediately
+      setDisplayText(safe);
+    }
+  }, [safe, speed]);
+
   const fallback = <div className={className}>{safe}</div>;
+
   return (
     <ErrorBoundary fallback={fallback}>
-      <TypeAnimation
-        sequence={[safe]}
-        speed={speed}
-        wrapper="div"
-        className={className}
-        cursor={false}
-      />
+      <div className={className}>{displayText}</div>
     </ErrorBoundary>
   );
 }
