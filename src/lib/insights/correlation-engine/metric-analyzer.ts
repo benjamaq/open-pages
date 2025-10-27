@@ -12,7 +12,8 @@ export function analyzeMetricVsMetric(
 
   // Validate entries have both metrics
   const valid0 = getValidEntries(entries, [metric1, metric2])
-  if (valid0.length < 12) return null
+  // Lowered production threshold: allow early signals with at least 5 valid days
+  if (valid0.length < 5) return null
 
   // Outlier filtering on both metrics
   const valid = filterOutliers(valid0, metric1)
@@ -43,7 +44,8 @@ export function analyzeMetricVsMetric(
     }
   }
 
-  if (groupHigh.length < 3 || groupLow.length < 3) return null
+  // Early production threshold: require at least 2 per group to allow 5–7 day insights
+  if (groupHigh.length < 2 || groupLow.length < 2) return null
 
   const highVals = groupHigh.map((e) => (e as any)[metric2] as number)
   const lowVals = groupLow.map((e) => (e as any)[metric2] as number)
@@ -57,7 +59,14 @@ export function analyzeMetricVsMetric(
   if (d < 0.5) return null
 
   const { ciLow, ciHigh, pValue } = bootstrapCI(groupHigh, groupLow, metric2, 1000)
-  if (ciLow * ciHigh < 0) return null
+  const crossesZero = ciLow * ciHigh < 0
+  // Relax CI crossing zero for small-n if the signal is clear
+  if (crossesZero) {
+    const smallN = (groupHigh.length + groupLow.length) <= 7
+    const strongDelta = Math.abs(delta) >= 1.5
+    const significant = pValue <= 0.05
+    if (!(smallN && strongDelta && significant)) return null
+  }
 
   const effectSize: EffectSize = d >= 0.8 ? 'large' : d >= 0.5 ? 'moderate' : 'small'
   const confidence: Confidence =
