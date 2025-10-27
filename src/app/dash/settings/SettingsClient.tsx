@@ -900,14 +900,22 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   id="avatar-file-input"
                   style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 as any, opacity: 0.01 }}
                 />
-                <label
-                  htmlFor="avatar-file-input"
-                  onClick={() => { console.log('🔴 SettingsClient LABEL CLICK'); try { const el = document.getElementById('avatar-file-input') as HTMLInputElement | null; if (el && (el as any).showPicker) { (el as any).showPicker(); } } catch (e) {} }}
-                  className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-                >
-                  <Camera className="w-3 h-3 mr-1" />
-                  {isUploading ? 'Uploading...' : 'Upload image'}
-                </label>
+                <div className="relative inline-block">
+                  <button type="button" className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors">
+                    <Camera className="w-3 h-3 mr-1" />
+                    {isUploading ? 'Uploading...' : 'Upload image'}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.heic,.heif"
+                    onChange={(e) => { console.log('🖼️ SettingsClient FILE SELECTED:', e.target.files?.[0]); handleProfilePhotoUpload(e); }}
+                    disabled={isUploading}
+                    id="avatar-file-input"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowFallbackPicker((v) => !v)}

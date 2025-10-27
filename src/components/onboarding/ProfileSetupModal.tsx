@@ -165,22 +165,22 @@ export default function ProfileSetupModal({
                         </svg>
                       </div>
                       <div className="text-sm text-gray-600">
-                        <label
-                          htmlFor="file-upload"
-                          className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 cursor-pointer"
-                          onClick={() => { console.log('🔴 ProfileSetupModal LABEL CLICK'); try { const el = document.getElementById('file-upload') as HTMLInputElement | null; if (el && (el as any).showPicker) { (el as any).showPicker(); } } catch (e) {} }}
-                        >
-                          Choose photo
-                        </label>
-                        <input
-                          ref={fileInputRef}
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
-                          onChange={handleFileChange}
-                          style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 as any, opacity: 0.01 }}
-                        />
+                        <div className="relative inline-block">
+                          <button type="button" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">
+                            Choose photo
+                          </button>
+                          <input
+                            ref={fileInputRef}
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                        
                       </div>
                       {profilePhoto && (
                         <p className="text-xs text-green-600 mt-2">✓ {profilePhoto.name}</p>

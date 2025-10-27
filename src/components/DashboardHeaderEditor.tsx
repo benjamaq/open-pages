@@ -180,14 +180,25 @@ export default function DashboardHeaderEditor({
                 {/* Upload Controls */}
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <label
-                      htmlFor="header-avatar-upload"
-                      onClick={(e) => { console.log('🔴 DashboardHeaderEditor LABEL CLICK'); try { const el = document.getElementById('header-avatar-upload') as HTMLInputElement | null; if (el && (el as any).showPicker) { (el as any).showPicker(); } } catch (err) { console.warn('showPicker not available:', err); } }}
-                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      <Upload className="w-4 h-4" />
-                      {isUploading ? 'Uploading...' : 'Upload'}
-                    </label>
+                    <div className="relative inline-block">
+                      <button
+                        type="button"
+                        disabled={isUploading}
+                        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4" />
+                        {isUploading ? 'Uploading...' : 'Upload'}
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageUpload}
+                        onClick={() => console.log('🟦 header-avatar-upload input CLICK')}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </div>
                     
                     {avatarUrl && (
                       <button
@@ -218,15 +229,7 @@ export default function DashboardHeaderEditor({
                 </div>
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onClick={() => console.log('🟦 header-avatar-upload input CLICK')}
-                onChange={handleImageUpload}
-                id="header-avatar-upload"
-                style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 as any, opacity: 0.01 }}
-              />
+              
             </div>
 
             {/* Name Section */}
