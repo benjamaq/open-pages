@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { has
   }
 }
 
-export default function SafeType({ text, speed = 25, className }: SafeTypeProps) {
+export default function SafeType({ text, speed = 15, className }: SafeTypeProps) {
   const safe = typeof text === 'string' ? text : String(text ?? '');
   const [displayText, setDisplayText] = useState<string>('');
   const intervalRef = useRef<any>(null);

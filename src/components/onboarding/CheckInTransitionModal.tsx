@@ -98,7 +98,7 @@ Move the sliders to how you're feeling right now. Just honest.`;
             ) : (
               <TypeAnimation
                 sequence={[transitionMessage]}
-                speed={35}
+                speed={15}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed text-center"
                 cursor={false}
