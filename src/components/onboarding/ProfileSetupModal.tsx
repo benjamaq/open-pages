@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
@@ -28,6 +28,7 @@ export default function ProfileSetupModal({
   const [mission, setMission] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -40,6 +41,7 @@ export default function ProfileSetupModal({
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🖼️ File input changed');
     if (e.target.files && e.target.files[0]) {
       setProfilePhoto(e.target.files[0]);
     }
@@ -144,17 +146,25 @@ export default function ProfileSetupModal({
                         </svg>
                       </div>
                       <div className="text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg cursor-pointer hover:bg-gray-800">
-                          <span>Choose photo</span>
-                          <input 
-                            id="file-upload" 
-                            name="file-upload" 
-                            type="file" 
-                            accept="image/*"
-                            className="sr-only" 
-                            onChange={handleFileChange}
-                          />
-                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log('🖼️ Upload button clicked');
+                            fileInputRef.current?.click();
+                          }}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                        >
+                          Choose photo
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
                       </div>
                       {profilePhoto && (
                         <p className="text-xs text-green-600 mt-2">✓ {profilePhoto.name}</p>
