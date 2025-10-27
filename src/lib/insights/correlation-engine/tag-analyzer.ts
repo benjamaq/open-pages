@@ -3,6 +3,32 @@ import { mean, pooledStandardDeviation, cohensD as computeD, bootstrapCI } from 
 import { filterOutliers, getValidEntries } from '../utils/data-cleaning'
 import { applyLag } from './lag-analyzer'
 
+function toNormalizedTags(raw: any): string[] {
+  try {
+    if (Array.isArray(raw)) {
+      return raw
+        .map((t) => (typeof t === 'string' ? t : String(t)))
+        .map((t) => t.trim().toLowerCase().replace(/\s+/g, '_'))
+        .filter(Boolean)
+    }
+    if (raw == null) return []
+    const s = typeof raw === 'string' ? raw : JSON.stringify(raw)
+    // Handle common formats: '{magnesium}', '{"magnesium"}', 'magnesium', 'magnesium,other'
+    const cleaned = s
+      .replace(/^\{/, '')
+      .replace(/\}$/, '')
+      .replace(/^\[/, '')
+      .replace(/\]$/, '')
+      .replace(/"/g, '')
+    return cleaned
+      .split(',')
+      .map((t) => t.trim().toLowerCase().replace(/\s+/g, '_'))
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
 export function analyzeTagVsMetric(
   entries: DailyEntry[],
   config: TagCorrelationConfig
@@ -48,9 +74,9 @@ export function analyzeTagVsMetric(
   // Optional outlier filtering on metric
   const cleaned = filterOutliers(valid, metric)
 
-  // Split groups
-  const withTag = cleaned.filter((e) => (e.tags || []).includes(effectiveTag))
-  const withoutTag = cleaned.filter((e) => !(e.tags || []).includes(effectiveTag))
+  // Split groups (robust tag normalization)
+  const withTag = cleaned.filter((e) => toNormalizedTags((e as any).tags).includes(effectiveTag))
+  const withoutTag = cleaned.filter((e) => !toNormalizedTags((e as any).tags).includes(effectiveTag))
 
   try {
     console.log('[tag-analyzer] group sizes', {
@@ -61,6 +87,24 @@ export function analyzeTagVsMetric(
       daysWithoutTag: withoutTag.length,
       thresholds: { minWith, minWithout },
     })
+  } catch {}
+
+  // Deep debug for magnesium mismatch investigation
+  try {
+    if (tag === 'magnesium') {
+      const debugSample = cleaned.slice(0, 5).map((e: any) => ({
+        date: e.local_date,
+        rawTags: e.tags,
+        normalized: toNormalizedTags(e.tags),
+        hasMagnesium: toNormalizedTags(e.tags).includes(effectiveTag),
+      }))
+      console.log('[tag-analyzer] DEBUG magnesium', {
+        tag,
+        totalEntries: cleaned.length,
+        entriesWithAnyTags: cleaned.filter((e: any) => Array.isArray(e.tags) ? e.tags.length > 0 : !!toNormalizedTags(e.tags).length).length,
+        sample: debugSample,
+      })
+    }
   } catch {}
 
   if (withTag.length < minWith || withoutTag.length < minWithout) {

@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { has
   }
 }
 
-export default function SafeType({ text, speed = 60, className }: SafeTypeProps) {
+export default function SafeType({ text, speed = 35, className }: SafeTypeProps) {
   const safe = typeof text === 'string' ? text : String(text ?? '');
   const fallback = <div className={className}>{safe}</div>;
   return (

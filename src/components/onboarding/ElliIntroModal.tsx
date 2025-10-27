@@ -68,7 +68,7 @@ First, let me understand what brings you here.`;
             ) : (
             <TypeAnimation
                 sequence={[welcomeMessage]}
-              speed={60}
+              speed={35}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}
