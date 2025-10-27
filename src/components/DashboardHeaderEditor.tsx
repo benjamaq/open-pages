@@ -32,6 +32,22 @@ export default function DashboardHeaderEditor({
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const handleUploadClick = (e: React.MouseEvent) => {
+    console.log('🔴 UPLOAD CLICKED', e)
+    console.log('🔴 fileInputRef:', fileInputRef.current)
+    if (!fileInputRef.current) {
+      console.error('❌ REF IS NULL')
+      return
+    }
+    console.log('🔴 About to call .click()')
+    try {
+      fileInputRef.current.click()
+      console.log('🔴 .click() executed successfully')
+    } catch (error) {
+      console.error('❌ Error calling .click():', error)
+    }
+  }
+
   const handleSave = () => {
     onUpdate({
       name: name.trim(),
@@ -163,7 +179,7 @@ export default function DashboardHeaderEditor({
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={(e) => { console.log('🔴 DashboardHeaderEditor UPLOAD CLICKED'); console.log('🔴 fileInputRef:', fileInputRef.current); if (!fileInputRef.current) { console.error('❌ REF IS NULL in DashboardHeaderEditor'); return; } fileInputRef.current.click(); }}
+                      onClick={handleUploadClick}
                       disabled={isUploading}
                       className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     >
