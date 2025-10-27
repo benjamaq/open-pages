@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import type React from 'react';
 import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
@@ -29,6 +30,21 @@ export default function ProfileSetupModal({
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    try {
+      console.log('🔴 UPLOAD BUTTON CLICKED', e);
+      console.log('🔴 fileInputRef.current:', fileInputRef.current);
+      if (!fileInputRef.current) {
+        console.error('❌ FILE INPUT REF IS NULL');
+        return;
+      }
+      fileInputRef.current.click();
+      console.log('🔴 Triggered input click');
+    } catch (error) {
+      console.error('❌ Upload button error:', error);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -148,10 +164,7 @@ export default function ProfileSetupModal({
                       <div className="text-sm text-gray-600">
                         <button
                           type="button"
-                          onClick={() => {
-                            console.log('🖼️ Upload button clicked');
-                            fileInputRef.current?.click();
-                          }}
+                          onClick={handleButtonClick}
                           className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                         >
                           Choose photo
