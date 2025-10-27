@@ -33,6 +33,8 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
 
       const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
       const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      // Explicitly log the raw prop value
+      console.log('🚀 SafeType SPEED PARAMETER:', speed);
       console.log('🚀 SafeType START - Speed:', ms, 'ms');
 
       let currentIndex = 0;
@@ -41,6 +43,8 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
           if (currentIndex < safe.length) {
             setDisplayText(safe.substring(0, currentIndex + 1));
             const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            // Explicitly log the prop speed in every tick
+            console.log('⏱️ Using speed:', speed, 'ms per character');
             console.log('⏱️ Character typed - Delay used:', ms, 'ms');
             currentIndex++;
           } else {
