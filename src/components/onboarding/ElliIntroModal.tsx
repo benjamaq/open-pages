@@ -28,7 +28,7 @@ export default function ElliIntroModal({
   useEffect(() => {
     if (isOpen) {
       setShowTyping(true);
-      const timer = setTimeout(() => setShowTyping(false), 1500);
+      const timer = setTimeout(() => setShowTyping(false), 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);

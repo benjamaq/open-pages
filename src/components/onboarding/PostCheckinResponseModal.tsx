@@ -64,11 +64,11 @@ export default function PostCheckinResponseModal({
       setShowTyping(true);
       setShowMessage(false);
       
-      // Show typing for 1.5 seconds
+      // Brief thinking indicator before typing
       const timer = setTimeout(() => {
         setShowTyping(false);
         setShowMessage(true);
-      }, 1500);
+      }, 300);
 
       return () => clearTimeout(timer);
     }

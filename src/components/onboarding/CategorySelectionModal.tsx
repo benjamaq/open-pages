@@ -72,7 +72,7 @@ export default function CategorySelectionModal({
       setTimeout(() => {
         setShowTypingIndicator(false);
         setShowValidationMessage(true);
-      }, 1500);
+      }, 300);
     }
   };
 
@@ -84,7 +84,7 @@ export default function CategorySelectionModal({
     setTimeout(() => {
       setShowTypingIndicator(false);
       setShowValidationMessage(true);
-    }, 1500);
+    }, 300);
   };
 
   // Handle continue button click

@@ -35,11 +35,11 @@ export default function PostSupplementModal({
       setShowTyping(true);
       setShowMessage(false);
       
-      // Show typing for 2 seconds
+      // Brief thinking indicator
       const timer = setTimeout(() => {
         setShowTyping(false);
         setShowMessage(true);
-      }, 2000);
+      }, 300);
 
       return () => clearTimeout(timer);
     }
