@@ -23,6 +23,8 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren<{ fallback: 
 
 export default function SafeType({ text, speed = 15, className }: SafeTypeProps) {
   const safe = typeof text === 'string' ? text : String(text ?? '');
+  // DIAGNOSTIC: confirm new rAF SafeType is active
+  try { console.log('🔴 NEW SafeType loaded - speed:', speed, 'text length:', safe.length); } catch {}
   const [displayText, setDisplayText] = useState<string>('');
   const rafRef = useRef<number | null>(null);
   const indexRef = useRef<number>(0);
