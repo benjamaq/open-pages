@@ -859,6 +859,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
                   />
                 ) : null}
+
+                {/* Encouragement note for better insights */}
+                <div className="mt-4 bg-indigo-50 border border-indigo-100 rounded-md p-3">
+                  <div className="text-xs text-indigo-900 text-center">
+                    <span className="font-semibold">Pattern detection works best when you track:</span>
+                    <div className="mt-1">✅ Daily scores (pain, mood, sleep)</div>
+                    <div>✅ Lifestyle factors (what you ate, drank, took, did)</div>
+                    <div className="mt-1">The more you select, the faster we find what helps!</div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
