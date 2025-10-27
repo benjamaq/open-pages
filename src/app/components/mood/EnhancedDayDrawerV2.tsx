@@ -982,8 +982,98 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               </button>
               {/* Life Factors content - shown when expanded */}
               {isContextSectionOpen && (
-                <div className="px-4 pb-4 border-t border-gray-100">
-                  {/* Existing context chips UI remains unchanged below */}
+                <div className="px-4 pb-4 border-t border-gray-100 space-y-4">
+                  {/* Lifestyle */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Lifestyle</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {contextCategories.lifestyle.map(chip => {
+                        const isSelected = selectedContextChips.includes(chip);
+                        return (
+                          <button
+                            key={chip}
+                            onClick={() => toggleContextChip(chip)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Work/Environment */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Work / Environment</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {contextCategories.work.map(chip => {
+                        const isSelected = selectedContextChips.includes(chip);
+                        return (
+                          <button
+                            key={chip}
+                            onClick={() => toggleContextChip(chip)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Food */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Food</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {contextCategories.food.map(chip => {
+                        const isSelected = selectedContextChips.includes(chip);
+                        return (
+                          <button
+                            key={chip}
+                            onClick={() => toggleContextChip(chip)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Hydration / Routine */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hydration / Routine</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {contextCategories.hydration.map(chip => {
+                        const isSelected = selectedContextChips.includes(chip);
+                        return (
+                          <button
+                            key={chip}
+                            onClick={() => toggleContextChip(chip)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1185,7 +1275,77 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               {/* Vibe content - shown when expanded (existing UI restored here) */}
               {isVibeSectionOpen && (
                 <div className="px-4 pb-4 border-t border-gray-100 max-h-96 overflow-y-auto">
-                  {/* Existing Today’s Vibe chips UI retained */}
+                  {/* High Energy */}
+                  <div className="mb-4 mt-4">
+                    <h4 className="text-xs font-semibold text-green-700 mb-2 uppercase tracking-wide">Feeling Great</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getChipsByCategory('expressive_high').map(chip => {
+                        const isSelected = selectedTags.includes(chip.slug);
+                        return (
+                          <button
+                            key={chip.slug}
+                            onClick={() => toggleTag(chip.slug)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300 text-green-800 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <span className="mr-1">{chip.icon}</span>
+                            {chip.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Neutral/Steady */}
+                  <div className="mb-4">
+                    <h4 className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Steady / Managing</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getChipsByCategory('expressive_neutral').map(chip => {
+                        const isSelected = selectedTags.includes(chip.slug);
+                        return (
+                          <button
+                            key={chip.slug}
+                            onClick={() => toggleTag(chip.slug)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <span className="mr-1">{chip.icon}</span>
+                            {chip.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Low Energy */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-red-700 mb-2 uppercase tracking-wide">Struggling</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getChipsByCategory('expressive_low').map(chip => {
+                        const isSelected = selectedTags.includes(chip.slug);
+                        return (
+                          <button
+                            key={chip.slug}
+                            onClick={() => toggleTag(chip.slug)}
+                            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-red-100 to-orange-100 border-red-300 text-red-800 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <span className="mr-1">{chip.icon}</span>
+                            {chip.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
