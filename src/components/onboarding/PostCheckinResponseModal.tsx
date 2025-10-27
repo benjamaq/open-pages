@@ -165,7 +165,7 @@ export default function PostCheckinResponseModal({
                 <TypingIndicator />
               </div>
             ) : showMessage ? (
-              <SafeType text={response} speed={60} className="text-gray-700 whitespace-pre-line leading-relaxed" />
+              <SafeType text={response} speed={15} className="text-gray-700 whitespace-pre-line leading-relaxed" />
             ) : null}
           </div>
 

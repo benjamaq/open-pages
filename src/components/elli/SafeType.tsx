@@ -27,37 +27,35 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
   const intervalRef = useRef<any>(null);
 
   useEffect(() => {
-    // Manual, deterministic typing to control exact speed
     try {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setDisplayText('');
 
       const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
-      console.log('🔍 TYPING SPEED:', ms, 'ms per character');
+      const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      console.log('[SafeType] start', { ms, length: safe.length, t0 });
 
       let currentIndex = 0;
       intervalRef.current = setInterval(() => {
         try {
-          // Debug per tick (kept lightweight; remove if too noisy)
-          // console.log('⏱️ Character delay:', ms);
           if (currentIndex < safe.length) {
             setDisplayText(safe.substring(0, currentIndex + 1));
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            console.log('[SafeType] tick', { i: currentIndex, t: now, dt: Math.round(now - t0) });
             currentIndex++;
           } else {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+            const done = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            console.log('[SafeType] complete', { totalMs: Math.round(done - t0), chars: safe.length });
           }
         } catch {
-          // Ensure we never crash the UI due to typing errors
           if (intervalRef.current) clearInterval(intervalRef.current);
         }
       }, ms);
 
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
+      return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     } catch {
-      // Fallback: show full text immediately
       setDisplayText(safe);
     }
   }, [safe, speed]);
