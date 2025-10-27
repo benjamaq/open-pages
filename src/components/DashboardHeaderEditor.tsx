@@ -33,6 +33,8 @@ export default function DashboardHeaderEditor({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleUploadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('🔴 UPLOAD CLICKED', e)
     console.log('🔴 fileInputRef:', fileInputRef.current)
     if (!fileInputRef.current) {
@@ -221,7 +223,7 @@ export default function DashboardHeaderEditor({
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleImageUpload}
-                className="hidden"
+                style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 as any, opacity: 0.01 }}
               />
             </div>
 
