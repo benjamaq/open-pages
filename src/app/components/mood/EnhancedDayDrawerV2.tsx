@@ -1006,11 +1006,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     </div>
                   </div>
 
-                  {/* Work/Environment */}
+                  {/* Environment */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Work / Environment</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Environment</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.work.map(chip => {
+                      {contextCategories.environment.map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
                         return (
                           <button
@@ -1029,11 +1029,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     </div>
                   </div>
 
-                  {/* Food */}
+                  {/* Nutrition */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Food</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Nutrition</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.food.map(chip => {
+                      {contextCategories.nutrition.map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
                         return (
                           <button
@@ -1052,11 +1052,11 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                     </div>
                   </div>
 
-                  {/* Hydration / Routine */}
+                  {/* Illness / Health */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hydration / Routine</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Illness / Health</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.hydration.map(chip => {
+                      {contextCategories.illness.map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
                         return (
                           <button
