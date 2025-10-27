@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const results: any[] = []
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
     for (const r of recipients) {
       const first = extractFirstName(r.email)
       let subject = ''
@@ -105,13 +106,26 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      const resp = await sendEmail({
+      // Throttle to respect provider rate limits
+      await sleep(600)
+
+      let resp = await sendEmail({
         to: r.email,
         subject,
         html,
         from: 'Ben from BioStackr <notifications@biostackr.io>',
         replyTo: 'ben09@mac.com'
       })
+      if (!resp.success && (resp.error || '').toLowerCase().includes('too many requests')) {
+        await sleep(1000)
+        resp = await sendEmail({
+          to: r.email,
+          subject,
+          html,
+          from: 'Ben from BioStackr <notifications@biostackr.io>',
+          replyTo: 'ben09@mac.com'
+        })
+      }
       results.push({ email: r.email, ok: resp.success, id: resp.id, error: resp.error })
     }
 
