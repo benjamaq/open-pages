@@ -24,12 +24,15 @@ export default function ProfileSetupModal({
   userName,
   userId
 }: ProfileSetupModalProps) {
+  console.log('🔵 ProfileSetupModal LOADED - timestamp:', Date.now());
   const [showTyping, setShowTyping] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [mission, setMission] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log('🔵 ProfileSetupModal RENDER');
 
   const handleButtonClick = (e: React.MouseEvent) => {
     try {
