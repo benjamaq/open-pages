@@ -31,12 +31,12 @@ export default function ProfileSetupModal({
 
   if (!isOpen) return null;
 
-  // Show typing animation for 1.5 seconds
+  // Brief thinking indicator before typing
   if (showTyping) {
     setTimeout(() => {
       setShowTyping(false);
       setShowContent(true);
-    }, 1500);
+    }, 300);
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +123,7 @@ export default function ProfileSetupModal({
                 sequence={[
                   `Add profile photo. And let me know what you're working on.\n\nAdd a photo so people can see who you are, and tell me what you're working on right now.`
                 ]}
-                speed={35}
+                speed={15}
                 wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
                 cursor={false}

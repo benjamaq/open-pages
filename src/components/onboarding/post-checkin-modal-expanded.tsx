@@ -69,10 +69,10 @@ export default function PostCheckinModal({
       setShowTypingIndicator(false);
       setShowValidationMessage(false);
 
-      // Show typing animation for 1.5 seconds
+      // Brief thinking indicator
       const timer = setTimeout(() => {
         setShowTypingAnimation(false);
-      }, 1500);
+      }, 300);
 
       return () => clearTimeout(timer);
     }
@@ -153,7 +153,7 @@ export default function PostCheckinModal({
       setTimeout(() => {
         setShowTypingIndicator(false);
         setShowValidationMessage(true);
-      }, 1500);
+      }, 300);
     }
   };
 
@@ -166,7 +166,7 @@ export default function PostCheckinModal({
     setTimeout(() => {
       setShowTypingIndicator(false);
       setShowValidationMessage(true);
-    }, 1500);
+    }, 300);
   };
 
   // Handle continue button click
@@ -207,7 +207,7 @@ export default function PostCheckinModal({
     setTimeout(() => {
       setShowTypingIndicator(false);
       setShowValidationMessage(true);
-    }, 1500);
+    }, 300);
   };
 
   // Show validation message if we're in validation step
@@ -244,10 +244,10 @@ export default function PostCheckinModal({
                 <TypeAnimation
                   sequence={[
                     validationMessage.title,
-                    500, // Pause after title
+                    300, // Pause after title
                     validationMessage.title + '\n\n' + validationMessage.message
                   ]}
-                  speed={35}
+                  speed={15}
                   wrapper="div"
                   className="text-gray-700 whitespace-pre-line leading-relaxed"
                   cursor={false}
@@ -349,7 +349,7 @@ export default function PostCheckinModal({
             ) : (
                 <TypeAnimation
                   sequence={[getElliWelcomeMessage(dayOneData)]}
-                  speed={35}
+                  speed={15}
                   wrapper="div"
                   className="text-gray-700 leading-relaxed whitespace-pre-line"
                   cursor={false}
