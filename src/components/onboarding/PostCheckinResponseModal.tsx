@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
 import { createClient } from '@/lib/supabase/client'
@@ -61,16 +60,9 @@ export default function PostCheckinResponseModal({
 
   useEffect(() => {
     if (isOpen) {
-      setShowTyping(true);
-      setShowMessage(false);
-      
-      // Brief thinking indicator before typing
-      const timer = setTimeout(() => {
-        setShowTyping(false);
-        setShowMessage(true);
-      }, 300);
-
-      return () => clearTimeout(timer);
+      // Show message instantly with no typing delay
+      setShowTyping(false);
+      setShowMessage(true);
     }
   }, [isOpen]);
 
@@ -155,13 +147,7 @@ export default function PostCheckinResponseModal({
         <div className="p-6 space-y-6">
           {/* Elli's Tone-Aware Response */}
           <div className="min-h-[120px]">
-            {showTyping ? (
-              <div className="py-4 flex justify-center">
-                <TypingIndicator />
-              </div>
-            ) : showMessage ? (
-              <SafeType text={response} speed={15} className="text-gray-700 whitespace-pre-line leading-relaxed" />
-            ) : null}
+            <div className="text-gray-700 whitespace-pre-line leading-relaxed">{response}</div>
           </div>
 
           {/* Transition to Supplements */}
