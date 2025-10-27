@@ -233,7 +233,7 @@ export default function SymptomAnalysisCard({
             ) : (
               <TypeAnimation
                 sequence={[analysis.empatheticResponse]}
-                speed={60}
+                speed={15}
                 wrapper="p"
                 className="text-gray-700 leading-relaxed text-[15px] sm:text-base"
                 cursor={false}

@@ -855,7 +855,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 ) : showElliMessage ? (
                   <SafeType
                     text={`Hey ${userName} 💙\n\nLet's see where you're at today.\nMove the sliders.\nTell us what else is going on.`}
-                    speed={60}
+                    speed={15}
                     className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
                   />
                 ) : null}

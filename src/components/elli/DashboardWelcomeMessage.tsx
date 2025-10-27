@@ -95,7 +95,7 @@ export default function DashboardWelcomeMessage({
           ) : showMessage ? (
             <TypeAnimation
               sequence={[message]}
-              speed={60}
+              speed={15}
               wrapper="div"
               className="text-gray-700 whitespace-pre-line leading-relaxed"
               cursor={false}
