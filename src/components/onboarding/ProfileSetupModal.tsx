@@ -165,13 +165,13 @@ export default function ProfileSetupModal({
                         </svg>
                       </div>
                       <div className="text-sm text-gray-600">
-                        <button
-                          type="button"
-                          onClick={handleButtonClick}
-                          className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                        <label
+                          htmlFor="file-upload"
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 cursor-pointer"
+                          onClick={() => console.log('🔴 ProfileSetupModal LABEL CLICK')}
                         >
                           Choose photo
-                        </button>
+                        </label>
                         <input
                           ref={fileInputRef}
                           id="file-upload"

@@ -900,15 +900,14 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   id="avatar-file-input"
                   style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 as any, opacity: 0.01 }}
                 />
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.log('🔴 SettingsClient UPLOAD CLICKED'); console.log('🔴 fileInputRef:', fileInputRef.current); if (!fileInputRef.current) { console.error('❌ REF IS NULL in SettingsClient'); return; } try { if ((fileInputRef.current as any).showPicker) { (fileInputRef.current as any).showPicker(); } else { fileInputRef.current.click(); } } catch (e) { console.error('[Avatar] Failed to trigger file picker', e) } }}
-                  className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
-                  disabled={isUploading}
+                <label
+                  htmlFor="avatar-file-input"
+                  onClick={() => console.log('🔴 SettingsClient LABEL CLICK')}
+                  className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
                 >
                   <Camera className="w-3 h-3 mr-1" />
                   {isUploading ? 'Uploading...' : 'Upload image'}
-                </button>
+                </label>
                 <button
                   type="button"
                   onClick={() => setShowFallbackPicker((v) => !v)}
