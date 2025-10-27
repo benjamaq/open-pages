@@ -33,7 +33,7 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
 
       const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
       const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-      console.log('[SafeType] start', { ms, length: safe.length, t0 });
+      console.log('🚀 SafeType START - Speed:', ms, 'ms');
 
       let currentIndex = 0;
       intervalRef.current = setInterval(() => {
@@ -41,13 +41,13 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
           if (currentIndex < safe.length) {
             setDisplayText(safe.substring(0, currentIndex + 1));
             const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            console.log('[SafeType] tick', { i: currentIndex, t: now, dt: Math.round(now - t0) });
+            console.log('⏱️ Character typed - Delay used:', ms, 'ms');
             currentIndex++;
           } else {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
             const done = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            console.log('[SafeType] complete', { totalMs: Math.round(done - t0), chars: safe.length });
+            console.log('✅ SafeType COMPLETE - Total time:', Math.round(done - t0), 'ms');
           }
         } catch {
           if (intervalRef.current) clearInterval(intervalRef.current);
