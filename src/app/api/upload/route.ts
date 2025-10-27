@@ -69,73 +69,89 @@ export async function POST(request: NextRequest) {
     const fileNameWithExt = `${userId}/${Date.now()}.${fileExt}`
 
     try {
-      // Check if bucket exists, create if needed
+      // Ensure bucket exists and is public
       console.log('Checking if bucket exists:', bucket)
       const { data: buckets, error: listError } = await supabase.storage.listBuckets()
       if (listError) {
         console.error('Failed to list buckets:', listError)
         return NextResponse.json({ error: `Storage access failed: ${listError.message}` }, { status: 500 })
       }
-      
-      const bucketExists = buckets?.some(b => b.name === bucket)
-      console.log('Bucket exists:', bucketExists, 'Available buckets:', buckets?.map(b => b.name))
-      
-      if (!bucketExists) {
+
+      const exists = buckets?.some(b => b.name === bucket)
+      console.log('Bucket exists:', exists, 'Available buckets:', buckets?.map(b => b.name))
+
+      if (!exists) {
         console.log('Creating bucket:', bucket)
-        // Create bucket with public access and no RLS
         const { error: bucketError } = await supabase.storage.createBucket(bucket, {
           public: true,
           allowedMimeTypes: allowedTypes,
           fileSizeLimit: maxSize
         })
-        
         if (bucketError && !bucketError.message.includes('already exists')) {
           console.error('Bucket creation error:', bucketError)
-          // Try to continue anyway - bucket might exist but not be visible
-          console.log('Attempting upload despite bucket creation error...')
-        } else {
-          console.log('Bucket created successfully')
+        }
+      } else {
+        // Force public in case it was toggled
+        try {
+          await supabase.storage.updateBucket(bucket, {
+            public: true,
+            allowedMimeTypes: allowedTypes,
+            fileSizeLimit: maxSize
+          })
+        } catch (e) {
+          console.warn('Bucket update warning (continuing):', e)
         }
       }
 
-      // Upload to Supabase Storage
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(fileNameWithExt, file, {
-          cacheControl: '3600',
-          upsert: true // Allow overwriting
-        })
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError)
-        
-        // If it's an RLS error, try to provide helpful guidance
-        if (uploadError.message.includes('row-level security') || uploadError.message.includes('RLS')) {
-          return NextResponse.json({ 
-            error: `Storage permissions error. Please ensure the '${bucket}' bucket exists and has proper RLS policies configured in Supabase.` 
-          }, { status: 500 })
+      // Upload with small retry to avoid occasional 5xx from storage
+      const attemptUpload = async (tries = 2): Promise<string> => {
+        const { data, error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(fileNameWithExt, file, {
+            cacheControl: '3600',
+            upsert: true
+          })
+        if (uploadError) {
+          if (tries > 0) {
+            await new Promise(r => setTimeout(r, 250))
+            return attemptUpload(tries - 1)
+          }
+          console.error('Upload error:', uploadError)
+          if (uploadError.message.includes('row-level security') || uploadError.message.includes('RLS')) {
+            throw new Error(`Storage permissions error. Ensure bucket '${bucket}' has public access / correct policies.`)
+          }
+          throw new Error(`Upload failed: ${uploadError.message}`)
         }
-        
-        return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 })
+        return data?.path || fileNameWithExt
       }
 
-      // Get public URL
+      const finalPath = await attemptUpload()
+
+      // Get public URL and verify reachability
       const { data: urlData } = supabase.storage
         .from(bucket)
-        .getPublicUrl(fileNameWithExt)
+        .getPublicUrl(finalPath)
 
-      if (!urlData.publicUrl) {
+      const publicUrl = urlData?.publicUrl
+      if (!publicUrl) {
         return NextResponse.json({ error: 'Failed to get public URL' }, { status: 500 })
       }
 
-      // Profile update is handled by the client-side code
-      // to ensure proper state management and UI updates
+      // HEAD check to avoid invisible 403s due to private bucket
+      try {
+        const head = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' })
+        if (!head.ok) {
+          console.warn('Public URL not directly accessible, falling back to signed URL', head.status)
+          const { data: signed } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(finalPath, 60 * 60) // 1 hour
+          return NextResponse.json({ url: signed?.signedUrl || publicUrl, path: finalPath, success: true })
+        }
+      } catch (e) {
+        console.warn('HEAD check failed, continuing with public URL', e)
+      }
 
-      return NextResponse.json({ 
-        url: urlData.publicUrl,
-        path: fileNameWithExt,
-        success: true 
-      })
+      return NextResponse.json({ url: publicUrl, path: finalPath, success: true })
 
     } catch (error) {
       console.error('Storage error:', error)
