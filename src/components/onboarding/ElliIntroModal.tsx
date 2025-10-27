@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
 interface ElliIntroModalProps {
@@ -66,12 +66,10 @@ First, let me understand what brings you here.`;
                 <TypingIndicator />
               </div>
             ) : (
-            <TypeAnimation
-                sequence={[welcomeMessage]}
-              speed={15}
-                wrapper="div"
+              <SafeType
+                text={welcomeMessage}
+                speed={15}
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
-                cursor={false}
               />
             )}
           </div>
