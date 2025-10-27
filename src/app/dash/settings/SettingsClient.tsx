@@ -23,6 +23,7 @@ interface SettingsClientProps {
 }
 
 export default function SettingsClient({ profile, userEmail, trialInfo }: SettingsClientProps) {
+  console.log('🔵 SettingsClient LOADED')
   // Helper placed at top for VAPID key conversion
   function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -894,27 +895,14 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   ref={fileInputRef}
                   type="file"
                   accept="image/*,.heic,.heif"
-                  onChange={handleProfilePhotoUpload}
+                  onChange={(e) => { console.log('🖼️ SettingsClient FILE SELECTED:', e.target.files?.[0]); handleProfilePhotoUpload(e); }}
                   disabled={isUploading}
                   className="sr-only"
                   id="avatar-file-input"
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    try {
-                      console.log('[Avatar] Trigger file picker click')
-                      if (fileInputRef.current?.showPicker) {
-                        // Chrome supports showPicker on some channels
-                        // @ts-ignore
-                        fileInputRef.current.showPicker()
-                      } else {
-                        fileInputRef.current?.click()
-                      }
-                    } catch (e) {
-                      console.error('[Avatar] Failed to trigger file picker', e)
-                    }
-                  }}
+                  onClick={() => { console.log('🔴 SettingsClient UPLOAD CLICKED'); console.log('🔴 fileInputRef:', fileInputRef.current); if (!fileInputRef.current) { console.error('❌ REF IS NULL in SettingsClient'); return; } try { if ((fileInputRef.current as any).showPicker) { (fileInputRef.current as any).showPicker(); } else { fileInputRef.current.click(); } } catch (e) { console.error('[Avatar] Failed to trigger file picker', e) } }}
                   className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
                   disabled={isUploading}
                 >

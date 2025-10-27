@@ -24,6 +24,7 @@ export default function DashboardHeaderEditor({
   currentAvatarUrl,
   onUpdate
 }: DashboardHeaderEditorProps) {
+  console.log('🔵 DashboardHeaderEditor LOADED')
   const [name, setName] = useState(currentName)
   const [mission, setMission] = useState(currentMission)
   const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl)
@@ -49,6 +50,7 @@ export default function DashboardHeaderEditor({
   }
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🖼️ DashboardHeaderEditor FILE SELECTED:', event.target.files?.[0])
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -114,6 +116,7 @@ export default function DashboardHeaderEditor({
   const lastName = name.split(' ')[1] || ''
 
   return (
+    console.log('🔵 DashboardHeaderEditor RENDER'),
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -160,7 +163,7 @@ export default function DashboardHeaderEditor({
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={(e) => { console.log('🔴 DashboardHeaderEditor UPLOAD CLICKED'); console.log('🔴 fileInputRef:', fileInputRef.current); if (!fileInputRef.current) { console.error('❌ REF IS NULL in DashboardHeaderEditor'); return; } fileInputRef.current.click(); }}
                       disabled={isUploading}
                       className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                     >
