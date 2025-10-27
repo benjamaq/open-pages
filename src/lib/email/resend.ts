@@ -175,6 +175,66 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
   })
 }
 
+export async function sendDay2TipsEmail(params: { userEmail: string; userName: string }): Promise<{ success: boolean; id?: string; error?: string }> {
+  const html = generateDay2TipsHTML({ userName: params.userName })
+  return sendEmail({
+    to: params.userEmail,
+    subject: 'Day 2: Tips to unlock insights faster',
+    html,
+    from: 'Biostackr <notifications@biostackr.io>'
+  })
+}
+
+function generateDay2TipsHTML({ userName }: { userName: string }) {
+  const safeName = (userName || '').trim() || 'there'
+  return `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937;">
+      <div style="max-width: 640px; margin: 0 auto; padding: 24px;">
+        <div style="text-align:center; margin-bottom: 16px;">
+          <div style="font-size: 24px; font-weight: 700;">Hi ${safeName} 👋</div>
+          <div style="font-size: 16px; color:#4b5563; margin-top:8px;">You're off to a great start. Here are tips to unlock insights faster.</div>
+        </div>
+
+        <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="font-weight:600; margin-bottom:6px;">What works:</div>
+          <ul style="margin:0 0 0 18px; padding:0; color:#374151;">
+            <li>Check in daily (pain, mood, sleep)</li>
+            <li>Select 2–3 lifestyle tags (e.g., caffeine, exercise, supplements)</li>
+            <li>Add quick notes or symptoms when relevant</li>
+          </ul>
+        </div>
+
+        <div style="margin: 18px 0;">
+          <div style="font-weight:700; margin-bottom:8px;">Real examples</div>
+          <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px; margin-bottom:10px;">
+            <div style="font-weight:600">Jenny</div>
+            <div style="font-size:14px; color:#374151;">Checked in for 5 days and found that late caffeine pushed her pain up by ~3 points the next day.</div>
+          </div>
+          <div style="background:#ecfeff; border:1px solid #a5f3fc; border-radius:10px; padding:12px; margin-bottom:10px;">
+            <div style="font-weight:600">Mike</div>
+            <div style="font-size:14px; color:#374151;">Tracked for 7 days and saw that getting 7–8/10 sleep quality lifted his mood from 4 → 6 most days.</div>
+          </div>
+          <div style="background:#fef9c3; border:1px solid #fde68a; border-radius:10px; padding:12px;">
+            <div style="font-weight:600">Priya</div>
+            <div style="font-size:14px; color:#374151;">Logged symptoms for a week and spotted that fast food days correlated with more brain fog the next morning.</div>
+          </div>
+        </div>
+
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px;">
+          <div style="font-weight:700;">Pro tip</div>
+          <div style="font-size:14px; color:#065f46;">The more you track (especially lifestyle tags), the faster Elli can surface confident patterns. Even quick, 10-second check-ins help a lot.</div>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/dash" style="display:inline-block; background:#111827; color:#fff; padding:10px 16px; border-radius:10px; text-decoration:none; font-weight:600;">Open your dashboard</a>
+        </div>
+
+        <div style="margin-top:24px; font-size:12px; color:#6b7280; text-align:center;">You’re receiving this because you created a Biostackr account. Manage notifications in settings.</div>
+      </div>
+    </div>
+  `
+}
+
 function generateDailyReminderHTML(data: DailyReminderData): string {
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
