@@ -22,8 +22,6 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode }, { has
 }
 
 export default function SafeType({ text, speed = 15, className }: SafeTypeProps) {
-  // Build identifier for deployment tracking
-  const BUILD_TIME = (typeof process !== 'undefined' && process.env && (process.env.NEXT_PUBLIC_BUILD_TIME || process.env.VERCEL_GIT_COMMIT_SHA)) || '';
   const safe = typeof text === 'string' ? text : String(text ?? '');
   const [displayText, setDisplayText] = useState<string>('');
   const intervalRef = useRef<any>(null);
@@ -34,26 +32,15 @@ export default function SafeType({ text, speed = 15, className }: SafeTypeProps)
       setDisplayText('');
 
       const ms = typeof speed === 'number' && speed > 0 ? speed : 25;
-      const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-      // Explicitly log the raw prop value
-      console.log('🚀 SafeType SPEED PARAMETER:', Number(speed));
-      console.log('🚀 SafeType START - Speed:', ms, 'ms', BUILD_TIME ? `(build: ${BUILD_TIME})` : '');
-
       let currentIndex = 0;
       intervalRef.current = setInterval(() => {
         try {
           if (currentIndex < safe.length) {
             setDisplayText(safe.substring(0, currentIndex + 1));
-            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            // Explicitly log the prop speed in every tick
-            console.log('⏱️ Using speed:', Number(speed), 'ms per character');
-            console.log('⏱️ Character typed - Delay used:', ms, 'ms');
             currentIndex++;
           } else {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
-            const done = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            console.log('✅ SafeType COMPLETE - Total time:', Math.round(done - t0), 'ms');
           }
         } catch {
           if (intervalRef.current) clearInterval(intervalRef.current);

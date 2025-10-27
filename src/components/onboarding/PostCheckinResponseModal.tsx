@@ -117,12 +117,7 @@ export default function PostCheckinResponseModal({
   // Get tone profile
   const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
   
-  console.log('💙 PostCheckinResponseModal:', {
-    toneProfile,
-    empathyLevel: profile.empathyLevel,
-    category,
-    checkInData
-  });
+  // Removed verbose console logging to prevent main-thread blocking during typing
 
   // Generate tone-aware response from tone profile (also for first check-in)
   const { pain, mood, sleep } = checkInData;

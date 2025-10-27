@@ -43,9 +43,9 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
       setElliMessage(message);
       
       if (isNew) {
-        // Show typing animation for new messages
+        // Show typing animation briefly for new messages
         setShowTyping(true);
-        setTimeout(() => setShowTyping(false), 1500);
+        setTimeout(() => setShowTyping(false), 300);
       } else {
         // Show instantly for old messages
         setShowTyping(false);
