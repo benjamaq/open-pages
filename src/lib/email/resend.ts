@@ -19,6 +19,7 @@ export interface EmailData {
   subject: string
   html: string
   from?: string
+  replyTo?: string
 }
 
 export interface DailyReminderData {
@@ -102,7 +103,8 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
       from: data.from || 'notifications@biostackr.io',
       to: data.to,
       subject: data.subject,
-      html: data.html
+      html: data.html,
+      replyTo: data.replyTo
     })
 
     console.log('Resend API response:', result)
