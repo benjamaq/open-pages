@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         to: r.email,
         subject,
         html,
-        from: 'Ben from BioStackr <ben@biostackr.io>',
+        from: 'Ben from BioStackr <notifications@biostackr.io>',
         replyTo: 'ben09@mac.com'
       })
       results.push({ email: r.email, ok: resp.success, id: resp.id, error: resp.error })
