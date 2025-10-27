@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { getToneProfile } from '@/lib/elli/toneProfiles';
 
@@ -96,12 +96,10 @@ Move the sliders to how you're feeling right now. Just honest.`;
                 <TypingIndicator />
               </div>
             ) : (
-              <TypeAnimation
-                sequence={[transitionMessage]}
+              <SafeType
+                text={transitionMessage}
                 speed={15}
-                wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed text-center"
-                cursor={false}
               />
             )}
           </div>

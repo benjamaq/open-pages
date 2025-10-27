@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
 /**
@@ -119,14 +119,10 @@ export default function ProfileSetupModal({
                 <TypingIndicator />
               </div>
             ) : showContent ? (
-              <TypeAnimation
-                sequence={[
-                  `Add profile photo. And let me know what you're working on.\n\nAdd a photo so people can see who you are, and tell me what you're working on right now.`
-                ]}
+              <SafeType
+                text={`Add profile photo. And let me know what you're working on.\n\nAdd a photo so people can see who you are, and tell me what you're working on right now.`}
                 speed={15}
-                wrapper="div"
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
-                cursor={false}
               />
             ) : null}
           </div>

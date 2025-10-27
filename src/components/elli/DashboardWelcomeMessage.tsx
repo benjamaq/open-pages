@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
 import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
 
@@ -33,11 +33,11 @@ export default function DashboardWelcomeMessage({
   const [showMessage, setShowMessage] = useState(false);
 
   useEffect(() => {
-    // Show typing for 2 seconds
+    // Brief indicator to match onboarding
     const timer = setTimeout(() => {
       setShowTyping(false);
       setShowMessage(true);
-    }, 2000);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
@@ -93,13 +93,10 @@ export default function DashboardWelcomeMessage({
               <TypingIndicator />
             </div>
           ) : showMessage ? (
-            <TypeAnimation
-              sequence={[message]}
+            <SafeType
+              text={message}
               speed={15}
-              wrapper="div"
               className="text-gray-700 whitespace-pre-line leading-relaxed"
-              cursor={false}
-              onComplete={onComplete}
             />
           ) : null}
         </div>

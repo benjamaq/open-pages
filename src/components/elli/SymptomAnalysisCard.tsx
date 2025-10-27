@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
 import { analyzeSymptomsAction } from '@/lib/actions/analyze-symptoms';
 import type { CheckInData, SymptomAnalysis } from '@/lib/elli/symptomAnalyzer';
@@ -231,12 +231,10 @@ export default function SymptomAnalysisCard({
             {fromSavedToday ? (
               <p className="text-gray-700 leading-relaxed text-[15px] sm:text-base">{analysis.empatheticResponse}</p>
             ) : (
-              <TypeAnimation
-                sequence={[analysis.empatheticResponse]}
+              <SafeType
+                text={analysis.empatheticResponse}
                 speed={15}
-                wrapper="p"
                 className="text-gray-700 leading-relaxed text-[15px] sm:text-base"
-                cursor={false}
               />
             )}
           </div>

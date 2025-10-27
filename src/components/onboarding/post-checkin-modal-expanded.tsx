@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft } from 'lucide-react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { saveExpandedUserCondition } from '@/lib/db/userCondition';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import AddStackItemForm from '@/components/AddStackItemForm';
@@ -241,16 +241,10 @@ export default function PostCheckinModal({
               </div>
             ) : showValidationMessage ? (
               <div className="space-y-6">
-                <TypeAnimation
-                  sequence={[
-                    validationMessage.title,
-                    300, // Pause after title
-                    validationMessage.title + '\n\n' + validationMessage.message
-                  ]}
+                <SafeType
+                  text={`${validationMessage.title}\n\n${validationMessage.message}`}
                   speed={15}
-                  wrapper="div"
                   className="text-gray-700 whitespace-pre-line leading-relaxed"
-                  cursor={false}
                 />
 
                 <button
@@ -347,12 +341,10 @@ export default function PostCheckinModal({
                 <TypingIndicator />
               </div>
             ) : (
-                <TypeAnimation
-                  sequence={[getElliWelcomeMessage(dayOneData)]}
+                <SafeType
+                  text={getElliWelcomeMessage(dayOneData)}
                   speed={15}
-                  wrapper="div"
                   className="text-gray-700 leading-relaxed whitespace-pre-line"
-                  cursor={false}
                 />
             )}
           </div>

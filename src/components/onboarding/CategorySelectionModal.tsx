@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft } from 'lucide-react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { saveExpandedUserCondition } from '@/lib/db/userCondition';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { 
@@ -151,16 +151,10 @@ export default function CategorySelectionModal({
               </div>
             ) : showValidationMessage && validationMessage ? (
               <div className="space-y-6">
-                <TypeAnimation
-                  sequence={[
-                    validationMessage.title,
-                    300,
-                    validationMessage.title + '\n\n' + validationMessage.message
-                  ]}
+                <SafeType
+                  text={`${validationMessage.title}\n\n${validationMessage.message}`}
                   speed={15}
-                  wrapper="div"
                   className="text-gray-700 whitespace-pre-line leading-relaxed"
-                  cursor={false}
                 />
 
                 <button

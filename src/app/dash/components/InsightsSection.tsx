@@ -102,12 +102,6 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
 
       {isExpanded && (
         <div className="mt-3 space-y-2">
-          {/* Tip to encourage lifestyle tags for better insights */}
-          <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3">
-            <div className="text-xs text-indigo-900">
-              <span className="font-semibold">Tip:</span> Select lifestyle tags to unlock insights! The more you track what you eat, drink, and do, the faster we can find patterns. Try selecting 2–3 lifestyle tags each day (caffeine, exercise, supplements, etc.).
-            </div>
-          </div>
           {sortedInsights.length === 0 ? (
             <p className="text-xs text-gray-600">Track for 1-2 more days to discover your first insights.</p>
           ) : (
