@@ -902,7 +902,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 />
                 <label
                   htmlFor="avatar-file-input"
-                  onClick={() => console.log('🔴 SettingsClient LABEL CLICK')}
+                  onClick={() => { console.log('🔴 SettingsClient LABEL CLICK'); try { const el = document.getElementById('avatar-file-input') as HTMLInputElement | null; if (el && (el as any).showPicker) { (el as any).showPicker(); } } catch (e) {} }}
                   className="inline-flex items-center px-2 py-1.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
                 >
                   <Camera className="w-3 h-3 mr-1" />

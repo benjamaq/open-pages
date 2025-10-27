@@ -168,7 +168,7 @@ export default function ProfileSetupModal({
                         <label
                           htmlFor="file-upload"
                           className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 cursor-pointer"
-                          onClick={() => console.log('🔴 ProfileSetupModal LABEL CLICK')}
+                          onClick={() => { console.log('🔴 ProfileSetupModal LABEL CLICK'); try { const el = document.getElementById('file-upload') as HTMLInputElement | null; if (el && (el as any).showPicker) { (el as any).showPicker(); } } catch (e) {} }}
                         >
                           Choose photo
                         </label>
