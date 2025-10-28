@@ -10,6 +10,7 @@ export type DailyReminderTemplateParams = {
   checkInUrl: string
   magicUrl: string
   optOutUrl: string
+  milestoneBanner?: string | null
 }
 
 function clamp01(v: number) { return Math.max(0, Math.min(1, v)) }
@@ -98,6 +99,10 @@ export function renderDailyReminderHTML(params: DailyReminderTemplateParams): st
                 })()}
 
                 <div style="font-size:16px; font-weight:700; line-height:24px; color:#101828; margin:16px 0 8px;">Yesterday's Snapshot:</div>
+                ${params.milestoneBanner ? `
+                <div style="margin:16px 0 20px 0; padding:12px 14px; background:#EEF2FF; border:1px solid #C7D2FE; border-radius:10px; color:#1F2937; font-size:14px; line-height:22px;">
+                  ${params.milestoneBanner}
+                </div>` : ''}
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   ${bar('Pain', pain, '#F97316')}
                   ${bar('Mood', mood, '#16A34A')}

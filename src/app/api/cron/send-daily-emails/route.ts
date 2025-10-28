@@ -165,6 +165,32 @@ export async function POST(_req: NextRequest) {
           }
         } catch {}
 
+        // Milestone: first daily email ever
+        const { data: previousEmails } = await supabaseAdmin
+          .from('email_sends')
+          .select('id')
+          .eq('user_id', p.user_id)
+          .eq('email_type', 'daily_reminder')
+          .limit(1)
+        const isFirstEmail = !previousEmails || previousEmails.length === 0
+
+        // Milestone: reached 5+ total check-ins and haven't sent milestone_5 yet
+        const { count: totalEntries } = await supabaseAdmin
+          .from('daily_entries')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', p.user_id)
+        const { data: milestone5Sent } = await supabaseAdmin
+          .from('email_sends')
+          .select('id')
+          .eq('user_id', p.user_id)
+          .eq('email_type', 'milestone_5')
+          .limit(1)
+        const reachedFive = (totalEntries || 0) >= 5 && (!milestone5Sent || milestone5Sent.length === 0)
+
+        const milestoneBanner = reachedFive
+          ? '👏 Five days in — this is where useful patterns start to emerge. Keep going; consistency unlocks real insight.'
+          : undefined
+
         const html = renderDailyReminderHTML({
           userName: firstName,
           pain, mood, sleep,
@@ -175,23 +201,19 @@ export async function POST(_req: NextRequest) {
           checkInUrl: `${base}/dash`,
           magicUrl,
           optOutUrl: `${base}/settings/notifications`,
+          milestoneBanner,
         })
 
-        // Check if first daily email for this user
-        const { data: previousEmails } = await supabaseAdmin
-          .from('email_sends')
-          .select('id')
-          .eq('user_id', p.user_id)
-          .eq('email_type', 'daily_reminder')
-          .limit(1)
-        const isFirstEmail = !previousEmails || previousEmails.length === 0
-        const subject = isFirstEmail
-          ? "Skip today's check-in with Quick Save"
-          : getDailyReminderSubject(firstName)
+        let subject = getDailyReminderSubject(firstName)
+        if (isFirstEmail) subject = "Skip today's check-in with Quick Save"
+        if (reachedFive) subject = "5 days in — you’re unlocking insights"
 
         const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
         const sentOk = !resp.error
         await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
+        if (reachedFive) {
+          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
+        }
         results.push({ user_id: p.user_id, ok: sentOk, id: resp.data?.id, error: resp.error?.message })
       } catch (e: any) {
         results.push({ user_id: p.user_id, ok: false, error: e?.message })
