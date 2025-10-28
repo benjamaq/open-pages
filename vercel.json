@@ -2,14 +2,6 @@
   "regions": ["iad1"],
   "crons": [
     {
-      "path": "/api/notifications/send-daily",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/push/send-daily",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/digest/send",
       "schedule": "0 9 * * *"
     }

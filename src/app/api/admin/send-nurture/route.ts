@@ -77,62 +77,8 @@ function renderNurture(firstName: string, daysTracked: number, daysNeeded: numbe
   return { subject, html }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const payload = await request.json()
-    const recipients = (payload?.recipients || []) as Recipient[]
-    const dryRun = !!payload?.dryRun
-
-    if (!Array.isArray(recipients) || recipients.length === 0) {
-      return NextResponse.json({ error: 'No recipients provided' }, { status: 400 })
-    }
-
-    const results: any[] = []
-    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
-    for (const r of recipients) {
-      const first = extractFirstName(r.email)
-      let subject = ''
-      let html = ''
-      if (r.emailType === 'JESSE_SPECIAL') {
-        ({ subject, html } = renderJesseSpecial(first))
-      } else if (r.emailType === 'NURTURE_3_DAYS') {
-        ({ subject, html } = renderNurture(first, 2, 3))
-      } else {
-        ({ subject, html } = renderNurture(first, 1, 4))
-      }
-
-      if (dryRun) {
-        results.push({ email: r.email, subject, preview: html.slice(0, 200) + '...' })
-        continue
-      }
-
-      // Throttle to respect provider rate limits
-      await sleep(600)
-
-      let resp = await sendEmail({
-        to: r.email,
-        subject,
-        html,
-        from: 'Ben from BioStackr <notifications@biostackr.io>',
-        replyTo: 'ben09@mac.com'
-      })
-      if (!resp.success && (resp.error || '').toLowerCase().includes('too many requests')) {
-        await sleep(1000)
-        resp = await sendEmail({
-          to: r.email,
-          subject,
-          html,
-          from: 'Ben from BioStackr <notifications@biostackr.io>',
-          replyTo: 'ben09@mac.com'
-        })
-      }
-      results.push({ email: r.email, ok: resp.success, id: resp.id, error: resp.error })
-    }
-
-    return NextResponse.json({ ok: true, count: results.length, results })
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Internal error' }, { status: 500 })
-  }
+export async function POST(_request: NextRequest) {
+  return NextResponse.json({ ok: false, error: 'Nurture emails disabled' }, { status: 410 })
 }
 
 
