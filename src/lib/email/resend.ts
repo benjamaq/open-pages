@@ -184,12 +184,14 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
 
 export async function sendDay2TipsEmail(params: { userEmail: string; userName: string }): Promise<{ success: boolean; id?: string; error?: string }> {
   const html = generateDay2TipsHTML({ userName: params.userName })
+  const fromAddress = process.env.RESEND_FROM || 'Biostackr <notifications@biostackr.io>'
+  const replyTo = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
   return sendEmail({
     to: params.userEmail,
     subject: 'Day 2: You’re doing great — tips to unlock insights faster',
     html,
-    from: 'Biostackr <notifications@biostackr.io>',
-    replyTo: process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || 'ben09@mac.com'
+    from: fromAddress,
+    ...(replyTo ? { replyTo } : {})
   })
 }
 

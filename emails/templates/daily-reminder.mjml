@@ -1,0 +1,122 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif" />
+      <mj-text font-size="16px" line-height="1.6" color="#111111" />
+      <mj-section padding="0px" />
+      <mj-column padding="0px" />
+    </mj-attributes>
+    <mj-style inline="inline">
+      .eyebrow { color:#6b7280; font-size:12px; letter-spacing:.06em; text-transform:uppercase; }
+      .muted   { color:#6b7280; }
+      .rule    { border-top:1px solid #eeeeee; height:1px; line-height:1px; }
+      .btn     { border-radius:10px; padding:12px 18px; display:inline-block; font-weight:600; }
+      .btn-primary { background:#111111; color:#ffffff !important; }
+      .btn-secondary { color:#111111; border:1px solid #d1d5db; background:#ffffff; }
+      .pill { background:#f6f6f7; color:#374151; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .bar { height:8px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
+      .bar-fill { height:8px; background:#3b82f6; border-radius:6px; }
+      .stack li { margin:6px 0; }
+      .footer-link a { color:#6b7280 !important; text-decoration:underline; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#FAFAFB">
+    <!-- Top card section -->
+    <mj-section padding="0">
+      <mj-column width="600px" background-color="#FFFFFF" padding="24px" border-radius="16px">
+
+        <!-- Greeting + opener -->
+        <mj-text font-size="24px" line-height="32px" padding-bottom="8px"><strong>Hey {{user_name}} 👋</strong></mj-text>
+
+        <mj-text font-size="16px" line-height="24px" color="#101828">
+I noticed your pain was <strong>{{pain}}/10</strong> yesterday, with mood <strong>{{mood}}/10</strong> and sleep <strong>{{sleep}}/10</strong>.<br/>
+Small wins matter.
+        </mj-text>
+
+        <!-- Yesterday snapshot (flowing, no heavy box) -->
+        <mj-text padding-top="12px" padding-bottom="8px" font-size="16px" line-height="24px" color="#101828"><strong>Yesterday's Snapshot:</strong></mj-text>
+
+        <!-- Solid bars component: label above bar, brand colors -->
+        <mj-table>
+          <tr><td style="padding:0 0 8px 0; font-size:16px; line-height:24px; color:#101828;"><strong>Pain: {{pain}}/10</strong></td></tr>
+          <tr><td style="padding:0 0 10px 0;">
+            <div style="width:100%; max-width:180px; height:18px; border:1px solid #E5E7EB; border-radius:6px; background:#FFFFFF;">
+              <div style="width: {{pct_pain}}; height:100%; background:#F97316; border-radius:6px;"></div>
+            </div>
+          </td></tr>
+          <tr><td style="padding:0 0 8px 0; font-size:16px; line-height:24px; color:#101828;"><strong>Mood: {{mood}}/10</strong></td></tr>
+          <tr><td style="padding:0 0 10px 0;">
+            <div style="width:100%; max-width:180px; height:18px; border:1px solid #E5E7EB; border-radius:6px; background:#FFFFFF;">
+              <div style="width: {{pct_mood}}; height:100%; background:#16A34A; border-radius:6px;"></div>
+            </div>
+          </td></tr>
+          <tr><td style="padding:0 0 8px 0; font-size:16px; line-height:24px; color:#101828;"><strong>Sleep: {{sleep}}/10</strong></td></tr>
+          <tr><td style="padding:0 0 10px 0;">
+            <div style="width:100%; max-width:180px; height:18px; border:1px solid #E5E7EB; border-radius:6px; background:#FFFFFF;">
+              <div style="width: {{pct_sleep}}; height:100%; background:#FACC15; border-radius:6px;"></div>
+            </div>
+          </td></tr>
+        </mj-table>
+
+        <mj-text padding-bottom="12px" font-size="14px" line-height="22px" color="#475467">Readiness: {{readiness_emoji}} <strong>{{readiness_percent}}%</strong> — {{readiness_message}}</mj-text>
+
+        <mj-text css-class="muted" padding-bottom="16px" font-size="16px" line-height="24px" color="#344054">
+Your body's still catching up — a good day to be gentle with yourself.
+        </mj-text>
+
+        <mj-divider border-color="#eeeeee" padding-top="6px" padding-bottom="14px" />
+
+        <!-- Prompt -->
+        <mj-text padding-bottom="8px"><strong>How are you feeling today?</strong></mj-text>
+
+        <mj-text padding-bottom="14px">
+Your check-in takes just 20 seconds, or if it feels the same as yesterday, tap the Quick Save button.
+        </mj-text>
+
+      </mj-column>
+    </mj-section>
+
+    <!-- Buttons section (two columns for desktop, stacks on mobile) -->
+    <mj-section padding="0" background-color="#ffffff">
+      <mj-column width="600px" padding="0 24px 0 24px">
+        <mj-table align="center">
+          <tr>
+            <td style="padding:0 6px 0 0;">
+              <a href="{{check_in_url}}" style="display:inline-block; width:150px; background:#7C3AED; color:#FFFFFF; text-decoration:none; border-radius:10px; padding:14px 16px; font-weight:500; text-align:center;">Check in</a>
+            </td>
+            <td style="padding:0 0 0 6px;">
+              <a href="{{quick_save_url}}" style="display:inline-block; width:150px; background:#EDE9FE; color:#7C3AED; text-decoration:none; border-radius:10px; padding:14px 16px; font-weight:500; text-align:center; border:1px solid #C4B5FD;">Quick Save</a>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Helper + stack + footer section -->
+    <mj-section padding="0" background-color="#ffffff">
+      <mj-column width="600px" padding="12px 24px 24px 24px">
+        <!-- Helper text -->
+        <mj-text css-class="muted" padding-top="4px" padding-bottom="18px">
+The Quick Save button keeps your consistency visible and helps me spot patterns.<br/>
+Not every day needs effort. Consistency matters more than perfection.
+        </mj-text>
+
+        <mj-divider border-color="#eeeeee" padding-bottom="12px" />
+
+        <!-- Today's stack -->
+        <mj-text padding-bottom="6px"><strong>Today's Stack:</strong></mj-text>
+        <mj-text padding-top="0">{{stack_lines}}</mj-text>
+
+        <mj-text css-class="muted" padding-top="18px">
+Want to stop daily emails? <a href="{{unsubscribe_url}}">Turn them off here.</a>
+        </mj-text>
+
+        <mj-text padding-top="10px">— Elli 💙</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+
+

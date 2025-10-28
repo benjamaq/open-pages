@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:test": "tsx scripts/seedTestData.ts"
+    "seed:test": "tsx scripts/seedTestData.ts",
+    "emails:compile": "node scripts/compile-daily-reminder-mjml.js"
   },
   "dependencies": {
     "@next/third-parties": "^15.5.4",
@@ -41,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "madge": "^8.0.0",
+    "mjml": "^4.16.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",

@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
           to: email,
           subject: 'BioStackr debug email',
           html: `<div style="font-family:Arial,sans-serif">This is a debug email.<br/>From: ${from}<br/>Reply-To: ${replyTo || '(none)'}<br/>Domain: ${domain}</div>`,
-          replyTo: replyTo,
+          ...(replyTo ? { reply_to: replyTo, headers: { 'Reply-To': replyTo } } : {}),
         })
         sendResult = result
         if (result.error) sendError = result.error.message
