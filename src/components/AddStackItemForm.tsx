@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { addStackItem } from '../lib/actions/stack'
 import { useRouter } from 'next/navigation'
 import { checkItemLimit } from '../lib/actions/trial-limits'
@@ -33,8 +33,18 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
   const [limitInfo, setLimitInfo] = useState({ canAdd: true, currentCount: 0, limit: 0 })
   const router = useRouter()
 
-  // Check limits on mount
+  // Body scroll lock (prevents iOS keyboard/viewport flicker behind modal)
   useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [])
+
+  // Check limits on mount (guard to avoid repeat calls that can cause flicker)
+  const didCheckLimitsRef = useRef(false)
+  useEffect(() => {
+    if (didCheckLimitsRef.current) return
+    didCheckLimitsRef.current = true
     const checkLimits = async () => {
       try {
         // Only check supplements and protocols for limits
@@ -183,8 +193,8 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
   ]
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-sm max-h-[82vh] sm:max-h-[82vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-sm max-h-[82vh] sm:max-h-[82vh] flex flex-col overflow-hidden" style={{ WebkitOverflowScrolling: 'touch' as any }}>
         {/* Header */}
         <div className="bg-white rounded-t-2xl border-b border-gray-100 p-2 sm:p-3">
           <div className="flex items-center justify-between">
@@ -207,7 +217,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto rounded-b-2xl">
+        <div className="flex-1 overflow-y-auto rounded-b-2xl" style={{ WebkitOverflowScrolling: 'touch' as any }}>
           <form onSubmit={handleSubmit} className="flex flex-col h-full">
             <div className={`flex-1 ${itemType === 'supplements' ? 'pt-1 sm:pt-2 px-3 sm:px-5' : 'p-3 sm:p-5'} space-y-3 sm:space-y-5`}>
             {itemType === 'supplements' && isOnboarding && (
