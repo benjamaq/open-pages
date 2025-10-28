@@ -95,16 +95,21 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
 
     const resendClient = getResendClient()
     
+    const computedDomainFrom = process.env.RESEND_DOMAIN ? `BioStackr <noreply@${process.env.RESEND_DOMAIN}>` : undefined
+    const fromAddress = data.from || process.env.RESEND_FROM || computedDomainFrom || 'Biostackr <notifications@biostackr.io>'
+    const replyTo = data.replyTo
     console.log('Sending email to:', data.to)
-    console.log('From:', data.from || 'Biostackr <notifications@biostackr.io>')
+    console.log('From:', fromAddress)
+    if (replyTo) console.log('Reply-To:', replyTo)
     console.log('Subject:', data.subject)
     
     const result = await resendClient.emails.send({
-      from: data.from || 'notifications@biostackr.io',
+      from: fromAddress,
       to: data.to,
       subject: data.subject,
       html: data.html,
-      replyTo: data.replyTo
+      // Resend SDK expects `reply_to`, not `replyTo`
+      ...(replyTo ? { reply_to: replyTo } : {})
     })
 
     console.log('Resend API response:', result)
@@ -183,7 +188,8 @@ export async function sendDay2TipsEmail(params: { userEmail: string; userName: s
     to: params.userEmail,
     subject: 'Day 2: You’re doing great — tips to unlock insights faster',
     html,
-    from: 'Biostackr <notifications@biostackr.io>'
+    from: 'Biostackr <notifications@biostackr.io>',
+    replyTo: process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || 'ben09@mac.com'
   })
 }
 

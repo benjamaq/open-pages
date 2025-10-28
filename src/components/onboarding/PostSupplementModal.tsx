@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
 
@@ -35,7 +35,7 @@ export default function PostSupplementModal({
       setShowTyping(true);
       setShowMessage(false);
       
-      // Brief thinking indicator
+      // Brief thinking indicator (match standard 300ms)
       const timer = setTimeout(() => {
         setShowTyping(false);
         setShowMessage(true);
@@ -114,12 +114,10 @@ On the dashboard, add everything you're taking. I'll analyze patterns and help y
                 <TypingIndicator />
               </div>
             ) : showMessage ? (
-              <TypeAnimation
-                sequence={[message]}
-                speed={35}
-                wrapper="div"
+              <SafeType
+                text={message}
+                speed={15}
                 className="text-gray-700 whitespace-pre-line leading-relaxed"
-                cursor={false}
               />
             ) : null}
           </div>

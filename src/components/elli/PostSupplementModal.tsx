@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TypeAnimation } from 'react-type-animation';
+import SafeType from '@/components/elli/SafeType';
 import { X, CheckCircle } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { getPostSupplementTemplate } from '@/lib/elli/elliTemplates';
@@ -37,7 +37,8 @@ export default function PostSupplementModal({
   useEffect(() => {
     if (isOpen) {
       setShowTyping(true);
-      const timer = setTimeout(() => setShowTyping(false), 1500);
+      // Match global typing pattern: short indicator (300ms)
+      const timer = setTimeout(() => setShowTyping(false), 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -76,13 +77,11 @@ export default function PostSupplementModal({
                 <TypingIndicator />
               </div>
             ) : (
-            <TypeAnimation
-                sequence={[elliMessage]}
-              speed={60}
-                wrapper="div"
-                className="text-gray-700 whitespace-pre-line leading-relaxed"
-                cursor={false}
-              />
+            <SafeType
+              text={elliMessage}
+              speed={15}
+              className="text-gray-700 whitespace-pre-line leading-relaxed"
+            />
             )}
           </div>
 

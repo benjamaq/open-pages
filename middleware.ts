@@ -4,6 +4,12 @@ import { updateSession } from './src/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   // Redirect root (/) to the static landing page in all environments
   const { pathname } = request.nextUrl
+
+  // Public endpoint: allow unauthenticated access and skip session middleware
+  if (pathname.startsWith('/api/checkin/magic')) {
+    return NextResponse.next()
+  }
+
   if (pathname === '/' || pathname === '') {
     const url = request.nextUrl.clone()
     url.pathname = '/landing-v2.html'
@@ -25,6 +31,7 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     // Exclude API routes, Next internals, assets, and favicon from middleware
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Also explicitly allow the magic check-in endpoint to be public
+    '/((?!api/checkin/magic|api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
