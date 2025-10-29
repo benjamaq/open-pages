@@ -1753,7 +1753,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     let fired = false
     if (!fired) {
       fired = true
-      fireMetaEvent('ViewContent', { content_name: 'dashboard' }, { email: userEmail, externalId: userId }).catch(() => {})
+      fireMetaEvent('ViewContent', { content_type: 'page', content_name: 'dashboard' }, { email: userEmail, externalId: userId }).catch(() => {})
     }
   }, [userId, userEmail])
 
@@ -2483,13 +2483,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   todayEntry={todayMoodEntry}
                   todayItems={todayItems}
                   onEditToday={() => {
-                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', content_name: 'check_in_start' }, { email: userEmail, externalId: userId }).catch(() => {})
+                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', value: 0, currency: 'USD' }, { email: userEmail, externalId: userId }).catch(() => {})
                     setShowEnhancedMoodDrawer(true)
                   }}
                   onEditDay={(date: string) => {
                     console.log('🔍 DashboardClient - Day clicked:', date);
                     setSelectedMoodDate(date);
-                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', content_name: 'check_in_start' }, { email: userEmail, externalId: userId }).catch(() => {})
+                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', value: 0, currency: 'USD' }, { email: userEmail, externalId: userId }).catch(() => {})
                     setShowEnhancedMoodDrawer(true);
                   }}
                   onRefresh={loadTodayMoodEntry}

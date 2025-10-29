@@ -13,7 +13,7 @@ export default function InsightsViewTracker({ insights }: { insights: any[] }) {
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        await fireMetaEvent('ViewContent', { content_name: 'insights' }, { email: user?.email || undefined, externalId: user?.id || undefined })
+        await fireMetaEvent('ViewContent', { content_type: 'page', content_name: 'insights' }, { email: user?.email || undefined, externalId: user?.id || undefined })
       } catch {}
     })()
 
