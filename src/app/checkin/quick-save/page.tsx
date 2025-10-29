@@ -16,32 +16,9 @@ function QuickSaveContent() {
       setMessage('Missing token')
       return
     }
-    let cancelled = false
-    const run = async () => {
-      setStatus('loading')
-      try {
-        const resp = await fetch('/api/checkin/process-magic-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        })
-        const json = await resp.json().catch(() => ({}))
-        if (!resp.ok || !json?.ok) {
-          if (cancelled) return
-          setStatus('error')
-          setMessage(json?.error || 'Invalid or expired token')
-          return
-        }
-        if (cancelled) return
-        router.replace('/dash?toast=magic_success')
-      } catch (e: any) {
-        if (cancelled) return
-        setStatus('error')
-        setMessage(e?.message || 'Failed to process token')
-      }
-    }
-    run()
-    return () => { cancelled = true }
+    setStatus('loading')
+    // Delegate to server which will redirect to /checkin/success on completion
+    window.location.href = `/api/checkin/process-magic-token?token=${encodeURIComponent(token)}`
   }, [router, search])
 
   return (
@@ -63,10 +40,10 @@ function QuickSaveContent() {
           <h1 className="text-lg font-semibold text-gray-900">We couldn’t use that link</h1>
           <p className="text-sm text-gray-600 mt-2">{message || 'The quick save token is invalid or expired.'}</p>
           <button
-            onClick={() => router.replace('/dash')}
+            onClick={() => router.replace('/')}
             className="mt-6 inline-flex items-center px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
           >
-            Go to dashboard
+            Go to home
           </button>
         </>
       )}

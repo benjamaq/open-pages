@@ -74,6 +74,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
               ;(window as any).gtag('event', 'sign_up', { method: 'email', landing_variant: landingVariant })
             }
           } catch {}
+          // Fire Meta Pixel LEAD (distinct from CompleteRegistration)
+          try {
+            await fireMetaEvent('Lead', {
+              value: 0,
+              currency: 'USD',
+              content_name: 'user_signup'
+            }, {
+              email: cleanEmail,
+              externalId: data.user.id
+            })
+          } catch {}
           // Fire Meta Pixel CompleteRegistration
           try { if (typeof window !== 'undefined' && (window as any).fbq) { (window as any).fbq('track','CompleteRegistration') } } catch {}
           try { await fetch('/api/diag/signup-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase: 'success', mode, email: cleanEmail, referrer: document.referrer, userAgent: navigator.userAgent, isInApp, viewport }) }) } catch {}
@@ -87,10 +98,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
               console.log('✅ GA4: Signup event sent')
             }
           } catch {}
-          // Fire Meta Pixel CompleteRegistration immediately with attribution
+          // Fire Meta Pixel CompleteRegistration immediately with attribution + advanced matching
           try {
             const attrib = attachAttributionToParams({ value: 0, currency: 'EUR' })
-            const method = fireMetaEvent('CompleteRegistration', attrib)
+            const method = await fireMetaEvent('CompleteRegistration', attrib, {
+              email: cleanEmail,
+              firstName: (cleanName || '').split(' ')[0] || undefined,
+              lastName: (cleanName || '').split(' ').slice(1).join(' ') || undefined,
+              externalId: data.user.id
+            })
             console.log('✅ Meta Pixel: CompleteRegistration fired (AuthForm) via', method, 'with attribution', attrib)
           } catch {}
           // Initialize free subscription (idempotent)
@@ -161,10 +177,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
               if (betaResponse.ok) {
                 // Beta code activated! User gets Pro access
                 setMessage('Beta code activated! You now have 6 months of free Pro access! 🎉 Redirecting...')
-                // Fire Meta CompleteRegistration again to be safe before redirect
+                // Fire Meta CompleteRegistration again to be safe before redirect (with advanced matching)
                 try {
                   const attrib = attachAttributionToParams({ value: 0, currency: 'EUR' })
-                  const method = fireMetaEvent('CompleteRegistration', attrib)
+                  const method = await fireMetaEvent('CompleteRegistration', attrib, {
+                    email: cleanEmail,
+                    firstName: (cleanName || '').split(' ')[0] || undefined,
+                    lastName: (cleanName || '').split(' ').slice(1).join(' ') || undefined,
+                    externalId: data.user.id
+                  })
                   console.log('✅ Meta Pixel: CompleteRegistration fired (beta path) via', method, 'with attribution', attrib)
                 } catch {}
                 setTimeout(() => {

@@ -15,6 +15,7 @@ import ProfileActionButtons from '../../../components/ProfileActionButtons'
 import { getPublicLibraryItems } from '../../../lib/actions/library'
 import type { Metadata } from 'next'
 import { getPublicMoodData } from '../../../lib/db/mood'
+import MetaView from '@/components/MetaView'
 // const MyHealthDescriptorBanner = dynamic(() => import('@/components/MyHealthDescriptorBanner'), { ssr: false })
 
 interface ProfilePageParams { slug: string }
@@ -344,6 +345,7 @@ export default async function ProfilePage(props: {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+      <MetaView contentName="profile" userIdProp={user?.id} emailProp={user?.email || undefined} />
       {/* Header - Brand First Design */}
       <div className="bg-white shadow-sm">
         {/* Row 1: Brand Only */}

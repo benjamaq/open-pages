@@ -1,12 +1,22 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, fireMetaEvent } from '@/lib/analytics'
+import { createClient } from '@/lib/supabase/client'
 
 export default function InsightsViewTracker({ insights }: { insights: any[] }) {
   const tracked = useRef(new Set<string>())
 
   useEffect(() => {
+    // Fire Meta ViewContent for insights page once
+    (async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        await fireMetaEvent('ViewContent', { content_name: 'insights' }, { email: user?.email || undefined, externalId: user?.id || undefined })
+      } catch {}
+    })()
+
     if (!insights || insights.length === 0) return
     insights.forEach((p) => {
       const id = p?.context?.insight_key || p?.id

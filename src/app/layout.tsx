@@ -90,7 +90,15 @@ export default function RootLayout({
             window.fbq = window.fbq || function(){(window.fbq.q = window.fbq.q || []).push(arguments)};
             window.fbq.loaded = true; window.fbq.version = '2.0';
             fbq('init', '704287959370274');
-            fbq('track', 'PageView');
+
+            // Anonymous context for PageView (Advanced Matching fields will be added on per-event when user info is available)
+            (function(){
+              function rc(n){try{var m=document.cookie.match(new RegExp('(?:^|; )'+n.replace(/([.$?*|{}()\\[\\]\\\\\/\\+^])/g,'\\$1')+'=([^;]*)'));return m?decodeURIComponent(m[1]):undefined}catch{return undefined}}
+              var fbp = rc('_fbp');
+              var fbc = rc('_fbc');
+              var ua = navigator.userAgent || '';
+              try { fbq('track', 'PageView', {}, { fbp: fbp || undefined, fbc: fbc || undefined, client_user_agent: ua }); } catch (e) {}
+            })();
           `}
         </Script>
       </head>

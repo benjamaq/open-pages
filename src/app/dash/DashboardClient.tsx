@@ -34,6 +34,7 @@ import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, need
 import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
 import { PatternsCard } from './components/PatternsCard'
+import { createClient } from '@/lib/supabase/client'
 
 interface Profile {
   id: string
@@ -1670,6 +1671,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showHeaderEditor, setShowHeaderEditor] = useState(false)
   const [profileMission, setProfileMission] = useState(profile.bio || '')
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | undefined>(undefined)
   const [welcomeType, setWelcomeType] = useState<'pro' | 'creator' | null>(null)
   const [streak, setStreak] = useState(0)
   
@@ -1735,6 +1737,26 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     }
   }, [profile])
 
+  // Fetch user email for advanced matching
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email) setUserEmail(user.email)
+      } catch {}
+    })()
+  }, [])
+
+  // ViewContent for dashboard page
+  useEffect(() => {
+    let fired = false
+    if (!fired) {
+      fired = true
+      fireMetaEvent('ViewContent', { content_name: 'dashboard' }, { email: userEmail, externalId: userId }).catch(() => {})
+    }
+  }, [userId, userEmail])
+
   const handleOnboardingStepComplete = async (step: number) => {
     console.log('🎯 DashboardClient - handleOnboardingStepComplete called for step:', step)
     try {
@@ -1753,7 +1775,18 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const handleOnboardingComplete = () => {
     setShowOnboarding(false)
     // Refresh profile data to update onboarding status
-    window.location.reload()
+    try {
+      fireMetaEvent('CompleteRegistration', {
+        value: 0,
+        currency: 'USD',
+        content_name: 'onboarding_complete'
+      }, {
+        email: userEmail,
+        externalId: userId
+      }).catch(() => {})
+    } finally {
+      window.location.reload()
+    }
   }
 
   // NEW: Handler for orchestrated onboarding completion
@@ -1777,6 +1810,16 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     
     setShowOrchestratedOnboarding(false);
     setShowOnboarding(false); // Prevent old onboarding modal from showing
+    try {
+      await fireMetaEvent('CompleteRegistration', {
+        value: 0,
+        currency: 'USD',
+        content_name: 'onboarding_complete'
+      }, {
+        email: userEmail,
+        externalId: userId
+      })
+    } catch {}
     window.location.reload(); // Refresh to show dashboard
   }
 
@@ -2101,8 +2144,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
             value: 0,
             currency: 'EUR'
           }
-          const method = fireMetaEvent('CompleteRegistration', attribution)
-          console.log('✅ Meta Pixel: CompleteRegistration SENT to Facebook via', method, 'with attribution', attribution)
+          fireMetaEvent('CompleteRegistration', attribution, {
+            firstName,
+            lastName,
+            externalId: userId
+          }).then(method => {
+            console.log('✅ Meta Pixel: CompleteRegistration SENT to Facebook via', method, 'with attribution', attribution)
+          }).catch(() => {})
         } catch {}
         sessionStorage.removeItem('justSignedUp')
         try { document.cookie = 'bs_cr=; Max-Age=0; Path=/; SameSite=Lax' } catch {}
@@ -2435,11 +2483,13 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   todayEntry={todayMoodEntry}
                   todayItems={todayItems}
                   onEditToday={() => {
+                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', content_name: 'check_in_start' }, { email: userEmail, externalId: userId }).catch(() => {})
                     setShowEnhancedMoodDrawer(true)
                   }}
                   onEditDay={(date: string) => {
                     console.log('🔍 DashboardClient - Day clicked:', date);
                     setSelectedMoodDate(date);
+                    fireMetaEvent('InitiateCheckout', { content_category: 'daily_checkin', content_name: 'check_in_start' }, { email: userEmail, externalId: userId }).catch(() => {})
                     setShowEnhancedMoodDrawer(true);
                   }}
                   onRefresh={loadTodayMoodEntry}
