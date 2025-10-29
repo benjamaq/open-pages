@@ -36,19 +36,19 @@ export async function POST(req: NextRequest) {
 
     const userId = tokenRow.user_id as string
 
-    // Resolve yesterday (server-midnight window)
-    const todayStart = new Date(); todayStart.setHours(0,0,0,0)
-    const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(todayStart.getDate() - 1)
+    // Resolve YYYY-MM-DD strings (UTC-based). If your system stores per-user local dates,
+    // consider deriving these with the user's timezone.
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const yDate = new Date()
+    yDate.setUTCDate(yDate.getUTCDate() - 1)
+    const yesterdayStr = yDate.toISOString().slice(0, 10)
 
-    // 3) Get yesterday's entry
+    // 3) Get yesterday's entry by composite key (user_id, local_date)
     const { data: yEntry, error: yErr } = await supabase
       .from('daily_entries')
-      .select('id, pain, mood, sleep_quality, meds, protocols')
+      .select('pain, mood, sleep_quality, meds, protocols, local_date')
       .eq('user_id', userId)
-      .gte('created_at', yesterdayStart.toISOString())
-      .lt('created_at', todayStart.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('local_date', yesterdayStr)
       .maybeSingle()
     if (yErr) return NextResponse.json({ ok: false, error: yErr.message }, { status: 500 })
     if (!yEntry) return NextResponse.json({ ok: false, error: 'No previous entry' }, { status: 404 })
@@ -56,18 +56,19 @@ export async function POST(req: NextRequest) {
     // 4) If already has a non-placeholder today, mark used and exit OK idempotent
     const { data: todayExisting } = await supabase
       .from('daily_entries')
-      .select('id, is_placeholder')
+      .select('is_placeholder, local_date')
       .eq('user_id', userId)
-      .gte('created_at', todayStart.toISOString())
-      .limit(1)
-    if (todayExisting && todayExisting.length > 0 && !todayExisting[0]?.is_placeholder) {
+      .eq('local_date', todayStr)
+      .maybeSingle()
+    if (todayExisting && !todayExisting.is_placeholder) {
       await supabase.from('magic_checkin_tokens').update({ used_at: new Date().toISOString() }).eq('id', tokenRow.id)
       return NextResponse.json({ ok: true, already: true })
     }
 
-    // 4b) Create today's placeholder using yesterday's data
+    // 4b) Create today's placeholder using yesterday's data (no id column; composite key)
     const insertPayload: any = {
       user_id: userId,
+      local_date: todayStr,
       pain: yEntry.pain ?? null,
       mood: yEntry.mood ?? null,
       sleep_quality: yEntry.sleep_quality ?? null,
