@@ -235,12 +235,29 @@ async function handler(req: NextRequest) {
           results.push({ user_id: p.user_id, email, ok: true, dry: true, tz, localYesterdayStr, subject })
         } else {
           const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
-          const sentOk = !resp.error
-          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
-          if (reachedFive) {
-            await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
+          const providerId = resp.data?.id || null
+          const sendError = resp.error?.message || null
+          const sentOk = !sendError
+          if (!sentOk) {
+            console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })
+            results.push({ user_id: p.user_id, email, ok: false, providerId, error: sendError })
+          } else {
+            try {
+              const { error: insertErr } = await supabaseAdmin
+                .from('email_sends')
+                .insert({ user_id: p.user_id, email_type: 'daily_reminder', success: true, error: null, provider_id: providerId })
+              if (insertErr) console.error('[daily-cron] email_sends insert failed (daily_reminder):', insertErr)
+              if (reachedFive) {
+                const { error: insert5Err } = await supabaseAdmin
+                  .from('email_sends')
+                  .insert({ user_id: p.user_id, email_type: 'milestone_5', success: true, error: null, provider_id: providerId })
+                if (insert5Err) console.error('[daily-cron] email_sends insert failed (milestone_5):', insert5Err)
+              }
+            } catch (insErr) {
+              console.error('[daily-cron] email_sends insert exception:', insErr)
+            }
+            results.push({ user_id: p.user_id, email, ok: true, id: providerId })
           }
-          results.push({ user_id: p.user_id, email, ok: sentOk, id: resp.data?.id, error: resp.error?.message })
         }
       } catch (e: any) {
         results.push({ user_id: p.user_id, ok: false, error: e?.message })
