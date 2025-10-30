@@ -3,6 +3,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderHTML, getDailyReminderSubject } from '@/lib/email/dailyReminderTemplate'
 import crypto from 'crypto'
 import { Resend } from 'resend'
+import { formatInTimeZone } from 'date-fns-tz'
 
 type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
 
@@ -120,13 +121,17 @@ export async function POST(_req: NextRequest) {
           .limit(1)
         if (sentToday && sentToday.length) { results.push({ user_id: p.user_id, skip: 'already sent' }); continue }
 
-        // Pull yesterday metrics (simplified fallback if missing)
+        // Pull yesterday metrics based on user's LOCAL date (use local_date column)
+        const tz = p.timezone || 'UTC'
+        const localTodayStr = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd')
+        const localYDate = new Date(localTodayStr)
+        localYDate.setDate(localYDate.getDate() - 1)
+        const localYesterdayStr = formatInTimeZone(localYDate, tz, 'yyyy-MM-dd')
         const { data: entry } = await supabaseAdmin
           .from('daily_entries')
-          .select('pain, mood, sleep_quality, meds, protocols, created_at')
+          .select('pain, mood, sleep_quality, meds, protocols, local_date')
           .eq('user_id', p.user_id)
-          .gte('created_at', yesterdayStart.toISOString())
-          .lt('created_at', todayStart.toISOString())
+          .eq('local_date', localYesterdayStr)
           .maybeSingle()
 
         const pain = entry?.pain ?? 5
