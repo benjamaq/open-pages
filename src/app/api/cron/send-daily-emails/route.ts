@@ -23,7 +23,9 @@ async function handler(req: NextRequest) {
   const dryRun = url.searchParams.get('dry') === '1'
   const filterEmail = url.searchParams.get('email') || undefined
   const forceFlag = url.searchParams.get('force') === '1'
-  const authorizedForce = forceFlag && (req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`)
+  // Allow force when explicitly targeting an email, even without auth header (scoped to that user only)
+  const hasAuth = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
+  const authorizedForce = forceFlag && (hasAuth || !!filterEmail)
   const bypassAll = (dryRun && !!filterEmail) || authorizedForce
     // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
@@ -82,8 +84,13 @@ async function handler(req: NextRequest) {
           .eq('email', filterEmail)
           .maybeSingle()
         targetedUserId = (target as any)?.id
-        if (targetedUserId && scopedProfiles.some(p => p.user_id === targetedUserId)) {
-          scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
+        if (targetedUserId) {
+          if (scopedProfiles.some(p => p.user_id === targetedUserId)) {
+            scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
+          } else {
+            // If profile not present, synthesize a minimal one; timezone will be ignored when bypassAll
+            scopedProfiles = [{ user_id: targetedUserId, display_name: null, timezone: 'UTC' }]
+          }
         }
       } catch {}
     }
@@ -123,9 +130,9 @@ async function handler(req: NextRequest) {
   })
 
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Users in 7-8am window:', profilesInWindow.length)
+    console.log(`[daily-cron] Users in 7-8am window: ${profilesInWindow.length} (bypassAll=${bypassAll})`)
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Preparing to send', profilesInWindow.length, 'emails', `(dry=${dryRun})`)
+    console.log(`[daily-cron] Preparing to send ${profilesInWindow.length} emails (dry=${dryRun})`)
 
     const results: any[] = []
     let successCount = 0
