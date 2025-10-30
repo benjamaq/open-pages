@@ -91,6 +91,10 @@ async function handler(req: NextRequest) {
             // If profile not present, synthesize a minimal one; timezone will be ignored when bypassAll
             scopedProfiles = [{ user_id: targetedUserId, display_name: null, timezone: 'UTC' }]
           }
+        } else {
+          // Hard safety: if email filter provided but user not found, do not fan out to all users
+          console.error('[daily-cron] Target email not found in auth.users, aborting targeted run:', filterEmail)
+          return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
         }
       } catch {}
     }
@@ -263,6 +267,9 @@ async function handler(req: NextRequest) {
             const sentOk = !sendError
             // eslint-disable-next-line no-console
             console.log('[daily-cron] Resend response:', { user_id: p.user_id, email, resend_id: resendId, error: sendError })
+            try {
+              console.log('[daily-cron] Resend payload:', { from, to: email, subject, html: (typeof html === 'string') ? html.substring(0, 300) : '(non-string)' })
+            } catch {}
             if (!sentOk) {
               console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })
               results.push({ user_id: p.user_id, email, ok: false, resend_id: resendId, error: sendError })
