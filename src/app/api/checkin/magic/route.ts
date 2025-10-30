@@ -49,7 +49,9 @@ async function handleMagic(request: NextRequest): Promise<NextResponse> {
     try { console.log('🔴 User ID from token:', tokenRow?.user_id); } catch {}
     if (tokenErr || !tokenRow) {
       try { console.log('❌ Token invalid - redirecting'); } catch {}
-      return NextResponse.redirect(new URL('/dash?toast=magic_invalid', url.origin))
+      const errUrl = new URL('/checkin/success', url.origin)
+      errUrl.searchParams.set('error', 'invalid_token')
+      return NextResponse.redirect(errUrl)
     }
 
     const userId: string = tokenRow.user_id
@@ -89,7 +91,19 @@ async function handleMagic(request: NextRequest): Promise<NextResponse> {
         .update({ used_at: new Date().toISOString() })
         .eq('id', tokenRow.id)
       try { console.log('🔴 Marked token used; already checked in today'); } catch {}
-      return NextResponse.redirect(new URL('/dash?toast=already_checked_in', url.origin))
+      // Redirect to success with today date and pull today's entry values
+      const { data: todayEntry } = await supabase
+        .from('daily_entries')
+        .select('pain,mood,sleep_quality,local_date')
+        .eq('user_id', userId)
+        .eq('local_date', localTodayStr)
+        .maybeSingle()
+      const okUrl = new URL('/checkin/success', url.origin)
+      okUrl.searchParams.set('date', localTodayStr)
+      if ((todayEntry as any)?.pain != null) okUrl.searchParams.set('pain', String((todayEntry as any).pain))
+      if ((todayEntry as any)?.mood != null) okUrl.searchParams.set('mood', String((todayEntry as any).mood))
+      if ((todayEntry as any)?.sleep_quality != null) okUrl.searchParams.set('sleep', String((todayEntry as any).sleep_quality))
+      return NextResponse.redirect(okUrl)
     }
 
     // Get yesterday's entry
@@ -110,7 +124,9 @@ async function handleMagic(request: NextRequest): Promise<NextResponse> {
         .update({ used_at: new Date().toISOString() })
         .eq('id', tokenRow.id)
       try { console.log('🔴 Marked token used; no yesterday to copy'); } catch {}
-      return NextResponse.redirect(new URL('/dash?toast=no_yesterday_to_copy', url.origin))
+      const errUrl = new URL('/checkin/success', url.origin)
+      errUrl.searchParams.set('error', 'no_yesterday_to_copy')
+      return NextResponse.redirect(errUrl)
     }
 
     // Upsert today's entry using RPC to keep meds/protocols in sync
@@ -135,7 +151,9 @@ async function handleMagic(request: NextRequest): Promise<NextResponse> {
     const { error: rpcErr } = await supabase.rpc('upsert_daily_entry_and_snapshot', rpcPayload)
     try { console.log('🔴 RPC upsert error (if any):', rpcErr); } catch {}
     if (rpcErr) {
-      return NextResponse.redirect(new URL('/dash?toast=magic_failed', url.origin))
+      const errUrl = new URL('/checkin/success', url.origin)
+      errUrl.searchParams.set('error', 'magic_failed')
+      return NextResponse.redirect(errUrl)
     }
 
     // Mark as magic placeholder
@@ -154,10 +172,17 @@ async function handleMagic(request: NextRequest): Promise<NextResponse> {
     try { console.log('🔴 Marked token as used'); } catch {}
 
     try { console.log('✅ Redirecting: magic_success'); } catch {}
-    return NextResponse.redirect(new URL('/dash?toast=magic_success', url.origin))
+    const okUrl = new URL('/checkin/success', url.origin)
+    okUrl.searchParams.set('date', localTodayStr)
+    if (y.pain != null) okUrl.searchParams.set('pain', String(y.pain))
+    if (y.mood != null) okUrl.searchParams.set('mood', String(y.mood))
+    if (y.sleep_quality != null) okUrl.searchParams.set('sleep', String(y.sleep_quality))
+    return NextResponse.redirect(okUrl)
   } catch (e) {
     console.error('Magic check-in error:', e)
-    return NextResponse.redirect(new URL('/dash?toast=magic_error', new URL(request.url).origin))
+    const errUrl = new URL('/checkin/success', new URL(request.url).origin)
+    errUrl.searchParams.set('error', 'magic_error')
+    return NextResponse.redirect(errUrl)
   }
 }
 
