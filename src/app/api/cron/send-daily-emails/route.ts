@@ -85,23 +85,21 @@ async function handler(req: NextRequest) {
       } catch {}
     }
 
-    // STEP 2: Resolve emails in one query from auth.users
+    // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Fetching emails via auth.users query...')
+    console.log('[daily-cron] Resolving emails via RPC get_user_emails...')
     const emailMap = new Map<string, string>()
     const userIds = Array.from(new Set(scopedProfiles.map(p => p.user_id)))
     if (userIds.length === 0) {
       console.log('[daily-cron] No user IDs to resolve emails for')
     } else {
       const { data: authUsers, error: authErr } = await (supabaseAdmin as any)
-        .from('auth.users')
-        .select('id, email')
-        .in('id', userIds)
+        .rpc('get_user_emails', { user_ids: userIds })
       if (authErr) {
-        console.error('[daily-cron] auth.users query failed:', authErr)
+        console.error('[daily-cron] RPC get_user_emails failed:', authErr)
       } else {
         for (const u of (authUsers as Array<{ id: string; email: string | null }>)) {
-          if (u.email) emailMap.set(u.id, u.email)
+          if (u?.id && u?.email) emailMap.set(u.id, u.email)
         }
         console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.length)
       }
