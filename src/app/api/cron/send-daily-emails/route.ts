@@ -62,33 +62,30 @@ export async function POST(_req: NextRequest) {
       return NextResponse.json({ ok:false, error: error.message }, { status: 500 })
     }
 
-    // STEP 2: Load emails via getUserById loop (reliable, supported)
+    // STEP 2: Load emails in a single query from auth.users to avoid rate limits
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Fetching emails via getUserById...')
+    console.log('[daily-cron] Fetching emails via single auth.users query...')
     const emailMap = new Map<string, string>()
-    let emailsFetched = 0
-    let emailsFailed = 0
-    for (const profile of (profiles as ProfileRow[])) {
-      try {
-        const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id)
-        if (userError) {
-          // eslint-disable-next-line no-console
-          console.error(`[daily-cron] getUserById error for ${profile.user_id}:`, userError)
-          emailsFailed++
-          continue
-        }
-        if (user?.email) {
-          emailMap.set(profile.user_id, user.email)
-          emailsFetched++
-        }
-      } catch (err) {
+    const userIds = Array.from(new Set(((profiles as ProfileRow[]) || []).map(p => p.user_id)))
+    if (userIds.length === 0) {
+      // eslint-disable-next-line no-console
+      console.log('[daily-cron] No user IDs to resolve emails for')
+    } else {
+      const { data: authUsers, error: authErr } = await (supabaseAdmin as any)
+        .from('auth.users')
+        .select('id, email')
+        .in('id', userIds)
+      if (authErr) {
         // eslint-disable-next-line no-console
-        console.error(`[daily-cron] Exception fetching user ${profile.user_id}:`, err)
-        emailsFailed++
+        console.error('[daily-cron] auth.users query failed:', authErr)
+      } else {
+        for (const u of (authUsers as Array<{ id: string; email: string | null }>)) {
+          if (u.email) emailMap.set(u.id, u.email)
+        }
+        // eslint-disable-next-line no-console
+        console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.length)
       }
     }
-    // eslint-disable-next-line no-console
-    console.log(`[daily-cron] Fetched ${emailsFetched} emails, ${emailsFailed} failed`)
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
