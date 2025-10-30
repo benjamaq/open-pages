@@ -18,9 +18,11 @@ async function handler(req: NextRequest) {
     )
 
     // 1) Read debug flags
-    const url = new URL(req.url)
-    const dryRun = url.searchParams.get('dry') === '1'
-    const filterEmail = url.searchParams.get('email') || undefined
+  const url = new URL(req.url)
+  const dryRun = url.searchParams.get('dry') === '1'
+  const filterEmail = url.searchParams.get('email') || undefined
+  const forceFlag = url.searchParams.get('force') === '1'
+  const authorizedForce = forceFlag && (req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`)
     // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(todayStart.getDate() - 1)
@@ -102,12 +104,13 @@ async function handler(req: NextRequest) {
 
     // Timezone window filter (send only to users in 7:00-7:59 local)
     const now = new Date()
-    const profilesInWindow = (profiles as ProfileRow[]).filter(p => {
-      const tz = p.timezone || 'UTC'
-      const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
-      const hour = userTime.getHours()
-      return hour >= 7 && hour < 8
-    })
+  const profilesInWindow = (profiles as ProfileRow[]).filter(p => {
+    if (authorizedForce && filterEmail) return true // bypass hour gate for targeted force
+    const tz = p.timezone || 'UTC'
+    const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
+    const hour = userTime.getHours()
+    return hour >= 7 && hour < 8
+  })
 
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Users in 7-8am window:', profilesInWindow.length)
@@ -121,14 +124,16 @@ async function handler(req: NextRequest) {
         // profiles.daily_reminders_enabled already filtered by the .or above
 
         // Deduplicate by email_sends same day
-        const { data: sentToday } = await supabaseAdmin
-          .from('email_sends')
-          .select('id')
-          .eq('user_id', p.user_id)
-          .eq('email_type', 'daily_reminder')
-          .gte('sent_at', new Date(new Date().toDateString()))
-          .limit(1)
-        if (sentToday && sentToday.length) { results.push({ user_id: p.user_id, skip: 'already sent' }); continue }
+        if (!authorizedForce) {
+          const { data: sentToday } = await supabaseAdmin
+            .from('email_sends')
+            .select('id')
+            .eq('user_id', p.user_id)
+            .eq('email_type', 'daily_reminder')
+            .gte('sent_at', new Date(new Date().toDateString()))
+            .limit(1)
+          if (sentToday && sentToday.length) { results.push({ user_id: p.user_id, skip: 'already sent' }); continue }
+        }
 
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
         const tz = p.timezone || 'UTC'
@@ -146,7 +151,7 @@ async function handler(req: NextRequest) {
         const pain = entry?.pain ?? 5
         const mood = entry?.mood ?? 5
         const sleep = entry?.sleep_quality ?? 5
-        if (!entry) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); continue }
+        if (!entry) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); if (!authorizedForce) continue }
 
         // Calculate readiness
         const readinessPercent = Math.round((((10 - pain) + mood + sleep) / 3) * 10)
@@ -224,7 +229,9 @@ async function handler(req: NextRequest) {
         } else {
           const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
           const sentOk = !resp.error
-          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
+          if (!dryRun) {
+            await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
+          }
           if (reachedFive) {
             await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
           }
