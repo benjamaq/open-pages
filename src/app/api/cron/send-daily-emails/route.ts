@@ -7,7 +7,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 
 type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
 
-export async function POST(_req: NextRequest) {
+async function handler(_req: NextRequest) {
   try {
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Starting email cron job...')
@@ -228,6 +228,14 @@ export async function POST(_req: NextRequest) {
     console.error('[daily-cron] Fatal error:', e)
     return NextResponse.json({ ok:false, error: e?.message || 'Database error' }, { status: 500 })
   }
+}
+
+export async function GET(req: NextRequest) {
+  return handler(req)
+}
+
+export async function POST(req: NextRequest) {
+  return handler(req)
 }
 
 
