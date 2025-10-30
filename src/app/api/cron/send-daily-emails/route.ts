@@ -124,8 +124,12 @@ async function handler(req: NextRequest) {
 
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Users in 7-8am window:', profilesInWindow.length)
+    // eslint-disable-next-line no-console
+    console.log('[daily-cron] Preparing to send', profilesInWindow.length, 'emails', `(dry=${dryRun})`)
 
     const results: any[] = []
+    let successCount = 0
+    let failCount = 0
     for (const p of profilesInWindow) {
       try {
         const email = emailMap.get(p.user_id)
@@ -232,31 +236,54 @@ async function handler(req: NextRequest) {
         if (reachedFive) subject = "5 days in — you’re unlocking insights"
 
         if (dryRun) {
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] DRY RUN - would send to:', { user_id: p.user_id, email, subject })
           results.push({ user_id: p.user_id, email, ok: true, dry: true, tz, localYesterdayStr, subject })
         } else {
-          const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
-          const providerId = resp.data?.id || null
-          const sendError = resp.error?.message || null
-          const sentOk = !sendError
-          if (!sentOk) {
-            console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })
-            results.push({ user_id: p.user_id, email, ok: false, providerId, error: sendError })
-          } else {
-            try {
-              const { error: insertErr } = await supabaseAdmin
-                .from('email_sends')
-                .insert({ user_id: p.user_id, email_type: 'daily_reminder', success: true, error: null, provider_id: providerId })
-              if (insertErr) console.error('[daily-cron] email_sends insert failed (daily_reminder):', insertErr)
-              if (reachedFive) {
-                const { error: insert5Err } = await supabaseAdmin
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] Sending to:', { user_id: p.user_id, email, subject })
+          try {
+            const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
+            const providerId = resp.data?.id || null
+            const sendError = resp.error?.message || null
+            const sentOk = !sendError
+            // eslint-disable-next-line no-console
+            console.log('[daily-cron] Resend response:', { user_id: p.user_id, email, id: providerId, error: sendError })
+            if (!sentOk) {
+              console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })
+              results.push({ user_id: p.user_id, email, ok: false, providerId, error: sendError })
+              failCount++
+            } else {
+              try {
+                const { error: insertErr } = await supabaseAdmin
                   .from('email_sends')
-                  .insert({ user_id: p.user_id, email_type: 'milestone_5', success: true, error: null, provider_id: providerId })
-                if (insert5Err) console.error('[daily-cron] email_sends insert failed (milestone_5):', insert5Err)
+                  .insert({ user_id: p.user_id, email_type: 'daily_reminder', success: true, error: null, provider_id: providerId })
+                if (insertErr) {
+                  console.error('[daily-cron] email_sends insert failed (daily_reminder):', insertErr)
+                } else {
+                  // eslint-disable-next-line no-console
+                  console.log('[daily-cron] email_sends insert OK (daily_reminder):', { user_id: p.user_id, providerId })
+                }
+                if (reachedFive) {
+                  const { error: insert5Err } = await supabaseAdmin
+                    .from('email_sends')
+                    .insert({ user_id: p.user_id, email_type: 'milestone_5', success: true, error: null, provider_id: providerId })
+                  if (insert5Err) {
+                    console.error('[daily-cron] email_sends insert failed (milestone_5):', insert5Err)
+                  } else {
+                    console.log('[daily-cron] email_sends insert OK (milestone_5):', { user_id: p.user_id, providerId })
+                  }
+                }
+              } catch (insErr) {
+                console.error('[daily-cron] email_sends insert exception:', insErr)
               }
-            } catch (insErr) {
-              console.error('[daily-cron] email_sends insert exception:', insErr)
+              results.push({ user_id: p.user_id, email, ok: true, id: providerId })
+              successCount++
             }
-            results.push({ user_id: p.user_id, email, ok: true, id: providerId })
+          } catch (sendEx: any) {
+            console.error('[daily-cron] Resend exception:', { user_id: p.user_id, email, error: sendEx?.message || sendEx })
+            results.push({ user_id: p.user_id, email, ok: false, error: sendEx?.message || 'send_exception' })
+            failCount++
           }
         }
       } catch (e: any) {
@@ -264,7 +291,9 @@ async function handler(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true, count: results.length, results, dryRun: dryRun ? true : undefined, resolvedEmails: emailMap.size })
+    // eslint-disable-next-line no-console
+    console.log('[daily-cron] Summary:', { success: successCount, failed: failCount, attempted: profilesInWindow.length })
+    return NextResponse.json({ ok: true, count: results.length, results, success: successCount, failed: failCount, dryRun: dryRun ? true : undefined, resolvedEmails: emailMap.size })
   } catch (e: any) {
     // eslint-disable-next-line no-console
     console.error('[daily-cron] Fatal error:', e)
