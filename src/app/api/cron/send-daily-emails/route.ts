@@ -7,7 +7,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 
 type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
 
-async function handler(_req: NextRequest) {
+async function handler(req: NextRequest) {
   try {
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Starting email cron job...')
@@ -17,7 +17,11 @@ async function handler(_req: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // 1) Select users to send (simplified: users with yesterday entry; opt-out handled later)
+    // 1) Read debug flags
+    const url = new URL(req.url)
+    const dryRun = url.searchParams.get('dry') === '1'
+    const filterEmail = url.searchParams.get('email') || undefined
+    // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(todayStart.getDate() - 1)
 
@@ -63,29 +67,33 @@ async function handler(_req: NextRequest) {
       return NextResponse.json({ ok:false, error: error.message }, { status: 500 })
     }
 
-    // STEP 2: Load emails in a single query from auth.users to avoid rate limits
+    // STEP 2: Load emails via admin.listUsers (batched) to avoid per-user lookups and REST auth schema restrictions
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Fetching emails via single auth.users query...')
+    console.log('[daily-cron] Fetching emails via admin.listUsers batching...')
     const emailMap = new Map<string, string>()
-    const userIds = Array.from(new Set(((profiles as ProfileRow[]) || []).map(p => p.user_id)))
-    if (userIds.length === 0) {
-      // eslint-disable-next-line no-console
+    const userIds = new Set(((profiles as ProfileRow[]) || []).map(p => p.user_id))
+    if (userIds.size === 0) {
       console.log('[daily-cron] No user IDs to resolve emails for')
     } else {
-      const { data: authUsers, error: authErr } = await (supabaseAdmin as any)
-        .from('auth.users')
-        .select('id, email')
-        .in('id', userIds)
-      if (authErr) {
-        // eslint-disable-next-line no-console
-        console.error('[daily-cron] auth.users query failed:', authErr)
-      } else {
-        for (const u of (authUsers as Array<{ id: string; email: string | null }>)) {
-          if (u.email) emailMap.set(u.id, u.email)
+      const perPage = 200
+      let page = 1
+      while (true) {
+        const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
+        if (error) {
+          console.error('[daily-cron] listUsers error:', error)
+          break
         }
-        // eslint-disable-next-line no-console
-        console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.length)
+        const users = (data as any)?.users || []
+        for (const u of users) {
+          if (u?.id && u?.email && userIds.has(u.id)) {
+            emailMap.set(u.id, u.email)
+          }
+        }
+        if (users.length < perPage) break
+        page += 1
+        if (page > 50) break // safety cap
       }
+      console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.size)
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
@@ -108,7 +116,8 @@ async function handler(_req: NextRequest) {
     for (const p of profilesInWindow) {
       try {
         const email = emailMap.get(p.user_id)
-        if (!email) { results.push({ user_id: p.user_id, skip: 'no email' }); continue }
+        if (!email) { results.push({ user_id: p.user_id, skip: 'no email', stage: 'email-lookup' }); continue }
+        if (filterEmail && email !== filterEmail) { continue }
         // profiles.daily_reminders_enabled already filtered by the .or above
 
         // Deduplicate by email_sends same day
@@ -137,7 +146,7 @@ async function handler(_req: NextRequest) {
         const pain = entry?.pain ?? 5
         const mood = entry?.mood ?? 5
         const sleep = entry?.sleep_quality ?? 5
-        if (!entry) { results.push({ user_id: p.user_id, skip: 'no yesterday entry' }); continue }
+        if (!entry) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); continue }
 
         // Calculate readiness
         const readinessPercent = Math.round((((10 - pain) + mood + sleep) / 3) * 10)
@@ -210,19 +219,23 @@ async function handler(_req: NextRequest) {
         if (isFirstEmail) subject = "Skip today's check-in with Quick Save"
         if (reachedFive) subject = "5 days in — you’re unlocking insights"
 
-        const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
-        const sentOk = !resp.error
-        await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
-        if (reachedFive) {
-          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
+        if (dryRun) {
+          results.push({ user_id: p.user_id, email, ok: true, dry: true, tz, localYesterdayStr, subject })
+        } else {
+          const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
+          const sentOk = !resp.error
+          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
+          if (reachedFive) {
+            await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
+          }
+          results.push({ user_id: p.user_id, email, ok: sentOk, id: resp.data?.id, error: resp.error?.message })
         }
-        results.push({ user_id: p.user_id, ok: sentOk, id: resp.data?.id, error: resp.error?.message })
       } catch (e: any) {
         results.push({ user_id: p.user_id, ok: false, error: e?.message })
       }
     }
 
-    return NextResponse.json({ ok: true, count: results.length, results })
+    return NextResponse.json({ ok: true, count: results.length, results, dryRun: dryRun ? true : undefined, resolvedEmails: emailMap.size })
   } catch (e: any) {
     // eslint-disable-next-line no-console
     console.error('[daily-cron] Fatal error:', e)
