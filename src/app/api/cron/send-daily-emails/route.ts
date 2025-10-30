@@ -73,31 +73,8 @@ async function handler(req: NextRequest) {
       return NextResponse.json({ ok:false, error: error.message }, { status: 500 })
     }
 
-    // Optional scope: if a target email was provided, look up its user_id once and scope profiles to that user only
+    // Start with all profiles; in force mode we'll scope AFTER resolving emails via RPC
     let scopedProfiles: ProfileRow[] = ((profiles as any) || []) as ProfileRow[]
-    let targetedUserId: string | undefined
-    if (filterEmail) {
-      try {
-        const { data: target } = await (supabaseAdmin as any)
-          .from('auth.users')
-          .select('id')
-          .eq('email', filterEmail)
-          .maybeSingle()
-        targetedUserId = (target as any)?.id
-        if (targetedUserId) {
-          if (scopedProfiles.some(p => p.user_id === targetedUserId)) {
-            scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
-          } else {
-            // If profile not present, synthesize a minimal one; timezone will be ignored when bypassAll
-            scopedProfiles = [{ user_id: targetedUserId, display_name: null, timezone: 'UTC' }]
-          }
-        } else {
-          // Hard safety: if email filter provided but user not found, do not fan out to all users
-          console.error('[daily-cron] Target email not found in auth.users, aborting targeted run:', filterEmail)
-          return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
-        }
-      } catch {}
-    }
 
     // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues
     // eslint-disable-next-line no-console
@@ -117,6 +94,18 @@ async function handler(req: NextRequest) {
         }
         console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.length)
       }
+    }
+
+    // In force mode + target email, now scope to exactly that user based on resolved emails
+    if (authorizedForce && filterEmail) {
+      const targetEntry = Array.from(emailMap.entries()).find(([, email]) => email === filterEmail)
+      const targetUserId = targetEntry?.[0]
+      if (!targetUserId) {
+        console.error('[daily-cron] Target email not found after RPC resolution, aborting targeted run:', filterEmail)
+        return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
+      }
+      scopedProfiles = scopedProfiles.filter(p => p.user_id === targetUserId)
+      console.log('[daily-cron] Force targeting user:', { user_id: targetUserId, email: filterEmail })
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
