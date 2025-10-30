@@ -238,6 +238,13 @@ async function handler(req: NextRequest) {
           milestoneBanner,
         })
 
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] Email HTML length:', (typeof html === 'string') ? html.length : '(non-string)')
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] Email preview:', (typeof html === 'string') ? html.substring(0, 200) : '(non-string)')
+        } catch {}
+
         let subject = getDailyReminderSubject(firstName)
         if (isFirstEmail) subject = "Skip today's check-in with Quick Save"
         if (reachedFive) subject = "5 days in — you’re unlocking insights"
