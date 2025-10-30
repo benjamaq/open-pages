@@ -23,6 +23,7 @@ async function handler(req: NextRequest) {
   const filterEmail = url.searchParams.get('email') || undefined
   const forceFlag = url.searchParams.get('force') === '1'
   const authorizedForce = forceFlag && (req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`)
+  const bypassAll = (dryRun && !!filterEmail) || authorizedForce
     // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(todayStart.getDate() - 1)
@@ -69,33 +70,41 @@ async function handler(req: NextRequest) {
       return NextResponse.json({ ok:false, error: error.message }, { status: 500 })
     }
 
-    // STEP 2: Load emails via admin.listUsers (batched) to avoid per-user lookups and REST auth schema restrictions
+    // Optional scope: if a target email was provided, look up its user_id once and scope profiles to that user only
+    let scopedProfiles: ProfileRow[] = ((profiles as any) || []) as ProfileRow[]
+    let targetedUserId: string | undefined
+    if (filterEmail) {
+      try {
+        const { data: target } = await (supabaseAdmin as any)
+          .from('auth.users')
+          .select('id')
+          .eq('email', filterEmail)
+          .maybeSingle()
+        targetedUserId = (target as any)?.id
+        if (targetedUserId) scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
+      } catch {}
+    }
+
+    // STEP 2: Resolve emails in one query from auth.users
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Fetching emails via admin.listUsers batching...')
+    console.log('[daily-cron] Fetching emails via auth.users query...')
     const emailMap = new Map<string, string>()
-    const userIds = new Set(((profiles as ProfileRow[]) || []).map(p => p.user_id))
-    if (userIds.size === 0) {
+    const userIds = Array.from(new Set(scopedProfiles.map(p => p.user_id)))
+    if (userIds.length === 0) {
       console.log('[daily-cron] No user IDs to resolve emails for')
     } else {
-      const perPage = 200
-      let page = 1
-      while (true) {
-        const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
-        if (error) {
-          console.error('[daily-cron] listUsers error:', error)
-          break
+      const { data: authUsers, error: authErr } = await (supabaseAdmin as any)
+        .from('auth.users')
+        .select('id, email')
+        .in('id', userIds)
+      if (authErr) {
+        console.error('[daily-cron] auth.users query failed:', authErr)
+      } else {
+        for (const u of (authUsers as Array<{ id: string; email: string | null }>)) {
+          if (u.email) emailMap.set(u.id, u.email)
         }
-        const users = (data as any)?.users || []
-        for (const u of users) {
-          if (u?.id && u?.email && userIds.has(u.id)) {
-            emailMap.set(u.id, u.email)
-          }
-        }
-        if (users.length < perPage) break
-        page += 1
-        if (page > 50) break // safety cap
+        console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.length)
       }
-      console.log('[daily-cron] Emails resolved:', emailMap.size, '/', userIds.size)
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
@@ -104,8 +113,8 @@ async function handler(req: NextRequest) {
 
     // Timezone window filter (send only to users in 7:00-7:59 local)
     const now = new Date()
-  const profilesInWindow = (profiles as ProfileRow[]).filter(p => {
-    if (authorizedForce && filterEmail) return true // bypass hour gate for targeted force
+    const profilesInWindow = scopedProfiles.filter(p => {
+      if (bypassAll) return true // bypass hour gate for targeted dry/force
     const tz = p.timezone || 'UTC'
     const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
     const hour = userTime.getHours()
@@ -124,7 +133,7 @@ async function handler(req: NextRequest) {
         // profiles.daily_reminders_enabled already filtered by the .or above
 
         // Deduplicate by email_sends same day
-        if (!authorizedForce) {
+        if (!bypassAll) {
           const { data: sentToday } = await supabaseAdmin
             .from('email_sends')
             .select('id')
@@ -148,10 +157,10 @@ async function handler(req: NextRequest) {
           .eq('local_date', localYesterdayStr)
           .maybeSingle()
 
-        const pain = entry?.pain ?? 5
-        const mood = entry?.mood ?? 5
-        const sleep = entry?.sleep_quality ?? 5
-        if (!entry) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); if (!authorizedForce) continue }
+        const pain = (entry as any)?.pain ?? 5
+        const mood = (entry as any)?.mood ?? 5
+        const sleep = (entry as any)?.sleep_quality ?? 5
+        if (!entry && !bypassAll) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); continue }
 
         // Calculate readiness
         const readinessPercent = Math.round((((10 - pain) + mood + sleep) / 3) * 10)
@@ -229,9 +238,7 @@ async function handler(req: NextRequest) {
         } else {
           const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
           const sentOk = !resp.error
-          if (!dryRun) {
-            await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
-          }
+          await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'daily_reminder', success: sentOk, error: resp.error?.message })
           if (reachedFive) {
             await supabaseAdmin.from('email_sends').insert({ user_id: p.user_id, email_type: 'milestone_5', success: sentOk, error: resp.error?.message })
           }
