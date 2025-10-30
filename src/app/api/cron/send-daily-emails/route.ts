@@ -4,6 +4,7 @@ import { renderDailyReminderHTML, getDailyReminderSubject } from '@/lib/email/da
 import crypto from 'crypto'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
+import { addDays } from 'date-fns'
 
 type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
 
@@ -81,7 +82,9 @@ async function handler(req: NextRequest) {
           .eq('email', filterEmail)
           .maybeSingle()
         targetedUserId = (target as any)?.id
-        if (targetedUserId) scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
+        if (targetedUserId && scopedProfiles.some(p => p.user_id === targetedUserId)) {
+          scopedProfiles = scopedProfiles.filter(p => p.user_id === targetedUserId)
+        }
       } catch {}
     }
 
@@ -144,10 +147,7 @@ async function handler(req: NextRequest) {
 
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
         const tz = p.timezone || 'UTC'
-        const localTodayStr = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd')
-        const localYDate = new Date(localTodayStr)
-        localYDate.setDate(localYDate.getDate() - 1)
-        const localYesterdayStr = formatInTimeZone(localYDate, tz, 'yyyy-MM-dd')
+        const localYesterdayStr = formatInTimeZone(addDays(new Date(), -1), tz, 'yyyy-MM-dd')
         const { data: entry } = await supabaseAdmin
           .from('daily_entries')
           .select('pain, mood, sleep_quality, meds, protocols, local_date')
