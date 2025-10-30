@@ -247,6 +247,12 @@ async function handler(req: NextRequest) {
           console.log('[daily-cron] Email HTML length:', (typeof html === 'string') ? html.length : '(non-string)')
           // eslint-disable-next-line no-console
           console.log('[daily-cron] Email preview:', (typeof html === 'string') ? html.substring(0, 200) : '(non-string)')
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] Full HTML sample:', (typeof html === 'string') ? html.substring(0, 500) : '(non-string)')
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] HTML contains buttons?', (typeof html === 'string') ? html.includes('Check In') : false)
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] HTML contains Quick Save?', (typeof html === 'string') ? html.includes('Quick Save') : false)
         } catch {}
 
         let subject = getDailyReminderSubject(firstName)
