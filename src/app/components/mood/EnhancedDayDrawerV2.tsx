@@ -499,8 +499,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       // Convert context chips from display format to slug format for database storage
       const contextChipsAsSlugs = selectedContextChips.map(chip => contextDisplayToSlug[chip] || chip);
       
-      // Combine expressive mood chips (selectedTags) with contextual chips (selectedContextChips)
-      const allTags = [...selectedTags, ...contextChipsAsSlugs];
+      // Combine expressive mood chips (selectedTags) with contextual chips (selectedContextChips) and dedupe
+      const allTags = Array.from(new Set([...selectedTags, ...contextChipsAsSlugs]));
       
       console.log('🔍 Saving - selectedTags (expressive mood chips):', selectedTags);
       console.log('🔍 Saving - contextChipsAsSlugs (contextual chips):', contextChipsAsSlugs);
@@ -516,7 +516,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       
       const savePayload = {
         ...formData,
-        tags: allTags.length > 0 ? allTags : null, // Include both expressive mood chips and contextual chips
+        tags: allTags.length > 0 ? allTags : null, // Include both expressive mood chips and contextual chips (deduped)
         completedItems: allScheduledItems.length > 0 ? allScheduledItems : null,
         wearables: wearables.recovery_score || wearables.sleep_score ? {
           device: selectedWearable,

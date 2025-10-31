@@ -186,8 +186,9 @@ export default function TodaySnapshot({
   }, []); // Only load once on mount
 
 
-  // Get selected chips (max 4) - tags are now in slug format
-  const selectedChips = todayEntry?.tags?.map(tag => 
+  // Get selected chips (max 4) - dedupe slugs first to avoid duplicates (e.g., Allergies vs Hay fever)
+  const dedupedTags = Array.from(new Set((todayEntry?.tags as string[] | undefined) || []));
+  const selectedChips = dedupedTags.map(tag => 
     CHIP_CATALOG.find(chip => chip.slug === tag)
   ).filter(Boolean) || [];
 
