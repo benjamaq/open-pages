@@ -158,6 +158,41 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
     return []
   }
   const formatted = passed.map((r) => formatInsight(r))
+  // Append co-occurrence notes for tag correlations
+  try {
+    const tagDaysMap: Record<string, number> = {}
+    const coCounts: Record<string, Record<string, number>> = {}
+    ;(entries || []).forEach((e: any) => {
+      const tags: string[] = Array.isArray(e?.tags) ? Array.from(new Set(e.tags)) : []
+      tags.forEach((t) => { tagDaysMap[t] = (tagDaysMap[t] || 0) + 1 })
+      for (let i = 0; i < tags.length; i++) {
+        for (let j = 0; j < tags.length; j++) {
+          if (i === j) continue
+          const a = tags[i]; const b = tags[j]
+          coCounts[a] = coCounts[a] || {}
+          coCounts[a][b] = (coCounts[a][b] || 0) + 1
+        }
+      }
+    })
+    formatted.forEach((fi) => {
+      if (fi.type === 'tag_correlation') {
+        const tag = fi.data?.tag || fi.data?.variable1 || (fi as any).tag
+        const total = tagDaysMap[tag] || 0
+        if (total >= 5 && coCounts[tag]) {
+          // Find highest co-occurrence partner
+          const pairs = Object.entries(coCounts[tag]).map(([b, cnt]) => ({ b, rate: cnt / total }))
+          pairs.sort((a, b) => b.rate - a.rate)
+          const top = pairs[0]
+          if (top && top.rate >= 0.7) {
+            const note = `\n\nNote: ${tag} and ${top.b} often occur together in your data. Try varying them separately to isolate their individual effects.`
+            fi.message = `${fi.message}${note}`
+          }
+        }
+      }
+    })
+  } catch (noteErr) {
+    console.warn('[insights] Co-occurrence note generation failed:', noteErr)
+  }
   formatted.sort((a, b) => {
     if (a.type !== b.type) return (TYPE_PRIORITY as any)[a.type] - (TYPE_PRIORITY as any)[b.type]
     const aD = (a.data?.cohensD || 0) as number

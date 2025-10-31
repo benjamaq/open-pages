@@ -35,6 +35,17 @@ export function calculatePriorityScore(result: CorrelationResult): number {
     if (p < 0.01) score += 50
     else if (p < 0.05) score += 25
   }
+
+  // 7. SPECIFICITY BONUS: prioritize concrete nutrition/supplement inputs over generic hygiene tags
+  const nutritionTags = new Set([
+    'gluten', 'dairy', 'alcohol', 'too_much_caffeine', 'high_sugar', 'caffeine', 'sugar'
+  ])
+  if ((result as any).type === 'tag_correlation') {
+    const tag = (result as any).tag as string
+    if (nutritionTags.has(tag)) score += 50
+    // Simple supplement heuristic: tags that start with 'supp_' or contain '/supplement/' in future schemas
+    if (/^(supp_|supplement_)/i.test(tag)) score += 50
+  }
   return score
 }
 
