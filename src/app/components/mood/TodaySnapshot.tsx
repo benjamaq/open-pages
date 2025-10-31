@@ -428,8 +428,16 @@ export default function TodaySnapshot({
                   )}
                 </div>
               </div>
-              <div className="text-xs text-gray-500 text-center sm:text-right">
-                {todayEntry?.wearables?.device ? `${todayEntry.wearables.device} connected` : 'No wearables data'}
+              <div className="text-xs text-gray-700 text-center sm:text-right">
+                {(() => {
+                  const w = (todayEntry as any)?.wearables || {};
+                  const sleep = typeof w.sleep_score === 'number' ? w.sleep_score : undefined;
+                  const recovery = typeof w.recovery_score === 'number' ? w.recovery_score : undefined;
+                  if (sleep != null && recovery != null) return `Sleep: ${sleep} • Recovery: ${recovery}`;
+                  if (sleep != null) return `Sleep: ${sleep}`;
+                  if (recovery != null) return `Recovery: ${recovery}`;
+                  return 'No wearables entries';
+                })()}
               </div>
             </div>
 
