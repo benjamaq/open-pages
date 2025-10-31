@@ -1,10 +1,6 @@
 export const FEATURE_FLAGS = {
-  MOOD_TRACKING: process.env.NEXT_PUBLIC_MOOD_TRACKING_ENABLED === 'true' || process.env.NODE_ENV === 'development',
-  MOOD_TRACKING_BETA: process.env.NEXT_PUBLIC_MOOD_TRACKING_BETA === 'true',
-  ENABLE_MISSION_STEP: process.env.NEXT_PUBLIC_ENABLE_MISSION_STEP === 'true',
-  ENABLE_NEW_STEP2: process.env.NEXT_PUBLIC_ENABLE_NEW_STEP2 === 'true'
+  MOOD_TRACKING: true,
+  MOOD_TRACKING_BETA: false,
+  ENABLE_NEW_STEP2: true, // hardcoded for local testing
+  ENABLE_MISSION_STEP: false // hardcoded for local testing
 } as const;
-
-export function isFeatureEnabled(feature: keyof typeof FEATURE_FLAGS): boolean {
-  return FEATURE_FLAGS[feature];
-}

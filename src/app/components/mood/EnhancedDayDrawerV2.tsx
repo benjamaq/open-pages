@@ -77,6 +77,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [hasMovedSliders, setHasMovedSliders] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [includeSnapshot, setIncludeSnapshot] = useState(true);
@@ -590,7 +591,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             pain_locations: selectedPainLocations,
             pain_types: selectedPainTypes,
             custom_symptoms: customSymptoms,
-            tags: selectedTags,
+            tags: selectedContextChips,
             journal: formData.journal
           });
           
@@ -838,31 +839,28 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             </div>
           </div>
 
-          {/* Elli Introduction - Only for First Check-in */}
-          {isOnboarding && isActuallyFirstCheckIn && (
-            <div className="px-6 pt-6 pb-4">
-              <div className="bg-white border border-purple-200 rounded-xl p-6">
-                {/* Elli Avatar */}
-                <div className="text-center mb-4">
-                  <span className="text-5xl">💙</span>
-                </div>
-
-                {/* Typing indicator or message */}
-                {showElliTyping ? (
-                  <div className="flex items-center justify-center py-8">
-                    <TypingIndicator />
-                  </div>
-                ) : showElliMessage ? (
-                  <SafeType
-                    text={`Hey ${userName} 💙\n\nLet's see where you're at today.\nMove the sliders.\nTell us what else is going on.`}
-                    speed={15}
-                    className="text-gray-700 whitespace-pre-line text-center leading-relaxed"
-                  />
-                ) : null}
-                {/* Removed educational blue box per brief */}
+        {/* Step 2 intro (no blue box) */}
+        {isOnboarding && isActuallyFirstCheckIn && (
+          <div className="px-6 pt-6">
+            <div className="text-center mb-6 space-y-3">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-2xl">💙</span>
+                <p className="text-xl">Hey {userName}</p>
               </div>
+              <p className="text-base text-gray-700">Let's see where you're at today.</p>
+              <div className="space-y-1 text-base">
+                <p><strong>1.</strong> Move the sliders</p>
+                <p><strong>2.</strong> Choose life factors and symptoms</p>
+              </div>
+              <p className="text-sm text-gray-500 pt-2">
+                The more you add now, the faster I can spot your patterns. 
+                Most people who add context get their first insight by Day 3.
+              </p>
             </div>
-          )}
+          </div>
+        )}
+
+          {/* Removed old intro block per final brief */}
 
           {/* Content */}
           <div className="px-6 py-6 space-y-6">
@@ -882,6 +880,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                       value={formData.mood || 5}
                       onChange={(e) => {
                         updateField('mood', parseInt(e.target.value));
+                        if (!hasMovedSliders) setHasMovedSliders(true);
                       }}
                       className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                       style={{
@@ -907,6 +906,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                       value={formData.sleep_quality || 5}
                       onChange={(e) => {
                         updateField('sleep_quality', parseInt(e.target.value));
+                        if (!hasMovedSliders) setHasMovedSliders(true);
                       }}
                       className="flex-1 h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider"
                       style={{
@@ -932,6 +932,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                       value={formData.pain || 5}
                       onChange={(e) => {
                         updateField('pain', parseInt(e.target.value));
+                        if (!hasMovedSliders) setHasMovedSliders(true);
                       }}
                       className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider"
                       style={{
@@ -1462,7 +1463,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               </button>
               <button
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || (isOnboarding && isActuallyFirstCheckIn && !hasMovedSliders)}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
                 {isSaving ? (isActuallyFirstCheckIn ? 'Processing...' : 'Saving...') : (isActuallyFirstCheckIn ? 'Next' : 'Save')}

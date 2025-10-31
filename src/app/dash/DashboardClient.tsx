@@ -1721,20 +1721,14 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
       nextStep: profile ? getNextOnboardingStep(profile) : null
     })
     
-    // NEW: Check if user needs orchestrated onboarding (category before check-in)
-    if (profile && needsOrchestratedOnboarding(profile)) {
+    // Default: show orchestrated onboarding when user still needs mandatory steps
+    if (profile && shouldShowOnboarding(profile)) {
       console.log('🎯 Showing NEW orchestrated onboarding flow');
       setShowOrchestratedOnboarding(true);
       return; // Don't show old onboarding
     }
     
-    // OLD: Existing onboarding for users who already have tone_profile
-    if (profile && shouldShowOnboarding(profile)) {
-      const nextStep = getNextOnboardingStep(profile)
-      console.log('🎯 Showing old onboarding modal for step:', nextStep)
-      setOnboardingStep(nextStep)
-      setShowOnboarding(true)
-    }
+    // Old onboarding disabled in favor of orchestrator
   }, [profile])
 
   // Fetch user email for advanced matching

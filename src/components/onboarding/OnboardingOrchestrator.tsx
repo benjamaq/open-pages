@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import ElliIntroModal from './ElliIntroModal';
-import CategorySelectionModal from './CategorySelectionModal';
 import EnhancedDayDrawerV2 from '@/app/components/mood/EnhancedDayDrawerV2';
+import Step5MissionStatement from './Step5MissionStatement';
+import Step2CoreCheckin from './Step2CoreCheckin';
+import { FEATURE_FLAGS } from '@/lib/feature-flags';
 import PostCheckinResponseModal from './PostCheckinResponseModal';
 import AddStackItemForm from '@/components/AddStackItemForm';
-import PostSupplementModal from './PostSupplementModal';
-import ProfileSetupModal from './ProfileSetupModal';
+import Step5MissionProfile from './Step5MissionProfile';
 import { getToneProfileType } from '@/lib/elli/toneProfiles';
 import { trackEvent } from '@/lib/analytics';
 
@@ -30,12 +31,10 @@ import { trackEvent } from '@/lib/analytics';
 
 type OnboardingStep = 
   | 'intro'           // ElliIntroModal - generic welcome
-  | 'category'        // Category selection
   | 'checkin'         // EnhancedDayDrawerV2 - mood/sleep/pain sliders
   | 'response'        // PostCheckinResponseModal - tone-aware response
   | 'add_supplement'  // AddStackItemForm - add supplement/medication
-  | 'post_supplement' // PostSupplementModal - after first supplement added
-  | 'profile_setup'   // ProfileSetupModal - photo and mission
+  | 'mission_profile' // New combined mission + profile
   | 'complete';       // Done - go to dashboard
 
 interface CheckInData {
@@ -63,6 +62,11 @@ export default function OnboardingOrchestrator({
   userId,
   userName
 }: OnboardingOrchestratorProps) {
+  console.log('🚩 Onboarding flags:', {
+    ENABLE_NEW_STEP2: FEATURE_FLAGS.ENABLE_NEW_STEP2,
+    ENABLE_MISSION_STEP: FEATURE_FLAGS.ENABLE_MISSION_STEP,
+    currentStep: 'check what renders'
+  });
   // State management
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('intro');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -84,30 +88,19 @@ export default function OnboardingOrchestrator({
   // ========================================================================
   // STEP 1: Intro → Category
   // ========================================================================
-  const handleIntroComplete = () => {
-    console.log('✅ Intro complete, moving to category selection');
-    setCurrentStep('category');
+  const handleIntroComplete = (category: string) => {
+    console.log('✅ Intro complete with category:', category);
+    // Set category and tone profile immediately (no separate category step)
+    setSelectedCategory(category);
+    const tone = getToneProfileType(category, null);
+    setToneProfile(tone);
+    setCurrentStep('checkin');
   };
 
   // ========================================================================
   // STEP 2: Category → Check-in (Direct)
   // ========================================================================
-  const handleCategoryComplete = (category: string, specific: string | null) => {
-    console.log('✅ Category selected:', { category, specific });
-    
-    // Set category and specific
-    setSelectedCategory(category);
-    setSelectedSpecific(specific);
-    
-    // CRITICAL: Set tone profile immediately
-    const tone = getToneProfileType(category, specific);
-    setToneProfile(tone);
-    
-    console.log('✅ Tone profile set:', tone);
-    
-    // Move directly to check-in (no transition modal needed)
-    setCurrentStep('checkin');
-  };
+  // Removed separate category step; handled in intro
 
   // ========================================================================
   // STEP 3: Check-in → Response
@@ -138,10 +131,24 @@ export default function OnboardingOrchestrator({
   // ========================================================================
   // STEP 5: Post-Supplement → Profile Setup
   // ========================================================================
-  const handlePostSupplementComplete = () => {
-    console.log('✅ Post-supplement complete, moving to profile setup');
-    setCurrentStep('profile_setup');
+  // After supplement step, go directly to mission/profile
+  const goToMissionProfile = () => {
+    console.log('➡️  Proceeding to mission/profile step');
+    setCurrentStep('mission_profile');
   };
+
+  const getBridgeMessage = (d: CheckInData) => {
+    if (typeof d?.pain === 'number' && d.pain >= 6) {
+      return `I see you're at ${d.pain}/10 pain today. Let's track what you're taking — so I can see what actually moves that number.`
+    }
+    if (typeof d?.mood === 'number' && d.mood < 5) {
+      return `Tough day. Let's track what you're taking — I'm looking for patterns that might help.`
+    }
+    if (typeof d?.sleep === 'number' && d.sleep < 5) {
+      return `Sleep ${d.sleep}/10 is rough. Let's track what you're taking — including anything for sleep — so I can spot what works.`
+    }
+    return `Let's start tracking what you're taking — so I can see what actually helps you feel better.`
+  }
 
   // ========================================================================
   // STEP 6: Profile Setup → Complete
@@ -188,37 +195,36 @@ export default function OnboardingOrchestrator({
         />
       )}
 
-      {/* Step 2: Category Selection */}
-      {currentStep === 'category' && (
-        <CategorySelectionModal
-          isOpen={true}
-          onClose={() => {}} // Can't close during onboarding
-          onContinue={handleCategoryComplete}
-          userId={userId}
-          userName={userName}
-        />
-      )}
+      {/* Category selection handled inside ElliIntroModal */}
 
-      {/* Step 3: Check-in Sliders */}
+      {/* Step 3: Check-in (old/new) */}
       {currentStep === 'checkin' && (
-        <EnhancedDayDrawerV2
-          isOpen={true}
-          onClose={() => {}} // Can't close during onboarding
-          date={new Date().toISOString().split('T')[0]}
-          userId={userId}
-          userName={userName}
-          isFirstCheckIn={true}
-          isOnboarding={true} // NEW PROP - tells drawer we're in onboarding
-          onOnboardingComplete={handleCheckinComplete} // NEW PROP - callback with data
-          todayItems={{
-            supplements: [],
-            protocols: [],
-            movement: [],
-            mindfulness: [],
-            food: [],
-            gear: []
-          }}
-        />
+        FEATURE_FLAGS.ENABLE_NEW_STEP2 ? (
+          <Step2CoreCheckin
+            userId={userId}
+            userName={userName}
+            onComplete={handleCheckinComplete}
+          />
+        ) : (
+          <EnhancedDayDrawerV2
+            isOpen={true}
+            onClose={() => {}} // Can't close during onboarding
+            date={new Date().toISOString().split('T')[0]}
+            userId={userId}
+            userName={userName}
+            isFirstCheckIn={true}
+            isOnboarding={true} // NEW PROP - tells drawer we're in onboarding
+            onOnboardingComplete={handleCheckinComplete} // NEW PROP - callback with data
+            todayItems={{
+              supplements: [],
+              protocols: [],
+              movement: [],
+              mindfulness: [],
+              food: [],
+              gear: []
+            }}
+          />
+        )
       )}
 
       {/* Step 4: Tone-Aware Response */}
@@ -240,21 +246,15 @@ export default function OnboardingOrchestrator({
       {currentStep === 'add_supplement' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-center tracking-tight">Add what you're taking</h2>
-            <p className="text-gray-600 text-sm mb-6 text-center">
-              Add your first supplement, medication, or anything you're trying. We'll add the rest on your dashboard.
-            </p>
+            {/* Bridge Message */}
+            {checkInData && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-gray-800">{getBridgeMessage(checkInData)}</p>
+              </div>
+            )}
             <AddStackItemForm
-              onClose={() => {
-                // If they close without adding, skip to profile setup
-                setCurrentStep('profile_setup');
-              }}
-              onSuccess={(itemName) => {
-                // They successfully added a supplement!
-                console.log('✅ Supplement added:', itemName);
-                setSupplementName(itemName);
-                setCurrentStep('post_supplement');
-              }}
+              onClose={goToMissionProfile}
+              onSuccess={() => goToMissionProfile()}
               itemType="supplements"
               isOnboarding={true}
               buttonColor="purple"
@@ -264,24 +264,15 @@ export default function OnboardingOrchestrator({
       )}
 
       {/* Step 6: Post-Supplement Message */}
-      {currentStep === 'post_supplement' && supplementName && toneProfile && (
-        <PostSupplementModal
-          isOpen={true}
-          onContinue={handlePostSupplementComplete}
-          userName={userName}
-          supplementName={supplementName}
-          toneProfile={toneProfile}
-        />
-      )}
+      {/* PostSupplementModal removed per final brief */}
 
-
-      {/* Step 7: Profile Setup */}
-      {currentStep === 'profile_setup' && (
-        <ProfileSetupModal
-          isOpen={true}
-          onComplete={handleProfileSetupComplete}
-          userName={userName}
+      {/* Step 7: Mission + Profile */}
+      {currentStep === 'mission_profile' && (
+        <Step5MissionProfile
           userId={userId}
+          displayName={userName}
+          onNext={handleProfileSetupComplete}
+          onSkip={handleProfileSetupComplete}
         />
       )}
     </>

@@ -25,7 +25,7 @@ export const trackOnboardingEvent = async (event: OnboardingEvent) => {
 
 export const saveCheckinQualityMetrics = async (metrics: {
   user_id: string
-  entry_id: string
+  entry_local_date: string
   is_first_checkin: boolean
   expandables_opened: number
   life_factors_count: number

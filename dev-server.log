@@ -1,1362 +1,626 @@
 
 > open-pages@0.1.0 dev
-> next dev --port 3009
+> next dev --port 3009 -p 3009
 
    ▲ Next.js 15.5.3
    - Local:        http://localhost:3009
-   - Network:      http://192.168.0.145:3009
+   - Network:      http://172.20.10.2:3009
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1439ms
+ ✓ Ready in 2.2s
  ○ Compiling /dash ...
- ✓ Compiled /dash in 4.5s (1635 modules)
- ✓ Compiled in 910ms (540 modules)
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+ ✓ Compiled /dash in 2.6s (1452 modules)
+ ⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>) {
+  page: '/dash'
+}
+ ✓ Compiled in 688ms (445 modules)
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1579ms (1778 modules)
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
+ GET /dash 500 in 2360ms
 🔍 Dashboard - Protocols found for today: 0
 🔍 Dashboard - All protocols for profile: []
 🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
+Today is day 5 (0=Sunday, 1=Monday, etc.)
 Movement items scheduled for today: 0
 Movement items after bi-weekly filter: 0
-🔍 DashboardClient - Mood components loaded: { TodaySnapshot: true, EnhancedDayDrawerV2: true }
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
+ GET /dash 200 in 6331ms
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 5 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
 🔍 DashboardClient - todayItems: { supplements: 0, protocols: 0, movement: 0, mindfulness: 0 }
-🔍 DashboardClient - Mood tracking check: {
-  FEATURE_FLAGS_MOOD_TRACKING: true,
-  TodaySnapshot: true,
-  todayMoodEntry: null,
-  shouldRender: [Function: TodaySnapshot]
-}
 🔍 TodaySnapshot - todayEntry.tags: undefined
 🔍 TodaySnapshot - selectedChips: []
 🔍 TodaySnapshot - displayChips: []
+🔴 NEW SafeType loaded - speed: 15 text length: 132
 🎭 EnhancedDrawerV2 State Check: {
   isLoaded: true,
   formDataKeys: [ 'localDate', 'mood', 'sleep_quality', 'pain', 'tags', 'journal' ],
   isOpen: false,
-  date: '2025-10-13',
-  userId: '25264cf8-7cea-4979-88be-bd874724fe1e'
+  date: '2025-10-31',
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129'
 }
- GET /dash 200 in 6329ms
- ○ Compiling /api/mood/month ...
- ✓ Compiled /api/mood/month in 840ms (1638 modules)
- GET /api/mood/month?month=2025-10 200 in 1240ms
- GET /api/trial-status 200 in 1274ms
- GET /api/mood/month?month=2025-08 200 in 1277ms
- POST /dash 200 in 1261ms
- GET /api/dashboard-optimized 200 in 1353ms
- GET /api/usage-status 200 in 1616ms
- ✓ Compiled /api/profile/update in 319ms (1649 modules)
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
- GET /api/mood/month?month=2025-08 200 in 616ms
- GET /api/trial-status 200 in 667ms
- GET /api/mood/month?month=2025-10 200 in 677ms
- ✓ Compiled /api/dashboard in 272ms (1651 modules)
-🔍 Dashboard API called: 2025-10-13T17:54:45.178Z
-Profile update result: {
-  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
-  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
-  slug: 'hhkdskk-mgpbnfcn',
-  display_name: 'johnny',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T16:02:30.647+00:00',
-  updated_at: '2025-10-13T17:54:45.207811+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: false,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 1071ms
-Profile update result: {
-  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
-  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
-  slug: 'hhkdskk-mgpbnfcn',
-  display_name: 'johnny',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T16:02:30.647+00:00',
-  updated_at: '2025-10-13T17:54:45.20909+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: false,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 1080ms
- POST /dash 200 in 826ms
- GET /api/dashboard-optimized 200 in 492ms
-🔍 Fetching followers for user: 25264cf8-7cea-4979-88be-bd874724fe1e
-🔍 Dashboard API called: 2025-10-13T17:54:45.421Z
+🔵 DashboardHeaderEditor LOADED
+ GET /dash 200 in 1246ms
+ ○ Compiling /api/dashboard-optimized ...
+ ✓ Compiled /api/dashboard-optimized in 653ms (1806 modules)
+ GET /api/mood/month?month=2025-10 200 in 1129ms
+ GET /api/insights?limit=10 200 in 1140ms
+ GET /api/mood/month?month=2025-10 200 in 1148ms
+ GET /api/usage-status 200 in 1154ms
+ GET /api/trial-status 200 in 1166ms
+ GET /api/dashboard-optimized 200 in 1377ms
+ GET /api/mood/month?month=2025-08 200 in 446ms
+ GET /api/mood/month?month=2025-10 200 in 437ms
+ GET /api/trial-status 200 in 428ms
+ POST /dash 200 in 705ms
+ ✓ Compiled /api/dashboard in 426ms (1808 modules)
+🔍 Dashboard API called: 2025-10-31T09:43:18.335Z
+🔍 Fetching followers for user: 3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129
 ✅ Follower count fetched: 0
 📈 New followers since yesterday: 0
- GET /api/dashboard?t=1760378084205 200 in 679ms
- GET /api/trial-status 200 in 295ms
- POST /dash 200 in 217ms
-🔍 Fetching followers for user: 25264cf8-7cea-4979-88be-bd874724fe1e
- GET /api/usage-status 200 in 870ms
-✅ Follower count fetched: 0
-📈 New followers since yesterday: 0
- GET /api/dashboard?t=1760378085316 200 in 392ms
- GET /api/trial-status 200 in 214ms
- POST /dash 200 in 307ms
- POST /dash 200 in 127ms
- POST /dash 200 in 121ms
- POST /dash 200 in 133ms
- POST /dash 200 in 132ms
+ GET /api/dashboard?t=1761903797841 200 in 849ms
+ ✓ Compiled in 1036ms (1822 modules)
 🔍 saveDailyEntry - Calling RPC with: {
-  p_user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
-  p_local_date: '2025-10-13',
-  p_mood: 8,
-  p_sleep_quality: 4,
-  p_pain: 7,
-  p_night_wakes: undefined,
-  p_tags: null,
-  p_journal: null,
-  p_completed_items: null,
-  p_wearables: null
-}
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-Error fetching recent check-ins: {
-  code: '42703',
-  details: null,
-  hint: null,
-  message: 'column daily_entries.date does not exist'
-}
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
- POST /dash 200 in 1220ms
-Error saving Elli message: {
-  code: '42501',
-  details: null,
-  hint: null,
-  message: 'new row violates row-level security policy for table "elli_messages"'
-}
-Error generating Elli message: {
-  code: '42501',
-  details: null,
-  hint: null,
-  message: 'new row violates row-level security policy for table "elli_messages"'
-}
- POST /dash 200 in 2996ms
- POST /dash 200 in 304ms
- POST /dash 200 in 142ms
-Profile update request: { allow_stack_follow: true }
-Filtered updates: { allow_stack_follow: true }
-Profile update result: {
-  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
-  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
-  slug: 'hhkdskk-mgpbnfcn',
-  display_name: 'johnny',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T16:02:30.647+00:00',
-  updated_at: '2025-10-13T17:55:42.110643+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: true,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 375ms
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
-Profile update result: {
-  id: 'c5f8cb48-28fb-4ba2-b31e-83c625b1451b',
-  user_id: '25264cf8-7cea-4979-88be-bd874724fe1e',
-  slug: 'hhkdskk-mgpbnfcn',
-  display_name: 'johnny',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T16:02:30.647+00:00',
-  updated_at: '2025-10-13T17:55:42.31789+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: true,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 191ms
- ○ Compiling /auth/signup ...
- ✓ Compiled /auth/signup in 953ms (1659 modules)
- GET /auth/signup 200 in 1045ms
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
- GET /dash 200 in 903ms
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
- GET /dash 200 in 807ms
- POST /dash 200 in 284ms
- GET /api/trial-status 200 in 317ms
- GET /api/mood/month?month=2025-10 200 in 314ms
- GET /api/mood/month?month=2025-08 200 in 313ms
- GET /api/dashboard-optimized 200 in 429ms
- GET /api/trial-status 200 in 184ms
- GET /api/mood/month?month=2025-08 200 in 214ms
- GET /api/mood/month?month=2025-10 200 in 217ms
-🔍 Dashboard API called: 2025-10-13T17:56:01.391Z
- GET /api/usage-status 200 in 592ms
- POST /dash 200 in 317ms
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
-🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
- GET /api/dashboard-optimized 200 in 441ms
-Profile update result: {
-  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
-  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
-  slug: 'iiiiiii-mgpfpcgv',
-  display_name: 'hjfjjjf',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T17:55:58.688+00:00',
-  updated_at: '2025-10-13T17:56:01.725332+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: false,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 336ms
-Profile update result: {
-  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
-  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
-  slug: 'iiiiiii-mgpfpcgv',
-  display_name: 'hjfjjjf',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T17:55:58.688+00:00',
-  updated_at: '2025-10-13T17:56:01.7249+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: false,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
-}
-Cache invalidated for /dash
- POST /api/profile/update 200 in 339ms
-🔍 Dashboard API called: 2025-10-13T17:56:01.754Z
-✅ Follower count fetched: 0
-📈 New followers since yesterday: 0
- GET /api/dashboard?t=1760378161266 200 in 449ms
- GET /api/trial-status 200 in 365ms
- POST /dash 200 in 131ms
-🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
- GET /api/trial-status 200 in 160ms
-✅ Follower count fetched: 0
-📈 New followers since yesterday: 0
- GET /api/dashboard?t=1760378161709 200 in 273ms
- GET /api/usage-status 200 in 616ms
- POST /dash 200 in 295ms
- POST /dash 200 in 131ms
- POST /dash 200 in 125ms
- POST /dash 200 in 109ms
- POST /dash 200 in 102ms
- POST /dash 200 in 98ms
-🔍 saveDailyEntry - Calling RPC with: {
-  p_user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
-  p_local_date: '2025-10-13',
-  p_mood: 8,
-  p_sleep_quality: 8,
+  p_user_id: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  p_local_date: '2025-10-31',
+  p_mood: 6,
+  p_sleep_quality: 6,
   p_pain: 6,
   p_night_wakes: undefined,
-  p_tags: null,
+  p_tags: [ 'pms_pmdd' ],
   p_journal: null,
   p_completed_items: null,
   p_wearables: null
 }
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-Error fetching recent check-ins: {
-  code: '42703',
-  details: null,
-  hint: null,
-  message: 'column daily_entries.date does not exist'
+Lifestyle insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:126:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  124 |   // Lifestyle Factors (Priority 3 - above supplements) (require at least 5 days)
+  125 |   try {
+> 126 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  127 |     const lifestyleFactors = [
+  128 |       { id: 'alcohol', name: 'Alcohol', icon: '🍷' },
+  129 |       { id: 'high_carb_meal', name: 'High-carb meals', icon: '🍝' },
+Supplement insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:170:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  168 |   // Supplements (Priority 4) (require at least 14 days typical, but we gate at 5 to allow testing)
+  169 |   try {
+> 170 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  171 |     // Build candidate list from actual skipped_supplements values in entries
+  172 |     const observed = new Set<string>()
+  173 |     for (const e of entries as any[]) {
+Symptom insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:232:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  230 |   // Symptoms (Priority 5) (require at least 5 days)
+  231 |   try {
+> 232 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  233 |     const symptoms = [
+  234 |       { id: 'headache', name: 'Headaches', icon: '🤕' },
+  235 |       { id: 'fatigue', name: 'Fatigue', icon: '😴' },
+Exercise insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:274:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  272 |   // Exercise (Priority 6) (require at least 5 days)
+  273 |   try {
+> 274 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  275 |     const ex = computeExerciseCorrelation(entries as any)
+  276 |     if (ex.status !== 'not_enough_data' && ex.status !== 'no_clear_pattern') {
+  277 |       const exerciseInsight = generateExerciseInsight(ex)
+Protocol insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:325:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  323 |   // Protocols (Priority 7) (require at least 5 days)
+  324 |   try {
+> 325 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  326 |     const protocols = [
+  327 |       { id: 'ice_bath', name: 'Ice baths', icon: '🧊' },
+  328 |       { id: 'sauna', name: 'Sauna', icon: '🔥' },
+[insights] START {
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  priority: 'high',
+  t: '2025-10-31T09:43:30.227Z'
 }
+[insights] Fetching entries for last 14 days
+[insights] Service role key loaded: true
+[insights] Supabase URL: https://qvwvpxkflvhokmxutapi.supabase.co
+[insights] Query params: {
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  startStr: '2025-10-17',
+  endStr: '2025-10-31'
+}
+[insights] Query error? null
+[insights] Raw entries count: 1
+[insights] First entry: {
+  local_date: '2025-10-31',
+  pain: 6,
+  mood: 6,
+  sleep_quality: 6,
+  sleep_hours: null,
+  tags: [ 'pms_pmdd' ],
+  lifestyle_factors: [],
+  symptoms: []
+}
+[insights] Last entry: {
+  local_date: '2025-10-31',
+  pain: 6,
+  mood: 6,
+  sleep_quality: 6,
+  sleep_hours: null,
+  tags: [ 'pms_pmdd' ],
+  lifestyle_factors: [],
+  symptoms: []
+}
+[insights] Entries fetched: 1
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'magnesium', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'muscle_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'constipation', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'constipation', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'diarrhea', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'diarrhea', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'flare_up', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'flare_up', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'migraine', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'migraine', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'ate_clean', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'ate_clean', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'mood', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'fatigue', totalValidDays: 0 }
+[insights] Raw results before FDR: 0
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
 🔍 Dashboard - Protocols found for today: 0
 🔍 Dashboard - All protocols for profile: []
 🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
+Today is day 5 (0=Sunday, 1=Monday, etc.)
 Movement items scheduled for today: 0
 Movement items after bi-weekly filter: 0
- POST /dash 200 in 957ms
-Error saving Elli message: {
-  code: '42501',
-  details: null,
-  hint: null,
-  message: 'new row violates row-level security policy for table "elli_messages"'
+ GET /dash 200 in 270ms
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 5 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ POST /dash 200 in 9468ms
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 5 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+🔍 DashboardClient - todayItems: { supplements: 0, protocols: 0, movement: 0, mindfulness: 0 }
+🔍 TodaySnapshot - todayEntry.tags: undefined
+🔍 TodaySnapshot - selectedChips: []
+🔍 TodaySnapshot - displayChips: []
+🔴 NEW SafeType loaded - speed: 15 text length: 132
+🎭 EnhancedDrawerV2 State Check: {
+  isLoaded: true,
+  formDataKeys: [ 'localDate', 'mood', 'sleep_quality', 'pain', 'tags', 'journal' ],
+  isOpen: false,
+  date: '2025-10-31',
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129'
 }
-Error generating Elli message: {
-  code: '42501',
-  details: null,
-  hint: null,
-  message: 'new row violates row-level security policy for table "elli_messages"'
-}
- POST /dash 200 in 3068ms
- POST /dash 200 in 277ms
- POST /dash 200 in 106ms
- GET /api/dashboard-optimized 200 in 618ms
-🔍 Dashboard API called: 2025-10-13T17:57:42.513Z
-🔍 Fetching followers for user: 7edf9df7-9203-448a-9328-f6670f458e3a
+🔵 DashboardHeaderEditor LOADED
+ GET /dash 200 in 1997ms
+ GET /api/trial-status 200 in 281ms
+ GET /api/usage-status 200 in 283ms
+ GET /api/mood/month?month=2025-10 200 in 284ms
+ GET /api/mood/month?month=2025-10 200 in 285ms
+ GET /api/insights?limit=10 200 in 290ms
+ GET /api/dashboard-optimized 200 in 427ms
+🔍 Dashboard API called: 2025-10-31T09:43:56.067Z
+ GET /api/trial-status 200 in 294ms
+ GET /api/mood/month?month=2025-08 200 in 316ms
+ GET /api/mood/month?month=2025-10 200 in 299ms
+🔍 Fetching followers for user: 3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129
+ POST /dash 200 in 430ms
 ✅ Follower count fetched: 0
 📈 New followers since yesterday: 0
- GET /api/dashboard?t=1760378262467 200 in 318ms
- GET /api/mood/month?month=2025-10 200 in 210ms
- GET /api/mood/month?month=2025-10 200 in 209ms
-Error saving expanded condition: {
+ GET /api/dashboard?t=1761903836037 200 in 407ms
+ ○ Compiling /api/elli/generate ...
+ ✓ Compiled /api/elli/generate in 827ms (1941 modules)
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
+🔍 Dashboard - Protocols found for today: 0
+🔍 Dashboard - All protocols for profile: []
+🔍 Dashboard filtering debug:
+Today is day 5 (0=Sunday, 1=Monday, etc.)
+Movement items scheduled for today: 0
+Movement items after bi-weekly filter: 0
+ GET /api/elli/generate 200 in 1372ms
+ GET /api/mood/month?month=2025-10 200 in 1103ms
+ GET /api/mood/month?month=2025-10 200 in 1228ms
+ GET /api/elli/generate 200 in 1230ms
+ GET /api/mood/month?month=2025-10 200 in 1223ms
+ GET /dash 200 in 526ms
+ GET /api/mood/month?month=2025-10 200 in 225ms
+🔍 Analyzing check-in for ben (day 1)
+Error logging API call: {
   code: 'PGRST205',
   details: null,
-  hint: "Perhaps you meant the table 'public.user_usage'",
-  message: "Could not find the table 'public.users' in the schema cache"
+  hint: "Perhaps you meant the table 'public.elli_messages'",
+  message: "Could not find the table 'public.elli_api_calls' in the schema cache"
 }
- ⨯ [Error: {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.user_usage'","message":"Could not find the table 'public.users' in the schema cache"}] {
-  digest: '2917940259'
+📊 Trigger decision: {
+  shouldGenerate: true,
+  useAI: true,
+  triggerType: 'milestone',
+  reason: 'Milestone: Day 1'
 }
- POST /dash 500 in 448ms
-Profile update request: { allow_stack_follow: true }
-Filtered updates: { allow_stack_follow: true }
-Profile update result: {
-  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
-  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
-  slug: 'iiiiiii-mgpfpcgv',
-  display_name: 'hjfjjjf',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T17:55:58.688+00:00',
-  updated_at: '2025-10-13T17:58:09.300035+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: true,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
+🎯 Milestone/Pattern detection - using full context
+📈 Patterns detected: { sleepPain: false, trends: 0, insights: 1 }
+🤖 Calling OpenAI for milestone message...
+✅ OpenAI response received (434 tokens)
+ POST /dash 200 in 5386ms
+🔍 Analyzing check-in for ben (day 1)
+Error logging API call: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.elli_messages'",
+  message: "Could not find the table 'public.elli_api_calls' in the schema cache"
 }
-Cache invalidated for /dash
- POST /api/profile/update 200 in 235ms
-Profile update request: { onboarding_step: 1, first_checkin_completed: true }
-Filtered updates: { onboarding_step: 1, first_checkin_completed: true }
-Profile update result: {
-  id: '34f60657-ffa7-4344-9a4b-c752a95620e5',
-  user_id: '7edf9df7-9203-448a-9328-f6670f458e3a',
-  slug: 'iiiiiii-mgpfpcgv',
-  display_name: 'hjfjjjf',
-  bio: null,
-  avatar_url: null,
-  public: true,
-  created_at: '2025-10-13T17:55:58.688+00:00',
-  updated_at: '2025-10-13T17:58:09.478958+00:00',
-  show_journal_public: true,
-  show_library: true,
-  nutrition_signature: {},
-  tier: 'free',
-  custom_logo_url: null,
-  custom_branding_enabled: false,
-  allow_stack_follow: true,
-  show_public_followers: true,
-  beta_code_used_at: null,
-  referral_code: null,
-  referral_source: null,
-  onboarding_completed: false,
-  onboarding_step: 1,
-  first_checkin_completed: true,
-  first_supplement_added: false,
-  profile_created: false,
-  public_page_viewed: false,
-  condition_primary: null,
-  condition_details: null,
-  condition_provided_at: null
+📊 Trigger decision: {
+  shouldGenerate: true,
+  useAI: true,
+  triggerType: 'milestone',
+  reason: 'Milestone: Day 1'
 }
-Cache invalidated for /dash
- POST /api/profile/update 200 in 175ms
- ✓ Compiled in 1422ms (1669 modules)
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
+🎯 Milestone/Pattern detection - using full context
+📈 Patterns detected: { sleepPain: false, trends: 0, insights: 1 }
+🤖 Calling OpenAI for milestone message...
+✅ OpenAI response received (447 tokens)
+ POST /dash 200 in 5341ms
+🔍 saveDailyEntry - Calling RPC with: {
+  p_user_id: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  p_local_date: '2025-10-31',
+  p_mood: null,
+  p_sleep_quality: 6,
+  p_pain: 7,
+  p_night_wakes: undefined,
+  p_tags: [ 'ovulation_window' ],
+  p_journal: null,
+  p_completed_items: null,
+  p_wearables: null
+}
+Lifestyle insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:126:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  124 |   // Lifestyle Factors (Priority 3 - above supplements) (require at least 5 days)
+  125 |   try {
+> 126 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  127 |     const lifestyleFactors = [
+  128 |       { id: 'alcohol', name: 'Alcohol', icon: '🍷' },
+  129 |       { id: 'high_carb_meal', name: 'High-carb meals', icon: '🍝' },
+Supplement insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:170:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  168 |   // Supplements (Priority 4) (require at least 14 days typical, but we gate at 5 to allow testing)
+  169 |   try {
+> 170 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  171 |     // Build candidate list from actual skipped_supplements values in entries
+  172 |     const observed = new Set<string>()
+  173 |     for (const e of entries as any[]) {
+Symptom insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:232:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  230 |   // Symptoms (Priority 5) (require at least 5 days)
+  231 |   try {
+> 232 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  233 |     const symptoms = [
+  234 |       { id: 'headache', name: 'Headaches', icon: '🤕' },
+  235 |       { id: 'fatigue', name: 'Fatigue', icon: '😴' },
+Exercise insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:274:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  272 |   // Exercise (Priority 6) (require at least 5 days)
+  273 |   try {
+> 274 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  275 |     const ex = computeExerciseCorrelation(entries as any)
+  276 |     if (ex.status !== 'not_enough_data' && ex.status !== 'no_clear_pattern') {
+  277 |       const exerciseInsight = generateExerciseInsight(ex)
+Protocol insights computation failed (continuing): Error: not_enough_data
+    at computeAndPersistInsights (src/app/actions/insights.ts:325:31)
+    at async saveDailyEntry (src/lib/db/mood.ts:134:22)
+  323 |   // Protocols (Priority 7) (require at least 5 days)
+  324 |   try {
+> 325 |     if (!hasAtLeast(5)) throw new Error('not_enough_data')
+      |                               ^
+  326 |     const protocols = [
+  327 |       { id: 'ice_bath', name: 'Ice baths', icon: '🧊' },
+  328 |       { id: 'sauna', name: 'Sauna', icon: '🔥' },
+[insights] START {
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  priority: 'high',
+  t: '2025-10-31T09:44:09.497Z'
+}
+[insights] Fetching entries for last 14 days
+[insights] Service role key loaded: true
+[insights] Supabase URL: https://qvwvpxkflvhokmxutapi.supabase.co
+[insights] Query params: {
+  userId: '3b2423fc-fa19-4c56-b2e7-3a4dfdd1a129',
+  startStr: '2025-10-17',
+  endStr: '2025-10-31'
+}
+[insights] Query error? null
+[insights] Raw entries count: 1
+[insights] First entry: {
+  local_date: '2025-10-31',
+  pain: 7,
+  mood: null,
+  sleep_quality: 6,
+  sleep_hours: null,
+  tags: [ 'ovulation_window' ],
+  lifestyle_factors: [],
+  symptoms: []
+}
+[insights] Last entry: {
+  local_date: '2025-10-31',
+  pain: 7,
+  mood: null,
+  sleep_quality: 6,
+  sleep_hours: null,
+  tags: [ 'ovulation_window' ],
+  lifestyle_factors: [],
+  symptoms: []
+}
+[insights] Entries fetched: 1
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'too_much_caffeine', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'magnesium', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'alcohol', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'muscle_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_stress', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'poor_sleep', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'high_sugar', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'gluten', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'stomach_pain', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'constipation', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'constipation', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'diarrhea', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dairy', metric: 'diarrhea', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'headache', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'dehydrated', metric: 'brain_fog', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'fatigue', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'irritability', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'period', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'flare_up', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'flare_up', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'migraine', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'migraine', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'meditation', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'ate_clean', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'ate_clean', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'anxiety', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'work_deadline', metric: 'insomnia', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'pain', totalValidDays: 1 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'mood', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'bloating', totalValidDays: 0 }
+[tag-analyzer] insufficient total days { tag: 'fast_food', metric: 'fatigue', totalValidDays: 0 }
+[insights] Raw results before FDR: 0
+🔍 Dashboard - Day of week: 5 (0=Sunday, 1=Monday, etc.)
 🔍 Dashboard - Protocols found for today: 0
 🔍 Dashboard - All protocols for profile: []
 🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
+Today is day 5 (0=Sunday, 1=Monday, etc.)
 Movement items scheduled for today: 0
 Movement items after bi-weekly filter: 0
- GET /dash 200 in 222ms
- POST /dash 200 in 346ms
- ✓ Compiled in 500ms (1649 modules)
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ○ Compiling /_not-found ...
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- GET /api/dashboard-optimized 500 in 3223ms
- GET /dash 500 in 735ms
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- GET /api/dashboard?t=1760378464049 500 in 281ms
- GET /dash 500 in 279ms
- GET /dash 500 in 27ms
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- GET /api/dashboard-optimized 500 in 354ms
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- GET /api/dashboard?t=1760378562091 500 in 158ms
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:538:1]
- [2m535[0m |     reference += `, and I can see your pain is at ${pain}/10 today`;
- [2m536[0m |     
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += ' - that's really severe';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
- [2m541[0m |     } else if (pain >= 4) {
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:540:1]
- [2m537[0m |     if (pain >= 8) {
- [2m538[0m |       reference += " - that's really severe";
- [2m539[0m |     } else if (pain >= 6) {
- [2m540[0m |       reference += ' - that's definitely challenging';
-     : [35;1m      ^^^^^^^^^^^|^^^^^^^^^^[0m[33;1m^[0m
-     :                  [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m541[0m |     } else if (pain >= 4) {
- [2m542[0m |       reference += ' - managing, but not easy';
- [2m543[0m |     }
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
- [2m547[0m |   if (mood !== null && mood <= 3) {
- [2m548[0m |     reference += '. I can also see your mood is quite low today';
- [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
- [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
-     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
-     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m551[0m |   }
- [2m552[0m | 
- [2m553[0m |   reference += '.';
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
- [2m547[0m |   if (mood !== null && mood <= 3) {
- [2m548[0m |     reference += '. I can also see your mood is quite low today';
- [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
- [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
-     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
-     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m551[0m |   }
- [2m552[0m | 
- [2m553[0m |   reference += '.';
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ⨯ ./src/lib/constants/expanded-categories.ts
-Error:   [31mx[0m Expected ';', '}' or <eof>
-     ,-[[36;1;4m/Users/testdev/Desktop/open-pages/src/lib/constants/expanded-categories.ts[0m:550:1]
- [2m547[0m |   if (mood !== null && mood <= 3) {
- [2m548[0m |     reference += ". I can also see your mood is quite low today";
- [2m549[0m |   } else if (sleep !== null && sleep <= 3) {
- [2m550[0m |     reference += '. And I notice your sleep wasn't great either';
-     : [35;1m    ^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^[0m[33;1m^[0m
-     :                           [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
- [2m551[0m |   }
- [2m552[0m | 
- [2m553[0m |   reference += '.';
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/lib/constants/expanded-categories.ts
-./src/components/onboarding/post-checkin-modal-expanded.tsx
-./src/components/onboarding/post-checkin-modal.tsx
-./src/app/components/mood/EnhancedDayDrawerV2.tsx
-./src/app/dash/DashboardClient.tsx
- ✓ Compiled /api/dashboard in 304ms (1961 modules)
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
-  page: '/dash'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
-  page: '/dash'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
-[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
-  page: '/dash'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
-[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json',
-  page: '/dash'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
-[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
-[Error: ENOENT: no such file or directory, open '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/Users/testdev/Desktop/open-pages/.next/routes-manifest.json'
-}
- GET /dash 500 in 1445ms
- GET /dash 500 in 337ms
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>) {
-  digest: '1959690638'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>)
-    at stringify (<anonymous>) {
-  digest: '14159150'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>)
-    at stringify (<anonymous>) {
-  digest: '14159150'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>)
-    at stringify (<anonymous>) {
-  digest: '14159150'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>) {
-  digest: '1959690638'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>) {
-  digest: '1959690638'
-}
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  digest: '3879456399'
-}
- ⨯ Error: Could not find the module "/Users/testdev/Desktop/open-pages/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
-    at stringify (<anonymous>) {
-  digest: '1959690638'
-}
-[TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  page: '/dash'
-}
- GET /dash 500 in 2005ms
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
- ✓ Compiled in 819ms (1975 modules)
- ✓ Compiled in 507ms (1975 modules)
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  digest: '294470296'
-}
-[TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  page: '/dash'
-}
- GET /dash 500 in 793ms
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  digest: '294470296'
-}
-[TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')]
- ⨯ [TypeError: Cannot read properties of undefined (reading 'call')] {
-  page: '/dash'
-}
- GET /dash 500 in 604ms
-🔍 Dashboard - Day of week: 1 (0=Sunday, 1=Monday, etc.)
-🔍 Dashboard - Protocols found for today: 0
-🔍 Dashboard - All protocols for profile: []
-🔍 Dashboard filtering debug:
-Today is day 1 (0=Sunday, 1=Monday, etc.)
-Movement items scheduled for today: 0
-Movement items after bi-weekly filter: 0
+ POST /dash 200 in 2692ms
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [?25h

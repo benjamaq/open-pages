@@ -157,20 +157,13 @@ export default function PostCheckinResponseModal({
                 <p className="text-gray-700 mb-4">
                   Now let's add what you're taking, doing, or trying out.
                 </p>
-                {/* Post-checkin encouragement */}
-                <div className="mb-4 bg-indigo-50 border border-indigo-100 rounded-md p-3">
-                  <div className="text-xs text-indigo-900">
-                    <div className="font-semibold">Great start! 💪</div>
-                    Want faster insights? Try selecting lifestyle tags like "caffeine," "exercise," or supplements you're taking.
-                  </div>
-                </div>
               </div>
 
               <button
                 onClick={() => onComplete()}
                 className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
               >
-                Add what you're taking →
+                Continue →
               </button>
             </>
           )}

@@ -45,7 +45,23 @@ function SuccessContent() {
       )}
       <p className="text-sm text-gray-600 mt-3">You can close this window.</p>
       <div className="mt-6 flex items-center justify-center gap-3">
-        <a href="/dash" className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">View Dashboard</a>
+        <button
+          onClick={() => {
+            try {
+              // Try client-side navigation first
+              router.push('/dash')
+            } catch {}
+            // Fallback to hard redirect in case client navigation is blocked
+            try {
+              const base = (process as any).env?.NEXT_PUBLIC_SITE_URL
+              const url = base ? new URL('/dash', base).toString() : '/dash'
+              setTimeout(() => { window.location.assign(url) }, 100)
+            } catch {}
+          }}
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+        >
+          View Dashboard
+        </button>
       </div>
     </div>
   )

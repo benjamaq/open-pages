@@ -6,7 +6,7 @@ import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
 interface ElliIntroModalProps {
   isOpen: boolean;
-  onContinue: () => void;
+  onContinue: (category: string) => void;
   userName: string;
 }
 
@@ -35,15 +35,21 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `Hey ${userName}, welcome to BioStackr!
+  const welcomeMessage = `Hey ${userName}, I'm so glad you're here. I know you're exhausted from trying everything — and I know how hard it is to keep showing up when nothing seems to work.
 
-I'm Elli, and I'm really glad you're here.
+Let's find out why you're here today, and start building a plan that actually helps.`;
 
-Whether you're dealing with chronic pain, tracking fertility, optimizing performance, or just trying to feel better - I'm here to help you figure out YOUR patterns.
-
-What's helping. What's not. What's actually going on with your body.
-
-First, let me understand what brings you here.`;
+  const categories = [
+    'Chronic Pain or Illness',
+    'Autoimmune or Inflammatory',
+    'Energy or Chronic Fatigue',
+    'Sleep & Insomnia Issues',
+    'Mental Health & Focus',
+    'Fertility or Cycle Tracking',
+    'Meds & Treatment Tracking',
+    'Pattern Discovery',
+    'Complex / Undiagnosed'
+  ];
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -69,19 +75,32 @@ First, let me understand what brings you here.`;
               <SafeType
                 text={welcomeMessage}
                 speed={15}
-                className="text-gray-700 whitespace-pre-line leading-relaxed"
+                className="text-gray-700 whitespace-pre-line leading-relaxed text-lg"
               />
             )}
           </div>
 
-          {/* Continue Button */}
+          {/* Category Grid */}
           {!showTyping && (
-            <button
-              onClick={onContinue}
-              className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-            >
-              Let's go →
-            </button>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => onContinue(cat)}
+                    className="px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => onContinue(categories[0])}
+                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+              >
+                I'm Ready →
+              </button>
+            </div>
           )}
         </div>
       </div>

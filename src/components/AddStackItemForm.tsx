@@ -11,6 +11,7 @@ interface AddStackItemFormProps {
   itemType?: 'supplements' | 'movement' | 'food' | 'mindfulness'
   onSuccess?: (itemName: string) => void // Optional callback when item is successfully added
   isOnboarding?: boolean // When true, show onboarding-specific header and purple buttons
+  buttonColor?: string // optional styling hint from orchestrator
 }
 
 export default function AddStackItemForm({ onClose, itemType = 'supplements', onSuccess, isOnboarding = false }: AddStackItemFormProps) {
@@ -222,9 +223,11 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
             <div className={`flex-1 ${itemType === 'supplements' ? 'pt-1 sm:pt-2 px-3 sm:px-5' : 'p-3 sm:p-5'} space-y-3 sm:space-y-5`}>
             {itemType === 'supplements' && isOnboarding && (
               <div className="text-center">
-                <div className="text-4xl mb-3">💙</div>
-                <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">Add your first medication or supplement</h3>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">You can edit or add more later.</p>
+                <div className="text-4xl mb-2">💙</div>
+                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
+                <p className="text-sm sm:text-base text-gray-600 mt-2">
+                  Knowing what you’re taking is the key to finding your patterns faster. I use this data to see what works (and what doesn’t) for you.
+                </p>
               </div>
             )}
             {error && (
@@ -499,14 +502,14 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
                   className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${isOnboarding ? 'border border-purple-200 text-purple-700 hover:bg-purple-50' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   disabled={isLoading}
                 >
-                  Cancel
+                  {isOnboarding ? "I'll add this at the dashboard →" : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Adding...' : '+ Add to Schedule'}
+                  {isLoading ? 'Adding...' : (isOnboarding ? 'Add' : '+ Add to Schedule')}
                 </button>
               </div>
             </div>

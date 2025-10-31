@@ -455,7 +455,7 @@ export default function TodaySnapshot({
                         <span className="text-2xl">💙</span>
                         <div className="flex-1">
                           <SafeType
-                            text={( () => { const h=new Date().getHours(); const greet = h<12?`Good morning, ${userName}! Welcome back.`: h<18?`Good afternoon, ${userName}! Welcome back.`:`Good evening, ${userName}! Welcome back.`; return `${greet}\n\nReady to check in? Let's see how today's treating you—every check-in helps us spot what's working.`; } )()}
+                            text={( () => { const h=new Date().getHours(); let greet; if (h>=5 && h<12) greet = `Good morning, ${userName}! Welcome back.`; else if (h>=12 && h<17) greet = `Good afternoon, ${userName}! Welcome back.`; else if (h>=17 && h<22) greet = `Good evening, ${userName}! Welcome back.`; else greet = `Hey, ${userName}!`; return `${greet}\n\nReady to check in? Let's see how today's treating you—every check-in helps us spot what's working.`; } )()}
                             speed={15}
                             className="text-[15px] sm:text-base text-gray-800 leading-relaxed"
                           />

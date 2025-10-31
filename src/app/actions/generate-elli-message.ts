@@ -77,7 +77,9 @@ export async function generateAndSaveElliMessage(
     let hour: number;
     const hasClientOffset = options && typeof options.tzOffsetMinutes === 'number' && Number.isFinite(options.tzOffsetMinutes);
     if (hasClientOffset) {
-      const ms = Date.now() - (options!.tzOffsetMinutes as number) * 60 * 1000;
+      const offset = options!.tzOffsetMinutes as number; // minutes ahead of UTC (positive east of UTC)
+      // Derive client local hour from server time and client offset
+      const ms = Date.now() - offset * 60 * 1000;
       hour = new Date(ms).getHours();
     } else {
       // Try user's saved timezone from notification_preferences
@@ -105,7 +107,15 @@ export async function generateAndSaveElliMessage(
         hour = new Date().getHours();
       }
     }
-    const timeOfDay: 'morning' | 'afternoon' | 'evening' = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+    const timeOfDay: 'morning' | 'afternoon' | 'evening' = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+
+    console.log('[TIMEZONE DEBUG]', {
+      serverTime: new Date().toISOString(),
+      usedHour: hour,
+      hasClientOffset,
+      clientOffsetMinutes: hasClientOffset ? (options!.tzOffsetMinutes as number) : undefined,
+      timeOfDay
+    });
 
     // Build context for Elli
     const context: ElliContext = {
