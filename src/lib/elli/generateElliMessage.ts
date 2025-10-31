@@ -259,6 +259,12 @@ function sanitizeMessage(message: string, context: ElliContext): string {
       .replace(/\s{2,}/g, ' ')
       .trim();
 
+    // Never call pain "best" or set numeric pain goals
+    result = result
+      .replace(/[^.!?]*\bbest\s+pain[^.!?]*[.!?]/gi, '')
+      .replace(/\b(to|toward|towards)\s+a\s*([0-9]{1,2})\/10\s+in\s+pain\b/gi, 'to lower pain')
+      .replace(/\bto\s+a\s*([0-9]{1,2})\/10\s+in\s+pain\s+and\s+mood\b/gi, 'to lower pain and a steadier mood');
+
     // Never invite chat or sharing details (no chat UI yet)
     result = result
       .replace(/[^.!?]*(don['’]t\s+hesitate\s+to\s+share|share\s+any\s+details|talk\s+to\s+me|reach\s+out)[^.!?]*[.!?]/gi, '');

@@ -64,7 +64,7 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
             This isn't about goals or perfection — it's about what matters to you.<br />
             Why you keep showing up, even on the hard days.
           </p>
-          <p className="text-sm text-gray-500 mb-6 text-center">Before we get to the dashboard, {displayName}.</p>
+          {/* Removed extra preface line per request */}
 
           <div className="mb-6">
             <p className="text-sm text-gray-600 mb-4">Some people say:</p>
