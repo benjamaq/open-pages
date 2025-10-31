@@ -5,6 +5,7 @@ import { analyzeMetricVsMetric } from './metric-analyzer'
 import { findBestLag } from './lag-analyzer'
 import { HIGH_PRIORITY_CORRELATIONS, LAG_ENABLED_TAGS, TYPE_PRIORITY } from './config'
 import { applyFDR } from '../utils/statistics'
+import { rankInsights } from './priority-scorer'
 import { formatInsight } from '../formatters/insight-formatter'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
@@ -143,18 +144,11 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
   } catch (filterErr) {
     console.error('[insights] Error filtering self-correlations', filterErr)
   }
-  // Prioritize and limit to top 3 (tag correlations first, then larger effect size)
+  // Prioritize with categorization/priority scoring and limit to top 3
   try {
-    passed.sort((a: any, b: any) => {
-      const aIsTag = (a as any).type === 'tag_correlation'
-      const bIsTag = (b as any).type === 'tag_correlation'
-      if (aIsTag && !bIsTag) return -1
-      if (!aIsTag && bIsTag) return 1
-      const aEffect = Math.abs(Number((a as any).cohensD || 0))
-      const bEffect = Math.abs(Number((b as any).cohensD || 0))
-      return bEffect - aEffect
-    })
-    passed = passed.slice(0, 3)
+    const scored = rankInsights(passed)
+    // Map back to original CorrelationResult order for formatter
+    passed = scored.slice(0, 3) as unknown as CorrelationResult[]
     console.log('[insights] After prioritization and limiting to 3:', passed.length)
   } catch (orderErr) {
     console.error('[insights] Error during prioritization/limiting', orderErr)
