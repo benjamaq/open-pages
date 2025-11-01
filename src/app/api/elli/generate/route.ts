@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       tags: Array.isArray(r?.tags) ? r.tags as string[] : undefined,
     })
     const recentRaw = await getRecentCheckIns(user.id, 7)
-    const recentEntries = Array.isArray(recentRaw) ? recentRaw.map(toEntry) : []
+    let recentEntries = Array.isArray(recentRaw) ? recentRaw.map(toEntry) : []
     const todayEntry = {
       pain: typeof context?.checkIn?.pain === 'number' ? context.checkIn.pain : 0,
       mood: typeof context?.checkIn?.mood === 'number' ? context.checkIn.mood : 5,
@@ -68,12 +68,19 @@ export async function POST(request: NextRequest) {
       tags: undefined as string[] | undefined,
     }
 
+    // Day 1 server guard: if 0 or 1 entries, force Day 1 path and disable humanizer
+    const isDay1 = !Array.isArray(recentEntries) || recentEntries.length <= 1
+    if (isDay1) {
+      recentEntries = []
+      try { console.log('🔴 [api/elli/generate] Forcing Day 1 path: clearing recentEntries and disabling humanizer') } catch {}
+    }
+
     const message = await generateElliMessage({
       userId: user.id,
       userName: context?.userName || 'there',
       todayEntry,
       recentEntries,
-      useHumanizer: true,
+      useHumanizer: !isDay1,
       condition: (context?.condition as any) || undefined,
     })
     try { console.log('🔵 API ROUTE RETURNING:', typeof message === 'string' ? (message.substring(0, 100) + '...') : message) } catch {}
