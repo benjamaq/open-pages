@@ -57,6 +57,7 @@ export default function PostCheckinResponseModal({
   // Short confirmation only – full Elli message appears on the dashboard
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
+  const handleContinue = () => { try { onComplete(); } catch {} }
 
   // Resolve a friendly first name if the passed userName is missing or placeholder
   useEffect(() => {
@@ -122,9 +123,10 @@ export default function PostCheckinResponseModal({
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="text-center p-6">
           <div className="text-5xl mb-3">✓</div>
-          <h3 className="text-xl font-bold mb-3">Check-in saved!</h3>
+          <h3 className="text-xl font-bold mb-2">Check-in saved!</h3>
+          <p className="text-gray-600 mb-4">Great job showing up today.</p>
           <div className="text-left bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-gray-700 mb-2">You rated:</p>
+            <p className="text-gray-700 font-medium mb-2">You rated:</p>
             <ul className="space-y-1 text-gray-900">
               <li>• Sleep: {typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5}/10</li>
               <li>• Mood: {typeof checkInData?.mood === 'number' ? checkInData.mood : 5}/10</li>
@@ -132,10 +134,10 @@ export default function PostCheckinResponseModal({
             </ul>
           </div>
           <button 
-            onClick={() => onComplete()}
+            onClick={handleContinue}
             className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
           >
-            Continue to Dashboard
+            Continue Setup
           </button>
         </div>
       </div>
