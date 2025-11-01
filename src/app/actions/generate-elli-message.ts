@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { generateElliMessage, type ElliContext } from '@/lib/elli/generateElliMessage';
+import { generateElliMessage } from '@/lib/elli/message-service';
 import type { ToneProfileType } from '@/lib/elli/toneProfiles';
 import { saveElliMessage, getUserCheckInCount, getRecentCheckIns } from '@/lib/db/elliMessages';
 import { getUserCondition } from '@/lib/db/userCondition';
@@ -117,65 +117,32 @@ export async function generateAndSaveElliMessage(
       timeOfDay
     });
 
-    // Build context for Elli
-    const context: ElliContext = {
-      userName,
-      condition,
-      checkIn: { pain: safePain, mood: safeMood, sleep: safeSleep },
-      timeOfDay,
-      daysOfTracking: checkInCount,
-      previousCheckIns: recentCheckIns,
-      toneProfile: (profile?.tone_profile as ToneProfileType) || 'general_wellness',
-    readinessToday: Math.round(((safeMood * 0.2) + (safeSleep * 0.4) + ((10 - safePain) * 0.4)) * 10),
-      readinessYesterday: (() => {
-      const yesterday = recentCheckIns[1];
-      if (!yesterday) return null;
-      const mood = yesterday.mood ?? 5;
-      const sleep = yesterday.sleep_quality ?? 5;
-      const pain = yesterday.pain ?? 0;
-      return Math.round(((mood * 0.2) + (sleep * 0.4) + ((10 - pain) * 0.4)) * 10);
-      })(),
-      factors: {
-        symptoms: (todayEntry?.symptoms as string[] | null) || undefined,
-        lifestyle_factors: (todayEntry?.lifestyle_factors as string[] | null) || undefined,
-      },
-      primaryInsight: primaryInsight?.context ?? null,
-      // Explicit availability flags to prevent over-claiming on new accounts
-      dataAvailability: {
-        uniqueDays: Array.isArray(recentCheckIns) ? new Set(recentCheckIns.map((r:any)=>r.local_date)).size : 0,
-        hasYesterday: Array.isArray(recentCheckIns) && recentCheckIns.some((r:any)=>{
-          const y = new Date(); y.setDate(y.getDate() - 1);
-          return r.local_date === y.toISOString().slice(0,10)
-        }),
-        hasLastWeek: Array.isArray(recentCheckIns) ? new Set(recentCheckIns.map((r:any)=>r.local_date)).size >= 7 : false,
-      },
-    };
+    // Map to message-service params
+    const toEntry = (r: any) => ({
+      local_date: r?.local_date,
+      pain: typeof r?.pain === 'number' ? r.pain : 0,
+      mood: typeof r?.mood === 'number' ? r.mood : 5,
+      sleep_quality: typeof r?.sleep_quality === 'number' ? r.sleep_quality : 5,
+      tags: Array.isArray(r?.tags) ? r.tags as string[] : undefined,
+    })
 
-    // Novelty detection: if we created new insights today, add flags
-    try {
-      const todayISO = new Date().toISOString().split('T')[0];
-      const { data: recentInsights } = await supabase
-        .from('elli_messages')
-        .select('id, created_at, context')
-        .eq('user_id', userId)
-        .eq('message_type', 'insight')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      const createdToday = (recentInsights as any[] | null)?.filter((i) => (i.created_at || '').startsWith(todayISO)) || [];
-      const hasNewSleep = createdToday.some((i:any) => i.context?.insight_key === 'sleep_pain_correlation');
-      const hasNewTrendWarn = createdToday.some((i:any) => i.context?.insight_key === 'seven_day_trend' && i.context?.type === 'Warning');
-      const hasNewGood = createdToday.some((i:any) => i.context?.insight_key === 'seven_day_trend' && i.context?.type === 'Great news');
-      const hasAny = createdToday.length > 0;
-      context.flags = {
-        newSleepPattern: hasNewSleep,
-        newTrendWarning: hasNewTrendWarn,
-        newGoodNews: hasNewGood,
-        hasAnyNewPatterns: hasAny,
-      };
-    } catch {}
-    
-    // Generate the message (with OpenAI or templates)
-    let message = await generateElliMessage(messageType, context);
+    const recentEntries = Array.isArray(recentCheckIns) ? recentCheckIns.map(toEntry) : []
+    const todayStructuredEntry = {
+      pain: safePain,
+      mood: safeMood,
+      sleep_quality: safeSleep,
+      tags: (todayEntry?.lifestyle_factors as string[] | null) || undefined,
+    }
+
+    // Generate the message via new service (optional humanizer retained by default)
+    const message = await generateElliMessage({
+      userId,
+      userName,
+      todayEntry: todayStructuredEntry,
+      recentEntries,
+      useHumanizer: true,
+      condition: (condition as any)?.primary || undefined,
+    });
     console.log('🔵 generateAndSaveElliMessage:message_length', typeof message === 'string' ? message.length : 0);
     
     // Save to database

@@ -293,7 +293,7 @@ function generateDailyReminderHTML(data: DailyReminderData): string {
         
         <div class="content">
           <div class="greeting">
-            Good morning, ${data.userName}!<br>
+            ${(require('@/lib/utils/greetings').getGreeting())}, ${data.userName}!<br>
             Here's your health routine for <strong>${today}</strong>
           </div>
 

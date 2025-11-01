@@ -19,9 +19,10 @@ export default function Step5MissionStatement({ userId, displayName, onNext, onS
   const supabase = createClient()
 
   const examples = [
-    "I'm fighting fibromyalgia and trying to be present for my kids",
-    'I\'m trying to find what actually helps so I can work again',
-    "I'm tired of doctors not believing me — I want proof"
+    "I haven't slept well in months and I need to figure out why",
+    "I'm managing chronic pain and want to find what actually helps",
+    "I'm exhausted and need to understand what's draining my energy",
+    "I want proof of what's working so I can feel confident in my choices"
   ]
 
   const handleSave = async () => {
@@ -51,8 +52,8 @@ export default function Step5MissionStatement({ userId, displayName, onNext, onS
     <div className="max-w-2xl mx-auto p-6">
       <div className="text-center mb-8">
         <div className="text-4xl mb-4">💙</div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Before you see your dashboard, {displayName}...</h2>
-        <p className="text-lg text-gray-700">What are you working toward?</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">What are you working toward?</h2>
+        <p className="text-lg text-gray-700">This helps me understand what success looks like for you. No pressure, no judgment — just honest.</p>
       </div>
 
       <div className="mb-8 space-y-3">

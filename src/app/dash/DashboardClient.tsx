@@ -35,6 +35,7 @@ import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
 import { PatternsCard } from './components/PatternsCard'
 import { createClient } from '@/lib/supabase/client'
+import { getGreeting as getGreetingUtil } from '@/lib/utils/greetings'
 
 interface Profile {
   id: string
@@ -1904,15 +1905,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   }
 
   const getGreeting = () => {
-    try {
-      const now = new Date()
-      const hour = now.getHours()
-      if (hour < 12) return 'Good morning'
-      if (hour < 18) return 'Good afternoon'
-      return 'Good evening'
-    } catch {
-      return 'Hello'
-    }
+    try { return getGreetingUtil() } catch { return 'Hello' }
   }
 
   const getFormattedDate = () => {

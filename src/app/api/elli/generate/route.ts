@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateElliMessage, type ElliContext } from '@/lib/elli/generateElliMessage';
+import { generateElliMessage } from '@/lib/elli/message-service';
+import { getRecentCheckIns } from '@/lib/db/elliMessages';
 import { saveElliMessage } from '@/lib/db/elliMessages';
 
 export async function POST(request: NextRequest) {
@@ -23,10 +24,14 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { messageType, context } = body as {
-      messageType: 'post_checkin' | 'post_supplement' | 'dashboard' | 'milestone';
-      context: ElliContext;
-    };
+    try {
+      console.log('🔵 API ROUTE CALLED with:', {
+        messageType: (body as any)?.messageType,
+        hasContext: !!(body as any)?.context,
+        contextKeys: (body as any)?.context ? Object.keys((body as any)?.context) : []
+      })
+    } catch {}
+    const { messageType, context } = body as any
     try {
       const { ELLI_PROMPTS } = require('@/lib/prompts');
       const pv = (ELLI_PROMPTS?.FIRST_CHECKIN || '').slice(0, 50);
@@ -46,8 +51,32 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Generate Elli message (with OpenAI or templates)
-    const message = await generateElliMessage(messageType, context);
+    // Map context → params for the new service
+    const toEntry = (r: any) => ({
+      local_date: r?.local_date,
+      pain: typeof r?.pain === 'number' ? r.pain : 0,
+      mood: typeof r?.mood === 'number' ? r.mood : 5,
+      sleep_quality: typeof r?.sleep_quality === 'number' ? r.sleep_quality : 5,
+      tags: Array.isArray(r?.tags) ? r.tags as string[] : undefined,
+    })
+    const recentRaw = await getRecentCheckIns(user.id, 7)
+    const recentEntries = Array.isArray(recentRaw) ? recentRaw.map(toEntry) : []
+    const todayEntry = {
+      pain: typeof context?.checkIn?.pain === 'number' ? context.checkIn.pain : 0,
+      mood: typeof context?.checkIn?.mood === 'number' ? context.checkIn.mood : 5,
+      sleep_quality: typeof context?.checkIn?.sleep === 'number' ? context.checkIn.sleep : 5,
+      tags: undefined as string[] | undefined,
+    }
+
+    const message = await generateElliMessage({
+      userId: user.id,
+      userName: context?.userName || 'there',
+      todayEntry,
+      recentEntries,
+      useHumanizer: true,
+      condition: (context?.condition as any) || undefined,
+    })
+    try { console.log('🔵 API ROUTE RETURNING:', typeof message === 'string' ? (message.substring(0, 100) + '...') : message) } catch {}
     try {
       const hasName = !!context?.userName && typeof message === 'string' && message.includes(context.userName);
       const painStr = String(context?.checkIn?.pain ?? '');

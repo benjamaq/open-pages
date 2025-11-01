@@ -133,7 +133,7 @@ export default function Step2CoreCheckin({ userId, userName, onComplete }: Step2
       <div className="text-center mb-6 space-y-3">
         <div className="flex items-center justify-center gap-2 mb-4">
           <span className="text-2xl">💙</span>
-          <p className="text-xl">Hey {userName}</p>
+          <p className="text-xl">{require('@/lib/utils/greetings').getGreeting()}, {userName}</p>
         </div>
         <p className="text-base text-gray-700">Let's see where you're at today.</p>
         <div className="space-y-1 text-base">

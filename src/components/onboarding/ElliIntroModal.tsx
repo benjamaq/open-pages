@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SafeType from '@/components/elli/SafeType';
+import { getGreeting } from '@/lib/utils/greetings';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
 interface ElliIntroModalProps {
@@ -35,19 +36,21 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `Hey ${userName}, I'm so glad you're here. I know you're exhausted from trying everything — and I know how hard it is to keep showing up when nothing seems to work.
+  const welcomeMessage = `${getGreeting()}, ${userName}. I'm so glad you're here.
 
-Let's find out why you're here today, and start building a plan that actually helps.`;
+Whether you're dealing with chronic pain, sleep issues, or just trying to understand what helps you feel better — you're in the right place.
+
+Let's find out what matters most to you, and start uncovering patterns that actually help.`;
 
   const categories = [
     'Chronic Pain or Illness',
-    'Autoimmune or Inflammatory',
-    'Energy or Chronic Fatigue',
     'Sleep & Insomnia Issues',
+    'Energy or Chronic Fatigue',
+    'Autoimmune or Inflammatory',
     'Mental Health & Focus',
-    'Fertility or Cycle Tracking',
     'Meds & Treatment Tracking',
     'Pattern Discovery',
+    'Fertility or Cycle Tracking',
     'Complex / Undiagnosed'
   ];
 

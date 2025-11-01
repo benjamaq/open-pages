@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { getGreeting } from '@/lib/utils/greetings';
 import { ChevronDown } from 'lucide-react';
 import { saveDailyEntry, type SaveDailyEntryInput } from '@/lib/db/mood';
 import { CHIP_CATALOG, getChipsByCategory } from '@/lib/constants/chip-catalog';
@@ -44,6 +45,7 @@ type EnhancedDayDrawerV2Props = {
 };
 
 export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, userName = '', isFirstCheckIn = false, isOnboarding = false, onOnboardingComplete, todayItems, initialData }: EnhancedDayDrawerV2Props) {
+  const mountedRef = useRef<boolean>(false);
   const [formData, setFormData] = useState<SaveDailyEntryInput>({
     localDate: date,
     mood: null,
@@ -94,6 +96,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   // Context chips state (6-8 total limit)
   const [selectedContextChips, setSelectedContextChips] = useState<string[]>([]);
   const [showMoreContext, setShowMoreContext] = useState(false);
+  // Custom context inputs per section
+  const [showCustomNutritionInput, setShowCustomNutritionInput] = useState(false);
+  const [customNutritionInput, setCustomNutritionInput] = useState('');
+  const [showCustomLifestyleInput, setShowCustomLifestyleInput] = useState(false);
+  const [customLifestyleInput, setCustomLifestyleInput] = useState('');
+  const [showCustomEnvironmentInput, setShowCustomEnvironmentInput] = useState(false);
+  const [customEnvironmentInput, setCustomEnvironmentInput] = useState('');
+  // Section-specific custom chip lists (display values)
+  const [customLifestyleChips, setCustomLifestyleChips] = useState<string[]>([]);
+  const [customEnvironmentChips, setCustomEnvironmentChips] = useState<string[]>([]);
+  const [customNutritionChips, setCustomNutritionChips] = useState<string[]>([]);
+  const [customIllnessChips, setCustomIllnessChips] = useState<string[]>([]);
+  const [showCustomIllnessInput, setShowCustomIllnessInput] = useState(false);
+  const [customIllnessInput, setCustomIllnessInput] = useState('');
   
   // Symptom tracking state (5 limit)
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
@@ -103,12 +119,21 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   const [customSymptomInput, setCustomSymptomInput] = useState('');
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false);
   const [showMoreSymptoms, setShowMoreSymptoms] = useState(false);
+  // Custom pain location/type inputs and lists
+  const [customPainLocationsList, setCustomPainLocationsList] = useState<string[]>([]);
+  const [customPainLocationInput, setCustomPainLocationInput] = useState('');
+  const [showCustomPainLocationInput, setShowCustomPainLocationInput] = useState(false);
+  const [customPainTypesList, setCustomPainTypesList] = useState<string[]>([]);
+  const [customPainTypeInput, setCustomPainTypeInput] = useState('');
+  const [showCustomPainTypeInput, setShowCustomPainTypeInput] = useState(false);
 
   // Collapsible section states
   // Collapse Today's Vibe by default (both first and subsequent check-ins)
   const [isVibeSectionOpen, setIsVibeSectionOpen] = useState(false);
   const [isContextSectionOpen, setIsContextSectionOpen] = useState(false);
   const [isSymptomsSectionOpen, setIsSymptomsSectionOpen] = useState(false);
+  const [showLifeFactorsInfo, setShowLifeFactorsInfo] = useState(false);
+  const [showSymptomsInfo, setShowSymptomsInfo] = useState(false);
   const [isNotesSectionOpen, setIsNotesSectionOpen] = useState(false);
 
   // Handle Elli welcome typing animation for first check-in (onboarding only)
@@ -128,12 +153,14 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
 
   // Ensure collapsible sections start closed whenever a new day opens the drawer
   useEffect(() => {
+    mountedRef.current = true;
     if (isOpen) {
       setIsVibeSectionOpen(false);
       setIsContextSectionOpen(false);
       setIsSymptomsSectionOpen(false);
       setIsNotesSectionOpen(false);
     }
+    return () => { mountedRef.current = false };
   }, [isOpen, date]);
 
   // Core symptoms from the brief
@@ -313,6 +340,32 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     );
   };
 
+  const toSlug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+  const addCustomContextChip = async (raw: string, section: 'nutrition' | 'lifestyle' | 'environment' | 'illness') => {
+    const display = raw.trim()
+    if (!display) return
+    console.log('🔧 Custom tag added:', display, 'in section:', section)
+    setSelectedContextChips(prev => (prev.includes(display) ? prev : [...prev, display]))
+    // Track in section-specific list so it renders alongside presets
+    if (section === 'lifestyle') {
+      setCustomLifestyleChips(prev => (prev.includes(display) ? prev : [...prev, display]))
+    } else if (section === 'environment') {
+      setCustomEnvironmentChips(prev => (prev.includes(display) ? prev : [...prev, display]))
+    } else if (section === 'nutrition') {
+      setCustomNutritionChips(prev => (prev.includes(display) ? prev : [...prev, display]))
+    } else if (section === 'illness') {
+      setCustomIllnessChips(prev => (prev.includes(display) ? prev : [...prev, display]))
+    }
+    // Persist optional section metadata for future grouping
+    try {
+      await fetch('/api/user-tags/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tag: toSlug(display), section })
+      })
+    } catch {}
+  }
+
   const handleAddCustomSymptom = () => {
     if (customSymptomInput.trim()) {
       setCustomSymptoms(prev => [...prev, customSymptomInput.trim()]);
@@ -385,6 +438,41 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     }
     setSaveMessage('');
   }, [date, initialData]);
+
+  // Preselect yesterday's tags when starting a new check-in (no initialData.tags and no draft)
+  useEffect(() => {
+    const shouldPrefill = isOpen
+      && (!initialData || !Array.isArray(initialData.tags) || initialData.tags.length === 0)
+      && selectedTags.length === 0
+      && selectedContextChips.length === 0
+    if (!shouldPrefill) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/entries/latest-tags', { cache: 'no-store' })
+        if (!res.ok) return
+        const json = await res.json()
+        const prev: string[] = Array.isArray(json?.previous_tags) ? json.previous_tags : []
+        if (!prev.length) return
+        // Split into expressive mood chips vs contextual chips
+        const expressive: string[] = []
+        const contextual: string[] = []
+        prev.forEach((slug) => {
+          const chip = CHIP_CATALOG.find(c => c.slug === slug)
+          if (chip?.category?.startsWith('expressive')) {
+            if (!expressive.includes(slug)) expressive.push(slug)
+          } else {
+            const display = contextSlugToDisplay[slug] || slug
+            if (!contextual.includes(display)) contextual.push(display)
+          }
+        })
+        if (!cancelled && expressive.length > 0) setSelectedTags(expressive.slice(0, 4))
+        if (!cancelled && contextual.length > 0) setSelectedContextChips(contextual)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   // Load draft from localStorage when opening (after initialData processing)
   useEffect(() => {
@@ -479,6 +567,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   };
 
   // Handle save function
+  const safeClose = () => { try { if (mountedRef.current && typeof onClose === 'function') onClose(); } catch {} };
   const handleSave = async () => {
     console.log('🔍 SAVE BUTTON CLICKED!');
     setIsSaving(true);
@@ -497,7 +586,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       const shouldClearPainData = currentPain === 0;
 
       // Convert context chips from display format to slug format for database storage
-      const contextChipsAsSlugs = selectedContextChips.map(chip => contextDisplayToSlug[chip] || chip);
+      const contextChipsAsSlugs = selectedContextChips.map(chip => contextDisplayToSlug[chip] || toSlug(chip));
       
       // Combine expressive mood chips (selectedTags) with contextual chips (selectedContextChips) and dedupe
       const allTags = Array.from(new Set([...selectedTags, ...contextChipsAsSlugs]));
@@ -659,14 +748,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           // Normal behavior for subsequent check-ins
           setTimeout(() => {
             try {
+              if (!mountedRef.current) return;
               const hasShown = localStorage.getItem('pushPromptShown');
               if (!hasShown && isActuallyFirstCheckIn) {
                 setShowReminderPrompt(true);
               } else {
-                onClose();
+                safeClose();
               }
             } catch {
-              onClose();
+              safeClose();
             }
           }, 1000);
         }
@@ -820,12 +910,10 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Daily Check-in
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 text-center sm:text-left">
+                  {isActuallyFirstCheckIn ? "Let's Get Started! 👋" : 'Daily Check-in'}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  {formatDate(date)}
-                </p>
+                <p className="text-xs sm:text-sm text-gray-600">{isActuallyFirstCheckIn ? 'Your first check-in' : formatDate(date)}</p>
               </div>
               <button
                 onClick={onClose}
@@ -947,7 +1035,9 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               </div>
             </div>
 
-            {/* 🎯 Readiness Score Display - Standalone */}
+          {/* Removed explainer box per onboarding screen consolidation */}
+
+          {/* 🎯 Readiness Score Display - Standalone */}
             <div className="text-center py-2">
               <div className="flex items-center justify-center space-x-3">
                 <span className={`text-3xl font-bold ${readinessMeta.colorClass}`}>
@@ -969,7 +1059,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🌍</span>
-                  <h3 className="text-base font-medium text-gray-900">Life Factors</h3>
+                  <h3 className="text-base font-medium text-gray-900 flex items-center gap-2">Life Factors</h3>
                   <span className="text-xs text-gray-400 font-normal">Help us find your patterns faster – select what applies</span>
                   {selectedContextChips.length > 0 && (
                     <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
@@ -984,26 +1074,88 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               {/* Life Factors content - shown when expanded */}
               {isContextSectionOpen && (
                 <div className="px-4 pb-4 border-t border-gray-100 space-y-4">
+                  {showLifeFactorsInfo && (
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-md text-sm">
+                      <p className="text-gray-700">
+                        <strong>Life factors help Elli spot patterns.</strong> When you tag "caffeine" or "high stress," Elli can show you how these affect your sleep, mood, and pain over time.
+                      </p>
+                    </div>
+                  )}
                   {/* Lifestyle */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Lifestyle</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.lifestyle.map(chip => {
+                      {[...contextCategories.lifestyle, ...customLifestyleChips].map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
+                        const isCustom = customLifestyleChips.includes(chip);
                         return (
                           <button
                             key={chip}
                             onClick={() => toggleContextChip(chip)}
                             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                               isSelected
-                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                            }`}
+                            } ${isCustom ? 'ring-1 ring-pink-400' : ''}`}
                           >
+                            {isCustom && <span className="inline-block w-1.5 h-1.5 rounded-full bg-pink-500 mr-1.5" />}
                             {chip}
                           </button>
                         );
                       })}
+                      {/* Add custom activity tag */}
+                      {!showCustomLifestyleInput ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setShowCustomLifestyleInput(true)}
+                            className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                          >
+                            + Add custom
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setShowLifeFactorsInfo(!showLifeFactorsInfo) }}
+                            className="text-xs text-gray-400 hover:text-gray-600"
+                            aria-label="About custom life factors"
+                          >
+                            ℹ️
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type="text"
+                            value={customLifestyleInput}
+                            onChange={(e) => setCustomLifestyleInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomContextChip(customLifestyleInput, 'lifestyle')
+                                setCustomLifestyleInput('')
+                                setShowCustomLifestyleInput(false)
+                              }
+                            }}
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Type an activity (e.g. long_run)"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              addCustomContextChip(customLifestyleInput, 'lifestyle')
+                              setCustomLifestyleInput('')
+                              setShowCustomLifestyleInput(false)
+                            }}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => { setShowCustomLifestyleInput(false); setCustomLifestyleInput('') }}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1011,22 +1163,67 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Environment</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.environment.map(chip => {
+                      {[...contextCategories.environment, ...customEnvironmentChips].map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
+                        const isCustom = customEnvironmentChips.includes(chip);
                         return (
                           <button
                             key={chip}
                             onClick={() => toggleContextChip(chip)}
                             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                               isSelected
-                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                            }`}
+                            } ${isCustom ? 'ring-1 ring-pink-400' : ''}`}
                           >
+                            {isCustom && <span className="inline-block w-1.5 h-1.5 rounded-full bg-pink-500 mr-1.5" />}
                             {chip}
                           </button>
                         );
                       })}
+                      {/* Add custom context tag */}
+                      {!showCustomEnvironmentInput ? (
+                        <button
+                          onClick={() => setShowCustomEnvironmentInput(true)}
+                          className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                        >
+                          + Add custom
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type="text"
+                            value={customEnvironmentInput}
+                            onChange={(e) => setCustomEnvironmentInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomContextChip(customEnvironmentInput, 'environment')
+                                setCustomEnvironmentInput('')
+                                setShowCustomEnvironmentInput(false)
+                              }
+                            }}
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Type a context tag (e.g. pollen_high)"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              addCustomContextChip(customEnvironmentInput, 'environment')
+                              setCustomEnvironmentInput('')
+                              setShowCustomEnvironmentInput(false)
+                            }}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => { setShowCustomEnvironmentInput(false); setCustomEnvironmentInput('') }}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1034,22 +1231,67 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Nutrition</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.nutrition.map(chip => {
+                      {[...contextCategories.nutrition, ...customNutritionChips].map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
+                        const isCustom = customNutritionChips.includes(chip);
                         return (
                           <button
                             key={chip}
                             onClick={() => toggleContextChip(chip)}
                             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                               isSelected
-                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                            }`}
+                            } ${isCustom ? 'ring-1 ring-pink-400' : ''}`}
                           >
+                            {isCustom && <span className="inline-block w-1.5 h-1.5 rounded-full bg-pink-500 mr-1.5" />}
                             {chip}
                           </button>
                         );
                       })}
+                      {/* Add custom nutrition tag */}
+                      {!showCustomNutritionInput ? (
+                        <button
+                          onClick={() => setShowCustomNutritionInput(true)}
+                          className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                        >
+                          + Add custom
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type="text"
+                            value={customNutritionInput}
+                            onChange={(e) => setCustomNutritionInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomContextChip(customNutritionInput, 'nutrition')
+                                setCustomNutritionInput('')
+                                setShowCustomNutritionInput(false)
+                              }
+                            }}
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Type a food trigger (e.g. ate_sushi)"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              addCustomContextChip(customNutritionInput, 'nutrition')
+                              setCustomNutritionInput('')
+                              setShowCustomNutritionInput(false)
+                            }}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => { setShowCustomNutritionInput(false); setCustomNutritionInput('') }}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1057,7 +1299,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Illness / Health</h4>
                     <div className="flex flex-wrap gap-2">
-                      {contextCategories.illness.map(chip => {
+                      {[...contextCategories.illness, ...customIllnessChips].map(chip => {
                         const isSelected = selectedContextChips.includes(chip);
                         return (
                           <button
@@ -1065,7 +1307,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                             onClick={() => toggleContextChip(chip)}
                             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                               isSelected
-                                ? 'bg-amber-50 border-amber-300 text-amber-800'
+                                ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                             }`}
                           >
@@ -1073,6 +1315,49 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                           </button>
                         );
                       })}
+                      {/* Add custom illness/health tag */}
+                      {!showCustomIllnessInput ? (
+                        <button
+                          onClick={() => setShowCustomIllnessInput(true)}
+                          className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                        >
+                          + Add custom
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type="text"
+                            value={customIllnessInput}
+                            onChange={(e) => setCustomIllnessInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomContextChip(customIllnessInput, 'illness')
+                                setCustomIllnessInput('')
+                                setShowCustomIllnessInput(false)
+                              }
+                            }}
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Type a health tag (e.g. sinus_issue)"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              addCustomContextChip(customIllnessInput, 'illness')
+                              setCustomIllnessInput('')
+                              setShowCustomIllnessInput(false)
+                            }}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => { setShowCustomIllnessInput(false); setCustomIllnessInput('') }}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1087,7 +1372,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🩺</span>
-                  <h3 className="text-base font-medium text-gray-900">Symptoms</h3>
+                  <h3 className="text-base font-medium text-gray-900 flex items-center gap-2">Symptoms</h3>
                   <span className="text-xs text-gray-400 font-normal">Tell us what symptoms you're feeling today</span>
                   {(() => {
                     const totalSelected = selectedSymptoms.length + customSymptoms.length + selectedPainLocations.length + selectedPainTypes.length;
@@ -1106,8 +1391,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               {/* Symptoms content - shown when expanded (existing) */}
               {isSymptomsSectionOpen && (
                 <div className="px-4 pb-4 space-y-4 border-t border-gray-100">
+                  {showSymptomsInfo && (
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-md text-sm">
+                      <p className="text-gray-700">
+                        <strong>Symptoms help Elli find connections.</strong> Tagging "headache" or "brain fog" lets Elli reveal patterns like: "Headaches after poor sleep" or "Brain fog linked to dairy."
+                      </p>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
-                    {coreSymptoms.slice(0, showMoreSymptoms ? undefined : 6).map(symptom => {
+                    {coreSymptoms.map(symptom => {
                       const isSelected = selectedSymptoms.includes(symptom);
                       const isDisabled = !isSelected && (selectedSymptoms.length + customSymptoms.length) >= 5;
                       return (
@@ -1125,25 +1417,27 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                         </button>
                       );
                     })}
-                    {!showMoreSymptoms && (
-                      <button
-                        onClick={() => setShowMoreSymptoms(true)}
-                        className="px-3 py-1.5 text-sm rounded-full border border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700"
-                      >
-                        Show more
-                      </button>
-                    )}
                   </div>
                   {/* Custom symptoms */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">Custom symptoms</span>
-                      <button
-                        onClick={() => setShowCustomSymptomInput(!showCustomSymptomInput)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
-                        {showCustomSymptomInput ? 'Hide' : 'Add custom'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowCustomSymptomInput(!showCustomSymptomInput)}
+                          className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100 text-sm"
+                        >
+                          {showCustomSymptomInput ? 'Hide' : '+ Add custom'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setShowSymptomsInfo(!showSymptomsInfo) }}
+                          className="text-xs text-gray-400 hover:text-gray-600"
+                          aria-label="About custom symptoms"
+                        >
+                          ℹ️
+                        </button>
+                      </div>
                     </div>
                     {showCustomSymptomInput && (
                       <div className="flex items-center gap-2 mb-2">
@@ -1191,22 +1485,74 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Where is the pain?</h4>
                         <div className="flex flex-wrap gap-2">
-                          {painLocations.map(location => {
+                          {[...painLocations, ...customPainLocationsList].map(location => {
                             const isSelected = selectedPainLocations.includes(location);
+                            const isCustom = customPainLocationsList.includes(location);
                             return (
                               <button
                                 key={location}
                                 onClick={() => togglePainLocation(location)}
                                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                                   isSelected
-                                    ? 'bg-red-100 border-red-300 text-red-800'
+                                    ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                     : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                                }`}
+                                } ${isCustom ? 'ring-1 ring-pink-400' : ''}`}
                               >
+                                {isCustom && <span className="inline-block w-1.5 h-1.5 rounded-full bg-pink-500 mr-1.5" />}
                                 {location}
                               </button>
                             );
                           })}
+                          {!showCustomPainLocationInput ? (
+                            <button
+                              onClick={() => setShowCustomPainLocationInput(true)}
+                              className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                            >
+                              + Add custom
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full">
+                              <input
+                                type="text"
+                                value={customPainLocationInput}
+                                onChange={(e) => setCustomPainLocationInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const v = customPainLocationInput.trim()
+                                    if (v) {
+                                      setCustomPainLocationsList(prev => prev.includes(v) ? prev : [...prev, v])
+                                      setSelectedPainLocations(prev => prev.includes(v) ? prev : [...prev, v])
+                                    }
+                                    setCustomPainLocationInput('')
+                                    setShowCustomPainLocationInput(false)
+                                  }
+                                }}
+                                className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Add a location (e.g. jaw, ribs)"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => {
+                                  const v = customPainLocationInput.trim()
+                                  if (v) {
+                                    setCustomPainLocationsList(prev => prev.includes(v) ? prev : [...prev, v])
+                                    setSelectedPainLocations(prev => prev.includes(v) ? prev : [...prev, v])
+                                  }
+                                  setCustomPainLocationInput('')
+                                  setShowCustomPainLocationInput(false)
+                                }}
+                                className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                              >
+                                Add
+                              </button>
+                              <button
+                                onClick={() => { setShowCustomPainLocationInput(false); setCustomPainLocationInput('') }}
+                                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1214,22 +1560,74 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">What type of pain?</h4>
                         <div className="flex flex-wrap gap-2">
-                          {painTypes.map(type => {
+                          {[...painTypes, ...customPainTypesList].map(type => {
                             const isSelected = selectedPainTypes.includes(type);
+                            const isCustom = customPainTypesList.includes(type);
                             return (
                               <button
                                 key={type}
                                 onClick={() => togglePainType(type)}
                                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                                   isSelected
-                                    ? 'bg-orange-100 border-orange-300 text-orange-800'
+                                    ? 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300 text-blue-800 shadow-sm'
                                     : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                                }`}
+                                } ${isCustom ? 'ring-1 ring-pink-400' : ''}`}
                               >
+                                {isCustom && <span className="inline-block w-1.5 h-1.5 rounded-full bg-pink-500 mr-1.5" />}
                                 {type}
                               </button>
                             );
                           })}
+                          {!showCustomPainTypeInput ? (
+                            <button
+                              onClick={() => setShowCustomPainTypeInput(true)}
+                              className="px-3 py-1.5 bg-pink-50 border-2 border-dashed border-pink-500 text-pink-600 rounded-full hover:bg-pink-100"
+                            >
+                              + Add custom
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full">
+                              <input
+                                type="text"
+                                value={customPainTypeInput}
+                                onChange={(e) => setCustomPainTypeInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const v = customPainTypeInput.trim()
+                                    if (v) {
+                                      setCustomPainTypesList(prev => prev.includes(v) ? prev : [...prev, v])
+                                      setSelectedPainTypes(prev => prev.includes(v) ? prev : [...prev, v])
+                                    }
+                                    setCustomPainTypeInput('')
+                                    setShowCustomPainTypeInput(false)
+                                  }
+                                }}
+                                className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Add a pain type (e.g. burning)"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => {
+                                  const v = customPainTypeInput.trim()
+                                  if (v) {
+                                    setCustomPainTypesList(prev => prev.includes(v) ? prev : [...prev, v])
+                                    setSelectedPainTypes(prev => prev.includes(v) ? prev : [...prev, v])
+                                  }
+                                  setCustomPainTypeInput('')
+                                  setShowCustomPainTypeInput(false)
+                                }}
+                                className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                              >
+                                Add
+                              </button>
+                              <button
+                                onClick={() => { setShowCustomPainTypeInput(false); setCustomPainTypeInput('') }}
+                                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

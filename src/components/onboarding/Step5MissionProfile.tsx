@@ -59,19 +59,19 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="max-w-2xl mx-auto p-6">
           <p className="text-2xl mb-4 text-center">💙</p>
-          <h2 className="text-2xl font-medium mb-3 text-center">What matters most to you right now?</h2>
+          <h2 className="text-2xl font-medium mb-3 text-center">What are you working toward?</h2>
           <p className="text-gray-600 mb-4 text-center">
-            This isn't about goals or perfection — it's about what matters to you.<br />
-            Why you keep showing up, even on the hard days.
+            Understanding your goals helps me support you better.
           </p>
           {/* Removed extra preface line per request */}
 
           <div className="mb-6">
             <p className="text-sm text-gray-600 mb-4">Some people say:</p>
             <div className="space-y-2 text-sm text-gray-600">
-              <p>💬 "I'm fighting fibromyalgia and trying to be present for my kids"</p>
-              <p>💬 "I'm trying to find what actually helps so I can work again"</p>
-              <p>💬 "I'm tired of doctors not believing me — I want proof"</p>
+              <p>💬 "I haven't slept well in months and need to figure out why"</p>
+              <p>💬 "I'm managing chronic pain and want to find what actually helps"</p>
+              <p>💬 "I'm exhausted and need to understand what's draining my energy"</p>
+              <p>💬 "I want proof of what's working so I can feel confident in my choices"</p>
             </div>
           </div>
 

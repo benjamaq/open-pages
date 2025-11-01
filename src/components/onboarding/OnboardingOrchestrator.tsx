@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ElliIntroModal from './ElliIntroModal';
+import HowItWorksScreen from './HowItWorksScreen';
 import EnhancedDayDrawerV2 from '@/app/components/mood/EnhancedDayDrawerV2';
 import Step5MissionStatement from './Step5MissionStatement';
 import Step2CoreCheckin from './Step2CoreCheckin';
@@ -31,6 +32,7 @@ import { trackEvent } from '@/lib/analytics';
 
 type OnboardingStep = 
   | 'intro'           // ElliIntroModal - generic welcome
+  | 'how_it_works'    // New explanation screen
   | 'checkin'         // EnhancedDayDrawerV2 - mood/sleep/pain sliders
   | 'response'        // PostCheckinResponseModal - tone-aware response
   | 'add_supplement'  // AddStackItemForm - add supplement/medication
@@ -94,7 +96,7 @@ export default function OnboardingOrchestrator({
     setSelectedCategory(category);
     const tone = getToneProfileType(category, null);
     setToneProfile(tone);
-    setCurrentStep('checkin');
+    setCurrentStep('how_it_works');
   };
 
   // ========================================================================
@@ -196,6 +198,14 @@ export default function OnboardingOrchestrator({
       )}
 
       {/* Category selection handled inside ElliIntroModal */}
+
+      {/* New Step: How It Works → then Check-in */}
+      {currentStep === 'how_it_works' && (
+        <HowItWorksScreen
+          isOpen={true}
+          onContinue={() => setCurrentStep('checkin')}
+        />
+      )}
 
       {/* Step 3: Check-in (old/new) */}
       {currentStep === 'checkin' && (

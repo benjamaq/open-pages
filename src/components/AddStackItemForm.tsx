@@ -226,8 +226,9 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
                 <div className="text-4xl mb-2">💙</div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
                 <p className="text-sm sm:text-base text-gray-600 mt-2">
-                  Knowing what you’re taking is the key to finding your patterns faster. I use this data to see what works (and what doesn’t) for you.
+                  Knowing what you’re taking is the key to finding your patterns faster.
                 </p>
+                {/* Removed explainer about next steps to keep the modal focused on the action */}
               </div>
             )}
             {error && (

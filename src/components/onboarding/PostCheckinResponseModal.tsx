@@ -54,16 +54,78 @@ export default function PostCheckinResponseModal({
   toneProfile,
   isFirstCheckIn = false
 }: PostCheckinResponseModalProps) {
-  const [showTyping, setShowTyping] = useState(true);
-  const [showMessage, setShowMessage] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [resolvedName, setResolvedName] = useState<string>(userName);
 
+  // Fetch Elli message from server (message-service) when modal opens
   useEffect(() => {
+    const fetchMessage = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
+        try {
+          console.log('🚨 ABOUT TO CALL API');
+          console.log('🚨 USER ID:', userId);
+          console.log('🚨 USER NAME:', nameForMessage);
+          console.log('🚨 VALUES:', {
+            sleepValue: typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
+            moodValue: typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
+            painValue: typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
+          });
+          console.log('🚨 FETCHING...');
+        } catch {}
+        const resp = await fetch('/api/elli/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messageType: 'post_checkin',
+            context: {
+              userName: nameForMessage,
+              checkIn: {
+                pain: typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
+                mood: typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
+                sleep: typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
+              },
+              // Pass category as a loose condition hint (optional)
+              condition: category || undefined,
+            }
+          })
+        });
+        try { console.log('🌐 API RESPONSE STATUS:', resp.status) } catch {}
+        if (!resp.ok) throw new Error('Failed to generate Elli message');
+        const json = await resp.json().catch(() => ({}));
+        const svcMessage = (json && json.message) || '';
+        try { console.log('📥 API RETURNED MESSAGE:', typeof svcMessage === 'string' ? (svcMessage.substring(0, 100) + '...') : svcMessage) } catch {}
+        if (!svcMessage || typeof svcMessage !== 'string') throw new Error('Invalid Elli message payload');
+        setMessage(svcMessage);
+      } catch (e) {
+        console.error('🚨 FETCH FAILED:', e);
+        // Fallback to tone profile template
+        try {
+          const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
+          const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
+          const fallback = profile.fallbackTemplates.postCheckin(
+            typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
+            typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
+            typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
+            nameForMessage
+          );
+          setMessage(fallback);
+        } catch (err) {
+          setError('Failed to generate message');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (isOpen) {
-      // Show message instantly with no typing delay
-      setShowTyping(false);
-      setShowMessage(true);
+      fetchMessage();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Resolve a friendly first name if the passed userName is missing or placeholder
@@ -111,14 +173,7 @@ export default function PostCheckinResponseModal({
   
   // Removed verbose console logging to prevent main-thread blocking during typing
 
-  // Generate tone-aware response from tone profile (also for first check-in)
-  const { pain, mood, sleep } = checkInData;
-  let response = '';
-  const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
-  response = profile.fallbackTemplates.postCheckin(pain, mood, sleep, nameForMessage);
-  if (typeof pain === 'number' && pain > 0 && !/\bpain\b/i.test(response)) {
-    response = `Pain at ${pain}/10. ${response}`;
-  }
+  // Message resolved via API (or fallback)
 
   // Gentle note if caffeine-related chip/tag was selected
   try {
@@ -145,13 +200,17 @@ export default function PostCheckinResponseModal({
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Elli's Tone-Aware Response */}
+          {/* Elli's Response */}
           <div className="min-h-[120px]">
-            <div className="text-gray-700 whitespace-pre-line leading-relaxed">{response}</div>
+            {isLoading ? (
+              <div className="py-6 flex justify-center"><TypingIndicator /></div>
+            ) : (
+              <div className="text-gray-700 whitespace-pre-line leading-relaxed">{message}</div>
+            )}
           </div>
 
           {/* Transition to Supplements */}
-          {showMessage && (
+          {!isLoading && (
             <>
               <div className="border-t border-gray-200 pt-6">
                 <p className="text-gray-700 mb-4">
