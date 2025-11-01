@@ -3,7 +3,7 @@ export default function WhyDifferent() {
     <section className="why-different py-16">
       <div className="max-w-4xl mx-auto text-center px-6">
         <p className="text-sm uppercase tracking-wide text-blue-600 mb-4">
-          WHY BIOSTACKR IS DIFFERENT
+          WHY BIOSTACKR IS DIFFERENT 💙
         </p>
         <h2 className="text-4xl font-bold mb-6">
           Sleep trackers show you graphs.<br />
@@ -24,7 +24,7 @@ export default function WhyDifferent() {
             </ul>
           </div>
           <div className="text-left p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
-            <h3 className="font-bold mb-4">✨ BioStackr:</h3>
+            <h3 className="font-bold mb-4">✨ BioStackr (with Elli 💙):</h3>
             <ul className="space-y-3">
               <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span><span>Find <strong>what's causing</strong> bad sleep</span></li>
               <li className="flex items-start"><span className="text-blue-600 mr-2">✓</span><span>Track triggers: caffeine, food, stress, exercise timing</span></li>

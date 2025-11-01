@@ -7,8 +7,11 @@ export default function HeroSleep() {
   return (
     <section className="hero-sleep">
       <div className="max-w-4xl mx-auto text-center px-6 py-16">
-        <p className="text-sm uppercase tracking-wide text-blue-600 mb-4">
+        <p className="text-sm uppercase tracking-wide text-blue-600 mb-2">
           THE NEXT GENERATION OF SLEEP TRACKING
+        </p>
+        <p className="text-lg text-gray-600 mb-4 font-medium">
+          Meet Elli, your AI sleep companion 💙
         </p>
         <h1 className="text-6xl md:text-7xl font-black mb-6 text-gray-900">
           Can't sleep?<br />
