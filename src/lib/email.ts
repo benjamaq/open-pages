@@ -206,21 +206,23 @@ export const emailTemplates = {
   }),
   
   welcome: (data: WelcomeEmailData) => ({
-    subject: 'Welcome to BioStackr — you just took the hardest step',
+    subject: 'Welcome to BioStackr — let\'s find your answers',
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px;">
         <div style="margin-bottom: 20px;">
           <p style="color: #111827; font-size: 16px; line-height: 1.7; margin: 0 0 14px;">Hey ${data.name},</p>
           <p style="color: #111827; font-size: 16px; line-height: 1.7; margin: 0 0 14px;">Welcome to BioStackr. I'm genuinely glad you're here.</p>
-          <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 14px;">I built this for my mum—she has chronic pain and was drowning in guesswork. Doctors would ask "what's helping?" and she'd freeze. We all know that feeling. When you're in pain, your brain can't hold onto patterns. That's where BioStackr comes in.</p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 14px;">I built this for my mum—she was drowning in guesswork, trying everything for her health issues but never knowing what actually helped. Doctors would ask "what's working?" and she'd freeze. We all know that feeling. When you're struggling (pain, sleep, migraines, fatigue), your brain can't hold onto patterns.</p>
+          <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 14px;">That's where BioStackr comes in.</p>
         </div>
 
         <div style="margin: 22px 0;">
           <h3 style="color: #111827; font-size: 16px; font-weight: 700; margin: 0 0 10px;">Here's what's happening right now:</h3>
-          <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 12px;">People are finding answers in 5-7 days that took them years to figure out on their own. Things like:</p>
+          <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 12px;">People are finding answers in 5–7 days that took them years to figure out on their own. Things like:</n>
           <ul style="color: #111827; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 18px;">
+            <li style="margin-bottom: 8px;">"My sleep quality jumps to 8/10 when I cut caffeine after 2pm"</li>
+            <li style="margin-bottom: 8px;">"Migraines spike 48 hours after high‑stress days"</li>
             <li style="margin-bottom: 8px;">"My pain drops to 3/10 when I take magnesium 3+ days straight"</li>
-            <li style="margin-bottom: 8px;">"Migraines spike 48 hours after I skip sleep"</li>
             <li style="margin-bottom: 8px;">"My mood's actually better when I move, even just 10 minutes"</li>
           </ul>
           <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 12px 0 0;">The patterns were always there. They just needed someone—or something—to spot them.</p>
@@ -232,7 +234,7 @@ export const emailTemplates = {
 
         <div style="margin: 22px 0;">
           <h3 style="color: #111827; font-size: 16px; font-weight: 700; margin: 0 0 10px;">Here's my one tip:</h3>
-          <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 12px;">The real magic happens after 5–7 days of consistent tracking. Don't overthink it. Just log your check-in daily (takes 20 seconds), and the patterns will show themselves. Miss a day? No guilt. Just pick it back up.</p>
+          <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 12px;">The real magic happens after 5–7 days of consistent tracking. Don't overthink it. Just log your check‑in daily (takes 20 seconds), and the patterns will show themselves. Miss a day? No guilt. Just pick it back up.</p>
           <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 12px;">If anything is confusing, if something breaks, or you just want to tell me this is helping—reply to this email. I read every message.</p>
           <p style="color: #111827; font-size: 15px; line-height: 1.7; margin: 12px 0 0;">— Ben</p>
         </div>
@@ -244,7 +246,7 @@ export const emailTemplates = {
         </div>
 
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://biostackr.io/dash" style="display: inline-block; background: #111827; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Go to Dashboard</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://biostackr.io'}/dash" style="display: inline-block; background: #111827; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">Go to Dashboard</a>
         </div>
 
         <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 24px;">
