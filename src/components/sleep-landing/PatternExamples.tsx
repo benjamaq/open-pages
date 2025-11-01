@@ -5,7 +5,10 @@ export default function PatternExamples() {
   return (
     <section className="pattern-examples py-16 bg-white">
       <div className="max-w-5xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-12">Patterns Elli Has Found 💙</h2>
+        <h2 className="text-3xl font-bold text-center mb-4">Patterns Our AI (Elli) Finds For You 💙</h2>
+        <p className="text-center text-gray-600 mb-10 max-w-3xl mx-auto">
+          Meet Elli, your AI sleep companion. She analyzes your daily check-ins and spots patterns you’d never notice on your own:
+        </p>
         <PatternCarousel
           patterns={[
             { emoji: '☕', title: 'Caffeine Cutoff', description: 'Your sleep quality drops from 7/10 → 4/10 on nights you drink caffeine after 2pm.', insight: 'Even one coffee disrupts your sleep cycles hours later.', borderColor: 'border-green-200', bgColor: 'bg-green-50', preLabel: 'Elli discovers patterns like:' },

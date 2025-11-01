@@ -16,7 +16,9 @@ export default function FAQ() {
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Do I need a wearable?</h3>
-            <p className="text-gray-700">No. BioStackr works with just self-reported sleep quality (1-10 scale). You can also manually import sleep scores from Whoop or Oura if you use those.</p>
+            <p className="text-gray-700">No. BioStackr works with self-reported sleep quality (1–10 scale) — which is actually more valuable than device data.</p>
+            <p className="text-gray-700 mt-2">Why? Because you're rating how you <strong>feel</strong>, not what a sensor thinks happened. A device might say you slept 8 hours, but if you feel exhausted, that's what matters. Your subjective experience is the real data.</p>
+            <p className="text-gray-700 mt-2">You can also manually import sleep scores from Whoop or Oura if you want, but it's not required.</p>
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">How long until I see patterns?</h3>

@@ -1,7 +1,7 @@
 "use client"
 
 import useEmblaCarousel from 'embla-carousel-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import PatternCard from './PatternCard'
 
 interface PatternItem {
@@ -21,6 +21,9 @@ export default function PatternCarousel({ patterns }: Props) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', loop: true, duration: 30 })
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
+  const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const resumeTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const AUTO_DELAY_MS = 8000 // 8 seconds per slide
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
@@ -35,21 +38,40 @@ export default function PatternCarousel({ patterns }: Props) {
     emblaApi.on('reInit', onSelect)
   }, [emblaApi, onSelect])
 
-  // Auto-rotate every 6 seconds
+  const stopAuto = useCallback(() => {
+    if (autoTimerRef.current) clearInterval(autoTimerRef.current)
+    autoTimerRef.current = null
+  }, [])
+
+  const startAuto = useCallback(() => {
+    if (!emblaApi) return
+    stopAuto()
+    autoTimerRef.current = setInterval(() => {
+      emblaApi.scrollNext()
+    }, AUTO_DELAY_MS)
+  }, [emblaApi, stopAuto])
+
   useEffect(() => {
     if (!emblaApi) return
-    const autoplay = setInterval(() => {
-      emblaApi.scrollNext()
-    }, 6000)
-    return () => clearInterval(autoplay)
-  }, [emblaApi])
+    startAuto()
+    return () => {
+      stopAuto()
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    }
+  }, [emblaApi, startAuto, stopAuto])
 
-  const scrollTo = (index: number) => emblaApi?.scrollTo(index)
-  const scrollPrev = () => emblaApi?.scrollPrev()
-  const scrollNext = () => emblaApi?.scrollNext()
+  const handleManual = () => {
+    stopAuto()
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    resumeTimerRef.current = setTimeout(() => startAuto(), 15000)
+  }
+
+  const scrollTo = (index: number) => { emblaApi?.scrollTo(index); handleManual() }
+  const scrollPrev = () => { emblaApi?.scrollPrev(); handleManual() }
+  const scrollNext = () => { emblaApi?.scrollNext(); handleManual() }
 
   return (
-    <div className="relative">
+    <div className="relative carousel-container" onMouseEnter={stopAuto} onMouseLeave={startAuto}>
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-6 transition-transform duration-300 ease-in-out">
           {patterns.map((p, idx) => (

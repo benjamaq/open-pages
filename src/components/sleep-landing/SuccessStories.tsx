@@ -19,8 +19,8 @@ export default function SuccessStories() {
             <p className="font-bold text-sm mb-2">After 2 weeks tracking in BioStackr:</p>
             <p className="text-sm">When she took <strong>Magnesium Glycinate 400mg consistently for 3+ days</strong>, her sleep quality jumped from 4/10 → 8/10. When she missed it, sleep dropped within 48 hours.</p>
           </div>
-          <p className="text-sm text-gray-600 mb-4">She showed her doctor. He actually listened. Now she knows exactly what helps — and never misses her magnesium.</p>
-          <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700">"I spent 3 years guessing. BioStackr showed me the answer in 2 weeks. The doctor finally listened, and I got my life back."</blockquote>
+          <p className="text-sm text-gray-600 mb-4">Now she knows exactly what helps — and never misses her magnesium.</p>
+          <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700">"I spent 3 years guessing. BioStackr showed me the answer in 2 weeks. I got my life back."</blockquote>
         </div>
 
         <div className="bg-white p-8 rounded-lg shadow-sm mb-8">
