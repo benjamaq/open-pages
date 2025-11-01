@@ -54,7 +54,7 @@ export default function Pricing() {
               </ul>
             </div>
             <div className="mt-8">
-              <Link href="/auth/signup/pro" className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Get started with Premium</Link>
+              <Link href="/auth/signup?plan=premium" className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Get started with Premium</Link>
               <p className="text-xs text-gray-500 text-center mt-2">Save with annual billing</p>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { trackEvent } from '@/lib/analytics'
+import Link from 'next/link'
 import HeroSleep from '@/components/sleep-landing/HeroSleep'
 import SocialProofBar from '@/components/sleep-landing/SocialProofBar'
 import WhyDifferent from '@/components/sleep-landing/WhyDifferent'
@@ -40,6 +41,17 @@ export default function SleepLandingClient() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Simple top nav */}
+      <header className="w-full border-b border-gray-100 bg-white/90 sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="text-gray-900 font-bold">BioStackr</Link>
+          <nav className="flex items-center gap-3">
+            <Link href="/auth/signin" className="text-sm text-gray-700 hover:text-gray-900">Sign in</Link>
+            <Link href="/auth/signup" className="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800">Sign up</Link>
+            <Link href="/contact" className="text-sm text-gray-700 hover:text-gray-900">Contact</Link>
+          </nav>
+        </div>
+      </header>
       <HeroSleep />
       <SocialProofBar />
       <WhyDifferent />
