@@ -122,12 +122,13 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     const template = emailTemplates.welcome(data)
     
     // Use the same verified domain as daily reminder emails
+    const replyToAddress = process.env.REPLY_TO_EMAIL || 'ben@biostackr.com'
     const emailPayload = {
       from: 'Ben from BioStackr <notifications@biostackr.io>',
       to: data.email,
       subject: template.subject,
       html: template.html,
-      replyTo: 'ben09@mac.com'
+      replyTo: replyToAddress
     }
     
     console.log('📧 Sending welcome email with payload:', {
