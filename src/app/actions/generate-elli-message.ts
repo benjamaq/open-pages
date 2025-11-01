@@ -41,11 +41,12 @@ export async function generateAndSaveElliMessage(
       details: profile.condition_details || undefined
     } : undefined;
     
-    // Get check-in count for milestone detection
+    // Get check-in count for milestone detection / Day 1 guard
     const checkInCount = await getUserCheckInCount(userId);
+    const isDay1Server = (typeof checkInCount === 'number' ? checkInCount : 0) <= 1;
     
-    // Get recent check-ins for pattern detection
-    const recentCheckIns = await getRecentCheckIns(userId, 7);
+    // Get recent check-ins for pattern detection (skip for Day 1 to avoid false positives)
+    const recentCheckIns = isDay1Server ? [] : await getRecentCheckIns(userId, 7);
     
     // Fetch today's factors (symptoms + lifestyle + exercise/protocols)
     const todayISO = new Date().toISOString().split('T')[0];
@@ -140,7 +141,8 @@ export async function generateAndSaveElliMessage(
       userName,
       todayEntry: todayStructuredEntry,
       recentEntries,
-      useHumanizer: true,
+      // On Day 1, bypass humanizer completely to avoid corporate language or invented claims
+      useHumanizer: !isDay1Server,
       condition: (condition as any)?.primary || undefined,
     });
     console.log('🔵 generateAndSaveElliMessage:message_length', typeof message === 'string' ? message.length : 0);
