@@ -3,7 +3,7 @@ export default function SocialProofBar() {
     <section className="social-proof bg-blue-50 py-8">
       <div className="max-w-6xl mx-auto px-6">
         <p className="text-center text-sm text-gray-600 mb-6">
-          Helping people discover their sleep triggers in 7–14 days
+          Helping people understand their sleep issues in 7-14 days
         </p>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-white p-4 rounded-lg">

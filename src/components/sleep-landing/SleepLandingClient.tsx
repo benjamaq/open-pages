@@ -44,7 +44,9 @@ export default function SleepLandingClient() {
       {/* Simple top nav */}
       <header className="w-full border-b border-gray-100 bg-white/90 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="text-gray-900 font-bold">BioStackr</Link>
+          <Link href="/" className="inline-flex items-center" aria-label="BioStackr home">
+            <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-8 w-auto" />
+          </Link>
           <nav className="flex items-center gap-3">
             <Link href="/auth/signin" className="text-sm text-gray-700 hover:text-gray-900">Sign in</Link>
             <Link href="/auth/signup" className="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800">Sign up</Link>
