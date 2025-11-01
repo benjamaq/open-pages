@@ -1757,8 +1757,8 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 onClick={() => setShowAdvanced(!showAdvanced)}
               >
                 <div className="flex items-center space-x-2">
-                  <span>Wearables</span>
-                  <span className="text-xs text-gray-400 font-normal">Optional</span>
+                  <span>Import Wearable Data</span>
+                  <span className="text-xs text-gray-400 font-normal">Optional — Manual Entry</span>
                 </div>
                 <svg 
                   className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
@@ -1772,10 +1772,14 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               
               {showAdvanced && (
                 <div className="mt-3 space-y-4">
-                  {/* Wearable Device Selector */}
+                  {/* Helper text */}
+                  <p className="text-sm text-gray-600">
+                    Manually enter your sleep and recovery scores from Whoop, Oura, etc. (Direct device sync coming soon)
+                  </p>
+                  {/* Device Type Selector */}
                   <div>
                     <label className="block text-base font-medium text-gray-700 mb-2">
-                      Wearable Device
+                      Device Type
                     </label>
                     <select
                       value={selectedWearable}

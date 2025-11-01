@@ -54,79 +54,9 @@ export default function PostCheckinResponseModal({
   toneProfile,
   isFirstCheckIn = false
 }: PostCheckinResponseModalProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [resolvedName, setResolvedName] = useState<string>(userName);
-
-  // Fetch Elli message from server (message-service) when modal opens
-  useEffect(() => {
-    const fetchMessage = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
-        try {
-          console.log('🚨 ABOUT TO CALL API');
-          console.log('🚨 USER ID:', userId);
-          console.log('🚨 USER NAME:', nameForMessage);
-          console.log('🚨 VALUES:', {
-            sleepValue: typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
-            moodValue: typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
-            painValue: typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
-          });
-          console.log('🚨 FETCHING...');
-        } catch {}
-        const resp = await fetch('/api/elli/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messageType: 'post_checkin',
-            context: {
-              userName: nameForMessage,
-              checkIn: {
-                pain: typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
-                mood: typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
-                sleep: typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
-              },
-              // Pass category as a loose condition hint (optional)
-              condition: category || undefined,
-            }
-          })
-        });
-        try { console.log('🌐 API RESPONSE STATUS:', resp.status) } catch {}
-        if (!resp.ok) throw new Error('Failed to generate Elli message');
-        const json = await resp.json().catch(() => ({}));
-        const svcMessage = (json && json.message) || '';
-        try { console.log('📥 API RETURNED MESSAGE:', typeof svcMessage === 'string' ? (svcMessage.substring(0, 100) + '...') : svcMessage) } catch {}
-        if (!svcMessage || typeof svcMessage !== 'string') throw new Error('Invalid Elli message payload');
-        setMessage(svcMessage);
-      } catch (e) {
-        console.error('🚨 FETCH FAILED:', e);
-        // Fallback to tone profile template
-        try {
-          const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
-          const nameForMessage = (resolvedName || userName || '').trim() || 'friend';
-          const fallback = profile.fallbackTemplates.postCheckin(
-            typeof checkInData?.pain === 'number' ? checkInData.pain : 0,
-            typeof checkInData?.mood === 'number' ? checkInData.mood : 5,
-            typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5,
-            nameForMessage
-          );
-          setMessage(fallback);
-        } catch (err) {
-          setError('Failed to generate message');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isOpen) {
-      fetchMessage();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  // Short confirmation only – full Elli message appears on the dashboard
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Resolve a friendly first name if the passed userName is missing or placeholder
   useEffect(() => {
@@ -190,42 +120,16 @@ export default function PostCheckinResponseModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="relative p-6 border-b border-gray-100">
-          {/* Elli Avatar */}
-          <div className="flex justify-center mb-4">
-            <span className="text-5xl">💙</span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Elli's Response */}
-          <div className="min-h-[120px]">
-            {isLoading ? (
-              <div className="py-6 flex justify-center"><TypingIndicator /></div>
-            ) : (
-              <div className="text-gray-700 whitespace-pre-line leading-relaxed">{message}</div>
-            )}
-          </div>
-
-          {/* Transition to Supplements */}
-          {!isLoading && (
-            <>
-              <div className="border-t border-gray-200 pt-6">
-                <p className="text-gray-700 mb-4">
-                  Now let's add what you're taking, doing, or trying out.
-                </p>
-              </div>
-
-              <button
-                onClick={() => onComplete()}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-              >
-                Continue →
-              </button>
-            </>
-          )}
+        <div className="p-8 text-center">
+          <div className="text-5xl mb-3">✓</div>
+          <h3 className="text-xl font-bold mb-2">Check-in saved!</h3>
+          <p className="text-gray-600 mb-6">Great job showing up today.</p>
+          <button
+            onClick={() => onComplete()}
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+          >
+            Continue to Dashboard
+          </button>
         </div>
       </div>
     </div>

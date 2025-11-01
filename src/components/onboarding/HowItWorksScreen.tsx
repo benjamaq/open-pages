@@ -62,11 +62,10 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
           <div className="section-card bg-white p-6 rounded-lg border-2 border-gray-200">
             <div className="flex items-center gap-3 mb-4">
               <span className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">2</span>
-              <h3 className="text-xl font-bold">Add Context (Optional)</h3>
+              <h3 className="text-xl font-bold">Add Context (Recommended)</h3>
             </div>
             <p className="text-gray-700 mb-4">
-              After the sliders, you'll see buttons (we call them "tags") organized into categories. 
-              Click any that apply to today:
+              <strong>This step is optional—but it's where the magic happens.</strong> After the sliders, you'll see buttons (we call them "tags") organized into categories. Click any that apply to today:
             </p>
             <div className="space-y-3 mb-4">
               <div className="border border-gray-200 rounded-lg p-4">
