@@ -6,18 +6,18 @@ export default function HowItWorks() {
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div className="text-2xl mb-2">1️⃣</div>
-            <h3 className="font-bold mb-2">Tell Elli How You Feel (20 Seconds)</h3>
-            <p className="text-gray-600 text-sm">Each day, just tell Elli how you slept and what might have affected it. Caffeine, stress, late dinner—whatever feels relevant. Takes 20 seconds.</p>
+            <h3 className="font-bold mb-2">Daily Check‑In (20 Seconds)</h3>
+            <p className="text-gray-600 text-sm">Each day, rate your sleep and note what might have affected it. Caffeine, stress, late dinner—whatever feels relevant. Takes 20 seconds.</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div className="text-2xl mb-2">2️⃣</div>
             <h3 className="font-bold mb-2">Share Your Routines & What You're Taking</h3>
-            <p className="text-gray-600 text-sm">Let Elli know about your habits—caffeine timing, evening meals, supplements, exercise. She'll watch for patterns you'd never spot alone.</p>
+            <p className="text-gray-600 text-sm">Tell us about your habits—caffeine timing, evening meals, supplements, exercise. The system will watch for patterns you'd never spot alone.</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div className="text-2xl mb-2">3️⃣</div>
-            <h3 className="font-bold mb-2">Elli Finds What's Disrupting Your Sleep</h3>
-            <p className="text-gray-600 text-sm">Within 7–14 days, Elli will show you exactly what's helping and what's hurting your sleep—so you can actually fix it.</p>
+            <h3 className="font-bold mb-2">We Find What's Disrupting Your Sleep</h3>
+            <p className="text-gray-600 text-sm">Within 7–14 days, we’ll show you exactly what's helping and what's hurting your sleep—so you can actually fix it.</p>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ export default function FAQ() {
         <div className="space-y-10">
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">I've tried everything—why should I track again?</h3>
-            <p className="text-gray-700">Because BioStackr is different. Other tools make you track everything and figure it out yourself. Elli finds the patterns unique to <strong>your</strong> body and tells you exactly what to change.</p>
+            <p className="text-gray-700">Because BioStackr is different. Other tools make you track everything and figure it out yourself. Our system finds the patterns unique to <strong>your</strong> body and tells you exactly what to change.</p>
             <p className="text-gray-700 mt-2">You're not tracking for the sake of tracking—you're getting answers. Usually within 7–14 days. No more guessing. No more feeling like nothing works.</p>
             <p className="text-gray-700 mt-2">This isn't another sleep diary. This is finally understanding what's disrupting your sleep so you can fix it.</p>
           </div>

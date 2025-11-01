@@ -7,13 +7,16 @@ export default function HeroSleep() {
   return (
     <section className="hero-sleep">
       <div className="max-w-4xl mx-auto text-center px-6 py-16">
-        <p className="text-sm text-gray-600 mb-2">For anyone who’s tired of being tired</p>
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-          You deserve better sleep.<br />
-          <span className="font-semibold">Let’s find out what’s in the way.</span>
+        <p className="text-sm uppercase tracking-wide text-blue-600 font-semibold mb-4">
+          THE NEXT GENERATION OF SLEEP TRACKING
+        </p>
+        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          Can't sleep?<nobr></nobr><br />
+          Find out why.
         </h1>
-        <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
-          Track your sleep, daily factors, and patterns. Elli (your AI companion) shows you what’s actually affecting your rest.
+        <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Most sleep trackers show you <em>how</em> you slept.<br />
+          Our intelligent system shows you what's disrupting your sleep — so you can fix it.
         </p>
         <div className="flex gap-4 justify-center mb-6">
           <Link

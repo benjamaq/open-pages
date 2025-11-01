@@ -13,7 +13,7 @@ export default function PatternCard({ emoji, title, description, insight, border
   const first = words.slice(0, 4).join(' ')
   const rest = words.slice(4).join(' ')
   return (
-    <div className={`pattern-card min-h-[280px] flex flex-col p-6 rounded-lg border-2 bg-white ${borderColor}`}>
+    <div className={`pattern-card min-h-[320px] h-full flex flex-col p-6 rounded-lg border-2 bg-white ${borderColor}`}>
       {preLabel && (
         <div className="text-xs text-blue-600 font-medium mb-1">{preLabel}</div>
       )}

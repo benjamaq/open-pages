@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function PatternCarousel({ patterns }: Props) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', loop: true, duration: 30 })
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', loop: true, duration: 50 })
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -73,7 +73,7 @@ export default function PatternCarousel({ patterns }: Props) {
   return (
     <div className="relative carousel-container" onMouseEnter={stopAuto} onMouseLeave={startAuto}>
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-6 transition-transform duration-300 ease-in-out">
+        <div className="flex gap-6 items-stretch transition-transform duration-500 ease-in-out">
           {patterns.map((p, idx) => (
             <div key={idx} className="shrink-0 basis-full sm:basis-3/4 md:basis-1/2 lg:basis-1/3 h-full">
               <PatternCard {...p} />
