@@ -121,23 +121,19 @@ export default function PostCheckinResponseModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="text-center p-6">
-          <div className="text-5xl mb-3">✓</div>
-          <h3 className="text-xl font-bold mb-2">Check-in saved!</h3>
-          <p className="text-gray-600 mb-4">Great job showing up today.</p>
-          <div className="text-left bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-gray-700 font-medium mb-2">You rated:</p>
-            <ul className="space-y-1 text-gray-900">
-              <li>• Sleep: {typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5}/10</li>
-              <li>• Mood: {typeof checkInData?.mood === 'number' ? checkInData.mood : 5}/10</li>
-              <li>• Pain: {typeof checkInData?.pain === 'number' ? checkInData.pain : 0}/10</li>
-            </ul>
-          </div>
+        <div className="p-8 text-center">
+          <p className="text-lg text-gray-800 mb-3 leading-relaxed">
+            Thanks for checking in. I can see you rated sleep {typeof checkInData?.sleep === 'number' ? checkInData.sleep : 5}/10, 
+            mood {typeof checkInData?.mood === 'number' ? checkInData.mood : 5}/10, and pain {typeof checkInData?.pain === 'number' ? checkInData.pain : 0}/10.
+          </p>
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            Over the next few days, we'll start spotting patterns together.
+          </p>
           <button 
             onClick={handleContinue}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity"
           >
-            Continue Setup
+            Next
           </button>
         </div>
       </div>
