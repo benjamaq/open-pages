@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function PatternCarousel({ patterns }: Props) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', loop: true, duration: 25 })
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', loop: true, duration: 15 })
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null)
