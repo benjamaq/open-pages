@@ -17,7 +17,7 @@ export async function generateElliMessage(params: GenerateMessageParams): Promis
   // Day 1: purpose-built short welcome message
   // Some callers may include today's entry in recentEntries; treat 0 or 1 as Day 1
   const isDay1 = !Array.isArray(recentEntries) || recentEntries.length <= 1
-  try { console.log('🎯 IS DAY 1?', isDay1) } catch {}
+  try { console.log('🎯 DAY 1 DETECTED?', isDay1) } catch {}
   if (isDay1) {
     const sleepVal = todayEntry.sleep_quality
     const moodVal = todayEntry.mood
@@ -54,6 +54,7 @@ export async function generateElliMessage(params: GenerateMessageParams): Promis
 
     const variation = Math.floor(Math.random() * day1Variations.length)
     const selected = day1Variations[variation]
+    try { console.log('📤 Selected variation:', variation) } catch {}
     try { console.log('📤 RETURNING MESSAGE:', selected.substring(0, 100) + '...') } catch {}
     return selected
   }
