@@ -1,4 +1,5 @@
 import SleepLandingClient from '@/components/sleep-landing/SleepLandingClient'
+import Script from 'next/script'
 
 export const metadata = {
   title: "Can't Sleep? Find Out Why | BioStackr",
@@ -6,7 +7,20 @@ export const metadata = {
 }
 
 export default function SleepLandingPage() {
-  return <SleepLandingClient />
+  return (
+    <>
+      <Script id="clarity-script" strategy="afterInteractive">
+        {`
+          (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "tzoo4eg3mg");
+        `}
+      </Script>
+      <SleepLandingClient />
+    </>
+  )
 }
 
 
