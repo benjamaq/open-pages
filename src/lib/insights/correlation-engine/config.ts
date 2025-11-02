@@ -82,21 +82,17 @@ export const HIGH_PRIORITY_CORRELATIONS: Array<TagCorrelationConfig | MetricCorr
   { type: 'tag', tag: 'high_sugar', metric: 'brain_fog', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
   { type: 'tag', tag: 'high_sugar', metric: 'bloating', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
 
-  // Gluten
-  { type: 'tag', tag: 'gluten', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'gluten', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'gluten', metric: 'bloating', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'gluten', metric: 'stomach_pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'gluten', metric: 'brain_fog', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'gluten', metric: 'fatigue', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
+  // Food sensitivity – UI saves 'new_food' for Gluten/Dairy
+  { type: 'tag', tag: 'new_food', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, priority: 'high', /* minCohenD: 0.5 */ } as any,
+  { type: 'tag', tag: 'new_food', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1.5, priority: 'high', /* minCohenD: 0.5 */ } as any,
 
-  // Dairy
-  { type: 'tag', tag: 'dairy', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'dairy', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'dairy', metric: 'bloating', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'dairy', metric: 'stomach_pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'dairy', metric: 'constipation', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
-  { type: 'tag', tag: 'dairy', metric: 'diarrhea', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 1, priority: 'high' },
+  // Carbohydrate patterns – UI saves 'high_carb' for Heavy meal / High sugar
+  { type: 'tag', tag: 'high_carb', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, priority: 'high', /* minCohenD: 0.5 */ } as any,
+  { type: 'tag', tag: 'high_carb', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1.5, priority: 'high', /* minCohenD: 0.5 */ } as any,
+
+  // low_carb – UI saves this for "Ate clean"
+  { type: 'tag', tag: 'low_carb', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, priority: 'high', /* minCohenD: 0.5 */ } as any,
+  { type: 'tag', tag: 'low_carb', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1.5, priority: 'high', /* minCohenD: 0.5 */ } as any,
 
   // Dehydration
   { type: 'tag', tag: 'dehydrated', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 0, priority: 'high' },
@@ -130,6 +126,10 @@ export const HIGH_PRIORITY_CORRELATIONS: Array<TagCorrelationConfig | MetricCorr
   { type: 'tag', tag: 'work_deadline', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 0, priority: 'high' },
   { type: 'tag', tag: 'work_deadline', metric: 'anxiety', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
   { type: 'tag', tag: 'work_deadline', metric: 'insomnia', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1, lagDays: 0, priority: 'high' },
+
+  // big_deadline – UI saves this for "Work deadline"
+  { type: 'tag', tag: 'big_deadline', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, priority: 'high', /* minCohenD: 0.5 */ } as any,
+  { type: 'tag', tag: 'big_deadline', metric: 'mood', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 1.5, priority: 'high', /* minCohenD: 0.5 */ } as any,
 
   // Fast food
   { type: 'tag', tag: 'fast_food', metric: 'pain', minDaysWithTag: 2, minDaysWithoutTag: 2, minDelta: 2, lagDays: 1, priority: 'high' },
