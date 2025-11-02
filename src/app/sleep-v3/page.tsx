@@ -15,14 +15,14 @@ const brand = {
 };
 
 function Container({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`mx-auto max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
+  return <div className={`mx-auto max-w-6xl px-6 lg:px-8 ${className}`}>{children}</div>;
 }
 
 function CTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center justify-center rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_10px_28px_rgba(109,99,255,0.45)] transition [background:linear-gradient(135deg,#6a6ff2_0%,#7d5ef9_100%)] hover:shadow-[0_12px_38px_rgba(109,99,255,0.6)]"
+      className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium text-white shadow-[0_8px_24px_rgba(109,99,255,0.45)] transition [background:linear-gradient(135deg,#6a6ff2_0%,#7d5ef9_100%)] hover:shadow-[0_10px_36px_rgba(109,99,255,0.55)]"
     >
       {children}
     </Link>
@@ -60,20 +60,20 @@ function HeroGradient() {
         className="absolute inset-0 -z-10 bg-[radial-gradient(90%_90%_at_70%_0%,#20244f_0%,#0c0e1b_60%)]"
         style={{ backgroundColor: brand.bgDarkFrom }}
       />
-      <div className="pointer-events-none absolute -top-24 right-1/4 h-96 w-96 rounded-full blur-3xl" style={{ background: brand.glow }} />
-      <Container className="py-20 sm:py-24 lg:py-28">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+      <div className="pointer-events-none absolute -top-24 right-1/4 h-72 w-72 rounded-full blur-3xl" style={{ background: brand.glow }} />
+      <Container className="py-16 sm:py-20 lg:py-28">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
             <p className="mb-4 text-xs uppercase tracking-[0.2em] text-[rgba(255,255,255,0.6)]">
               The next generation of sleep tracking
             </p>
-            <h1 className="text-balance text-5xl font-semibold leading-tight text-white sm:text-6xl lg:text-7xl">
-              Find what’s <span className="text-indigo-200">ruining your sleep</span>.
+            <h1 className="text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl">
+              Find what’s <span className="text-[rgba(164,172,255,0.95)]">ruining your sleep</span>.
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[rgba(255,255,255,0.8)]">
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-[rgba(255,255,255,0.75)]">
               Most sleep apps show you <em>how</em> you slept. BioStackr finds <strong>what’s disrupting</strong> your sleep—so you can fix it.
             </p>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <CTA href="/signup">Start Tracking Sleep</CTA>
               <CTASecondary href="#how">How it works</CTASecondary>
             </div>
@@ -85,48 +85,17 @@ function HeroGradient() {
               <li>~20 seconds per day</li>
             </ul>
           </div>
-          <PhoneMock />
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="absolute -inset-8 -z-10 rounded-[36px] bg-[radial-gradient(60%_60%_at_60%_0%,rgba(122,138,255,0.35),transparent)]" />
+            <div className="rounded-[36px] border border-white/10 bg-white/10 p-3 backdrop-blur">
+              <div className="aspect-[9/19] overflow-hidden rounded-[28px] bg-white shadow-[0_12px_60px_rgba(0,0,0,0.45)] flex items-center justify-center">
+                <span className="text-xs text-slate-500">Screenshot Placeholder</span>
+              </div>
+            </div>
+          </div>
         </div>
       </Container>
     </section>
-  );
-}
-
-function PhoneMock() {
-  return (
-    <div className="relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-8 -z-10 rounded-[36px] bg-[radial-gradient(60%_60%_at_60%_0%,rgba(122,138,255,0.35),transparent)]" />
-      <div className="rounded-[36px] border border-white/10 bg-white/10 p-3 backdrop-blur">
-        <div className="aspect-[9/19] overflow-hidden rounded-[28px] bg-white shadow-[0_12px_60px_rgba(0,0,0,0.45)]">
-          {/* Top bar */}
-          <div className="h-10 bg-slate-50/60 px-4 flex items-center justify-between">
-            <div className="h-2 w-16 rounded-full bg-slate-300" />
-            <div className="flex gap-2">
-              <div className="h-2 w-6 rounded-full bg-slate-300" />
-              <div className="h-2 w-6 rounded-full bg-slate-300" />
-            </div>
-          </div>
-          {/* Hero card */}
-          <div className="p-4">
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-slate-50 p-4 ring-1 ring-indigo-100">
-              <div className="h-4 w-40 rounded bg-indigo-100" />
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                <div className="h-16 rounded-lg bg-white ring-1 ring-slate-200" />
-                <div className="h-16 rounded-lg bg-white ring-1 ring-slate-200" />
-                <div className="h-16 rounded-lg bg-white ring-1 ring-slate-200" />
-              </div>
-            </div>
-            {/* Insight card */}
-            <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-              <div className="h-3 w-24 rounded bg-slate-200" />
-              <div className="mt-2 h-3 w-48 rounded bg-slate-200" />
-              <div className="mt-2 h-24 rounded-lg bg-slate-100" />
-              <div className="mt-3 h-8 w-28 rounded-full bg-indigo-100" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
