@@ -1,3 +1,5 @@
+export { default } from '../sleep-v2/page'
+
 import SleepLandingClient from '@/components/sleep-landing/SleepLandingClient'
 import Script from 'next/script'
 

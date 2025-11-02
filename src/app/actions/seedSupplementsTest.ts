@@ -83,13 +83,15 @@ export async function seedMagnesiumTestData(): Promise<{ ok: true; created: numb
 
       // Upsert supplement log (explicit skip on skip days, else taken)
       if (magnesiumId) {
+        // Never mark TODAY as taken automatically
+        const isToday = i === 0
         await supabase
           .from('supplement_logs')
           .upsert({
             user_id: user.id,
             supplement_id: magnesiumId,
             local_date,
-            taken: !isSkip,
+            taken: isToday ? false : !isSkip,
           }, { onConflict: 'user_id,supplement_id,local_date' })
       }
       created++
