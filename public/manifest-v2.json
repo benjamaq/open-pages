@@ -1,7 +1,7 @@
 {
   "name": "BioStackr Premium (V2)",
   "short_name": "BioStackr V2",
-  "start_url": "/?pwa=2",
+  "start_url": "/sleep",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
