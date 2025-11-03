@@ -63,30 +63,15 @@ export default function SleepLandingV2() {
               BioStackr's intelligent system analyzes everything you do against your sleep—700+ data points per day to find what's keeping you awake.
             </p>
             <div className="flex gap-4 flex-wrap mb-4">
-              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Sleep Trigger</Link>
+              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Trigger Free</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
             </div>
-            <p className="mt-6 text-sm text-white/80">Install in one tap · Daily reminders · 20 seconds/day · Free to start</p>
-            <p className="text-sm text-white/60 mb-6">Private by default</p>
-            <div className="flex gap-2 flex-wrap text-xs">
-              {["✓ 700+ data points analyzed daily","✓ Built with chronic-pain veterans","✓ Grounded in sleep science"].map((b) => (
-                <span key={b} className="bg-white/10 border border-white/20 rounded-full px-3 py-1 text-white/85">{b}</span>
-              ))}
-            </div>
+            
           </div>
         </Container>
       </section>
 
-      {/* Narrow Callout */}
-      <section className="py-10 bg-[#F5F5F5]">
-        <Container>
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl lg:text-2xl font-semibold text-black">Wearables give you a score. We give you a solution.</h2>
-            </div>
-          </div>
-        </Container>
-      </section>
+      
 
       
 
@@ -188,7 +173,7 @@ export default function SleepLandingV2() {
                   <li key={li} className="flex items-start gap-3"><svg className="h-6 w-6 text-[#E8B86D] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg><span className="text-gray-700">{li}</span></li>
                 ))}
               </ul>
-              <Link href="/signup" className="block w-full text-center rounded-lg border-2 border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50">Start Free</Link>
+              <Link href="/auth/signup" className="block w-full text-center rounded-lg border-2 border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50">Start Free</Link>
             </div>
             <div className="rounded-3xl border-2 border-[#E8B86D] bg-gradient-to-br from-[#FFF9F0] to-white p-8 relative">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2"><span className="bg-[#E8B86D] text-black px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span></div>
