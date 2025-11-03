@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import PWARegister from "./components/PWARegister";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import PWAInstallFab from "./components/PWAInstallFab";
 import { captureAttributionClient } from '@/lib/attribution'
 
@@ -109,7 +108,6 @@ export default function RootLayout({
         <PWARegister />
         {/* Hide PWA header on shared link pages and desktop by default via CSS hook */}
         {/* PWA header temporarily disabled to satisfy Next.js Server Component constraints */}
-        <PWAInstallPrompt />
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
           {children}
