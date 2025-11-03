@@ -1,8 +1,10 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import ScrollControls from "@/components/ScrollControls";
 import Starfield from "@/components/Starfield";
 import type React from "react";
+import { trackEvent } from "@/lib/analytics";
 
 function Container({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`mx-auto max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
@@ -13,6 +15,9 @@ function Section({ children, className = "", id }: { children: React.ReactNode; 
 }
 
 export default function SleepLandingV2() {
+  const onCta = (name: string, params?: Record<string, any>) => {
+    try { trackEvent(name, { page: "/sleep", ...(params || {}) }); } catch {}
+  };
   return (
     <main>
       {/* SECTION 1: HERO (EVENING GRADIENT WITH STARS) */}
@@ -34,10 +39,10 @@ export default function SleepLandingV2() {
                 <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-10 lg:h-12 w-auto" />
               </Link>
               <div className="flex items-center gap-6">
-                <Link href="#pricing" className="hover:underline">Pricing</Link>
-                <Link href="/contact" className="hover:underline">Contact</Link>
-                <Link href="/auth/signin" className="hover:underline">Sign In</Link>
-                <Link href="/auth/signup" className="hover:underline">Sign Up</Link>
+                <Link href="#pricing" className="hover:underline" onClick={() => onCta('view_content', { content_name: 'pricing_nav' })}>Pricing</Link>
+                <Link href="/contact" className="hover:underline" onClick={() => onCta('view_content', { content_name: 'contact_nav' })}>Contact</Link>
+                <Link href="/auth/signin" className="hover:underline" onClick={() => onCta('cta_click', { cta: 'sign_in_nav' })}>Sign In</Link>
+                <Link href="/auth/signup" className="hover:underline" onClick={() => onCta('lead', { cta: 'sign_up_nav' })}>Sign Up</Link>
               </div>
             </div>
           </Container>
@@ -55,8 +60,8 @@ export default function SleepLandingV2() {
               BioStackr's intelligent system analyzes everything you do against your sleep—700+ data points per day to find what's keeping you awake.
             </p>
             <div className="flex gap-4 flex-wrap mb-4">
-              <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Sleep Trigger</Link>
-              <Link href="#how-it-works" className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
+              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Sleep Trigger</Link>
+              <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
             </div>
             <p className="text-lg lg:text-xl text-white/80 mb-4 font-semibold">Free to start · 20 seconds per day</p>
             <p className="text-sm text-white/60 mb-6">Private by default</p>
@@ -187,7 +192,7 @@ export default function SleepLandingV2() {
                   <li key={li} className="flex items-start gap-3"><svg className="h-6 w-6 text-[#E8B86D] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg><span className="text-gray-900 font-medium">{li}</span></li>
                 ))}
               </ul>
-              <Link href="/auth/signup/pro" className="block w-full text-center rounded-lg bg-[#E8B86D] px-6 py-3 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Start Premium</Link>
+              <Link href="/auth/signup/pro" onClick={() => { onCta('cta_click', { cta: 'start_premium' }); onCta('begin_checkout', { plan: 'pro' }); }} className="block w-full text-center rounded-lg bg-[#E8B86D] px-6 py-3 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Start Premium</Link>
             </div>
           </div>
           <p className="text-center text-sm text-gray-500 mt-8">Cancel anytime · No credit card required for free plan</p>
