@@ -162,6 +162,10 @@ export default function SleepLandingV2() {
               </div>
             ))}
           </div>
+          {/* Mobile swipe hint */}
+          <div className="md:hidden text-center text-white/80 text-xs mt-1">
+            ← Swipe →
+          </div>
         </Container>
       </Section>
 
