@@ -94,8 +94,7 @@ export default function SleepLandingV2() {
         </Container>
       </Section>
 
-      {/* New PWA Install Section */}
-      <PwaInstallSection />
+      
 
       {/* SECTION 3: PATTERN EXAMPLES WITH DATA (carousel) */}
       <Section className="relative overflow-hidden">
@@ -355,6 +354,9 @@ export default function SleepLandingV2() {
           </div>
         </Container>
       </Section>
+
+      {/* PWA Install Section moved to bottom */}
+      <PwaInstallSection />
 
       {/* SECTION 6: FOOTER (LIGHT GRAY) */}
       <footer className="bg-[#F5F5F5] py-12">
