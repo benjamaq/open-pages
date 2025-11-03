@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import ScrollControls from "@/components/ScrollControls";
 import Starfield from "@/components/Starfield";
+import PwaTopBanner from "@/components/PwaTopBanner";
+import PwaInstallSection from "@/components/landing/PwaInstallSection";
 import type React from "react";
 import { trackEvent } from "@/lib/analytics";
 
@@ -20,6 +22,7 @@ export default function SleepLandingV2() {
   };
   return (
     <main>
+      <PwaTopBanner />
       {/* SECTION 1: HERO (EVENING GRADIENT WITH STARS) */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Gradient */}
@@ -63,7 +66,7 @@ export default function SleepLandingV2() {
               <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Sleep Trigger</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
             </div>
-            <p className="text-lg lg:text-xl text-white/80 mb-4 font-semibold">Free to start · 20 seconds per day</p>
+            <p className="mt-6 text-sm text-white/80">Install in one tap · Daily reminders · 20 seconds/day · Free to start</p>
             <p className="text-sm text-white/60 mb-6">Private by default</p>
             <div className="flex gap-2 flex-wrap text-xs">
               {["✓ 700+ data points analyzed daily","✓ Built with chronic-pain veterans","✓ Grounded in sleep science"].map((b) => (
@@ -105,6 +108,9 @@ export default function SleepLandingV2() {
           </div>
         </Container>
       </Section>
+
+      {/* New PWA Install Section */}
+      <PwaInstallSection />
 
       {/* SECTION 3: PATTERN EXAMPLES WITH DATA (carousel) */}
       <Section className="relative overflow-hidden">

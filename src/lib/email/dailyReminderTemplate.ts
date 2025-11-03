@@ -108,6 +108,11 @@ export function renderDailyReminderHTML(params: DailyReminderTemplateParams): st
                   ${bar('Mood', mood, '#16A34A')}
                   ${bar('Sleep', sleep, '#FACC15')}
                 </table>
+                <div style="margin: 24px 0; padding: 16px; background: #f9f9f9; border-radius: 8px;">
+                  <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">📱 Haven't installed BioStackr yet?</p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">Tap <strong>Install</strong> at the top when you open BioStackr. One tap and it's on your home screen with daily reminders—no App Store needed.</p>
+                  <a href="${checkInUrl}" style="display: inline-block; padding: 12px 24px; background: #E8B86D; color: #000; text-decoration: none; border-radius: 6px; font-weight: 600;">Open BioStackr</a>
+                </div>
                 <div style="font-size:14px; line-height:22px; color:#475467; margin:0 0 12px 0;">Readiness: ${readinessEmoji} <strong>${Math.max(0, Math.min(100, Math.round(readinessPercent)))}%</strong> — ${readinessMessage}</div>
 
                 <div style="height:1px; background:#ECEFF3; margin:20px 0;"></div>
