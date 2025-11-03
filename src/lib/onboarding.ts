@@ -28,7 +28,17 @@ export function getOnboardingProgress(profile: any): OnboardingState {
 }
 
 export function shouldShowOnboarding(profile: any): boolean {
-  // Show onboarding if steps 1-2 are not completed (mandatory)
+  // Never show if already completed
+  if (profile?.onboarding_completed) return false
+  // For legacy/older accounts, avoid re-triggering onboarding repeatedly
+  try {
+    const createdAt = profile?.created_at ? new Date(profile.created_at) : null
+    if (createdAt) {
+      const ageDays = (Date.now() - createdAt.getTime()) / 86400000
+      if (ageDays >= 3) return false
+    }
+  } catch {}
+  // Show onboarding if mandatory steps are not completed
   return !profile?.first_checkin_completed || !profile?.first_supplement_added
 }
 

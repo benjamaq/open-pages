@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description: "Track pain, mood and sleep, log what you’re trying, and finally see patterns that help you manage chronic pain. Private by default; share with your doctor when ready.",
   keywords: ["chronic pain", "fibromyalgia", "autoimmune", "pain tracking", "sleep", "mood", "doctor", "shareable link"],
   authors: [{ name: "Open Pages" }],
+  manifest: "/manifest-v2.json",
   openGraph: {
     title: "BioStackr – Understand Your Chronic Pain",
     description: "Track pain, mood and sleep against what you’re trying. See patterns and share a timeline with your doctor.",
@@ -36,7 +37,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.facebook.com" />
         <link rel="preconnect" href="https://www.facebook.com" crossOrigin="anonymous" />
-        <link rel="manifest" href="/manifest-v2.json" />
         <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-title" content="BioStackr" />
         {/* Removed deprecated apple-mobile-web-app-capable to silence Chrome warning */}

@@ -789,73 +789,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           <p className="text-xs text-gray-500">You’ll get a reminder at {reminderTime} each day</p>
         </div>
 
-        {/* Push Diagnostics */}
-        <div className="mt-4 border-t border-gray-100 pt-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Push diagnostics</span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={async () => {
-                  try {
-                    const resp = await fetch('/api/push/status', { cache: 'no-store' })
-                    const data = await resp.json()
-                    setPushDiag(data)
-                    console.log('[Push] status:', data)
-                  } catch (e) {
-                    console.error('[Push] status error', e)
-                  }
-                }}
-                className="px-2 py-1 text-xs border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Check
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    if (!('serviceWorker' in navigator)) return
-                    const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
-                    const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string | undefined
-                    if (!vapid) { console.warn('No VAPID key'); return }
-                    const toKey = (s: string) => {
-                      const padding = '='.repeat((4 - (s.length % 4)) % 4)
-                      const base64 = (s + padding).replace(/-/g, '+').replace(/_/g, '/')
-                      const raw = atob(base64)
-                      const arr = new Uint8Array(raw.length)
-                      for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i)
-                      return arr
-                    }
-                    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(vapid) })
-                    await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) })
-                    console.log('[Push] re-subscribed')
-                  } catch (e) { console.error('[Push] re-subscribe error', e) }
-                }}
-                className="px-2 py-1 text-xs border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Re-subscribe
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const resp = await fetch('/api/push/test', { method: 'POST' })
-                    const data = await resp.json().catch(()=>({}))
-                    console.log('[Push] server test resp', resp.status, data)
-                    alert(resp.ok ? 'Server push test sent (check notifications)' : `Server test failed: ${data?.error || resp.status}`)
-                  } catch (e) {
-                    console.error('[Push] server test error', e)
-                  }
-                }}
-                className="px-2 py-1 text-xs border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Server test
-              </button>
-            </div>
-          </div>
-          {pushDiag && (
-            <div className="mt-2 text-[11px] text-gray-500">
-              Latest: {pushDiag?.latest?.endpoint ? 'present' : 'none'} · Count: {pushDiag?.count ?? 0}
-            </div>
-          )}
-        </div>
+        {/* Diagnostics removed in production */}
       </div>
       {/* Profile Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
