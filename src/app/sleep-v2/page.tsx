@@ -63,7 +63,7 @@ export default function SleepLandingV2() {
               BioStackr's intelligent system analyzes everything you do against your sleep—700+ data points per day to find what's keeping you awake.
             </p>
             <div className="flex gap-4 flex-wrap mb-4">
-              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Find Your Trigger Free</Link>
+              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_sleep_trigger' }); onCta('lead', { cta: 'find_sleep_trigger' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Fix Your Sleep Free</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
             </div>
             
