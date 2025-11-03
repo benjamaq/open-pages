@@ -230,11 +230,24 @@
       if (isMobile && isNarrow && !isStandalone && !dismissed) {
         var el = document.getElementById('pwa-top-banner');
         if (el) el.classList.add('mobile-active');
-        var msg = 'iPhone: Share ↑ → Add to Home Screen · Android: Menu \\u22EE → Add to Home screen — faster, daily reminders';
-        if (isIOS) msg = "iPhone: Share ↑ → Add to Home Screen — faster, daily reminders";
-        if (isAndroid) msg = "Android: Menu ⋮ → Add to Home screen — faster, daily reminders";
         var instr = document.getElementById('pwa-instructions');
-        if (instr) { instr.textContent = msg; var strong = document.querySelector('#pwa-top-banner strong'); if (strong) strong.textContent = 'Install BioStackr on home screen'; }
+        if (instr) {
+          var strong = document.querySelector('#pwa-top-banner strong');
+          if (strong) strong.textContent = 'Install BioStackr on home screen';
+          if (isIOS) {
+            instr.innerHTML = 'Tap ' +
+              '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin: 0 4px -2px 4px;">' +
+              '<path d="M12 3v10" stroke="white" stroke-width="2" stroke-linecap="round"/>' +
+              '<path d="M8 7l4-4 4 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<path d="M6 12v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6" stroke="white" stroke-width="2" stroke-linecap="round"/>' +
+              '</svg>' +
+              'then \"Add to Home Screen\"';
+          } else if (isAndroid) {
+            instr.textContent = 'Android: Menu ⋮ → Add to Home screen';
+          } else {
+            instr.textContent = 'Add to your Home Screen from the browser menu.';
+          }
+        }
         var btn = document.getElementById('pwa-install-dismiss');
         if (btn) btn.onclick = function(){ try { localStorage.setItem('pwa_banner_dismissed','1'); } catch(e){}; el && (el.style.display='none'); };
       }

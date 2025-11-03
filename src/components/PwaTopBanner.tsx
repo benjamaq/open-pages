@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export default function PwaTopBanner() {
   const [show, setShow] = useState(false);
-  const [msg, setMsg] = useState("Add to your Home Screen for a faster, app-like experience.");
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
 
   useEffect(() => {
     try {
@@ -14,8 +14,9 @@ export default function PwaTopBanner() {
       const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true;
       const dismissed = typeof window !== 'undefined' && localStorage.getItem('pwa_banner_dismissed') === '1';
       if (isMobile && !isStandalone && !dismissed) {
-        if (isIOS) setMsg("iPhone: Share ↑ → Add to Home Screen — faster, daily reminders");
-        else if (isAndroid) setMsg("Android: Menu ⋮ → Add to Home screen — faster, daily reminders");
+        if (isIOS) setPlatform('ios');
+        else if (isAndroid) setPlatform('android');
+        else setPlatform('other');
         setShow(true);
       }
     } catch {}
@@ -34,7 +35,22 @@ export default function PwaTopBanner() {
         <div className="flex items-start gap-3">
           <div className="flex-1 text-sm leading-snug">
             <div className="font-semibold">Install BioStackr on home screen</div>
-            <div className="opacity-90">{msg}</div>
+            <div className="opacity-90">
+              {platform === 'ios' ? (
+                <span className="inline-flex items-center gap-2">
+                  <span>Tap</span>
+                  {/* iOS share icon (inline SVG) */}
+                  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" className="inline" style={{ verticalAlign: 'middle' }}>
+                    <path d="M12 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M8 7l4-4 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 12v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <span>then "Add to Home Screen"</span>
+                </span>
+              ) : (
+                <span>Android: Menu ⋮ → Add to Home screen</span>
+              )}
+            </div>
           </div>
           <button
             aria-label="Dismiss"
