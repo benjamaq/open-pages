@@ -205,7 +205,7 @@
 <body>
 
 <!-- Mobile PWA Install Banner (static HTML version) -->
-<div id="pwa-top-banner" style="display:none; position: sticky; top: 0; left: 0; right: 0; z-index: 1000; background: #4f46e5; color: white;">
+<div id="pwa-top-banner" style="position: sticky; top: 0; left: 0; right: 0; z-index: 1000; background: #4f46e5; color: white;">
   <div style="max-width: 1200px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 10px;">
     <div style="flex: 1; font-size: 14px; line-height: 1.4;">
       <strong>Install BioStackr</strong>
@@ -227,7 +227,7 @@
       var isNarrow = window.innerWidth <= 768;
       if (isMobile && isNarrow && !isStandalone && !dismissed) {
         var el = document.getElementById('pwa-top-banner');
-        if (el) el.classList.add('mobile-active');
+        if (el) { el.classList.add('mobile-active'); try { el.style.display = 'block'; } catch(e){} }
         var instr = document.getElementById('pwa-instructions');
         if (instr) {
           var strong = document.querySelector('#pwa-top-banner strong');
