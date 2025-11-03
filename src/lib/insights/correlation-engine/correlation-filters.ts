@@ -10,8 +10,21 @@ export enum InsightCategory {
 }
 
 export function categorizeCorrelation(result: CorrelationResult): InsightCategory {
-  const var1Meta = getVariableType((result as any).variable1)
-  const var2Meta = getVariableType((result as any).variable2)
+  // Normalize variable names for different result shapes
+  const isTag = (result as any).type === 'tag_correlation'
+  const var1Name = isTag
+    ? (result as any).tag
+    : (result as any).metric1 ?? (result as any).variable1
+  const var2Name = isTag
+    ? (result as any).metric
+    : (result as any).metric2 ?? (result as any).variable2
+
+  // Derive metadata; unknown tags are treated as actionable inputs
+  const var1Meta = isTag
+    ? { name: String(var1Name), type: VariableType.INPUT, category: 'tag', actionable: true }
+    : getVariableType(String(var1Name))
+  const var2Meta = getVariableType(String(var2Name))
+
   if (!var1Meta || !var2Meta) return InsightCategory.INVALID
 
   if (var1Meta.type === VariableType.INPUT && var2Meta.type === VariableType.OUTCOME && var1Meta.actionable) {
@@ -35,7 +48,8 @@ export function shouldShowCorrelation(result: CorrelationResult): boolean {
   if (category === InsightCategory.ACTIONABLE_HIGH_VALUE) return true
   const d = (result as any).cohensD as number | undefined
   if ((category === InsightCategory.INFORMATIVE || category === InsightCategory.META_INSIGHT) && typeof d === 'number') {
-    return d >= 0.8
+    // Allow medium effects (d ≥ 0.5); FDR and analyzer thresholds already guard quality
+    return d >= 0.5
   }
   return false
 }
