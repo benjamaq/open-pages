@@ -169,11 +169,11 @@ export default function MigraineLandingClient() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.55) saturate(0.95)'
+            filter: 'brightness(0.75) saturate(1)'
           }}
         />
-        {/* Dark violet overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/70 via-[#2A2A45]/65 to-[#1A1A2E]/70" />
+        {/* Dark violet overlay for readability (lightened) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/55 via-[#2A2A45]/45 to-[#1A1A2E]/55" />
         <Container className="relative z-10">
           <div className="text-center mb-10">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">Here's What BioStackr Actually Tells You</h2>
@@ -239,11 +239,11 @@ export default function MigraineLandingClient() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.55) saturate(0.95)'
+            filter: 'brightness(0.8) saturate(1)'
           }}
         />
-        {/* Readability overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/70 via-[#2A2A45]/60 to-[#1A1A2E]/70" />
+        {/* Readability overlay (lightened) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/45 via-[#2A2A45]/35 to-[#1A1A2E]/45" />
         <Container className="relative z-10">
           <div className="text-center mb-8">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">In their words</h2>
@@ -321,10 +321,10 @@ export default function MigraineLandingClient() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.5) saturate(0.9)'
+            filter: 'brightness(0.7) saturate(1)'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/75 via-[#2A2A45]/65 to-[#1A1A2E]/75" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/55 via-[#2A2A45]/45 to-[#1A1A2E]/55" />
         <Container className="relative z-10">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-4 text-4xl lg:text-5xl font-bold text-white">Stop living around your migraines</h2>
