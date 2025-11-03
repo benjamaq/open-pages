@@ -266,9 +266,13 @@ async function generateTemplateResponse(
   else if (messageType === 'weekly_summary') {
     empatheticResponse = `${user.first_name}, week in review: `;
     
-    if (patterns.bestDay && patterns.worstDay) {
+    // Only include best/worst when we have 7+ days of data
+    const dayCount = (fullContext as any)?.allCheckIns?.length || 0;
+    if (patterns.bestDay && patterns.worstDay && dayCount >= 7) {
       empatheticResponse += `Best day was ${formatDate(patterns.bestDay.date)} (pain ${patterns.bestDay.pain}/10). `;
       empatheticResponse += `Toughest was ${formatDate(patterns.worstDay.date)} (pain ${patterns.worstDay.pain}/10). `;
+    } else if (dayCount < 7) {
+      try { console.log(`⚠️ Weekly summary skipped best/worst: only ${dayCount} days`); } catch {}
     }
     
     if (patterns.trends.length > 0) {

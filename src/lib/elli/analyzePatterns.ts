@@ -71,6 +71,19 @@ export interface ComprehensivePatterns {
  */
 export function analyzePatterns(fullContext: FullContext): ComprehensivePatterns {
   const { allCheckIns, supplements, exercises } = fullContext;
+  // LOGGING: Track pattern analysis and guards
+  try {
+    // eslint-disable-next-line no-console
+    console.log('═══════════════════════════════════');
+    // eslint-disable-next-line no-console
+    console.log('🔍 analyzePatterns() called');
+    // eslint-disable-next-line no-console
+    console.log('Check-in count:', allCheckIns.length);
+    // eslint-disable-next-line no-console
+    console.log('Will compute best/worst:', allCheckIns.length >= 7);
+    // eslint-disable-next-line no-console
+    console.log('═══════════════════════════════════');
+  } catch {}
   
   // Run all analyses
   const sleepPainCorrelation = analyzeSleepPainCorrelation(allCheckIns);
@@ -78,7 +91,11 @@ export function analyzePatterns(fullContext: FullContext): ComprehensivePatterns
   const supplementEffectiveness = analyzeSupplementEffectiveness(allCheckIns, supplements);
   const exerciseImpact = analyzeExerciseImpact(allCheckIns, exercises);
   const trends = analyzeTrends(allCheckIns);
-  const { bestDay, worstDay } = findExtremes(allCheckIns);
+  // NUCLEAR OPTION: Force null best/worst when < 7 days to avoid premature claims
+  const forced = allCheckIns.length < 7
+    ? { bestDay: null, worstDay: null }
+    : findExtremes(allCheckIns);
+  const { bestDay, worstDay } = forced;
   
   // Generate insights from detected patterns
   const insights = generateInsights({
@@ -89,7 +106,7 @@ export function analyzePatterns(fullContext: FullContext): ComprehensivePatterns
     trends,
     bestDay,
     worstDay,
-  });
+  }, allCheckIns.length);
   
   return {
     sleepPainCorrelation,
@@ -334,7 +351,9 @@ export function findExtremes(checkIns: FullContextCheckIn[]): {
   bestDay: DayExtreme | null;
   worstDay: DayExtreme | null;
 } {
-  if (checkIns.length === 0) {
+  // CRITICAL: Require at least 7 days for meaningful best/worst comparison
+  if (checkIns.length < 7) {
+    try { console.log(`🚫 findExtremes blocked: Need 7+ days, have ${checkIns.length}`); } catch {}
     return { bestDay: null, worstDay: null };
   }
   
@@ -369,7 +388,7 @@ export function findExtremes(checkIns: FullContextCheckIn[]): {
 /**
  * Generate human-readable insights from patterns
  */
-function generateInsights(patterns: Partial<ComprehensivePatterns>): string[] {
+function generateInsights(patterns: Partial<ComprehensivePatterns>, dayCount?: number): string[] {
   const insights: string[] = [];
   
   // Sleep-pain correlation insight
@@ -403,10 +422,15 @@ function generateInsights(patterns: Partial<ComprehensivePatterns>): string[] {
   
   // Best/worst day insights
   if (patterns.bestDay && patterns.worstDay) {
-    insights.push(
-      `Your best day was ${formatDate(patterns.bestDay.date)} ` +
-      `(pain ${patterns.bestDay.pain}/10, mood ${patterns.bestDay.mood}/10)`
-    );
+    const total = typeof dayCount === 'number' ? dayCount : undefined;
+    if (total === undefined || total >= 7) {
+      insights.push(
+        `Your best day was ${formatDate(patterns.bestDay.date)} ` +
+        `(pain ${patterns.bestDay.pain}/10, mood ${patterns.bestDay.mood}/10)`
+      );
+    } else {
+      try { console.log(`⚠️ generateInsights: bestDay exists but only ${total} days - skipping`); } catch {}
+    }
   }
   
   // Exercise insights
