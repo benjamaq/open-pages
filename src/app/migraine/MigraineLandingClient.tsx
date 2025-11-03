@@ -228,12 +228,26 @@ export default function MigraineLandingClient() {
         </Container>
       </Section>
 
-      {/* TESTIMONIALS (plain) */}
-      <Section className="bg-white">
-        <Container>
+      {/* TESTIMONIALS with full-background abstract image3 */}
+      <Section className="relative overflow-hidden">
+        {/* Background image */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url('/abstract%20image3.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(0.55) saturate(0.95)'
+          }}
+        />
+        {/* Readability overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A2E]/70 via-[#2A2A45]/60 to-[#1A1A2E]/70" />
+        <Container className="relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-black mb-2">In their words</h2>
-            <p className="text-gray-600">Real people, specific breakthroughs</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">In their words</h2>
+            <p className="text-gray-200">Real people, specific breakthroughs</p>
           </div>
           <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide">
             {[
@@ -245,14 +259,14 @@ export default function MigraineLandingClient() {
               { q:'"I thought caffeine was bad—turns out withdrawal days were worse. Timing solved it. Clear and practical."', n:'Mina T., 27 · Seoul' },
             ].map((t,i)=> (
               <div key={i} className="min-w-[340px] md:min-w-[380px] snap-center">
-                <div className="rounded-3xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 p-8 shadow-sm h-full flex flex-col">
+                <div className="rounded-3xl bg-white/90 backdrop-blur-sm border border-gray-200 p-8 shadow-sm h-full flex flex-col">
                   <blockquote className="text-lg leading-relaxed text-gray-900 mb-6 flex-grow">{t.q}</blockquote>
-                  <div className="text-sm text-gray-500">— {t.n}</div>
+                  <div className="text-sm text-gray-600">— {t.n}</div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="md:hidden text-center text-gray-500 text-xs mt-1">← Swipe →</div>
+          <div className="md:hidden text-center text-gray-200 text-xs mt-1">← Swipe →</div>
         </Container>
       </Section>
 
