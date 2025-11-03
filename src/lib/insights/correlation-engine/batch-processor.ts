@@ -17,7 +17,10 @@ function getConfigsByPriority(priority: 'high' | 'normal' | 'low') {
 
 export async function runCorrelationBatch(userId: string, priority: 'high' | 'normal' | 'low'): Promise<FormattedInsight[]> {
   const startTs = Date.now()
-  console.log('[insights] START', { userId, priority, t: new Date().toISOString() })
+  console.log('═══════════════════════════════════')
+  console.log('🔍 CORRELATION BATCH STARTING')
+  console.log('User ID:', userId)
+  console.log('Priority:', priority)
   console.log('[insights] Fetching entries for last 14 days')
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,18 +80,36 @@ export async function runCorrelationBatch(userId: string, priority: 'high' | 'no
   }
 
   const configs = getConfigsByPriority(priority)
+  try {
+    const tagList = configs
+      .filter((c: any) => c.type === 'tag')
+      .map((c: any) => c.tag)
+    console.log('Tags to check:', tagList)
+    console.log('═══════════════════════════════════')
+  } catch {}
   if (!entries || entries.length === 0 || configs.length === 0) return []
 
   const tasks = configs.map(async (cfg) => {
     try {
       if ((cfg as any).type === 'tag') {
         const tcfg = cfg as TagCorrelationConfig
+        try {
+          console.log(`\n📊 Checking tag: ${tcfg.tag}`)
+        } catch {}
         const needsLag = (LAG_ENABLED_TAGS as readonly string[]).includes(tcfg.tag) && typeof tcfg.lagDays === 'number'
         if (needsLag) {
           const lag = findBestLag(entries as any, tcfg.tag, tcfg.metric, Math.max(0, tcfg.lagDays || 3))
           return lag?.result || null
         }
-        return analyzeTagVsMetric(entries as any, tcfg)
+        const res = analyzeTagVsMetric(entries as any, tcfg)
+        try {
+          if (!res) {
+            console.log(`❌ SKIPPED ${tcfg.tag}: below thresholds or insufficient data`)
+          } else {
+            console.log(`✅ PASSED ${tcfg.tag}: Delta ${(res as any).delta}, p=${(res as any).pValue}`)
+          }
+        } catch {}
+        return res
       } else {
         const mcfg = cfg as MetricCorrelationConfig
         return analyzeMetricVsMetric(entries as any, mcfg)
