@@ -41,18 +41,10 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
     return clean || list[0]
   }
 
-  // Show up to 5 insights, sorted by priority, then delta, then recency
+  // Show up to 5 insights, grouped by key, then strictly sorted by recency (most recent first)
   let sortedInsights = Array.from(byKey.values())
     .map(group => pickForKey(group))
-    .sort((a, b) => {
-      const ap = a.context?.priority ?? 99
-      const bp = b.context?.priority ?? 99
-      if (ap !== bp) return ap - bp
-      const ad = Math.abs((a as any).context?.metrics?.delta || (a as any).context?.metrics?.sameDayDelta || 0)
-      const bd = Math.abs((b as any).context?.metrics?.delta || (b as any).context?.metrics?.sameDayDelta || 0)
-      if (ad !== bd) return bd - ad
-      return (new Date(b.created_at || '').getTime()) - (new Date(a.created_at || '').getTime())
-    })
+    .sort((a, b) => (new Date(b.created_at || '').getTime()) - (new Date(a.created_at || '').getTime()))
     .slice(0, 5)
 
   const trackedInsights = useRef(new Set<string>())
