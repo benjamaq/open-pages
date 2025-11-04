@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import fs from 'fs'
+import path from 'path'
 
 export const metadata: Metadata = {
   title: 'BioStackr: Pattern Discovery for Chronic Pain',
@@ -7,20 +8,34 @@ export const metadata: Metadata = {
 }
 
 export default function PainPage() {
+  // Restore existing chronic pain landing content from static HTML
+  const staticPath = path.join(process.cwd(), 'public', 'landing-v2.html')
+  let staticHtml = ''
+  try {
+    staticHtml = fs.readFileSync(staticPath, 'utf8')
+  } catch {}
   return (
     <main>
       <section className="bg-white">
-        <div className="container mx-auto px-4 py-24 md:py-36 min-h-[70vh] flex items-center">
-          <div className="max-w-3xl mx-auto text-center">
-            <p className="tracking-wide text-gray-900 font-light text-2xl md:text-3xl mb-4">Pattern Discovery for Your Health</p>
-            <p className="text-gray-600 text-lg md:text-xl mb-8">Track pain, mood, and what you try. We'll find why flares happen—and what actually helps.</p>
-            <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-[#F4B860] px-6 py-3 text-base font-semibold text-[#2C2C2C] hover:bg-[#E5A850] transition-colors">Start Pain Discovery →</Link>
+        <div className="container mx-auto px-4 py-16 md:py-24">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="tracking-wide text-gray-900 font-light text-2xl md:text-3xl">Pattern Discovery for Your Health</p>
           </div>
         </div>
       </section>
+      {staticHtml ? (
+        <section className="bg-white">
+          {/* Hide the static page's own header/navigation to avoid duplication */}
+          <style>{`.site-header{display:none !important}`}</style>
+          <div className="container mx-auto px-4 py-8">
+            <div className="prose max-w-none w-full" dangerouslySetInnerHTML={{ __html: staticHtml }} />
+          </div>
+        </section>
+      ) : null}
     </main>
   )
 }
+
 
 
 
