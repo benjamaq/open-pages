@@ -81,10 +81,10 @@ export default function TimelineStorySection() {
       </div>
 
       <style jsx>{`
-        .timeline-story-section{ background:#fff; padding:120px 0; width:100% }
+        .timeline-story-section{ background:#fff; padding:96px 0; width:100% }
         .timeline-story-container{ max-width:1200px; margin:0 auto; padding:0 40px }
-        @media(max-width:1024px){ .timeline-story-section{padding:80px 0} .timeline-story-container{padding:0 32px} }
-        @media(max-width:640px){ .timeline-story-section{padding:60px 0} .timeline-story-container{padding:0 24px} }
+        @media(max-width:1024px){ .timeline-story-section{padding:64px 0} .timeline-story-container{padding:0 32px} }
+        @media(max-width:640px){ .timeline-story-section{padding:48px 0} .timeline-story-container{padding:0 24px} }
         .timeline-header{ text-align:center; margin-bottom:64px }
         .timeline-title{ font-family:Inter,-apple-system,sans-serif; font-size:48px; font-weight:700; line-height:1.2; letter-spacing:-.02em; color:#1F2937; margin:0 0 24px }
         .timeline-subtitle{ font-family:Inter,-apple-system,sans-serif; font-size:24px; color:#6B7280; margin:0 }
