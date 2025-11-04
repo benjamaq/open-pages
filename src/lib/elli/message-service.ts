@@ -20,27 +20,41 @@ export async function generateElliMessage(params: GenerateMessageParams): Promis
   try { console.log('🎯 DAY 1 DETECTED?', isDay1) } catch {}
   if (isDay1) {
     // Primary metric mapping
-    const primaryMetrics: any = {
-      sleep: { displayName: 'sleep', sliderLabel: 'Sleep', verb: 'affecting', goal: 'sleep better', emoji: '🌙', value: todayEntry.sleep_quality, secondaryLabel: 'Energy', secondaryValue: todayEntry.pain },
-      pain: { displayName: 'pain', sliderLabel: 'Pain', verb: 'helping', goal: 'manage your pain', emoji: '💪', value: todayEntry.pain, secondaryLabel: 'Sleep', secondaryValue: todayEntry.sleep_quality },
-      migraines: { displayName: 'migraine intensity', sliderLabel: 'Migraine', verb: 'triggering', goal: 'reduce your migraines', emoji: '🧠', value: todayEntry.pain, secondaryLabel: 'Sleep', secondaryValue: todayEntry.sleep_quality },
-      energy: { displayName: 'energy', sliderLabel: 'Energy', verb: 'affecting', goal: 'boost your energy', emoji: '⚡', value: todayEntry.sleep_quality, secondaryLabel: 'Sleep', secondaryValue: todayEntry.pain },
-      other: { displayName: 'symptoms', sliderLabel: 'Overall', verb: 'affecting', goal: 'feel better', emoji: '✨', value: todayEntry.sleep_quality, secondaryLabel: 'Pain', secondaryValue: todayEntry.pain },
+    const map: any = {
+      sleep: { label: 'Sleep', name: 'sleep', secondaryLabel: 'Pain', value: todayEntry.sleep_quality, secondaryValue: todayEntry.pain, emoji: '🌙' },
+      pain: { label: 'Pain', name: 'pain', secondaryLabel: 'Sleep', value: todayEntry.pain, secondaryValue: todayEntry.sleep_quality, emoji: '💪' },
+      migraines: { label: 'Migraine', name: 'migraine intensity', secondaryLabel: 'Sleep', value: todayEntry.pain, secondaryValue: todayEntry.sleep_quality, emoji: '🧠' },
+      energy: { label: 'Energy', name: 'energy', secondaryLabel: 'Sleep', value: todayEntry.sleep_quality, secondaryValue: todayEntry.pain, emoji: '⚡' },
+      other: { label: 'Overall', name: 'symptoms', secondaryLabel: 'Pain', value: todayEntry.sleep_quality, secondaryValue: todayEntry.pain, emoji: '✨' },
     }
-    const primary = (typeof condition === 'string' && primaryMetrics[condition]) ? condition as string : 'other'
-    const metric = primaryMetrics[primary]
+    const primary = (typeof condition === 'string' && map[condition]) ? (condition as string) : 'other'
+    const m = map[primary]
     const moodVal = todayEntry.mood
-    const moodAssessment = moodVal >= 7 ? 'is solid' : moodVal >= 4 ? 'could be better' : 'needs attention'
-    const tipMap: Record<string, string> = {
-      sleep: 'Try keeping your bedroom cool (65–68°F helps most people)',
-      pain: 'Gentle movement often helps — even just 10 minutes',
-      migraines: 'Stay hydrated and watch for patterns in meal timing',
-      energy: 'A consistent sleep schedule can make a big difference',
-      other: 'Small consistent changes often have the biggest impact',
+
+    // Empathy lines by condition
+    const empathy: Record<string, (v:number)=>string> = {
+      sleep: (v)=> v <= 5 ? `sleep is at ${v}/10 — that's tough, and I know how frustrating that is.` : `sleep is at ${v}/10 — there's room to improve.`,
+      pain: (v)=> v >= 7 ? `pain is at ${v}/10 — I can see you're dealing with a lot right now.` : `pain is at ${v}/10 — we'll work on bringing that down.`,
+      migraines: (v)=> v >= 7 ? `migraine intensity is at ${v}/10 — that's tough to deal with.` : `migraine intensity is at ${v}/10 — let's dig into why.`,
+      energy: (v)=> v <= 4 ? `energy is at ${v}/10 — that's draining to manage.` : `energy is at ${v}/10 — we can push that higher.`,
+      other: (v)=> `you're at ${v}/10 — let's figure this out.`,
     }
-    const line = `${metric.sliderLabel} ${metric.value}/10 • Mood ${moodVal}/10 • ${metric.secondaryLabel} ${metric.secondaryValue}/10`
-    const msg = `Hey ${userName}! Thanks for checking in today.\n\n${line}\n\nI can see ${metric.displayName} is at ${metric.value}/10 — there's room to improve there. Your mood at ${moodVal}/10 ${moodAssessment}.\n\nOver the next week, I'll start spotting patterns. Keep checking in daily and we'll figure out what's ${metric.verb} your ${metric.displayName}.\n\n${metric.emoji} In the meantime: ${tipMap[primary]}`
-    try { console.log('📤 RETURNING MESSAGE (Day1 personalized):', msg.substring(0, 120) + '...') } catch {}
+    // Suggestions by condition
+    const suggestions: Record<string, string[]> = {
+      sleep: [ 'adjust your meditation practice', 'set a consistent bedtime routine', 'keep your room cooler (65–68°F)' ],
+      pain: [ '10 minutes of gentle movement', 'try heat/ice at specific times', 'review pain-med timing' ],
+      migraines: [ 'hydrate consistently', 'keep meal timing steady', 'reduce late-night screens' ],
+      energy: [ 'stick to a consistent sleep schedule', 'get 10+ min morning sunlight', 'balance activity and rest' ],
+      other: [ 'small tweaks consistently', 'note timing windows', 'focus on one change at a time' ],
+    }
+    const line = `${m.label} ${m.value}/10 • Mood ${moodVal}/10 • ${m.secondaryLabel} ${m.secondaryValue}/10`
+    const empathetic = empathy[primary](m.value)
+    const secondaryNote = (m.secondaryValue >= 7 || m.secondaryValue <= 3)
+      ? ` ${m.secondaryLabel} at ${m.secondaryValue}/10 might be playing a role — that's common.`
+      : ''
+    const sugg = suggestions[primary]
+    const suggLine = `In the meantime, try ${sugg[0]}, ${sugg[1]}, or ${sugg[2]}.`
+    const msg = `Hey ${userName}! Thanks for checking in.\n\n${line}\n\nI can see ${empathetic}${secondaryNote}\n\nOver the next week, I'll start spotting patterns to see what's going on. ${suggLine}\n\nKeep tracking. The more I know about you, the more we can find what helps.`
     return msg
   }
 
@@ -64,7 +78,19 @@ export async function generateElliMessage(params: GenerateMessageParams): Promis
     const prevMood = recentEntries[recentEntries.length - 1]?.mood ?? moodVal
     const moodComment = moodVal > prevMood ? `Your mood is up to ${moodVal}/10 — that's progress!` : moodVal < prevMood ? `Your mood is at ${moodVal}/10 today.` : `Your mood is holding steady at ${moodVal}/10.`
     const line = `${m.label} ${m.value}/10 • Mood ${moodVal}/10 • ${m.secondaryLabel} ${m.secondaryValue}/10`
-    const msg = `Hey ${userName}! Thanks for checking in.\n\n${line}\n\n${moodComment}\n\nKeep tracking — I'll need a few more days to spot patterns, but we're getting closer to understanding what's ${m.verb} your ${m.name}.\n\n[View insights →]`
+    const secondaryNote = (m.secondaryValue >= 7 || m.secondaryValue <= 3)
+      ? ` ${m.secondaryLabel} at ${m.secondaryValue}/10 might be contributing.`
+      : ''
+    const suggestions: Record<string, string[]> = {
+      sleep: [ 'adjust your meditation', 'set a consistent bedtime', 'keep your room cooler (65–68°F)' ],
+      pain: [ '10 minutes gentle movement', 'try heat/ice timing', 'review med timing' ],
+      migraines: [ 'hydrate', 'steady meal timing', 'cut late-night screens' ],
+      energy: [ 'consistent sleep schedule', 'morning sunlight', 'balance activity/rest' ],
+      other: [ 'small consistent tweaks', 'watch timing windows' ],
+    }
+    const sugg = suggestions[primary]
+    const suggLine = `Try ${sugg.slice(0,3).join(', ')}.`
+    const msg = `Hey ${userName}! Thanks for checking in.\n\n${line}\n\n${moodComment}${secondaryNote}\n\nI'll need a few more days to spot patterns. ${suggLine}`
     return msg
   }
 
