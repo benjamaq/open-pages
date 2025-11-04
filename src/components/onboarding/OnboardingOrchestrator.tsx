@@ -12,6 +12,7 @@ import AddStackItemForm from '@/components/AddStackItemForm';
 import Step5MissionProfile from './Step5MissionProfile';
 import { getToneProfileType } from '@/lib/elli/toneProfiles';
 import { trackEvent } from '@/lib/analytics';
+import { createClient } from '@/lib/supabase/client';
 
 /**
  * OnboardingOrchestrator
@@ -90,12 +91,31 @@ export default function OnboardingOrchestrator({
   // ========================================================================
   // STEP 1: Intro → Category
   // ========================================================================
-  const handleIntroComplete = (category: string) => {
+  const handleIntroComplete = async (category: string) => {
     console.log('✅ Intro complete with category:', category);
     // Set category and tone profile immediately (no separate category step)
     setSelectedCategory(category);
     const tone = getToneProfileType(category, null);
     setToneProfile(tone);
+    // Map selection to primary condition for personalization
+    const mapToPrimary = (label: string): 'sleep' | 'pain' | 'migraines' | 'energy' | 'other' => {
+      const lower = (label || '').toLowerCase();
+      if (lower.includes('sleep')) return 'sleep';
+      if (lower.includes('migraine') || lower.includes('headache')) return 'migraines';
+      if (lower.includes('pain') || lower.includes('fibromyalgia') || lower.includes('arthritis') || lower.includes('back')) return 'pain';
+      if (lower.includes('energy') || lower.includes('fatigue')) return 'energy';
+      return 'other';
+    }
+    try {
+      const supabase = createClient();
+      await supabase
+        .from('profiles')
+        .update({ condition_primary: mapToPrimary(category), condition_details: category })
+        .eq('user_id', userId);
+      try { trackEvent('onboarding_condition_set', { primary: mapToPrimary(category), details: category }) } catch {}
+    } catch (e) {
+      console.warn('Failed to save primary condition (non-blocking)', e);
+    }
     setCurrentStep('how_it_works');
   };
 
