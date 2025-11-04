@@ -104,22 +104,19 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
                 Create Your Own Tags
               </h4>
               <p className="text-sm text-gray-700 leading-relaxed mb-2">
-                <strong>Don't see what you need? Make your own tag.</strong>
+                <strong>Need something specific? Create your own.</strong>
               </p>
               <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                In each category, you'll see a "+ Custom" button. Click it to create 
-                a tag for anything: "Argued with partner" • "Worked late" • "Horror movie" • 
-                "Sunny day" • "New pillow" • "Ate dairy" • literally anything.
+                Tap “+ Custom” in any category to add anything — “Argued with partner”, “Worked late”,
+                “New pillow”, “Ate dairy”. Whatever matters to you.
               </p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                When you tag the same things over time, Elli spots patterns: 
-                "Your sleep drops to 4/10 on high-stress days vs 7/10 on calm days."
+                Repeating a tag over time lets Elli surface patterns like:
+                “Sleep 4/10 on high‑stress days vs 7/10 on calm days”. Tag what feels relevant;
+                more signal = faster insights.
               </p>
             </div>
-            <p className="text-sm text-gray-600 italic">
-              Tag whatever you think might affect you. The more you tag, the faster 
-              Elli finds what's really making a difference.
-            </p>
+            <p className="text-sm text-gray-600 italic">Tag what matters. More tags → faster answers.</p>
           </div>
 
           {/* SECTION 3: Track Everything You're Trying */}

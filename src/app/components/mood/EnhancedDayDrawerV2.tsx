@@ -951,10 +951,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 <p><strong>1.</strong> Move the sliders</p>
                 <p><strong>2.</strong> Choose life factors and symptoms</p>
               </div>
-              <p className="text-sm text-gray-500 pt-2">
-                The more you add now, the faster I can spot your patterns. 
-                Most people who add context get their first insight by Day 3.
-              </p>
+              {/* Intentionally simplified per onboarding brief */}
             </div>
           </div>
         )}
@@ -1768,7 +1765,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 onClick={() => setShowAdvanced(!showAdvanced)}
               >
                 <div className="flex items-center space-x-2">
-                  <span>Import Wearable Data</span>
+                  <span>Add Wearable Data</span>
                   <span className="text-xs text-gray-400 font-normal">Optional — Manual Entry</span>
                 </div>
                 <svg 
