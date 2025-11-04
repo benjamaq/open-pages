@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SafeType from '@/components/elli/SafeType';
+import BrandSparkIcon from '@/components/BrandSparkIcon';
 import { getGreeting } from '@/lib/utils/greetings';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 
@@ -38,7 +39,7 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `✨\n\nHey ${userName}, welcome to BioStackr\n\nI'm really happy you're here.\n\nLet's figure out what's going on with your health — we'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
+  const welcomeMessage = `Hey ${userName}, welcome to BioStackr\n\nI'm really happy you're here.\n\nLet's figure out what's going on with your health — we'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
 
   const dropdowns: { key: string; label: string; options: string[] }[] = [
     { key: 'sleep', label: 'Sleep', options: ['General sleep issues','Insomnia','Sleep apnea','Other sleep concerns'] },
@@ -53,7 +54,7 @@ export default function ElliIntroModal({
         {/* Header */}
         <div className="relative p-6 border-b border-gray-100">
           <div className="flex justify-center mb-4">
-            <span className="text-5xl">✨</span>
+            <BrandSparkIcon size={48} />
           </div>
 
         </div>
