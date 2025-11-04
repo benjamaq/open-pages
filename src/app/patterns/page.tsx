@@ -99,16 +99,16 @@ export default async function PatternsPage() {
         {/* Warnings */}
         {warnings.length > 0 && (
           <section className="mb-12 warnings-section">
-            <div className="section-header">
-              <h2>🚨 Attention Needed</h2>
-              <p>These trends need your attention.</p>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">🚨 Attention Needed</h2>
+              <p className="text-base text-gray-500">These trends need your attention.</p>
             </div>
-            <div className="cards-container">
+            <div className="flex flex-col gap-4">
               {warnings.map((w: any) => (
-                <div key={w.id} className="pattern-card" data-type="warning">
-                  <div className="card-header">WARNING</div>
-                  <h3 className="card-title">{w._title || w.context?.topLine}</h3>
-                  <p className="card-body">{w._discovery || w.context?.discovery}</p>
+                <div key={w.id} className="bg-red-50 rounded-xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-red-600">
+                  <div className="text-red-600 text-xs font-bold uppercase tracking-wide mb-3">WARNING</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{w._title || w.context?.topLine}</h3>
+                  <p className="text-base text-gray-700 leading-relaxed">{w._discovery || w.context?.discovery}</p>
                 </div>
               ))}
             </div>
@@ -117,13 +117,13 @@ export default async function PatternsPage() {
 
         {milestones.length > 0 && (
           <section className="milestones-section mb-12">
-            <div className="section-header"><h2>✨ Your Wins</h2><p>Breakthrough moments worth celebrating.</p></div>
-            <div className="cards-container">
+            <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">✨ Your Wins</h2><p className="text-base text-gray-500">Breakthrough moments worth celebrating.</p></div>
+            <div className="flex flex-col gap-4">
               {milestones.map((m: any) => (
-                <div key={m.id} className="pattern-card" data-type="milestone">
-                  <div className="card-header">MILESTONE</div>
-                  <h3 className="card-title">{m._title || m.context?.topLine}</h3>
-                  <p className="card-body">{m._discovery || m.context?.discovery}</p>
+                <div key={m.id} className="bg-amber-50 rounded-xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-amber-500">
+                  <div className="text-amber-600 text-xs font-bold uppercase tracking-wide mb-3">MILESTONE</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{m._title || m.context?.topLine}</h3>
+                  <p className="text-base text-gray-700 leading-relaxed">{m._discovery || m.context?.discovery}</p>
                 </div>
               ))}
             </div>
@@ -132,13 +132,13 @@ export default async function PatternsPage() {
 
         {observations.length > 0 && (
           <section className="observations-section mb-12">
-            <div className="section-header"><h2>📊 Recent Observations</h2><p>Trends in your metrics.</p></div>
-            <div className="cards-container">
+            <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">📊 Recent Observations</h2><p className="text-base text-gray-500">Trends in your metrics.</p></div>
+            <div className="flex flex-col gap-4">
               {observations.map((o: any) => (
-                <div key={o.id} className="pattern-card" data-type="observation">
-                  <div className="card-header">OBSERVATION</div>
-                  <h3 className="card-title">{o._title || o.context?.topLine}</h3>
-                  <p className="card-body">{o._discovery || o.context?.discovery}</p>
+                <div key={o.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-gray-400">
+                  <div className="text-gray-600 text-xs font-bold uppercase tracking-wide mb-3">OBSERVATION</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{o._title || o.context?.topLine}</h3>
+                  <p className="text-base text-gray-700 leading-relaxed">{o._discovery || o.context?.discovery}</p>
                 </div>
               ))}
             </div>
@@ -150,14 +150,14 @@ export default async function PatternsPage() {
 
         {confirmed.length > 0 && (
           <section className="mb-12">
-            <div className="section-header"><h2>💙 Confirmed Patterns</h2><p>These patterns have appeared multiple times — act on these.</p></div>
-            <div className="cards-container">
+            <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">💙 Confirmed Patterns</h2><p className="text-base text-gray-500">These patterns have appeared multiple times — act on these.</p></div>
+            <div className="flex flex-col gap-4">
               {confirmed.map((p: any) => (
-                <div key={p.id} className="pattern-card" data-type="pattern">
-                  <div className="card-header">PATTERN DISCOVERED</div>
-                  <h3 className="card-title">{p._title || p.context?.topLine}</h3>
-                  <p className="card-body">{p._discovery || p.context?.discovery}</p>
-                  {(p._action || p.context?.action) && (<p className="card-body card-insight"><span className="card-insight-label">Insight:</span> {p._action || p.context?.action}</p>)}
+                <div key={p.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-purple-600">
+                  <div className="text-purple-600 text-xs font-bold uppercase tracking-wide mb-3">PATTERN DISCOVERED</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{p._title || p.context?.topLine}</h3>
+                  <p className="text-base text-gray-700 leading-relaxed">{p._discovery || p.context?.discovery}</p>
+                  {(p._action || p.context?.action) && (<p className="text-base text-gray-700 leading-relaxed mt-3 pt-3 border-t border-gray-200"><span className="font-bold text-gray-900 mr-1">Insight:</span> {p._action || p.context?.action}</p>)}
                   <div className="text-xs text-gray-500 mt-2">Confirmed {p.count} times</div>
                 </div>
               ))}
@@ -167,13 +167,13 @@ export default async function PatternsPage() {
 
         {emerging.length > 0 && (
           <section className="emerging-patterns-section">
-            <div className="section-header"><h2>🌱 Emerging Patterns</h2><p>Keep watching — these need more data to confirm.</p></div>
-            <div className="cards-container">
+            <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">🌱 Emerging Patterns</h2><p className="text-base text-gray-500">Keep watching — these need more data to confirm.</p></div>
+            <div className="flex flex-col gap-4">
               {emerging.map((p: any) => (
-                <div key={p.id} className="pattern-card" data-type="pattern">
-                  <div className="card-header">PATTERN DISCOVERED</div>
-                  <h3 className="card-title">{p._title || p.context?.topLine}</h3>
-                  <p className="card-body">{p._discovery || p.context?.discovery}</p>
+                <div key={p.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-purple-600">
+                  <div className="text-purple-600 text-xs font-bold uppercase tracking-wide mb-3">PATTERN DISCOVERED</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{p._title || p.context?.topLine}</h3>
+                  <p className="text-base text-gray-700 leading-relaxed">{p._discovery || p.context?.discovery}</p>
                   <div className="text-xs text-gray-500 mt-2">Seen {p.count} time{p.count > 1 ? 's' : ''} • Need {3 - p.count} more</div>
                 </div>
               ))}
@@ -191,7 +191,7 @@ export default async function PatternsPage() {
 
             {recentFallback.length > 0 ? (
               <section className="mb-8">
-                <div className="section-header"><h2>🕑 Recent insights</h2><p>Latest updates across your tracking.</p></div>
+                <div className="mb-6"><h2 className="text-2xl font-bold text-gray-900">🕑 Recent insights</h2><p className="text-base text-gray-500">Latest updates across your tracking.</p></div>
                 <div className="space-y-3">
                   {recentFallback.map((p: any) => (
                     <div
@@ -224,24 +224,6 @@ export default async function PatternsPage() {
         )}
       </div>
     </div>
-    <style jsx>{`
-      .section-header{ margin-bottom:24px }
-      .section-header h2{ font-size:24px; font-weight:700; color:#1F2937; margin:0 0 8px; display:flex; align-items:center; gap:8px }
-      .section-header p{ font-size:16px; color:#6B7280; margin:0 }
-      .cards-container{ display:flex; flex-direction:column; gap:16px }
-      .pattern-card{ background:#fff; border:1px solid #E5E7EB; border-left:4px solid #7C3AED; border-radius:12px; padding:24px }
-      .pattern-card[data-type="warning"]{ border-left-color:#DC2626; background:rgba(220,38,38,0.05) }
-      .pattern-card[data-type="milestone"]{ border-left-color:#F59E0B; background:rgba(251,191,36,0.05) }
-      .pattern-card[data-type="observation"]{ border-left-color:#9CA3AF }
-      .card-header{ color:#7C3AED; font-size:13px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:8px; margin-bottom:12px }
-      .pattern-card[data-type="warning"] .card-header{ color:#DC2626 }
-      .pattern-card[data-type="milestone"] .card-header{ color:#F59E0B }
-      .pattern-card[data-type="observation"] .card-header{ color:#6B7280 }
-      .card-title{ font-size:20px; font-weight:700; color:#1F2937; margin:0 0 12px }
-      .card-body{ font-size:16px; line-height:1.7; color:#374151 }
-      .card-insight{ margin-top:12px; padding-top:12px; border-top:1px solid #E5E7EB }
-      .card-insight-label{ font-weight:700; color:#1F2937; margin-right:4px }
-    `}</style>
   )
 }
 

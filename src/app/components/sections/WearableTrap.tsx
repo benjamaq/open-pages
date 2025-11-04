@@ -30,14 +30,14 @@ export default function WearableTrap() {
           <div className="bg-gradient-to-br from-teal-700 to-amber-600 p-8 rounded-2xl border-2 border-[#F4B860] shadow-lg">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center"><span className="text-2xl">🔍</span></div>
-              <h3 className="text-2xl font-bold text-white">BioStackr</h3>
+              <h3 className="text-2xl font-bold text-white">🧠 BioStackr</h3>
             </div>
             <ul className="space-y-4 text-lg text-white">
-              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Caffeine after 2pm → 38% worse sleep</span></li>
-              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Late workouts → Awake until 1am</span></li>
-              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Magnesium (3+ nights) → +2.1 sleep quality</span></li>
-              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Alcohol + screens → 67% worse REM</span></li>
-              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Morning walks → Asleep 30min faster</span></li>
+              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Caffeine after 2pm → Sleep 4/10 (vs 7/10)</span></li>
+              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Magnesium nightly → Anxiety worse (not better)</span></li>
+              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Morning sunlight → Energy 7/10 (vs 4/10)</span></li>
+              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Late workouts → Sleep drops to 4/10</span></li>
+              <li className="flex items-start gap-3"><span className="text-[#F4B860] mt-1 font-bold">✓</span><span>Argued with partner → Mood 3/10 next day</span></li>
             </ul>
             <p className="mt-8 text-base font-bold text-[#F4B860] text-center">Now you know what to fix.</p>
           </div>
