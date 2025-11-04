@@ -87,7 +87,7 @@ export default function MigraineLandingClient() {
         {/* Content */}
         <Container className="relative z-10 px-6 pt-28 sm:pt-32 pb-16 sm:pb-24">
           <div className="max-w-4xl">
-            <p className="text-xs uppercase tracking-wider text-white/70 mb-4">MIGRAINE TRIGGER DETECTION</p>
+            <p className="tracking-wide text-white/90 font-light text-[24px] sm:text-[28px] mb-6">Pattern Discovery for Your Health</p>
             <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight mb-6">
               Finally Understand What Triggers Your Migraines
             </h1>

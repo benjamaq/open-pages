@@ -140,21 +140,18 @@ export default function Step2CoreCheckin({ userId, userName, onComplete }: Step2
           <p><strong>1.</strong> Move the sliders</p>
           <p><strong>2.</strong> Choose life factors and symptoms</p>
         </div>
-        <p className="text-sm text-gray-500 pt-2">
-          The more you add now, the faster I can spot your patterns. 
-          Most people who add context get their first insight by Day 3.
-        </p>
+        <p className="text-sm text-gray-500 pt-2">The more you add now, the faster we can spot your patterns.</p>
       </div>
 
       {/* Expandable headers (tracked opens) */}
       <ExpandableHeader
-        title="🌍 Life Factors"
+        title="🌍 What Did You Do Yesterday?"
         subtitle="Help us find patterns faster — select what applies"
         examples="Examples: caffeine, alcohol, high stress, work deadline, travel, meditation"
         onOpen={() => handleOpen('life_factors')}
       />
       <ExpandableHeader
-        title="🩺 Symptoms"
+        title="🩺 How Are You Feeling?"
         subtitle="Tell us what symptoms you're feeling today"
         examples="Examples: headache, nausea, brain fog, dizziness, fatigue, anxiety"
         onOpen={() => handleOpen('symptoms')}

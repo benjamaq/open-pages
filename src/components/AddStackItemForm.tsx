@@ -226,7 +226,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
                 <div className="text-4xl mb-2">💙</div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
                 <p className="text-sm sm:text-base text-gray-600 mt-2">
-                  Knowing what you’re taking is the key to finding your patterns faster.
+                  Knowing what you’re taking helps us find patterns faster — but you can always add this later.
                 </p>
                 {/* Removed explainer about next steps to keep the modal focused on the action */}
               </div>
@@ -500,17 +500,17 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${isOnboarding ? 'border border-purple-200 text-purple-700 hover:bg-purple-50' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   disabled={isLoading}
                 >
-                  {isOnboarding ? "I'll add this at the dashboard →" : 'Cancel'}
+                  {isOnboarding ? 'Skip for now' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Adding...' : (isOnboarding ? 'Add' : '+ Add to Schedule')}
+                  {isLoading ? 'Adding...' : (isOnboarding ? 'Add →' : '+ Add to Schedule')}
                 </button>
               </div>
             </div>

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function HowItWorks() {
   const steps = [
     { number: '1', icon: '✍️', title: 'Check in (20 seconds)', description: "How'd you sleep? How do you feel? What did you do yesterday?" },
@@ -23,6 +25,9 @@ export default function HowItWorks() {
               <p className="text-gray-600 leading-relaxed">{s.description}</p>
             </div>
           ))}
+        </div>
+        <div className="text-center mt-10">
+          <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-[#F4B860] px-6 py-3 text-base font-semibold text-[#2C2C2C] hover:bg-[#E5A850] transition-colors whitespace-nowrap">Start Sleep Discovery →</Link>
         </div>
       </div>
     </section>

@@ -25,6 +25,8 @@ export default function ElliIntroModal({
   userName 
 }: ElliIntroModalProps) {
   const [showTyping, setShowTyping] = useState(true);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,22 +38,13 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `${getGreeting()}, ${userName}. I'm so glad you're here.
+  const welcomeMessage = `💙\n\nWelcome to BioStackr\n\nLet's figure out what's going on with your health.\n\nWe'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
 
-Whether you're dealing with chronic pain, sleep issues, or just trying to understand what helps you feel better — you're in the right place.
-
-Let's find out what matters most to you, and start uncovering patterns that actually help.`;
-
-  const categories = [
-    'Chronic Pain or Illness',
-    'Sleep & Insomnia Issues',
-    'Energy or Chronic Fatigue',
-    'Autoimmune or Inflammatory',
-    'Mental Health & Focus',
-    'Meds & Treatment Tracking',
-    'Pattern Discovery',
-    'Fertility or Cycle Tracking',
-    'Complex / Undiagnosed'
+  const dropdowns: { key: string; label: string; options: string[] }[] = [
+    { key: 'sleep', label: 'Sleep', options: ['General sleep issues','Insomnia','Sleep apnea','Other sleep concerns'] },
+    { key: 'pain', label: 'Chronic Pain', options: ['Fibromyalgia','Arthritis','Back pain','General chronic pain','Other pain condition'] },
+    { key: 'migraines', label: 'Migraines', options: ['Chronic migraines','Cluster headaches','Tension headaches'] },
+    { key: 'other', label: 'Other', options: ['Energy or Chronic Fatigue','Mental Health & Focus','Autoimmune or Inflammatory','Fertility or Cycle Tracking','Meds & Treatment Tracking','Pattern Discovery','Complex / Undiagnosed'] },
   ];
 
   return (
@@ -59,7 +52,6 @@ Let's find out what matters most to you, and start uncovering patterns that actu
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative p-6 border-b border-gray-100">
-          {/* Elli Avatar */}
           <div className="flex justify-center mb-4">
             <span className="text-5xl">💙</span>
           </div>
@@ -68,7 +60,6 @@ Let's find out what matters most to you, and start uncovering patterns that actu
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Elli's Message with Typing */}
           <div className="min-h-[200px] text-left">
             {showTyping ? (
               <div className="py-4 flex justify-center">
@@ -83,22 +74,35 @@ Let's find out what matters most to you, and start uncovering patterns that actu
             )}
           </div>
 
-          {/* Category Grid */}
+          {/* Category Dropdowns */}
           {!showTyping && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {categories.map((cat) => (
+            <div className="space-y-3">
+              {dropdowns.map((d) => (
+                <div key={d.key} className="relative">
                   <button
-                    key={cat}
-                    onClick={() => onContinue(cat)}
-                    className="px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors text-left"
+                    onClick={() => setOpenMenu(openMenu === d.key ? null : d.key)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors flex items-center justify-between"
                   >
-                    {cat}
+                    <span>{d.label}</span>
+                    <span>▼</span>
                   </button>
-                ))}
-              </div>
+                  {openMenu === d.key && (
+                    <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-md">
+                      {d.options.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => { setSelected(opt); onContinue(opt); }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
               <button
-                onClick={() => onContinue(categories[0])}
+                onClick={() => onContinue(selected || 'Sleep & Insomnia Issues')}
                 className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
               >
                 I'm Ready →

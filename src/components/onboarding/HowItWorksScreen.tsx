@@ -27,7 +27,7 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
               <span className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
               <h3 className="text-xl font-bold">Daily Check-In</h3>
             </div>
-            <p className="text-gray-700 mb-4">Every day, you'll see three sliders. Move each slider to rate how you're feeling:</p>
+            <p className="text-gray-700 mb-4">Every day, you'll rate how you're feeling. Takes 20 seconds.</p>
             <ul className="space-y-2 mb-4">
               <li className="flex items-start gap-2">
                 <span className="text-gray-400 mt-1">→</span>
@@ -65,7 +65,7 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
               <h3 className="text-xl font-bold">Add Context (Recommended)</h3>
             </div>
             <p className="text-gray-700 mb-4">
-              <strong>This step is optional—but it's where the magic happens.</strong> After the sliders, you'll see buttons (we call them "tags") organized into categories. Click any that apply to today:
+              <strong>This step is optional—but it helps us find patterns faster.</strong> After the sliders, you'll see buttons organized into categories. Click any that apply to today:
             </p>
             <div className="space-y-3 mb-4">
               <div className="border border-gray-200 rounded-lg p-4">
@@ -127,9 +127,7 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
               <span className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</span>
               <h3 className="text-xl font-bold">Track Everything You're Trying</h3>
             </div>
-            <p className="text-gray-700 mb-4">After your first check-in, you'll land on your dashboard. From there, 
-              you can add everything you're trying:
-            </p>
+            <p className="text-gray-700 mb-4">After your first check-in, you can add everything you're trying — supplements, medications, routines, anything. The more you track, the faster we find what works.</p>
             <ul className="grid grid-cols-2 gap-2 mb-4">
               <li className="flex items-center gap-2 text-gray-700 text-sm"><span>💊</span> Supplements (magnesium, vitamin D, etc.)</li>
               <li className="flex items-center gap-2 text-gray-700 text-sm"><span>💉</span> Medications (prescriptions)</li>
