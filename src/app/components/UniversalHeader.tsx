@@ -57,6 +57,9 @@ export default function UniversalHeader() {
                 Contact
               </Link>
             </nav>
+            <Link href="/auth/signin" className={navLinkBase}>
+              Sign In
+            </Link>
             <Link href="/auth/signup" className={`${ctaClass} h-10 md:h-11 px-4 md:px-5 text-sm md:text-base`}>
               Start Free
             </Link>
