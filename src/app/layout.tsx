@@ -4,7 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import PWARegister from "./components/PWARegister";
 import PWAInstallFab from "./components/PWAInstallFab";
-import UniversalHeader from "./components/UniversalHeader";
+import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
 
 const inter = Inter({
@@ -111,7 +111,7 @@ export default function RootLayout({
         {/* PWA header temporarily disabled to satisfy Next.js Server Component constraints */}
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
-          <UniversalHeader />
+          <HeaderGate />
           {children}
         </div>
         <Script id="pwa-marker" strategy="afterInteractive">
