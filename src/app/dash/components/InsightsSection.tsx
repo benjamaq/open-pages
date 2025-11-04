@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics'
 import { formatDistanceToNowStrict } from 'date-fns'
 
@@ -21,6 +22,7 @@ interface Insight {
 
 export function InsightsSection({ insights }: { insights: Insight[] }) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const router = useRouter()
   // Note: Avoid early returns before hooks to keep hook order consistent
 
   // Only include last 7 days, then group by insight_key; pick latest clean item
@@ -74,15 +76,14 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
           <span>Patterns Discovered</span>
         </h4>
         <div className="flex items-center gap-3">
-          <a
-            href="/patterns"
-            className="text-xs text-purple-700 hover:text-purple-900 leading-tight flex flex-col items-end sm:flex-row sm:items-center sm:gap-1"
-            aria-label="View all insights"
+          <button
+            type="button"
+            onClick={() => router.push('/patterns')}
+            className="bg-purple-600 text-white text-xs font-semibold px-3 py-2 rounded-md shadow-sm hover:bg-purple-700 transition-colors"
+            aria-label="View all patterns"
           >
-            <span>View All</span>
-            <span className="sm:inline hidden">patterns</span>
-            <span className="sm:hidden">Patterns</span>
-          </a>
+            View all patterns
+          </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-xs text-gray-500 hover:text-gray-700"
@@ -109,8 +110,44 @@ export function InsightsSection({ insights }: { insights: Insight[] }) {
 
 function InsightCard({ insight }: { insight: Insight }) {
   const { type, topLine, discovery, action } = insight.context
-  const cardType = (type === 'pattern' || type === 'observation' || type === 'milestone') ? type : 'pattern'
-  const headerLabel = cardType === 'pattern' ? 'PATTERN DISCOVERED' : cardType === 'milestone' ? 'MILESTONE' : 'OBSERVATION'
+
+  // Determine card type if not explicitly set
+  const determineCardType = (): 'pattern' | 'observation' | 'milestone' | 'warning' => {
+    const t = (topLine || '').toLowerCase()
+    const d = (discovery || '').toLowerCase()
+
+    // Exact title-driven checks from brief
+    if (t.includes('breakthrough')) return 'milestone'
+    if (t.includes('climbing')) return 'warning'
+    if (t.includes('linked to') || t.includes('appears to')) return 'pattern'
+
+    // WARNING (negative trend / alert)
+    const warningIndicators = [
+      'climbing', 'increasing', 'getting worse', 'declined', 'declining', 'warning', 'concerning', 'worsening', 'dropped significantly'
+    ]
+    if (warningIndicators.some(k => t.includes(k) || d.includes(k))) return 'warning'
+
+    // PATTERN (correlation between two variables)
+    const patternIndicators = [
+      'affect', 'linked to', 'correlated with', 'appears to', ' vs ', 'when your', 'with ', 'without '
+    ]
+    if (patternIndicators.some(k => t.includes(k) || d.includes(k))) return 'pattern'
+
+    // MILESTONE (achievement)
+    const milestoneIndicators = [
+      'breakthrough', 'best', 'worst', 'lowest', 'highest', 'first time'
+    ]
+    if (milestoneIndicators.some(k => t.includes(k) || d.includes(k))) return 'milestone'
+
+    // Default OBSERVATION
+    return 'observation'
+  }
+
+  const resolvedType = (type === 'pattern' || type === 'observation' || type === 'milestone' || type === 'warning')
+    ? type
+    : determineCardType()
+  const headerLabel = resolvedType === 'pattern' ? 'PATTERN DISCOVERED' : resolvedType === 'milestone' ? 'MILESTONE' : resolvedType === 'warning' ? 'WARNING' : 'OBSERVATION'
+  try { if (process.env.NODE_ENV !== 'production') { console.log('[Card]', { title: topLine, resolvedType }) } } catch {}
   const ts = (() => {
     const iso = insight.created_at
     if (!iso) return ''
@@ -129,11 +166,11 @@ function InsightCard({ insight }: { insight: Insight }) {
     } catch { return '/dash' }
   })()
   return (
-    <div className="pattern-card" data-type={cardType}>
+    <div className="pattern-card" data-type={resolvedType}>
       <div className="card-header">{headerLabel}</div>
       {topLine && (<h3 className="card-title">{topLine}</h3>)}
       {discovery && (<p className="card-body">{discovery}</p>)}
-      {cardType === 'pattern' && action && (
+      {resolvedType === 'pattern' && action && (
         <p className="card-body card-insight"><span className="card-insight-label">Insight:</span> {action}</p>
       )}
       {ts && (
@@ -147,12 +184,15 @@ function InsightCard({ insight }: { insight: Insight }) {
         .pattern-card{ background:#fff; border:1px solid #E5E7EB; border-left:4px solid #7C3AED; border-radius:12px; padding:24px }
         .pattern-card[data-type="observation"]{ border-left-color:#9CA3AF }
         .pattern-card[data-type="milestone"]{ border-left-color:#F59E0B; background:rgba(251,191,36,0.05) }
+        .pattern-card[data-type="warning"]{ border-left-color:#DC2626; background:rgba(220,38,38,0.05) }
         .card-header{ color:#7C3AED; font-size:13px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:8px; margin-bottom:12px }
         .pattern-card[data-type="observation"] .card-header{ color:#6B7280 }
         .pattern-card[data-type="milestone"] .card-header{ color:#F59E0B }
+        .pattern-card[data-type="warning"] .card-header{ color:#DC2626 }
         .pattern-card[data-type="pattern"] .card-header:before{ content:"🧠"; font-size:18px }
         .pattern-card[data-type="observation"] .card-header:before{ content:"📊"; font-size:18px }
         .pattern-card[data-type="milestone"] .card-header:before{ content:"✨"; font-size:18px }
+        .pattern-card[data-type="warning"] .card-header:before{ content:"🚨"; font-size:18px }
         .card-title{ font-size:20px; font-weight:700; color:#1F2937; margin:0 0 16px }
         .card-body{ font-size:16px; line-height:1.7; color:#374151 }
         .card-insight{ margin-top:16px; padding-top:16px; border-top:1px solid #E5E7EB }
