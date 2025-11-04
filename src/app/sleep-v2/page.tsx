@@ -15,6 +15,8 @@ import FAQ from "../components/sections/FAQ";
 import FinalCTA from "../components/sections/FinalCTA";
 import RealPatternsCarousel from "../components/sections/RealPatternsCarousel";
 import AdditionalFeatures from "../components/sections/AdditionalFeatures";
+import CustomTagsSection from "@/components/landing/CustomTagsSection";
+import TimelineStorySection from "@/components/landing/TimelineStorySection";
 
 function Container({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`mx-auto max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
@@ -81,6 +83,8 @@ export default function SleepLandingV2() {
       
 
       <RealPatternsCarousel />
+      <CustomTagsSection />
+      <TimelineStorySection />
 
       
       

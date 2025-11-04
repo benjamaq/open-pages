@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import fs from 'fs'
 import path from 'path'
-import CustomTagsSection from '@/components/landing/CustomTagsSection'
-import TimelineStorySection from '@/components/landing/TimelineStorySection'
 
 export const metadata: Metadata = {
   title: 'BioStackr: Pattern Discovery for Chronic Pain',
@@ -40,9 +38,7 @@ export default function PainPage() {
           </div>
         </section>
       ) : null}
-      {/* New sections inserted after core content */}
-      <CustomTagsSection />
-      <TimelineStorySection />
+      {/* Pain page ends after embedded content */}
     </main>
   )
 }
