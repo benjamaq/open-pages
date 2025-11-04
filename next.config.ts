@@ -34,7 +34,23 @@ const nextConfig: NextConfig = {
         ]
       }
     ]
-  }
+  },
+
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/sleep',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/migraine',
+        destination: '/migraines',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import PWARegister from "./components/PWARegister";
 import PWAInstallFab from "./components/PWAInstallFab";
+import UniversalHeader from "./components/UniversalHeader";
 import { captureAttributionClient } from '@/lib/attribution'
 
 const inter = Inter({
@@ -12,14 +13,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BioStackr – Understand Your Chronic Pain in 20 Seconds a Day",
-  description: "Track pain, mood and sleep, log what you’re trying, and finally see patterns that help you manage chronic pain. Private by default; share with your doctor when ready.",
-  keywords: ["chronic pain", "fibromyalgia", "autoimmune", "pain tracking", "sleep", "mood", "doctor", "shareable link"],
+  title: "BioStackr: Pattern Discovery for Sleep | Find Why You Can't Sleep",
+  description: "Sleep trackers give you a score. BioStackr finds why you can't sleep. Track in 20 seconds/day and get AI insights in 7–14 days.",
+  keywords: ["sleep", "insomnia", "sleep tracking", "sleep patterns", "mood", "pattern discovery", "biofeedback"],
   authors: [{ name: "Open Pages" }],
   manifest: "/manifest-v2.json",
   openGraph: {
-    title: "BioStackr – Understand Your Chronic Pain",
-    description: "Track pain, mood and sleep against what you’re trying. See patterns and share a timeline with your doctor.",
+    title: "BioStackr: Pattern Discovery for Sleep",
+    description: "Find the patterns keeping you awake. Actionable insights in 7–14 days.",
     type: "website",
   },
 };
@@ -110,6 +111,7 @@ export default function RootLayout({
         {/* PWA header temporarily disabled to satisfy Next.js Server Component constraints */}
         <PWAInstallFab />
         <div className="flex flex-col min-h-screen">
+          <UniversalHeader />
           {children}
         </div>
         <Script id="pwa-marker" strategy="afterInteractive">

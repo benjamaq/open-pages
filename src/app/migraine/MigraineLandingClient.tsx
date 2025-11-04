@@ -82,22 +82,7 @@ export default function MigraineLandingClient() {
         />
         <Starfield count={80} opacity={0.35} />
 
-        {/* Top Nav */}
-        <div className="absolute top-4 left-0 right-0 z-20">
-          <Container className="px-6">
-            <div className="flex items-center justify-between gap-6 text-white/90 text-sm">
-              <Link href="/">
-                <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-10 lg:h-12 w-auto" />
-              </Link>
-              <div className="flex items-center gap-6">
-                <Link href="#pricing" className="hover:underline">Pricing</Link>
-                <Link href="/contact" className="hover:underline">Contact</Link>
-                <Link href="/auth/signin" className="hover:underline">Sign In</Link>
-                <Link href="/auth/signup" className="hover:underline">Sign Up</Link>
-              </div>
-            </div>
-          </Container>
-        </div>
+        {/* Top Nav removed in favor of universal header */}
 
         {/* Content */}
         <Container className="relative z-10 px-6 pt-28 sm:pt-32 pb-16 sm:pb-24">

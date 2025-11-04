@@ -25,6 +25,7 @@ const config: Config = {
           800: '#1f2937',
           900: '#111827',
         },
+        gold: '#F4B860',
       },
       typography: {
         // Custom typography for better readability
