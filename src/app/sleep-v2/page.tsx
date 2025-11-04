@@ -60,11 +60,11 @@ export default function SleepLandingV2() {
               <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'start_sleep_discovery' }); onCta('lead', { cta: 'start_sleep_discovery' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#F4B860] h-12 px-6 text-[16px] font-semibold text-[#2C2C2C] transition-all hover:bg-[#E5A850]">Start Sleep Discovery →</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-[#F4B860] px-8 h-12 text-[16px] font-semibold text-white transition-all hover:bg-[#F4B860] hover:text-[#2C2C2C]">See How It Works</Link>
             </div>
-            <div className="mt-3 text-center">
-              <p className="text-lg md:text-xl font-medium text-white/90">
+            <div className="mt-8 text-center">
+              <p className="text-base md:text-lg font-medium text-white/90">
                 <span className="text-[#F4B860] font-bold">Your job:</span> A 20-second check-in daily.
               </p>
-              <p className="text-lg md:text-xl text-white/90">You spend more time choosing your socks.</p>
+              <p className="text-base md:text-lg text-white/90">(You spend more time choosing your socks.)</p>
             </div>
             
           </div>
