@@ -92,16 +92,19 @@ export default function TimelineStorySection() {
         @media(max-width:640px){ .timeline-header{margin-bottom:48px} .timeline-title{font-size:32px} .timeline-subtitle{font-size:18px} }
         .marcus-intro{ max-width:800px; margin:0 auto 48px; text-align:left; font-family:Inter,-apple-system,sans-serif; font-size:18px; line-height:1.8; color:#374151 }
         .marcus-intro strong{ font-weight:600; color:#1F2937 }
-        .timeline-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; margin:0 auto 64px; max-width:1200px }
-        .timeline-box{ background:#fff; border:2px solid #E5E7EB; border-radius:16px; padding:28px; aspect-ratio:1/1.1; min-height:280px }
-        .timeline-box h3{ font-size:14px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#6B7280; margin:0 0 4px }
-        .timeline-box .subtitle{ font-size:20px; font-weight:600; color:#1F2937; margin:0 0 20px }
-        .timeline-box p{ font-size:16px; line-height:1.6; color:#374151; margin:0 0 12px }
+        .timeline-grid{ display:grid; grid-template-columns:repeat(4, minmax(260px,1fr)); gap:24px; margin:0 auto 64px; max-width:1200px }
+        .timeline-box{ background:#fff; border:2px solid #E5E7EB; border-radius:16px; padding:28px; min-height:360px; box-shadow:0 2px 8px rgba(0,0,0,.03); display:flex; flex-direction:column; justify-content:flex-start; overflow-wrap:anywhere }
+        .timeline-box h3{ font-size:14px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#6B7280; margin:0 0 6px }
+        .timeline-box .subtitle{ font-size:20px; font-weight:600; color:#1F2937; margin:0 0 16px }
+        .timeline-box p{ font-size:16px; line-height:1.6; color:#374151; margin:0 0 8px }
         .timeline-box ul{ list-style:none; padding:0; margin:12px 0 }
-        .timeline-box ul li{ font-size:16px; line-height:1.6; color:#374151; margin-bottom:8px }
-        .timeline-box ul li::before{ content:'•'; margin-right:8px; color:#14b8a6 }
+        .timeline-box ul li{ font-size:16px; line-height:1.6; color:#374151; margin-bottom:6px; display:flex; align-items:flex-start; gap:8px }
+        .timeline-box ul li::before{ content:'•'; color:#14b8a6 }
         .timeline-box.breakthrough{ background:rgba(251,191,36,.04); border:3px solid #F59E0B }
         .checklist li::before{ content:'✓'; color:#10B981; font-weight:700; margin-right:8px }
+        @media(max-width:1200px){ .timeline-grid{ grid-template-columns:repeat(3, minmax(260px,1fr)) } }
+        @media(max-width:1024px){ .timeline-grid{ grid-template-columns:repeat(2, minmax(260px,1fr)) } .timeline-box{ min-height:340px } }
+        @media(max-width:640px){ .timeline-grid{ grid-template-columns:1fr; gap:20px } .timeline-box{ min-height:0 } }
         @media(max-width:1024px){ .timeline-grid{ grid-template-columns:repeat(2,1fr); gap:20px } }
         @media(max-width:640px){ .timeline-grid{ grid-template-columns:1fr; gap:16px } .timeline-box{ padding:20px } }
         .timeline-explanation{ max-width:800px; margin:0 auto 48px; text-align:center }
