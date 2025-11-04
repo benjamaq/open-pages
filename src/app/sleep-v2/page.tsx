@@ -95,25 +95,7 @@ export default function SleepLandingV2() {
 
       
 
-      {/* SECTION 9: TIMELINE EXPECTATIONS */}
-      <Section className="bg-[#F5F5F5]">
-        <Container>
-          <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4 text-center">How long until you find your trigger?</h2>
-          <p className="text-xl text-gray-600 mb-12 text-center">Most people see their first breakthrough in 7-14 days</p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title:'Days 1–3: Getting started', body:'Record baseline sleep, mood, pain. Add what you’re trying (supplements, caffeine, workouts, meals, stress).'},
-              { title:'Days 4–7: First patterns emerge', body:'The system begins to test timing windows and interactions. Expect early hypotheses and small adjustments.'},
-              { title:'Days 7–14: Breakthrough moment', body:'A clear pattern usually emerges (e.g., caffeine cutoff, exercise timing, room temperature). This card is highlighted.'},
-            ].map((c, i) => (
-              <div key={c.title} className={`rounded-2xl border p-6 ${i===2? 'border-[#E8B86D] bg-[#FFF9F0]':'border-gray-200 bg-white'}`}>
-                <h3 className="text-lg font-semibold text-black mb-2">{c.title}</h3>
-                <p className="text-gray-700 leading-relaxed">{c.body}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </Section>
+      {/* Removed previous timeline expectations section (replaced by new sections) */}
       <FounderStory />
       <AdditionalFeatures />
       {/* Pricing positioned after Additional Features */}

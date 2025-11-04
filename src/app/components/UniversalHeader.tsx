@@ -8,16 +8,15 @@ const tomorrow = Tomorrow({ subsets: ["latin"], weight: ["400", "500", "600", "7
 export default function UniversalHeader() {
   const pathname = usePathname() || "/";
   const isActive = (p: string) => pathname === p;
-  const onLanding = ["/", "/sleep", "/pain", "/migraines", "/migraine"].some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
+  // Use transparent, white-text header only on sleep landing (root or /sleep)
+  const transparentLanding = pathname === "/" || pathname.startsWith("/sleep");
 
-  const headerClass = onLanding
+  const headerClass = transparentLanding
     ? "absolute top-0 left-0 right-0 z-30"
     : "border-b border-gray-100 bg-white";
-  const logoTitleClass = onLanding ? `${tomorrow.className} text-xl md:text-3xl font-medium text-white whitespace-nowrap` : `${tomorrow.className} text-xl md:text-2xl font-medium text-gray-900 whitespace-nowrap`;
-  const navLinkBase = onLanding ? "text-sm md:text-base text-white/85 hover:text-white" : "text-sm md:text-base text-gray-700 hover:text-gray-900";
-  const navLinkActive = onLanding ? "text-white" : "text-purple-600 font-medium";
+  const logoTitleClass = transparentLanding ? `${tomorrow.className} text-xl md:text-3xl font-medium text-white whitespace-nowrap` : `${tomorrow.className} text-xl md:text-2xl font-medium text-gray-900 whitespace-nowrap`;
+  const navLinkBase = transparentLanding ? "text-sm md:text-base text-white/85 hover:text-white" : "text-sm md:text-base text-gray-700 hover:text-gray-900";
+  const navLinkActive = transparentLanding ? "text-white" : "text-purple-600 font-medium";
   const ctaClass = "inline-flex items-center justify-center h-11 rounded-md bg-[#F4B860] px-5 text-[#2C2C2C] font-semibold hover:bg-[#E5A850]";
 
   return (
