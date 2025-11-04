@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import BrandSparkIcon from '@/components/BrandSparkIcon'
 
 interface HowItWorksScreenProps {
   isOpen: boolean
@@ -16,7 +17,7 @@ export default function HowItWorksScreen({ isOpen, onContinue }: HowItWorksScree
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 sm:p-8">
           <div className="text-center mb-6">
-            <div className="text-4xl mb-2">💙</div>
+            <div className="mb-2 flex justify-center"><BrandSparkIcon size={40} /></div>
             <h2 className="text-2xl font-bold text-gray-900">Here’s how this works</h2>
           </div>
 

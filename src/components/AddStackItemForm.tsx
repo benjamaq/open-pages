@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import BrandSparkIcon from './BrandSparkIcon'
 import { addStackItem } from '../lib/actions/stack'
 import { useRouter } from 'next/navigation'
 import { checkItemLimit } from '../lib/actions/trial-limits'
@@ -223,7 +224,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
             <div className={`flex-1 ${itemType === 'supplements' ? 'pt-1 sm:pt-2 px-3 sm:px-5' : 'p-3 sm:p-5'} space-y-3 sm:space-y-5`}>
             {itemType === 'supplements' && isOnboarding && (
               <div className="text-center">
-                <div className="text-4xl mb-2">💙</div>
+                <div className="mb-2 flex justify-center"><BrandSparkIcon size={40} /></div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
                 <p className="text-sm sm:text-base text-gray-600 mt-2">
                   Knowing what you’re taking helps us find patterns faster — but you can always add this later.

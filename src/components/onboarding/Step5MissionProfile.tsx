@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import BrandSparkIcon from '@/components/BrandSparkIcon'
 import { createClient } from '@/lib/supabase/client'
 
 interface Step5MissionProfileProps {
@@ -58,7 +59,7 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="max-w-2xl mx-auto p-6">
-          <p className="text-2xl mb-4 text-center">💙</p>
+          <div className="mb-2 flex justify-center"><BrandSparkIcon size={40} /></div>
           <h2 className="text-2xl font-medium mb-3 text-center">What are you working toward?</h2>
           <p className="text-gray-600 mb-4 text-center">
             Understanding your goals helps me support you better.
