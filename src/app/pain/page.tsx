@@ -25,10 +25,16 @@ export default function PainPage() {
       </section>
       {staticHtml ? (
         <section className="bg-white">
-          {/* Hide the static page's own header/navigation to avoid duplication */}
-          <style>{`.site-header{display:none !important}`}</style>
-          <div className="container mx-auto px-4 py-8">
-            <div className="prose max-w-none w-full" dangerouslySetInnerHTML={{ __html: staticHtml }} />
+          {/* Hide the static page's own header/navigation and trust badges; tighten hero spacing */}
+          <style>{`
+            .site-header{display:none !important}
+            .below-nav{display:none !important}
+            .pain-embed .section-label{display:none !important}
+            .pain-embed .section-label + span{display:none !important}
+            .pain-embed section:first-of-type{padding-top:20px !important}
+          `}</style>
+          <div className="container mx-auto px-4 py-4">
+            <div className="prose max-w-none w-full pain-embed" dangerouslySetInnerHTML={{ __html: staticHtml }} />
           </div>
         </section>
       ) : null}

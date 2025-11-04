@@ -38,7 +38,7 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `💙\n\nWelcome to BioStackr\n\nLet's figure out what's going on with your health.\n\nWe'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
+  const welcomeMessage = `✨\n\nHey ${userName}, welcome to BioStackr\n\nI'm really happy you're here.\n\nLet's figure out what's going on with your health — we'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
 
   const dropdowns: { key: string; label: string; options: string[] }[] = [
     { key: 'sleep', label: 'Sleep', options: ['General sleep issues','Insomnia','Sleep apnea','Other sleep concerns'] },
