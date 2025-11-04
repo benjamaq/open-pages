@@ -932,7 +932,18 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           <div className="px-6 pt-6">
             <div className="text-center mb-6 space-y-3">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <span className="text-2xl">💙</span>
+                {/* Brand icon */}
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line x1="24" y1="8" x2="24" y2="15" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="24" y1="33" x2="24" y2="40" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="8" y1="24" x2="15" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="33" y1="24" x2="40" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="13" y1="13" x2="18" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="30" y1="30" x2="35" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="35" y1="13" x2="30" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="18" y1="30" x2="13" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M24 18L28 24L24 30L20 24Z" fill="#F4B860"/>
+                </svg>
                 <p className="text-xl">Hey {userName}</p>
               </div>
               <p className="text-base text-gray-700">Let's see where you're at today.</p>

@@ -203,7 +203,17 @@ export default function SymptomAnalysisCard({
     return (
       <div className={`bg-purple-50 border border-purple-200 rounded-xl p-4 ${className}`}>
         <div className="flex items-start gap-3">
-          <span className="text-2xl">💙</span>
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="24" y1="8" x2="24" y2="15" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="24" y1="33" x2="24" y2="40" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="8" y1="24" x2="15" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="33" y1="24" x2="40" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="13" y1="13" x2="18" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="30" y1="30" x2="35" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="35" y1="13" x2="30" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="18" y1="30" x2="13" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M24 18L28 24L24 30L20 24Z" fill="#F4B860"/>
+          </svg>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium text-gray-700">Elli is analyzing your check-in...</span>
@@ -224,7 +234,17 @@ export default function SymptomAnalysisCard({
   return (
     <div className={`bg-purple-50 border border-purple-200 rounded-xl p-4 ${className}`}>
       <div className="flex items-start gap-3">
-        <span className="text-3xl sm:text-4xl">💙</span>
+        <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="24" y1="8" x2="24" y2="15" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="24" y1="33" x2="24" y2="40" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="8" y1="24" x2="15" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="33" y1="24" x2="40" y2="24" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="13" y1="13" x2="18" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="30" y1="30" x2="35" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="35" y1="13" x2="30" y2="18" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="18" y1="30" x2="13" y2="35" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M24 18L28 24L24 30L20 24Z" fill="#F4B860"/>
+        </svg>
         <div className="flex-1">
           {/* Main empathetic response */}
           <div className="mb-3">

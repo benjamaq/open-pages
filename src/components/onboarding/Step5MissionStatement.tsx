@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import BrandSparkIcon from '@/components/BrandSparkIcon'
 import { createClient } from '@/lib/supabase/client'
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding'
 
@@ -51,7 +52,7 @@ export default function Step5MissionStatement({ userId, displayName, onNext, onS
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="text-center mb-8">
-        <div className="text-4xl mb-4">💙</div>
+        <div className="mb-2 flex justify-center"><BrandSparkIcon size={48} /></div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">What are you working toward?</h2>
         <p className="text-lg text-gray-700">This helps me understand what success looks like for you. No pressure, no judgment — just honest.</p>
       </div>
