@@ -53,7 +53,7 @@ export default function ElliIntroModal({
         {/* Header */}
         <div className="relative p-6 border-b border-gray-100">
           <div className="flex justify-center mb-4">
-            <span className="text-5xl">💙</span>
+            <span className="text-5xl">✨</span>
           </div>
 
         </div>
