@@ -83,8 +83,8 @@ export default function SleepLandingV2() {
       
 
       <RealPatternsCarousel />
-      <CustomTagsSection />
       <TimelineStorySection />
+      <CustomTagsSection />
 
       
       
