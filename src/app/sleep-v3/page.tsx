@@ -3,6 +3,8 @@ export const metadata = {
   description: 'Find your first clear sleep pattern in 7–14 days with a 20-second daily check-in.'
 };
 
+import Link from 'next/link'
+import AuthButton from '@/components/AuthButton'
 const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
@@ -48,7 +50,16 @@ function Hero() {
       {/* Night sky stars */}
       <Starfield count={150} opacity={0.7} />
       <Container>
-        <div className="flex flex-col items-center text-center gap-6 py-20 md:py-28">
+        {/* Top inside-hero row: logo + nav + CTA */}
+        <div className="flex items-center justify-between pt-5">
+          <div className="text-2xl md:text-3xl font-extrabold tracking-[0.08em]">BIOSTACKʁ</div>
+          <div className="flex items-center gap-4">
+            <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
+            <AuthButton />
+            <PrimaryCTA className="hidden sm:inline-flex" />
+          </div>
+        </div>
+        <div className="flex flex-col items-center text-center gap-6 py-12 md:py-20">
           <h1 className="max-w-4xl text-4xl font-extrabold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
           <p className="max-w-3xl text-lg text-white/85">
             You’ve tried magnesium, mouth tape, no screens, early workouts — and you’re still awake at 2am. The answer isn’t another hack. It’s in your patterns — and you can see them in a week.
@@ -325,15 +336,6 @@ function FinalCTA() {
 export default function SleepV3Page() {
   return (
     <main className="scroll-smooth">
-      {/* Sticky top CTA (desktop and tablet) */}
-      <div className="sticky top-0 z-40 hidden w-full bg-slate-900/80 py-2 backdrop-blur sm:block">
-        <Container>
-          <div className="flex items-center justify-between text-sm text-white/90">
-            <span>BioStackr</span>
-            <PrimaryCTA />
-          </div>
-        </Container>
-      </div>
       <Hero />
       <PatternShowcase />
       <HowItWorks />
