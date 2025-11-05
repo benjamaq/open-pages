@@ -66,10 +66,9 @@ export default function SleepLandingV2() {
             </div>
             <div className="mt-12 text-center">
               <div className="text-white/85 flex flex-wrap gap-4 justify-center text-[14px] sm:text-[15px]">
-                <span>✓ No app store</span>
-                <span>✓ No wearable</span>
                 <span>✓ 20-second check-in</span>
-                <span>✓ Patterns in 7-14 days</span>
+                <span>✓ No wearable required</span>
+                <span>✓ Patterns in 7–14 days</span>
                 <span>✓ Private by default</span>
               </div>
             </div>
