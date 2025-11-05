@@ -3,7 +3,7 @@ export const metadata = {
   description: 'Find your first clear sleep pattern in 7–14 days with a 20-second daily check-in.'
 };
 
-const CTA_TEXT = "See What’s Keeping Me Awake — Free";
+const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
   return (
@@ -52,9 +52,9 @@ function Hero() {
 
           {/* Proof strip */}
           <div className="mt-2 w-full max-w-3xl rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <p className="text-base font-semibold">4,287 patterns discovered</p>
-              <p className="text-sm text-white/85">“Found my trigger in 5 days. First full night in 18 months.” — Alex, 29</p>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-sm text-white/90">4,287 people found their trigger in ~9 days.</p>
+              <p className="text-xs text-white/70">You’re next.</p>
             </div>
           </div>
 
@@ -118,9 +118,9 @@ function PatternShowcase() {
 
 function HowItWorks() {
   const steps = [
-    { title: 'Log (20s/day)', text: 'Sleep quality + what you did (caffeine, exercise, stress, screens).', icon: '📝' },
-    { title: 'We connect the dots', text: 'We test timing and interactions to surface likely triggers.', icon: '🔍' },
-    { title: 'You act', text: 'Try what works. Ditch what doesn’t. Sleep improves.', icon: '✅' },
+    { title: 'Log — 20 seconds', text: 'Note sleep + what you did (coffee, stress, screens).', icon: '📝' },
+    { title: 'Elli finds your trigger', text: "Example: ‘It’s not stress. It’s the 3pm latte.’", icon: '🔍' },
+    { title: 'Sleep better', text: 'One change. One week. One win.', icon: '✅' },
   ];
   return (
     <Section id="how-it-works" className="bg-white">
@@ -249,8 +249,8 @@ function Pricing() {
             <p className="mt-2 text-3xl font-extrabold text-slate-900">$0 <span className="text-base font-medium text-slate-500">/ month</span></p>
             <ul className="mt-4 space-y-2 text-slate-700">
               <li>✓ 20‑second daily check‑ins</li>
-              <li>✓ Pattern discovery</li>
-              <li>✓ Private by default</li>
+              <li>✓ First pattern (7–14 days)</li>
+              <li>✓ Privacy by default</li>
             </ul>
             <a href="#get-started" className="mt-6 inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free</a>
           </div>
@@ -259,11 +259,11 @@ function Pricing() {
             <p className="mt-2 text-3xl font-extrabold text-slate-900">$9.99 <span className="text-base font-medium text-slate-500">/ month</span></p>
             <ul className="mt-4 space-y-2 text-slate-700">
               <li>✓ Everything in Free</li>
-              <li>✓ Unlimited items to track</li>
-              <li>✓ Priority support</li>
+              <li>✓ FULL pattern engine</li>
               <li>✓ Export your data</li>
+              <li>✓ Priority support</li>
             </ul>
-            <a href="#get-started" className="mt-6 inline-flex rounded-xl bg-[#F4B860] px-5 py-3 font-semibold text-slate-900 hover:bg-[#E5A850]">Try Premium</a>
+            <a href="#get-started" className="mt-6 inline-flex rounded-xl bg-[#F4B860] px-5 py-3 font-semibold text-slate-900 hover:bg-[#E5A850]">Unlock Full Patterns →</a>
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-500">No credit card for Free. Cancel anytime.</p>
