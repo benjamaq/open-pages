@@ -21,15 +21,13 @@ export default function CustomTagsSection() {
         </div>
 
         <div className="tags-showcase">
-          <h3 className="tags-showcase-label">Examples of custom tags created by BioStackr users:</h3>
-          <div className="tags-grid">
-            {[
-              '🥊 Fight with girlfriend','💪 Cold shower','🍷 Wine with dinner','🧘 Meditated >15min',
-              '💼 Worked past 9pm','🛏️ Had sex','📞 Took work call late','😤 Argued with boss'
-            ].map((t) => (
-              <div key={t} className="tag-pill">{t}</div>
+          <h3 className="tags-showcase-label">Examples you can track:</h3>
+          <div className="tag-examples-row">
+            {['💔 Fight with girlfriend','📱 Phone in bedroom','😴 Napped >30min','☀️ Bright morning light','🍕 Ate late','✈️ Travel day','🕶️ Blue-light glasses','💊 2nd coffee after 2pm'].map((t) => (
+              <span key={t} className="tag-chip">{t}</span>
             ))}
           </div>
+          <p className="micro-note">One-tap suggestions learn from your history.</p>
         </div>
 
         <div className="tag-creation-mockup-compact">
@@ -49,11 +47,13 @@ export default function CustomTagsSection() {
           </div>
         </div>
 
-        <div className="tag-story-example">
-          <p><strong>Remember Jake?</strong> Here's the magnesium discovery in detail:</p>
-          <p>Jake tracked "took magnesium" every night for months, assuming it was helping his anxiety. After 6 weeks of data, BioStackr found the opposite: magnesium correlated with <strong>HIGHER anxiety scores</strong> the next day. He stopped taking it. Anxiety dropped significantly within a week.</p>
-          <p className="story-emphasis">He'd been following common advice for months. It was making things worse for his body.</p>
-        </div>
+        <details className="jake-details">
+          <summary>Read the magnesium discovery story →</summary>
+          <div className="story-content">
+            <p>One user tracked "took magnesium" every night for months, assuming it was helping his anxiety. After 6 weeks of data, BioStackr found the opposite: magnesium correlated with <strong>HIGHER anxiety scores</strong> the next day. He stopped taking it. Anxiety dropped significantly within a week.</p>
+            <p>He'd been following common advice for months. It was making things worse for his body.</p>
+          </div>
+        </details>
 
         <div className="custom-tags-cta">
           <p>Track what matters to you. Not what an app thinks should matter.</p>
@@ -78,11 +78,10 @@ export default function CustomTagsSection() {
         @media (max-width:640px){ .custom-tags-intro{margin-bottom:40px} .custom-tags-intro p{font-size:16px} }
         .tags-showcase{ margin-bottom:40px }
         .tags-showcase-label{ font-family:Inter,-apple-system,sans-serif; font-size:17px; font-weight:600; color:#374151; text-align:center; margin:0 0 20px }
-        .tags-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:900px; margin:0 auto }
-        .tag-pill{ background:#fff; border:1px solid #E5E7EB; border-radius:20px; padding:8px 16px; font-family:Inter,-apple-system,sans-serif; font-size:14px; font-weight:500; color:#374151; text-align:center; transition:all .2s ease }
-        .tag-pill:hover{ border-color:#F4B860; box-shadow:0 2px 8px rgba(244,184,96,.15); transform:translateY(-1px) }
-        @media (max-width:1024px){ .tags-grid{grid-template-columns:repeat(2,1fr); gap:10px} .tag-pill{font-size:15px; padding:10px 16px} }
-        @media (max-width:640px){ .tags-showcase{margin-bottom:40px} .tags-grid{grid-template-columns:1fr; gap:8px} .tag-pill{font-size:14px; white-space:normal} }
+        .tag-examples-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:900px; margin:0 auto 12px }
+        .tag-chip{ background:#fff; border:2px solid #E5E7EB; padding:10px 16px; border-radius:20px; font-size:15px; color:#374151; white-space:nowrap }
+        .micro-note{ text-align:center; font-size:14px; color:#6B7280; margin-top:8px }
+        @media (max-width:640px){ .tag-examples-row{ gap:8px } .tag-chip{ font-size:14px } }
         .tag-creation-mockup-compact{ max-width:600px; margin:0 auto 40px }
         .mockup-label{ font-family:Inter,-apple-system,sans-serif; font-size:17px; font-weight:600; color:#374151; text-align:center; margin:0 0 16px }
         .mockup-container{ background:#fff; border:2px solid #E5E7EB; border-radius:12px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.04) }
@@ -95,10 +94,12 @@ export default function CustomTagsSection() {
         .suggestions-label{ font-size:13px; font-weight:600; color:#6B7280; margin:0 0 8px; text-transform:uppercase; letter-spacing:.05em }
         .suggestion{ display:inline-block; font-family:Inter,-apple-system,sans-serif; font-size:14px; color:#6B7280; margin-right:16px }
         @media (max-width:640px){ .tag-creation-mockup-compact{margin-bottom:40px} .mockup-container{padding:20px} .mockup-input-row{flex-direction:column} .mockup-button{width:100%} .mockup-suggestions{flex-direction:column; align-items:center; gap:12px} }
-        .tag-story-example{ max-width:900px; margin:0 auto 40px; padding:24px 32px; background:rgba(244,184,96,.05); border-left:4px solid #F4B860; border-radius:8px }
-        .tag-story-example p{ font-family:Inter,-apple-system,sans-serif; font-size:17px; line-height:1.7; color:#374151; margin:0 0 14px }
-        .story-emphasis{ font-size:18px !important; font-weight:500 !important; color:#1F2937 !important }
-        @media (max-width:640px){ .tag-story-example{ margin-bottom:40px; padding:24px 20px } .tag-story-example p{ font-size:16px } .story-emphasis{ font-size:16px !important } }
+        .jake-details{ max-width:700px; margin:40px auto 0; text-align:left }
+        .jake-details summary{ font-size:16px; font-weight:600; color:#7C3AED; cursor:pointer; text-align:center; padding:12px; list-style:none }
+        .jake-details summary::-webkit-details-marker{ display:none }
+        .jake-details .story-content{ padding:24px; background:#fff; border-radius:12px; border-left:4px solid #F59E0B; margin-top:16px }
+        .jake-details .story-content p{ font-size:16px; line-height:1.6; color:#374151; margin:0 0 16px }
+        .jake-details .story-content p:last-child{ margin-bottom:0 }
         .custom-tags-cta{ text-align:center; margin-top:0 }
         .custom-tags-cta p{ font-family:Inter,-apple-system,sans-serif; font-size:18px; color:#374151; margin:0 0 20px }
         .closing-tagline{ font-size:20px !important; font-weight:600 !important; color:#1F2937 !important; margin:32px 0 24px !important }

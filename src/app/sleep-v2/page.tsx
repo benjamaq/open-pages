@@ -54,18 +54,23 @@ export default function SleepLandingV2() {
               <br />
               One Week to Find Why.
             </h1>
-            <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-8 max-w-[760px] mx-auto text-center">
-              <p>You've tried magnesium, no caffeine, sleep hygiene, meditation. Nothing works because you haven't found your pattern yet.</p>
+            <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-3 max-w-[760px] mx-auto text-center">
+              <p>You've tried the usual fixes. Most sleep problems start long before bed. BioStackr connects your day to your sleep so you can stop guessing.</p>
             </div>
-            <div className="flex gap-4 flex-wrap mb-4 justify-center">
-              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'start_sleep_discovery' }); onCta('lead', { cta: 'start_sleep_discovery' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#F4B860] h-12 px-6 text-[16px] font-semibold text-[#2C2C2C] transition-all hover:bg-[#E5A850]">Start Sleep Discovery →</Link>
+            <div className="text-white/90 italic text-[16px] sm:text-[18px] text-center mb-6">
+              <p>Your job: A 20-second check-in daily.<br />(You spend more time choosing your socks.)</p>
+            </div>
+            <div className="flex gap-4 flex-wrap mb-2 justify-center">
+              <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_my_sleep_pattern' }); onCta('lead', { cta: 'find_my_sleep_pattern' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#F4B860] h-12 px-6 text-[16px] font-semibold text-[#2C2C2C] transition-all hover:bg-[#E5A850]">Find My Sleep Pattern – Free</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-[#F4B860] px-8 h-12 text-[16px] font-semibold text-white transition-all hover:bg-[#F4B860] hover:text-[#2C2C2C]">See How It Works</Link>
             </div>
-            <div className="mt-8 text-center">
-              <div className="text-white/90 space-y-1">
-                <p className="text-sm md:text-base">✓ Join 1,200+ people tracking with BioStackr</p>
-                <p className="text-sm md:text-base">✓ No devices needed • No credit card required</p>
-                <p className="text-sm md:text-base">✓ Most people start seeing patterns within their first week</p>
+            <div className="mt-4 text-center">
+              <div className="text-white/85 flex flex-wrap gap-4 justify-center text-[14px] sm:text-[15px]">
+                <span>✓ No app store</span>
+                <span>✓ No wearable</span>
+                <span>✓ 20-second check-in</span>
+                <span>✓ Patterns in 7-14 days</span>
+                <span>✓ Private by default</span>
               </div>
             </div>
             
@@ -75,6 +80,10 @@ export default function SleepLandingV2() {
 
       {/* Section 2: Results/Patterns (new) */}
       <ResultsPatterns />
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] z-50 md:hidden">
+        <Link href="/auth/signup" className="block w-full text-center rounded-lg bg-[#F4B860] px-5 py-3 text-base font-semibold text-[#2C2C2C] hover:bg-[#E5A850]">Start Free — 20s/day</Link>
+      </div>
 
       {/* Section 3: How It Works */}
       <div id="how-it-works"><HowItWorks /></div>
@@ -116,7 +125,7 @@ export default function SleepLandingV2() {
                 <p className="text-gray-600">Perfect for getting started</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {['Track up to 12 items','Daily check-ins (20 seconds)','Pattern detection','Basic insights'].map((li) => (
+                {['20-second daily check-ins','Track up to 12 items','Pattern detection','Basic insights','Most see a pattern within 7-14 days'].map((li) => (
                   <li key={li} className="flex items-start gap-3"><svg className="h-6 w-6 text-[#E8B86D] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg><span className="text-gray-700">{li}</span></li>
                 ))}
               </ul>
@@ -130,14 +139,14 @@ export default function SleepLandingV2() {
                 <p className="text-gray-600">For serious sleep optimization</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {['Everything in Free','Unlimited items to track','Priority support','Export your data'].map((li) => (
+                {['Everything in Free','Unlimited items to track','Priority support','Export your data','Full pattern report unlocks at Day 7'].map((li) => (
                   <li key={li} className="flex items-start gap-3"><svg className="h-6 w-6 text-[#E8B86D] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg><span className="text-gray-900 font-medium">{li}</span></li>
                 ))}
               </ul>
               <Link href="/auth/signup/pro" onClick={() => { onCta('cta_click', { cta: 'start_premium' }); onCta('begin_checkout', { plan: 'pro' }); }} className="block w-full text-center rounded-lg bg-[#E8B86D] px-6 py-3 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Start Premium</Link>
             </div>
           </div>
-          <p className="text-center text-sm text-gray-500 mt-8">Cancel anytime · No credit card required for free plan</p>
+          <p className="text-center text-sm text-gray-500 mt-8">7-day money-back guarantee • Cancel anytime</p>
         </Container>
       </Section>
       <FAQ />

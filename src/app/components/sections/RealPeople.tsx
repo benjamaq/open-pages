@@ -3,35 +3,23 @@ export default function RealPeople() {
     {
       initial: 'A',
       name: 'Alex, 29',
-      location: 'Insomnia · Portland',
-      story: [
-        "I've had terrible sleep for like 3 years. Tried everything — magnesium, fancy sleep apps, even paid for a sleep coach who told me to 'relax more' which, thanks for nothing.",
-        "Started using BioStackr mostly because I was desperate and it was free. After about 2 weeks it flagged that I was eating really late on weeknights (dinner around 9pm because of work). When I ate earlier, even by just an hour, I'd actually fall asleep.",
-        "I'm still not perfect but I'm getting like 6 solid hours now instead of 4 broken ones. That's huge for me.",
-      ],
-      timeline: 'Started seeing patterns around day 12',
+      location: 'Portland',
+      quote: 'Cut afternoon coffee and phone out of bedroom. Fell asleep 30-45 min faster by day 12.',
+      img: '/male image.png',
     },
     {
       initial: 'L',
       name: 'Lars, 38',
-      location: 'Poor Sleep · Copenhagen',
-      story: [
-        "Bought an Oura ring last year. Wasn't cheap — and basically just confirmed what I already knew — my sleep sucks. Didn't tell me why though.",
-        "Someone mentioned this app in a Reddit thread. The AI picked up that my afternoon coffee was the problem. I drink it around 2-3pm thinking it's fine, but apparently it wasn't.",
-        "Cut the afternoon coffee, sleep improved. Not like, amazing, but definitely better. Wish I'd known this before spending all that money on a ring.",
-      ],
-      timeline: 'Coffee pattern showed up after a week',
+      location: 'Copenhagen',
+      quote: 'Thought my sleep was fine. Patterns showed evening workouts wrecked me. Moved to mornings; sleep steadier within a week.',
+      img: '/abstract image2.png',
     },
     {
       initial: 'M',
       name: 'Maya, 34',
-      location: 'Sleep Issues · Toronto',
-      story: [
-        "I work late and then go to the gym around 8pm because that's when I have time. Never connected it to my sleep problems until I started tracking everything in here.",
-        "The pattern was pretty clear after 10 days or so — late workouts = I'm wired until like 1am. Early morning workouts (even though I hate them) and I'm out by 11.",
-        "Still adjusting but at least now I know what the problem is instead of just guessing.",
-      ],
-      timeline: 'Took about 10 days',
+      location: 'Toronto',
+      quote: "Combo I missed: wine + short sleep = disaster. Avoided that combo, haven't had a 2 AM night in 10 days.",
+      img: '/female image.png',
     },
   ];
   return (
@@ -41,18 +29,10 @@ export default function RealPeople() {
         <p className="text-center text-gray-600 text-lg mb-16 max-w-2xl mx-auto">Real stories. Real breakthroughs. Usually in 7-14 days.</p>
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {testimonials.map((t, i) => (
-            <div key={i} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="flex flex-col items-center text-center mb-6">
-                <img src={i === 0 ? '/female image.png' : i === 1 ? '/male image.png' : '/abstract image3.png'} alt={t.name} className="w-20 h-20 rounded-full object-cover border-4 border-purple-500 mb-3" />
-                <div className="font-bold text-lg">{t.name}</div>
-                <div className="text-sm text-gray-600">{t.location}</div>
-              </div>
-              <div className="space-y-4 text-gray-700 leading-relaxed">
-                {t.story.map((p, pi) => (<p key={pi}>{p}</p>))}
-              </div>
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <p className="text-sm text-[#F4B860] font-medium">{t.timeline}</p>
-              </div>
+            <div key={i} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow text-center">
+              <img src={t.img} alt={t.name} className="w-20 h-20 rounded-full object-cover border-4 border-purple-500 mx-auto mb-4" />
+              <blockquote className="text-gray-700 italic mb-3">“{t.quote}”</blockquote>
+              <p className="text-sm font-semibold text-gray-700">— {t.name}, {t.location}</p>
             </div>
           ))}
         </div>
