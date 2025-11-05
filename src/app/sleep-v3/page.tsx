@@ -8,13 +8,13 @@ import AuthButton from '@/components/AuthButton'
 import Image from 'next/image'
 import { Tomorrow } from 'next/font/google'
 const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
-const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['700'] })
+const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['600'] })
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="#get-started"
-      className={`inline-flex items-center justify-center rounded-xl bg-[#F4B860] px-4 py-2.5 text-sm md:text-base font-semibold text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg bg-[#F4B860] px-3.5 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
     >
       {CTA_TEXT}
     </a>
@@ -25,7 +25,7 @@ function SecondaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="#how-it-works"
-      className={`inline-flex items-center justify-center rounded-xl border border-white/30 px-4 py-2.5 text-sm md:text-base font-semibold text-white/90 hover:bg-white/5 ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg border border-white/30 px-3.5 py-2 text-sm font-medium text-white/90 hover:bg-white/5 ${className}`}
     >
       How It Works (20 seconds/day)
     </a>
@@ -48,55 +48,45 @@ import Starfield from '@/components/Starfield';
 
 function Hero() {
   return (
-    <header className="relative isolate overflow-hidden bg-gradient-to-b from-slate-800 via-slate-800 to-slate-700 text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.06),transparent_45%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.05),transparent_40%)]" />
-      {/* Night sky stars */}
-      <Starfield count={150} opacity={0.55} />
+    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#EAF2FF] via-[#F6FAFF] to-[#FFFFFF] text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(13,110,253,0.08),transparent_45%),radial-gradient(circle_at_80%_15%,rgba(99,102,241,0.07),transparent_50%),radial-gradient(circle_at_60%_70%,rgba(56,189,248,0.06),transparent_45%)]" />
       <Container>
         {/* Top inside-hero row: logo + nav + CTA */}
         <div className="flex items-center justify-between pt-5">
-          <div className={`${tomorrow.className} text-3xl md:text-4xl font-extrabold tracking-[0.08em]`}>
+          <div className={`${tomorrow.className} text-2xl md:text-3xl font-semibold tracking-[0.08em]`}>
             <span>BIOSTACK</span>
-            <span className="inline-block align-baseline text-[1.15em] [transform:scaleX(-1)]">R</span>
+            <span className="inline-block align-baseline text-[1.1em] [transform:scaleX(-1)]">R</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
-            <AuthButton />
-            <PrimaryCTA className="hidden sm:inline-flex" />
+            <Link href="/contact" className="text-slate-700 hover:text-slate-900 text-sm md:text-base">Contact</Link>
+            <AuthButton showDashboardLink={false} />
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-6 py-12 md:py-20">
-          <h1 className="max-w-4xl text-4xl font-extrabold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
-          <p className="max-w-3xl text-lg text-white/85">
+          <h1 className="max-w-4xl text-4xl font-extrabold leading-tight md:text-6xl text-slate-900">Still can’t sleep? We’ll show you why.</h1>
+          <p className="max-w-3xl text-xl md:text-2xl leading-relaxed text-slate-700">
             You’ve tried magnesium, mouth tape, no screens, early workouts — and you’re still awake at 2am. The answer isn’t another hack. It’s in your patterns — and you can see them in a week.
           </p>
-
-          {/* Proof strip */}
-          <div className="mt-2 w-full max-w-3xl rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-sm text-white/90">4,287 people found their trigger in ~9 days.</p>
-              <p className="text-xs text-white/70">You’re next.</p>
-            </div>
-          </div>
 
           {/* CTAs */}
           <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
             <PrimaryCTA />
             <SecondaryCTA />
           </div>
+          <p className="text-slate-700 text-sm">Your job: a 20-second check-in. (You spend longer choosing socks.)</p>
 
-          <p className="text-white/85 text-sm">Your job: a 20-second check-in. (You spend longer choosing socks.)</p>
-
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/80 text-sm">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-slate-700 text-sm">
             <span>✓ No wearable</span>
             <span>✓ No credit card</span>
             <span>✓ First pattern in 7–14 days</span>
           </div>
+
+          <p className="mt-4 text-xs text-slate-600">4,200 people found a trigger in less than 9 days.</p>
         </div>
       </Container>
 
       {/* Sticky mobile bottom CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-slate-900/80 px-5 py-3 backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/80 px-5 py-2 backdrop-blur md:hidden border-t border-slate-200">
         <div className="mx-auto max-w-6xl">
           <PrimaryCTA className="w-full" />
         </div>
@@ -115,12 +105,12 @@ function PatternShowcase() {
             <div className="mt-6 space-y-4">
               <div>
                 <p className="text-sm font-medium text-slate-700">With phone in bedroom</p>
-                <div className="mt-2 h-3 w-full rounded-full bg-slate-100"><div className="h-3 rounded-full bg-red-300" style={{ width: '50%' }} /></div>
+                <div className="mt-2 h-3 w-full rounded-full bg-slate-100"><div className="h-3 rounded-full bg-[#FF7A7A]" style={{ width: '50%' }} /></div>
                 <p className="mt-1 text-xs text-slate-500">Sleep 5/10</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-700">Phone left outside</p>
-                <div className="mt-2 h-3 w-full rounded-full bg-slate-100"><div className="h-3 rounded-full bg-emerald-300" style={{ width: '70%' }} /></div>
+                <div className="mt-2 h-3 w-full rounded-full bg-slate-100"><div className="h-3 rounded-full bg-[#34D399]" style={{ width: '70%' }} /></div>
                 <p className="mt-1 text-xs text-slate-500">Sleep 7/10</p>
               </div>
             </div>
