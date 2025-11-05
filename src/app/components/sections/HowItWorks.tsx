@@ -27,7 +27,7 @@ export default function HowItWorks() {
           ))}
         </div>
         <div className="max-w-xl mx-auto bg-gray-50 rounded-xl p-5 mt-10">
-          <div className="flex items-center justify-between text-center">
+          <div className="flex items-start justify-between text-center">
             <div className="flex-1">
               <div className="inline-block bg-purple-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-1">Day 1</div>
               <p className="text-sm text-gray-600">Baseline</p>
