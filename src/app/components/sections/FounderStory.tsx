@@ -1,6 +1,6 @@
 export default function FounderStory() {
   return (
-    <section className="py-24 bg-gradient-to-br from-[#0f766e]/10 via-[#2A6B7A]/10 to-[#E9D6A8]/10">
+    <section className="py-24 bg-gradient-to-b from-[#1A4F5C]/20 via-[#2A6B7A]/20 to-[#0f766e]/20">
       <div className="container mx-auto px-6 max-w-3xl text-center">
         <img src="/mum photo.png" alt="Ben and his mum" className="w-full max-w-[500px] h-auto rounded-2xl mx-auto mb-10 shadow-xl" />
         <h2 className="text-3xl md:text-4xl font-bold mb-6">"I Built This After Watching My Mum Suffer"</h2>

@@ -79,10 +79,7 @@ export default function SleepLandingV2() {
 
       {/* Section 2: Results/Patterns (new) */}
       <ResultsPatterns />
-      {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] z-50 md:hidden">
-        <Link href="/auth/signup" className="block w-full text-center rounded-lg bg-[#F4B860] px-5 py-3 text-base font-semibold text-[#2C2C2C] hover:bg-[#E5A850]">Start Free — 20s/day</Link>
-      </div>
+      {/* Sticky Mobile CTA removed per request */}
 
       {/* Section 3: How It Works */}
       <div id="how-it-works"><HowItWorks /></div>
