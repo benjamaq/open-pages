@@ -62,7 +62,7 @@ export default function SleepLandingV2() {
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-[#F4B860] px-8 h-12 text-[16px] font-semibold text-white transition-all hover:bg-[#F4B860] hover:text-[#2C2C2C]">See How It Works →</Link>
             </div>
             <div className="text-white/90 italic text-[16px] sm:text-[18px] text-center mt-8">
-              <p>Your job: A 20-second check-in daily.<br />(You spend more time choosing your socks.)</p>
+              <p><span className="text-[#F4B860] font-semibold not-italic">Your job:</span> A 20-second check-in daily.<br />(You spend more time choosing your socks.)</p>
             </div>
             <div className="mt-12 text-center">
               <div className="text-white/85 flex flex-wrap gap-4 justify-center text-[14px] sm:text-[15px]">
