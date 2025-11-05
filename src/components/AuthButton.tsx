@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 
-export default function AuthButton({ showDashboardLink = true }: { showDashboardLink?: boolean }) {
+export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -79,14 +79,6 @@ export default function AuthButton({ showDashboardLink = true }: { showDashboard
   if (user) {
     return (
       <div className="flex items-center space-x-4">
-        {showDashboardLink && (
-          <Link 
-            href="/dash" 
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Dashboard
-          </Link>
-        )}
         <button
           onClick={handleSignOut}
           className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
