@@ -28,6 +28,7 @@ export default function ElliIntroModal({
   const [showTyping, setShowTyping] = useState(true);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -92,7 +93,7 @@ export default function ElliIntroModal({
                       {d.options.map((opt) => (
                         <button
                           key={opt}
-                          onClick={() => { setSelected(opt); onContinue(opt); }}
+                          onClick={() => { setSelected(opt); setError(null); }}
                           className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                         >
                           {opt}
@@ -102,9 +103,13 @@ export default function ElliIntroModal({
                   )}
                 </div>
               ))}
+              {error && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
               <button
-                onClick={() => onContinue(selected || 'Sleep & Insomnia Issues')}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                onClick={() => { if (!selected) { setError("Please choose why you're here to continue."); } else { onContinue(selected); } }}
+                disabled={!selected}
+                className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${selected ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
               >
                 I'm Ready →
               </button>
