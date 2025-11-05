@@ -15,6 +15,7 @@ import FAQ from "../components/sections/FAQ";
 import FinalCTA from "../components/sections/FinalCTA";
 import RealPatternsCarousel from "../components/sections/RealPatternsCarousel";
 import AdditionalFeatures from "../components/sections/AdditionalFeatures";
+import ResultsPatterns from "../components/sections/ResultsPatterns";
 import CustomTagsSection from "@/components/landing/CustomTagsSection";
 import TimelineStorySection from "@/components/landing/TimelineStorySection";
 
@@ -49,40 +50,41 @@ export default function SleepLandingV2() {
           <div className="max-w-4xl mx-auto">
             <p className="tracking-wide text-white/90 font-light text-[24px] sm:text-[28px] mb-6 text-center">Pattern Discovery for Your Health</p>
             <h1 className="text-[36px] sm:text-[40px] lg:text-[56px] font-bold text-white leading-snug mb-6 text-center">
-              Sleep trackers give you a score.
+              Two Years of Bad Sleep.
               <br />
-              BioStackr finds why you can't sleep.
+              One Week to Find Why.
             </h1>
             <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-8 max-w-[760px] mx-auto text-center">
-              <p>You've tried magnesium, mouth tape, no screens, early workouts — but you still can't sleep. BioStackr finds patterns that are unique to you so you can sleep again.</p>
+              <p>You've tried magnesium, no caffeine, sleep hygiene, meditation. Nothing works because you haven't found your pattern yet.</p>
             </div>
             <div className="flex gap-4 flex-wrap mb-4 justify-center">
               <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'start_sleep_discovery' }); onCta('lead', { cta: 'start_sleep_discovery' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#F4B860] h-12 px-6 text-[16px] font-semibold text-[#2C2C2C] transition-all hover:bg-[#E5A850]">Start Sleep Discovery →</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-[#F4B860] px-8 h-12 text-[16px] font-semibold text-white transition-all hover:bg-[#F4B860] hover:text-[#2C2C2C]">See How It Works</Link>
             </div>
             <div className="mt-8 text-center">
-              <p className="text-base md:text-lg font-medium text-white/90">
-                <span className="text-[#F4B860] font-bold">Your job:</span> A 20-second check-in daily.
-              </p>
-              <p className="text-base md:text-lg text-white/90">(You spend more time choosing your socks.)</p>
+              <div className="text-white/90 space-y-1">
+                <p className="text-sm md:text-base">✓ Join 1,200+ people tracking with BioStackr</p>
+                <p className="text-sm md:text-base">✓ No devices needed • No credit card required</p>
+                <p className="text-sm md:text-base">✓ Most people start seeing patterns within their first week</p>
+              </div>
             </div>
             
           </div>
         </Container>
       </section>
 
-      {/* New sections: Wearable Trap and Real People */}
-      <WearableTrap />
-      <RealPeople />
+      {/* Section 2: Results/Patterns (new) */}
+      <ResultsPatterns />
 
-      {/* HOW IT WORKS */}
-      <div id="how-it-works">
-        <HowItWorks />
-      </div>
+      {/* Section 3: How It Works */}
+      <div id="how-it-works"><HowItWorks /></div>
+
+      {/* Section 4: Testimonials (with photos) */}
+      <RealPeople />
 
       
 
-      <RealPatternsCarousel />
+      {/* Section 5: Founder story (move up) will render below; then Track Anything */}
       <TimelineStorySection />
       <CustomTagsSection />
 
@@ -96,6 +98,7 @@ export default function SleepLandingV2() {
       
 
       {/* Removed previous timeline expectations section (replaced by new sections) */}
+      {/* Section 5 continued: Founder story (moved up) */}
       <FounderStory />
       <AdditionalFeatures />
       {/* Pricing positioned after Additional Features */}

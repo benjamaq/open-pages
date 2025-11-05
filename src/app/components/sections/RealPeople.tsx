@@ -42,12 +42,10 @@ export default function RealPeople() {
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {testimonials.map((t, i) => (
             <div key={i} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-14 h-14 bg-[#F4B860] rounded-full flex items-center justify-center text-white font-bold text-xl">{t.initial}</div>
-                <div>
-                  <div className="font-bold text-lg">{t.name}</div>
-                  <div className="text-sm text-gray-600">{t.location}</div>
-                </div>
+              <div className="flex flex-col items-center text-center mb-6">
+                <img src={i === 0 ? '/female image.png' : i === 1 ? '/male image.png' : '/abstract image3.png'} alt={t.name} className="w-20 h-20 rounded-full object-cover border-4 border-purple-500 mb-3" />
+                <div className="font-bold text-lg">{t.name}</div>
+                <div className="text-sm text-gray-600">{t.location}</div>
               </div>
               <div className="space-y-4 text-gray-700 leading-relaxed">
                 {t.story.map((p, pi) => (<p key={pi}>{p}</p>))}
