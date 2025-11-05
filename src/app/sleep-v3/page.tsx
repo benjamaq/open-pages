@@ -52,19 +52,7 @@ function Hero() {
       {/* warm horizon glow */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#F4B860]/35 via-[#F4B860]/10 to-transparent" />
       <Container>
-        {/* Top inside-hero row: logo + nav + CTA */}
-        <div className="flex items-center justify-between pt-5">
-          <div className={`${tomorrow.className} text-xl sm:text-2xl md:text-3xl font-medium tracking-[0.06em]`}>
-            <span>BIOSTACK</span>
-            <span className="inline-block align-baseline text-[1.1em] [transform:scaleX(-1)]">R</span>
-          </div>
-          <div className="flex items-center gap-3 md:gap-5">
-            <Link href="/auth/signin" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base underline-offset-2 hover:underline">Sign In</Link>
-            <Link href="/auth/signup" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base underline-offset-2 hover:underline">Sign Up</Link>
-            <Link href="/contact" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base">Contact</Link>
-          </div>
-        </div>
-        <div className="flex flex-col items-center text-center gap-6 py-12 md:py-20">
+        <div className="flex flex-col items-center text-center gap-6 pt-12 pb-12 md:py-20">
           <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
           <p className="max-w-3xl text-xl md:text-2xl leading-relaxed text-white/90">
             You’ve tried magnesium, mouth tape, no screens, early workouts — and you’re still awake at 2am. The answer isn’t another hack. It’s in your patterns — and you can see them in a week.
