@@ -4,7 +4,6 @@ export const metadata = {
 };
 
 import Link from 'next/link'
-import AuthButton from '@/components/AuthButton'
 import Image from 'next/image'
 import { Tomorrow } from 'next/font/google'
 const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
@@ -13,7 +12,7 @@ const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['600'] })
 function PrimaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
-      href="#get-started"
+      href="/auth/signup"
       className={`inline-flex items-center justify-center rounded-lg bg-[#F4B860] px-3.5 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
     >
       {CTA_TEXT}
@@ -57,10 +56,10 @@ function Hero() {
             <span>BIOSTACK</span>
             <span className="inline-block align-baseline text-[1.1em] [transform:scaleX(-1)]">R</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
+          <div className="flex items-center gap-5">
             <Link href="/auth/signin" className="text-white/90 hover:text-white text-sm md:text-base underline-offset-2 hover:underline">Sign In</Link>
-            <AuthButton />
+            <Link href="/auth/signup" className="text-white/90 hover:text-white text-sm md:text-base underline-offset-2 hover:underline">Sign Up</Link>
+            <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-6 py-12 md:py-20">
@@ -156,7 +155,7 @@ function HowItWorks() {
 function Testimonials() {
   const items = [
     { name: 'Alex, 29 — Insomnia', quote: 'Phone out of the bedroom → asleep 90 min earlier by day 12.', img: '/male 38.png' },
-    { name: 'Lars, 38 — Poor sleep', quote: 'Afternoon coffee was the problem. Moved to mornings. Week 2: fewer 3am wake-ups.', img: '/male image.png' },
+    { name: 'Lars, 46 — Poor sleep', quote: 'Afternoon coffee was the problem. Moved to mornings. Week 2: fewer 3am wake-ups.', img: '/male image.png' },
     { name: 'Maya, 34 — Sleep issues', quote: 'Evening workouts were killing me. Switched to mornings — slept through twice in week 3.', img: '/female 34.png' },
   ];
   return (
@@ -247,7 +246,7 @@ function Founder() {
               <p className="mt-2 text-sm text-slate-500">— Ben, Founder</p>
             </div>
             <div className="mt-6 md:mt-0 flex justify-center md:justify-end">
-              <Image src="/mum%20photo.png" alt="Ben with his mum" width={120} height={120} className="h-24 w-24 md:h-28 md:w-28 rounded-lg object-cover shadow-sm" />
+              <Image src="/mum%20photo.png" alt="Ben with his mum" width={220} height={220} className="h-28 w-28 md:h-40 md:w-40 rounded-xl object-cover shadow" />
             </div>
           </div>
         </div>
@@ -270,7 +269,7 @@ function Pricing() {
               <li>✓ First pattern (7–14 days)</li>
               <li>✓ Privacy by default</li>
             </ul>
-            <a href="#get-started" className="mt-6 inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free</a>
+            <a href="/auth/signup" className="mt-6 inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free</a>
           </div>
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900">Premium</h3>
@@ -281,7 +280,7 @@ function Pricing() {
               <li>✓ Export your data</li>
               <li>✓ Priority support</li>
             </ul>
-            <a href="#get-started" className="mt-6 inline-flex rounded-xl bg-[#F4B860] px-5 py-3 font-semibold text-slate-900 hover:bg-[#E5A850]">Unlock Full Patterns →</a>
+            <a href="/auth/signup/pro" className="mt-6 inline-flex rounded-xl bg-[#F4B860] px-5 py-3 font-semibold text-slate-900 hover:bg-[#E5A850]">Unlock Full Patterns →</a>
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-500">No credit card for Free. Cancel anytime.</p>
