@@ -2,9 +2,9 @@ export default function RealPeople() {
   const testimonials = [
     {
       initial: 'A',
-      name: 'Alex, 29',
+      name: 'Alex, 46',
       location: 'Insomnia · Portland',
-      img: '/male image.png',
+      img: '/male 38.png',
       story: [
         "I've had terrible sleep for like 3 years. Tried everything — magnesium, fancy sleep apps, even paid for a sleep coach who told me to 'relax more' which, thanks for nothing.",
         "Started using BioStackr mostly because I was desperate and it was free. After about 2 weeks it flagged that I was eating really late on weeknights (dinner around 9pm because of work). When I ate earlier, even by just an hour, I'd actually fall asleep.",
@@ -23,10 +23,10 @@ export default function RealPeople() {
       ],
     },
     {
-      initial: 'M',
-      name: 'Maya, 34',
+      initial: 'S',
+      name: 'Sylvie, 34',
       location: 'Sleep Issues · Toronto',
-      img: '/female image.png',
+      img: '/female 34.png',
       story: [
         "I work late and then go to the gym around 8pm because that's when I have time. Never connected it to my sleep problems until I started tracking everything in here.",
         "The pattern was pretty clear after 10 days or so — late workouts = I'm wired until like 1am. Early morning workouts (even though I hate them) and I'm out by 11.",
