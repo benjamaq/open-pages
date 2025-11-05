@@ -6,18 +6,20 @@ export default function ResultsPatterns() {
         <p className="text-base md:text-lg text-center text-gray-600 mb-8">Real patterns BioStackr uncovered in the first two weeks.</p>
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
-          {/* 1) Late-Night Phone Scrolls */}
+          {/* 1) Phone Stayed Out of the Bedroom */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-purple-600 hover:shadow-lg transition-all h-full" title="Based on ~9 days of tracking">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">📱</span>
-              <h3 className="text-lg font-bold text-gray-900">Late‑Night Phone Scrolls</h3>
+              <h3 className="text-lg font-bold text-gray-900">Phone Stayed Out of the Bedroom</h3>
             </div>
             <div className="flex items-center gap-2 font-semibold text-sm md:text-base mb-2">
-              <span className="text-red-500">Scroll after 10pm: Sleep 5/10</span>
+              <span className="text-red-500">With phone in bed: Sleep 5/10</span>
               <span className="text-gray-400">→</span>
-              <span className="text-emerald-600">Cutoff by 10pm: Sleep 7/10</span>
+              <span className="text-emerald-600">Phone left outside: Sleep 7/10</span>
             </div>
-            <p className="text-sm text-gray-700 italic mb-2">“It wasn’t the phone — it was when I scrolled.”</p>
+            <p className="text-sm text-gray-700 italic">“I used to climb into bed and scroll. The screen, the blue light — it kept my brain wired.”</p>
+            <p className="text-sm text-gray-700 italic">“When I started leaving my phone in another room, I realised the difference wasn’t just the light — it was the intention.”</p>
+            <p className="text-sm text-gray-700 italic mb-2">“Going to bed actually became about sleep again.”</p>
             <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">High confidence</span>
           </div>
 
@@ -51,18 +53,20 @@ export default function ResultsPatterns() {
             <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">Moderate confidence</span>
           </div>
 
-          {/* 4) Magnesium (the Plot Twist) */}
+          {/* 4) Magnesium (The Plot Twist) */}
           <div className="bg-amber-50 border border-amber-400 rounded-xl p-6 h-full" title="Based on ~14 days of tracking">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">💊</span>
-              <h3 className="text-lg font-bold text-amber-800">Magnesium (the Plot Twist)</h3>
+              <h3 className="text-lg font-bold text-amber-800">Magnesium (The Plot Twist)</h3>
             </div>
             <div className="flex items-center gap-2 font-semibold text-sm md:text-base mb-2">
-              <span className="text-emerald-700">Without: Anxiety 4/10</span>
+              <span className="text-emerald-700">Before magnesium: Anxiety 4/10</span>
               <span className="text-amber-700">→</span>
-              <span className="text-red-700 font-semibold">With: Anxiety 7/10 ↑</span>
+              <span className="text-red-700 font-semibold">While taking magnesium: Anxiety 7/10 ↑</span>
             </div>
-            <p className="text-sm text-amber-900 italic mb-2">“Stopped it — calm again within a week.”</p>
+            <p className="text-sm text-amber-900 italic">“Everyone says magnesium helps you relax — so I took it daily.”</p>
+            <p className="text-sm text-amber-900 italic">“What I didn’t expect was the opposite: even moving it to the afternoon, my heart raced and I couldn’t switch off.”</p>
+            <p className="text-sm text-amber-900 italic mb-2">“I stopped completely, and the anxiety vanished within a week.”</p>
             <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">High confidence</span>
           </div>
         </div>
