@@ -7,7 +7,7 @@ export default function TimelineStorySection() {
       <div className="timeline-story-container">
         <div className="timeline-header">
           <h2 className="timeline-title">How long does it take to find patterns?</h2>
-          <p className="timeline-subtitle">Some show up in days. Others take months. Here's what one person discovered.</p>
+          <p className="timeline-subtitle">Progress looks different for everyone — here’s what it typically feels like.</p>
         </div>
         {/* Punchy intro */}
         <div className="marcus-intro">

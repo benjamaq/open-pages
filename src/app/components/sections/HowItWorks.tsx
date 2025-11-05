@@ -11,8 +11,8 @@ export default function HowItWorks() {
     <section className="py-20 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-4">
-          <p className="text-lg text-gray-600 mb-2">It only takes 20 seconds a day to discover your patterns</p>
-          <h2 className="text-4xl md:text-5xl font-bold">How You Go From Guessing → Knowing</h2>
+          <p className="text-lg text-gray-600 mb-2">Here’s how BioStackr uncovers patterns like these.</p>
+          <h2 className="text-4xl font-bold text-gray-900">From Check‑In to Clarity</h2>
         </div>
         <div className="grid md:grid-cols-4 gap-8 mt-16 max-w-6xl mx-auto">
           {steps.map((s, i) => (
