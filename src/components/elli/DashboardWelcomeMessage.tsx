@@ -45,32 +45,35 @@ export default function DashboardWelcomeMessage({
   // Get tone profile
   const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
 
+  // Derive a friendly first name in case a full name is passed
+  const safeName = (userName || '').trim().split(/\s+/)[0] || 'there';
+
   // Generate tone-aware welcome message
   const getWelcomeMessage = () => {
     if (!checkInData) {
-      return `${userName}, welcome to your dashboard! I'm here to help you track patterns and understand what's working for you.`;
+      return `${safeName}, welcome to your dashboard! I'm here to help you track patterns and understand what's working for you.`;
     }
 
     const { mood, sleep, pain } = checkInData;
     
     const messages = {
-      chronic_pain: `${userName}, I'm paying attention to your ${mood}/10 mood and ${pain}/10 pain today. I'll be back to you soon after a few more check-ins to share what I'm seeing in your patterns.`,
+      chronic_pain: `${safeName}, I'm paying attention to your ${mood}/10 mood and ${pain}/10 pain today. I'll be back to you soon after a few more check-ins to share what I'm seeing in your patterns.`,
 
-      biohacking: `${userName}, baseline data recorded - mood ${mood}/10, sleep ${sleep}/10. I'm tracking your interventions and will provide analysis after collecting more data points.`,
+      biohacking: `${safeName}, baseline data recorded - mood ${mood}/10, sleep ${sleep}/10. I'm tracking your interventions and will provide analysis after collecting more data points.`,
 
-      mental_health: `${userName}, I see your mood at ${mood}/10 today. I'm watching your patterns and will check back after a few more check-ins to share insights about what's helping.`,
+      mental_health: `${safeName}, I see your mood at ${mood}/10 today. I'm watching your patterns and will check back after a few more check-ins to share insights about what's helping.`,
 
-      fertility: `${userName}, I'm tracking your mood at ${mood}/10 and energy levels. I'll monitor your patterns alongside your cycle data and share insights soon.`,
+      fertility: `${safeName}, I'm tracking your mood at ${mood}/10 and energy levels. I'll monitor your patterns alongside your cycle data and share insights soon.`,
 
-      adhd: `${userName}, you did it! You're here on your dashboard. I'm tracking your ${mood}/10 mood and will help you see patterns that work for YOUR brain.`,
+      adhd: `${safeName}, you did it! You're here on your dashboard. I'm tracking your ${mood}/10 mood and will help you see patterns that work for YOUR brain.`,
 
-      sleep: `${userName}, I'm monitoring your sleep at ${sleep}/10 and mood at ${mood}/10. I'll analyze your patterns and share insights about what's affecting your sleep.`,
+      sleep: `${safeName}, I'm monitoring your sleep at ${sleep}/10 and mood at ${mood}/10. I'll analyze your patterns and share insights about what's affecting your sleep.`,
 
-      energy: `${userName}, I'm tracking your energy at ${mood}/10 today. I'll watch for patterns and help you understand what's boosting or draining your energy.`,
+      energy: `${safeName}, I'm tracking your energy at ${mood}/10 today. I'll watch for patterns and help you understand what's boosting or draining your energy.`,
 
-      perimenopause: `${userName}, I'm paying attention to your ${mood}/10 mood and tracking your symptoms. I'll analyze your patterns and share insights about what's helping during this transition.`,
+      perimenopause: `${safeName}, I'm paying attention to your ${mood}/10 mood and tracking your symptoms. I'll analyze your patterns and share insights about what's helping during this transition.`,
 
-      general_wellness: `${userName}, I'm tracking your mood at ${mood}/10 and sleep at ${sleep}/10. I'll analyze your patterns and help you optimize your wellness routine.`
+      general_wellness: `${safeName}, I'm tracking your mood at ${mood}/10 and sleep at ${sleep}/10. I'll analyze your patterns and help you optimize your wellness routine.`
     };
 
     return messages[toneProfile as keyof typeof messages] || messages.general_wellness;
