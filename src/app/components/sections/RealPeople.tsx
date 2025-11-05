@@ -35,13 +35,13 @@ export default function RealPeople() {
     },
   ];
   return (
-    <section className="py-20 bg-gradient-to-b from-purple-50 to-white">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-purple-50 to-white">
       <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-gray-900 mb-3">Built for People Who’ve Already Tried Everything</h2>
-        <p className="text-center text-gray-600 text-base md:text-lg mb-12 max-w-2xl mx-auto">From trial and error to clarity — here’s when things finally clicked.</p>
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-3">Built for People Who’ve Already Tried Everything</h2>
+        <p className="text-center text-gray-600 text-sm md:text-lg mb-10 max-w-2xl mx-auto">From trial and error to clarity — here’s when things finally clicked.</p>
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
           {testimonials.map((t, i) => (
-            <div key={i} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+            <div key={i} className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="flex items-center gap-3 mb-4">
                 <img src={t.img} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-purple-300" />
                 <div>
@@ -49,7 +49,7 @@ export default function RealPeople() {
                   <div className="text-sm text-gray-600">{t.location}</div>
                 </div>
               </div>
-              <div className="space-y-4 text-gray-700 leading-relaxed text-[15px]">
+              <div className="space-y-3 md:space-y-4 text-gray-700 leading-relaxed text-[14px] md:text-[15px]">
                 {t.story.map((p, pi) => (<p key={pi}>{p}</p>))}
               </div>
             </div>

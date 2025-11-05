@@ -20,11 +20,11 @@ import CustomTagsSection from "@/components/landing/CustomTagsSection";
 import TimelineStorySection from "@/components/landing/TimelineStorySection";
 
 function Container({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`mx-auto max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
+  return <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>;
 }
 
 function Section({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
-  return <section id={id} className={`py-20 lg:py-28 ${className}`}>{children}</section>;
+  return <section id={id} className={`py-16 md:py-20 lg:py-28 ${className}`}>{children}</section>;
 }
 
 export default function SleepLandingV2() {
@@ -49,12 +49,12 @@ export default function SleepLandingV2() {
         <Container className="relative z-10 px-6 pt-28 sm:pt-32">
           <div className="max-w-4xl mx-auto">
             <p className="text-[12px] sm:text-[14px] text-white/70 italic mb-6 text-center">• Pattern Discovery for Your Health</p>
-            <h1 className="text-[36px] sm:text-[40px] lg:text-[56px] font-bold text-white leading-snug mb-7 text-center">
+            <h1 className="text-[32px] sm:text-[38px] lg:text-[54px] font-bold text-white leading-snug mb-7 text-center">
               Two Years of Bad Sleep.
               <br />
               One Week to Find Why.
             </h1>
-            <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-8 max-w-[760px] mx-auto text-center">
+            <div className="text-[17px] sm:text-[19px] text-white/90 leading-relaxed mb-8 max-w-[760px] mx-auto text-center">
               <p>You've tried magnesium, mouth tape, no screens, early workouts — and you still can't sleep. BioStackr finds the hidden patterns that actually keep you awake.</p>
             </div>
             <div className="flex gap-4 flex-wrap mb-6 justify-center mt-2">
