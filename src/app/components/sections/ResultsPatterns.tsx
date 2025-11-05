@@ -5,7 +5,7 @@ export default function ResultsPatterns() {
         <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">Stop Guessing. Start Knowing.</h2>
         <p className="text-base md:text-lg text-center text-gray-600 mb-8">Real patterns BioStackr uncovered in the first two weeks.</p>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-6">
           {/* 1) Phone Stayed Out of the Bedroom */}
           <div className="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-6 hover:shadow-md transition-all h-full min-h-[300px] flex flex-col" title="Based on ~9 days of tracking">
             <div className="flex items-center gap-2 mb-2">

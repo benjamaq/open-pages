@@ -102,7 +102,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed" style={{ backgroundColor: '#FFFFFF' }}>
+      <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed overflow-x-hidden" style={{ backgroundColor: '#FFFFFF' }}>
         <noscript>
           <img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=704287959370274&ev=PageView&noscript=1" />
         </noscript>
