@@ -7,13 +7,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Tomorrow } from 'next/font/google'
 const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
-const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['600'] })
+const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['500','600'] })
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="/auth/signup"
-      className={`inline-flex items-center justify-center rounded-lg bg-[#F4B860] px-3.5 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg bg-[#F4B860] px-3 py-1.5 text-[11px] sm:px-3.5 sm:py-2 sm:text-sm font-medium leading-tight text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
     >
       {CTA_TEXT}
     </a>
@@ -24,7 +24,7 @@ function SecondaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="#how-it-works"
-      className={`inline-flex items-center justify-center rounded-lg border border-white/30 px-3.5 py-2 text-sm font-medium text-white/90 hover:bg-white/5 ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg border border-white/30 px-3 py-1.5 text-[11px] sm:px-3.5 sm:py-2 sm:text-sm font-medium leading-tight text-white/90 hover:bg-white/5 ${className}`}
     >
       How It Works (20 seconds/day)
     </a>
@@ -47,23 +47,25 @@ import Starfield from '@/components/Starfield';
 
 function Hero() {
   return (
-    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#23345B] via-[#2F4A75] to-[#C7D4FF] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.08),transparent_45%),radial-gradient(circle_at_80%_15%,rgba(255,255,255,0.07),transparent_50%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.06),transparent_45%)]" />
+    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#1b2745] via-[#283a72] to-[#F6D8A6] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.10),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(244,184,96,0.22),transparent_55%),radial-gradient(circle_at_60%_75%,rgba(255,255,255,0.06),transparent_45%)]" />
+      {/* warm horizon glow */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#F4B860]/35 via-[#F4B860]/10 to-transparent" />
       <Container>
         {/* Top inside-hero row: logo + nav + CTA */}
         <div className="flex items-center justify-between pt-5">
-          <div className={`${tomorrow.className} text-2xl md:text-3xl font-semibold tracking-[0.08em]`}>
+          <div className={`${tomorrow.className} text-xl sm:text-2xl md:text-3xl font-medium tracking-[0.06em]`}>
             <span>BIOSTACK</span>
             <span className="inline-block align-baseline text-[1.1em] [transform:scaleX(-1)]">R</span>
           </div>
-          <div className="flex items-center gap-5">
-            <Link href="/auth/signin" className="text-white/90 hover:text-white text-sm md:text-base underline-offset-2 hover:underline">Sign In</Link>
-            <Link href="/auth/signup" className="text-white/90 hover:text-white text-sm md:text-base underline-offset-2 hover:underline">Sign Up</Link>
-            <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
+          <div className="flex items-center gap-3 md:gap-5">
+            <Link href="/auth/signin" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base underline-offset-2 hover:underline">Sign In</Link>
+            <Link href="/auth/signup" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base underline-offset-2 hover:underline">Sign Up</Link>
+            <Link href="/contact" className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base">Contact</Link>
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-6 py-12 md:py-20">
-          <h1 className="max-w-4xl text-4xl font-extrabold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
+          <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
           <p className="max-w-3xl text-xl md:text-2xl leading-relaxed text-white/90">
             You’ve tried magnesium, mouth tape, no screens, early workouts — and you’re still awake at 2am. The answer isn’t another hack. It’s in your patterns — and you can see them in a week.
           </p>
@@ -80,12 +82,22 @@ function Hero() {
             <span>✓ No credit card</span>
             <span>✓ First pattern in 7–14 days</span>
           </div>
-          <p className="mt-3 text-sm md:text-base font-medium text-white/90">Over 5,000 people found a trigger in less than 9 days.</p>
+          {/* Hero proof: compact, specific timing example (smaller on mobile) */}
+          <div className="mt-8 w-full max-w-3xl mx-auto rounded-xl border border-white/15 bg-white/10 backdrop-blur p-4 md:p-5 flex gap-3 items-start">
+            <img src="/girl%20image.png" alt="Ash" className="h-10 w-10 rounded-full object-cover border border-amber-400 flex-shrink-0" />
+            <div className="flex-1 text-left">
+              <p className="text-[13px] md:text-sm text-white/95 italic">
+                “Taking my supplements in the afternoon instead of morning. Such a simple thing. Took me 2 years to figure out — BioStackr found it in 9 days.”
+              </p>
+              <p className="text-[11px] md:text-xs text-white/80 mt-1">— Ash, 32, Portland</p>
+            </div>
+          </div>
+          <p className="mt-2 text-[12px] md:text-sm text-white/85">Over 5,000 people have found their sleep trigger with BioStackr.</p>
         </div>
       </Container>
 
       {/* Sticky mobile bottom CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-[#1f2a44]/70 px-5 py-2 backdrop-blur md:hidden border-t border-white/10">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-[#1f2a44]/70 px-5 py-1 backdrop-blur md:hidden border-t border-white/10">
         <div className="mx-auto max-w-6xl">
           <PrimaryCTA className="w-full" />
         </div>
@@ -156,7 +168,7 @@ function Testimonials() {
   const items = [
     { name: 'Alex, 29 — Insomnia', quote: 'Phone out of the bedroom → asleep 90 min earlier by day 12.', img: '/male 38.png' },
     { name: 'Lars, 46 — Poor sleep', quote: 'Afternoon coffee was the problem. Moved to mornings. Week 2: fewer 3am wake-ups.', img: '/male image.png' },
-    { name: 'Maya, 34 — Sleep issues', quote: 'Evening workouts were killing me. Switched to mornings — slept through twice in week 3.', img: '/female 34.png' },
+    { name: 'Sylvia, 34 — Sleep issues', quote: 'Evening workouts were killing me. Switched to mornings — slept through twice in week 3.', img: '/female 34.png' },
   ];
   return (
     <Section id="proof" className="bg-slate-50/60">
@@ -246,7 +258,7 @@ function Founder() {
               <p className="mt-2 text-sm text-slate-500">— Ben, Founder</p>
             </div>
             <div className="mt-6 md:mt-0 flex justify-center md:justify-end">
-              <Image src="/mum%20photo.png" alt="Ben with his mum" width={220} height={220} className="h-28 w-28 md:h-40 md:w-40 rounded-xl object-cover shadow" />
+              <Image src="/mum%20photo.png" alt="Ben with his mum" width={280} height={280} className="h-36 w-36 md:h-56 md:w-56 rounded-xl object-cover shadow" />
             </div>
           </div>
         </div>
@@ -276,9 +288,7 @@ function Pricing() {
             <p className="mt-2 text-3xl font-extrabold text-slate-900">$9.99 <span className="text-base font-medium text-slate-500">/ month</span></p>
             <ul className="mt-4 space-y-2 text-slate-700">
               <li>✓ Everything in Free</li>
-              <li>✓ FULL pattern engine</li>
-              <li>✓ Export your data</li>
-              <li>✓ Priority support</li>
+              <li>✓ Add more context (unlimited items & tags)</li>
             </ul>
             <a href="/auth/signup/pro" className="mt-6 inline-flex rounded-xl bg-[#F4B860] px-5 py-3 font-semibold text-slate-900 hover:bg-[#E5A850]">Unlock Full Patterns →</a>
           </div>
