@@ -39,10 +39,14 @@ function Container({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
+import Starfield from '@/components/Starfield';
+
 function Hero() {
   return (
     <header className="relative isolate overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.06),transparent_45%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.05),transparent_40%)]" />
+      {/* Night sky stars */}
+      <Starfield count={150} opacity={0.7} />
       <Container>
         <div className="flex flex-col items-center text-center gap-6 py-20 md:py-28">
           <h1 className="max-w-4xl text-4xl font-extrabold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
