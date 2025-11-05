@@ -54,17 +54,17 @@ export default function SleepLandingV2() {
               <br />
               One Week to Find Why.
             </h1>
-            <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-2 max-w-[760px] mx-auto text-center">
+            <div className="text-[18px] sm:text-[20px] text-white/90 leading-relaxed mb-6 max-w-[760px] mx-auto text-center">
               <p>You've tried the usual fixes. Most sleep problems start long before bed. BioStackr connects your day to your sleep so you can stop guessing.</p>
             </div>
-            <div className="flex gap-4 flex-wrap mb-2 justify-center mt-1">
+            <div className="flex gap-4 flex-wrap mb-4 justify-center mt-2">
               <Link href="/auth/signup" onClick={() => { onCta('cta_click', { cta: 'find_my_sleep_pattern' }); onCta('lead', { cta: 'find_my_sleep_pattern' }); }} className="inline-flex items-center justify-center rounded-lg bg-[#F4B860] h-12 px-6 text-[16px] font-semibold text-[#2C2C2C] transition-all hover:bg-[#E5A850]">Find My Sleep Pattern – Free</Link>
               <Link href="#how-it-works" onClick={() => onCta('cta_click', { cta: 'see_how_it_works' })} className="inline-flex items-center justify-center rounded-lg border-2 border-[#F4B860] px-8 h-12 text-[16px] font-semibold text-white transition-all hover:bg-[#F4B860] hover:text-[#2C2C2C]">See How It Works</Link>
             </div>
-            <div className="text-white/90 italic text-[16px] sm:text-[18px] text-center mt-6">
+            <div className="text-white/90 italic text-[16px] sm:text-[18px] text-center mt-8">
               <p>Your job: A 20-second check-in daily.<br />(You spend more time choosing your socks.)</p>
             </div>
-            <div className="mt-10 text-center">
+            <div className="mt-12 text-center">
               <div className="text-white/85 flex flex-wrap gap-4 justify-center text-[14px] sm:text-[15px]">
                 <span>✓ No app store</span>
                 <span>✓ No wearable</span>
