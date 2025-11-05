@@ -51,11 +51,11 @@ function Hero() {
     <header className="relative isolate overflow-hidden bg-gradient-to-b from-slate-800 via-slate-800 to-slate-700 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.06),transparent_45%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.05),transparent_40%)]" />
       {/* Night sky stars */}
-      <Starfield count={150} opacity={0.7} />
+      <Starfield count={150} opacity={0.55} />
       <Container>
         {/* Top inside-hero row: logo + nav + CTA */}
         <div className="flex items-center justify-between pt-5">
-          <div className={`${tomorrow.className} text-2xl md:text-3xl font-extrabold tracking-[0.08em]`}>
+          <div className={`${tomorrow.className} text-3xl md:text-4xl font-extrabold tracking-[0.08em]`}>
             <span>BIOSTACK</span>
             <span className="inline-block align-baseline text-[1.15em] [transform:scaleX(-1)]">R</span>
           </div>
@@ -257,7 +257,7 @@ function Founder() {
               <p className="mt-2 text-sm text-slate-500">— Ben, Founder</p>
             </div>
             <div className="mt-6 md:mt-0 flex justify-center md:justify-end">
-              <Image src="/mum photo.png" alt="Ben with his mum" width={120} height={120} className="h-24 w-24 md:h-28 md:w-28 rounded-lg object-cover shadow-sm" />
+              <Image src="/mum%20photo.png" alt="Ben with his mum" width={120} height={120} className="h-24 w-24 md:h-28 md:w-28 rounded-lg object-cover shadow-sm" />
             </div>
           </div>
         </div>
