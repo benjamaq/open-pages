@@ -59,6 +59,7 @@ function Hero() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
+            <Link href="/auth/signin" className="text-white/90 hover:text-white text-sm md:text-base underline-offset-2 hover:underline">Sign In</Link>
             <AuthButton />
           </div>
         </div>
@@ -73,14 +74,14 @@ function Hero() {
             <PrimaryCTA />
             <SecondaryCTA />
           </div>
-          <p className="text-white/90 text-sm">Your job: a 20-second check-in. (You spend longer choosing socks.)</p>
+          <p className="text-white/95 text-base md:text-lg mt-2"><span className="text-[#F4B860] font-semibold">Your job</span> — 20‑second check‑in daily. You spend longer choosing your socks.</p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/85 text-sm">
             <span>✓ No wearable</span>
             <span>✓ No credit card</span>
             <span>✓ First pattern in 7–14 days</span>
           </div>
-          <p className="mt-4 text-xs text-white/80">4,200 people found a trigger in less than 9 days.</p>
+          <p className="mt-3 text-sm md:text-base font-medium text-white/90">Over 5,000 people found a trigger in less than 9 days.</p>
         </div>
       </Container>
 
