@@ -179,13 +179,13 @@ function Testimonials() {
   );
 }
 
-function PatternCard({ title, before, after, note, confidence }: { title: string; before: string; after: string; note: string; confidence: string }) {
+function PatternCard({ title, before, after, note, confidence, isReversal }: { title: string; before: string; after: string; note: string; confidence: string; isReversal?: boolean }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
       <div className="mt-4 space-y-3">
-        <div className="flex items-center gap-2 text-sm"><span className="inline-flex h-2 w-2 rounded-full bg-red-300" /><span className="text-slate-700">{before}</span></div>
-        <div className="flex items-center gap-2 text-sm"><span className="inline-flex h-2 w-2 rounded-full bg-emerald-300" /><span className="text-slate-700">{after}</span></div>
+        <div className="flex items-center gap-2 text-sm"><span className={`inline-flex h-2 w-2 rounded-full ${isReversal ? 'bg-[#34D399]' : 'bg-[#FF7A7A]'}`} /><span className="text-slate-700">{before}</span></div>
+        <div className="flex items-center gap-2 text-sm"><span className={`inline-flex h-2 w-2 rounded-full ${isReversal ? 'bg-[#FF7A7A]' : 'bg-[#34D399]'}`} /><span className="text-slate-700">{after}</span></div>
       </div>
       <p className="mt-3 text-slate-600">{note}</p>
       <p className="mt-2 text-xs text-slate-500">{confidence}</p>
@@ -197,7 +197,7 @@ function MorePatterns() {
   const data = [
     { title: 'Evening arguments → later sleep', before: 'Talks after 9pm: Sleep 4/10', after: 'Talks before 7pm: Sleep 7/10', note: 'We moved tough chats earlier. Evenings got quiet — my brain finally slowed down.', confidence: 'High confidence' },
     { title: 'Meals too close to bed', before: 'Ate ≤1h before bed: Sleep 5/10', after: 'Ate ≥3h before bed: Sleep 7/10', note: 'Same food, earlier timing — no 3am wake‑ups.', confidence: 'Moderate confidence' },
-    { title: 'Magnesium (the plot twist)', before: 'Before magnesium: Anxiety 4/10', after: 'While taking it: Anxiety 7/10 ↑', note: 'Everyone said it helps. For me it revved me up — even in the afternoon. I stopped and the anxiety vanished within a week.', confidence: 'High confidence' },
+    { title: 'Magnesium made sleep worse (for me)', before: 'Before magnesium: Sleep 7/10', after: 'While taking magnesium: Sleep 5/10 ↓', note: 'Everyone said magnesium helps you sleep. For me it did the opposite — I felt anxious and woke up more. I stopped and slept through the night within a week.', confidence: 'High confidence', isReversal: true },
     { title: 'Room temperature', before: 'Hot room: fragmented sleep', after: 'Cool room: improved', note: 'Lowering the thermostat by 2°C cut night wakings in half.', confidence: 'Moderate confidence' },
   ];
   return (
