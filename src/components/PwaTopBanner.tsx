@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 export default function PwaTopBanner() {
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
+  const [height, setHeight] = useState<number>(0);
 
   useEffect(() => {
     try {
@@ -22,10 +23,26 @@ export default function PwaTopBanner() {
     } catch {}
   }, []);
 
+  useEffect(() => {
+    if (show && typeof window !== 'undefined') {
+      // Defer measurement to next tick after banner renders
+      requestAnimationFrame(() => {
+        const el = document.getElementById('pwa-top-banner');
+        const h = el?.offsetHeight || 0;
+        setHeight(h);
+        document.documentElement.style.setProperty('--pwa-banner-offset', `${h}px`);
+      });
+      return () => {
+        document.documentElement.style.setProperty('--pwa-banner-offset', '0px');
+      };
+    }
+  }, [show]);
+
   if (!show) return null;
 
   return (
     <div
+      id="pwa-top-banner"
       role="region"
       aria-label="Install BioStackr"
       className="sticky top-0 z-50 w-full"

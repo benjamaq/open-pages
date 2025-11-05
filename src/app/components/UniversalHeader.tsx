@@ -12,7 +12,7 @@ export default function UniversalHeader() {
   const transparentLanding = pathname === "/" || pathname.startsWith("/sleep");
 
   const headerClass = transparentLanding
-    ? "absolute top-0 left-0 right-0 z-30"
+    ? "absolute left-0 right-0 z-30"
     : "border-b border-gray-100 bg-white";
   const logoTitleClass = transparentLanding ? `${tomorrow.className} text-xl md:text-3xl font-medium text-white whitespace-nowrap` : `${tomorrow.className} text-xl md:text-2xl font-medium text-gray-900 whitespace-nowrap`;
   const navLinkBase = transparentLanding ? "text-sm md:text-base text-white/85 hover:text-white" : "text-sm md:text-base text-gray-700 hover:text-gray-900";
@@ -20,7 +20,7 @@ export default function UniversalHeader() {
   const ctaClass = "inline-flex items-center justify-center h-11 rounded-md bg-[#F4B860] px-5 text-[#2C2C2C] font-semibold hover:bg-[#E5A850]";
 
   return (
-    <header className={headerClass}>
+    <header className={headerClass} style={transparentLanding ? ({ top: 'var(--pwa-banner-offset, 0px)' } as any) : undefined}>
       <div className="container mx-auto px-4 py-2 md:py-4">
         {/* Mobile layout */}
         <div className="md:hidden flex flex-col gap-2">
