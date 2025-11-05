@@ -291,10 +291,10 @@ function Pricing() {
 
 function MicroFAQ() {
   const faqs = [
-    { q: 'Will this actually work for me?', a: 'Most people see their first clear pattern in 7–14 days. Your timeline may vary — we’ll keep testing gently until it’s clear.' },
-    { q: 'Do I need a wearable?', a: 'No. A 20‑second daily check‑in is enough. If you have a wearable, you can add it.' },
-    { q: 'What if I forget to check in?', a: 'Missing a day or two is normal. We look across weeks, not perfection.' },
-    { q: 'Is my data private?', a: 'Yes. Your data stays yours. You can export or delete anytime.' },
+    { q: 'Will this actually work for me?', a: 'If a pattern exists in your recent data, we usually surface it within 7–14 days. Most new users get a first clear pattern in two weeks or less. Keep using Free until you do — we never lock your data behind a paywall.' },
+    { q: 'Do I need a wearable?', a: 'No. A 20‑second daily check‑in is enough to find patterns. If you connect Apple Watch, Oura or Whoop, we can auto‑import sleep, activity and HR data to strengthen the signals — completely optional.' },
+    { q: 'What if I forget to check in?', a: 'Totally fine. The model looks across weeks and timing windows (e.g., evening coffee vs morning coffee), so a few missed days won’t break anything. You control gentle reminders and can snooze or turn them off anytime.' },
+    { q: 'Is my data private?', a: 'Yes. Your data is encrypted in transit and at rest. We never sell your data or train public models on it. You can export everything or permanently delete your account from Settings at any time.' },
   ];
   return (
     <Section id="faq" className="bg-white">
