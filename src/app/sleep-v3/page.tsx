@@ -5,13 +5,16 @@ export const metadata = {
 
 import Link from 'next/link'
 import AuthButton from '@/components/AuthButton'
+import Image from 'next/image'
+import { Tomorrow } from 'next/font/google'
 const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
+const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['700'] })
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="#get-started"
-      className={`inline-flex items-center justify-center rounded-xl bg-[#F4B860] px-5 py-3 text-base font-semibold text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
+      className={`inline-flex items-center justify-center rounded-xl bg-[#F4B860] px-4 py-2.5 text-sm md:text-base font-semibold text-slate-900 shadow-sm hover:bg-[#E5A850] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B860] ${className}`}
     >
       {CTA_TEXT}
     </a>
@@ -22,7 +25,7 @@ function SecondaryCTA({ className = "" }: { className?: string }) {
   return (
     <a
       href="#how-it-works"
-      className={`inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-base font-semibold text-white/90 hover:bg-white/5 ${className}`}
+      className={`inline-flex items-center justify-center rounded-xl border border-white/30 px-4 py-2.5 text-sm md:text-base font-semibold text-white/90 hover:bg-white/5 ${className}`}
     >
       How It Works (20 seconds/day)
     </a>
@@ -45,14 +48,17 @@ import Starfield from '@/components/Starfield';
 
 function Hero() {
   return (
-    <header className="relative isolate overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-white">
+    <header className="relative isolate overflow-hidden bg-gradient-to-b from-slate-800 via-slate-800 to-slate-700 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.06),transparent_45%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.05),transparent_40%)]" />
       {/* Night sky stars */}
       <Starfield count={150} opacity={0.7} />
       <Container>
         {/* Top inside-hero row: logo + nav + CTA */}
         <div className="flex items-center justify-between pt-5">
-          <div className="text-2xl md:text-3xl font-extrabold tracking-[0.08em]">BIOSTACKʁ</div>
+          <div className={`${tomorrow.className} text-2xl md:text-3xl font-extrabold tracking-[0.08em]`}>
+            <span>BIOSTACK</span>
+            <span className="inline-block align-baseline text-[1.15em] [transform:scaleX(-1)]">R</span>
+          </div>
           <div className="flex items-center gap-4">
             <Link href="/contact" className="text-white/90 hover:text-white text-sm md:text-base">Contact</Link>
             <AuthButton />
@@ -243,10 +249,17 @@ function Founder() {
   return (
     <Section id="why" className="bg-white">
       <Container>
-        <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-slate-900">Why I built BioStackr</h2>
-          <p className="mt-4 text-slate-700">“I watched my mum try everything for years — more data, more apps, zero answers. I built this to give people clarity, not just charts.”</p>
-          <p className="mt-2 text-sm text-slate-500">— Ben, Founder</p>
+        <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="md:flex md:items-center md:justify-between md:gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-3xl font-bold text-slate-900">Why I built BioStackr</h2>
+              <p className="mt-4 text-slate-700">“I watched my mum try everything for years — more data, more apps, zero answers. I built this to give people clarity, not just charts.”</p>
+              <p className="mt-2 text-sm text-slate-500">— Ben, Founder</p>
+            </div>
+            <div className="mt-6 md:mt-0 flex justify-center md:justify-end">
+              <Image src="/mum photo.png" alt="Ben with his mum" width={120} height={120} className="h-24 w-24 md:h-28 md:w-28 rounded-lg object-cover shadow-sm" />
+            </div>
+          </div>
         </div>
       </Container>
     </Section>
