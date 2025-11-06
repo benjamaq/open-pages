@@ -87,6 +87,21 @@ function Hero() {
             </div>
           </div>
           <p className="mt-2 text-[12px] md:text-sm text-white/85">Over 5,000 people have found their sleep trigger with BioStackr.</p>
+          {/* Micro timeline chips */}
+          <div className="mt-3 flex items-center justify-center gap-4 text-center">
+            <div>
+              <span className="inline-block bg-white/20 text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full mb-1">Day 1</span>
+              <div className="text-[10px] md:text-xs text-white/80">Start</div>
+            </div>
+            <div>
+              <span className="inline-block bg-white/20 text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full mb-1">Days 3–5</span>
+              <div className="text-[10px] md:text-xs text-white/80">First signals</div>
+            </div>
+            <div>
+              <span className="inline-block bg-white/20 text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full mb-1">Days 7–14</span>
+              <div className="text-[10px] md:text-xs text-white/80">Clear pattern</div>
+            </div>
+          </div>
         </div>
       </Container>
 

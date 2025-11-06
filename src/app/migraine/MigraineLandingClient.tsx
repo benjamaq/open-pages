@@ -95,11 +95,11 @@ export default function MigraineLandingClient() {
               Track for 20 seconds a day. BioStackr's intelligent system analyzes everything you log to uncover the
               patterns most associated with your migraines—so you can avoid them before they hit.
             </p>
-            <div className="flex gap-4 flex-wrap mb-4">
-              <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Stop Guessing. Find My Triggers Now</Link>
+            <div className="flex gap-4 flex-wrap mb-2">
+              <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Start Free</Link>
               <Link href="#how-it-works" className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
             </div>
-            <p className="mt-2 text-base md:text-lg text-white/85">Install in one tap · Daily reminders</p>
+            <p className="mt-1 text-sm md:text-base text-white/85">No credit card • 20 seconds daily • Free forever</p>
           </div>
         </Container>
       </section>
@@ -314,12 +314,15 @@ export default function MigraineLandingClient() {
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-4 text-4xl lg:text-5xl font-bold text-white">Stop living around your migraines</h2>
             <p className="mb-2 text-xl text-gray-200">Start today—most people see usable patterns in 5–7 days.</p>
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]"
-            >
-              Start Free — 20 Seconds a Day
-            </Link>
+            <div className="inline-flex flex-col items-center">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]"
+              >
+                Start Free
+              </Link>
+              <span className="mt-2 text-sm text-gray-200">No credit card • 20 seconds daily • Free forever</span>
+            </div>
             <p className="mt-6 text-sm text-gray-200">Install in one tap · Daily reminders · Private by default</p>
           </div>
         </Container>
