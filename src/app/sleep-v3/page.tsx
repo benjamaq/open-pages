@@ -47,10 +47,12 @@ import Starfield from '@/components/Starfield';
 
 function Hero() {
   return (
-    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#111a2f] via-[#233862] to-[#f4cf9b] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.10),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(244,184,96,0.25),transparent_55%),radial-gradient(circle_at_60%_75%,rgba(255,255,255,0.06),transparent_45%)]" />
+    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#0b101d] via-[#192844] to-[#e26a5a] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(226,106,90,0.25),transparent_55%),radial-gradient(circle_at_60%_70%,rgba(255,255,255,0.06),transparent_45%)]" />
       {/* warm horizon glow */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#F4B860]/40 via-[#F4B860]/15 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#e26a5a]/45 via-[#e26a5a]/15 to-transparent" />
+      {/* subtle starfield */}
+      <Starfield count={180} opacity={0.55} />
       {/* moon */}
       <div aria-hidden className="hidden sm:block absolute right-[10%] top-[12%] w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/90 ring-1 ring-white/60 shadow-[0_0_60px_20px_rgba(255,255,255,0.25)]" />
       <Container>
