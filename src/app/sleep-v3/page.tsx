@@ -6,7 +6,7 @@ export const metadata = {
 import Link from 'next/link'
 import Image from 'next/image'
 import { Tomorrow } from 'next/font/google'
-const CTA_TEXT = "Start Free Account";
+const CTA_TEXT = "Start Free";
 const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['500','600'] })
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
@@ -47,10 +47,12 @@ import Starfield from '@/components/Starfield';
 
 function Hero() {
   return (
-    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#1b2745] via-[#283a72] to-[#F6D8A6] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.10),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(244,184,96,0.22),transparent_55%),radial-gradient(circle_at_60%_75%,rgba(255,255,255,0.06),transparent_45%)]" />
+    <header className="relative isolate overflow-hidden bg-gradient-to-b from-[#111a2f] via-[#233862] to-[#f4cf9b] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.10),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(244,184,96,0.25),transparent_55%),radial-gradient(circle_at_60%_75%,rgba(255,255,255,0.06),transparent_45%)]" />
       {/* warm horizon glow */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#F4B860]/35 via-[#F4B860]/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#F4B860]/40 via-[#F4B860]/15 to-transparent" />
+      {/* moon */}
+      <div aria-hidden className="hidden sm:block absolute right-[10%] top-[12%] w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/90 ring-1 ring-white/60 shadow-[0_0_60px_20px_rgba(255,255,255,0.25)]" />
       <Container>
         <div className="flex flex-col items-center text-center gap-6 pt-28 md:pt-40 pb-14 md:pb-24">
           <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">Still can’t sleep? We’ll show you why.</h1>
@@ -283,7 +285,7 @@ function Pricing() {
               <li>✓ Privacy by default</li>
             </ul>
             <div className="mt-6">
-              <a href="/auth/signup" className="inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free Account</a>
+              <a href="/auth/signup" className="inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free</a>
               <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
             </div>
           </div>

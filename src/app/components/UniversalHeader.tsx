@@ -35,7 +35,7 @@ export default function UniversalHeader() {
               <Link href="/contact" className={navLinkBase}>Contact</Link>
             </nav>
             <Link href="/auth/signin" className={`${navLinkBase} text-xs md:text-base`}>Sign In</Link>
-            <Link href="/auth/signup" className={`${ctaClass} h-9 md:h-11 px-3 md:px-5 text-xs md:text-base`}>Start Free Account</Link>
+            <Link href="/auth/signup" className={`${ctaClass} h-9 md:h-11 px-3 md:px-5 text-xs md:text-base`}>Start Free</Link>
           </div>
         </div>
       </div>
