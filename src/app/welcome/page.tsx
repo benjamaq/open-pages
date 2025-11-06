@@ -97,7 +97,7 @@ export default function WelcomePage() {
                 <Zap className="w-5 h-5 text-yellow-500" />
               </h3>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-gray-900">$9.99</span>
+                <span className="text-3xl font-bold text-gray-900">$29</span>
                 <span className="text-gray-600">/month</span>
               </div>
               <p className="text-sm text-gray-600 mt-2">For serious health optimizers</p>

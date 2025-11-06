@@ -40,7 +40,7 @@ export const STRIPE_CONFIG = {
     pro: {
       monthly: {
         priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
-        amount: 999, // $9.99
+        amount: 2900, // $29.00
       },
       yearly: {
         priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID!,

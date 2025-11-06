@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS pricing_config (
 
 -- Insert Pro pricing (configurable for A/B testing)
 INSERT INTO pricing_config (plan_type, price_monthly_cents, price_yearly_cents) VALUES
-('pro', 999, 9990) -- $9.99/month, $99.90/year
+('pro', 2900, 29000) -- $29.00/month, $290.00/year
 ON CONFLICT (plan_type) DO UPDATE SET
   price_monthly_cents = EXCLUDED.price_monthly_cents,
   price_yearly_cents = EXCLUDED.price_yearly_cents;

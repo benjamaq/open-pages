@@ -58,7 +58,7 @@ export default function TierManagement({ currentTier, isOwner }: TierManagementP
     {
       id: 'pro',
       name: 'Pro',
-      price: '$9.99',
+      price: '$29',
       period: '/month',
       icon: '⚡',
       color: 'blue',

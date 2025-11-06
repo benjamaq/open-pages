@@ -131,7 +131,7 @@ export default function SleepLandingV2() {
               <div className="absolute -top-4 left-1/2 -translate-x-1/2"><span className="bg-[#E8B86D] text-black px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span></div>
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-black mb-2">Premium</h3>
-                <div className="flex items-baseline gap-2 mb-4"><span className="text-5xl font-bold text-black">$9.99</span><span className="text-gray-500">/month</span></div>
+                <div className="flex items-baseline gap-2 mb-4"><span className="text-5xl font-bold text-black">$29</span><span className="text-gray-500">/month</span></div>
                 <p className="text-gray-600">For serious sleep optimization</p>
               </div>
               <ul className="space-y-4 mb-8">

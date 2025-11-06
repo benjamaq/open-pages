@@ -40,7 +40,7 @@ export default function MigraineLandingClient() {
       <PwaTopBanner />
 
       {/* HERO */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
         {/* Base gradient (softer for migraine) */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#312E81] via-[#4C1D95] to-[#E8B86D] opacity-80" />
         {/* Background hero image (subject on right third) */}
@@ -95,11 +95,11 @@ export default function MigraineLandingClient() {
               Track for 20 seconds a day. BioStackr's intelligent system analyzes everything you log to uncover the
               patterns most associated with your migraines—so you can avoid them before they hit.
             </p>
-            <div className="flex gap-4 flex-wrap mb-2">
-              <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-8 py-4 text-base font-semibold text-black transition-all hover:bg-[#d9a860]">Start Free</Link>
-              <Link href="#how-it-works" className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10">See How It Works</Link>
+            <div className="flex gap-2 flex-wrap mb-2">
+              <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-lg bg-[#E8B86D] px-4 py-2 text-sm sm:px-8 sm:py-4 sm:text-base font-semibold text-black transition-all hover:bg-[#d9a860] whitespace-nowrap">Start Free</Link>
+              <Link href="#how-it-works" className="inline-flex items-center justify-center rounded-lg border-2 border-white px-4 py-2 text-sm sm:px-8 sm:py-4 sm:text-base font-semibold text-white transition-all hover:bg-white/10 whitespace-nowrap">See How It Works</Link>
             </div>
-            <p className="mt-1 text-sm md:text-base text-white/85">No credit card • 20 seconds daily • Free forever</p>
+            
           </div>
         </Container>
       </section>
@@ -281,7 +281,7 @@ export default function MigraineLandingClient() {
               <div className="absolute -top-4 left-1/2 -translate-x-1/2"><span className="bg-[#E8B86D] text-black px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span></div>
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-black mb-2">Premium</h3>
-                <div className="flex items-baseline gap-2 mb-4"><span className="text-5xl font-bold text-black">$9.99</span><span className="text-gray-500">/month</span></div>
+                <div className="flex items-baseline gap-2 mb-4"><span className="text-5xl font-bold text-black">$29</span><span className="text-gray-500">/month</span></div>
                 <p className="text-gray-600">For deep, migraine‑specific insights</p>
               </div>
               <ul className="space-y-4 mb-8">
@@ -321,7 +321,7 @@ export default function MigraineLandingClient() {
               >
                 Start Free
               </Link>
-              <span className="mt-2 text-sm text-gray-200">No credit card • 20 seconds daily • Free forever</span>
+              
             </div>
             <p className="mt-6 text-sm text-gray-200">Install in one tap · Daily reminders · Private by default</p>
           </div>

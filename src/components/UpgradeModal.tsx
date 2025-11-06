@@ -97,7 +97,7 @@ export default function UpgradeModal({ isOpen, onClose, itemType, currentCount, 
 
           {/* Pricing */}
           <div className="bg-green-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-900">$9.99</div>
+            <div className="text-2xl font-bold text-green-900">$29</div>
             <div className="text-sm text-green-700">per month</div>
             <div className="text-xs text-green-600 mt-1">Cancel anytime</div>
           </div>

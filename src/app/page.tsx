@@ -1,1 +1,2 @@
-export { default } from './sleep-v3/page'
+export { metadata } from './pain/page'
+export { default } from './pain/page'

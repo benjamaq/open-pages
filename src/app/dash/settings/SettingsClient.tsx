@@ -1148,7 +1148,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                   href="/pricing/pro"
                   className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors"
                 >
-                  Upgrade to Pro - $9.99/month
+                  Upgrade to Pro - $29/month
                 </a>
                 <span className="text-xs text-gray-500">Cancel anytime</span>
               </div>
@@ -1175,7 +1175,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                       href="/pricing/pro"
                       className="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
                     >
-                      Upgrade to Pro - $9.99/month
+                      Upgrade to Pro - $29/month
                     </a>
                   </div>
                 </div>
@@ -1267,7 +1267,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="font-medium text-gray-900">Biostackr Pro</h3>
-                  <p className="text-sm text-gray-600">$9.99/month</p>
+                  <p className="text-sm text-gray-600">$29/month</p>
                 </div>
                 <a
                   href="/dash/billing"

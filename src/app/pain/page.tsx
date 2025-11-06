@@ -13,16 +13,12 @@ export default function PainPage() {
   let staticHtml = ''
   try {
     staticHtml = fs.readFileSync(staticPath, 'utf8')
+    // Swap hero headline to a more positive variant (A/B tested)
+    staticHtml = staticHtml.replace(/You[’']ve tried everything to manage your pain\./, 'Find what’s working for your pain.')
+    staticHtml = staticHtml.replace(/You\'ve tried everything to manage your pain\./, 'Find what’s working for your pain.')
   } catch {}
   return (
     <main>
-      <section className="bg-white">
-        <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="tracking-wide text-gray-900 font-light text-2xl md:text-3xl">Pattern Discovery for Your Health</p>
-          </div>
-        </div>
-      </section>
       {staticHtml ? (
         <section className="bg-white">
           {/* Hide the static page's own header/navigation and trust badges; tighten hero spacing */}
@@ -32,6 +28,20 @@ export default function PainPage() {
             .pain-embed .section-label{display:none !important}
             .pain-embed .section-label + span{display:none !important}
             .pain-embed section:first-of-type{padding-top:20px !important}
+            /* Remove PWA Install section */
+            .pain-embed #install{display:none !important}
+            /* Add clear spacing between Founder Story and In Their Words sections */
+            .pain-embed section[style="background: #f8f9fa; padding: 80px 20px; overflow: hidden;"]{
+              margin-top: 48px !important;
+              padding-top: 96px !important;
+            }
+            /* Mobile iPhone SE tweaks for hero sizing & CTAs */
+            @media (max-width: 375px){
+              .pain-embed .hero-title{ font-size: 28px !important; line-height: 1.25 !important; }
+              .pain-embed .hero-subtitle{ font-size: 14px !important; }
+              .pain-embed [id='cta-signup']{ padding: 8px 12px !important; font-size: 13px !important; border-radius: 8px !important; }
+              .pain-embed a[href="#how-it-works"]{ padding: 8px 12px !important; font-size: 13px !important; border-radius: 8px !important; }
+            }
           `}</style>
           <div className="container mx-auto px-4 py-4">
             <div className="prose max-w-none w-full pain-embed" dangerouslySetInnerHTML={{ __html: staticHtml }} />

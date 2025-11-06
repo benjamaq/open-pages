@@ -40,11 +40,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/sleep',
-        destination: '/',
-        permanent: true,
-      },
-      {
         source: '/migraine',
         destination: '/migraines',
         permanent: false,

@@ -43,7 +43,7 @@ export default function Pricing() {
             </div>
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2"><span>Premium</span><span className="text-gray-600">⚡</span></h3>
-              <div className="mt-4 flex items-baseline justify-center"><span className="text-4xl font-bold text-gray-900">$9.99</span><span className="text-gray-600 ml-1">/month</span></div>
+              <div className="mt-4 flex items-baseline justify-center"><span className="text-4xl font-bold text-gray-900">$29</span><span className="text-gray-600 ml-1">/month</span></div>
               <p className="mt-2 text-gray-600">For serious sleep optimizers</p>
             </div>
             <div className="mt-8">

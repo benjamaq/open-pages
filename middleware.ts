@@ -2,22 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './src/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // Redirect root (/) to the static landing page in all environments
   const { pathname } = request.nextUrl
-
   // Public endpoint: allow unauthenticated access and skip session middleware
   if (pathname.startsWith('/api/checkin/magic')) {
     return NextResponse.next()
   }
-
-  if (pathname === '/' || pathname === '') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/landing-v2.html'
-    // Serve the landing content at '/' without changing the URL
-    const res = NextResponse.rewrite(url)
-    res.headers.set('Cache-Control', 'no-store, max-age=0')
-    return res
-  }
+  // Let the App Router handle routing for the root (/) and all other paths
   return await updateSession(request)
 }
 
