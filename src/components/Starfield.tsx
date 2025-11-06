@@ -6,9 +6,10 @@ type StarfieldProps = {
   count?: number
   className?: string
   opacity?: number
+  color?: string
 }
 
-export default function Starfield({ count = 100, className = '', opacity = 0.6 }: StarfieldProps) {
+export default function Starfield({ count = 100, className = '', opacity = 0.6, color = '#ffffff' }: StarfieldProps) {
   const [stars, setStars] = useState<Array<{ top: number; left: number; size: number; opacity: number; key: string }>>([])
 
   useEffect(() => {
@@ -28,8 +29,8 @@ export default function Starfield({ count = 100, className = '', opacity = 0.6 }
       {stars.map((s) => (
         <div
           key={s.key}
-          className="absolute rounded-full bg-white"
-          style={{ top: `${s.top}%`, left: `${s.left}%`, width: `${s.size}px`, height: `${s.size}px`, opacity: s.opacity }}
+          className="absolute rounded-full"
+          style={{ top: `${s.top}%`, left: `${s.left}%`, width: `${s.size}px`, height: `${s.size}px`, opacity: s.opacity, backgroundColor: color }}
         />
       ))}
     </div>
