@@ -6,7 +6,7 @@ export const metadata = {
 import Link from 'next/link'
 import Image from 'next/image'
 import { Tomorrow } from 'next/font/google'
-const CTA_TEXT = "Find MY Sleep Trigger — Free (Takes 20 Seconds)";
+const CTA_TEXT = "Start Free Account";
 const tomorrow = Tomorrow({ subsets: ['latin'], weight: ['500','600'] })
 
 function PrimaryCTA({ className = "" }: { className?: string }) {
@@ -63,6 +63,7 @@ function Hero() {
             <PrimaryCTA />
             <SecondaryCTA />
           </div>
+          <p className="mt-2 text-xs md:text-sm text-white/85">No credit card • 20 seconds daily • Free forever</p>
           <p className="text-white/95 text-base md:text-lg mt-2"><span className="text-[#F4B860] font-semibold">Your job</span> — 20‑second check‑in daily. You spend longer choosing your socks.</p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/85 text-sm">
@@ -118,7 +119,10 @@ function PatternShowcase() {
             <h3 className="text-xl font-semibold text-slate-900">“Phone stayed out of the bedroom”</h3>
             <p className="mt-3 text-slate-700">“I used to climb into bed and scroll. The blue light didn’t help, but the real fix was intention — when my phone stayed in another room, <span className="font-semibold">going to bed became about sleep again.</span>”</p>
             <p className="mt-3 text-sm text-slate-500">High confidence • 9 nights</p>
-            <PrimaryCTA className="mt-6" />
+            <div className="mt-6">
+              <PrimaryCTA />
+              <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
+            </div>
           </div>
         </div>
       </Container>
@@ -146,7 +150,10 @@ function HowItWorks() {
           ))}
         </div>
         <p className="mt-6 text-sm text-slate-500">Day 1: Start • Days 3–5: first signals • Days 7–14: first clear pattern</p>
-        <PrimaryCTA className="mt-6" />
+        <div className="mt-6">
+          <PrimaryCTA />
+          <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
+        </div>
       </Container>
     </Section>
   );
@@ -173,7 +180,10 @@ function Testimonials() {
             </div>
           ))}
         </div>
-        <PrimaryCTA className="mt-8" />
+        <div className="mt-8">
+          <PrimaryCTA />
+          <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
+        </div>
       </Container>
     </Section>
   );
@@ -207,7 +217,10 @@ function MorePatterns() {
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {data.map((d) => (<PatternCard key={d.title} {...d} />))}
         </div>
-        <PrimaryCTA className="mt-8" />
+        <div className="mt-8">
+          <PrimaryCTA />
+          <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
+        </div>
       </Container>
     </Section>
   );
@@ -269,7 +282,10 @@ function Pricing() {
               <li>✓ First pattern (7–14 days)</li>
               <li>✓ Privacy by default</li>
             </ul>
-            <a href="/auth/signup" className="mt-6 inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free</a>
+            <div className="mt-6">
+              <a href="/auth/signup" className="inline-flex rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-900 hover:bg-slate-50">Start Free Account</a>
+              <p className="mt-1 text-xs text-gray-600">No credit card • 20 seconds daily • Free forever</p>
+            </div>
           </div>
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900">Premium</h3>
@@ -321,11 +337,7 @@ function FinalCTA() {
           <h2 className="text-3xl md:text-4xl font-extrabold">Find your sleep trigger. Start tonight.</h2>
           <p className="mt-3 text-white/90">Log today. See your first signals this week.</p>
           <PrimaryCTA className="mt-6" />
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/80 text-sm">
-            <span>✓ No wearable</span>
-            <span>✓ 20 sec/day</span>
-            <span>✓ First pattern in 7–14 days</span>
-          </div>
+          <p className="mt-2 text-sm text-white/85">No credit card • 20 seconds daily • Free forever</p>
         </div>
       </Container>
       <div id="get-started" />
