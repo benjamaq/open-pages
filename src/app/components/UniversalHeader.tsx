@@ -25,12 +25,12 @@ export default function UniversalHeader() {
             <span className="tracking-wider">BIOSTACK</span>
             <span className="inline-block align-baseline ml-1 origin-center scale-x-[-1] text-[1.2em]">R</span>
           </Link>
-          <div className="flex items-center justify-between md:justify-end gap-2 md:gap-6">
-            <nav className="flex items-center gap-2 md:gap-4 text-xs md:text-base">
+          <div className="flex items-center justify-end gap-2 md:gap-6">
+            <nav className="flex items-center gap-3 md:gap-4 text-xs md:text-base">
               <Link href="/contact" className={navLinkBase}>Contact</Link>
+              <Link href="/auth/signup" className={`${navLinkBase} whitespace-nowrap`}>Sign Up</Link>
+              <Link href="/auth/signin" className={`${navLinkBase} whitespace-nowrap`}>Sign In</Link>
             </nav>
-            <Link href="/auth/signup" className={`${navLinkBase} text-xs md:text-base whitespace-nowrap`}>Sign Up</Link>
-            <Link href="/auth/signin" className={`${navLinkBase} text-xs md:text-base whitespace-nowrap`}>Sign In</Link>
           </div>
         </div>
       </div>

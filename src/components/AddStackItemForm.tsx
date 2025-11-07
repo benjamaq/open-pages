@@ -196,7 +196,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-sm max-h-[82vh] sm:max-h-[82vh] flex flex-col overflow-hidden" style={{ WebkitOverflowScrolling: 'touch' as any }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[20rem] sm:max-w-sm max-h-[82vh] sm:max-h-[82vh] flex flex-col overflow-hidden" style={{ WebkitOverflowScrolling: 'touch' as any }}>
         {/* Header */}
         <div className="bg-white rounded-t-2xl border-b border-gray-100 p-2 sm:p-3">
           <div className="flex items-center justify-between">
@@ -225,8 +225,8 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
             {itemType === 'supplements' && isOnboarding && (
               <div className="text-center">
                 <div className="mb-2 flex justify-center"><BrandSparkIcon size={40} /></div>
-                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
-                <p className="text-sm sm:text-base text-gray-600 mt-2">
+                <h3 className="text-lg sm:text-2xl font-semibold text-gray-900 tracking-tight">Add your first supplement or medication</h3>
+                <p className="text-xs sm:text-base text-gray-600 mt-2">
                   Knowing what you’re taking helps us find patterns faster — but you can always add this later.
                 </p>
                 {/* Removed explainer about next steps to keep the modal focused on the action */}
@@ -496,19 +496,19 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
             </div>
 
             {/* Bottom CTA - Sticky */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-3 sm:pt-4 px-4 sm:px-6 pb-4 sm:pb-6 mt-4">
-              <div className="flex space-x-3">
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-3 sm:pt-4 px-3 sm:px-6 pb-3 sm:pb-6 mt-4">
+              <div className="flex space-x-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  className={`flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                   disabled={isLoading}
                 >
                   {isOnboarding ? 'Skip for now' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                  className={`flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isOnboarding ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:brightness-110' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                   disabled={isLoading}
                 >
                   {isLoading ? 'Adding...' : (isOnboarding ? 'Add →' : '+ Add to Schedule')}

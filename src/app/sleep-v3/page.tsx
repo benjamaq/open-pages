@@ -169,9 +169,9 @@ function HowItWorks() {
     <Section id="how-it-works" className="bg-white">
       <Container>
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center">Three steps. One week. Clear answers.</h2>
-        <div className="mt-8 grid md:grid-cols-3 gap-6">
+        <div className="mt-8 grid md:grid-cols-3 gap-6 place-items-center md:place-items-stretch">
           {/* Card 1: Log */}
-          <div className="rounded-2xl border border-amber-200 bg-[#fef3c7] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
+          <div className="w-full max-w-[360px] rounded-2xl border border-amber-200 bg-[#fef3c7] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
             {/* Visual mockup */}
             <div className="mb-6 h-[220px] sm:h-[260px] md:h-[300px] rounded-2xl bg-white border border-slate-200 p-4 sm:p-5 shadow-sm">
               <div className="h-4 w-1/3 bg-slate-300 rounded mb-3" />
@@ -202,7 +202,7 @@ function HowItWorks() {
           </div>
 
           {/* Card 2: Elli finds pattern */}
-          <div className="rounded-2xl border border-purple-200 bg-[#f3e8ff] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
+          <div className="w-full max-w-[360px] rounded-2xl border border-purple-200 bg-[#f3e8ff] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
             {/* Visual mockup */}
             <div className="mb-6 h-[220px] sm:h-[260px] md:h-[300px] rounded-2xl bg-white border border-purple-200 p-4 sm:p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -228,7 +228,7 @@ function HowItWorks() {
           </div>
 
           {/* Card 3: One change */}
-          <div className="rounded-2xl border border-emerald-200 bg-[#d1fae5] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
+          <div className="w-full max-w-[360px] rounded-2xl border border-emerald-200 bg-[#d1fae5] p-6 sm:p-8 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition">
             {/* Visual mockup */}
             <div className="mb-6 h-[220px] sm:h-[260px] md:h-[300px] rounded-2xl bg-white border border-emerald-200 p-4 sm:p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-4">
@@ -508,17 +508,17 @@ export default function SleepV3Page() {
               </div>
               <div className="mt-3 text-sm text-slate-600">Get started in 30 seconds - no credit card required.</div>
             </div>
-            <div className="md:col-span-5">
-              <div className="space-y-4">
-                <div className="w-full max-w-[320px] sm:max-w-[400px] rounded-xl border-l-[4px] bg-purple-50 p-6 shadow-sm" style={{ borderLeftColor: '#8b5cf6' }}>
+          <div className="md:col-span-5">
+            <div className="space-y-4 flex flex-col items-center">
+                <div className="w-full max-w-[320px] sm:max-w-[400px] mx-auto rounded-xl border-l-[4px] bg-purple-50 p-6 shadow-sm" style={{ borderLeftColor: '#8b5cf6' }}>
                   <div className="text-xl font-semibold text-purple-900">📱 Phone in bedroom: Sleep 4/10. Phone outside: Sleep 8/10</div>
                   <div className="text-[16px] text-purple-900/80 mt-1">Insight: Leaving it outside turns “bedtime” back into “sleep time.”</div>
                 </div>
-                <div className="w-full max-w-[320px] sm:max-w-[400px] rounded-xl border-l-[4px] bg-blue-50 p-6 shadow-sm" style={{ borderLeftColor: '#6366f1' }}>
+                <div className="w-full max-w-[320px] sm:max-w-[400px] mx-auto rounded-xl border-l-[4px] bg-blue-50 p-6 shadow-sm" style={{ borderLeftColor: '#6366f1' }}>
                   <div className="text-xl font-semibold text-blue-900">☕ Coffee after 2pm drops your sleep quality from 7/10 to 3/10</div>
                   <div className="text-[16px] text-blue-900/80 mt-1">Insight: Morning coffee fine. Afternoon wrecks your night.</div>
                 </div>
-                <div className="w-full max-w-[320px] sm:max-w-[400px] rounded-xl border-l-[4px] bg-red-50 p-6 shadow-sm" style={{ borderLeftColor: '#ef4444' }}>
+                <div className="w-full max-w-[320px] sm:max-w-[400px] mx-auto rounded-xl border-l-[4px] bg-red-50 p-6 shadow-sm" style={{ borderLeftColor: '#ef4444' }}>
                   <div className="text-xl font-semibold text-red-900">💬 Arguments after 9pm drop sleep quality by 40%</div>
                   <div className="text-[16px] text-red-900/80 mt-1">Insight: Tough conversations before bed keep your brain wired all night.</div>
                 </div>

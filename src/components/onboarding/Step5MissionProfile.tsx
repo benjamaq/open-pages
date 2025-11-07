@@ -57,18 +57,18 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-white rounded-2xl w-full max-w-[22rem] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="mx-auto p-5 sm:p-6 md:p-6">
           <div className="mb-2 flex justify-center"><BrandSparkIcon size={40} /></div>
-          <h2 className="text-2xl font-medium mb-3 text-center">What are you working toward?</h2>
-          <p className="text-gray-600 mb-4 text-center">
+          <h2 className="text-xl sm:text-2xl font-medium mb-3 text-center">What are you working toward?</h2>
+          <p className="text-gray-600 mb-4 text-center text-sm sm:text-base">
             Understanding your goals helps me support you better.
           </p>
           {/* Removed extra preface line per request */}
 
-          <div className="mb-6">
-            <p className="text-sm text-gray-600 mb-4">Some people say:</p>
-            <div className="space-y-2 text-sm text-gray-600">
+          <div className="mb-5 sm:mb-6">
+            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Some people say:</p>
+            <div className="space-y-2 text-xs sm:text-sm text-gray-600">
               <p>💬 "I haven't slept well in months and need to figure out why"</p>
               <p>💬 "I'm managing chronic pain and want to find what actually helps"</p>
               <p>💬 "I'm exhausted and need to understand what's draining my energy"</p>
@@ -81,12 +81,12 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
             onChange={(e) => { if (e.target.value.length <= maxLength) setMission(e.target.value) }}
             placeholder={"I'm working toward..."}
             maxLength={maxLength}
-            className="w-full border border-gray-400 rounded-lg p-4 mb-2"
+            className="w-full border border-gray-400 rounded-lg p-3 sm:p-4 mb-2 text-sm sm:text-base"
             rows={4}
           />
-          <p className="text-sm text-gray-500 text-right mb-6">{mission.length}/{maxLength}</p>
+          <p className="text-xs sm:text-sm text-gray-500 text-right mb-5 sm:mb-6">{mission.length}/{maxLength}</p>
 
-          <div className="mb-6">
+          <div className="mb-5 sm:mb-6">
             <p className="text-sm font-medium mb-2">📸 Add a profile photo (optional)</p>
             <input
               type="file"
@@ -96,18 +96,18 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4">
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
+              className="flex-1 bg-purple-600 text-white py-2.5 px-3 sm:py-3 sm:px-4 rounded-lg font-medium text-sm sm:text-base hover:bg-purple-700 transition disabled:opacity-50"
             >
               {isSaving ? 'Saving…' : 'Save & Continue'}
             </button>
             <button
               onClick={onSkip}
               disabled={isSaving}
-              className="flex-1 border py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition"
+              className="flex-1 border py-2.5 px-3 sm:py-3 sm:px-4 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-50 transition"
             >
               Skip to Dashboard →
             </button>
