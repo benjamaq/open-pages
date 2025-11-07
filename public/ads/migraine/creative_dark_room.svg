@@ -1,0 +1,49 @@
+<svg width="1080" height="1350" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b0b0f"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#0b0b0f" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#000" flood-opacity="0.45"/></filter>
+    <style>
+      .h1{font:800 74px/1.15 Inter, Arial, sans-serif; fill:#ffffff}
+      .p{font:500 36px/1.5 Inter, Arial, sans-serif; fill:#e5e7eb}
+      .cta{font:800 44px/1 Inter, Arial, sans-serif; fill:#111827}
+      .brand{font:700 30px/1 Inter, Arial, sans-serif; letter-spacing:0.18em; fill:#e5e7eb}
+      .cardTitle{font:700 34px/1.2 Inter, Arial, sans-serif; fill:#111827}
+      .cardBody{font:500 28px/1.4 Inter, Arial, sans-serif; fill:#374151}
+    </style>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#bg)"/>
+  <rect width="1080" height="1350" fill="url(#glow)"/>
+  <!-- Brand -->
+  <rect x="36" y="36" rx="10" ry="10" width="180" height="48" fill="#0b1222" stroke="#334155"/>
+  <text x="46" y="69" class="brand">BIOSTACKR</text>
+
+  <text x="60" y="220" class="h1">Another migraine. Another ruined weekend.</text>
+  <text x="60" y="300" class="p">Find your triggers in 2 weeks. Free.</text>
+
+  <!-- phone -->
+  <g filter="url(#shadow)" transform="translate(640,310)">
+    <rect rx="44" width="360" height="700" fill="#0b0f1a" stroke="#1f2937" stroke-width="6"/>
+    <rect x="18" y="80" rx="20" width="324" height="580" fill="#ffffff"/>
+    <g transform="translate(36,110)">
+      <text x="0" y="0" class="cardTitle">Pattern found</text>
+      <text x="0" y="60" class="cardBody">Pressure drop yesterday</text>
+      <text x="0" y="100" class="cardBody">and late night → migraine today</text>
+      <rect x="0" y="150" width="284" height="12" rx="6" fill="#e5e7eb"/>
+      <rect x="0" y="150" width="200" height="12" rx="6" fill="#fca5a5"/>
+      <text x="0" y="190" class="cardBody" style="font-size:22px">Higher severity on “storm days”</text>
+    </g>
+  </g>
+
+  <!-- CTA -->
+  <g transform="translate(60,1120)" filter="url(#shadow)">
+    <rect rx="20" width="520" height="98" fill="#f59e0b"/>
+    <text x="40" y="90" class="cta">Stop cancelling plans — Start Free</text>
+  </g>
+</svg>
