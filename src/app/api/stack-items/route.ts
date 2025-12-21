@@ -18,15 +18,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the user's profile
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
+    // Auto-create a minimal profile if missing (to unblock add flow)
     if (profileError || !profile) {
-      console.error('Profile not found:', profileError)
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      const guessName = (user.email || '').split('@')[0] || 'You'
+      const { data: created, error: createErr } = await supabase
+        .from('profiles')
+        .insert({ user_id: user.id, name: guessName })
+        .select('id')
+        .maybeSingle()
+      if (createErr || !created) {
+        console.error('Profile not found and failed to create:', profileError || createErr)
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      }
+      profile = created
     }
 
     // Add the stack item
@@ -38,7 +48,8 @@ export async function POST(request: NextRequest) {
         dose: dose || null,
         item_type,
         frequency: frequency || 'daily',
-        schedule_days: [1, 2, 3, 4, 5, 6, 7], // Default to all days
+        // Default to all days (0=Sun..6=Sat) to match dashboard filtering
+        schedule_days: [0, 1, 2, 3, 4, 5, 6],
         notes: null,
         created_at: new Date().toISOString()
       })

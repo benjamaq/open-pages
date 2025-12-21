@@ -1,0 +1,155 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { clearDraft } from '@/lib/onboarding/draft'
+import Link from 'next/link'
+
+export default function SignupPage() {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const cleanEmail = email.trim()
+      const cleanName = name.trim()
+      const firstName = cleanName.split(' ')[0] || cleanName
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            name: cleanName,
+            first_name: firstName
+          }
+        }
+      })
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+      // Ensure a profile row exists with display_name
+      if (data?.user) {
+        try {
+          const baseSlug = cleanEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
+          const ts = Date.now().toString(36)
+          const slug = `${baseSlug}-${ts}`
+          await supabase
+            .from('profiles')
+            .upsert({
+              user_id: data.user.id,
+              display_name: cleanName,
+              first_name: firstName,
+              slug,
+              public: true,
+              allow_stack_follow: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id', ignoreDuplicates: false })
+        } catch (e) {
+          // non-fatal
+          console.warn('profiles upsert failed (anon client):', e)
+        }
+        // Service role bootstrap to bypass RLS in edge cases
+        try {
+          await fetch('/api/profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: data.user.id, name: cleanName, email: cleanEmail })
+          })
+        } catch (e) {
+          console.warn('profiles bootstrap failed:', e)
+        }
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Auth client error. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+      setLoading(false)
+      return
+    }
+    setLoading(false)
+    // Prevent cross-account bleed: clear any previous onboarding draft
+    try { clearDraft() } catch {}
+    router.push('/onboarding')
+  }
+
+  return (
+    <div
+      className="min-h-screen grid place-items-center p-6"
+      style={{
+        backgroundImage: "url('/sign in.png?v=1')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <div className="w-full max-w-[520px] rounded-2xl border border-gray-200 bg-white/95 p-8 sm:p-10 shadow-lg ring-1 ring-black/5">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-slate-900">Create your BioStackr account</h1>
+          <p className="mt-2 text-gray-600">Start building signal. You can refine everything later.</p>
+        </div>
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div className="grid gap-1">
+            <label className="text-sm text-gray-700">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Eddie"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              required
+            />
+            <div className="text-xs text-gray-500 mt-1">Used for your dashboard and reports.</div>
+          </div>
+          <div className="grid gap-1">
+            <label className="text-sm text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div className="grid gap-1">
+            <label className="text-sm text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              required
+            />
+            <div className="text-xs text-gray-500 mt-1">At least 8 characters.</div>
+          </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+          >
+            {loading ? 'Creating…' : 'Create account'}
+          </button>
+        </form>
+        <div className="mt-4 text-sm text-gray-600 text-center">
+          Already have an account?{' '}
+          <Link className="hover:underline" href="/login" style={{ color: '#6A3F2B' }}>
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+

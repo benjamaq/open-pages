@@ -1,8 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { generateElliMessage } from '@/lib/elli/message-service';
-import type { ToneProfileType } from '@/lib/elli/toneProfiles';
+import { generateElliMessage } from '@/lib/message-service';
+import type { ToneProfileType } from '@/lib/toneProfiles';
 import { saveElliMessage, getUserCheckInCount, getRecentCheckIns } from '@/lib/db/elliMessages';
 import { getUserCondition } from '@/lib/db/userCondition';
 

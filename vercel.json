@@ -17,6 +17,10 @@
     {
       "path": "/api/push/send-daily",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/update-exchange-rates",
+      "schedule": "0 6 * * *"
     }
   ]
 }

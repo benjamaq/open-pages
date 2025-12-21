@@ -1,7 +1,7 @@
 'use server';
 
-import { analyzeSymptoms, CheckInData, SymptomAnalysis } from '@/lib/elli/symptomAnalyzer';
-import { analyzeWithFullContext } from '@/lib/elli/enhancedSymptomAnalyzer';
+import { analyzeSymptoms, type CheckInData, type SymptomAnalysis } from '@/lib/symptomAnalyzer';
+import { analyzeWithFullContext } from '@/lib/enhancedSymptomAnalyzer';
 import { createClient } from '@/lib/supabase/server';
 
 /**

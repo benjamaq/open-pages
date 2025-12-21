@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
-import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
+import { TONE_PROFILES, type ToneProfileType } from '@/lib/toneProfiles';
 
 /**
  * PostSupplementModal

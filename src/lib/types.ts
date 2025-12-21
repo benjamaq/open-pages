@@ -1,3 +1,64 @@
+export interface UserContext {
+  firstName?: string;
+  daysTracked: number;
+  totalCheckins: number;
+  currentStreak: number;
+  longestStreak: number;
+  hasCheckinToday: boolean;
+  // Computed, optional
+  supplementCount?: number;
+  monthlySpendUsd?: number;
+  
+  activeTests: Array<{
+    supplementId: string;
+    name: string;
+    primaryGoal: string;
+    daysCompleted: number;
+    targetDays: number;
+  }>;
+  
+  today?: {
+    mood?: number;
+    energy?: number;
+    focus?: number;
+    stress?: string;
+  };
+  
+  yesterday?: {
+    mood?: number;
+    energy?: number;
+    focus?: number;
+  };
+  
+  hasNewTruthReport: boolean;
+  newTruthReports: Array<{ supplementId: string; name: string }>;
+  microInsights: MicroInsight[];
+  priorities?: string[];
+}
+
+export interface MicroInsight {
+  supplementName: string;
+  metric: string;
+  onAvg: number;
+  offAvg: number;
+  diff: number;
+  samplesOn: number;
+  samplesOff: number;
+}
+
+export const HEALTH_PRIORITIES = [
+  { key: 'sleep', label: 'Sleep Quality', emoji: '🛏️' },
+  { key: 'cognitive', label: 'Cognitive Performance', emoji: '🧠' },
+  { key: 'gut', label: 'Gut Health', emoji: '💪' },
+  { key: 'energy', label: 'Energy & Stamina', emoji: '⚡' },
+  { key: 'longevity', label: 'Longevity', emoji: '🧬' },
+  { key: 'immunity', label: 'Immunity', emoji: '🛡️' },
+  { key: 'mood', label: 'Stress & Mood', emoji: '😌' },
+  { key: 'athletic', label: 'Athletic Performance', emoji: '🏋️' },
+  { key: 'joint', label: 'Joint & Bone Health', emoji: '🦴' },
+  { key: 'beauty', label: 'Skin, Hair & Nails', emoji: '✨' },
+] as const;
+
 // Database types for Open Pages health profile sharing app
 
 export interface Database {

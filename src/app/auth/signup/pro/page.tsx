@@ -121,7 +121,8 @@ export default function ProSignUpPage() {
         password,
         options: {
           data: {
-            name: name.trim()
+            name: name.trim(),
+            first_name: name.trim().split(' ')[0] || name.trim()
           }
         }
       })
@@ -136,6 +137,7 @@ export default function ProSignUpPage() {
             .upsert({
               user_id: data.user.id,
               display_name: name.trim(),
+              first_name: name.trim().split(' ')[0] || name.trim(),
               referral_code: referralCode.trim() || null,
               referral_source: referralCode.trim() === 'redditgo' ? 'reddit' : null,
               slug: email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
@@ -154,6 +156,15 @@ export default function ProSignUpPage() {
         } catch (profileError) {
           console.error('Profile upsert error:', profileError)
         }
+
+        // Service role bootstrap backup
+        try {
+          await fetch('/api/profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: data.user.id, name: name.trim(), email })
+          })
+        } catch {}
 
 
         // Activate beta code if provided

@@ -28,6 +28,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
     schedule_days: [0, 1, 2, 3, 4, 5, 6], // All days by default
     category: 'General'
   })
+  const [startDate, setStartDate] = useState<string>('') // Optional for supplements
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -92,9 +93,47 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
       setIsLoading(false)
       return
     }
+    // For supplements, start date is optional in the new flow
 
     try {
-      await addStackItem({ ...formData, itemType })
+      if (itemType === 'supplements') {
+        // Use API route so we get the created item id, then create initial period
+        const resp = await fetch('/api/stack-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            dose: formData.dose || null,
+            item_type: 'supplements',
+            frequency: formData.frequency || 'daily'
+          })
+        })
+        const json = await resp.json()
+        if (!resp.ok) {
+          throw new Error(json?.error || 'Failed to create supplement')
+        }
+        const newId = json?.data?.id
+        // Creating initial period is optional and endpoint may not exist; ignore failures
+        if (newId && startDate) {
+          try {
+            const periodResp = await fetch(`/api/supplements/${encodeURIComponent(newId)}/periods`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                start_date: startDate,
+                end_date: null
+              })
+            })
+            // If endpoint not present, ignore
+            if (!periodResp.ok) {
+              // swallow
+            }
+          } catch {}
+        }
+      } else {
+        // Non-supplement items: use existing server action
+        await addStackItem({ ...formData, itemType })
+      }
       
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -383,6 +422,19 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
                   ))}
                 </select>
               </div>
+            )}
+            {/* Start date for supplements (required) */}
+            {itemType === 'supplements' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Started when? (optional)</label>
+              <input
+                type="date"
+                value={startDate}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={`w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 ${isOnboarding ? 'focus:ring-purple-600' : 'focus:ring-gray-900'} focus:border-transparent bg-white text-sm`}
+              />
+            </div>
             )}
           </div>
 

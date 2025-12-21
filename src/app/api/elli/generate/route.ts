@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateElliMessage } from '@/lib/elli/message-service';
+import { generateElliMessage } from '@/lib/message-service';
 import { getRecentCheckIns } from '@/lib/db/elliMessages';
 import { saveElliMessage } from '@/lib/db/elliMessages';
 

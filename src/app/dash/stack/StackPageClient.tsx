@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, MoreHorizontal, Eye, EyeOff, Copy, Trash2, Search, Filter, X } from 'lucide-react'
 import AddStackItemForm from '../../../components/AddStackItemForm'
+import AddSupplementModal from '../../../components/supplements/AddSupplementModal'
 import EditStackItemForm from '../../../components/EditStackItemForm'
+import SupplementTimeline from '../../../components/supplements/SupplementTimeline'
 import { updateStackItem, deleteStackItem } from '../../../lib/actions/stack'
 
 interface StackItem {
@@ -291,6 +293,14 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
               {item.brand && <p className="text-sm text-gray-600 break-words">Brand: {item.brand}</p>}
               {item.timing && <p className="text-sm text-gray-600 break-words">Timing: {item.timing}</p>}
               
+              {/* Visual Period Timeline + List */}
+              <div className="mt-4">
+                <SupplementTimeline
+                  supplementId={String(item.id)}
+                  supplementName={item.name}
+                />
+              </div>
+
               <div className="mt-4 flex justify-between items-center">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   item.public ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
@@ -397,9 +407,48 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
 
       {/* Modals */}
       {showAddForm && (
-        <AddStackItemForm 
-          onClose={() => setShowAddForm(false)} 
-          itemType="supplements"
+        <AddSupplementModal
+          open={true}
+          onClose={() => {
+            setShowAddForm(false)
+            router.refresh()
+          }}
+          save={{
+            onCreate: async ({ name, startDate, endDate, dose }) => {
+              const createRes = await fetch('/api/stack-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name,
+                  dose: dose || null,
+                  item_type: 'supplements',
+                  frequency: 'daily'
+                })
+              })
+              const createJson = await createRes.json()
+              if (!createRes.ok) throw new Error(createJson?.error || 'Failed to create supplement')
+              const supplementId = createJson?.data?.id as string
+              const periodRes = await fetch(`/api/supplements/${encodeURIComponent(supplementId)}/periods`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+              })
+              const periodJson = await periodRes.json()
+              if (!periodRes.ok) throw new Error(periodJson?.error || 'Failed to create period')
+              const first = periodJson?.period
+              return { supplementId, periods: first ? [{
+                id: first.id,
+                supplementId,
+                startDate: first.start_date,
+                endDate: first.end_date,
+                dose: first.dose,
+                notes: first.notes
+              }] : [] }
+            },
+            onReplacePeriods: async (_supplementId, _periods) => {
+              await Promise.resolve()
+            }
+          }}
         />
       )}
 

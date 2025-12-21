@@ -1,0 +1,20 @@
+@keyframes breathe {
+  0%,100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.animate-breathe { animation: breathe 8s ease-in-out infinite; }
+
+@keyframes pulse-slow {
+  0%,100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+
+@keyframes signal-glitch {
+  0% { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(251,191,36,0.35)); }
+  100% { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+}
+.animate-signal-glitch { animation: signal-glitch 1.8s ease-in-out infinite; }
+
+

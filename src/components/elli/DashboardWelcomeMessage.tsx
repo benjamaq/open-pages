@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
-import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
+import { TONE_PROFILES, type ToneProfileType } from '@/lib/toneProfiles';
 
 /**
  * DashboardWelcomeMessage

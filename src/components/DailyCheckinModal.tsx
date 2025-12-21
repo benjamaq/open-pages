@@ -201,16 +201,7 @@ export default function DailyCheckinModal({
   userId,
   profileSlug
 }: DailyCheckinModalProps) {
-  // Debug: Log when component loads to verify new mood chips
-  console.log('🎭 DailyCheckinModal loaded with new emoji mood chips v2.3')
-  
-  // Debug: Check if emoji mood chips are in the array
-  const emojiMoods = ['⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates', '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']
-  console.log('🎭 Emoji moods array:', emojiMoods)
-  console.log('🎭 First emoji mood:', emojiMoods[0])
-  console.log('🎭 Emoji test - Lightning:', '⚡')
-  console.log('🎭 Emoji test - Cloud:', '🌧️')
-  console.log('🎭 Emoji test - Ice:', '🧊')
+  // Minimal, analytical UI per brief
   
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
@@ -225,13 +216,22 @@ export default function DailyCheckinModal({
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [showWearables, setShowWearables] = useState(false)
-  const [showSymptoms, setShowSymptoms] = useState(false)
-  const [customSymptomInput, setCustomSymptomInput] = useState('')
-  const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
+  const [selectedSupps, setSelectedSupps] = useState<Record<string, boolean>>({})
   const [selectedLifestyleFactors, setSelectedLifestyleFactors] = useState<string[]>([])
-  const [selectedExercise, setSelectedExercise] = useState<string>('none')
-  const [exerciseIntensity, setExerciseIntensity] = useState<string>('')
-  const [selectedProtocols, setSelectedProtocols] = useState<string[]>([])
+  const [focus, setFocus] = useState<number>(5)
+
+  // Allowed confounders
+  const CONFOUNDERS = [
+    { id: 'alcohol', label: 'Alcohol' },
+    { id: 'poor_sleep', label: 'Poor sleep' },
+    { id: 'high_stress', label: 'High stress' },
+    { id: 'illness', label: 'Illness' },
+    { id: 'travel', label: 'Travel' },
+    { id: 'heavy_training', label: 'Heavy training' },
+    { id: 'no_training', label: 'No training' },
+    { id: 'late_caffeine', label: 'Late caffeine' },
+    { id: 'very_high_carbs', label: 'Very high carbs' },
+  ]
 
   // Load saved data when modal opens
   useEffect(() => {
@@ -306,10 +306,10 @@ export default function DailyCheckinModal({
             painLocations: data.painLocations || [],
             customSymptoms: data.customSymptoms || []
           }))
+          if (typeof data.focus === 'number') {
+            setFocus(data.focus)
+          }
           setSelectedLifestyleFactors(Array.isArray(data.lifestyleFactors) ? data.lifestyleFactors : [])
-          setSelectedExercise(typeof data.exerciseType === 'string' ? data.exerciseType : 'none')
-          setExerciseIntensity(typeof data.exerciseIntensity === 'string' ? data.exerciseIntensity : '')
-          setSelectedProtocols(Array.isArray(data.protocols) ? data.protocols : [])
         }
       } catch (error) {
         console.error('Error loading saved check-in:', error)
@@ -341,9 +341,9 @@ export default function DailyCheckinModal({
     setDraft(prev => ({
       ...prev,
       supplementsCount: todayItems.supplements?.length || 0,
-      protocols: todayItems.protocols?.map((p: any) => p.name) || [],
-      mindfulness: todayItems.mindfulness?.map((m: any) => m.name) || [],
-      movement: todayItems.movement?.map((m: any) => m.name) || []
+      protocols: [],
+      mindfulness: [],
+      movement: []
     }))
 
     // Load saved note
@@ -368,49 +368,58 @@ export default function DailyCheckinModal({
 
     try {
       const today = new Date().toISOString().split('T')[0]
-      
-      // Save to database via mood API
-      const moodData = {
-        mood: typeof draft.energy === 'number' ? draft.energy : 5, // Map energy to mood score
-        sleep_quality: typeof draft.sleep === 'number' ? draft.sleep : 5,
-        pain: typeof draft.pain === 'number' ? draft.pain : 5,
-        tags: draft.mood ? [draft.mood] : [],
-        journal: draft.moodComment || null,
-        symptoms: draft.symptoms || [],
-        pain_locations: draft.painLocations || [],
-        custom_symptoms: draft.customSymptoms || [],
-        lifestyle_factors: selectedLifestyleFactors,
-        exercise_type: selectedExercise,
-        exercise_intensity: exerciseIntensity || null,
-        protocols: selectedProtocols
-      }
 
-      const moodResponse = await fetch('/api/mood/today', {
+      // Map Energy/Focus 0-10 → 1-5 scale expected by /api/checkin
+      const toFive = (n: number | undefined | null) => {
+        const v = typeof n === 'number' ? n : 5
+        return Math.max(1, Math.min(5, Math.round(v / 2)))
+      }
+      const moodScore = toFive(draft.energy) // derive mood from energy
+      const energyScore = toFive(draft.energy)
+      const focusScore = toFive((typeof (focus) === 'number' ? focus : 5))
+
+      // Build supplement intake map from selected checkboxes
+      const supplement_intake: Record<string, boolean> = {}
+      try {
+        Object.entries(selectedSupps).forEach(([k, v]) => { if (v) supplement_intake[k] = true })
+      } catch {}
+
+      // Tags: confounders only
+      const tags: string[] = Array.isArray(selectedLifestyleFactors) ? [...selectedLifestyleFactors] : []
+
+      // Save via BioStackr check-in API
+      const res = await fetch('/api/checkin', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-client-tz-offset': (() => { try { return String(new Date().getTimezoneOffset()) } catch { return '0' } })(),
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(moodData)
+        body: JSON.stringify({
+          mood: moodScore,
+          energy: energyScore,
+          focus: focusScore,
+          tags,
+          supplement_intake
+        })
       })
-
-      if (!moodResponse.ok) {
-        throw new Error('Failed to save mood data')
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j?.error || 'Failed to save check-in')
       }
 
       // Save to localStorage for backward compatibility
       localStorage.setItem(`biostackr_last_daily_checkin_${userId}`, JSON.stringify({
         energy: draft.energy,
         mood: draft.mood,
+        focus: focus,
         pain: draft.pain,
         sleep: draft.sleep,
         symptoms: draft.symptoms,
         painLocations: draft.painLocations,
         customSymptoms: draft.customSymptoms,
         lifestyleFactors: selectedLifestyleFactors,
-        exerciseType: selectedExercise,
-        exerciseIntensity: exerciseIntensity,
-        protocols: selectedProtocols,
+        exerciseType: 'none',
+        exerciseIntensity: '',
+        protocols: [],
         date: today,
         userId: userId
       }))
@@ -443,10 +452,24 @@ export default function DailyCheckinModal({
 
       setMessage('✅ Check-in saved successfully!')
 
-      // Trigger dashboard reload
+      // Immediately refresh dashboard progress (without full reload)
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('progress:refresh'))
+        }
+      } catch {}
+
+      // Trigger dashboard reload (legacy path only)
       if (window.location.pathname.includes('/dash')) {
         setTimeout(() => window.location.reload(), 800)
       }
+
+      // Clear any ?checkin=1 param to avoid auto-reopen loops
+      try {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('checkin')
+        window.history.replaceState({}, '', url.toString())
+      } catch {}
 
       setTimeout(() => {
         setMessage('')
@@ -773,491 +796,158 @@ export default function DailyCheckinModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-200 flex-shrink-0">
-          <div>
-            <h2 className="text-xl font-semibold text-zinc-900">Daily Check-in</h2>
-            <p className="text-sm text-zinc-500">{formatDate(new Date())}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header (sticky, neutral) */}
+        <div className="sticky top-0 bg-white border-b px-8 py-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Daily Check-in</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
-        {/* Scrollable Content - This div IS the rounded container */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white rounded-b-xl pr-2">
-          <div className="p-6 space-y-6">
-            {/* Section 1: Personal Check-in - Light Gray Container */}
-            <div className="bg-gray-50 rounded-lg p-5">
-              <h3 className="text-lg font-semibold text-zinc-900 mb-4">Personal Check-in</h3>
+        {/* Scrollable Content (neutral, reusing Add Supplement spacing rhythm) */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
+          <div className="p-8 space-y-6">
+            {/* Section 1: Personal Check-in (very light container, soft radius, generous padding) */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Personal Check-in</h3>
               
-              {/* Three Sliders: Mood, Pain, Sleep */}
-              <div className="space-y-4 mb-4">
-                {/* Mood Slider */}
+              {/* Three Sliders: Energy, Focus, Sleep */}
+              <div className="space-y-6 mb-6">
+                {/* Energy Slider */}
                 <div className="overflow-hidden">
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Mood</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Energy</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
-                      min={0}
+                      min={1}
                       max={10}
                       value={draft.energy}
                       onChange={(e) => setDraft(d => ({ ...d, energy: Number(e.target.value) }))}
-                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
-                      style={{
-                        background: `linear-gradient(to right, 
-                          #ef4444 0%, 
-                          #f97316 20%, 
-                          #eab308 40%, 
-                          #84cc16 60%, 
-                          #22c55e 80%, 
-                          #16a34a 100%)`,
-                        outline: 'none',
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'none'
-                      }}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
-                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.energy}/10</span>
+                    <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{draft.energy}/10</span>
                   </div>
                 </div>
 
-                {/* Pain Slider */}
+                {/* Focus Slider */}
                 <div className="overflow-hidden">
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Pain</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Focus</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
-                      min={0}
+                      min={1}
                       max={10}
-                      value={draft.pain || 0}
-                      onChange={(e) => setDraft(d => ({ ...d, pain: Number(e.target.value) }))}
-                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
-                      style={{
-                        background: `linear-gradient(to right, 
-                          #16a34a 0%, 
-                          #22c55e 20%, 
-                          #eab308 40%, 
-                          #f97316 60%, 
-                          #ef4444 80%, 
-                          #dc2626 100%)`,
-                        outline: 'none',
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'none'
-                      }}
+                      value={focus}
+                      onChange={(e) => setFocus(Number(e.target.value))}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
-                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.pain || 0}/10</span>
+                    <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{focus}/10</span>
                   </div>
                 </div>
 
                 {/* Sleep Slider */}
                 <div className="overflow-hidden">
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Sleep</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Sleep</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
-                      min={0}
+                      min={1}
                       max={10}
                       value={draft.sleep || 5}
                       onChange={(e) => setDraft(d => ({ ...d, sleep: Number(e.target.value) }))}
-                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-transparent min-w-0"
-                      style={{
-                        background: `linear-gradient(to right, 
-                          #ef4444 0%, 
-                          #f97316 20%, 
-                          #eab308 40%, 
-                          #84cc16 60%, 
-                          #22c55e 80%, 
-                          #16a34a 100%)`,
-                        outline: 'none',
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'none'
-                      }}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
-                    <span className="w-8 text-right text-sm text-zinc-700 font-medium flex-shrink-0">{draft.sleep || 5}/10</span>
+                    <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{draft.sleep || 5}/10</span>
                   </div>
                 </div>
-              </div>
+            </div>
 
-              {/* Mood Preset Selector */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-zinc-900 mb-2">Mood Vibe (optional)</label>
-                <select
-                  value={draft.mood ?? ''}
-                  onChange={(e) => setDraft(d => ({ ...d, mood: e.target.value || undefined }))}
-                  className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                >
-                  <option value="">Pick a vibe…</option>
-                  {(['f—ing broken', 'Running on fumes', 'Under-slept', 'Wired & tired', 'Tired but trying',
-                    'Foggy', 'A bit wonky', 'A bit sore', 'Glassy-eyed', 'Low and slow',
-                    'Slow burn', 'Overcaffeinated', 'A bit spicy', 'Resetting', 'Rebuilding',
-                    'Solid baseline', 'Back online', 'Calm & steady', 'Cruising', 'Climbing',
-                    'Crisp and clear', 'Quietly powerful', 'Renegade mode', 'Dialed in', 'Peaking',
-                    'Laser-focused', 'Flow state', 'Bulletproof', 'Angel in the sky', 'Unstoppable',
-                    '⚡ Dialed in', '🌧️ Walking storm cloud', '🧊 Chill & unbothered', '🤹 Spinning too many plates',
-                    '🐢 Slow but steady', '🔄 Restart required', '🫠 Melted but managing', '🌤️ Quietly optimistic']).map(mood => (
-                    <option key={mood} value={mood}>{mood}</option>
+            {/* Supplements today (same section container style as Add Supplement) */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Supplements today</h3>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {(todayItems?.supplements || []).map((it: any) => (
+                    <label key={it.id} className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 bg-white hover:border-gray-300 transition-colors">
+                      <input
+                        type="checkbox"
+                        className="accent-gray-900"
+                        checked={!!selectedSupps[it.id]}
+                        onChange={() => setSelectedSupps(prev => ({ ...prev, [it.id]: !prev[it.id] }))}
+                      />
+                      <span className="text-sm text-gray-800">{it.name || it.title || 'Item'}</span>
+                    </label>
                   ))}
-                </select>
+              </div>
               </div>
 
-              {/* Symptom Tracking Section - Collapsible */}
-              <div className="bg-white rounded-lg p-4 mb-4 border border-zinc-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-base font-medium text-zinc-900">Symptoms today (optional)</h4>
-                  <button
-                    onClick={() => setShowSymptoms(!showSymptoms)}
-                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label={showSymptoms ? 'Collapse' : 'Expand'}
-                  >
-                    <ChevronDown className={`w-5 h-5 transition-transform ${showSymptoms ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
-                  </button>
-                </div>
+              {/* Mood preset removed per spec */}
 
-                {showSymptoms && (
-                  <div className="space-y-4">
-                    {/* Core Symptoms - Tag Style */}
-                    <div>
-                      <p className="text-xs text-zinc-500 mb-2">Select all that apply</p>
-                      <div className="flex flex-wrap gap-2">
-                        {coreSymptoms.map(symptom => (
-                          <button
-                            key={symptom.id}
-                            onClick={() => toggleSymptom(symptom.id)}
-                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                              (draft.symptoms || []).includes(symptom.id)
-                                ? 'bg-zinc-900 text-white'
-                                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                            }`}
-                          >
-                            {symptom.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              {/* Symptoms removed per spec */}
 
-                    {/* Custom Symptoms */}
-                    <div>
-                      {(draft.customSymptoms || []).length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {(draft.customSymptoms || []).map(symptom => (
-                            <div
-                              key={symptom}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-900"
-                            >
-                              <span>{symptom}</span>
-                              <button
-                                onClick={() => removeCustomSymptom(symptom)}
-                                className="ml-1 hover:text-blue-700"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {!showCustomSymptomInput ? (
-                        <button
-                          onClick={() => setShowCustomSymptomInput(true)}
-                          className="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>Add custom symptom</span>
-                        </button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={customSymptomInput}
-                            onChange={(e) => setCustomSymptomInput(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddCustomSymptom()}
-                            placeholder="Type your symptom..."
-                            className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                            autoFocus
-                          />
-                          <button
-                            onClick={handleAddCustomSymptom}
-                            className="px-4 py-2 rounded-md bg-zinc-900 text-white text-sm hover:bg-zinc-800"
-                          >
-                            Add
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowCustomSymptomInput(false)
-                              setCustomSymptomInput('')
-                            }}
-                            className="px-4 py-2 rounded-md bg-zinc-100 text-zinc-700 text-sm hover:bg-zinc-200"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Pain Locations - Only show if pain > 0 */}
-                    {(draft.pain || 0) > 0 && (
-                      <div className="pt-3 border-t border-zinc-200">
-                        <label className="block text-sm font-medium text-zinc-900 mb-2">Where's your pain?</label>
-                        <div className="flex flex-wrap gap-2">
-                          {painLocations.map(location => (
-                            <button
-                              key={location.id}
-                              onClick={() => togglePainLocation(location.id)}
-                              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                                (draft.painLocations || []).includes(location.id)
-                                  ? 'bg-red-600 text-white'
-                                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                              }`}
-                            >
-                              {location.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes Field moved outside dropdown */}
-                  </div>
-                )}
-              </div>
-
-              {/* Lifestyle Factors (optional) */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">Anything unusual today? (optional)</p>
+              {/* Confounders (optional) */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Anything unusual today? (optional)</h3>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { id: 'alcohol', icon: '🍷', label: 'Alcohol' },
-                    { id: 'high_carb_meal', icon: '🍝', label: 'High-carb meal' },
-                    { id: 'high_stress', icon: '😰', label: 'High stress' },
-                    { id: 'work_deadline', icon: '📅', label: 'Work deadline' },
-                    { id: 'sitting_all_day', icon: '💺', label: 'Sitting all day' },
-                    { id: 'too_much_caffeine', icon: '☕', label: 'Too much caffeine' },
-                    { id: 'dehydrated', icon: '💧', label: 'Dehydrated' },
-                    { id: 'ate_out', icon: '🍔', label: 'Ate out' },
-                    { id: 'poor_sleep_last_night', icon: '😴', label: 'Slept poorly' },
-                    { id: 'no_exercise', icon: '🛋️', label: 'No movement' }
+                    { id: 'alcohol', label: 'Alcohol' },
+                    { id: 'poor_sleep', label: 'Poor sleep' },
+                    { id: 'high_stress', label: 'High stress' },
+                    { id: 'illness', label: 'Illness' },
+                    { id: 'travel', label: 'Travel' },
+                    { id: 'intense_exercise', label: 'Intense exercise' }
                   ].map(factor => (
                     <button
                       key={factor.id}
                       type="button"
                       onClick={() => setSelectedLifestyleFactors(prev => prev.includes(factor.id) ? prev.filter(id => id !== factor.id) : [...prev, factor.id])}
                       className={`
-                        flex items-center gap-1 px-3 py-1.5 rounded-full text-sm
+                        px-3 py-1.5 rounded-full text-sm border transition-colors
                         ${selectedLifestyleFactors.includes(factor.id)
-                          ? 'bg-purple-100 text-purple-700 border-2 border-purple-400'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300'
-                        }
-                        hover:bg-purple-50 transition-colors
-                      `}
-                    >
-                      <span>{factor.icon}</span>
-                      <span>{factor.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">Tap any that apply. This helps us find what affects your pain.</p>
-              </div>
-
-              {/* Exercise (optional) */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-2">Did you exercise today? (optional)</p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {[
-                    { id: 'none', icon: '🛋️', label: 'Rest day' },
-                    { id: 'walking', icon: '🚶', label: 'Walking' },
-                    { id: 'running', icon: '🏃', label: 'Running' },
-                    { id: 'gym', icon: '🏋️', label: 'Gym/Weights' },
-                    { id: 'yoga', icon: '🧘', label: 'Yoga/Stretch' },
-                    { id: 'swimming', icon: '🏊', label: 'Swimming' }
-                  ].map(type => (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => setSelectedExercise(type.id)}
-                      className={`
-                        px-3 py-1.5 rounded-full text-sm
-                        ${selectedExercise === type.id
-                          ? 'bg-green-100 text-green-700 border-2 border-green-400'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                          ? 'bg-gray-200 text-gray-900 border-gray-400'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                         }
                       `}
                     >
-                      {type.icon} {type.label}
+                      {factor.label}
                     </button>
                   ))}
                 </div>
-
-                {selectedExercise && selectedExercise !== 'none' && (
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-gray-600 mr-2">Intensity:</p>
-                    {['light', 'moderate', 'intense'].map(intensity => (
-                      <button
-                        key={intensity}
-                        type="button"
-                        onClick={() => setExerciseIntensity(intensity)}
-                        className={`
-                          px-2 py-1 rounded text-xs
-                          ${exerciseIntensity === intensity
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-200 text-gray-600'
-                          }
-                        `}
-                      >
-                        {intensity}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <p className="text-xs text-gray-500 mt-2">Optional — helps explain unusual days.</p>
               </div>
 
-              {/* Protocols (optional) */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">Any recovery protocols today? (optional)</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: 'ice_bath', icon: '🧊', label: 'Ice bath' },
-                    { id: 'sauna', icon: '🔥', label: 'Sauna' },
-                    { id: 'meditation', icon: '🧘', label: 'Meditation' },
-                    { id: 'massage', icon: '💆', label: 'Massage' },
-                    { id: 'stretching', icon: '🤸', label: 'Stretching' },
-                    { id: 'red_light', icon: '💡', label: 'Red light therapy' }
-                  ].map(protocol => (
-                    <button
-                      key={protocol.id}
-                      type="button"
-                      onClick={() => setSelectedProtocols(prev => prev.includes(protocol.id) ? prev.filter(id => id !== protocol.id) : [...prev, protocol.id])}
-                      className={`
-                        flex items-center gap-1 px-3 py-1.5 rounded-full text-sm
-                        ${selectedProtocols.includes(protocol.id)
-                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-400'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300'
-                        }
-                      `}
-                    >
-                      <span>{protocol.icon}</span>
-                      <span>{protocol.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Exercise removed per spec */}
 
-              {/* Notes Field (outside of Symptoms) */}
-              <div className="bg-white rounded-lg p-4 mt-4 border border-zinc-200">
-                <label className="block text-sm font-medium text-zinc-900 mb-2">Notes (optional)</label>
-                <textarea
-                  value={draft.moodComment || ''}
-                  onChange={(e) => setDraft(d => ({ ...d, moodComment: e.target.value }))}
-                  placeholder="How are you feeling? Any observations?"
-                  className="w-full rounded-md border border-zinc-300 bg-white p-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                  rows={3}
-                />
-              </div>
+              {/* Protocols removed per spec */}
 
-              {/* Wearables Section */}
-              <div className="bg-gray-50 rounded-lg p-5 mt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-zinc-900">Wearables</h3>
-                  <button
-                    onClick={() => setShowWearables(!showWearables)}
-                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label={showWearables ? 'Collapse' : 'Expand'}
-                  >
-                    <ChevronDown className={`w-5 h-5 transition-transform ${showWearables ? 'rotate-180' : ''}`} style={{ color: '#6B7280' }} />
-                  </button>
-                </div>
+              {/* Notes section removed per spec */}
 
-                {showWearables && (
-                  <div className="space-y-4">
-                    {/* Wearable Source */}
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-900 mb-2">Device</label>
-                      <select
-                        value={draft.wearable?.source || 'None'}
-                        onChange={(e) => setDraft(d => ({ 
-                          ...d, 
-                          wearable: { 
-                            ...d.wearable, 
-                            source: e.target.value as WearableSource 
-                          } 
-                        }))}
-                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                      >
-                        <option value="None">Select device...</option>
-                        {(['WHOOP', 'Oura', 'Apple Health', 'Garmin', 'Fitbit', 'Polar', 'Suunto', 'Coros', 'Amazfit', 'Samsung Health', 'Google Fit', 'Strava', 'MyFitnessPal', 'Cronometer', 'Eight Sleep', 'Other'] as WearableSource[]).map(source => (
-                          <option key={source} value={source}>{source}</option>
-                        ))}
-                      </select>
-                    </div>
+              {/* Wearables removed per spec */}
 
-                    {/* Sleep Score */}
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-900 mb-2">Sleep Score (0-100)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={draft.wearable?.sleepScore || ''}
-                        onChange={(e) => setDraft(d => ({ 
-                          ...d, 
-                          wearable: { 
-                            ...d.wearable, 
-                            sleepScore: e.target.value ? Number(e.target.value) : undefined 
-                          } 
-                        }))}
-                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                        placeholder="Enter sleep score"
-                      />
-                    </div>
-
-                    {/* Recovery Score */}
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-900 mb-2">Recovery Score (0-100)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={draft.wearable?.recoveryScore || ''}
-                        onChange={(e) => setDraft(d => ({ 
-                          ...d, 
-                          wearable: { 
-                            ...d.wearable, 
-                            recoveryScore: e.target.value ? Number(e.target.value) : undefined 
-                          } 
-                        }))}
-                        className="w-full rounded-md border border-zinc-300 bg-white p-2 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
-                        placeholder="Enter recovery score"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Save Button and Message */}
-              <div className="flex items-center justify-between">
-                <div>
-                  {message && !message.includes('Shared') && (
-                    <div className={`text-sm ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
-                      {message}
-                    </div>
-                  )}
-                  <p className="text-sm text-zinc-500 mt-1">
-                    This will automatically update on your dashboard
-                  </p>
-                </div>
-                <button 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="px-6 py-2 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 font-medium"
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* Footer (sticky, neutral) */}
+        <div className="sticky bottom-0 bg-white border-t px-8 py-6 flex justify-between">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >Cancel</button>
+          <div className="flex items-center gap-3">
+            {message && (
+              <div className="text-sm text-gray-600">
+                {message.replace('✅ ', '').replace('❌ ', '')}
+              </div>
+            )}
+            <button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </div>
@@ -1265,22 +955,22 @@ export default function DailyCheckinModal({
       <style jsx>{`
         input[type="range"]::-webkit-slider-thumb {
           appearance: none;
-          height: 20px;
-          width: 20px;
+          height: 18px;
+          width: 18px;
           border-radius: 50%;
-          background: #fff;
+          background: #111827; /* neutral dark */
           cursor: pointer;
-          border: 3px solid #16a34a;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          border: none; /* no ring */
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
         input[type="range"]::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
+          height: 18px;
+          width: 18px;
           border-radius: 50%;
-          background: #fff;
+          background: #111827; /* neutral dark */
           cursor: pointer;
-          border: 3px solid #16a34a;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          border: none; /* no ring */
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
         .overflow-y-auto::-webkit-scrollbar {
           width: 8px;

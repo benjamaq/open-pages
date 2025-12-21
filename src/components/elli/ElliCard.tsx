@@ -5,6 +5,7 @@ import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
 import { getLatestElliMessage, dismissElliMessage, getAllElliMessages } from '@/lib/db/elliMessages';
 import type { ElliMessage } from '@/lib/db/elliMessages';
+import { isMobile } from '@/lib/browser';
 
 interface ElliCardProps {
   userId: string;
@@ -25,10 +26,28 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<ElliMessage[] | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [speedPref, setSpeedPref] = useState<'fast'|'slow'>(() => {
+    try {
+      const s = localStorage.getItem('elli_speed');
+      if (s === 'fast' || s === 'slow') return s;
+    } catch {}
+    return isMobile() ? 'fast' : 'slow';
+  });
+  const [showReveal, setShowReveal] = useState(false);
 
   useEffect(() => {
     loadElliMessage();
   }, [userId, triggerRefresh]);
+
+  useEffect(() => {
+    let t: any;
+    if (isNewMessage && showTyping) {
+      t = setTimeout(() => setShowReveal(true), 1000);
+    } else {
+      setShowReveal(false);
+    }
+    return () => { if (t) clearTimeout(t); };
+  }, [isNewMessage, showTyping]);
 
   async function loadElliMessage() {
     setLoading(true);
@@ -89,6 +108,17 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
           <h3 className="text-lg font-semibold text-gray-900">Elli</h3>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span>Speed</span>
+            <button
+              className={`px-2 py-0.5 rounded ${speedPref==='fast'?'bg-white border border-gray-300 text-gray-900':'text-gray-600'}`}
+              onClick={() => { setSpeedPref('fast'); try{localStorage.setItem('elli_speed','fast')}catch{} }}
+            >Fast</button>
+            <button
+              className={`px-2 py-0.5 rounded ${speedPref==='slow'?'bg-white border border-gray-300 text-gray-900':'text-gray-600'}`}
+              onClick={() => { setSpeedPref('slow'); try{localStorage.setItem('elli_speed','slow')}catch{} }}
+            >Slow</button>
+          </div>
           <button
             onClick={() => {
               setShowHistory(prev => !prev);
@@ -108,15 +138,23 @@ export function ElliCard({ userId, triggerRefresh }: ElliCardProps) {
         </div>
       </div>
       
-      <div className="min-h-[60px]">
+      <div className="min-h-[60px]" onClick={() => { if (showTyping) setShowTyping(false) }}>
         {showTyping && isNewMessage ? (
-          <div className="py-4">
+          <div className="py-4 flex items-center justify-between">
             <TypingIndicator />
+            {showReveal && (
+              <button
+                className="ml-4 text-xs px-2 py-1 rounded border border-gray-300 bg-white text-gray-700"
+                onClick={(e) => { e.stopPropagation(); setShowTyping(false); }}
+              >
+                Show instantly
+              </button>
+            )}
           </div>
         ) : (
           <div className="text-gray-700 whitespace-pre-line">
             {isNewMessage ? (
-              <SafeType text={elliMessage.message_text} speed={15} className="" />
+              <SafeType text={elliMessage.message_text} speed={speedPref==='fast' ? 5 : 15} className="" />
             ) : (
               <p>{elliMessage.message_text}</p>
             )}

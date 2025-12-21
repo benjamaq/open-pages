@@ -13,7 +13,27 @@ import EnhancedDayDrawerV2 from '../components/mood/EnhancedDayDrawerV2'
 import EditableName from '../../components/EditableName'
 import EditableMission from '../../components/EditableMission'
 import AddStackItemForm from '../../components/AddStackItemForm'
+// Removed old AddSupplementModal (supplements); using dashboard/AddSupplementModal below
 import AddProtocolForm from '../../components/AddProtocolForm'
+import SupplementTimeline from '../../components/supplements/SupplementTimeline'
+import HeaderTop from '../../components/dashboard/Header'
+import ROIPills from '../../components/dashboard/ROIPills'
+import QuickStatsBar from '../../components/dashboard/QuickStatsBar'
+import DailyQuickCheck from '../../components/dashboard/DailyQuickCheck'
+import SupplementsGrid from '../../components/dashboard/SupplementsGrid'
+import ActiveExperimentCard from '../../components/dashboard/ActiveExperimentCard'
+import InsightsPlaceholder from '../../components/dashboard/InsightsPlaceholder'
+import { ExperimentsStrip } from '../../components/dashboard/ExperimentsStrip'
+import QuickCheckin from '../../components/dashboard/QuickCheckin'
+import AddSupplementButton from '../../components/dashboard/AddSupplementButton'
+import ExperimentsPanel from '../../components/dashboard/ExperimentsPanel'
+import { ExperimentCard } from '@/components/dashboard/ExperimentCard'
+import TruthSnapshotHeader from '@/components/dashboard/TruthSnapshotHeader'
+import TrialsPanel from '@/components/dashboard/TrialsPanel'
+import GatheringEvidencePanel from '@/components/dashboard/GatheringEvidencePanel'
+import ExperimentsRail from '../../components/dashboard/ExperimentsRail'
+import SupplementsHeader from '../../components/dashboard/SupplementsHeader'
+import AddSupplementModal from '../../components/supplements/AddSupplementModal'
 import GearCard from '../../components/GearCard'
 import AddGearForm from '../../components/AddGearForm'
 import LibrarySection from '../../components/LibrarySection'
@@ -33,9 +53,55 @@ import PWAInstallButton from '../components/PWAInstallButton'
 import { shouldShowOnboarding, getNextOnboardingStep, updateOnboardingStep, needsOrchestratedOnboarding } from '@/lib/onboarding'
 import { ElliCard } from '../../components/elli/ElliCard'
 import OnboardingOrchestrator from '../../components/onboarding/OnboardingOrchestrator'
+import BiohackerOnboarding from '../../components/onboarding/BiohackerOnboarding'
 import { PatternsCard } from './components/PatternsCard'
 import { createClient } from '@/lib/supabase/client'
 import { getGreeting as getGreetingUtil } from '@/lib/utils/greetings'
+import SupplementCard from '@/components/dashboard/SupplementCard'
+import SupplementDetailsModal from '../../components/modals/SupplementDetailsModal'
+
+// Vanilla modal helper - bypasses React
+function showModal(config: {
+  title: string
+  fields: Array<{ id: string; placeholder: string; type?: string }>
+  onSubmit: (values: Record<string, string>) => void
+}) {
+  document.getElementById('vanilla-modal')?.remove()
+  const modal = document.createElement('div')
+  modal.id = 'vanilla-modal'
+  modal.style.cssText = `
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center; z-index: 999999;
+  `
+  const fieldsHtml = config.fields.map(f => `
+    <input id="${f.id}" type="${f.type || 'text'}" placeholder="${f.placeholder}"
+      style="width: 100%; padding: .5rem; border: 1px solid #e5e7eb; border-radius: .5rem; margin-bottom: 1rem;" />
+  `).join('')
+  modal.innerHTML = `
+    <div style="background: white; padding: 2rem; border-radius: 1rem; width: 420px; max-width: 90vw; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">${config.title}</h2>
+      ${fieldsHtml}
+      <div style="display: flex; gap: .5rem; justify-content: flex-end;">
+        <button id="modal-cancel" style="padding: .5rem 1rem; border-radius: .5rem; background: #f3f4f6; cursor: pointer;">Cancel</button>
+        <button id="modal-submit" style="padding: .5rem 1rem; border-radius: .5rem; background: #2563eb; color: white; cursor: pointer;">Submit</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(modal)
+  const first = document.getElementById(config.fields[0]?.id) as HTMLInputElement | null
+  first?.focus()
+  const close = () => modal.remove()
+  document.getElementById('modal-cancel')!.onclick = close
+  modal.onclick = (e) => { if (e.target === modal) close() }
+  document.getElementById('modal-submit')!.onclick = () => {
+    const values: Record<string, string> = {}
+    config.fields.forEach(f => {
+      values[f.id] = (document.getElementById(f.id) as HTMLInputElement)?.value || ''
+    })
+    config.onSubmit(values)
+    close()
+  }
+}
 
 interface Profile {
   id: string
@@ -516,31 +582,40 @@ const SupplementsCard = ({ items, onToggleComplete, completedItems, onManage, on
               const isCompleted = completedItems.has(itemKey)
               
               return (
-                <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                  <button
-                    onClick={() => onToggleComplete(item.id, 'supplement')}
-                    className={`w-3 h-3 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                      isCompleted
-                        ? 'bg-gray-900 border-gray-900 scale-110'
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    {isCompleted && (
-                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </button>
-                  
-                  <div className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-              <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {item.name}
-                        {item.dose && (
-                          <span className="text-gray-500 ml-1">({item.dose})</span>
-                        )}
-                      </span>
+                <div key={item.id} className="p-2 rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => onToggleComplete(item.id, 'supplement')}
+                      className={`w-3 h-3 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                        isCompleted
+                          ? 'bg-gray-900 border-gray-900 scale-110'
+                          : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      {isCompleted && (
+                        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    
+                    <div className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          {item.name}
+                          {item.dose && (
+                            <span className="text-gray-500 ml-1">({item.dose})</span>
+                          )}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+                  {/* Visual period timeline + list for this supplement */}
+                  <div className="mt-2">
+                    <SupplementTimeline
+                      supplementId={String(item.id)}
+                      supplementName={item.name}
+                    />
                   </div>
                 </div>
               )
@@ -1379,7 +1454,172 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const router = useRouter()
   const searchParams = useSearchParams()
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set())
+  const [summary, setSummary] = useState<any>(null)
+  const [showAddSupplement, setShowAddSupplement] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [showTimeline, setShowTimeline] = useState(false)
+  const [selectedSupplement, setSelectedSupplement] = useState<string | null>(null)
+  const [showStartExperiment, setShowStartExperiment] = useState(false)
+  const [selectedSupplementForExperiment, setSelectedSupplementForExperiment] = useState<string | null>(null)
+  const [showExperiments, setShowExperiments] = useState(true)
+  // DEBUG: Force render indicator
+  console.log('🎨 RENDER - showAddSupplement:', showAddSupplement, 'showTimeline:', showTimeline)
+  // DEBUG badge removed after verification
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
+
+  // Prevent background scroll while any modal is open
+  useEffect(() => {
+    const anyOpen = showAddSupplement || showTimeline
+    const prevHtml = document.documentElement.style.overflow
+    const prevBody = document.body.style.overflow
+    if (anyOpen) {
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.documentElement.style.overflow = prevHtml || ''
+      document.body.style.overflow = prevBody || ''
+    }
+    return () => {
+      document.documentElement.style.overflow = prevHtml || ''
+      document.body.style.overflow = prevBody || ''
+    }
+  }, [showAddSupplement, showTimeline])
+
+  // Forced overlays removed after clean modal fix
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+        if (res.ok) setSummary(await res.json())
+      } catch {}
+    })()
+  }, [])
   
+  // Biohacker cockpit: render the unified 12-col layout and skip legacy modules
+  if (FEATURE_FLAGS.BIOHACKER_MODE) {
+    return (
+      <div data-testid="dash-root" className="mb-6">
+        {/* Add Supplement Modal - ALWAYS RENDERED (Biohacker branch) */}
+        <AddSupplementModal
+          open={showAddSupplement}
+          onClose={() => {
+            console.log('🚨 CORRECT DETAILED MODAL CLOSING')
+            setShowAddSupplement(false)
+          }}
+          save={{
+            onCreate: async (payload: { name: string; startDate: string; endDate: string | null; dose?: string | null }) => {
+              console.log('🚨 CORRECT DETAILED MODAL CREATING', payload)
+              const res = await fetch('/api/supplements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              })
+              const data = await res.json()
+              try {
+                const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+                if (s.ok) setSummary(await s.json())
+              } catch (e) { console.error(e) }
+              return { supplementId: data.id }
+            }
+          }}
+        />
+        {/* Timeline Modal - ALWAYS RENDERED (Biohacker branch) */}
+        <SupplementDetailsModal
+          open={showTimeline && selectedSupplement !== null}
+          onClose={() => {
+            setShowTimeline(false)
+            setSelectedSupplement(null)
+          }}
+          supplement={(() => {
+            const supp = (summary?.supplements || []).find((x: any) => x.id === selectedSupplement)
+            return supp || { id: selectedSupplement || 'unknown', name: 'Supplement', periods: [] }
+          })()}
+          onCreatePeriod={async (sid, p) => {
+            await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ start_date: p.start, end_date: p.end ?? null, notes: p.note ?? null })
+            })
+            try {
+              const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+              if (s.ok) setSummary(await s.json())
+            } catch {}
+          }}
+          onUpdatePeriod={async (sid, p) => {
+            await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ periodId: p.id, start_date: p.start, end_date: p.end ?? null, notes: p.note ?? null })
+            })
+            try {
+              const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+              if (s.ok) setSummary(await s.json())
+            } catch {}
+          }}
+          onDeletePeriod={async (sid, periodId) => {
+            await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ periodId })
+            })
+            try {
+              const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+              if (s.ok) setSummary(await s.json())
+            } catch {}
+          }}
+        />
+        {/* ===== Header & Quick Stats ===== */}
+        <div data-testid="dash-header">
+          <HeaderTop />
+          {/* Dev badge to visibly confirm the layout path when ?devLayout=1 */}
+          {searchParams.get('devLayout') === '1' && (
+            <div data-testid="layout-lock-badge" className="max-w-7xl mx-auto px-4 mt-2">
+              <div className="inline-flex items-center gap-2 rounded-md bg-emerald-50 text-emerald-800 px-3 py-1.5 text-xs ring-1 ring-emerald-200">
+                <span>Layout LOCK OK</span>
+                <span className="text-[10px] text-emerald-600">grid=12 · left 8 / right 4</span>
+              </div>
+            </div>
+          )}
+          {/* Removed ROI and QuickStats to declutter */}
+        </div>
+
+        {/* ===== Daily Check-in ===== */}
+        <div data-testid="dash-mood" className="max-w-7xl mx-auto px-4 mt-4">
+          <QuickCheckin inline onComplete={async () => {
+            try {
+              const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+              if (s.ok) setSummary(await s.json())
+              await loadTodayMoodEntry()
+            } catch {}
+          }} />
+        </div>
+
+        {/* Demo test strip removed */}
+
+        {/* Experiments section removed per design */}
+
+        {/* Remove snapshot and legacy panels; show grouped grid instead */}
+        <div className="max-w-7xl mx-auto px-4 mt-6">
+          <SupplementsGrid
+            supplements={summary?.supplements || []}
+            onAddClick={() => setShowAddSupplement(true)}
+            onViewTimeline={(id: string) => { setSelectedSupplement(id); setShowTimeline(true) }}
+            onEdit={() => {}}
+            onArchive={() => {}}
+          />
+        </div>
+
+        {/* Mobile FAB */}
+        <AddSupplementButton variant="fab" onOpen={() => { console.log('➕ ADD SUPPLEMENT CLICKED'); setShowAddSupplement(true); }} />
+
+      </div>
+    )
+  }
+
   // Lazy import to avoid large module diff; header button to install PWA
   // We'll render near the "My Health Profile" button row
   
@@ -1509,12 +1749,19 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     
     // Check for welcome parameter
     const welcomeParam = searchParams.get('welcome')
+    const addParam = searchParams.get('add')
     if (welcomeParam === 'pro' || welcomeParam === 'creator') {
       setWelcomeType(welcomeParam)
       setShowWelcomePopup(true)
       // Remove the welcome parameter from URL
       const url = new URL(window.location.href)
       url.searchParams.delete('welcome')
+      window.history.replaceState({}, '', url.toString())
+    }
+    if (addParam === '1') {
+      setShowAddSupplement(true)
+      const url = new URL(window.location.href)
+      url.searchParams.delete('add')
       window.history.replaceState({}, '', url.toString())
     }
     calculateStreak()
@@ -1648,7 +1895,6 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
   const [showQuickAddFood, setShowQuickAddFood] = useState(false)
   const [showAddGear, setShowAddGear] = useState(false)
   const [showAddLibrary, setShowAddLibrary] = useState(false)
-  const [showAddSupplement, setShowAddSupplement] = useState(false)
   const [showAddProtocol, setShowAddProtocol] = useState(false)
   const [showAddMovement, setShowAddMovement] = useState(false)
   const [showAddMindfulness, setShowAddMindfulness] = useState(false)
@@ -2147,6 +2393,75 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   return (
     <>
+      {/* Correct Add Supplement modal (calendar + periods) */}
+      <AddSupplementModal
+        open={showAddSupplement}
+        onClose={() => {
+          console.log('🚨 CORRECT DETAILED MODAL CLOSING')
+          setShowAddSupplement(false)
+        }}
+        save={{
+          onCreate: async (payload: { name: string; startDate: string; endDate: string | null; dose?: string | null }) => {
+            console.log('🚨 CORRECT DETAILED MODAL CREATING', payload)
+            const res = await fetch('/api/supplements', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            })
+            const data = await res.json()
+            // Refresh summary after create
+            try {
+              const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+              if (s.ok) setSummary(await s.json())
+            } catch (e) { console.error(e) }
+            return { supplementId: data.id }
+          }
+        }}
+      />
+      <SupplementDetailsModal
+        open={showTimeline && selectedSupplement !== null}
+        onClose={() => {
+          setShowTimeline(false)
+          setSelectedSupplement(null)
+        }}
+        supplement={(() => {
+          const supp = (summary?.supplements || []).find((x: any) => x.id === selectedSupplement)
+          return supp || { id: selectedSupplement || 'unknown', name: 'Supplement', periods: [] }
+        })()}
+        onCreatePeriod={async (sid, p) => {
+          await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ start_date: p.start, end_date: p.end ?? null, notes: p.note ?? null })
+          })
+          try {
+            const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+            if (s.ok) setSummary(await s.json())
+          } catch {}
+        }}
+        onUpdatePeriod={async (sid, p) => {
+          await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ periodId: p.id, start_date: p.start, end_date: p.end ?? null, notes: p.note ?? null })
+          })
+          try {
+            const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+            if (s.ok) setSummary(await s.json())
+          } catch {}
+        }}
+        onDeletePeriod={async (sid, periodId) => {
+          await fetch(`/api/supplements/${encodeURIComponent(sid)}/periods`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ periodId })
+          })
+          try {
+            const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+            if (s.ok) setSummary(await s.json())
+          } catch {}
+        }}
+      />
       <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
         {/* Header - Brand First Design */}
         <div className="bg-white shadow-sm">
@@ -2403,6 +2718,90 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           />
         )}
         
+        {/* Dashboard V2 — New biohacker-centric header and quick sections */}
+        <div className="mb-6">
+          <HeaderTop />
+          <>
+            <ROIPills monthlySavings={summary?.user?.monthlySavings ?? 0} truthProgress={summary?.user?.truthProgress ?? { checks: 0, target: 7 }} />
+            <QuickStatsBar stats={summary?.quickStats ?? null} />
+
+            {/* ===== Top: header + quick bars stay as-is above this point ===== */}
+            <div className="max-w-7xl mx-auto px-4 mt-4">
+              <QuickCheckin onComplete={async () => {
+                try {
+                  const s = await fetch('/api/dashboard/summary', { cache: 'no-store' })
+                  if (s.ok) setSummary(await s.json())
+                  await loadTodayMoodEntry()
+                } catch {}
+              }} />
+            </div>
+
+            {/* Optional: show the thin strip ONLY if there's an active test */}
+            {summary?.activeExperiment && (
+              <div className="max-w-7xl mx-auto px-4 mt-3">
+                <ExperimentsStrip items={[
+                  {
+                    id: String(summary.activeExperiment.id ?? 'exp'),
+                    title: summary.activeExperiment.title ?? summary.activeExperiment.name ?? 'Experiment',
+                    day: Number(summary.activeExperiment.day ?? 1),
+                    deltaPct: typeof summary.activeExperiment.effectPct === 'number' ? Number(summary.activeExperiment.effectPct) : undefined,
+                    n: Number(summary.activeExperiment.n ?? 0),
+                    confidence: Number(summary.activeExperiment.confidence ?? 0)
+                  }
+                ]} />
+              </div>
+            )}
+
+            {/* FULL-WIDTH stack header */}
+            <div className="max-w-7xl mx-auto px-4 mt-6">
+              <SupplementsHeader onAdd={() => setShowAddSupplement(true)} />
+            </div>
+
+            {/* >>> THE GRID: left = supplements, right = experiments + insights (stacked) <<< */}
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="grid grid-cols-12 gap-6">
+                {/* LEFT: supplements */}
+                <section className="col-span-12 md:col-span-8">
+                  <SupplementsGrid
+                    supplements={summary?.supplements || []}
+                    onAddClick={() => setShowAddSupplement(true)}
+                    onViewTimeline={(id: string) => { setSelectedSupplement(id); setShowTimeline(true) }}
+                    onEdit={() => {}}
+                    onArchive={() => {}}
+                  />
+                </section>
+
+                {/* RIGHT RAIL: Experiments + Insights stacked */}
+                <section className="col-span-12 md:col-span-4 space-y-6 md:sticky md:top-[72px]">
+                  <ExperimentsPanel
+                    active={summary?.activeExperiment
+                      ? {
+                          id: String(summary.activeExperiment.id ?? 'exp'),
+                          name: summary.activeExperiment.name ?? summary.activeExperiment.title ?? 'Experiment',
+                          day: Number(summary.activeExperiment.day ?? 1),
+                          n: Number(summary.activeExperiment.n ?? 0),
+                          effectPct: Number(summary.activeExperiment.effectPct ?? 0),
+                          confidence: Number(summary.activeExperiment.confidence ?? 0)
+                        }
+                      : null}
+                    onStart={() => { /* start wizard */ }}
+                    onPause={() => {}}
+                    onEnd={() => {}}
+                  />
+
+                  <InsightsPlaceholder
+                    hasUploadedData={!!summary?.quickStats}
+                    completedCheckins={summary?.user?.truthProgress?.checks ?? 0}
+                    targetCheckins={summary?.user?.truthProgress?.target ?? 7}
+                  />
+                </section>
+              </div>
+            </div>
+          </>
+        </div>
+
+        {/* Mobile FAB for adding supplement */}
+        <AddSupplementButton variant="fab" onOpen={() => setShowAddSupplement(true)} />
 
         {/* Main Content - Modular Cards */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
@@ -2737,13 +3136,9 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           <LibraryUploadForm onClose={() => setShowAddLibrary(false)} />
         )}
 
-        {/* Add Supplement Modal */}
-        {showAddSupplement && (
-          <AddStackItemForm 
-            onClose={() => setShowAddSupplement(false)} 
-            itemType="supplements"
-          />
-        )}
+        
+
+        {/* Old Add Supplement Modal removed in favor of dashboard/AddSupplementModal */}
 
         {/* Add Protocol Modal */}
         {showAddProtocol && (
@@ -2788,7 +3183,22 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           onUpdate={handleProfileUpdate}
         />
 
+        {/* ===== FULL-WIDTH EXPERIMENTS RAIL ===== */}
+        <ExperimentsRail
+          userId={userId}
+          supplements={(summary?.supplements || []).map((s: any) => ({ id: s.id, name: s.name }))}
+        />
+
       </div>
+
+      {/* Vanilla modals are invoked via showModal helper in handlers */}
+
+      {/* DEBUG: Always visible test modal */}
+      {true && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded z-[9999]">
+          Debug: showAdd={String(showAddSupplement)} showTime={String(showTimeline)}
+        </div>
+      )}
 
       <style jsx global>{`
         .slider {
@@ -2821,13 +3231,29 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
           border: 2px solid #ffffff;
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
+        @keyframes pulse-soft { 
+          0%{box-shadow:0 0 0 0 rgba(16,185,129,.35)} 
+          100%{box-shadow:0 0 0 12px rgba(16,185,129,0)} 
+        }
+        .animate-pulse-soft { animation: pulse-soft .8s ease-out; }
+        @keyframes pulse-slow { 0%{opacity:.9} 50%{opacity:1} 100%{opacity:.9} }
+        .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
       `}</style>
 
       {/* Beta Feedback Widget */}
       <BetaFeedbackWidget isBetaUser={isBetaUser} />
 
-      {/* NEW: Orchestrated Onboarding (Category before check-in) */}
-      {showOrchestratedOnboarding && (
+      {/* NEW: Biohacker MVP Onboarding (CSV + Stack + Goals + Day1) */}
+      {showOrchestratedOnboarding && FEATURE_FLAGS.BIOHACKER_MODE && (
+        <BiohackerOnboarding
+          isOpen={true}
+          onComplete={handleOrchestratedOnboardingComplete}
+          userName={firstName || 'there'}
+        />
+      )}
+
+      {/* Fallback: Original Orchestrator (kept for non-biohacker mode) */}
+      {showOrchestratedOnboarding && !FEATURE_FLAGS.BIOHACKER_MODE && (
         <OnboardingOrchestrator
           isOpen={true}
           onComplete={handleOrchestratedOnboardingComplete}

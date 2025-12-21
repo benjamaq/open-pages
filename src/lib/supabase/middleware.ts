@@ -37,19 +37,37 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api/') &&
-    request.nextUrl.pathname !== '/' &&
-    request.nextUrl.pathname !== '/u' &&
-    !request.nextUrl.pathname.startsWith('/u/') &&
-    request.nextUrl.pathname !== '/checkin/quick-save' &&
-    request.nextUrl.pathname !== '/checkin/success'
+    !user
   ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/signin'
-    return NextResponse.redirect(url)
+    const path = request.nextUrl.pathname
+    // NEW SYSTEM: allow public access to /new-login and /new-signup,
+    // but protect /dashboard by redirecting to /login
+    if (path.startsWith('/dashboard') || path.startsWith('/insights') || path.startsWith('/onboarding')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+    if (
+      path.startsWith('/login') ||
+      path.startsWith('/signup') ||
+      path.startsWith('/api/')
+    ) {
+      return supabaseResponse
+    }
+
+    // EXISTING SYSTEM: original guard & redirects to /auth/signin
+    if (
+      !path.startsWith('/auth') &&
+      path !== '/' &&
+      path !== '/u' &&
+      !path.startsWith('/u/') &&
+      path !== '/checkin/quick-save' &&
+      path !== '/checkin/success'
+    ) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/signin'
+      return NextResponse.redirect(url)
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

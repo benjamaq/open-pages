@@ -59,6 +59,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   const [showPostCheckinModal, setShowPostCheckinModal] = useState(false);
   const [postCheckinData, setPostCheckinData] = useState<any>(null);
   const [showReminderPrompt, setShowReminderPrompt] = useState(false);
+  const [showSuccessConfirm, setShowSuccessConfirm] = useState(false);
   
   // Elli welcome message state
   const [showElliTyping, setShowElliTyping] = useState(false);
@@ -89,6 +90,93 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     recovery_score: null as number | null,
     sleep_score: null as number | null
   });
+
+  // SIMPLE BioStackr check-in state (mood, energy, focus, noise, supplement intake)
+  const [simpleMood, setSimpleMood] = useState<number>(3)
+  const [simpleEnergy, setSimpleEnergy] = useState<number>(3)
+  const [simpleFocus, setSimpleFocus] = useState<number>(3)
+  const [noiseAlcohol, setNoiseAlcohol] = useState<boolean>(false)
+  const [noiseTravel, setNoiseTravel] = useState<boolean>(false)
+  const [noisePoorSleep, setNoisePoorSleep] = useState<boolean>(false)
+  const [noiseStress, setNoiseStress] = useState<boolean>(false)
+  const [activeSupps, setActiveSupps] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedSupps, setSelectedSupps] = useState<Record<string, boolean>>({})
+
+  // Load active supplements for today’s intake checklist
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!isOpen) return
+      try {
+        const r = await fetch('/api/supplements', { cache: 'no-store' })
+        if (!r.ok) return
+        const j = await r.json()
+        if (cancelled) return
+        const rows = Array.isArray(j) ? j : []
+        const mapped = rows
+          .filter((row: any) => row?.is_active !== false)
+          .map((row: any) => ({
+            id: String(row?.id ?? row?.supplement_id ?? ''),
+            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement')
+          }))
+          .filter((r: any) => r.id)
+        setActiveSupps(mapped)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [isOpen])
+
+  const handleSimpleToggleSupp = (id: string) => {
+    setSelectedSupps(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const handleSimpleSave = async () => {
+    try {
+      setIsSaving(true)
+      setSaveMessage('')
+      const tags: string[] = []
+      if (noiseAlcohol) tags.push('alcohol')
+      if (noiseTravel) tags.push('travel')
+      if (noisePoorSleep) tags.push('poor_sleep')
+      if (noiseStress) tags.push('high_stress')
+      const supplement_intake: Record<string, boolean> = {}
+      Object.entries(selectedSupps).forEach(([k, v]) => { if (v) supplement_intake[k] = true })
+
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mood: simpleMood,
+          energy: simpleEnergy,
+          focus: simpleFocus,
+          tags,
+          supplement_intake
+        })
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        setSaveMessage(`❌ ${j?.error || 'Failed to save'}`)
+        setIsSaving(false)
+        return
+      }
+      setSaveMessage('✅ Check-in saved!')
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('progress:refresh'))
+        }
+      } catch {}
+      // Brief success overlay (reuse existing state)
+      try { setShowSuccessConfirm(true) } catch {}
+      setTimeout(() => {
+        try { setShowSuccessConfirm(false); } catch {}
+        safeClose()
+      }, 1200)
+    } catch (e) {
+      setSaveMessage('❌ Failed to save check-in')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   // Draft persistence key (per user + date)
   const draftKey = typeof window !== 'undefined' ? `checkinDraft-${userId}-${date}` : '';
@@ -710,6 +798,13 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         // Clear draft after successful save
         try { if (draftKey) localStorage.removeItem(draftKey); } catch {}
 
+        // Immediately refresh dashboard progress (without full reload)
+        try {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('progress:refresh'))
+          }
+        } catch {}
+
         // Show post-check-in modal ONLY during orchestrated onboarding
         if (isOnboarding && isActuallyFirstCheckIn && !firstCheckInLoading) {
           try {
@@ -745,9 +840,15 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             }, 1000);
           }
         } else {
-          // Normal behavior for subsequent check-ins
+          // Normal behavior for subsequent check-ins:
+          // 1) Show brief success confirmation with new design
+          // 2) Offer reminders prompt if applicable, else close
+          try {
+            setShowSuccessConfirm(true);
+          } catch {}
           setTimeout(() => {
             try {
+              setShowSuccessConfirm(false);
               if (!mountedRef.current) return;
               const hasShown = localStorage.getItem('pushPromptShown');
               if (!hasShown && isActuallyFirstCheckIn) {
@@ -758,7 +859,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
             } catch {
               safeClose();
             }
-          }, 1000);
+          }, 1200);
         }
       } else {
         const friendly = /auth/i.test(result.error || '')
@@ -893,6 +994,172 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
   };
 
   if (!isOpen) return null;
+
+  // SIMPLE BioStackr Drawer (Mood, Energy, Focus, Supplements, Noise)
+  const SIMPLE_MODE = true
+  if (SIMPLE_MODE) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+        <div className="relative min-h-screen flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Daily Check‑in</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">{new Date(date).toLocaleDateString()}</p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 space-y-8">
+              {/* Sliders */}
+              <div className="space-y-6">
+                {/* Mood */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={simpleMood}
+                      onChange={(e) => setSimpleMood(parseInt(e.target.value))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-600 min-w-[2rem] text-center">{simpleMood}</span>
+                  </div>
+                </div>
+                {/* Energy */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Energy</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={simpleEnergy}
+                      onChange={(e) => setSimpleEnergy(parseInt(e.target.value))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-600 min-w-[2rem] text-center">{simpleEnergy}</span>
+                  </div>
+                </div>
+                {/* Focus */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Focus</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={simpleFocus}
+                      onChange={(e) => setSimpleFocus(parseInt(e.target.value))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-600 min-w-[2rem] text-center">{simpleFocus}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supplements taken today */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Which supplements did you take today?</label>
+                <div className="space-y-2">
+                  {activeSupps.length === 0 && (
+                    <div className="text-sm text-gray-500">No active supplements found.</div>
+                  )}
+                  {activeSupps.map((s) => (
+                    <label key={s.id} className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={!!selectedSupps[s.id]}
+                        onChange={() => handleSimpleToggleSupp(s.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                      />
+                      <span className="text-gray-800">{s.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Noise factors */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Noise factors (optional)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNoiseAlcohol(v => !v)}
+                    className={`px-3 py-2 rounded-lg border text-sm ${noiseAlcohol ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-800 border-gray-300'}`}
+                  >
+                    Alcohol
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNoiseTravel(v => !v)}
+                    className={`px-3 py-2 rounded-lg border text-sm ${noiseTravel ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-800 border-gray-300'}`}
+                  >
+                    Travel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNoisePoorSleep(v => !v)}
+                    className={`px-3 py-2 rounded-lg border text-sm ${noisePoorSleep ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-800 border-gray-300'}`}
+                  >
+                    Poor sleep
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNoiseStress(v => !v)}
+                    className={`px-3 py-2 rounded-lg border text-sm ${noiseStress ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-800 border-gray-300'}`}
+                  >
+                    Stress
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="text-sm text-gray-600">{saveMessage}</div>
+                <button
+                  onClick={handleSimpleSave}
+                  disabled={isSaving}
+                  className="inline-flex items-center justify-center rounded-full bg-[#111111] px-5 py-2.5 text-sm font-semibold text-white shadow hover:shadow-md transition disabled:opacity-60"
+                >
+                  {isSaving ? 'Saving…' : 'Submit'}
+                </button>
+              </div>
+            </div>
+
+            {/* Lightweight success confirmation */}
+            {showSuccessConfirm && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/30" />
+                <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-5 text-center">
+                    <div className="text-3xl mb-2">✅</div>
+                    <h3 className="text-base font-semibold text-gray-900">Check-in saved</h3>
+                    <p className="text-sm text-gray-600 mt-1">Thanks — your progress just updated.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -1882,6 +2149,20 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
           </div>
         </div>
       </div>
+
+      {/* Lightweight success confirmation (new design language) */}
+      {showSuccessConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-5 text-center">
+              <div className="text-3xl mb-2">✅</div>
+              <h3 className="text-base font-semibold text-gray-900">Check-in saved</h3>
+              <p className="text-sm text-gray-600 mt-1">Thanks — your progress just updated.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
           <style jsx>{`
             .slider::-webkit-slider-thumb {

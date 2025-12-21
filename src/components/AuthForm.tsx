@@ -57,7 +57,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
           password,
           options: {
             data: {
-              name: cleanName
+              name: cleanName,
+              first_name: cleanName
             }
           }
         })
@@ -123,7 +124,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           } catch (e) {
             console.warn('Free tier init failed (non-blocking):', e)
           }
-          // Create profile with name and referral code - handles race conditions atomically
+          // Create profile with anon client (may succeed if RLS allows). If it fails, we’ll fall back to server-side bootstrap.
           try {
             // Generate a unique slug
             const baseSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -135,6 +136,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               .upsert({
                 user_id: data.user.id,
                 display_name: cleanName,
+                first_name: cleanName,
                 referral_code: cleanReferral || null,
                 referral_source: cleanReferral === 'redditgo' ? 'reddit' : null,
                 slug: uniqueSlug,
@@ -161,8 +163,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
               console.log('✅ Profile created successfully for user:', data.user.id)
             }
           } catch (profileError) {
-            console.error('Profile upsert error:', profileError)
-            // Don't fail the signup if profile creation fails
+            console.error('Profile upsert error (anon client):', profileError)
+          }
+
+          // Ensure profile exists via server-side bootstrap (service role, bypassing RLS)
+          try {
+            await fetch('/api/profiles', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user_id: data.user.id, name: cleanName, email: cleanEmail })
+            })
+          } catch (e) {
+            console.warn('Profile bootstrap request failed', e)
           }
 
           // Check if referral code is actually a beta code
@@ -191,7 +203,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 setTimeout(() => {
                   try { sessionStorage.setItem('justSignedUp', '1') } catch {}
                   try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
-                  router.push('/dash')
+                  router.push('/onboarding')
                   router.refresh()
                 }, 2000)
                 return
@@ -211,7 +223,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setTimeout(() => {
             try { sessionStorage.setItem('justSignedUp', '1') } catch {}
             try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
-            router.push('/dash')
+            router.push('/onboarding')
             router.refresh()
           }, 1000)
         }
@@ -277,19 +289,19 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {isSignUp && (
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Full Name
+                  First name
                 </label>
                 <div className="mt-1">
                   <input
                     id="name"
                     name="name"
                     type="text"
-                    autoComplete="name"
+                    autoComplete="given-name"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your first name"
                   />
                 </div>
               </div>

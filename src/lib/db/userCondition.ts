@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getToneProfileType } from '@/lib/elli/toneProfiles';
+import { getToneProfileType } from '@/lib/toneProfiles';
 
 export interface UserCondition {
   primary: string | null;

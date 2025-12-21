@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
-import { TONE_PROFILES, type ToneProfileType } from '@/lib/elli/toneProfiles';
+import { TONE_PROFILES, type ToneProfileType } from '@/lib/toneProfiles';
 import { createClient } from '@/lib/supabase/client'
 
 /**

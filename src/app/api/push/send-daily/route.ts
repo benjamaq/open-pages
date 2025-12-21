@@ -106,6 +106,9 @@ async function sendToUser(userId: string, payload: any, tz: string) {
 }
 
 async function handleSend() {
+  if (process.env.PUSH_CRON_PAUSED === '1' || process.env.PUSH_NOTIFICATIONS_ENABLED === 'false') {
+    return NextResponse.json({ ok: true, paused: true })
+  }
   const supabase = createAdminClient()
   const now = new Date().toISOString()
   try { console.error('[push-cron] START', { now }) } catch {}
@@ -135,7 +138,7 @@ async function handleSend() {
     const userId = (pref as any).profiles?.user_id
     if (!userId) continue
 
-    const inWindow = isTimeInWindow(t, tz, 3)
+    const inWindow = isTimeInWindow(t, tz, 1)
     if (!inWindow) continue
     attempted += 1
 

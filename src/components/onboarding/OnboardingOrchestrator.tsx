@@ -10,7 +10,7 @@ import { FEATURE_FLAGS } from '@/lib/feature-flags';
 import PostCheckinResponseModal from './PostCheckinResponseModal';
 import AddStackItemForm from '@/components/AddStackItemForm';
 import Step5MissionProfile from './Step5MissionProfile';
-import { getToneProfileType } from '@/lib/elli/toneProfiles';
+import { getToneProfileType } from '@/lib/toneProfiles';
 import { trackEvent } from '@/lib/analytics';
 import { createClient } from '@/lib/supabase/client';
 

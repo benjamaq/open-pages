@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
-import { getToneProfile } from '@/lib/elli/toneProfiles';
+import { getToneProfile } from '@/lib/toneProfiles';
 
 interface CheckInTransitionModalProps {
   isOpen: boolean;

@@ -1,7 +1,7 @@
 // Minimal service worker for installability and conservative offline support
 // Cache only safe GET requests; exclude /api/ by default
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v6';
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const OFFLINE_FALLBACK_URL = '/offline';
 
@@ -39,6 +39,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // In local development, never intercept - avoid "offline" false positives
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
 
   // Never cache API calls by default
   if (url.pathname.startsWith('/api/')) return;
