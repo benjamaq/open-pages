@@ -34,7 +34,7 @@ export default function Pricing() {
               </ul>
             </div>
             <div className="mt-8">
-              <Link href="/auth/signup" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Find My Sleep Triggers</Link>
+              <Link href="/signup" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Find My Sleep Triggers</Link>
             </div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-900 p-8 relative">
@@ -54,7 +54,7 @@ export default function Pricing() {
               </ul>
             </div>
             <div className="mt-8">
-              <Link href="/auth/signup?plan=premium" className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Get started with Premium</Link>
+              <Link href="/signup?plan=premium" className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block">Get started with Premium</Link>
               <p className="text-xs text-gray-500 text-center mt-2">Save with annual billing</p>
             </div>
           </div>

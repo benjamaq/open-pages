@@ -10,7 +10,7 @@ export function CheckinHero({ firstName }: { firstName?: string }) {
       <p className="text-indigo-100">Ready for today&apos;s check‑in?</p>
       <p className="text-indigo-200 mb-6">30 seconds to get closer to answers</p>
       <button
-        onClick={() => router.push('/dashboard?checkin=1')}
+        onClick={() => router.push('/dashboard?checkin=open')}
         className="mt-2 inline-flex items-center px-6 py-3 rounded-xl bg-white text-indigo-700 font-semibold hover:bg-indigo-50"
       >
         Complete Check-in →

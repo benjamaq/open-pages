@@ -30,11 +30,11 @@ export const STRIPE_CONFIG = {
       monthly: {
         // Prefer dedicated Premium price if present; otherwise fallback to Pro price
         priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
-        amount: 999,
+        amount: 1900,
       },
       yearly: {
         priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID!,
-        amount: 9990,
+        amount: 14900,
       },
     },
     pro: {

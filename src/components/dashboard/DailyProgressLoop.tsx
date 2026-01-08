@@ -42,6 +42,12 @@ export function DailyProgressLoop() {
   } | null>(null)
   const [milestone50, setMilestone50] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [milestone85, setMilestone85] = useState<{ id: string; name: string; percent: number } | null>(null)
+  const [isMember, setIsMember] = useState<boolean>(false)
+
+  // Debug: confirm membership gating value on each change
+  useEffect(() => {
+    try { console.log('isMember:', isMember) } catch {}
+  }, [isMember])
 
   useEffect(() => {
     let mounted = true
@@ -57,6 +63,37 @@ export function DailyProgressLoop() {
     }
     // Initial fetch
     refresh()
+    // Load membership status for gating verdicts
+    ;(async () => {
+      try {
+        let paid = false
+        // Prefer unified billing info
+        try {
+          const r = await fetch('/api/billing/info', { cache: 'no-store' })
+          if (r.ok) {
+            const j = await r.json()
+            paid = Boolean(j?.isPaid)
+          }
+        } catch {}
+        // Fallback to payments/status
+        if (!paid) {
+          try {
+            const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+            if (pr.ok) {
+              const j = await pr.json()
+              paid = !!(j as any)?.is_member
+            }
+          } catch {}
+        }
+        if (!mounted) return
+        setIsMember(paid)
+        // Debug: log userId and paid status
+        try {
+          const me = await fetch('/api/me', { cache: 'no-store' }).then(r => r.ok ? r.json() : {})
+          console.log('isPaid:', paid, 'userId:', me?.id || '(unknown)')
+        } catch {}
+      } catch {}
+    })()
     // Listen for explicit refresh events after check-in completes
     const handler = () => { refresh() }
     if (typeof window !== 'undefined') {
@@ -112,6 +149,24 @@ export function DailyProgressLoop() {
   const stackPercent = totalSupps > 0 ? Math.round((analyzedCount / totalSupps) * 100) : 0
   const readyCount = s.clearSignal.length
   const buildingCount = s.building.length
+  // Free-mode neutral sections: compute from all rows
+  const freeAll = [
+    ...(s.clearSignal || []),
+    ...(s.noSignal || []),
+    ...((data.sections as any)?.inconsistent || []),
+    ...(s.building || []),
+    ...((data.sections as any)?.needsData || []),
+  ]
+  const freeBuilding = freeAll.filter((r: any) => {
+    const pct = Number(r?.progressPercent ?? 0)
+    const hasVerdict = Boolean((r as any)?.effectCategory)
+    return !hasVerdict && pct < 100
+  })
+  const freeReady = freeAll.filter((r: any) => {
+    const pct = Number(r?.progressPercent ?? 0)
+    const hasVerdict = Boolean((r as any)?.effectCategory)
+    return hasVerdict || pct >= 100
+  })
   // Next likely result (closest to completion among building, excluding noisy)
   const nextLikely = (() => {
     const candidates = s.building
@@ -128,7 +183,7 @@ export function DailyProgressLoop() {
     return "~2 weeks of check-ins"
   }
 
-  // Contextual subtitle for Building Signal
+  // Contextual subtitle for Collecting data
   const buildingSubtitle = (() => {
     const totalDistinct = (data as any)?.checkins?.totalDistinctDays ?? 0
     const last30 = (data as any)?.checkins?.last30 ?? { total: 0, noise: 0, clean: 0 }
@@ -169,31 +224,48 @@ export function DailyProgressLoop() {
           + Add Supplement
         </a>
       </div>
-      {/* Sections (two-column grid cards) */}
-      {s.clearSignal.length > 0 && (
-        <Section title="Clear Signal Ready" color="emerald">
-          {s.clearSignal.map(r => <RowItem key={r.id} row={r} ready />)}
-        </Section>
-      )}
-      {(data.sections as any)?.inconsistent && (data.sections as any)?.inconsistent.length > 0 && (
-        <Section title="Inconsistent / Too Noisy" color="amber">
-          {(data.sections as any).inconsistent.map((r: Row) => <RowItem key={r.id} row={r} />)}
-        </Section>
-      )}
-      {s.building.length > 0 && (
-        <Section title="Building Signal" subtitle={buildingSubtitle} color="indigo">
-          {s.building.map(r => <RowItem key={r.id} row={r} />)}
-        </Section>
-      )}
-      {s.noSignal.length > 0 && (
-        <Section title="No Signal Found" color="slate">
-          {s.noSignal.map(r => <RowItem key={r.id} row={r} noSignal />)}
-        </Section>
-      )}
-      {(data.sections as any)?.needsData && (data.sections as any)?.needsData.length > 0 && (
-        <Section title="Needs More Data" color="indigo">
-          {(data.sections as any).needsData.map((r: Row) => <RowItem key={r.id} row={r} />)}
-        </Section>
+      {/* Sections (membership-gated presentation) */}
+      {isMember ? (
+        <>
+          {s.clearSignal.length > 0 && (
+            <Section title="Clear Signal Ready" color="emerald">
+              {s.clearSignal.map(r => <RowItem key={r.id} row={r} ready isMember={isMember} />)}
+            </Section>
+          )}
+          {(data.sections as any)?.inconsistent && (data.sections as any)?.inconsistent.length > 0 && (
+            <Section title="Inconsistent / Too Noisy" color="amber">
+              {(data.sections as any).inconsistent.map((r: Row) => <RowItem key={r.id} row={r} isMember={isMember} />)}
+            </Section>
+          )}
+          {s.building.length > 0 && (
+            <Section title="Collecting data" subtitle={buildingSubtitle} color="indigo">
+              {s.building.map(r => <RowItem key={r.id} row={r} isMember={isMember} />)}
+            </Section>
+          )}
+          {s.noSignal.length > 0 && (
+            <Section title="No Signal Found" color="slate">
+              {s.noSignal.map(r => <RowItem key={r.id} row={r} noSignal isMember={isMember} />)}
+            </Section>
+          )}
+          {(data.sections as any)?.needsData && (data.sections as any)?.needsData.length > 0 && (
+            <Section title="Needs More Data" color="indigo">
+              {(data.sections as any).needsData.map((r: Row) => <RowItem key={r.id} row={r} isMember={isMember} />)}
+            </Section>
+          )}
+        </>
+      ) : (
+        <>
+          {freeBuilding.length > 0 && (
+            <Section title="Collecting data" subtitle={buildingSubtitle} color="indigo">
+              {freeBuilding.map((r: any) => <RowItem key={r.id} row={r} isMember={false} />)}
+            </Section>
+          )}
+          {freeReady.length > 0 && (
+            <Section title="Verdict ready" color="emerald">
+              {freeReady.map((r: any) => <RowItem key={r.id} row={r} isMember={false} />)}
+            </Section>
+          )}
+        </>
       )}
       {/* "Too Much Noise" category removed */}
     </section>
@@ -211,9 +283,10 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
   )
 }
 
-function RowItem({ row, ready, noSignal }: { row: Row; ready?: boolean; noSignal?: boolean }) {
-  // Use a single, readable progress color
-  const barColor = 'bg-[#14b8a6]' // teal
+function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean }) {
+  // Progress bar colors per dashboard palette
+  const trackColor = '#E4DDD6'
+  const fillColor = '#C65A2E'
   // Realistic signal strength:
   // - If confidence from analysis exists (ready/no_signal), use it
   // - Otherwise, use current clean-days-based progressPercent
@@ -222,48 +295,144 @@ function RowItem({ row, ready, noSignal }: { row: Row; ready?: boolean; noSignal
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
   const strengthDisplay = (effectCat === 'needs_more_data' || row.progressPercent >= 100) ? 100 : strength
-  const trendArrow = row.trend === 'positive' ? '↑' : row.trend === 'negative' ? '↓' : '→'
+  // ON/OFF details for contextual guidance
+  const daysOn = Number((row as any).daysOn || 0)
+  const daysOff = Number((row as any).daysOff || 0)
+  const reqDays = Number(row.requiredDays || 14)
+  const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
+  const onComplete = daysOn >= reqDays
+  const offComplete = daysOff >= reqOff
   const [showPaywall, setShowPaywall] = useState(false)
-  // Standardized effect badges
+  // Status badge (gated): show process states for free; show verdicts only if member
   const badge = (() => {
     const cat = (effectCat || '').toLowerCase()
-    if (cat === 'works') return { label: 'MATCHED ✓', cls: 'bg-emerald-100 text-emerald-700 border border-emerald-200' }
-    if (cat === 'no_effect') return { label: 'NO EFFECT', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
-    if (cat === 'inconsistent') return { label: 'MIXED', cls: 'bg-amber-100 text-amber-700 border border-amber-200' }
-    if (cat === 'needs_more_data') return { label: 'TESTING', cls: 'bg-blue-100 text-blue-700 border border-blue-200' }
-    return null
+    const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
+    const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
+    const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
+    const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
+    const isReady = on >= reqOn && off >= reqOff
+    if (isReady) {
+      if (isMember) {
+        if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+        if (cat === 'no_effect' || cat === 'drop') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
+        return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+      }
+      // Free user: locked verdict
+      return { label: '🔒 Verdict Ready', cls: 'bg-gray-100 text-gray-500 border border-gray-200' }
+    }
+    // Not ready yet — keep existing "Building" semantics
+    if (!isReady) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+    return null as any
   })()
-  // Progress status copy (separate from verdict badge)
-  const progressStatus = (!effectCat && row.progressPercent >= 95) ? { label: 'Almost ready', color: 'text-blue-600' } : null
+  const effectLine = (() => {
+    const isReady = String(row.status || '').toLowerCase() === 'ready'
+    if (!isMember || !isReady) return null
+    const pct = typeof row.effectPct === 'number' ? Math.round(row.effectPct) : null
+    if (pct == null) return null
+    const signed = pct >= 0 ? `+${pct}` : String(pct)
+    return `${signed}% energy`
+  })()
   return (
     <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
           <span>{abbreviateSupplementName(String(row.name || ''))}</span>
           {badge ? (
-            <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.cls}`}>
-              {badge.label}
-            </span>
+            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
           ) : null}
         </div>
         <div className="flex items-center gap-2">
-          {ready && <button className="text-[11px] underline" style={{ color: '#6A3F2B' }} onClick={() => setShowPaywall(true)}>🔒 View result</button>}
-          {progressStatus ? (
-            <div className={`text-[11px] font-medium ${progressStatus.color}`}>{progressStatus.label}</div>
-          ) : (
-            <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
-          )}
+          <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
         </div>
       </div>
-      <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: '#E8E5E0' }}>
-        <div className={`h-full ${barColor}`} style={{ width: `${progressForDisplay}%` }} />
+      {effectLine && (
+        <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
+      )}
+      {/* Inconclusive reason for paid, ready but unclear */}
+      {isMember && (daysOn >= reqDays && daysOff >= reqOff) && String((row as any).verdict || '').toLowerCase() === 'unclear' && (row as any).inconclusiveText && (
+        <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
+          {(row as any).inconclusiveText}
+        </div>
+      )}
+      <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
+        {(() => {
+          const pct = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
+          return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
+        })()}
       </div>
-      <div className="mt-2 text-[11px] text-gray-600">
+      <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
         Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
-        Trending: {trendArrow}
-        <span className="mx-2">•</span>
-        {row.monthlyCost && row.monthlyCost > 0 ? `$${Math.round(row.monthlyCost)}/mo` : <span className="text-gray-400">—</span>}
+        Days tracked: <span className="font-medium">{row.daysOfData}</span>
+        {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
       </div>
+      {(daysOn + daysOff) > 0 && (
+        <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+          ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
+          OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
+        </div>
+      )}
+      {!isMember && daysOff === 0 && row.progressPercent < 100 && (
+        <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+          Needs skip days to compare — keep following your rotation schedule
+        </div>
+      )}
+      {!isMember && (Boolean(effectCat) || row.progressPercent >= 100 || (daysOn >= reqDays && daysOff >= reqOff)) && (
+        <div className="mt-2">
+          <button
+            className="text-[11px] font-medium"
+            style={{ color: '#3A2F2A' }}
+            onClick={async () => {
+              try {
+                const r = await fetch('/api/billing/info', { cache: 'no-store' })
+                const j = r.ok ? await r.json() : {}
+                const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
+                if (isPaid) {
+                  window.location.href = '/results'
+                } else {
+                  window.location.href = '/checkout'
+                }
+              } catch {
+                window.location.href = '/checkout'
+              }
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
+          >
+            🔒 Unlock verdict
+          </button>
+        </div>
+      )}
+      {isMember && (daysOn >= reqDays && daysOff >= reqOff) && (
+        <div className="mt-2">
+          <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
+            View full report →
+          </a>
+          {String((row as any).verdict || '').toLowerCase() === 'unclear' && (
+            <button
+              className="ml-3 text-[11px] px-2 py-1 border border-gray-300 rounded"
+              onClick={async () => {
+                if (!confirm('Start a retest for this supplement?')) return
+                try {
+                  await fetch('/api/supplement/retest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userSupplementId: (row as any).id })
+                  })
+                  try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
+                } catch (e) {
+                  console.error(e)
+                }
+              }}
+            >
+              Retest
+            </button>
+          )}
+        </div>
+      )}
+      {!isMember && row.progressPercent < 100 && (
+        <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
+      )}
       {showPaywall && (
         <PaywallModal onClose={() => setShowPaywall(false)} />
       )}
@@ -294,25 +463,28 @@ function PaywallModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative z-10 w-full max-w-[520px] rounded-xl bg-white p-8 shadow-lg border border-gray-200">
-        <h3 className="text-2xl font-semibold text-center mb-3">Unlock your results</h3>
+        <h3 className="text-2xl font-semibold text-center mb-3">Unlock your verdict</h3>
         <p className="text-base text-gray-600">
-          You&apos;ve built enough signal to see real answers.
+          You&apos;ve built enough signal to get a real answer.
         </p>
-        <ul className="mt-3 text-gray-700 text-sm space-y-1">
-          <li>✓ Which supplements actually work for your body</li>
-          <li>✓ Effect sizes (e.g., +18% better sleep)</li>
-          <li>✓ Keep or drop recommendations</li>
-          <li>✓ How much you could save by dropping what doesn&apos;t work</li>
+        <ul className="mt-3 text-gray-700 text-sm space-y-1 list-disc list-inside">
+          <li>See which supplements are worth keeping — and which aren&apos;t</li>
+          <li>Get a clear verdict backed by your real data</li>
+          <li>Understand how confident the signal is</li>
+          <li>See what staying uncertain is costing you</li>
         </ul>
-        <button
-          onClick={onClose}
-          className="w-full h-12 mt-6 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-95"
+        <a
+          href="/checkout"
+          className="w-full h-12 mt-6 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-90 flex items-center justify-center"
         >
-          Unlock for $9.99/month — cancel anytime
-        </button>
+          Choose a plan — $19/month or $149/year
+        </a>
         <button onClick={onClose} className="w-full h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
           Maybe later
         </button>
+        <div className="mt-3 text-[11px] text-center" style={{ color: '#8A7F78' }}>
+          No guessing. No vibes. Just a clear decision.
+        </div>
       </div>
     </div>
   )

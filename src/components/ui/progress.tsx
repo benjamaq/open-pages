@@ -12,11 +12,11 @@ export function Progress({ value = 0, className = '' }: ProgressProps) {
   return (
     <div
       className={`h-3 w-full rounded-full overflow-hidden ${className}`}
-      style={{ backgroundColor: '#E8E5E0' }} // track
+      style={{ backgroundColor: '#E4DDD6' }} // track (dashboard-neutral)
     >
       <div
         className="h-full rounded-full transition-all duration-500 ease-out"
-        style={{ width: `${clamped}%`, backgroundColor: '#C65A2E' }} // burnt clay fill
+        style={{ width: `${clamped}%`, backgroundColor: '#C65A2E' }} // richer burnt clay fill
       />
     </div>
   );

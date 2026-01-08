@@ -94,25 +94,97 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
     }
 
     const resendClient = getResendClient()
-    
-    const computedDomainFrom = process.env.RESEND_DOMAIN ? `BioStackr <noreply@${process.env.RESEND_DOMAIN}>` : undefined
-    const fromAddress = data.from || process.env.RESEND_FROM || computedDomainFrom || 'Biostackr <notifications@biostackr.io>'
+    // Force BioStackr sender unless a specific 'from' is provided
+    const fromAddress = data.from || 'BioStackr <reminders@biostackr.io>'
     const replyTo = data.replyTo
-    console.log('Sending email to:', data.to)
-    console.log('From:', fromAddress)
-    if (replyTo) console.log('Reply-To:', replyTo)
-    console.log('Subject:', data.subject)
+    // Minimal safe HTML fallback if upstream template is empty
+    const minimalHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${(data.subject || 'BioStackr').toString().slice(0, 90)}</title>
+        </head>
+        <body style="margin:0;padding:24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5;color:#1a1a1a;background:#f5f5f0">
+          <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #eee;border-radius:12px;padding:20px">
+            <div style="font-weight:600;margin-bottom:8px;">BioStackr</div>
+            <div>This is a fallback body to ensure emails are visible.</div>
+          </div>
+        </body>
+      </html>
+    `
+    const safeHtml = (() => {
+      const raw = String(data.html || '')
+      const len = raw.replace(/\s/g, '').length
+      return len >= 50 ? raw : minimalHtml
+    })()
+
+    // Build plain-text fallback from HTML (use safeHtml)
+    const textFromHtml = (() => {
+      try {
+        const raw = String(safeHtml || '')
+          .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+          .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+        return raw.replace(/\s+/g, ' ').trim().slice(0, 2000)
+      } catch { return undefined }
+    })()
+
+    try {
+      console.log('[email] Sending with:', {
+        from: fromAddress,
+        to: data.to,
+        subject: data.subject,
+        html: (safeHtml || '').substring(0, 500),
+        text: textFromHtml ? textFromHtml.substring(0, 120) : undefined
+      })
+      if (replyTo) console.log('Reply-To:', replyTo)
+    } catch {}
+    
+    // EXACT debug lines requested (existing)
+    try {
+      const toEmail = data.to
+      const subject = data.subject
+      const html = safeHtml as string
+      console.log('=== EMAIL DEBUG ===')
+      console.log('To:', toEmail)
+      console.log('Subject:', subject)
+      console.log('HTML length:', (html as string | undefined)?.length)
+      console.log('HTML content:', html)
+      console.log('===================')
+    } catch {}
+
+    // EXACT code block requested by user - placed immediately before Resend call
+    {
+      const html = safeHtml as string
+      console.log('========== EMAIL DEBUG ==========');
+      console.log('html variable type:', typeof html);
+      console.log('html is null:', html === null);
+      console.log('html is undefined:', html === undefined);
+      console.log('html length:', html?.length || 0);
+      console.log('html first 1000 chars:', html?.substring(0, 1000) || 'EMPTY');
+      console.log('=================================');
+    }
     
     const result = await resendClient.emails.send({
       from: fromAddress,
       to: data.to,
       subject: data.subject,
-      html: data.html,
+      html: safeHtml,
+      ...(textFromHtml ? { text: textFromHtml } : {}),
       // Resend SDK expects `reply_to`, not `replyTo`
       ...(replyTo ? { reply_to: replyTo } : {})
     })
 
     console.log('Resend API response:', result)
+    try {
+      console.log('Resend response:', JSON.stringify(result, null, 2))
+    } catch {}
 
     if (result.error) {
       console.error('Resend error:', result.error)
@@ -127,17 +199,33 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; id
 }
 
 export async function sendDailyReminder(data: DailyReminderData): Promise<{ success: boolean; id?: string; error?: string }> {
-  const html = generateDailyReminderHTML(data)
-  
-  return sendEmail({
-    to: data.userEmail,
-    subject: `Your Daily Biostackr Reminder - ${new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'short', 
-      day: 'numeric' 
-    })}`,
-    html
-  })
+  // Render using V3 single-column template (energy/focus/sleep UI lives on dashboard)
+  try {
+    // Lazy import to avoid circular deps at module load
+    const { renderDailyReminderEmail } = await import('@/lib/email/templates/daily-reminder')
+    const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
+    const supplementCount =
+      (Array.isArray(data.supplements) ? data.supplements.length : 0) +
+      (Array.isArray(data.protocols) ? data.protocols.length : 0) +
+      (Array.isArray(data.movement) ? data.movement.length : 0) +
+      (Array.isArray(data.mindfulness) ? data.mindfulness.length : 0)
+    // Until we plumb real stack clarity here, default to 0
+    const progressPercent = 0
+    const html = renderDailyReminderEmail({
+      firstName: data.userName || 'there',
+      supplementCount: Math.max(1, supplementCount),
+      progressPercent,
+      checkinUrl: `${base}/dashboard?checkin=open`,
+    })
+    return sendEmail({
+      to: data.userEmail,
+      subject: `${progressPercent}% complete`,
+      html
+    })
+  } catch (e: any) {
+    console.error('[sendDailyReminder] Failed to render/send V3 template:', e?.message || e)
+    return { success: false, error: e?.message || 'render_failed' }
+  }
 }
 
 export async function sendMissedItemsReminder(data: MissedItemsData): Promise<{ success: boolean; id?: string; error?: string }> {
@@ -234,7 +322,7 @@ function generateDay2TipsHTML({ userName }: { userName: string }) {
 
         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px;">
           <div style="font-weight:700;">Pro tip</div>
-          <div style="font-size:14px; color:#065f46;">The more you track (especially lifestyle tags), the faster Elli can surface confident patterns. Even quick, 10-second check-ins help a lot.</div>
+          <div style="font-size:14px; color:#065f46;">The more you track (especially lifestyle tags), the faster clear patterns emerge. Even quick, 10-second check-ins help a lot.</div>
         </div>
 
         <div style="text-align:center; margin-top:20px;">

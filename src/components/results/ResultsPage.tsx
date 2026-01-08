@@ -19,6 +19,7 @@ type Sections = {
 export default function ResultsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMember, setIsMember] = useState<boolean>(false);
 
   useEffect(() => {
     let mounted = true;
@@ -33,6 +34,17 @@ export default function ResultsPage() {
         if (!mounted) return;
         setLoading(false);
       });
+    // Fetch membership for gating
+    (async () => {
+      try {
+        const r = await fetch('/api/payments/status', { cache: 'no-store' })
+        if (!mounted) return
+        if (r.ok) {
+          const j = await r.json()
+          setIsMember(Boolean((j as any)?.is_member))
+        }
+      } catch {}
+    })()
     return () => {
       mounted = false;
     };
@@ -56,6 +68,13 @@ export default function ResultsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#faf9f7]">
+        <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="/dashboard" className="text-sm text-slate-700 hover:underline">← Back to Dashboard</a>
+            <div className="text-sm font-semibold text-slate-900">Results</div>
+            <div />
+          </div>
+        </header>
         <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">Loading…</div>
       </div>
     );
@@ -63,6 +82,13 @@ export default function ResultsPage() {
   if (!data) {
     return (
       <div className="min-h-screen bg-[#faf9f7]">
+        <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="/dashboard" className="text-sm text-slate-700 hover:underline">← Back to Dashboard</a>
+            <div className="text-sm font-semibold text-slate-900">Results</div>
+            <div />
+          </div>
+        </header>
         <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">Error loading results</div>
       </div>
     );
@@ -70,6 +96,13 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-[#faf9f7]">
+      <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <a href="/dashboard" className="text-sm text-slate-700 hover:underline">← Back to Dashboard</a>
+          <div className="text-sm font-semibold text-slate-900">Results</div>
+          <div />
+        </div>
+      </header>
       <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-900">Results</h1>
@@ -77,7 +110,7 @@ export default function ResultsPage() {
         </header>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <ExecutiveSummaryCard working={workingSupps} wasted={wastedSupps} testing={testingSupps} />
+          <ExecutiveSummaryCard working={workingSupps} wasted={wastedSupps} testing={testingSupps} isMember={isMember} />
           <CostOfClarityCard totalYearly={totals.totalYearly} wastedYearly={totals.wastedYearly} />
         </div>
 

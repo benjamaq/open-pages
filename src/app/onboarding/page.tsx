@@ -29,6 +29,23 @@ export default function OnboardingPage() {
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
 
+  // Open full details modal with a minimal product stub (for manual/quick add)
+  function openManualAdd(name?: string) {
+    const stub: ProductLike = {
+      id: crypto.randomUUID(),
+      productName: name ?? '',
+      brandName: '',
+      canonicalSupplementId: '',
+      pricePerContainerDefault: 0,
+      servingsPerContainerDefault: 0,
+      // @ts-ignore – keep compatibility with ProductLike shape
+      dosePerServingAmountDefault: 1,
+      // @ts-ignore
+      dosePerServingUnitDefault: ''
+    }
+    setPendingProduct(stub)
+  }
+
   // Debounced search
   useEffect(() => {
     if (searchQuery.length < 2) {
@@ -39,21 +56,26 @@ export default function OnboardingPage() {
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`/api/catalog/search?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' });
-        const catalog = await res.json();
-        // Map catalog items into Product shape expected by the modal trigger
-        const mapped: Product[] = Array.isArray(catalog)
-          ? catalog.map((item: any) => ({
-              id: String(item.id),
-              productName: item.name ?? '',
-              brandName: item.brand ?? '',
-              canonicalSupplementId: String(item.id),
-              pricePerContainerDefault: Number(item.typical_price ?? 0) || 0,
-              servingsPerContainerDefault: Number(item.servings_per_container ?? 0) || 0,
-              dosePerServingAmountDefault: 1,
-              dosePerServingUnitDefault: (typeof item.serving_size === 'string' && item.serving_size.toLowerCase().includes('capsule')) ? 'capsules' : ''
-            }))
-          : [];
+        // Use new iHerb-backed search API
+        const res = await fetch(`/api/supplements/search?q=${encodeURIComponent(searchQuery)}`, { cache: 'no-store' });
+        const data = await res.json();
+        const rows = Array.isArray(data?.results) ? data.results : [];
+        // Map to Product shape for downstream modal
+        const mapped: Product[] = rows.map((row: any) => {
+          const servingsPerContainer = Number(row.servings_per_container ?? 0) || 0;
+          const pricePerServing = Number(row.price_per_serving ?? 0) || 0;
+          const pricePerContainer = servingsPerContainer > 0 ? pricePerServing * servingsPerContainer : 0;
+          return {
+            id: String(row.id),
+            productName: String(row.title ?? ''),
+            brandName: String(row.brand ?? ''),
+            canonicalSupplementId: String(row.id),
+            pricePerContainerDefault: pricePerContainer,
+            servingsPerContainerDefault: servingsPerContainer,
+            dosePerServingAmountDefault: 1,
+            dosePerServingUnitDefault: 'capsules'
+          };
+        });
         setSearchResults(mapped);
       } catch (error) {
         console.error('Search failed:', error);
@@ -134,13 +156,17 @@ export default function OnboardingPage() {
       setSupplements([...supplements, details]);
       // Persist to backend so dashboard sees it immediately
       try {
+        const payload = { 
+          name: details.name,
+          monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
+          primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : []
+        }
+        // eslint-disable-next-line no-console
+        console.log('POSTING (onboarding):', payload)
         const create = await fetch('/api/supplements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name: details.name,
-            monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0)))
-          })
+          body: JSON.stringify(payload)
         })
         const created = await create.json().catch(() => ({}))
         if (create.ok && created?.id) {
@@ -216,15 +242,22 @@ export default function OnboardingPage() {
 
           {/* Input Area */}
           <div className="mb-6">
-            <div className="text-sm text-slate-700 mb-2 font-medium">What are you currently taking?</div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Start with one (e.g. magnesium)"
-              className="w-full px-5 py-4 text-base border border-slate-200 rounded-xl bg-white shadow-sm focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
-            />
-            <p className="mt-2 text-[13px] text-slate-400">Brands and dosages are optional.</p>
+          <div className="text-sm text-slate-700 mb-2 font-medium">What are you currently taking?</div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim().length > 0) {
+                openManualAdd(searchQuery.trim())
+              }
+            }}
+            placeholder="Start with one (e.g. magnesium)"
+            className="w-full px-5 py-4 text-base border border-slate-200 rounded-xl bg-white shadow-sm focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
+          />
+          <div className="mt-2">
+            <p className="text-[13px] text-slate-400">Brands and dosages are optional.</p>
+          </div>
             
             {/* Common starting points */}
             <div className="text-xs text-slate-500 mt-4 mb-2">Common starting points</div>
@@ -232,12 +265,51 @@ export default function OnboardingPage() {
               {['Magnesium', 'Creatine', 'Vitamin D', 'Omega-3', 'Ashwagandha'].map(name => (
                 <button
                   key={name}
-                  onClick={() => setSearchQuery(name)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-[#f8f7f4] border border-[#e7e5e0] rounded-full hover:bg[#f1f0eb] hover:border-[#d4d2cd] transition whitespace-nowrap"
+                  onClick={async () => {
+                    const q = String(name || '').trim()
+                    setSearchQuery(q)
+                    if (q.length < 2) { setSearchResults([]); return }
+                    setIsSearching(true)
+                    try {
+                      const res = await fetch(`/api/supplements/search?q=${encodeURIComponent(q)}`, { cache: 'no-store' })
+                      const data = await res.json()
+                      const rows = Array.isArray(data?.results) ? data.results : []
+                      const mapped: Product[] = rows.map((row: any) => {
+                        const servingsPerContainer = Number(row.servings_per_container ?? 0) || 0;
+                        const pricePerServing = Number(row.price_per_serving ?? 0) || 0;
+                        const pricePerContainer = servingsPerContainer > 0 ? pricePerServing * servingsPerContainer : 0;
+                        return {
+                          id: String(row.id),
+                          productName: String(row.title ?? ''),
+                          brandName: String(row.brand ?? ''),
+                          canonicalSupplementId: String(row.id),
+                          pricePerContainerDefault: pricePerContainer,
+                          servingsPerContainerDefault: servingsPerContainer,
+                          dosePerServingAmountDefault: 1,
+                          dosePerServingUnitDefault: 'capsules'
+                        };
+                      });
+                      setSearchResults(mapped)
+                    } catch (error) {
+                      console.error('Search failed:', error)
+                    } finally {
+                      setIsSearching(false)
+                    }
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-[#f8f7f4] border border-[#e7e5e0] rounded-full hover:bg-[#f1f0eb] hover:border-[#d4d2cd] transition whitespace-nowrap"
                 >
                   {name}
                 </button>
               ))}
+            </div>
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => openManualAdd(searchQuery.trim() || undefined)}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#2C2C2C] text-white hover:bg-black text-sm"
+              >
+                + Add a different supplement manually
+              </button>
             </div>
           </div>
 
@@ -260,8 +332,13 @@ export default function OnboardingPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">{product.productName}</h3>
-                      <p className="text-sm text-slate-500">{product.brandName}</p>
+                      <h3 className="font-semibold text-slate-900">{product.brandName} {product.productName}</h3>
+                      <div className="mt-1 text-sm text-slate-600">
+                        <span className="mr-3">£{(product.pricePerContainerDefault > 0 && product.servingsPerContainerDefault > 0
+                          ? (product.pricePerContainerDefault / product.servingsPerContainerDefault).toFixed(2)
+                          : '—')}/serving</span>
+                        <span className="text-slate-500">{product.servingsPerContainerDefault || 0} servings</span>
+                      </div>
                     </div>
                     
                     <button

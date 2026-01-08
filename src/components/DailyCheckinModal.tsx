@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
+import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 
 // Constants for symptom tracking
 const coreSymptoms = [
@@ -205,7 +206,7 @@ export default function DailyCheckinModal({
   
   const [draft, setDraft] = useState<DailyCheckinInput>({
     dateISO: new Date().toISOString().split('T')[0],
-    energy: currentEnergy,
+    energy: Number.isFinite(Number(currentEnergy)) && Number(currentEnergy) > 0 ? Math.max(1, Math.min(10, Number(currentEnergy))) : 5,
     pain: 5,
     sleep: 5,
     symptoms: [],
@@ -219,6 +220,7 @@ export default function DailyCheckinModal({
   const [selectedSupps, setSelectedSupps] = useState<Record<string, boolean>>({})
   const [selectedLifestyleFactors, setSelectedLifestyleFactors] = useState<string[]>([])
   const [focus, setFocus] = useState<number>(5)
+  const [moodScore, setMoodScore] = useState<number>(5)
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -368,42 +370,80 @@ export default function DailyCheckinModal({
 
     try {
       const today = new Date().toISOString().split('T')[0]
-
-      // Map Energy/Focus 0-10 → 1-5 scale expected by /api/checkin
-      const toFive = (n: number | undefined | null) => {
-        const v = typeof n === 'number' ? n : 5
-        return Math.max(1, Math.min(5, Math.round(v / 2)))
-      }
-      const moodScore = toFive(draft.energy) // derive mood from energy
-      const energyScore = toFive(draft.energy)
-      const focusScore = toFive((typeof (focus) === 'number' ? focus : 5))
-
-      // Build supplement intake map from selected checkboxes
-      const supplement_intake: Record<string, boolean> = {}
+      // Persist the exact skip list shown in this modal for same-day dashboard display
       try {
-        Object.entries(selectedSupps).forEach(([k, v]) => { if (v) supplement_intake[k] = true })
+        const names = Array.isArray((todayItems as any)?.skipNames) ? (todayItems as any).skipNames as string[] : []
+        if (names.length > 0 && typeof window !== 'undefined') {
+          localStorage.setItem('biostackr_skip_names_today', JSON.stringify({ date: today, names }))
+        }
+      } catch {}
+
+      // Map 1–10 UI slider to DB 3‑point scale: 1–3→1, 4–6→2, 7–10→3
+      const toThree = (n: number | undefined | null) => {
+        const v = typeof n === 'number' ? n : 0
+        if (v <= 3) return 1
+        if (v <= 6) return 2
+        return 3
+      }
+      // Persist RAW 1–10 values for energy/focus/sleep; backend clamps to 1–10
+      const energyScore = draft.energy
+      const focusScore = typeof focus === 'number' ? focus : 0
+      const sleepScore = typeof draft.sleep === 'number' ? draft.sleep : 0
+
+      // Build supplement intake map from selected checkboxes + rotation skip list
+      // - Explicitly record every supplement as 'taken' or 'off'
+      // - Items in today's skip list are forced to 'off'
+      const supplement_intake: Record<string, string> = {}
+      const skipNameSet = new Set(
+        Array.isArray((todayItems as any)?.skipNames)
+          ? (todayItems as any).skipNames.map((n: string) => String(n).trim().toLowerCase())
+          : []
+      )
+      try {
+        const supps: Array<{ id: string; name?: string; title?: string }> = Array.isArray((todayItems as any)?.supplements)
+          ? (todayItems as any).supplements
+          : []
+        for (const it of supps) {
+          const id = String((it as any).id || '')
+          if (!id) continue
+          const nmLower = String((it as any).name || (it as any).title || '').trim().toLowerCase()
+          const isChecked = !!selectedSupps[id]
+          const isInSkip = skipNameSet.has(nmLower)
+          if (isInSkip) {
+            supplement_intake[id] = 'off'
+          } else {
+            supplement_intake[id] = isChecked ? 'taken' : 'off'
+          }
+        }
       } catch {}
 
       // Tags: confounders only
       const tags: string[] = Array.isArray(selectedLifestyleFactors) ? [...selectedLifestyleFactors] : []
 
       // Save via BioStackr check-in API
+      const payload = {
+        mood: moodScore,
+        energy: energyScore,
+        focus: focusScore,
+        sleep: sleepScore,
+        tags,
+        supplement_intake
+      }
+      try { console.log('CHECKIN submit payload:', payload) } catch {}
       const res = await fetch('/api/checkin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          mood: moodScore,
-          energy: energyScore,
-          focus: focusScore,
-          tags,
-          supplement_intake
-        })
+        body: JSON.stringify(payload)
       })
+      const json = await res.json().catch(() => ({} as any))
+      try { console.log('CHECKIN response:', { status: res.status, ok: res.ok, json }) } catch {}
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        throw new Error(j?.error || 'Failed to save check-in')
+        // Surface error to user
+        setMessage(typeof json?.error === 'string' ? `❗ ${json.error}` : '❗ Failed to save check-in')
+        setIsSaving(false)
+        return
       }
 
       // Save to localStorage for backward compatibility
@@ -464,7 +504,7 @@ export default function DailyCheckinModal({
         setTimeout(() => window.location.reload(), 800)
       }
 
-      // Clear any ?checkin=1 param to avoid auto-reopen loops
+      // Clear any ?checkin=open param to avoid auto-reopen loops
       try {
         const url = new URL(window.location.href)
         url.searchParams.delete('checkin')
@@ -796,17 +836,29 @@ export default function DailyCheckinModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header (sticky, neutral) */}
-        <div className="sticky top-0 bg-white border-b px-8 py-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Daily Check-in</h2>
+        <div className="sticky top-0 bg-white border-b px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Daily Check-in</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
         {/* Scrollable Content (neutral, reusing Add Supplement spacing rhythm) */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
-          <div className="p-8 space-y-6">
+          <div className="p-5 sm:p-8 space-y-6">
+            {/* Skip reminder (optional) */}
+            {Array.isArray((todayItems as any)?.skipNames) && (todayItems as any).skipNames.length > 0 && (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+                <div className="font-medium mb-2">Skipping today:</div>
+                <ul className="list-disc pl-5 space-y-1">
+                  {((todayItems as any).skipNames as string[]).map((raw, idx) => {
+                    const clean = abbreviateSupplementName ? abbreviateSupplementName(String(raw || '')) : String(raw || '')
+                    return <li key={`${clean}-${idx}`}>{clean}</li>
+                  })}
+                </ul>
+              </div>
+            )}
             {/* Section 1: Personal Check-in (very light container, soft radius, generous padding) */}
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Personal Check-in</h3>
@@ -860,11 +912,48 @@ export default function DailyCheckinModal({
                     <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{draft.sleep || 5}/10</span>
                   </div>
                 </div>
+                {/* Mood Slider */}
+                <div className="overflow-hidden">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Mood</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={moodScore}
+                      onChange={(e) => setMoodScore(Number(e.target.value))}
+                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
+                    />
+                    <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{moodScore}/10</span>
+                  </div>
+                </div>
             </div>
 
             {/* Supplements today (same section container style as Add Supplement) */}
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Supplements today</h3>
+              <div className="mb-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const all: Record<string, boolean> = {}
+                    try {
+                      (todayItems?.supplements || []).forEach((it: any) => { all[it.id] = true })
+                    } catch {}
+                    setSelectedSupps(all)
+                  }}
+                  className="text-xs text-gray-700 underline"
+                >
+                  Select all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupps({})}
+                  className="text-xs text-gray-500 underline"
+                >
+                  Clear
+                </button>
+              </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {(todayItems?.supplements || []).map((it: any) => (
                     <label key={it.id} className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 bg-white hover:border-gray-300 transition-colors">
@@ -925,15 +1014,21 @@ export default function DailyCheckinModal({
 
             </div>
 
+            {/* Baseline explainer per brief */}
+            <hr className="border-gray-200" />
+            <div className="text-sm text-gray-600">
+              Check-ins are compared against your baseline to estimate real effects.
+            </div>
+
           </div>
         </div>
 
         {/* Footer (sticky, neutral) */}
-        <div className="sticky bottom-0 bg-white border-t px-8 py-6 flex justify-between">
+        <div className="sticky bottom-0 bg-white border-t px-5 sm:px-8 py-4 sm:py-6 flex justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 sm:py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors min-h-[44px]"
           >Cancel</button>
           <div className="flex items-center gap-3">
             {message && (
@@ -944,7 +1039,7 @@ export default function DailyCheckinModal({
             <button 
               onClick={handleSave} 
               disabled={isSaving}
-              className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-8 py-3 sm:py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
             >
               {isSaving ? 'Saving...' : 'Save'}
             </button>

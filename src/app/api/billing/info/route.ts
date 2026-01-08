@@ -13,8 +13,31 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 
 export async function GET() {
   try {
-    // Check if Stripe is configured
+    const supabase = await createClient()
+    
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // If Stripe is not configured, still return isPaid using profile tier
     if (!stripe) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('user_id', user.id)
+        .single()
+      const tierLc = String((profile as any)?.tier || '').toLowerCase()
+      const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] user.id:', user.id)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] profile:', profile)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] tierLc:', tierLc)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] isPaidByTier:', isPaidByTier)
       return NextResponse.json({
         subscription: null,
         payment_method: null,
@@ -23,16 +46,9 @@ export async function GET() {
           current_period_start: new Date().toISOString(),
           current_period_end: new Date().toISOString(),
           features: []
-        }
+        },
+        isPaid: Boolean(isPaidByTier)
       })
-    }
-
-    const supabase = await createClient()
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user's subscription from database
@@ -44,11 +60,27 @@ export async function GET() {
 
     // If no subscription in DB, return free plan info
     if (!subscription || !subscription.stripe_customer_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('user_id', user.id)
+        .single()
+      const tierLc = String((profile as any)?.tier || '').toLowerCase()
+      const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] user.id:', user.id)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] profile:', profile)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] tierLc:', tierLc)
+      // eslint-disable-next-line no-console
+      console.log('[billing/info] isPaidByTier:', isPaidByTier)
       return NextResponse.json({
         subscription: null,
         payment_method: null,
         invoices: [],
-        usage: await getUserUsage(supabase, user.id)
+        usage: await getUserUsage(supabase, user.id),
+        isPaid: Boolean(isPaidByTier)
       })
     }
 
@@ -102,11 +134,32 @@ export async function GET() {
       hosted_invoice_url: invoice.hosted_invoice_url
     }))
 
+    // Also check database profile tier as a paid signal
+    const { data: profileTierRow } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('user_id', user.id)
+      .single()
+    const tierVal = (profileTierRow as any)?.tier
+    const tierLc = String(tierVal || '').toLowerCase()
+    const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+    const hasActiveSubscription = subscriptionInfo?.status === 'active' || subscriptionInfo?.status === 'trialing'
+    const finalIsPaid = Boolean(isPaidByTier || hasActiveSubscription)
+    // eslint-disable-next-line no-console
+    console.log('[billing/info] user.id:', user.id)
+    // eslint-disable-next-line no-console
+    console.log('[billing/info] profile.tier (lc):', tierLc)
+    // eslint-disable-next-line no-console
+    console.log('[billing/info] subscription.status:', subscriptionInfo?.status)
+    // eslint-disable-next-line no-console
+    console.log('[billing/info] isPaidByTier:', isPaidByTier, 'final isPaid:', finalIsPaid)
+
     return NextResponse.json({
       subscription: subscriptionInfo,
       payment_method: paymentMethodInfo,
       invoices: invoiceInfo,
-      usage: await getUserUsage(supabase, user.id)
+      usage: await getUserUsage(supabase, user.id),
+      isPaid: finalIsPaid
     })
 
   } catch (error) {

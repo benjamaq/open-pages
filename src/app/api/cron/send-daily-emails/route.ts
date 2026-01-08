@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { renderDailyReminderHTML, getDailyReminderSubject } from '@/lib/email/dailyReminderTemplate'
+import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
 import crypto from 'crypto'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
@@ -20,8 +20,11 @@ async function handler(req: NextRequest) {
 
     // 1) Read debug flags
   const url = new URL(req.url)
-  const dryRun = url.searchParams.get('dry') === '1'
-  const filterEmail = url.searchParams.get('email') || undefined
+  const dryParam = url.searchParams.get('dry')
+  const rawEmail = url.searchParams.get('email') || undefined
+  // Normalize email query (strip accidental quotes)
+  const filterEmail = rawEmail ? rawEmail.replace(/^"+|"+$/g, '') : undefined
+  const dryRun = dryParam === '1'
   const forceFlag = url.searchParams.get('force') === '1'
   // Allow force when explicitly targeting an email, even without auth header (scoped to that user only)
   const hasAuth = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
@@ -96,19 +99,46 @@ async function handler(req: NextRequest) {
       }
     }
 
-    // In force mode + target email, now scope to exactly that user based on resolved emails
+    // In force mode + target email, ensure we have the target user's id/email even if they lack a profile row
     if (authorizedForce && filterEmail) {
-      const targetEntry = Array.from(emailMap.entries()).find(([, email]) => email === filterEmail)
-      const targetUserId = targetEntry?.[0]
+      let targetEntry = Array.from(emailMap.entries()).find(([, email]) => (email || '').toLowerCase() === String(filterEmail).toLowerCase())
+      let targetUserId = targetEntry?.[0] as string | undefined
       if (!targetUserId) {
-        console.error('[daily-cron] Target email not found after RPC resolution, aborting targeted run:', filterEmail)
+        try {
+          const adminApi = (supabaseAdmin as any).auth?.admin
+          if (adminApi?.getUserByEmail) {
+            const { data: byEmail } = await adminApi.getUserByEmail(filterEmail)
+            if (byEmail?.user?.id) {
+              targetUserId = byEmail.user.id as string
+              emailMap.set(targetUserId, filterEmail)
+              const existing = scopedProfiles.some(p => p.user_id === targetUserId)
+              if (!existing) {
+                // Create a minimal in-memory profile for targeting
+                const { data: profRow } = await supabaseAdmin
+                  .from('profiles')
+                  .select('user_id, display_name, timezone')
+                  .eq('user_id', targetUserId)
+                  .maybeSingle()
+                const display_name = (profRow as any)?.display_name || (byEmail.user?.user_metadata?.name as string) || (filterEmail.split('@')[0] || 'there')
+                const timezone = (profRow as any)?.timezone || 'UTC'
+                scopedProfiles.push({ user_id: targetUserId, display_name, timezone })
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (!targetUserId) {
+        console.error('[daily-cron] Target email not found after RPC resolution:', filterEmail)
         return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
       }
       scopedProfiles = scopedProfiles.filter(p => p.user_id === targetUserId)
       console.log('[daily-cron] Force targeting user:', { user_id: targetUserId, email: filterEmail })
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
-    const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
+    // Sender: prefer env, else enforced verified domain
+    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.com>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
 
@@ -152,20 +182,26 @@ async function handler(req: NextRequest) {
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
         const tz = p.timezone || 'UTC'
         const localYesterdayStr = formatInTimeZone(addDays(new Date(), -1), tz, 'yyyy-MM-dd')
+        // Pull yesterday's metrics (Energy/Focus/Sleep) from daily_entries
         const { data: entry } = await supabaseAdmin
           .from('daily_entries')
-          .select('pain, mood, sleep_quality, meds, protocols, local_date')
+          .select('energy, focus, sleep, sleep_quality, mood, meds, protocols, local_date')
           .eq('user_id', p.user_id)
           .eq('local_date', localYesterdayStr)
           .maybeSingle()
 
-        const pain = (entry as any)?.pain ?? 5
-        const mood = (entry as any)?.mood ?? 5
-        const sleep = (entry as any)?.sleep_quality ?? 5
+        const energyVal = (entry as any)?.energy
+        const focusVal = (entry as any)?.focus
+        const sleepVal = (entry as any)?.sleep ?? (entry as any)?.sleep_quality
+        const energy = typeof energyVal === 'number' ? energyVal : 5
+        const focus = typeof focusVal === 'number' ? focusVal : 5
+        const sleep = typeof sleepVal === 'number' ? sleepVal : 5
+        const moodVal = (entry as any)?.mood
+        const mood = typeof moodVal === 'number' ? moodVal : null
         if (!entry && !bypassAll) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); continue }
 
-        // Calculate readiness
-        const readinessPercent = Math.round((((10 - pain) + mood + sleep) / 3) * 10)
+        // Calculate readiness from Energy/Focus/Sleep
+        const readinessPercent = Math.round(((energy + focus + sleep) / 3) * 10)
         const readinessEmoji = readinessPercent >= 70 ? '🌞' : readinessPercent >= 40 ? '💧' : '🌙'
         const readinessMessage = readinessPercent >= 70
           ? 'High energy — great day to move'
@@ -180,16 +216,40 @@ async function handler(req: NextRequest) {
         await supabaseAdmin.from('magic_checkin_tokens').insert({ user_id: p.user_id, token_hash: tokenHash, expires_at: expiresAt })
         const magicUrl = `${base}/api/checkin/magic?token=${rawToken}`
 
-        const firstName = (p.display_name || '').toString().split(' ')[0] || (p.display_name || 'there') || 'there'
-        // Build supplement list from yesterday's entry
-        const supplementList: string[] = []
+        // Greeting priority:
+        // 1) profiles.display_name (first token)
+        // 2) auth.users.user_metadata.name
+        // 3) email local part
+        let firstName = ''
+        const displayName = (p.display_name && String(p.display_name).trim()) ? String(p.display_name).trim() : ''
+        if (displayName) { firstName = displayName.split(/\s+/)[0] }
+        if (!firstName) {
+          try {
+            const adminApi = (supabaseAdmin as any).auth?.admin
+            if (adminApi?.getUserById) {
+              const { data: userById } = await adminApi.getUserById(p.user_id)
+              const metaName = (userById?.user?.user_metadata?.name as string) || ''
+              if (metaName && metaName.trim().length > 0) {
+                firstName = metaName.trim().split(/\s+/)[0]
+              }
+            }
+          } catch {}
+        }
+        if (!firstName) {
+          const em = emailMap.get(p.user_id) || ''
+          const localPart = em.includes('@') ? em.split('@')[0] : ''
+          firstName = localPart ? localPart.replace(/[._-]+/g, ' ').trim() : 'there'
+        }
+
+        // Supplement count from user_supplement (active or legacy-null)
+        let supplementCount = 0
         try {
-          if (Array.isArray((entry as any).meds)) {
-            for (const m of (entry as any).meds) if (m?.name) supplementList.push(String(m.name))
-          }
-          if (Array.isArray((entry as any).protocols)) {
-            for (const pr of (entry as any).protocols) if (pr?.name) supplementList.push(String(pr.name))
-          }
+          const { count: suppCount } = await supabaseAdmin
+            .from('user_supplement')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', p.user_id)
+            .or('is_active.eq.true,is_active.is.null')
+          supplementCount = Number(suppCount || 0)
         } catch {}
 
         // Milestone: first daily email ever
@@ -218,17 +278,21 @@ async function handler(req: NextRequest) {
           ? '👏 Five days in — this is where useful patterns start to emerge. Keep going; consistency unlocks real insight.'
           : undefined
 
-        const html = renderDailyReminderHTML({
-          userName: firstName,
-          pain, mood, sleep,
-          readinessPercent,
-          readinessEmoji,
-          readinessMessage,
-          supplementList: supplementList.length ? supplementList : ['Magnesium','Omega-3','Sauna Protocol'],
-          checkInUrl: `${base}/dash`,
-          magicUrl,
-          optOutUrl: `${base}/settings/notifications`,
-          milestoneBanner,
+        // New simplified V3 reminder content (single-column card)
+        // Progress should match dashboard: approximate by days-of-data / 14 averaged across stack.
+        // As an interim alignment, use user's total daily_entries count across stack / 14.
+        const progressPercent = Math.max(0, Math.min(100, Math.round(((totalEntries || 0) / 14) * 100)))
+        console.log('[daily-cron] TEMPLATE: templates/daily-reminder.tsx | Labels: Energy/Focus/Sleep')
+        const html = renderV3Reminder({
+          firstName: firstName || 'there',
+          supplementCount,
+          progressPercent,
+          checkinUrl: `${base}/dashboard?checkin=open`,
+          // Pass yesterday's metrics
+          energy,
+          focus,
+          sleep,
+          ...(mood != null ? { mood } : {})
         })
 
         try {
@@ -239,14 +303,10 @@ async function handler(req: NextRequest) {
           // eslint-disable-next-line no-console
           console.log('[daily-cron] Full HTML sample:', (typeof html === 'string') ? html.substring(0, 500) : '(non-string)')
           // eslint-disable-next-line no-console
-          console.log('[daily-cron] HTML contains buttons?', (typeof html === 'string') ? html.includes('Check In') : false)
-          // eslint-disable-next-line no-console
-          console.log('[daily-cron] HTML contains Quick Save?', (typeof html === 'string') ? html.includes('Quick Save') : false)
+          console.log('[daily-cron] HTML contains Check in?', (typeof html === 'string') ? html.includes('Check in') : false)
         } catch {}
 
-        let subject = getDailyReminderSubject(firstName)
-        if (isFirstEmail) subject = "Skip today's check-in with Quick Save"
-        if (reachedFive) subject = "5 days in — you’re unlocking insights"
+        let subject = `${Math.max(0, Math.min(100, progressPercent))}% complete`
 
         if (dryRun) {
           // eslint-disable-next-line no-console
@@ -256,7 +316,7 @@ async function handler(req: NextRequest) {
           // eslint-disable-next-line no-console
           console.log('[daily-cron] Sending to:', { user_id: p.user_id, email, subject })
           try {
-            const resp = await resend.emails.send({ from, to: email!, subject, html, ...(reply_to ? { reply_to } : {}) })
+            const resp = await resend.emails.send({ from: from, to: email!, subject, html, ...(reply_to ? { reply_to: reply_to } : {}) })
             const resendId = resp.data?.id || null
             const sendError = resp.error?.message || null
             const sentOk = !sendError

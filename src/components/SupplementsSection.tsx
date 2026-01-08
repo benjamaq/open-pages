@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { formatFrequencyDisplay } from '../lib/frequency-utils'
@@ -12,6 +12,7 @@ interface SupplementItem {
   timing: string | null
   brand: string | null
   public: boolean
+  category?: string | null
 }
 
 interface SupplementsSectionProps {
@@ -34,6 +35,44 @@ const getCompoundSlug = (supplementName: string): string | null => {
 
 export default function SupplementsSection({ supplements }: SupplementsSectionProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [category, setCategory] = useState<string>('Uncategorized')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string>('')
+
+  useEffect(() => {
+    if (editingId) {
+      const s = supplements.find(x => x.id === editingId)
+      setCategory(s?.category || 'Uncategorized')
+    }
+  }, [editingId, supplements])
+
+  const saveCategory = async () => {
+    if (!editingId) return
+    try {
+      setBusy(true)
+      setMessage('')
+      const res = await fetch(`/api/supplements/${encodeURIComponent(editingId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category })
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setMessage(j?.error || 'Failed to save')
+        setBusy(false)
+        return
+      }
+      setEditingId(null)
+      // Refresh dashboard pie or any data consumer
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new Event('progress:refresh')) } catch {}
+      setMessage('Saved')
+      setBusy(false)
+    } catch (e: any) {
+      setMessage(e?.message || 'Failed')
+      setBusy(false)
+    }
+  }
 
   return (
     <section id="supplements" className="mb-8">
@@ -91,6 +130,16 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
                         {item.brand && (
                           <p className="text-sm" style={{ color: '#A6AFBD' }}>Brand: {item.brand}</p>
                         )}
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm" style={{ color: '#5C6370' }}>Category: {item.category || 'Uncategorized'}</p>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(item.id)}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </div>
                       
                     </div>
@@ -105,6 +154,46 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
           </div>
         )}
       </div>
+      {editingId && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="px-5 py-4 border-b">
+              <div className="text-base font-semibold">Edit supplement</div>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                >
+                  {['Gut Health','Energy & Stamina','Sleep Quality','Stress & Mood','Uncategorized'].map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              {message && <div className="text-sm text-gray-600">{message}</div>}
+            </div>
+            <div className="px-5 py-4 border-t flex items-center justify-end gap-2">
+              <button
+                className="px-4 py-2 text-sm text-gray-700 border rounded-lg"
+                onClick={() => setEditingId(null)}
+                disabled={busy}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 text-sm text-white bg-gray-900 rounded-lg disabled:opacity-50"
+                onClick={saveCategory}
+                disabled={busy}
+              >
+                {busy ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

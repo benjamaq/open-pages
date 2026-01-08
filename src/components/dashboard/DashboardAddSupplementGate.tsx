@@ -49,13 +49,16 @@ export default function DashboardAddSupplementGate() {
   async function handleSave(details: SupplementDetails) {
     // Create supplement by name
     const safeName = (details.name || '').trim() || 'Custom supplement'
+    const payload = { 
+      name: safeName,
+      monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
+      primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : []
+    }
+    try { console.log('POSTING:', payload) } catch {}
     const create = await fetch('/api/supplements', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name: safeName,
-        monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0)))
-      })
+      body: JSON.stringify(payload)
     })
     const j = await create.json().catch(() => ({}))
     if (!create.ok || !j?.id) {

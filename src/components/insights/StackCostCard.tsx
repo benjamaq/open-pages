@@ -160,7 +160,21 @@ export function StackCostCard() {
             <span className="text-blue-700 font-medium">${effectSpend.testYear.toLocaleString()}</span> still testing
           </div>
           <div className="mt-4">
-            <a href="/results" className="text-sm font-medium text-blue-600 hover:text-blue-700">See what&apos;s actually working →</a>
+            <button
+              onClick={async () => {
+                try {
+                  const r = await fetch('/api/billing/info', { cache: 'no-store' })
+                  const j = r.ok ? await r.json() : {}
+                  const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
+                  window.location.href = isPaid ? '/results' : '/checkout'
+                } catch {
+                  window.location.href = '/checkout'
+                }
+              }}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              See what&apos;s actually working →
+            </button>
           </div>
         </div>
       </div>

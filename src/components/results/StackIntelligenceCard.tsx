@@ -98,9 +98,7 @@ export default function StackIntelligenceCard({
               <>No clear overlaps yet.</>
             )}
           </p>
-          <div className="mt-3 inline-flex rounded-full border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700">
-            probabilistic
-          </div>
+          {/* Removed probabilistic badge per brief */}
         </div>
 
         {/* Probability tiers */}

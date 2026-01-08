@@ -39,7 +39,7 @@ export function TodaysActionCard() {
               url.searchParams.set('checkin', '1')
               window.history.replaceState({}, '', url.toString())
             } catch {
-              window.location.href = '/dashboard?checkin=1'
+              window.location.href = '/dashboard?checkin=open'
             }
           }}
           className="inline-flex items-center justify-center rounded-full bg-[#111111] px-6 py-3 text-base font-semibold text-white shadow hover:shadow-md transition"

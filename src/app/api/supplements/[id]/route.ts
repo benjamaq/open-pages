@@ -165,15 +165,18 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const rawCost =
-      typeof body?.monthly_cost === 'number' ? body.monthly_cost :
-      typeof body?.monthly_cost_usd === 'number' ? body.monthly_cost_usd :
-      parseFloat(String(body?.monthly_cost || body?.monthly_cost_usd || 'NaN'));
-    if (isNaN(rawCost)) {
-      return NextResponse.json({ error: 'Invalid cost value' }, { status: 400 });
-    }
+    const hasCategory = typeof body?.category === 'string' && body.category.trim().length > 0
+    const wantsCostUpdate =
+      typeof body?.monthly_cost === 'number' ||
+      typeof body?.monthly_cost_usd === 'number' ||
+      (!isNaN(parseFloat(String(body?.monthly_cost || body?.monthly_cost_usd || 'NaN'))))
     const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
-    const monthlyCost = clamp(Number(rawCost), 0, 80);
+    const rawCost = wantsCostUpdate
+      ? (typeof body?.monthly_cost === 'number' ? body.monthly_cost :
+        typeof body?.monthly_cost_usd === 'number' ? body.monthly_cost_usd :
+        parseFloat(String(body?.monthly_cost || body?.monthly_cost_usd || 'NaN')))
+      : NaN
+    const monthlyCost = Number.isFinite(rawCost) ? clamp(Number(rawCost), 0, 80) : undefined
 
     // Resolve profile
     const { data: profile, error: pErr } = await supabase
@@ -184,18 +187,38 @@ export async function PATCH(
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-    // Update stack_items (patterns and dashboard use stack_items.monthly_cost)
-    const { data: updated, error: uErr } = await supabase
-      .from('stack_items')
-      .update({ monthly_cost: monthlyCost })
-      .eq('id', params.id)
-      .eq('profile_id', (profile as any).id)
-      .select('id, monthly_cost')
-      .maybeSingle();
-    if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    // If updating cost, write to stack_items.monthly_cost (used across UI)
+    if (monthlyCost != null && Number.isFinite(monthlyCost)) {
+      const { data: updated, error: uErr } = await supabase
+        .from('stack_items')
+        .update({ monthly_cost: monthlyCost })
+        .eq('id', params.id)
+        .eq('profile_id', (profile as any).id)
+        .select('id, monthly_cost')
+        .maybeSingle();
+      if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
+      if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
 
-    return NextResponse.json({ id: updated.id, monthly_cost: updated.monthly_cost });
+    // If updating category, try to update user_supplement.category and fall back to stack_items.tags
+    if (hasCategory) {
+      const category = String(body.category).trim()
+      // Attempt user_supplement update by matching user_supplement.id = params.id first
+      const up1 = await supabase
+        .from('user_supplement')
+        .update({ category })
+        .eq('id', params.id)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+      // If no rows affected, try mapping stack_items.id to user_supplement via name or supplement_id (best effort)
+      // Non-fatal if this fails — also update stack_items.tags to include category label for charts
+      await supabase
+        .from('stack_items')
+        .update({ tags: [category] })
+        .eq('id', params.id)
+        .eq('profile_id', (profile as any).id)
+    }
+
+    return NextResponse.json({ ok: true, id: params.id, ...(monthlyCost != null ? { monthly_cost: monthlyCost } : {}), ...(hasCategory ? { category: String(body.category).trim() } : {}) });
   } catch (error: any) {
     console.error('Error updating monthly cost:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

@@ -9,6 +9,7 @@ import { PersonalHeader } from '@/components/dashboard/PersonalHeader';
 import { StackEconomicsCard } from '@/components/dashboard/YourStackCostCard';
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel';
 import DashboardAddSupplementGate from '@/components/dashboard/DashboardAddSupplementGate';
+import UpgradeButton from '@/components/billing/UpgradeButton';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -32,11 +33,11 @@ export default async function DashboardPage() {
     headers: { cookie: cookieHeader },
     cache: 'no-store',
   })).json();
-  // Fetch payment status to drive lock indicators
-  const payment = await (await fetch(`${baseUrl}/api/payments/status`, {
+  // Fetch billing status (unified isPaid boolean)
+  const billing = await (await fetch(`${baseUrl}/api/billing/info`, {
     headers: { cookie: cookieHeader },
     cache: 'no-store',
-  })).json().catch(() => ({ has_report: false, is_member: false }));
+  })).json().catch(() => ({ isPaid: false, subscription: null }));
 
   // Determine overall progress toward first insights (use activeTests/activeTrials daysCompleted or 0)
   // Use number of check-ins for progress (so Day 1 after first check-in)
@@ -51,17 +52,19 @@ export default async function DashboardPage() {
         backgroundPosition: 'center'
       }}
     >
-      <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 flex-wrap">
           <a href="/dashboard" className="flex items-center">
-            <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-8 w-auto" />
+            <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-7 sm:h-8 w-auto" />
           </a>
-          <nav className="flex items-center gap-4">
-            <a href="/dashboard" className="text-sm font-medium">Dashboard</a>
-            <a href="/results" className="text-sm text-slate-600">{payment?.is_member ? 'Results' : 'Results 🔒'}</a>
-            <a href="/upload" className="text-sm text-slate-600 border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-50">
+          <nav className="flex items-center gap-3 sm:gap-4 text-sm overflow-x-auto whitespace-nowrap py-1">
+            <a href="/dashboard" className="font-medium">Dashboard</a>
+            <a href="/results" className="text-slate-600">{(billing?.isPaid || (billing?.subscription && (billing.subscription.status === 'active' || billing.subscription.status === 'trialing'))) ? 'Results' : 'Results 🔒'}</a>
+            <a href="/upload" className="text-slate-600 border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-50">
               ⌚ Upload Wearable Data
             </a>
+            <a href="/settings" className="text-slate-600">Settings</a>
+            {!billing?.isPaid && <UpgradeButton compact />}
           </nav>
         </div>
       </header>

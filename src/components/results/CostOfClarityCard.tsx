@@ -36,15 +36,13 @@ export default function CostOfClarityCard({
         </div>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-4">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Potential savings</div>
-          <div className="mt-1 text-xl font-semibold text-neutral-900">${Math.max(156, Math.round(Math.max(0, wastedYearly)))}/yr</div>
-          <div className="mt-1 text-sm text-neutral-600">average user finding</div>
+          <div className="text-xs uppercase tracking-wide text-neutral-500">At stake</div>
+          <div className="mt-1 text-xl font-semibold text-neutral-900">${Math.round(Math.max(0, totalYearly))}/yr</div>
+          <div className="mt-1 text-sm text-neutral-600">Your full stack — every supplement is being tested</div>
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-neutral-200 bg-[#fbfaf8] p-4 text-sm text-neutral-700">
-        <span className="font-semibold text-neutral-900">Framing:</span> You’re paying to find what’s worth keeping — and what’s just an expensive situationship.
-      </div>
+      {/* Framing box removed per brief to avoid confusing language */}
     </section>
   );
 }

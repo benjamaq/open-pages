@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { renderDailyReminderHTML as renderDailyReminderHTML_MJML, getDailyReminderSubject as getSubject_MJML } from '@/lib/email/buildDailyReminder'
-import { renderDailyReminderHTML as renderDailyReminderHTML_HTML, getDailyReminderSubject as getSubject_HTML } from '@/lib/email/dailyReminderTemplate'
+import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
 
 function stackToLines(list: string[]): string {
   const emojiFor = (item: string) => {
@@ -25,26 +24,23 @@ export async function GET(req: NextRequest) {
     const readinessScore = Number(url.searchParams.get('readinessScore') || 60)
     const readinessEmoji = url.searchParams.get('readinessEmoji') || '💧'
     const readinessMessage = url.searchParams.get('readinessMessage') || 'Take it steady — light activity today'
-    const checkInUrl = url.searchParams.get('checkInUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dash`
-    const magicUrl = url.searchParams.get('magicUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/api/checkin/magic?token=TEST123`
+    const checkInUrl = url.searchParams.get('checkInUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dashboard?checkin=open`
     const optOutUrl = url.searchParams.get('optOutUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
     const supplements = (url.searchParams.getAll('supplement') || [])
     const supplementList = supplements.length ? supplements : ['Magnesium', 'Omega-3', 'Sauna Protocol']
 
-    // Prefer plain HTML template for production reliability (no mjml at runtime)
-    const html = renderDailyReminderHTML_HTML({
-      userName,
-      pain, mood, sleep,
-      readinessPercent: readinessScore,
-      readinessEmoji,
-      readinessMessage,
-      supplementList,
-      checkInUrl,
-      magicUrl,
-      optOutUrl,
+    // Use V3 template (Energy/Focus/Sleep)
+    const html = renderV3Reminder({
+      firstName: userName,
+      supplementCount: Math.max(1, supplementList.length),
+      progressPercent: readinessScore,
+      checkinUrl: checkInUrl,
+      energy: pain,
+      focus: mood,
+      sleep
     })
 
-    const subject = getSubject_HTML(userName)
+    const subject = `${readinessScore}% complete`
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
@@ -68,23 +64,20 @@ export async function POST(req: NextRequest) {
     const readinessEmoji = body.readinessEmoji || '💧'
     const readinessMessage = body.readinessMessage || 'Take it steady — light activity today'
     const supplements: string[] = body.supplementList || ['Magnesium', 'Omega-3', 'Sauna Protocol']
-    const checkInUrl = body.checkInUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dash`
-    const magicUrl = body.magicUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/api/checkin/magic?token=TEST123`
+    const checkInUrl = body.checkInUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dashboard?checkin=open`
     const optOutUrl = body.optOutUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
 
-    const html = renderDailyReminderHTML_HTML({
-      userName,
-      pain, mood, sleep,
-      readinessPercent: readinessScore,
-      readinessEmoji,
-      readinessMessage,
-      supplementList: supplements,
-      checkInUrl,
-      magicUrl,
-      optOutUrl,
+    const html = renderV3Reminder({
+      firstName: userName,
+      supplementCount: Math.max(1, supplements.length),
+      progressPercent: readinessScore,
+      checkinUrl: checkInUrl,
+      energy: pain,
+      focus: mood,
+      sleep
     })
 
-    const subject = getSubject_HTML(userName)
+    const subject = `${readinessScore}% complete`
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined

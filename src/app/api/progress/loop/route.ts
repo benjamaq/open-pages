@@ -17,8 +17,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
   console.log('[progress/loop] === V2 CODE RUNNING ===')
-  console.log('[progress/loop] === START ===')
+    console.log('[progress/loop] === START ===')
   try {
+    // Attach rotation selection debug in response for easier inspection
+    let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -97,7 +99,7 @@ export async function GET(request: Request) {
           totalDistinctDays: 0,
           hasCheckedInToday: false,
           todaySummary: null,
-          last30: { total: 0, noise: 0, clean: 0 },
+          last30: { total: 0, noise: 0, clean: 0, tagCounts: emptyTagCounts },
           last7: { total: 0, noise: 0, clean: 0, tagCounts: emptyTagCounts }
         },
         sections: {
@@ -163,12 +165,8 @@ export async function GET(request: Request) {
       return ''
     }
     const distinctCheckinDays = new Set<string>((checkins || []).map((c: any) => getDayKey(c)).filter(Boolean))
-    let hasCheckedInToday = distinctCheckinDays.has(todayKey)
-    let todaySummary: { mood?: number; energy?: number; focus?: number } | null = null
-    if (hasCheckedInToday) {
-      const todayRow = (checkins || []).find((c: any) => getDayKey(c) === todayKey)
-      if (todayRow) todaySummary = { mood: (todayRow as any).mood ?? undefined, energy: (todayRow as any).energy ?? undefined, focus: (todayRow as any).focus ?? undefined }
-    }
+    let hasCheckedInToday = false
+    let todaySummary: { mood?: number; energy?: number; focus?: number; sleep?: number } | null = null
 
     // Pattern insights to detect ready/no_signal and effect direction
     const { data: insights } = await supabase
@@ -219,6 +217,14 @@ export async function GET(request: Request) {
       illness: 'illness',
       intense_exercise: 'intense_exercise',
     }
+    const tagCountsLast30: Record<string, number> = {
+      alcohol: 0,
+      travel: 0,
+      high_stress: 0,
+      poor_sleep: 0,
+      illness: 0,
+      intense_exercise: 0,
+    }
     const tagCountsLast7: Record<string, number> = {
       alcohol: 0,
       travel: 0,
@@ -226,6 +232,15 @@ export async function GET(request: Request) {
       poor_sleep: 0,
       illness: 0,
       intense_exercise: 0,
+    }
+    for (const e of entries || []) {
+      const tags: string[] = Array.isArray((e as any).tags) ? (e as any).tags : []
+      for (const t of tags) {
+        const k = String(t).toLowerCase()
+        if (TAGS_MAP[k] != null) {
+          tagCountsLast30[TAGS_MAP[k]] = (tagCountsLast30[TAGS_MAP[k]] || 0) + 1
+        }
+      }
     }
     for (const e of entries7 || []) {
       const tags: string[] = Array.isArray((e as any).tags) ? (e as any).tags : []
@@ -245,7 +260,7 @@ export async function GET(request: Request) {
     since365.setDate(since365.getDate() - 365)
     const { data: entries365 } = await supabase
       .from('daily_entries')
-      .select('local_date,tags,skipped_supplements')
+      .select('local_date,mood,energy,focus,sleep_quality,tags,skipped_supplements,supplement_intake')
       .eq('user_id', user.id)
       .gte('local_date', since365.toISOString().slice(0,10))
     const allEntryDatesSet = new Set<string>((entries365 || []).map((e: any) => String(e.local_date).slice(0,10)))
@@ -276,6 +291,44 @@ export async function GET(request: Request) {
     if (cleanDatesSet.size === 0 && distinctCheckinDays.size > 0) {
       cleanDatesSet = new Set(Array.from(distinctCheckinDays))
     }
+    // Determine if user actually has a daily entry for today (authoritative for "checked in")
+    const hasTodayEntry = allEntryDatesSet.has(todayKey)
+    if (hasTodayEntry) {
+      hasCheckedInToday = true
+      try {
+        const te = (entries365 || []).find((e: any) => String((e as any).local_date).slice(0,10) === todayKey)
+        try { console.log('[DEBUG] Path 1: daily_entries te.sleep_quality=', (te as any)?.sleep_quality) } catch {}
+        if (te) {
+          todaySummary = {
+            mood: (te as any).mood ?? undefined,
+            energy: (te as any).energy ?? undefined,
+            focus: (te as any).focus ?? undefined,
+            sleep: (te as any).sleep_quality ?? (te as any).sleep ?? undefined
+          }
+          try { console.log('[progress/loop] todaySummary (daily_entries):', todaySummary) } catch {}
+        }
+      } catch {}
+    } else {
+      // No daily_entries for today → fall back to checkin table for today's summary
+      hasCheckedInToday = distinctCheckinDays.has(todayKey)
+      if (hasCheckedInToday) {
+        const todayRow = (checkins || []).find((c: any) => getDayKey(c) === todayKey)
+        try { console.log('[DEBUG] Path 2: checkin todayRow.sleep_quality=', (todayRow as any)?.sleep_quality) } catch {}
+        if (todayRow) {
+          todaySummary = {
+            mood: (todayRow as any).mood ?? undefined,
+            energy: (todayRow as any).energy ?? undefined,
+            focus: (todayRow as any).focus ?? undefined,
+            // Prefer sleep_quality; fallback to sleep
+            sleep: (todayRow as any).sleep_quality ?? (todayRow as any).sleep ?? undefined
+          }
+          try { console.log('[progress/loop] todaySummary (checkin):', todaySummary) } catch {}
+        }
+      } else {
+        hasCheckedInToday = false
+      }
+    }
+
     // Use max of sources to avoid undercounting
     const totalDistinctDaysFromCheckins = distinctCheckinDays.size
     const totalDistinctDays = Math.max(totalDistinctDaysFromEntries, cleanDatesSet.size, totalDistinctDaysFromCheckins)
@@ -286,6 +339,25 @@ export async function GET(request: Request) {
         checkinsDistinct: totalDistinctDaysFromCheckins,
         chosen: totalDistinctDays
       })
+    } catch {}
+
+    // Compute gaps: days with no daily_entries between first check-in and today
+    let gapsDays = 0
+    try {
+      const checkinDatesSorted = Array.from(distinctCheckinDays).sort()
+      const firstCheckinKey = checkinDatesSorted.length > 0 ? checkinDatesSorted[0] : null
+      if (firstCheckinKey) {
+        const { data: sinceFirst } = await supabase
+          .from('daily_entries')
+          .select('local_date')
+          .eq('user_id', user.id)
+          .gte('local_date', firstCheckinKey)
+        const haveSet = new Set<string>((sinceFirst || []).map((e: any) => String((e as any).local_date).slice(0,10)))
+        const start = new Date(`${firstCheckinKey}T00:00:00Z`)
+        const end = new Date(`${todayKey}T00:00:00Z`)
+        const spanDays = Math.floor((end.getTime() - start.getTime()) / (24*60*60*1000)) + 1
+        gapsDays = Math.max(0, spanDays - haveSet.size)
+      }
     } catch {}
 
     // Helpers for category and required days
@@ -443,12 +515,17 @@ export async function GET(request: Request) {
     // Map names -> user_supplement ids for when items are from stack_items
     const { data: userSuppRows } = await supabase
       .from('user_supplement')
-      .select('id,name')
+      .select('id,name,retest_started_at,trial_number')
       .eq('user_id', user.id)
     const nameToUserSuppId = new Map<string, string>()
+    const userSuppIdToName = new Map<string, string>()
+    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null }>()
     for (const u of userSuppRows || []) {
       const nm = String((u as any).name || '').trim().toLowerCase()
-      if (nm) nameToUserSuppId.set(nm, String((u as any).id))
+      const uid = String((u as any).id)
+      if (nm) nameToUserSuppId.set(nm, uid)
+      userSuppIdToName.set(uid, String((u as any).name || ''))
+      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null })
     }
     for (const r of progressRows) {
       const eff = effBySupp.get(r.id)
@@ -470,25 +547,58 @@ export async function GET(request: Request) {
         ;(r as any).daysOff = (eff as any).days_off ?? null
         ;(r as any).cleanDays = (eff as any).clean_days ?? null
       }
-      // Derive daysOn/Off from daily_entries intake if effect rows are missing or zeroed
+      // Derive daysOn/Off from daily_entries intake; if retest is active, recompute from retest start
       try {
+        const nm = String((r as any).name || '').trim().toLowerCase()
+        const suppId = nameToUserSuppId.get(nm) || String((r as any).id)
+        const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
+        const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
         const currentOn = Number((r as any).daysOn || 0)
         const currentOff = Number((r as any).daysOff || 0)
-        if ((currentOn + currentOff) === 0) {
-          const nm = String((r as any).name || '').trim().toLowerCase()
-          const suppId = nameToUserSuppId.get(nm) || String((r as any).id)
+        const needRecompute = !!restartIso || (currentOn + currentOff) === 0
+        if (needRecompute) {
           let on = 0, off = 0
+          let onClean = 0, offClean = 0
           for (const entry of (entries365 || [])) {
-            const skippedArr = (entry as any).skipped_supplements || []
-            const isOff = Array.isArray(skippedArr) && (skippedArr as any[]).includes(suppId)
+            const dKey = String((entry as any).local_date).slice(0,10)
+            if (restartIso && dKey < restartIso.slice(0,10)) continue
+            const intake = (entry as any).supplement_intake || null
+            let isOff = false
+            let isTaken = false
+            let hasRecord = false
+            if (intake && typeof intake === 'object') {
+              const v = (intake as any)[suppId]
+              if (v !== undefined) {
+                hasRecord = true
+                const s = String(v).toLowerCase()
+                if (s === 'skipped' || s === 'off' || s === 'not_taken' || s === 'false' || s === '0') {
+                  isOff = true
+                } else if (s === 'taken' || s === 'true' || s === '1') {
+                  isTaken = true
+                }
+              }
+            }
+            if (!hasRecord) continue
+            const isClean = !(Array.isArray((entry as any).tags) && (entry as any).tags.length > 0)
             if (isOff) {
-              off++
-            } else {
+              if (isClean) { off++; offClean++ }
+            } else if (isTaken) {
               on++
+              if (isClean) onClean++
             }
           }
           ;(r as any).daysOn = on
           ;(r as any).daysOff = off
+          ;(r as any).daysOnClean = onClean
+          ;(r as any).daysOffClean = offClean
+          if (restartIso) {
+            ;(r as any).retestStartedAt = restartIso
+            ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId) ? (suppMetaById.get(suppId) as any).trial : null) ?? null
+            ;(r as any).effectCategory = undefined
+            r.effectPct = null
+            r.confidence = null
+            r.trend = undefined
+          }
         }
       } catch {}
       // Recompute progressPercent with bonuses now that we have some quality data
@@ -513,21 +623,39 @@ export async function GET(request: Request) {
         const todayStr = new Date().toISOString().slice(0,10)
         const microOffset = Math.floor(hash01(String(r.id) + todayStr) * 3) - 1
         let adjusted = baseProgress + staggerOffset + rotationBonus + qualityModifier + microOffset
-        // Gate by ON vs OFF evidence: progress = min(on_pct, off_pct)
+        const adjustedBeforeCap = adjusted
+        // Evidence-based progress: combine ON and OFF requirements
+        // Progress = (min(ON, ON_REQ) + min(OFF, OFF_REQ)) / (ON_REQ + OFF_REQ)
         const requiredOnDays = requiredDays
         const requiredOffDays = Math.min(5, Math.max(3, Math.round(requiredDays / 4))) // 3–5 off-days required
-        const onPct = requiredOnDays > 0 ? (daysOn / requiredOnDays) * 100 : 0
-        const offPct = requiredOffDays > 0 ? (daysOff / requiredOffDays) * 100 : 0
-        // If we have any ON/OFF accounting, gate the ceiling by min(onPct, offPct)
-        if ((daysOn > 0) || (daysOff > 0)) {
-          const gate = Math.min(onPct, offPct)
-          adjusted = Math.min(adjusted, gate)
-        } else {
-          // If no OFF evidence yet, do not allow 100% even if base hits it
-          if (adjusted >= 100) adjusted = 99
-        }
-        r.progressPercent = Math.max(0, Math.min(100, Math.round(adjusted)))
+        const onClamped = Math.min(Math.max(0, daysOn), requiredOnDays)
+        const offClamped = Math.min(Math.max(0, daysOff), requiredOffDays)
+        const denom = Math.max(1, requiredOnDays + requiredOffDays)
+        const evidencePct = ((onClamped + offClamped) / denom) * 100
+        // Use ON/OFF evidence as the progress value (UX: shows momentum from day one)
+        const finalPct = Math.max(0, Math.min(100, Math.round(evidencePct)))
+        // Debug: emit full calculation per supplement
+        try {
+          console.log('[progress/loop] calc', {
+            id: r.id,
+            name,
+            daysOfData: r.daysOfData,
+            requiredDays,
+            daysOn,
+            daysOff,
+            requiredOnDays,
+            requiredOffDays,
+            baseProgress: Math.round(baseProgress * 100) / 100,
+            adjustedBeforeCap: Math.round(adjustedBeforeCap * 100) / 100,
+            evidencePct: Math.round(evidencePct * 100) / 100,
+            finalPct
+          })
+        } catch {}
+        r.progressPercent = finalPct
         r.requiredDays = requiredDays
+        // Persist required ON/OFF for client-side gating
+        ;(r as any).requiredOnDays = requiredOnDays
+        ;(r as any).requiredOffDays = requiredOffDays
       }
       catch {}
     }
@@ -535,9 +663,9 @@ export async function GET(request: Request) {
     // Compute progress state labels and weighted stack progress
     const stateFor = (p: number): { label: string; color: 'gray'|'amber'|'green' } => {
       if (p <= 15) return { label: 'Collecting baseline', color: 'gray' }
-      if (p <= 40) return { label: 'Building pattern', color: 'gray' }
+      if (p <= 40) return { label: 'Collecting data', color: 'gray' }
       if (p <= 70) return { label: 'Signal emerging', color: 'amber' }
-      if (p <= 90) return { label: 'Almost ready', color: 'amber' }
+      if (p <= 90) return { label: 'Approaching verdict', color: 'amber' }
       if (p < 100) return { label: 'Verdict pending', color: 'green' }
       return { label: 'Ready for verdict', color: 'green' }
     }
@@ -548,6 +676,59 @@ export async function GET(request: Request) {
     const stackProgress = totalCost > 0
       ? Math.round(progressRows.reduce((s, r) => s + (r.progressPercent * (Number(r.monthlyCost || 0))), 0) / totalCost)
       : Math.round(progressRows.reduce((s, r) => s + r.progressPercent, 0) / Math.max(progressRows.length, 1))
+
+    // Compute readiness and derived summary fields (used by client for gating)
+    for (const r of progressRows) {
+      try {
+        const onClean = Number((r as any).daysOnClean || (r as any).daysOn || 0)
+        const offClean = Number((r as any).daysOffClean || (r as any).daysOff || 0)
+        const reqOn = Number((r as any).requiredOnDays || r.requiredDays || 14)
+        const reqOff = Number((r as any).requiredOffDays || Math.min(5, Math.max(3, Math.round((r.requiredDays || 14) / 4))))
+        const isReady = onClean >= reqOn && offClean >= reqOff
+        ;(r as any).isReady = isReady
+        // Verdict mapping (if effect category present)
+        const cat = String((r as any).effectCategory || '').toLowerCase()
+        const verdict =
+          cat === 'works' ? 'keep' :
+          cat === 'no_effect' ? 'drop' :
+          cat === 'inconsistent' ? 'testing' :
+          cat === 'needs_more_data' ? 'testing' :
+          isReady ? 'unclear' : null
+        ;(r as any).verdict = verdict
+        ;(r as any).effectPercent = typeof r.effectPct === 'number' ? Math.round(r.effectPct) : null
+        ;(r as any).effectMetric = (cat === 'works' || cat === 'no_effect' || cat === 'inconsistent') ? 'energy' : null
+        if (typeof r.confidence === 'number') {
+          const c = Math.round(r.confidence as number)
+          ;(r as any).confidenceText = c >= 80 ? 'high' : c >= 60 ? 'medium' : 'low'
+        } else {
+          ;(r as any).confidenceText = null
+        }
+        // Heuristic inconclusive reason/text for ready-but-unclear cases
+        if (isReady && (!cat || cat === 'needs_more_data' || (r as any).verdict === 'unclear')) {
+          const eff = Number((r as any).effectPercent || 0)
+          const clean = Number((r as any).cleanDays || 0)
+          const total = Number(r.daysOfData || 0)
+          const ratio = total > 0 ? (clean / total) : 0
+          let reason: string | null = null
+          let text: string | null = null
+          if (Math.abs(eff) <= 5) {
+            reason = 'small_effect'
+            text = 'Small effect (<5%) — not statistically clear'
+          } else if (ratio < 0.6) {
+            reason = 'high_noise'
+            text = 'High noise — many disrupted days reduce clarity'
+          } else {
+            reason = 'insufficient_signal'
+            text = 'More data needed for a confident verdict'
+          }
+          ;(r as any).inconclusiveReason = reason
+          ;(r as any).inconclusiveText = text
+        } else {
+          ;(r as any).inconclusiveReason = null
+          ;(r as any).inconclusiveText = null
+        }
+      } catch {}
+    }
 
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
@@ -618,6 +799,19 @@ export async function GET(request: Request) {
       })
     } catch {}
     // Rotation intelligence
+    // Build ON/OFF requirement status per supplement id to prioritize OFF-day needs
+    const progressById: Record<string, { daysOn: number; daysOff: number; reqOn: number; reqOff: number }> = {}
+    try {
+      for (const r of progressRows) {
+        const id = String((r as any).id || '')
+        if (!id) continue
+        const daysOn = Number((r as any).daysOn || 0)
+        const daysOff = Number((r as any).daysOff || 0)
+        const reqOn = Number((r as any).requiredDays || 14)
+        const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
+        progressById[id] = { daysOn, daysOff, reqOn, reqOff }
+      }
+    } catch {}
     const stackItems = (items || []).map((it: any) => {
       const cat = inferCategory(String(it?.name || ''), (it?.primary_goal_tags || it?.tags))
       const cost = Number(it?.monthly_cost || 0)
@@ -630,6 +824,19 @@ export async function GET(request: Request) {
       arr.push(s)
       groupsByCategory.set(s.category, arr)
     }
+  // Add a synthetic priority group for items with met ON requirement but lacking OFF days
+  try {
+    const priorityAll = (stackItems || []).filter(s => {
+      const p = progressById[s.id]
+      if (!p) return false
+      const onMet = p.daysOn >= p.reqOn
+      const offDef = Math.max(0, p.reqOff - p.daysOff)
+      return onMet && offDef > 0
+    })
+    if (priorityAll.length > 0) {
+      groupsByCategory.set('priority_override', priorityAll as any)
+    }
+  } catch {}
     const categoryPriority = ['sleep','energy','mood','stress','recovery','cognitive','digestion','other']
     const groupEntries = Array.from(groupsByCategory.entries()).sort((a, b) => {
       const costA = a[1].reduce((sum, s) => sum + (s.monthlyCost || 0), 0)
@@ -656,11 +863,70 @@ export async function GET(request: Request) {
     } else if (groupEntries.length > 0) {
       rotation.phase = 'rotation'
       const cycleIndex = Math.floor((totalDistinctDays - baselineDaysNeeded) / cycleLenDays)
-      const groupIdx = cycleIndex % groupEntries.length
+      // Choose category to prioritize supplements that need OFF days first
+      let bestIdx = -1
+      let bestScore = -1
+      for (let i = 0; i < groupEntries.length; i++) {
+        const [, groupSupps] = groupEntries[i]
+        const score = groupSupps.reduce((acc, s) => {
+          const p = progressById[s.id]
+          if (!p) return acc
+          const onMet = p.daysOn >= p.reqOn
+          const offDeficit = Math.max(0, p.reqOff - p.daysOff)
+          return acc + (onMet && offDeficit > 0 ? (100 + offDeficit) : 0)
+        }, 0)
+        if (score > bestScore) {
+          bestScore = score
+          bestIdx = i
+        }
+      }
+      const groupIdx = bestIdx >= 0 ? bestIdx : (cycleIndex % groupEntries.length)
       const [cat, groupSupps] = groupEntries[groupIdx]
+      try {
+        // Debug chosen category and its OFF‑day need score
+        const debugScores = groupSupps.map(s => {
+          const p = progressById[s.id]
+          const onMet = p ? (p.daysOn >= p.reqOn) : false
+          const offDef = p ? Math.max(0, p.reqOff - p.daysOff) : 0
+          const needOffScore = onMet && offDef > 0 ? (100 + offDef) : 0
+        return {
+            id: s.id,
+            name: s.name,
+            category: s.category,
+            monthlyCost: s.monthlyCost || 0,
+            daysOn: p?.daysOn ?? null,
+            daysOff: p?.daysOff ?? null,
+            reqOn: p?.reqOn ?? null,
+            reqOff: p?.reqOff ?? null,
+            onMet,
+            offDef,
+            score: needOffScore
+          }
+        })
+        const topPreview = [...debugScores]
+          .sort((a, b) => (b.score - a.score) || (b.monthlyCost - a.monthlyCost))
+          .slice(0, 5)
+        console.log('[rotation-debug] chosenCategory:', cat, 'categoryIndex:', groupIdx)
+        console.log('[rotation-debug] top5 (by need OFF days):', topPreview)
+        rotationDebug = { chosenCategory: String(cat), categoryIndex: Number(groupIdx), top5: topPreview }
+      } catch (e) {
+        console.log('[rotation-debug] log error:', (e as any)?.message || e)
+      }
       const toSkipCount = Math.min(skipPerCycle(stackSize), groupSupps.length)
       const skipList = [...groupSupps]
-        .sort((a, b) => (b.monthlyCost || 0) - (a.monthlyCost || 0))
+        .sort((a, b) => {
+          const pa = progressById[a.id]; const pb = progressById[b.id]
+          const aOnMet = pa ? (pa.daysOn >= pa.reqOn) : false
+          const bOnMet = pb ? (pb.daysOn >= pb.reqOn) : false
+          const aOffDef = pa ? Math.max(0, pa.reqOff - pa.daysOff) : 0
+          const bOffDef = pb ? Math.max(0, pb.reqOff - pb.daysOff) : 0
+          // Priority: need OFF days (onMet && offDeficit>0), then larger deficit, then higher monthly cost
+          const aNeed = aOnMet && aOffDef > 0 ? 1 : 0
+          const bNeed = bOnMet && bOffDef > 0 ? 1 : 0
+          if (bNeed !== aNeed) return bNeed - aNeed
+          if (bOffDef !== aOffDef) return bOffDef - aOffDef
+          return (b.monthlyCost || 0) - (a.monthlyCost || 0)
+        })
         .slice(0, toSkipCount)
       const skipIds = new Set(skipList.map(s => s.id))
       const takeList = stackItems.filter(s => !skipIds.has(s.id))
@@ -682,6 +948,22 @@ export async function GET(request: Request) {
         reason: reasonByCat[cat] || "This helps us isolate category effects."
       }
     }
+    try { console.log('[loop] todaySummary being returned:', todaySummary) } catch {}
+    // Build today's actual skipped names from supplement_intake if available
+    let todaySkippedNames: string[] | undefined = undefined
+    try {
+      const intakeToday = intakeByDate.get(todayKey)
+      if (intakeToday && typeof intakeToday === 'object') {
+        const offKeys = Object.keys(intakeToday).filter(k => {
+          const v = (intakeToday as any)[k]
+          const vn = String(v).toLowerCase()
+          return v === 'off' || v === 'skipped' || vn === 'false' || vn === '0'
+        })
+        if (offKeys.length > 0) {
+          todaySkippedNames = offKeys.map(k => userSuppIdToName.get(String(k)) || String(k))
+        }
+      }
+    } catch {}
     return NextResponse.json({
       debug,
       userId: user.id,
@@ -695,10 +977,13 @@ export async function GET(request: Request) {
         totalDistinctDays,
         hasCheckedInToday,
         todaySummary,
+        gapsDays,
+        todaySkippedNames,
         last30: {
           total: totalLast30,
           noise: noiseEvents,
           clean: cleanLast30,
+          tagCounts: tagCountsLast30,
         },
         last7: {
           total: totalLast7,
@@ -707,6 +992,7 @@ export async function GET(request: Request) {
           tagCounts: tagCountsLast7,
         },
       },
+      _debug: rotationDebug,
       sections: { clearSignal, noSignal: noEffect, inconsistent, building, needsData }
     })
   } catch (error: any) {

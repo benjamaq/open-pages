@@ -6,6 +6,8 @@ import Stripe from 'stripe'
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 export async function POST(req: NextRequest) {
+  // eslint-disable-next-line no-console
+  console.log('[stripe-webhook] Received event')
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')!
 
@@ -21,10 +23,20 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
 
   try {
+    // Basic diagnostics
+    // eslint-disable-next-line no-console
+    console.log('[stripe-webhook] Event type:', event.type)
+    try {
+      // eslint-disable-next-line no-console
+      console.log('[stripe-webhook] Customer:', (event.data as any)?.object?.customer || (event.data?.object as any)?.customer || null)
+    } catch {}
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        await handleCheckoutCompleted(session, supabase)
+        const result = await handleCheckoutCompleted(session, supabase)
+        // eslint-disable-next-line no-console
+        console.log('[stripe-webhook] DB update result:', result)
         // Fire Meta CAPI Purchase (server-to-server) if desired
         try {
           const metaToken = process.env.META_ACCESS_TOKEN
@@ -55,25 +67,33 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionChange(subscription, supabase)
+        const result = await handleSubscriptionChange(subscription, supabase)
+        // eslint-disable-next-line no-console
+        console.log('[stripe-webhook] DB update result:', result)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionDeleted(subscription, supabase)
+        const result = await handleSubscriptionDeleted(subscription, supabase)
+        // eslint-disable-next-line no-console
+        console.log('[stripe-webhook] DB update result:', result)
         break
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
-        await handlePaymentSucceeded(invoice, supabase)
+        const result = await handlePaymentSucceeded(invoice, supabase)
+        // eslint-disable-next-line no-console
+        console.log('[stripe-webhook] DB update result:', result)
         break
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        await handlePaymentFailed(invoice, supabase)
+        const result = await handlePaymentFailed(invoice, supabase)
+        // eslint-disable-next-line no-console
+        console.log('[stripe-webhook] DB update result:', result)
         break
       }
 
@@ -91,14 +111,14 @@ export async function POST(req: NextRequest) {
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
   supabase: ReturnType<typeof createClient>
-) {
+): Promise<{ ok: boolean; message?: string }> {
   const userId = session.metadata?.user_id
   const plan = session.metadata?.plan as 'pro' | 'premium' | 'creator'
   const customerId = session.customer as string
 
   if (!userId || !plan) {
     console.error('Missing metadata in checkout session:', session.metadata)
-    return
+    return { ok: false, message: 'missing_metadata' }
   }
 
   // Update user_usage with Stripe customer ID and subscription info
@@ -117,7 +137,7 @@ async function handleCheckoutCompleted(
 
   if (updateError) {
     console.error('Error updating user_usage:', updateError)
-    return
+    return { ok: false, message: 'user_usage_update_error' }
   }
 
   // Update profile with tier info
@@ -131,21 +151,23 @@ async function handleCheckoutCompleted(
 
   if (profileError) {
     console.error('Error updating profile:', profileError)
+    return { ok: false, message: 'profile_update_error' }
   }
 
   console.log(`User ${userId} upgraded to ${plan}`)
+  return { ok: true }
 }
 
 async function handleSubscriptionChange(
   subscription: Stripe.Subscription,
   supabase: ReturnType<typeof createClient>
-) {
+): Promise<{ ok: boolean; message?: string }> {
   const userId = subscription.metadata?.user_id
   const plan = subscription.metadata?.plan as 'pro' | 'premium' | 'creator'
 
   if (!userId) {
     console.error('Missing user_id in subscription metadata')
-    return
+    return { ok: false, message: 'missing_user_id' }
   }
 
   const isActive = subscription.status === 'active'
@@ -165,7 +187,7 @@ async function handleSubscriptionChange(
 
   if (updateError) {
     console.error('Error updating user_usage:', updateError)
-    return
+    return { ok: false, message: 'user_usage_update_error' }
   }
 
   // Update profile
@@ -179,20 +201,22 @@ async function handleSubscriptionChange(
 
   if (profileError) {
     console.error('Error updating profile:', profileError)
+    return { ok: false, message: 'profile_update_error' }
   }
 
   console.log(`Subscription ${subscription.id} updated for user ${userId}`)
+  return { ok: true }
 }
 
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
   supabase: ReturnType<typeof createClient>
-) {
+): Promise<{ ok: boolean; message?: string }> {
   const userId = subscription.metadata?.user_id
 
   if (!userId) {
     console.error('Missing user_id in subscription metadata')
-    return
+    return { ok: false, message: 'missing_user_id' }
   }
 
   // Downgrade user to free tier
@@ -207,7 +231,7 @@ async function handleSubscriptionDeleted(
 
   if (updateError) {
     console.error('Error updating user_usage:', updateError)
-    return
+    return { ok: false, message: 'user_usage_update_error' }
   }
 
   // Update profile
@@ -221,23 +245,27 @@ async function handleSubscriptionDeleted(
 
   if (profileError) {
     console.error('Error updating profile:', profileError)
+    return { ok: false, message: 'profile_update_error' }
   }
 
   console.log(`User ${userId} downgraded to free tier`)
+  return { ok: true }
 }
 
 async function handlePaymentSucceeded(
   invoice: Stripe.Invoice,
   _supabase: ReturnType<typeof createClient>
-) {
+): Promise<{ ok: boolean }> {
   // Handle successful payment - could send confirmation email, etc.
   console.log(`Payment succeeded for invoice ${invoice.id}`)
+  return { ok: true }
 }
 
 async function handlePaymentFailed(
   invoice: Stripe.Invoice,
   _supabase: ReturnType<typeof createClient>
-) {
+): Promise<{ ok: boolean }> {
   // Handle failed payment - could send notification email, etc.
   console.log(`Payment failed for invoice ${invoice.id}`)
+  return { ok: true }
 }

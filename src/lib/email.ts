@@ -1,3 +1,69 @@
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string
+  subject: string
+  html: string
+  text?: string
+}): Promise<boolean> {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY
+  const computedDomainFrom = process.env.RESEND_DOMAIN ? `BioStackr <noreply@${process.env.RESEND_DOMAIN}>` : undefined
+  const FROM_ADDRESS =
+    process.env.RESEND_FROM ||
+    process.env.EMAIL_FROM ||
+    computedDomainFrom ||
+    'BioStackr <notifications@biostackr.io>'
+  try {
+    console.log('[email] Preparing to send via Resend REST API')
+    console.log('[email] To:', to)
+    console.log('[email] From:', FROM_ADDRESS)
+    console.log('[email] RESEND_API_KEY present:', !!RESEND_API_KEY)
+  } catch {}
+  if (!RESEND_API_KEY) {
+    // eslint-disable-next-line no-console
+    console.log('[email] (dry-run) To:', to, 'Subject:', subject)
+    // eslint-disable-next-line no-console
+    console.log('[email] HTML:', html)
+    return true
+  }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: FROM_ADDRESS,
+        to: [to],
+        subject,
+        html,
+        text,
+      }),
+    })
+    try {
+      const clone = r.clone()
+      const bodyText = await clone.text().catch(() => '')
+      console.log('[email] Resend response status:', r.status)
+      if (bodyText) {
+        console.log('[email] Resend response body:', bodyText.slice(0, 2000))
+      }
+    } catch {}
+    if (!r.ok) {
+      const msg = await r.text()
+      throw new Error(msg)
+    }
+    return true
+  } catch (e: any) {
+    // eslint-disable-next-line no-console
+    console.error('[email] send failed:', e?.message || e)
+    return false
+  }
+}
+
 // Email utility functions for contact form
 // This is a placeholder implementation - you'll need to integrate with an actual email service
 
@@ -258,34 +324,7 @@ export const emailTemplates = {
   })
 }
 
-// Generic email sending function
-export async function sendEmail(data: EmailData): Promise<boolean> {
-  console.log('📧 Sending email to:', data.to)
-  
-  // Check if Resend API key is configured
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not configured, skipping email send')
-    return false
-  }
-
-  try {
-    const { Resend } = require('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    
-    await resend.emails.send({
-      from: 'noreply@biostackr.io',
-      to: data.to,
-      subject: data.subject,
-      html: data.html
-    })
-    
-    console.log('✅ Email sent successfully')
-    return true
-  } catch (error) {
-    console.error('❌ Failed to send email:', error)
-    return false
-  }
-}
+// Generic email creator helpers below expect the unified sendEmail above
 
 // Follower notification email
 export function createFollowerNotificationEmail(

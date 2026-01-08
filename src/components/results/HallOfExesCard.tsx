@@ -14,14 +14,8 @@ export default function HallOfExesCard({ wastedSupps }: { wastedSupps: Supp[] })
   return (
     <section className={`${cardBase} p-5 md:p-6`}>
       <div className="text-xs uppercase tracking-wide text-neutral-500">Hall of exes</div>
-      <h2 className="mt-1 text-base md:text-lg font-semibold text-neutral-900">
-        {hasExes ? "Future savings you can unlock" : "Future savings live here"}
-      </h2>
-      <p className="mt-1 text-sm text-neutral-600">
-        {hasExes
-          ? "We’ve identified items that aren’t pulling their weight."
-          : "Once verdicts land, this is where “expensive placebo” gets exposed."}
-      </p>
+      <h2 className="mt-1 text-base md:text-lg font-semibold text-neutral-900">Supplements you’ve broken up with</h2>
+      <p className="mt-1 text-sm text-neutral-600">Once confidence is real, dropped items will show here.</p>
 
       <div className="mt-4 rounded-xl border border-neutral-200 bg-[#fbfaf8] p-4">
         {hasExes ? (
@@ -29,14 +23,9 @@ export default function HallOfExesCard({ wastedSupps }: { wastedSupps: Supp[] })
             You could save <span className="font-semibold text-neutral-900">${Math.round(yearlySavings)}/year</span> by dropping what’s not working.
           </p>
         ) : (
-          <>
-            <p className="text-sm text-neutral-800">
-              Average user uncovers <span className="font-semibold text-neutral-900">$156/year</span> in waste.
-            </p>
-            <p className="mt-2 text-sm text-neutral-600">
-              Nothing to break up with yet — we’ll show it here when confidence is real.
-            </p>
-          </>
+          <p className="text-sm text-neutral-600">
+            Nothing to break up with yet — we’ll show it here when confidence is real.
+          </p>
         )}
       </div>
     </section>

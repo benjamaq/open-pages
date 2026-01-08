@@ -23,6 +23,7 @@ export interface SupplementDetails {
   dailyDose: number;
   doseUnit: string;
   daysPerWeek: number;
+  servingsPerDay?: number;
   pricePerContainer: number;
   servingsPerContainer: number;
   primaryGoals: string[];
@@ -76,7 +77,11 @@ export function SupplementDetailsModal({
       ? String(initial.servingsPerContainer)
       : (product.servingsPerContainerDefault != null ? String(product.servingsPerContainerDefault) : '')
   );
+  const [servingsPerDayInput, setServingsPerDayInput] = useState<string>(
+    initial?.servingsPerDay != null ? String(initial.servingsPerDay) : '1'
+  );
   const [primaryGoals, setPrimaryGoals] = useState<string[]>(initial?.primaryGoals ?? []);
+  const [notSure, setNotSure] = useState<boolean>(false);
   const [startedAt, setStartedAt] = useState<string>(initial?.startedAt ?? '');
   const [isActive, setIsActive] = useState<boolean>(initial?.isActive ?? true);
   const [stoppedAt, setStoppedAt] = useState<string>(initial?.stoppedAt ?? '');
@@ -91,6 +96,10 @@ export function SupplementDetailsModal({
     const n = parseFloat(servingsPerContainerInput.replace(/,/g, ''))
     return Number.isFinite(n) ? n : 0
   }, [servingsPerContainerInput])
+  const servingsPerDay = useMemo(() => {
+    const n = parseFloat(servingsPerDayInput.replace(/,/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }, [servingsPerDayInput])
 
   const effectiveDaysPerWeek = useMemo(() => {
     if (scheduleType === 'every_day') return 7;
@@ -108,11 +117,13 @@ export function SupplementDetailsModal({
   }, [scheduleType, cycleDaysOn, cycleDaysOff, daysPerWeek]);
 
   const monthlyCost = useMemo(() => {
-    if (!pricePerContainer || !servingsPerContainer || !dailyDose) return 0;
+    // Use servings per day for cost, not mg dose
+    if (!pricePerContainer || !servingsPerContainer || !servingsPerDay) return 0;
     const costPerServing = pricePerContainer / servingsPerContainer;
-    const monthly = costPerServing * dailyDose * (effectiveDaysPerWeek / 7) * 30;
+    const avgServingsPerDay = servingsPerDay * (effectiveDaysPerWeek / 7);
+    const monthly = costPerServing * avgServingsPerDay * 30;
     return Math.round(monthly * 100) / 100;
-  }, [pricePerContainer, servingsPerContainer, dailyDose, effectiveDaysPerWeek]);
+  }, [pricePerContainer, servingsPerContainer, servingsPerDay, effectiveDaysPerWeek]);
 
   function handleCatalogSelect(item: any) {
     // Populate overrides + cost fields
@@ -128,7 +139,8 @@ export function SupplementDetailsModal({
   }
 
   function toggleGoal(key: string) {
-    setPrimaryGoals((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev.length < 3 ? [...prev, key] : prev));
+    if (notSure) return;
+    setPrimaryGoals((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev.length < 2 ? [...prev, key] : prev));
   }
 
   // Build simple 6‑month usage timeline bars for visual feedback
@@ -169,7 +181,7 @@ export function SupplementDetailsModal({
   return (
    <div className="fixed inset-0 z-50 flex items-center justify-center">
      <div className="absolute inset-0 bg-slate-900/60" onClick={onCancel} />
-     <div className="relative z-10 w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
+     <div className="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
        <div className="flex items-center justify-between mb-4">
          <div>
           <div className="text-lg font-semibold text-slate-900">{overrideName || product.productName}</div>
@@ -179,7 +191,7 @@ export function SupplementDetailsModal({
          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600">✕</button>
        </div>
 
-       <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+      <div className="space-y-6 max-h-[78vh] overflow-y-auto pr-1" tabIndex={-1}>
         {/* Catalog Search */}
         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Find product</div>
@@ -230,29 +242,59 @@ export function SupplementDetailsModal({
              <span className="text-sm text-slate-500">per day</span>
            </div>
             <div className="mt-3">
-             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">When do you usually take it? (optional)</div>
-             <div className="flex flex-wrap gap-2">
-               {(['morning','afternoon','evening','night']).map((t: 'morning' | 'afternoon' | 'evening' | 'night') => {
-                 const selected = timeOfDay.includes(t)
-                 return (
-                   <button
-                     key={t}
-                     onClick={() => setTimeOfDay(selected ? timeOfDay.filter(x => x !== t) : [...timeOfDay, t])}
-                     className={`px-3 py-2 text-sm rounded-md border ${selected ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}
-                   >
-                     {t === 'morning' ? 'Morning' : t === 'afternoon' ? 'Afternoon' : t === 'evening' ? 'Evening' : 'Night'}
-                   </button>
-                 )
-               })}
-             </div>
-           </div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">When do you usually take it? (optional)</div>
+              <div className="flex flex-wrap gap-2">
+                {(['morning','afternoon','evening','night']).map((t: 'morning' | 'afternoon' | 'evening' | 'night') => {
+                  const selected = timeOfDay.includes(t)
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setTimeOfDay(selected ? timeOfDay.filter(x => x !== t) : [...timeOfDay, t])}
+                      className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${selected ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+                    >
+                      {t === 'morning' ? 'Morning' : t === 'afternoon' ? 'Afternoon' : t === 'evening' ? 'Evening' : 'Night'}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
            <div className="mt-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">How often?</div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => { setScheduleType('every_day'); setDaysPerWeek(7); }} className={`px-3 py-2 text-sm rounded-md border ${scheduleType === 'every_day' ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>Every day</button>
-              <button onClick={() => { setScheduleType('weekdays'); setDaysPerWeek(5); }} className={`px-3 py-2 text-sm rounded-md border ${scheduleType === 'weekdays' ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>Weekdays only</button>
-              <button onClick={() => { setScheduleType('weekends'); setDaysPerWeek(2); }} className={`px-3 py-2 text-sm rounded-md border ${scheduleType === 'weekends' ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>Weekends only</button>
-              <button onClick={() => setScheduleType('as_needed')} className={`px-3 py-2 text-sm rounded-md border ${scheduleType === 'as_needed' ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>As needed</button>
+              <button
+                type="button"
+                aria-pressed={scheduleType === 'every_day'}
+                onClick={() => { setScheduleType('every_day'); setDaysPerWeek(7); }}
+                className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${scheduleType === 'every_day' ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+              >
+                Every day
+              </button>
+              <button
+                type="button"
+                aria-pressed={scheduleType === 'weekdays'}
+                onClick={() => { setScheduleType('weekdays'); setDaysPerWeek(5); }}
+                className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${scheduleType === 'weekdays' ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+              >
+                Weekdays only
+              </button>
+              <button
+                type="button"
+                aria-pressed={scheduleType === 'weekends'}
+                onClick={() => { setScheduleType('weekends'); setDaysPerWeek(2); }}
+                className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${scheduleType === 'weekends' ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+              >
+                Weekends only
+              </button>
+              <button
+                type="button"
+                aria-pressed={scheduleType === 'as_needed'}
+                onClick={() => setScheduleType('as_needed')}
+                className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${scheduleType === 'as_needed' ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+              >
+                As needed
+              </button>
             </div>
            </div>
            {/* close mt-4 container */}
@@ -265,18 +307,28 @@ export function SupplementDetailsModal({
          {/* Section B — Why you’re taking this */}
          <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">What are you taking this for?</div>
+          <div className="text-xs text-slate-600 mb-1">Your hypothesis — we&apos;ll test what it actually affects</div>
           <div className="text-xs text-slate-500 mb-3">Helps us group results and spot patterns faster.</div>
+           <div className="mb-2">
+             <button
+               type="button"
+               onClick={() => { setNotSure(!notSure); if (!notSure) setPrimaryGoals([]) }}
+               className={`rounded-full px-3.5 py-2 text-sm border ${notSure ? 'bg-white border-[#55514A] text-slate-900' : 'border-[#E4E1DC] bg-white text-slate-700'}`}
+             >
+               Not sure yet — Skip for now
+             </button>
+           </div>
            <div className="grid grid-cols-2 gap-2">
              {HEALTH_PRIORITIES.map(p => {
                const selected = primaryGoals.includes(p.key);
                return (
-                <button key={p.key} onClick={() => toggleGoal(p.key)} className={`rounded-full px-3.5 py-2 text-sm text-left border ${selected ? 'bg-[#F6F5F3] border-[#55514A] text-slate-900' : 'border-[#E4E1DC] bg-white text-slate-700'}`}>
+                <button key={p.key} onClick={() => toggleGoal(p.key)} disabled={notSure} className={`rounded-full px-3.5 py-2 text-sm text-left border ${selected ? 'bg-[#F6F5F3] border-[#55514A] text-slate-900' : 'border-[#E4E1DC] bg-white text-slate-700'} ${notSure ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <span>{p.label}</span>
                  </button>
                )
              })}
            </div>
-           <div className="text-xs text-slate-500 mt-1">Select up to 3.</div>
+           <div className="text-xs text-slate-500 mt-1">Select up to 2.</div>
          </section>
 
          {/* Section C — Timing & context */}
@@ -291,8 +343,22 @@ export function SupplementDetailsModal({
              <div className="text-xs text-slate-700">
                Are you still taking it?
                <div className="mt-1 flex items-center gap-2">
-                <button onClick={() => setIsActive(true)} className={`px-3 py-2 text-sm rounded-md border ${isActive ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>Yes</button>
-                <button onClick={() => setIsActive(false)} className={`px-3 py-2 text-sm rounded-md border ${!isActive ? 'bg-[#F6F5F3] border-[#E4E1DC] text-slate-900' : 'border-[#E4E1DC] text-slate-700'}`}>No</button>
+               <button
+                 type="button"
+                 aria-pressed={isActive}
+                 onClick={() => setIsActive(true)}
+                 className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${isActive ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+               >
+                 Yes
+               </button>
+               <button
+                 type="button"
+                 aria-pressed={!isActive}
+                 onClick={() => setIsActive(false)}
+                 className={`px-3.5 py-2 rounded-full text-sm border transition-colors ${!isActive ? 'bg-[#2C2C2C] text-white border-[#2C2C2C]' : 'bg-white text-slate-700 border-[#E4E1DC] hover:border-slate-400'}`}
+               >
+                 No
+               </button>
                </div>
              </div>
              {!isActive && (
@@ -359,7 +425,7 @@ export function SupplementDetailsModal({
          {/* Section D — Cost (optional) */}
          <section className="rounded-xl border border-[#EDEAE4] bg-white p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Cost (optional)</div>
-           <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
              <div>
                <div className="text-xs text-slate-500 mb-1">Container price</div>
                 <input
@@ -385,6 +451,20 @@ export function SupplementDetailsModal({
                 />
              </div>
            </div>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <div className="text-xs text-slate-500 mb-1">Servings per day</div>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                min={0}
+                value={servingsPerDayInput}
+                onChange={(e) => setServingsPerDayInput(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md"
+              />
+            </div>
+          </div>
            <div className="mt-3 text-sm text-slate-600">
             Monthly cost: <span className="font-semibold text-slate-900">${monthlyCost.toFixed(2)}</span> <span className="ml-1 text-slate-500">Used to calculate what’s worth keeping.</span>
            </div>
@@ -404,7 +484,9 @@ export function SupplementDetailsModal({
                   servingsPerContainer,
                   monthlyCost,
                   effectiveDaysPerWeek,
+                  primaryGoals: notSure ? [] : primaryGoals
                 })
+                try { console.log('MODAL primaryGoals:', notSure ? [] : primaryGoals) } catch {}
                 onSave({
                productId: product.id,
                name: overrideName || product.productName,
@@ -413,9 +495,10 @@ export function SupplementDetailsModal({
                dailyDose,
                doseUnit,
                daysPerWeek: Number(effectiveDaysPerWeek.toFixed(3)), // preserve effective average
+               servingsPerDay,
                pricePerContainer,
                servingsPerContainer,
-               primaryGoals,
+               primaryGoals: notSure ? [] : primaryGoals,
                monthlyCost: Math.min(Math.max(monthlyCost, 0), 80),
                scheduleType,
                cycleDaysOn,

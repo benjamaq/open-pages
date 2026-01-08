@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import InsightPill from "./InsightPill";
 import InsightBullet from "./InsightBullet";
 
 const cardBase =
@@ -11,12 +10,13 @@ type Props = {
   working: any[];
   wasted: any[];
   testing: any[];
+  isMember?: boolean;
 };
 
-export default function ExecutiveSummaryCard({ working, wasted, testing }: Props) {
+export default function ExecutiveSummaryCard({ working, wasted, testing, isMember = false }: Props) {
   const hasInsights = (working?.length ?? 0) + (wasted?.length ?? 0) > 0;
 
-  const bullets = hasInsights
+  const bullets = hasInsights && isMember
     ? [
         `You’ve locked in ${working.length} keeper${working.length === 1 ? "" : "s"}.`,
         wasted.length > 0
@@ -27,12 +27,15 @@ export default function ExecutiveSummaryCard({ working, wasted, testing }: Props
           : "Most items have enough data for a verdict.",
       ]
     : [
-        "Model‑based: stacks like yours often show first changes in Sleep, then Energy, then Mood.",
-        "Model‑based: the first strong signal typically emerges after ~7–14 clean days.",
+        "Stacks like yours often show first changes in Sleep, then Energy, then Mood.",
+        "The first strong signal typically emerges after ~7–14 clean days.",
+        "[Locked] Upgrade to see your personalized findings here.",
       ];
 
   const knowledge = hasInsights
-    ? `Early answers are coming into focus — ${working.length} working, ${wasted.length} to reconsider, ${testing.length} still in flight.`
+    ? (isMember
+        ? `Early answers are coming into focus — ${working.length} working, ${wasted.length} to reconsider, ${testing.length} still in flight.`
+        : "We’re still building signal. Full insights unlock with membership.")
     : "We’re still building signal. Expect early insight within the next 1–2 weeks of consistent check‑ins.";
 
   return (
@@ -43,7 +46,6 @@ export default function ExecutiveSummaryCard({ working, wasted, testing }: Props
           <h2 className="mt-1 text-base md:text-lg font-semibold text-neutral-900">What you know now</h2>
           <p className="mt-1 text-sm text-neutral-600">The non‑obvious takeaways so far.</p>
         </div>
-        <InsightPill label="Insight layer" />
       </div>
 
       <div className="mt-4 rounded-xl border border-neutral-200 bg-[#fbfaf8] p-4">

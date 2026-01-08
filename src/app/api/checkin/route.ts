@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,16 +9,25 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json().catch(() => ({}))
-    let { mood, energy, focus, stress, tags, supplement_intake } = body || {}
+    try { console.log('[checkin] received body:', body) } catch {}
+    let { mood, energy, focus, sleep, stress, tags, supplement_intake } = body || {}
 
-    if (typeof mood !== 'number' || typeof energy !== 'number' || typeof focus !== 'number') {
+    if (typeof energy !== 'number' || typeof focus !== 'number') {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const clamp = (v: number) => Math.max(1, Math.min(5, Math.round(v)))
-    mood = clamp(mood)
-    energy = clamp(energy)
-    focus = clamp(focus)
+    // Clamp incoming values to 1–10 and persist RAW 1–10 (no 3‑point mapping)
+    const clamp10 = (v: any) => {
+      const n = Number(v)
+      if (!Number.isFinite(n)) return 0
+      return Math.max(1, Math.min(10, Math.round(n)))
+    }
+    const energy10 = clamp10(energy)
+    const focus10 = clamp10(focus)
+    const sleep10 = typeof sleep === 'number' ? clamp10(sleep) : null
+    // Mood is optional; if provided as number, clamp; otherwise leave null
+    const mood10 = typeof mood === 'number' ? clamp10(mood) : null
+    try { console.log('[checkin] normalized (1-10):', { energy10, focus10, sleep10, mood10 }) } catch {}
 
     const start = new Date()
     start.setHours(0, 0, 0, 0)
@@ -33,11 +43,17 @@ export async function POST(request: NextRequest) {
       .lt('created_at', end.toISOString())
       .maybeSingle()
 
+    // Values that will be written to both daily_entries and checkin (may fallback to 1–5 if DB constraints require)
+    let energyWrite = energy10
+    let focusWrite = focus10
+    let moodWrite = mood10
+    let sleepWrite = sleep10
+
     const payload: any = {
       user_id: user.id,
-      mood,
-      energy,
-      focus,
+      mood: moodWrite,
+      energy: energyWrite,
+      focus: focusWrite,
       created_at: new Date().toISOString(),
       day: new Date().toISOString().split('T')[0],
     }
@@ -70,20 +86,54 @@ export async function POST(request: NextRequest) {
         (supplement_intake && typeof supplement_intake === 'object')
           ? supplement_intake
           : null
-      await supabase
+      const dePayload = {
+        user_id: user.id,
+        local_date: localDate,
+        mood: moodWrite,
+        energy: energyWrite,
+        focus: focusWrite,
+        // Database column uses 'sleep_quality' in this schema
+        ...(sleepWrite != null ? { sleep_quality: sleepWrite } : {}),
+        tags: finalTags.length > 0 ? finalTags : null,
+        supplement_intake: intake
+      }
+      let { data: deUpsert, error: deErr } = await supabaseAdmin
         .from('daily_entries')
-        .upsert(
-          {
-            user_id: user.id,
-            local_date: localDate,
-            mood,
-            energy,
-            focus,
-            tags: finalTags.length > 0 ? finalTags : null,
-            supplement_intake: intake
-          },
-          { onConflict: 'user_id,local_date' }
-        )
+        .upsert(dePayload, { onConflict: 'user_id,local_date' })
+        .select('user_id,local_date,sleep_quality')
+        .maybeSingle()
+      try { console.log('[checkin] daily_entries upsert result:', { ok: !deErr, row: deUpsert, error: deErr }) } catch {}
+      // Do not write to a non-existent 'sleep' column; schema uses 'sleep_quality'
+      // If constraint error (e.g., CHECK 1..5), retry with scaled-to-5 values
+      if (deErr && /check|constraint/i.test(deErr.message || '')) {
+        try { console.log('[checkin] constraint error, retry with 1–5 mapping') } catch {}
+        const to5 = (n: number | null) => n == null ? null : Math.max(1, Math.min(5, Math.round(n / 2)))
+        energyWrite = to5(energy10) as number
+        focusWrite = to5(focus10) as number
+        moodWrite = to5(mood10 as any) as number | null
+        sleepWrite = to5(sleep10 as any) as number | null
+        const dePayloadRetry: any = {
+          user_id: user.id,
+          local_date: localDate,
+          energy: energyWrite,
+          focus: focusWrite,
+          ...(moodWrite != null ? { mood: moodWrite } : {}),
+          ...(sleepWrite != null ? { sleep_quality: sleepWrite } : {}),
+          tags: finalTags.length > 0 ? finalTags : null,
+          supplement_intake: intake
+        }
+        const retry = await supabaseAdmin
+          .from('daily_entries')
+          .upsert(dePayloadRetry, { onConflict: 'user_id,local_date' })
+          .select('user_id,local_date,sleep_quality')
+          .maybeSingle()
+        deUpsert = retry.data as any
+        deErr = retry.error as any
+        try { console.log('[checkin] daily_entries retry result:', { ok: !deErr, row: deUpsert, error: deErr, values: { energyWrite, focusWrite, moodWrite, sleepWrite } }) } catch {}
+      }
+      if (deErr) {
+        return NextResponse.json({ error: `Failed to save daily entry: ${deErr.message}` }, { status: 500 })
+      }
       if (finalTags.length === 0) {
         microWins.push('✨ Clean day logged — signal strength improved')
       }
@@ -130,7 +180,11 @@ export async function POST(request: NextRequest) {
     // Upsert by (user_id, day) so duplicate submissions update instead of insert
     // Debug log: attempt check-in upsert
     // eslint-disable-next-line no-console
-    console.log('[checkin] upsert payload:', payload)
+    // Sync (potentially scaled) values into checkin row
+    payload.energy = energyWrite
+    payload.focus = focusWrite
+    payload.mood = moodWrite
+    try { console.log('[checkin] upsert payload:', payload) } catch {}
     const { data: upserted, error } = await supabase
       .from('checkin')
       .upsert(payload, { onConflict: 'user_id,day' })

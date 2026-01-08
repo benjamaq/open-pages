@@ -21,9 +21,13 @@ export function CheckinLauncher() {
   const [currentEnergy, setCurrentEnergy] = useState<number>(5)
 
   useEffect(() => {
-    const shouldOpen = search.get('checkin') === '1'
-    setOpen(shouldOpen)
-  }, [search])
+    const val = search.get('checkin')
+    if (val === 'open' || val === '1') {
+      setOpen(true)
+      // Clean the URL right after opening
+      try { router.replace('/dashboard') } catch {}
+    }
+  }, [search, router])
 
   // Also support explicit event trigger: window.dispatchEvent(new Event('open:checkin:new'))
   useEffect(() => {
@@ -70,6 +74,36 @@ export function CheckinLauncher() {
           }))
           .filter((s: any) => s.id)
         setTodayItems((ti: any) => ({ ...ti, supplements }))
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load skip list from progress endpoint to surface "Skipping today" reminder
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/progress/loop', { cache: 'no-store' })
+        if (!r.ok) return
+        const j = await r.json().catch(() => ({}))
+        if (cancelled) return
+        const skip = Array.isArray(j?.rotation?.action?.skip) ? j.rotation.action.skip : []
+        const names = Array.from(
+          new Map(
+            skip
+              .map((s: any) => String(s?.name || '').trim())
+              .filter(Boolean)
+              .map((n: string) => [n.toLowerCase(), n])
+          ).values()
+        )
+        if (names.length > 0) {
+          setTodayItems((ti: any) => ({ ...ti, skipNames: names }))
+          try {
+            const todayStr = new Date().toISOString().split('T')[0]
+            localStorage.setItem('biostackr_skip_names_today', JSON.stringify({ date: todayStr, names }))
+          } catch {}
+        }
       } catch {}
     })()
     return () => { cancelled = true }

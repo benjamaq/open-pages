@@ -69,19 +69,28 @@ export async function GET() {
       stackItems = si || []
     }
     if (Array.isArray(stackItems) && stackItems.length > 0) {
-      // Build a fallback cost map from user_supplement by normalized name
+      // Build fallback maps from user_supplement by normalized name
       const costByName = new Map<string, number>()
+      const tagsByName = new Map<string, string[]>()
       for (const r of rows) {
         const nm = String((r as any)?.name || '').trim().toLowerCase()
         const cost = Number((r as any)?.monthly_cost_usd)
         if (nm && Number.isFinite(cost) && cost > 0) {
           costByName.set(nm, Math.max(0, Math.min(80, cost)))
         }
+        const tags = Array.isArray((r as any)?.primary_goal_tags) ? (r as any).primary_goal_tags : []
+        if (nm && tags.length > 0) {
+          tagsByName.set(nm, tags)
+        }
       }
       const converted = stackItems.map((r: any) => {
         const nm = String(r?.name || '').trim().toLowerCase()
         const mc = Number(r?.monthly_cost ?? 0)
         const monthly_cost_usd = Number.isFinite(mc) && mc > 0 ? Math.max(0, Math.min(80, mc)) : (costByName.get(nm) ?? 0)
+        const mergedTags: string[] =
+          Array.isArray(r.primary_goal_tags) && r.primary_goal_tags.length > 0
+            ? r.primary_goal_tags
+            : (tagsByName.get(nm) || (Array.isArray(r.tags) ? r.tags : []))
         return {
         id: r.id,
         user_id: user.id,
@@ -90,8 +99,8 @@ export async function GET() {
         created_at: r.created_at,
         // Map stack_items.monthly_cost → monthly_cost_usd for unified downstream consumption
           monthly_cost_usd,
-        // Prefer explicit primary_goal_tags, fallback to tags, else empty
-          primary_goal_tags: Array.isArray(r.primary_goal_tags) ? r.primary_goal_tags : (Array.isArray(r.tags) ? r.tags : []),
+        // Prefer explicit stack_items.primary_goal_tags, else user_supplement tags, else stack_items.tags, else empty
+          primary_goal_tags: mergedTags,
         }
       })
       // Use stack_items as the single source of truth when present to avoid double-counting
@@ -99,17 +108,8 @@ export async function GET() {
     }
 
     const normalized = rows.map((row: any) => {
-      const tags = Array.isArray(row?.primary_goal_tags) ? row.primary_goal_tags : []
-      const primaryMetric = typeof row?.primary_metric === 'string' && row.primary_metric.trim() ? [row.primary_metric.trim()] : []
-      // Heuristic inference by common supplement names if tags missing
-      const nm = String(row?.name || '').toLowerCase()
-      const inferredByName: string[] =
-        nm.includes('creatine') ? ['energy', 'athletic'] :
-        nm.includes('magnesium') ? ['sleep', 'stress'] :
-        nm.includes('omega') ? ['mood', 'inflammation'] :
-        nm.includes('vitamin d') ? ['immunity'] :
-        []
-      const primary_goal_tags = (tags.length > 0 ? tags : (primaryMetric.length > 0 ? primaryMetric : inferredByName))
+      // Declared intent only — no name-based inference
+      const primary_goal_tags = Array.isArray(row?.primary_goal_tags) ? row.primary_goal_tags : []
 
       const rawMonthly = Number(row?.monthly_cost_usd)
       const monthly_cost_usd = Number.isFinite(rawMonthly)
@@ -137,12 +137,16 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json().catch(() => ({})) as any
+    try { console.log('RECEIVED:', body) } catch {}
     const rawName = String(body?.name || '').trim()
     if (!rawName) return NextResponse.json({ error: 'Name required' }, { status: 400 })
     const normalizedName = rawName.toLowerCase()
     // Optional monthly cost from client
     const rawMonthlyFromBody = Number(body?.monthly_cost_usd)
     const monthlyFromBody = Number.isFinite(rawMonthlyFromBody) ? Math.max(0, Math.min(80, rawMonthlyFromBody)) : undefined
+    // Optional declared intent categories
+    const bodyTags = Array.isArray(body?.primary_goal_tags) ? body.primary_goal_tags : undefined
+    try { console.log('Saving primary_goal_tags:', bodyTags) } catch {}
 
     // 1) Try to map via canonical_supplement (if table exists)
     let canonicalName: string | null = null
@@ -226,6 +230,10 @@ export async function POST(request: Request) {
     if (monthlyFromBody != null) {
       insertPayload.monthly_cost_usd = monthlyFromBody
     }
+    if (bodyTags) {
+      insertPayload.primary_goal_tags = bodyTags
+    }
+    try { console.log('Insert payload:', insertPayload) } catch {}
 
     const { data: userSupp, error: usErr } = await supabase
       .from('user_supplement')

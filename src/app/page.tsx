@@ -73,14 +73,24 @@ export default function Page() {
                 </Button>
               </form>
             ) : (
-              <Link href="/login">
-                <Button
-                  size="sm"
-                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-5 font-semibold transition-all"
-                >
-                  Sign in
-                </Button>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/login">
+                  <Button
+                    size="sm"
+                    className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-5 font-semibold transition-all"
+                  >
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    size="sm"
+                    className="bg-[#F4B860] text-[#2C2C2C] hover:brightness-95 rounded-full px-5 font-semibold transition-all"
+                  >
+                    Sign up
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -108,13 +118,13 @@ export default function Page() {
             <p className="mb-10 text-lg text-neutral-600 leading-relaxed">
               BioStackr shows you what actually works — and what’s just wasting your money.
             </p>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap:4">
               <Link href={isAuthed ? "/dashboard" : "/signup"}>
                 <Button
                   size="lg"
                   className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
                 >
-                  Get My Breakup Report
+                  {isAuthed ? 'Go to dashboard' : 'Sign up — free'}
                 </Button>
               </Link>
               <p className="text-sm text-neutral-500">Free to start. Wearable optional.</p>
@@ -852,7 +862,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/checkout?plan=free">
+              <Link href="/signup">
                 <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Start Casual →
                 </Button>
@@ -894,7 +904,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/checkout?plan=pro">
+              <Link href="/signup?plan=premium">
                 <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Get Answers →
                 </Button>

@@ -5,15 +5,19 @@ import { getPriceId } from '../../../../lib/stripe'
 import { Database } from '../../../../lib/types'
 
 export async function POST(request: NextRequest) {
+  // Top-level guard to ensure JSON is always returned
   try {
-    const { plan, period, promoCode, userId, userEmail } = await request.json()
+    console.log('[checkout] Step 1: Got request')
+    const body = await request.json()
+    const { plan, period, promoCode, userId, userEmail } = body || {}
+    console.log('[checkout] Step 2: Parsed body:', { plan, period, userId, userEmail, hasPromo: Boolean(promoCode) })
     
     // Validate required parameters
     if (!userId || !userEmail) {
       return NextResponse.json({ error: 'User ID and email are required' }, { status: 400 })
     }
 
-    console.log('API Route - Received params:', { plan, period, userId, userEmail })
+    console.log('[checkout] Step 3: Using userId/email', { userId, userEmail })
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3009'
 
     // Create a simple Supabase client for database queries (no auth needed)
@@ -37,7 +41,16 @@ export async function POST(request: NextRequest) {
 
     // Map legacy 'pro' to 'premium' for branding while preserving price IDs
     const effectivePlan = (plan === 'premium' || plan === 'creator') ? plan : 'premium'
+    let lastComputedPriceId: string | null = null
     const priceId = getPriceId(effectivePlan as any, period)
+    lastComputedPriceId = priceId
+    console.log('[checkout] Step 4: Price ID resolved:', priceId, 'for', effectivePlan, period)
+    console.log('[checkout] Env candidates:', {
+      PREMIUM_MONTHLY: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
+      PREMIUM_YEARLY: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID,
+      PRO_MONTHLY: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
+      PRO_YEARLY: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID
+    })
     
     // Read attribution cookies from request for metadata
     const cookieHeader = request.headers.get('cookie') || ''
@@ -52,6 +65,7 @@ export async function POST(request: NextRequest) {
     if (!stripe) {
       return NextResponse.json({ error: 'Billing not configured' }, { status: 503 })
     }
+    console.log('[checkout] Step 5: Creating Stripe session...')
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: [
@@ -61,7 +75,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${origin}/dash?welcome=premium`,
+      success_url: `${origin}/onboarding`,
       cancel_url: `${origin}/pricing`,
       metadata: {
         user_id: userId,
@@ -96,17 +110,22 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to create checkout session')
     }
 
+    console.log('[checkout] Step 6: Session created', { id: session.id, url: session.url })
     return NextResponse.json({ url: session.url })
-  } catch (error) {
-    console.error('Error creating checkout session:', error)
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined
-    })
-    return NextResponse.json({ 
-      error: 'Failed to create checkout session',
-      details: error instanceof Error ? error.message : 'Unknown error'
+  } catch (error: any) {
+    console.error('[checkout] FATAL ERROR:', error)
+    // Try to include more actionable info (priceId and env keys) in response for debugging
+    return NextResponse.json({
+      error: 'Server error',
+      details: error?.message || 'Unknown error',
+      stack: error?.stack,
+      name: error?.name,
+      expectedEnvVars: {
+        monthlyPrimary: 'NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID',
+        yearlyPrimary: 'NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID',
+        monthlyFallback: 'NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID',
+        yearlyFallback: 'NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID'
+      }
     }, { status: 500 })
   }
 }

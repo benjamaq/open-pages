@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
-import { sendDailyReminder } from '../../../../lib/email/resend'
+import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -201,7 +201,24 @@ async function handleSend() {
           }
 
           console.log(`📧 Sending reminder to ${userEmail}`)
-          await sendDailyReminder(dailyReminderData)
+          // Use the new single-column V3 template
+          const supplementCount = (supplements?.length || 0) + (protocols?.length || 0) + (movement?.length || 0) + (mindfulness?.length || 0)
+          const progressPercent = Math.max(0, Math.min(100, Math.round(readinessPercent)))
+          const html = renderV3Reminder({
+            firstName: userName || 'there',
+            supplementCount: Math.max(1, supplementCount),
+            progressPercent,
+            checkinUrl: `${process.env.NEXT_PUBLIC_APP_URL || base}/dashboard?checkin=open`,
+          })
+          const subject = `${progressPercent}% complete`
+          const sendResp = await resend.emails.send({
+            from,
+            to: userEmail!,
+            subject,
+            html,
+            ...(reply_to ? { reply_to: reply_to } : {})
+          })
+          console.log('Resend response (V3):', { id: sendResp.data?.id, error: sendResp.error?.message })
           console.log(`✅ Email sent to ${userEmail}`)
           // Idempotency write: insert daily_email_sends row and update last_email_sent_at (best effort)
           try {

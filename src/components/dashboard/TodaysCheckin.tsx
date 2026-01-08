@@ -18,7 +18,7 @@ export function TodaysCheckin({
       <button
         onClick={() => {
           // Client-side; replace with opening your check-in modal if needed
-          try { router.push('/dashboard?checkin=1') } catch {}
+          try { router.push('/dashboard?checkin=open') } catch {}
         }}
         className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 p-8 shadow-lg hover:shadow-xl transition-all"
       >

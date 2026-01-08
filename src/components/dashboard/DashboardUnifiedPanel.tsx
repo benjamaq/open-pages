@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
+import { ReminderNudgeModal } from '@/components/settings/ReminderNudgeModal'
+import { HEALTH_PRIORITIES } from '@/lib/types'
 
 type Suggestion = { id: string; name: string }
 type Row = { id: string; name: string; daysOfData: number; requiredDays: number }
@@ -15,6 +17,14 @@ export function DashboardUnifiedPanel() {
   const [suppsLoaded, setSuppsLoaded] = useState(false)
   const [effects, setEffects] = useState<Record<string, any>>({})
   const [hasDaily, setHasDaily] = useState<boolean | null>(null)
+  const [wearableDays, setWearableDays] = useState<number>(0)
+  const [showBaselineHelp, setShowBaselineHelp] = useState<boolean>(false)
+  const [isMember, setIsMember] = useState<boolean>(false)
+  const [settings, setSettings] = useState<any | null>(null)
+  const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
+  const [showReminder, setShowReminder] = useState<boolean>(false)
+  const [showCommitment, setShowCommitment] = useState<boolean>(false)
+  const [overrideSkipNames, setOverrideSkipNames] = useState<string[] | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -54,38 +64,94 @@ export function DashboardUnifiedPanel() {
         if (d.ok) {
           const j = await d.json()
           setHasDaily(Boolean(j?.hasData))
+          setWearableDays(Number(j?.wearableDays || 0))
         } else {
           setHasDaily(false)
         }
       } catch { setHasDaily(false) }
+      try {
+        const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+        if (!mounted) return
+        if (pr.ok) {
+          const j = await pr.json()
+          setIsMember(!!(j as any)?.is_member)
+          try { console.log('isMember:', !!(j as any)?.is_member) } catch {}
+        }
+      } catch {}
+      try {
+        const s = await fetch('/api/settings', { cache: 'no-store' })
+        if (!mounted) return
+        if (s.ok) {
+          const j = await s.json()
+          setSettings(j)
+          try { console.log('GET /api/settings result:', j) } catch {}
+        }
+        setSettingsLoaded(true)
+      } catch {}
+      // Load skip-name override captured at modal open (same-day)
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('biostackr_skip_names_today') : null
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          const todayStr = new Date().toISOString().split('T')[0]
+          if (parsed?.date === todayStr && Array.isArray(parsed?.names) && parsed.names.length > 0) {
+            setOverrideSkipNames(parsed.names as string[])
+          }
+        }
+      } catch {}
     })()
     return () => { mounted = false }
   }, [])
 
+  // Debug: show today's summary coming from API for Sleep verification
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log('[dashboard] todaySummary received:', (progress as any)?.checkins?.todaySummary)
+    } catch {}
+  }, [(progress as any)?.checkins?.todaySummary])
+
   // Derive progress stats
-  const {
-    progressPercent, streak, readyCount, buildingCount, needsDataCount,
+    const {
+    progressPercent, streak, readyCount, buildingCount, needsDataCount, gapsDays,
     nextResult, disruptions
   } = useMemo(() => {
-    const s = progress?.sections || { clearSignal: [], building: [], noSignal: [] }
+    const s: any = (progress?.sections) || { clearSignal: [], building: [], noSignal: [] }
     const total = (s.clearSignal?.length || 0) + (s.building?.length || 0) + (s.noSignal?.length || 0) + ((progress?.sections as any)?.inconsistent?.length || 0) + ((progress?.sections as any)?.needsData?.length || 0)
-    const rows = [
+    const rows: any[] = [
       ...(s.clearSignal || []),
       ...(s.building || []),
       ...(s.noSignal || []),
-      ...(((progress?.sections as any)?.inconsistent) || []),
-      ...(((progress?.sections as any)?.needsData) || []),
+      ...((progress as any)?.sections?.inconsistent || []),
+      ...((progress as any)?.sections?.needsData || []),
     ]
     let pct = 0
     if (rows.length > 0) {
       const sum = rows.reduce((acc: number, r: any) => acc + Math.max(0, Math.min(100, Number(r?.progressPercent || 0))), 0)
       pct = Math.round(sum / rows.length)
     }
-    const building = s.building || []
-    const next = building
-      .map((r: any) => ({ r, remaining: Math.max(0, (r.requiredDays || 14) - (r.daysOfData || 0)) }))
-      .sort((a: any, b: any) => a.remaining - b.remaining)[0]
-    const tagCounts = (progress && progress.checkins && progress.checkins.last7 && progress.checkins.last7.tagCounts) ? progress.checkins.last7.tagCounts : null
+    const building: any[] = s.building || []
+    const scheduledSkipIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.skip) ? (progress as any).rotation.action.skip.map((x: any) => String(x.id)) : [])
+    const scheduledTakeIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.take) ? (progress as any).rotation.action.take.map((x: any) => String(x.id)) : [])
+    const nextPick = building
+      .map((r: any) => {
+        const reqOn = Math.max(0, Number(r?.requiredDays || 14))
+        const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
+        const on = Math.max(0, Number(r?.days? r.days : r.daysOn || 0)) // backward compatibility
+        const off = Math.max(0, Number(r?.daysOff || 0))
+        const onDef = Math.max(0, reqOn - on)
+        const offDef = Math.max(0, reqOff - off)
+        let eff = onDef + offDef
+        if (offDef > 0 && !scheduledSkipIds.has(String(r?.id || ''))) {
+          eff += 1000
+        }
+        if (onDef > 0 && (scheduledSkipIds.has(String(r?.id || '')) && !scheduledTakeIds.has(String(r?.id || '')))) {
+          eff += 100
+        }
+        return { r, eff, on, off, reqOn, reqOff }
+      })
+      .sort((a: any, b: any) => a.eff - b.eff)[0]
+    const tagCounts = (progress && (progress as any).checkins && (progress as any).checkins.last30 && (progress as any).checkins.last30.tagCounts) ? (progress as any).checkins.last30.tagCounts : null
     const labelMap: Record<string, string> = {
       alcohol: 'alcohol',
       travel: 'travel / timezone change',
@@ -98,63 +164,175 @@ export function DashboardUnifiedPanel() {
     if (tagCounts) {
       for (const [k, v] of Object.entries(tagCounts as Record<string, number>)) {
         const n = Number(v || 0)
-        if (n > 0 && labelMap[k]) disruptionArr.push({ label: labelMap[k], count: n })
+        if (n > 0 && labelMap[k]) disruptionArr.push({ label: (labelMap as any)[k], count: n })
       }
     }
+    // Compute readyCount based on ON/OFF readiness, not just effect categories
+    const allRows: any[] = [
+      ...(s.clearSignal || []),
+      ...(s.noSignal || []),
+      ...(s.inconsistent || []),
+      ...(s.needsData || []),
+      ...(s.building || []),
+    ]
+    const readyCt = allRows.filter(r => {
+      const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
+      const off = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
+      const reqOn = Number((r as any).requiredOnDays ?? (r as any).requiredDays ?? 14)
+      const reqOff = Number((r as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round(((r as any).requiredDays ?? 14) / 4))))
+      return on >= reqOn && off >= reqOff
+    }).length
     return {
       progressPercent: pct,
-      streak: (progress?.checkins?.totalDistinctDays || 0),
-      readyCount: (s.clearSignal?.length || 0) + (s.noSignal?.length || 0),
-      buildingCount: s.building?.length || 0,
-      needsDataCount: (progress?.sections as any)?.needsData?.length || 0,
-      nextResult: next ? {
-        name: next.r.name,
-        remaining: next.remaining,
-        clean: next.r.daysOfData,
-        req: next.r.requiredDays,
-        daysOn: Number((next.r as any).daysOn || 0),
-        daysOff: Number((next.r as any).daysOff || 0),
-        reqOff: Math.min(5, Math.max(3, Math.round(Number(next.r.requiredDays || 14) / 4))),
+      streak: Number((progress as any)?.checkins?.totalDistinctDays || 0),
+      gapsDays: Number((progress as any)?.checkins?.gapsDays || 0),
+      readyCount: readyCt,
+      buildingCount: Math.max(0, allRows.length - readyCt),
+      needsDataCount: Number(((progress as any)?.sections?.needsData || []).length || 0),
+      nextResult: nextPick ? {
+        name: nextPick.r?.name,
+        remaining: Math.max(0, nextPick.reqOn - nextPick.on) + Math.max(0, nextPick.reqOff - nextPick.off),
+        clean: nextPick.r?.daysOfData,
+        req: nextPick.reqOn,
+        daysOn: Number(nextPick.on || 0),
+        daysOff: Number(nextPick.off || 0),
+        reqOff: Number(nextPick.reqOff || 0),
+        id: String(nextPick.r?.id || '')
       } : null,
       disruptions: disruptionArr
     }
   }, [progress, supps])
 
+  // Day-2 reminder popup trigger
+  useEffect(() => {
+    try {
+      if (!settingsLoaded) { setShowReminder(false); return }
+      const totalDays = Number(progress?.checkins?.totalDistinctDays || 0)
+      const enabled = Boolean(settings?.reminder_enabled)
+      const dismissed = Boolean(settings?.reminder_popup_dismissed)
+      const shouldShow = totalDays >= 1 && !enabled && !dismissed
+      setShowReminder(shouldShow)
+      try {
+        console.log('Reminder gating:', {
+          totalDays,
+          reminder_enabled: enabled,
+          reminder_popup_dismissed: dismissed,
+          showReminder: shouldShow
+        })
+      } catch {}
+    } catch {}
+  }, [progress, settings, settingsLoaded])
+
+  // Commitment moment trigger (Day 3-5 inclusive, once)
+  useEffect(() => {
+    try {
+      const totalDays = Number(progress?.checkins?.totalDistinctDays || 0)
+      const already = Boolean(settings?.commitment_message_shown)
+      const should = totalDays >= 2 && totalDays <= 4 && !already
+      setShowCommitment(should)
+      if (should) {
+        fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commitment_message_shown: true })
+        }).catch(() => {})
+      }
+    } catch {}
+  }, [progress, settings])
+
+  async function dismissReminder() {
+    setShowReminder(false)
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminder_popup_dismissed: true })
+      })
+    } catch {}
+  }
+
+  async function enableReminder(payload: { time: string; timezone: string | null }) {
+    setShowReminder(false)
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reminder_enabled: true,
+          reminder_time: payload.time,
+          reminder_timezone: payload.timezone,
+          reminder_popup_dismissed: true
+        })
+      })
+      const s = await fetch('/api/settings', { cache: 'no-store' })
+      if (s.ok) setSettings(await s.json())
+    } catch {}
+  }
+
   // Economics donut + spend
   const { chartData, totalYearly, effYear, wasteYear, testYear } = useMemo(() => {
-    // Build goal segments from supplements costs and tags
-    type Acc = Record<string, { amount: number; label: string; color: string }>
-    const COLORS_HEX: Record<string, string> = {
-      cognitive: '#C65A2E', // burnt clay
-      sleep: '#6F7F5A',     // muted olive
-      immunity: '#B07A2A',  // burnt amber
-      other: '#6A3F2B'      // deep umber
-    }
+    // Build spend segments from DECLARED INTENT only (no name inference)
+    type Acc = Record<string, number>
     const acc: Acc = {}
     let monthlyTotal = 0
+    const normalizeKey = (k: string): string => {
+      const x = String(k || '').toLowerCase()
+      if (x === 'sleep_quality' || x === 'sleep') return 'sleep'
+      if (x === 'stress_mood' || x === 'mood' || x === 'stress') return 'mood'
+      if (x === 'energy_stamina' || x === 'energy' || x === 'stamina') return 'energy'
+      if (x === 'cognitive_performance' || x === 'cognitive' || x === 'focus' || x === 'memory') return 'cognitive'
+      if (x === 'gut_health' || x === 'gut' || x === 'digestion') return 'gut'
+      if (x === 'longevity') return 'longevity'
+      if (x === 'immunity' || x === 'immune') return 'immunity'
+      if (x === 'joint_bone_health' || x === 'joint' || x === 'bone') return 'joint'
+      if (x === 'athletic_performance' || x === 'athletic' || x === 'performance') return 'athletic'
+      if (x === 'skin_hair_nails' || x === 'beauty' || x === 'skin' || x === 'hair' || x === 'nails') return 'beauty'
+      if (!x) return 'uncategorised'
+      return x
+    }
     for (const s of supps) {
       const cost = Math.max(0, Math.min(80, Number(s.monthly_cost_usd ?? 0)))
       monthlyTotal += cost
-      const tags: string[] = Array.isArray(s.primary_goal_tags) && s.primary_goal_tags.length > 0 ? s.primary_goal_tags : ['other']
+      const tags: string[] = Array.isArray(s.primary_goal_tags) && s.primary_goal_tags.length > 0 ? s.primary_goal_tags : ['uncategorised']
       const perTag = cost / Math.max(1, tags.length)
-      for (const raw of tags) {
-        const t = String(raw || '').toLowerCase()
-        const key =
-          t.includes('sleep') ? 'sleep' :
-          (t.includes('energy') || t.includes('stamina')) ? 'energy' :
-          (t.includes('focus') || t.includes('cognitive') || t.includes('memory')) ? 'cognitive' :
-          (t.includes('longevity') || t.includes('aging')) ? 'longevity' :
-          t.includes('stress') ? 'stress' :
-          (t.includes('immune') || t.includes('immunity')) ? 'immunity' : 'other'
-        if (!acc[key]) acc[key] = { amount: 0, label: key.charAt(0).toUpperCase() + key.slice(1), color: COLORS_HEX[key] || '#8b5cf6' }
-        acc[key].amount += perTag
+      for (const key of tags.map((t: string) => normalizeKey(t))) {
+        acc[key] = (acc[key] || 0) + perTag
       }
     }
     const yearly = Math.round(monthlyTotal * 12)
-    const segments = Object.values(acc)
-      .map(a => ({ name: a.label, value: Math.round(a.amount * 12), color: a.color }))
+    const labelMap: Record<string, string> = Object.fromEntries(
+      HEALTH_PRIORITIES.map(p => [p.key, p.label])
+    )
+    labelMap['uncategorised'] = 'Uncategorised'
+    // Reinstate previous Stack Economics colors (by key)
+    // Muted, warm neutral palette aligned with dashboard/landing
+    const COLOR_BY_KEY: Record<string, string> = {
+      uncategorised: '#B8B1AA', // stone taupe
+      sleep: '#6F7F5A',         // muted olive
+      cognitive: '#7A5C58',     // rose umber
+      gut: '#8B5E3C',           // desaturated brown
+      energy: '#B07A2A',        // burnt amber (muted)
+      longevity: '#6A3F2B',     // deep umber
+      immunity: '#7C766F',      // warm gray
+      mood: '#8A7F78',          // muted taupe
+      athletic: '#9C6644',      // clay
+      joint: '#A67C52',         // saddle
+      beauty: '#9E6E83',        // dusty mauve
+    }
+    const segments = Object.entries(acc)
+      .map(([rawKey, amount]) => {
+        const key = normalizeKey(rawKey)
+        const display = labelMap[key] || (key.charAt(0).toUpperCase() + key.slice(1))
+        const color = COLOR_BY_KEY[key] || COLOR_BY_KEY.uncategorised
+        return {
+          key,
+          name: display,
+          value: Math.round(amount * 12),
+          color
+        }
+      })
       .sort((a, b) => b.value - a.value)
-    // Effective/waste/testing
+    // Effective/waste/testing (used for members only)
     let effMonthly = 0, wasteMonthly = 0, testMonthly = 0
     for (const s of supps) {
       const m = Math.max(0, Math.min(80, Number(s?.monthly_cost_usd ?? 0)))
@@ -185,11 +363,17 @@ export function DashboardUnifiedPanel() {
             <div className="h-24 bg-gray-100 rounded" />
           </div>
         </div>
+        {showCommitment && (
+          <div className="px-5 py-2 text-sm text-stone-500">
+            From here on, missed days make verdicts less clear.
+          </div>
+        )}
       </section>
     )
   }
 
   return (
+    <>
     <section className="bg-white border border-gray-200 rounded-lg">
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* TL: Today's Action (original location) */}
@@ -203,20 +387,21 @@ export function DashboardUnifiedPanel() {
                   <span className="flex items-center gap-2">
                     <span className="inline-block h-2 w-2 rounded-full bg-green-600" /> Checked in today
                   </span>
-                  <a className="hover:underline" href="/dashboard?checkin=1" style={{ color: '#6A3F2B' }}>Edit</a>
+                  <a className="hover:underline" href="/dashboard?checkin=open" style={{ color: '#6A3F2B' }}>Edit</a>
                 </div>
                 {progress?.checkins?.todaySummary && (
                   <div className="mt-3 text-sm text-gray-700">
-                    <span className="mr-4">Mood: <span className="font-medium">{progress.checkins.todaySummary.mood ?? '—'}</span></span>
                     <span className="mr-4">Energy: <span className="font-medium">{progress.checkins.todaySummary.energy ?? '—'}</span></span>
-                    <span>Focus: <span className="font-medium">{progress.checkins.todaySummary.focus ?? '—'}</span></span>
+                    <span className="mr-4">Focus: <span className="font-medium">{progress.checkins.todaySummary.focus ?? '—'}</span></span>
+                    <span className="mr-4">Sleep: <span className="font-medium">{progress.checkins.todaySummary.sleep ?? '—'}</span></span>
+                    <span>Mood: <span className="font-medium">{progress.checkins.todaySummary.mood ?? '—'}</span></span>
                   </div>
                 )}
               </>
             ) : (
               <div className="flex flex-col items-stretch">
                 <button
-                  onClick={() => { window.location.href = '/dashboard?checkin=1' }}
+                  onClick={() => { window.location.href = '/dashboard?checkin=open' }}
                   className="w-full inline-flex items-center justify-center rounded-full bg-[#111111] px-6 py-3 text-sm font-medium text-white"
                 >
                   Complete Today’s Check‑In →
@@ -240,22 +425,23 @@ export function DashboardUnifiedPanel() {
                       Take as normal: {Array.isArray(progress.rotation.action?.take) ? progress.rotation.action.take.length : 0} {Array.isArray(progress.rotation.action?.take) && progress.rotation.action.take.length === 1 ? 'supplement' : 'supplements'}
                     </div>
                     {/* Skip list */}
-                    {Array.isArray(progress.rotation.action?.skip) && progress.rotation.action.skip.length > 0 && (
+                    {(() => {
+                      const apiToday = (progress as any)?.checkins?.todaySkippedNames
+                      const names = Array.isArray(apiToday) ? apiToday : []
+                      return names.length > 0 ? (
                       <div>
-                        <div className="font-medium">Skip today ({progress.rotation.action.skip.length}):</div>
+                        <div className="font-medium">Skipped today ({names.length}):</div>
                         <ul className="mt-1 list-disc list-inside">
-                          {(() => {
-                            const dedup = Array.from(new Map((progress.rotation.action?.skip || []).map((s: any) => [String(s?.id || s?.name), s])).values())
-                            return dedup.map((s: any) => (
-                            <li key={String(s?.id || s?.name)}>{abbreviateSupplementName(String(s?.name || ''))}</li>
-                            ))
-                          })()}
+                          {names.map((nm: string) => (
+                            <li key={nm}>{abbreviateSupplementName(String(nm || ''))}</li>
+                          ))}
                         </ul>
                       </div>
-                    )}
+                      ) : null
+                    })()}
                     {/* Reason */}
-                    {progress.rotation.action?.reason && (
-                      <div className="text-xs text-gray-600">{progress.rotation.action.reason}</div>
+                    {(
+                      <div className="text-xs text-gray-600">This helps isolate which supplements are actually driving changes.</div>
                     )}
                   </>
                 )}
@@ -270,7 +456,7 @@ export function DashboardUnifiedPanel() {
         >
           <div className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: '#55514A' }}>Next result likely</div>
           {(() => {
-            // Derive richer copy
+            // Clear, state-driven copy for Next Result Likely
             if (!nextResult && (progress?.sections?.building?.length || 0) === 0) {
               return <div className="text-sm text-gray-700">All supplements analyzed</div>
             }
@@ -278,41 +464,81 @@ export function DashboardUnifiedPanel() {
               return <div className="text-sm text-gray-700">—</div>
             }
             const title = <div className="text-base font-semibold text-gray-900">{abbreviateSupplementName(String(nextResult.name || ''))}</div>
-            const remaining = Number(nextResult.remaining || 0)
-            if (remaining <= 0) {
-              return (
-                <div>
-                  {title}
-                  <div className="mt-1">
-                    <div className="text-sm font-medium text-gray-900">Expected tomorrow</div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-700 space-y-1">
-                    <div>ON days: <span className="font-medium">{Number(nextResult.daysOn || 0)}</span>/<span className="font-medium">{Number(nextResult.req || 0)}</span></div>
-                    <div>OFF days: <span className="font-medium">{Number(nextResult.daysOff || 0)}</span>/<span className="font-medium">{Number(nextResult.reqOff || 0)}</span></div>
-                  </div>
-                </div>
-              )
+            const onClean = Math.max(0, Number((nextResult as any).daysOnClean ?? nextResult.daysOn ?? 0))
+            const reqOn = Math.max(0, Number(nextResult.req || 0))
+            const offClean = Math.max(0, Number((nextResult as any).daysOffClean ?? nextResult.daysOff ?? 0))
+            const reqOff = Math.max(0, Number(nextResult.reqOff || 0))
+            const onMet = onClean >= reqOn
+            const offMet = offClean >= reqOff
+            const bothProgressing = onClean > 0 && offClean > 0
+            const needOn = Math.max(0, reqOn - onClean)
+            const needOff = Math.max(0, reqOff - offClean)
+            const daysToGo = Math.max(0, Math.max(needOn, needOff))
+
+            let headline: string = ''
+            let guidance: string | null = null
+            let ready: boolean = false
+
+            if (onMet && offMet) {
+              // State E — Ready
+              headline = 'Ready now'
+              ready = true
+            } else if (onMet && !offMet) {
+              // State B — Blocked by OFF days
+              headline = 'Waiting for clean OFF days'
+              guidance = 'Recent OFF days had disruptions, so they aren\'t usable for comparison. Skip this supplement on a calm day to complete the test.'
+            } else if (!onMet && offMet) {
+              // State C — Blocked by ON days
+              headline = 'Waiting for clean ON days'
+              guidance = 'Recent ON days had disruptions, so they aren\'t usable for comparison. Take this supplement on a calm day to build data.'
+            } else if (!onMet && !offMet && bothProgressing) {
+              // State A — Building normally (estimate)
+              headline = daysToGo > 0 ? `~${daysToGo} clean ${daysToGo === 1 ? 'day' : 'days'} to go` : 'Building data'
+              guidance = 'Keep checking in — you’re almost there.'
+            } else {
+              // State D — Both blocked early
+              headline = 'Building data'
+              guidance = 'Need more clean days — both on and off this supplement. Disruption‑free days count toward your result.'
             }
+
             return (
               <div>
                 {title}
                 <div className="mt-1">
-                  <div className="text-2xl font-extrabold text-gray-900">{`~${remaining}`}</div>
-                  <div className="text-sm text-gray-700">clean days remaining</div>
+                  <div className="text-sm font-medium text-gray-900">{headline}</div>
                 </div>
                 <div className="mt-2 text-xs text-gray-700 space-y-1">
-                  <div>ON days: <span className="font-medium">{Number(nextResult.daysOn || 0)}</span>/<span className="font-medium">{Number(nextResult.req || 0)}</span></div>
-                  <div>OFF days: <span className="font-medium">{Number(nextResult.daysOff || 0)}</span>/<span className="font-medium">{Number(nextResult.reqOff || 0)}</span></div>
-                </div>
-                {Array.isArray(disruptions) && disruptions.length > 0 && (
-                  <div className="mt-3">
-                    <div className="text-[12px] font-medium uppercase tracking-wide" style={{ color: '#6A3F2B' }}>Disruptions</div>
-                    <ul className="mt-1 text-xs grid grid-cols-2 gap-x-4 gap-y-0.5" style={{ color: '#6A3F2B' }}>
-                      {disruptions.slice(0, 4).map((d, i) => <li key={i} className="truncate">{d.count}× {d.label}</li>)}
-                      {disruptions.length > 4 && <li>+{disruptions.length - 4} more</li>}
-                    </ul>
-                    <p className="mt-2 text-[11px]" style={{ color: '#6A3F2B' }}>A few clean days will speed things up.</p>
+                  <div>
+                    Clean ON days: <span className="font-medium">{onClean}</span>/<span className="font-medium">{reqOn}</span> {!onMet ? `(need ${needOn} more)` : '✓'}
                   </div>
+                  <div>
+                    Clean OFF days: <span className="font-medium">{offClean}</span>/<span className="font-medium">{reqOff}</span> {offMet ? '✓' : `(need ${needOff} more)`}
+                  </div>
+                </div>
+                {ready ? (
+                  <div className="mt-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const r = await fetch('/api/billing/info', { cache: 'no-store' })
+                          const j = r.ok ? await r.json() : {}
+                          const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
+                          if (isPaid) {
+                            window.location.href = '/results'
+                          } else {
+                            window.location.href = '/checkout'
+                          }
+                        } catch {
+                          window.location.href = '/checkout'
+                        }
+                      }}
+                      className="text-sm text-gray-700 hover:underline"
+                    >
+                      View your result →
+                    </button>
+                  </div>
+                ) : (
+                  guidance && <div className="mt-3 text-xs text-gray-600">{guidance}</div>
                 )}
               </div>
             )
@@ -320,18 +546,23 @@ export function DashboardUnifiedPanel() {
         </div>
         {/* BL: Progress */}
         <div className="p-6 md:border-r border-gray-100">
-          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-4">Overall progress</div>
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-4">Clarity</div>
           <div className="flex items-center justify-between text-sm text-gray-700 mb-2">
-            <span className="text-gray-600">Stack progress</span>
+            <span className="text-gray-600">Progress</span>
             <span className="font-medium">{progressPercent}%</span>
           </div>
           <div className="w-full">
-            <Progress value={progressPercent} className="h-2 w-full" />
+            <Progress value={isMember ? progressPercent : Math.min(progressPercent, 90)} className="h-2 w-full" />
           </div>
+          <div className="mt-2 text-xs text-gray-500">Based on clean days collected across your supplements.</div>
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Days tracked</span>
               <span className="font-medium">{streak}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">Gaps (missed days)</span>
+              <span className="font-medium">{gapsDays}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Ready</span>
@@ -345,7 +576,18 @@ export function DashboardUnifiedPanel() {
               <span className="text-gray-500">Needs data</span>
               <span className="font-medium">{needsDataCount}</span>
             </div>
-          </div>
+        </div>
+          {Array.isArray(disruptions) && disruptions.length > 0 && (
+            <div className="mt-6">
+              <div className="text-[12px] font-medium uppercase tracking-wide text-gray-500">Recent disruptions (last 30 days)</div>
+              <ul className="mt-2 text-sm grid grid-cols-2 gap-x-4 gap-y-1 text-gray-700">
+                {disruptions.slice(0, 6).map((d, i) => (
+                  <li key={i} className="truncate">{d.count}× {d.label}</li>
+                ))}
+                {disruptions.length > 6 && <li className="text-gray-500">+{disruptions.length - 6} more</li>}
+              </ul>
+            </div>
+          )}
         </div>
         {/* BR: Stack Economics */}
         <div className="p-6">
@@ -361,7 +603,7 @@ export function DashboardUnifiedPanel() {
                 <PieChart>
                   <Pie data={chartData} dataKey="value" innerRadius={28} outerRadius={40} paddingAngle={2}>
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={(entry as any).color} />
+                      <Cell key={`cell-${index}`} fill={(entry as any).color || '#A8A29E'} />
                     ))}
                   </Pie>
                 </PieChart>
@@ -383,12 +625,43 @@ export function DashboardUnifiedPanel() {
           {/* Summary */}
           <div className="pt-4 border-t border-gray-100">
             {(() => {
-              // Recompute economics from sections to ensure verdict categories are used
-              const sec = progress?.sections || { clearSignal: [], noSignal: [], building: [], needsData: [] }
-              const sumYear = (arr: any[]) => arr.reduce((acc: number, s: any) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
-              const effY = sumYear((sec.clearSignal || []).filter((s: any) => (s as any).effectCategory === 'works'))
-              const wasteY = sumYear(sec.noSignal || [])
-              const testY = sumYear([...(sec.building || []), ...((sec.needsData || []))])
+              // Recompute economics based on verdicts and readiness
+              const sec = progress?.sections || { clearSignal: [], noSignal: [], building: [], needsData: [], inconsistent: [] }
+              const all: any[] = [
+                ...(sec.clearSignal || []),
+                ...(sec.noSignal || []),
+                ...(sec.inconsistent || []),
+                ...(sec.needsData || []),
+                ...(sec.building || []),
+              ]
+              const sumYearAll = (rows: any[]) => rows.reduce((acc, s) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
+              const effY = sumYearAll((sec.clearSignal || []).filter((s: any) => (s as any).effectCategory === 'works'))
+              const wasteY = sumYearAll(sec.noSignal || [])
+              const testY = sumYearAll([...(sec.building || []), ...((sec.needsData || []))])
+              if (!isMember) {
+                // For free users, "awaiting clarity" = items not ready by ON/OFF thresholds
+                const awaitingRows = all.filter((r: any) => {
+                  const on = Number(r?.daysOnClean ?? r?.daysOn ?? 0)
+                  const off = Number(r?.daysOffClean ?? r?.daysOff ?? 0)
+                  const reqOn = Number(r?.requiredOnDays ?? r?.requiredDays ?? 14)
+                  const reqOff = Number(r?.requiredOffDays ?? Math.min(5, Math.max(3, Math.round((r?.requiredDays ?? 14) / 4))))
+                  return !(on >= reqOn && off >= reqOff)
+                })
+                const awaiting = Math.round(sumYearAll(awaitingRows))
+                if (awaiting <= 0) {
+                  return (
+                    <div className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium" style={{ color: '#6A3F2B' }}>${(totalYearly || 0).toLocaleString()}/yr</span> — verdicts ready!
+                    </div>
+                  )
+                } else {
+                  return (
+                    <div className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium" style={{ color: '#6A3F2B' }}>${awaiting.toLocaleString()}/yr</span> awaiting clarity
+                    </div>
+                  )
+                }
+              }
               return (
                 <div className="text-sm text-gray-700 mb-2">
                   <span className="font-medium" style={{ color: '#6F7F5A' }}>${effY.toLocaleString()}</span> effective
@@ -405,7 +678,43 @@ export function DashboardUnifiedPanel() {
           </div>
         </div>
       </div>
+      {/* Baseline bar inside the same container, spanning both columns */}
+      <div className="p-6 md:col-span-2 border-t border-gray-100">
+        <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">YOUR BASELINE</div>
+        {wearableDays > 0 ? (
+          <>
+            <div className="text-sm text-gray-800">Built from {wearableDays} {wearableDays === 1 ? 'day' : 'days'} of data • Wearable + check-ins</div>
+            <div className="mt-2 text-sm text-gray-600">Your sleep and recovery patterns form this baseline. More clean days increase confidence.</div>
+            <button
+              type="button"
+              onClick={() => setShowBaselineHelp(v => !v)}
+              className="mt-2 text-sm text-gray-600 hover:underline"
+            >
+              How this works →
+            </button>
+            {showBaselineHelp && (
+              <div
+                role="dialog"
+                aria-modal="false"
+                className="mt-2 rounded-lg border border-gray-200 bg-white p-3 text-[13px] text-gray-700 shadow-sm"
+              >
+                Results compare your supplement ON days vs OFF days against your personal baseline to estimate whether a supplement is helping you.
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="text-sm text-gray-800">Built from daily check-ins • {Math.max(0, Number(progress?.checkins?.last30?.clean || 0))} {Number(progress?.checkins?.last30?.clean || 0) === 1 ? 'clean day' : 'clean days'} collected</div>
+            <div className="mt-2 text-sm text-gray-600">Results compare supplement ON vs OFF days against this baseline. More clean days increase confidence.</div>
+            <a href="/onboarding/wearables" className="mt-2 inline-block text-sm text-gray-600 hover:underline">
+              Connect wearable for deeper analysis →
+            </a>
+          </>
+        )}
+      </div>
     </section>
+    <ReminderNudgeModal open={showReminder} onClose={dismissReminder} onEnable={enableReminder} />
+    </>
   )
 }
 

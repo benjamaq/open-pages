@@ -29,7 +29,7 @@ export default function ProPricingPage() {
     return 'Get started with Premium'
   }
 
-  const getCtaHref = () => '/auth/signup/pro'
+  const getCtaHref = () => '/signup?plan=premium'
 
   return (
     <div className="min-h-screen bg-white">
@@ -62,10 +62,7 @@ export default function ProPricingPage() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Track your medications and supplements without limits. Priority support and enhanced progress tracking to help you understand what works.
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
-            <span>🔑</span>
-            <span>Have a beta code? Enter it at sign up.</span>
-          </div>
+          {/* Removed beta code messaging */}
         </div>
 
         {/* Billing Toggle */}
@@ -107,12 +104,12 @@ export default function ProPricingPage() {
               <h3 className="text-2xl font-bold text-gray-900">Premium</h3>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">
-                  ${billingPeriod === 'monthly' ? '9.99' : '99'}
+                  ${billingPeriod === 'monthly' ? '19' : '149'}
                 </span>
                 <span className="text-gray-600">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
               </div>
               {billingPeriod === 'yearly' && (
-                <p className="mt-2 text-gray-600 text-sm">Billed annually (Save $20)</p>
+                <p className="mt-2 text-gray-600 text-sm">Billed annually (Save 35%)</p>
               )}
               <p className="mt-2 text-gray-600">Everything in Free, plus unlimited tracking and priority support</p>
             </div>

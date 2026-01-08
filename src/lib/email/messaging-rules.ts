@@ -1,14 +1,8 @@
 // EXPLICIT MESSAGING RULES FOR DAILY EMAILS
 // Cursor must follow these EXACTLY
 
-export function getGreeting(userName: string, painLevel: number): string {
-  if (painLevel >= 7) {
-    return `Hey ${userName} 👋\n\nI know today might be tough.`;
-  }
-  if (painLevel >= 4) {
-    return `Hey ${userName} 👋\n\nLet's see how you're doing today.`;
-  }
-  return `Hey ${userName} 👋\n\nHope you're having a decent morning.`;
+export function getGreeting(userName: string, _energyLevel?: number): string {
+  return `Hey ${userName} 👋\n\nReady to build your baseline?`;
 }
 
 export function getReadinessMessage(score: number): string {
@@ -17,29 +11,15 @@ export function getReadinessMessage(score: number): string {
   return "Low-energy day — rest is progress.";
 }
 
-export function getInsightLine(
-  painYesterday: number,
-  painToday: number,
-  sleepQuality: number
-): string {
-  // VERY specific rules for what to say
-  if (painYesterday > painToday && sleepQuality >= 7) {
-    return "Your pain eased a little after better sleep.";
-  }
-  if (painYesterday < painToday) {
-    return "I'm noticing your pain increased — let's track what might have changed.";
-  }
-  // ... etc
-  return "I'm tracking your patterns to find what helps.";
+export function getInsightLine(_x?: number, _y?: number, _sleepQuality?: number): string {
+  return "Consistent check-ins help us test which supplements are actually worth keeping.";
 }
 
 // ADD MORE EXPLICIT FUNCTIONS FOR EVERY MESSAGE VARIATION
 
 // Pain tone lines (strict buckets per brief)
-export function getPainToneLine(painLevel: number): string {
-  if (painLevel >= 7) return "I know today is tough.";
-  if (painLevel >= 4) return "Let's see how you're doing.";
-  return "Nice work managing symptoms.";
+export function getPainToneLine(_energyLevel?: number): string {
+  return "Yesterday: Energy, Focus, and Sleep give us the clearest signal.";
 }
 
 // Mood acknowledgement lines

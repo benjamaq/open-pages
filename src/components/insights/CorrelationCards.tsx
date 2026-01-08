@@ -56,7 +56,7 @@ export function CorrelationCards() {
       body: 'Keep logging — results typically need 14+ clean days',
       strength: '',
       confidence: '',
-      href: '/dashboard?checkin=1'
+      href: '/dashboard?checkin=open'
     }]
   }, [patterns])
 

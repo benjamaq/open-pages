@@ -4,9 +4,12 @@ import mjml2html from 'mjml'
 
 export type DailyReminderVars = {
   user_name: string
-  pain: number
-  mood: number
+  // Prefer energy/focus; keep legacy fields for backward compatibility
+  energy?: number
+  focus?: number
   sleep: number
+  pain?: number
+  mood?: number
   readiness_percent: number
   readiness_emoji: string
   readiness_message: string
@@ -24,14 +27,22 @@ function pct(value0to10: number): string {
 export function renderDailyReminderHTML(vars: DailyReminderVars): string {
   const templatePath = path.resolve(process.cwd(), 'emails/templates/daily-reminder.mjml')
   let mjml = fs.readFileSync(templatePath, 'utf8')
+  const energy = typeof vars.energy === 'number' ? vars.energy : (typeof vars.pain === 'number' ? vars.pain : 0)
+  const focus = typeof vars.focus === 'number' ? vars.focus : (typeof vars.mood === 'number' ? vars.mood : 0)
   const replacements: Record<string, string> = {
     '{{user_name}}': vars.user_name,
-    '{{pain}}': String(vars.pain),
-    '{{mood}}': String(vars.mood),
+    // Legacy placeholders
+    '{{pain}}': String(energy),
+    '{{mood}}': String(focus),
     '{{sleep}}': String(vars.sleep),
-    '{{pct_pain}}': pct(vars.pain),
-    '{{pct_mood}}': pct(vars.mood),
+    '{{pct_pain}}': pct(energy),
+    '{{pct_mood}}': pct(focus),
     '{{pct_sleep}}': pct(vars.sleep),
+    // New placeholders (if template updated)
+    '{{energy}}': String(energy),
+    '{{focus}}': String(focus),
+    '{{pct_energy}}': pct(energy),
+    '{{pct_focus}}': pct(focus),
     '{{readiness_emoji}}': vars.readiness_emoji,
     '{{readiness_percent}}': String(Math.max(0, Math.min(100, Math.round(vars.readiness_percent)))) ,
     '{{readiness_message}}': vars.readiness_message,

@@ -30,9 +30,33 @@ export default function SupplementSearchInput({ onSelect }: { onSelect?: (item: 
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/catalog/search?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
+        // Switch to iHerb-backed search
+        const res = await fetch(`/api/supplements/search?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
         const data = await res.json();
-        setResults(Array.isArray(data) ? data : []);
+        const rows = Array.isArray(data?.results) ? data.results : [];
+        // Map API -> CatalogItem shape expected by modal
+        const mapped: CatalogItem[] = rows.map((r: any) => {
+          const servings = typeof r.servings_per_container === 'number'
+            ? r.servings_per_container
+            : (r.servings_per_container ? Number(r.servings_per_container) : null)
+          const pps = typeof r.price_per_serving === 'number'
+            ? r.price_per_serving
+            : (r.price_per_serving ? Number(r.price_per_serving) : null)
+          const containerPrice = (servings && pps) ? (pps * servings) : null
+          return {
+            id: String(r.id),
+            name: String(r.title ?? ''),
+            brand: r.brand ?? undefined,
+            category: r.category2 ?? undefined,
+            // typical_price is treated as container price by the modal
+            typical_price: containerPrice,
+            servings_per_container: servings,
+            serving_size: undefined,
+            image_url: undefined,
+            iherb_url: r.url ?? undefined
+          }
+        });
+        setResults(mapped);
         setShowDropdown(true);
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -102,16 +126,28 @@ export default function SupplementSearchInput({ onSelect }: { onSelect?: (item: 
               <span className="font-medium text-slate-900">{item.name}</span>
               <div className="flex items-center justify-between text-xs text-slate-600">
                 <span>{item.brand}</span>
-                {item.typical_price != null && <span className="text-slate-700">${item.typical_price}</span>}
+                {(() => {
+                  const servings = typeof item.servings_per_container === 'number' ? item.servings_per_container : null
+                  const container = typeof item.typical_price === 'number' ? item.typical_price : null
+                  const pps = (servings && container) ? (container / servings) : null
+                  if (container && servings) {
+                    return <span className="text-slate-700">${container.toFixed(2)} ({servings} servings) • ${pps!.toFixed(2)}/serving</span>
+                  }
+                  if (pps) {
+                    return <span className="text-slate-700">${pps.toFixed(2)}/serving</span>
+                  }
+                  return null
+                })()}
               </div>
               <div className="flex items-center justify-between text-xs text-slate-500">
-                {item.servings_per_container != null && <span>{item.servings_per_container} servings</span>}
                 {item.category && <span className="italic">{item.category}</span>}
               </div>
             </div>
           ))}
           {!loading && results.length === 0 && (
-            <div className="px-3 py-2 text-xs text-slate-500">No supplements found.</div>
+            <div className="px-3 py-3 text-sm text-slate-700">
+              Can’t find yours? <span className="font-semibold">Add manually</span> below.
+            </div>
           )}
         </div>
       )}

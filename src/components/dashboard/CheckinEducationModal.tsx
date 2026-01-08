@@ -4,27 +4,47 @@ import { useEffect, useState } from 'react'
 
 export function CheckinEducationModal() {
   const [show, setShow] = useState(false)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    try {
-      const dismissed = localStorage.getItem('checkin_education_dismissed')
-      if (dismissed !== '1') {
-        setShow(true)
+    let mounted = true
+    ;(async () => {
+      try {
+        // Check server-side flag first to persist across devices
+        const res = await fetch('/api/onboarding/context/status', { cache: 'no-store' })
+        if (!mounted) return
+        if (res.ok) {
+          const j = await res.json()
+          if (j?.completed) {
+            setShow(false)
+            setLoaded(true)
+            return
+          }
+        }
+      } catch {}
+      // Fallback to localStorage gating
+      try {
+        const dismissed = localStorage.getItem('checkin_education_dismissed')
+        setShow(dismissed !== '1')
+      } catch {
+        setShow(false)
+      } finally {
+        setLoaded(true)
       }
-    } catch {
-      // If localStorage is unavailable, don't block the user
-      setShow(false)
-    }
+    })()
+    return () => { mounted = false }
   }, [])
 
   const handleDismiss = () => {
     try {
       localStorage.setItem('checkin_education_dismissed', '1')
     } catch {}
+    // Persist completion to server so it won't reappear on re-login
+    fetch('/api/onboarding/context/complete', { method: 'POST' }).catch(() => {})
     setShow(false)
   }
 
-  if (!show) return null
+  if (!loaded || !show) return null
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(85, 81, 74, 0.45)' }}>

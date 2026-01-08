@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
 import Link from 'next/link'
 
 export default function SignupPage() {
   const router = useRouter()
+  const params = useSearchParams()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,6 +20,9 @@ export default function SignupPage() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    // Debug: trace premium path param
+    try { console.log('Plan param:', params.get('plan')) } catch {}
+    let createdUserId: string | null = null
     try {
       const supabase = createClient()
       const cleanEmail = email.trim()
@@ -29,7 +34,10 @@ export default function SignupPage() {
         options: {
           data: {
             name: cleanName,
-            first_name: firstName
+            first_name: firstName,
+            // Default daily reminders ON at 08:00 local by default
+            reminder_enabled: true,
+            reminder_time: '08:00'
           }
         }
       })
@@ -40,6 +48,7 @@ export default function SignupPage() {
       }
       // Ensure a profile row exists with display_name
       if (data?.user) {
+        createdUserId = String(data.user.id)
         try {
           const baseSlug = cleanEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
           const ts = Date.now().toString(36)
@@ -79,6 +88,31 @@ export default function SignupPage() {
     setLoading(false)
     // Prevent cross-account bleed: clear any previous onboarding draft
     try { clearDraft() } catch {}
+    // Redirect based on plan
+    const plan = params.get('plan')
+    if (plan === 'premium') {
+      try {
+        console.log('Creating Stripe session...')
+        const res = await fetch('/api/billing/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: 'premium',
+            period: 'monthly',
+            userId: createdUserId,
+            userEmail: email.trim()
+          })
+        })
+        const j = await res.json()
+        try { console.log('Stripe response:', j) } catch {}
+        if (res.ok && j?.url) {
+          window.location.href = j.url
+          return
+        }
+      } catch (e) {
+        // Fall through to onboarding if checkout cannot start
+      }
+    }
     router.push('/onboarding')
   }
 
@@ -94,7 +128,7 @@ export default function SignupPage() {
       <div className="w-full max-w-[520px] rounded-2xl border border-gray-200 bg-white/95 p-8 sm:p-10 shadow-lg ring-1 ring-black/5">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-slate-900">Create your BioStackr account</h1>
-          <p className="mt-2 text-gray-600">Start building signal. You can refine everything later.</p>
+          <p className="mt-2 text-gray-600">Start testing your supplements.</p>
         </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="grid gap-1">
