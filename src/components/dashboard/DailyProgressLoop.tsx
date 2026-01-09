@@ -450,8 +450,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
       )}
-      {/* Inconclusive reason for paid, ready but unclear */}
-      {testingActive && isMember && (daysOn >= reqDays && daysOff >= reqOff) && String((row as any).verdict || '').toLowerCase() === 'unclear' && (row as any).inconclusiveText && (
+      {/* Inconclusive note for paid users */}
+      {isInconclusive && isMember && (row as any).inconclusiveText && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
           {(row as any).inconclusiveText}
         </div>
@@ -497,35 +497,20 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           Needs skip days to compare — keep following your rotation schedule
         </div>
       )}
-      {/* Inconclusive: free report + retest */}
-      {isInconclusive && (
-        <div className="mt-2">
-          <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
-            View full report →
-          </a>
-          <button
-            className="ml-3 text-[11px] px-2 py-1 border border-gray-300 rounded"
-            onClick={async () => {
-              if (!confirm('Start a retest for this supplement?')) return
-              try {
-                await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, {
-                  method: 'POST'
-                })
-                try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
-              } catch (e) {
-                console.error(e)
-              }
-            }}
-          >
-            Retest
-          </button>
-        </div>
-      )}
       {!isMember && !isComplete && !isInconclusive && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
       <div className="mt-3 flex justify-end">
-        {isComplete && !isMember ? (
+        {testingStatus === 'testing' && (
+          <button
+            disabled={busy}
+            onClick={() => setShowStopModal(true)}
+            className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {busy ? 'Updating…' : 'Testing ✓'}
+          </button>
+        )}
+        {testingStatus === 'complete' && !isMember && (
           <button
             onClick={() => {
               setShowPaywall(true)
@@ -542,15 +527,29 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           >
             Unlock Verdict →
           </button>
-        ) : testingActive ? (
-          <button
-            disabled={busy}
-            onClick={() => setShowStopModal(true)}
-            className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {busy ? 'Updating…' : 'Testing ✓'}
-          </button>
-        ) : (
+        )}
+        {testingStatus === 'inconclusive' && (
+          <div className="flex gap-2">
+            <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
+              View full report →
+            </a>
+            <button
+              className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+              onClick={async () => {
+                if (!confirm('Start a retest for this supplement?')) return
+                try {
+                  await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
+                  try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
+                } catch (e) {
+                  console.error(e)
+                }
+              }}
+            >
+              Retest
+            </button>
+          </div>
+        )}
+        {testingStatus === 'inactive' && (
           <button
             disabled={busy}
             onClick={async () => {
