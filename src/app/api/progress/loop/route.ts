@@ -16,15 +16,16 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 }
 
 export async function GET(request: Request) {
-  console.log('[progress/loop] === V2 CODE RUNNING ===')
-    console.log('[progress/loop] === START ===')
+  const VERBOSE = process.env.NEXT_PUBLIC_VERBOSE_LOGS === '1'
+  if (VERBOSE) console.log('[progress/loop] === V2 CODE RUNNING ===')
+  if (VERBOSE) console.log('[progress/loop] === START ===')
   try {
     // Attach rotation selection debug in response for easier inspection
     let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    try { console.log('[progress/loop] user:', user.id) } catch {}
+    if (VERBOSE) { try { console.log('[progress/loop] user:', user.id) } catch {} }
 
     // Resolve profile (auto-create minimal if missing)
     let { data: profile, error: pErr } = await supabase
@@ -265,9 +266,11 @@ export async function GET(request: Request) {
       .gte('local_date', since365.toISOString().slice(0,10))
     const allEntryDatesSet = new Set<string>((entries365 || []).map((e: any) => String(e.local_date).slice(0,10)))
     const totalDistinctDaysFromEntries = allEntryDatesSet.size
-    try {
-      console.log('[progress/loop] user:', user.id, 'entries365:', (entries365 || []).length, 'distinctDates:', totalDistinctDaysFromEntries)
-    } catch {}
+    if (VERBOSE) {
+      try {
+        console.log('[progress/loop] user:', user.id, 'entries365:', (entries365 || []).length, 'distinctDates:', totalDistinctDaysFromEntries)
+      } catch {}
+    }
     const sortedAllDates = Array.from(allEntryDatesSet).sort()
     const firstCheckin = sortedAllDates.length > 0 ? sortedAllDates[0] : null
     const latestCheckin = sortedAllDates.length > 0 ? sortedAllDates[sortedAllDates.length - 1] : null
@@ -297,7 +300,7 @@ export async function GET(request: Request) {
       hasCheckedInToday = true
       try {
         const te = (entries365 || []).find((e: any) => String((e as any).local_date).slice(0,10) === todayKey)
-        try { console.log('[DEBUG] Path 1: daily_entries te.sleep_quality=', (te as any)?.sleep_quality) } catch {}
+        if (VERBOSE) { try { console.log('[DEBUG] Path 1: daily_entries te.sleep_quality=', (te as any)?.sleep_quality) } catch {} }
         if (te) {
           todaySummary = {
             mood: (te as any).mood ?? undefined,
@@ -305,7 +308,7 @@ export async function GET(request: Request) {
             focus: (te as any).focus ?? undefined,
             sleep: (te as any).sleep_quality ?? (te as any).sleep ?? undefined
           }
-          try { console.log('[progress/loop] todaySummary (daily_entries):', todaySummary) } catch {}
+          if (VERBOSE) { try { console.log('[progress/loop] todaySummary (daily_entries):', todaySummary) } catch {} }
         }
       } catch {}
     } else {
@@ -313,7 +316,7 @@ export async function GET(request: Request) {
       hasCheckedInToday = distinctCheckinDays.has(todayKey)
       if (hasCheckedInToday) {
         const todayRow = (checkins || []).find((c: any) => getDayKey(c) === todayKey)
-        try { console.log('[DEBUG] Path 2: checkin todayRow.sleep_quality=', (todayRow as any)?.sleep_quality) } catch {}
+        if (VERBOSE) { try { console.log('[DEBUG] Path 2: checkin todayRow.sleep_quality=', (todayRow as any)?.sleep_quality) } catch {} }
         if (todayRow) {
           todaySummary = {
             mood: (todayRow as any).mood ?? undefined,
@@ -322,7 +325,7 @@ export async function GET(request: Request) {
             // Prefer sleep_quality; fallback to sleep
             sleep: (todayRow as any).sleep_quality ?? (todayRow as any).sleep ?? undefined
           }
-          try { console.log('[progress/loop] todaySummary (checkin):', todaySummary) } catch {}
+          if (VERBOSE) { try { console.log('[progress/loop] todaySummary (checkin):', todaySummary) } catch {} }
         }
       } else {
         hasCheckedInToday = false
@@ -332,14 +335,16 @@ export async function GET(request: Request) {
     // Use max of sources to avoid undercounting
     const totalDistinctDaysFromCheckins = distinctCheckinDays.size
     const totalDistinctDays = Math.max(totalDistinctDaysFromEntries, cleanDatesSet.size, totalDistinctDaysFromCheckins)
-    try {
-      console.log('[progress/loop] daysTracked debug', {
-        entriesDistinct: totalDistinctDaysFromEntries,
-        cleanDates: cleanDatesSet.size,
-        checkinsDistinct: totalDistinctDaysFromCheckins,
-        chosen: totalDistinctDays
-      })
-    } catch {}
+    if (VERBOSE) {
+      try {
+        console.log('[progress/loop] daysTracked debug', {
+          entriesDistinct: totalDistinctDaysFromEntries,
+          cleanDates: cleanDatesSet.size,
+          checkinsDistinct: totalDistinctDaysFromCheckins,
+          chosen: totalDistinctDays
+        })
+      } catch {}
+    }
 
     // Compute gaps: days with no daily_entries between first check-in and today
     let gapsDays = 0
@@ -398,10 +403,12 @@ export async function GET(request: Request) {
     // Compute supplement progress
     const requiredDaysDefault = 14
     const progressRows: SupplementProgress[] = []
-    try {
-      console.log('[progress/loop] items:', (items || []).length)
-      console.log('[progress/loop] cleanDatesSet size:', cleanDatesSet.size, 'first5:', Array.from(cleanDatesSet).sort().slice(0,5))
-    } catch {}
+    if (VERBOSE) {
+      try {
+        console.log('[progress/loop] items:', (items || []).length)
+        console.log('[progress/loop] cleanDatesSet size:', cleanDatesSet.size, 'first5:', Array.from(cleanDatesSet).sort().slice(0,5))
+      } catch {}
+    }
 
     for (const it of items || []) {
       const id = (it as any).id as string
@@ -459,7 +466,7 @@ export async function GET(request: Request) {
       // Quality modifier placeholder (will refine after effect attach)
       let qualityModifier = 0
       let progressPercent = Math.min(100, Math.max(0, Math.floor(baseProgress + staggerOffset + rotationBonus + qualityModifier + microOffset)))
-      try { console.log('[progress/loop] row:', { id, name, startDate: (it as any).inferred_start_at || (it as any).start_date, daysOfData, progressPercent }) } catch {}
+      if (VERBOSE) { try { console.log('[progress/loop] row:', { id, name, startDate: (it as any).inferred_start_at || (it as any).start_date, daysOfData, progressPercent }) } catch {} }
 
       const insight = insightsById.get(id)
       let status: SupplementProgress['status'] = 'building'
@@ -519,16 +526,19 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
     const nameToUserSuppId = new Map<string, string>()
     const userSuppIdToName = new Map<string, string>()
-    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null; testing?: boolean }>()
+    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
     const testingActiveIds = new Set<string>()
+    const testingStatusById = new Map<string, string>()
     for (const u of userSuppRows || []) {
       const nm = String((u as any).name || '').trim().toLowerCase()
       const uid = String((u as any).id)
       if (nm) nameToUserSuppId.set(nm, uid)
       userSuppIdToName.set(uid, String((u as any).name || ''))
       const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
-      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting })
+      const status = String((u as any).testing_status || 'inactive')
+      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting, status })
       if (isTesting) testingActiveIds.add(uid)
+      testingStatusById.set(uid, status)
     }
     // Mark rows with testingActive and optionally drop non-testing from rotation/progress candidates
     for (const r of progressRows) {
@@ -647,22 +657,24 @@ export async function GET(request: Request) {
         // Use ON/OFF evidence as the progress value (UX: shows momentum from day one)
         const finalPct = Math.max(0, Math.min(100, Math.round(evidencePct)))
         // Debug: emit full calculation per supplement
-        try {
-          console.log('[progress/loop] calc', {
-            id: r.id,
-            name,
-            daysOfData: r.daysOfData,
-            requiredDays,
-            daysOn,
-            daysOff,
-            requiredOnDays,
-            requiredOffDays,
-            baseProgress: Math.round(baseProgress * 100) / 100,
-            adjustedBeforeCap: Math.round(adjustedBeforeCap * 100) / 100,
-            evidencePct: Math.round(evidencePct * 100) / 100,
-            finalPct
-          })
-        } catch {}
+        if (VERBOSE) {
+          try {
+            console.log('[progress/loop] calc', {
+              id: r.id,
+              name,
+              daysOfData: r.daysOfData,
+              requiredDays,
+              daysOn,
+              daysOff,
+              requiredOnDays,
+              requiredOffDays,
+              baseProgress: Math.round(baseProgress * 100) / 100,
+              adjustedBeforeCap: Math.round(adjustedBeforeCap * 100) / 100,
+              evidencePct: Math.round(evidencePct * 100) / 100,
+              finalPct
+            })
+          } catch {}
+        }
         r.progressPercent = finalPct
         r.requiredDays = requiredDays
         // Persist required ON/OFF for client-side gating
@@ -742,6 +754,28 @@ export async function GET(request: Request) {
       } catch {}
     }
 
+    // Auto-transition: if a testing supplement reached 100%, set status to 'complete' when significant, else 'inconclusive'
+    try {
+      for (const r of progressRows as any[]) {
+        const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
+        if (!uid) continue
+        const currentStatus = testingStatusById.get(String(uid)) || 'inactive'
+        const isTestingNow = currentStatus === 'testing'
+        if (isTestingNow && r.progressPercent >= 100) {
+          const insight = insightsById.get(String((r as any).id))
+          const significant = !!(insight && String((insight as any).status || '').toLowerCase() === 'significant')
+          const target: 'complete' | 'inconclusive' = significant ? 'complete' : 'inconclusive'
+          await (supabase as any)
+            .from('user_supplement')
+            .update({ testing_status: target } as any)
+            .eq('id', uid)
+            .eq('user_id', user.id)
+        }
+      }
+    } catch (e) {
+      console.log('[progress/loop] auto-transition error:', (e as any)?.message || e)
+    }
+
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'
@@ -770,14 +804,13 @@ export async function GET(request: Request) {
       if (candidates.length > 0) {
         const next = candidates.sort((a, b) => (b.progressPercent - a.progressPercent))[0]
         const nm = (next as any).name || 'Supplement'
-        // estimate with variance by category
         const cat = inferCategory(nm, (next as any).primary_goal_tags)
         const remaining = Math.max(0, next.requiredDays - next.daysOfData)
         const rnd = Math.floor(hash01(String(next.id) + new Date().toISOString().slice(0,10)) * 3)
         let est = remaining
-        if (cat === 'sleep') est = remaining + (rnd - 1) // -1..+1
-        else if (cat === 'cognitive') est = remaining + rnd // 0..2
-        else est = remaining + (rnd - 0) // 0..2
+        if (cat === 'sleep') est = remaining + (rnd - 1)
+        else if (cat === 'cognitive') est = remaining + rnd
+        else est = remaining + rnd
         ;(todaysProgress as any).nextLikely = { name: nm, estimate: `~${Math.max(0, est)} days` }
       }
     } catch {}
@@ -824,11 +857,14 @@ export async function GET(request: Request) {
         progressById[id] = { daysOn, daysOff, reqOn, reqOff }
       }
     } catch {}
-    const stackItems = (items || []).map((it: any) => {
-      const cat = inferCategory(String(it?.name || ''), (it?.primary_goal_tags || it?.tags))
-      const cost = Number(it?.monthly_cost || 0)
-      return { id: String(it?.id), name: String(it?.name || 'Supplement'), category: cat, monthlyCost: cost }
-    })
+    // Build stack items exclusively from testing-active supplements to drive rotation
+    const stackItems = progressRows
+      .filter(r => (r as any).testingActive)
+      .map((r: any) => {
+        const cat = inferCategory(String(r?.name || ''), (r?.primary_goal_tags || r?.tags))
+        const cost = Number(r?.monthlyCost || 0)
+        return { id: String(r?.id), name: String(r?.name || 'Supplement'), category: cat, monthlyCost: cost }
+      })
     const stackSize = stackItems.length
     const groupsByCategory = new Map<string, typeof stackItems>()
     for (const s of stackItems) {
@@ -976,6 +1012,20 @@ export async function GET(request: Request) {
         }
       }
     } catch {}
+    // Supplements flat array with state fields for client UI
+    const supplements = progressRows.map(r => {
+      const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
+      const testingStatus = uid ? (testingStatusById.get(String(uid)) || 'inactive') : 'inactive'
+      const insight = insightsById.get(String((r as any).id))
+      const significant = !!(insight && String((insight as any).status || '').toLowerCase() === 'significant')
+      return {
+        id: r.id,
+        name: r.name,
+        testing_status: testingStatus,
+        progressPercent: r.progressPercent,
+        isStatisticallySignificant: significant,
+      }
+    })
     return NextResponse.json({
       debug,
       userId: user.id,
@@ -985,6 +1035,7 @@ export async function GET(request: Request) {
       todaysProgress,
       rotation,
       stackProgress,
+      supplements,
       checkins: {
         totalDistinctDays,
         hasCheckedInToday,

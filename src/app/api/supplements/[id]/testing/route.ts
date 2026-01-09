@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, ctx: any) {
     // Body
     const body = await request.json().catch(() => ({}))
     const status = String(body?.status || '').toLowerCase()
-    if (!['inactive', 'testing', 'paused'].includes(status)) {
+    if (!['inactive', 'testing'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
