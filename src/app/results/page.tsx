@@ -117,6 +117,7 @@ export default function ResultsPage() {
     return supps.map(s => {
       const e = effects[s.id]
       const cat = (e?.effect_category || '').toLowerCase()
+      // Base verdict from effect summary (legacy), will be overridden by loop verdict when available
       let verdict: 'KEEP' | 'DROP' | 'INCONCLUSIVE' = 'INCONCLUSIVE'
       if (cat === 'works') verdict = 'KEEP'
       else if (cat === 'no_effect') verdict = 'DROP'
@@ -131,7 +132,7 @@ export default function ResultsPage() {
       const offAvg = typeof e?.pre_start_average === 'number' ? Number(e?.pre_start_average) : null
       const daysOn = typeof e?.days_on === 'number' ? e?.days_on : null
       const daysOff = typeof e?.days_off === 'number' ? e?.days_off : null
-      const loop = loopById[s.id]
+      const loopData = loopById[s.id]
       const monthly = Math.max(0, Math.min(80, Number(s.monthly_cost_usd ?? 0)))
       const yearly = Math.round(monthly * 12)
       // Cost impact phrasing
@@ -144,25 +145,40 @@ export default function ResultsPage() {
         }
         return ''
       })()
-      // Progressive status badge
+      // Use loop verdict/state to align with dashboard
+      // (loop computed above)
+      const isReady = Boolean(loopData && (loopData as any).isReady)
+      const loopVerdictRaw = String(loopData?.verdict || '').toLowerCase()
+      if (isReady) {
+        if (loopVerdictRaw === 'keep') verdict = 'KEEP'
+        else if (loopVerdictRaw === 'drop') verdict = 'DROP'
+        else verdict = 'INCONCLUSIVE'
+      }
+      // Progressive status badge (prioritize loop readiness)
       const badge = (() => {
-        if (verdict === 'KEEP') return { label: 'KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
-        if (verdict === 'DROP') return { label: 'DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+        if (isReady) {
+          if (verdict === 'KEEP') return { label: 'KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+          if (verdict === 'DROP') return { label: 'DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+          return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+        }
+        // Not ready yet → use magnitude/confidence to show interim state
         const c = conf ?? 0
         if (typeof signedMag === 'number' && Math.abs(signedMag) >= 5) {
           if (c >= 80) return { label: signedMag > 0 ? 'KEEP' : 'DROP', cls: signedMag > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200' }
           if (c >= 60) return { label: signedMag > 0 ? 'Likely keep' : 'Likely drop', cls: signedMag > 0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200' }
           return { label: 'Early read', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
         }
-        return { label: 'Building signal', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+        return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
       })()
       // Distance to verdict and context
-      const onClean = loop?.daysOnClean ?? null
-      const offClean = loop?.daysOffClean ?? null
-      const reqOn = loop?.requiredOnDays ?? loop?.requiredDays ?? null
-      const reqOff = loop?.requiredOffDays ?? (loop?.requiredDays ? Math.min(5, Math.max(3, Math.round(loop.requiredDays / 4))) : null)
+      const onClean = loopData?.daysOnClean ?? null
+      const offClean = loopData?.daysOffClean ?? null
+      const reqOn = loopData?.requiredOnDays ?? loopData?.requiredDays ?? null
+      const reqOff = loopData?.requiredOffDays ?? (loopData?.requiredDays ? Math.min(5, Math.max(3, Math.round(loopData.requiredDays / 4))) : null)
       let distance: string | null = null
-      if (typeof onClean === 'number' && typeof offClean === 'number' && typeof reqOn === 'number' && typeof reqOff === 'number') {
+      if (isReady) {
+        distance = 'Verdict ready'
+      } else if (typeof onClean === 'number' && typeof offClean === 'number' && typeof reqOn === 'number' && typeof reqOff === 'number') {
         const needOn = Math.max(0, reqOn - onClean)
         const needOff = Math.max(0, reqOff - offClean)
         if (needOn === 0 && needOff === 0) distance = 'Ready for verdict'
@@ -173,11 +189,22 @@ export default function ResultsPage() {
       let rotationHint: string | null = null
       if ((offClean ?? 0) === 0 && (onClean ?? 0) > 0) rotationHint = 'Needs OFF days — follow your rotation schedule'
       const contextLines: string[] = []
-      if (typeof signedMag === 'number') {
-        if (Math.abs(signedMag) < 5) contextLines.push('No measurable effect (<5% difference)')
-        else contextLines.push(`${signedMag >= 0 ? '+' : ''}${signedMag}% on ON days vs OFF days`)
+      if (isReady) {
+        const effPct = typeof (loopData as any)?.effectPercent === 'number' ? Math.round((loopData as any).effectPercent) : null
+        const metric = (loopData as any)?.effectMetric || 'energy'
+        if (verdict === 'KEEP' && effPct != null) contextLines.push(`Clear positive effect: +${effPct}% ${metric}`)
+        else if (verdict === 'DROP' && effPct != null) contextLines.push(`Clear negative effect: ${effPct}% ${metric}`)
+        else {
+          const inconc = (loopData as any)?.inconclusiveText || 'Data ready, effect not statistically clear'
+          contextLines.push(`Inconclusive — ${inconc}`)
+        }
       } else {
-        contextLines.push('Collecting data — trend not clear yet')
+        if (typeof signedMag === 'number') {
+          if (Math.abs(signedMag) < 5) contextLines.push('No measurable effect (<5% difference)')
+          else contextLines.push(`${signedMag >= 0 ? '+' : ''}${signedMag}% on ON days vs OFF days`)
+        } else {
+          contextLines.push('Collecting data — trend not clear yet')
+        }
       }
       if (typeof onAvg === 'number' || typeof offAvg === 'number') {
         contextLines.push(`ON: ${typeof onAvg === 'number' ? onAvg.toFixed(1) : '—'} avg • OFF: ${typeof offAvg === 'number' ? offAvg.toFixed(1) : '—'} avg`)

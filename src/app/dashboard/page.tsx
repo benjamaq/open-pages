@@ -28,16 +28,24 @@ export default async function DashboardPage() {
   // Forward cookies properly from request headers (avoids calling toString on cookies())
   const cookieHeader = hdrs.get('cookie') ?? '';
 
-  // Fetch context with forwarded cookies
-  const context = await (await fetch(`${baseUrl}/api/elli/context`, {
-    headers: { cookie: cookieHeader },
-    cache: 'no-store',
-  })).json();
-  // Fetch billing status (unified isPaid boolean)
-  const billing = await (await fetch(`${baseUrl}/api/billing/info`, {
-    headers: { cookie: cookieHeader },
-    cache: 'no-store',
-  })).json().catch(() => ({ isPaid: false, subscription: null }));
+  // Fetch context with forwarded cookies (do not let this crash the page)
+  let context: any = {}
+  try {
+    const r = await fetch(`${baseUrl}/api/elli/context`, {
+      headers: { cookie: cookieHeader },
+      cache: 'no-store',
+    })
+    context = r.ok ? await r.json() : {}
+  } catch {}
+  // Fetch billing status (unified isPaid boolean) - tolerant to failures
+  let billing: any = { isPaid: false, subscription: null }
+  try {
+    const r = await fetch(`${baseUrl}/api/billing/info`, {
+      headers: { cookie: cookieHeader },
+      cache: 'no-store',
+    })
+    billing = r.ok ? await r.json() : { isPaid: false, subscription: null }
+  } catch {}
 
   // Determine overall progress toward first insights (use activeTests/activeTrials daysCompleted or 0)
   // Use number of check-ins for progress (so Day 1 after first check-in)

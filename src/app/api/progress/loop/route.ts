@@ -515,17 +515,28 @@ export async function GET(request: Request) {
     // Map names -> user_supplement ids for when items are from stack_items
     const { data: userSuppRows } = await supabase
       .from('user_supplement')
-      .select('id,name,retest_started_at,trial_number')
+      .select('id,name,retest_started_at,trial_number,testing_status')
       .eq('user_id', user.id)
     const nameToUserSuppId = new Map<string, string>()
     const userSuppIdToName = new Map<string, string>()
-    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null }>()
+    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null; testing?: boolean }>()
+    const testingActiveIds = new Set<string>()
     for (const u of userSuppRows || []) {
       const nm = String((u as any).name || '').trim().toLowerCase()
       const uid = String((u as any).id)
       if (nm) nameToUserSuppId.set(nm, uid)
       userSuppIdToName.set(uid, String((u as any).name || ''))
-      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null })
+      const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
+      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting })
+      if (isTesting) testingActiveIds.add(uid)
+    }
+    // Mark rows with testingActive and optionally drop non-testing from rotation/progress candidates
+    for (const r of progressRows) {
+      try {
+        const nm = String((r as any).name || '').trim().toLowerCase()
+        const uid = nameToUserSuppId.get(nm) || String((r as any).id)
+        ;(r as any).testingActive = testingActiveIds.has(uid)
+      } catch { (r as any).testingActive = true }
     }
     for (const r of progressRows) {
       const eff = effBySupp.get(r.id)
@@ -551,6 +562,7 @@ export async function GET(request: Request) {
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
         const suppId = nameToUserSuppId.get(nm) || String((r as any).id)
+        ;(r as any).userSuppId = suppId
         const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
         const currentOn = Number((r as any).daysOn || 0)
@@ -754,7 +766,7 @@ export async function GET(request: Request) {
     }
     // Next result likely
     try {
-      const candidates = progressRows.filter(r => r.progressPercent < 100)
+      const candidates = progressRows.filter(r => (r as any).testingActive && r.progressPercent < 100)
       if (candidates.length > 0) {
         const next = candidates.sort((a, b) => (b.progressPercent - a.progressPercent))[0]
         const nm = (next as any).name || 'Supplement'

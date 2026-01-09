@@ -137,8 +137,8 @@ async function handler(req: NextRequest) {
       console.log('[daily-cron] Force targeting user:', { user_id: targetUserId, email: filterEmail })
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
-    // Sender: prefer env, else enforced verified domain
-    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.com>'
+    // Sender: prefer env, else enforced verified domain (use .io)
+    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
 

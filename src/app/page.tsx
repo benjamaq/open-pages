@@ -283,10 +283,10 @@ export default function Page() {
           {/* Split headline for rhythm */}
           <h2 className="text-black font-semibold leading-tight tracking-tight">
             <span className="block text-4xl sm:text-5xl lg:text-5xl lg:whitespace-nowrap mb-4">
-              Everyone&apos;s Looking for &quot;The One.&quot;
+              Everyone&apos;s looking for &quot;The One.&quot;
             </span>
             <span className="block text-3xl sm:text-4xl lg:text-4xl lg:whitespace-nowrap">
-              We Help You Find the 3–5 That Actually Work.
+              We help you find the 3–5 that actually work. (Or 15. No judgement.)
             </span>
           </h2>
           {/* Subheader with breathing room */}
@@ -838,12 +838,12 @@ export default function Page() {
             {/* Free Tier */}
             <Card className="border border-neutral-200 shadow-sm bg-white p-8">
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-black mb-2">Just Looking</h3>
-                <p className="text-sm text-neutral-600">€0/month</p>
+                <h3 className="text-2xl font-bold text-black mb-2">Starter</h3>
+                <p className="text-sm text-neutral-600">$0/month</p>
               </div>
 
               <div className="mb-8">
-                <span className="text-5xl font-bold text-black">€0</span>
+                <span className="text-5xl font-bold text-black">$0</span>
                 <span className="text-neutral-600">/month</span>
               </div>
 
@@ -876,14 +876,15 @@ export default function Page() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-black mb-2">Getting Serious</h3>
-                <p className="text-sm text-neutral-600">€12/month</p>
+                <h3 className="text-2xl font-bold text-black mb-2">Premium</h3>
+                <p className="text-sm text-neutral-600">$19/month</p>
               </div>
 
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-black">€12</span>
+              <div className="mb-2">
+                <span className="text-5xl font-bold text-black">$19</span>
                 <span className="text-neutral-600">/month</span>
               </div>
+              <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">(save 35%)</span></div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
@@ -892,7 +893,7 @@ export default function Page() {
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Wearable sync (Whoop, Oura, Apple)</span>
+                  <span className="text-neutral-700">Wearable data analysis</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />

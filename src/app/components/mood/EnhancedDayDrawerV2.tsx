@@ -2049,7 +2049,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
                 <div className="mt-3 space-y-4">
                   {/* Helper text */}
                   <p className="text-sm text-gray-600">
-                    Manually enter your sleep and recovery scores from Whoop, Oura, etc. (Direct device sync coming soon)
+                    Manually enter your sleep and recovery scores from Whoop, Oura, etc. (Direct device import coming soon)
                   </p>
                   {/* Device Type Selector */}
                   <div>

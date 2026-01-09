@@ -15,7 +15,7 @@ export default function PwaInstallSection() {
               <li>BioStackr appears on your home screen like any other app.</li>
               <li>
                 Get gentle <span className="font-semibold">daily reminders</span>, open instantly,{" "}
-                <span className="font-semibold">works offline</span>, syncs everywhere.
+                <span className="font-semibold">works offline</span>, works everywhere.
               </li>
             </ol>
 

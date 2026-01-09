@@ -176,7 +176,7 @@ export function DailyProgressLoop() {
     return candidates[0] || null
   })()
   const remainingLabel = (rem: number) => {
-    if (rem <= 0) return "Result may be ready after tonight's sync"
+    if (rem <= 0) return "Result may be ready after tonight's analysis"
     if (rem === 1) return "~1 more check-in"
     if (rem <= 4) return `~${rem} more check-ins`
     if (rem <= 7) return "About a week of check-ins"
@@ -219,54 +219,45 @@ export function DailyProgressLoop() {
       {/* Header removed; hero card now provided by <DashboardHero /> */}
       {/* Supplements section heading with Add button */}
       <div className="flex items-center justify-between">
-        <div className="text-base font-semibold text-gray-900">My Supplements</div>
+        <div className="text-base font-semibold text-gray-900">
+          My Supplements
+          <span className="ml-2 text-xs font-normal text-gray-600">
+            {isMember
+              ? (() => {
+                  const all = allRows as any[]
+                  const testing = all.filter(r => (r as any).testingActive).length
+                  return `• Testing ${testing}`
+                })()
+              : (() => {
+                  const all = allRows as any[]
+                  const testing = all.filter(r => (r as any).testingActive).length
+                  return `• Testing ${testing} of 5`
+                })()}
+          </span>
+        </div>
         <a href="/dashboard?add=1" className="inline-flex items-center justify-center rounded-full bg-[#111111] text-white text-sm px-4 py-2 hover:opacity-90">
           + Add Supplement
         </a>
       </div>
-      {/* Sections (membership-gated presentation) */}
-      {isMember ? (
-        <>
-          {s.clearSignal.length > 0 && (
-            <Section title="Clear Signal Ready" color="emerald">
-              {s.clearSignal.map(r => <RowItem key={r.id} row={r} ready isMember={isMember} />)}
-            </Section>
-          )}
-          {(data.sections as any)?.inconsistent && (data.sections as any)?.inconsistent.length > 0 && (
-            <Section title="Inconsistent / Too Noisy" color="amber">
-              {(data.sections as any).inconsistent.map((r: Row) => <RowItem key={r.id} row={r} isMember={isMember} />)}
-            </Section>
-          )}
-          {s.building.length > 0 && (
-            <Section title="Collecting data" subtitle={buildingSubtitle} color="indigo">
-              {s.building.map(r => <RowItem key={r.id} row={r} isMember={isMember} />)}
-            </Section>
-          )}
-          {s.noSignal.length > 0 && (
-            <Section title="No Signal Found" color="slate">
-              {s.noSignal.map(r => <RowItem key={r.id} row={r} noSignal isMember={isMember} />)}
-            </Section>
-          )}
-          {(data.sections as any)?.needsData && (data.sections as any)?.needsData.length > 0 && (
-            <Section title="Needs More Data" color="indigo">
-              {(data.sections as any).needsData.map((r: Row) => <RowItem key={r.id} row={r} isMember={isMember} />)}
-            </Section>
-          )}
-        </>
-      ) : (
-        <>
-          {freeBuilding.length > 0 && (
-            <Section title="Collecting data" subtitle={buildingSubtitle} color="indigo">
-              {freeBuilding.map((r: any) => <RowItem key={r.id} row={r} isMember={false} />)}
-            </Section>
-          )}
-          {freeReady.length > 0 && (
-            <Section title="Verdict ready" color="emerald">
-              {freeReady.map((r: any) => <RowItem key={r.id} row={r} isMember={false} />)}
-            </Section>
-          )}
-        </>
-      )}
+      {/* Flat grid of cards (no status sub-grouping) */}
+      {(() => {
+        const allForDisplay = isMember
+          ? [
+              ...(s.clearSignal || []),
+              ...(((data.sections as any)?.inconsistent) || []),
+              ...(s.building || []),
+              ...(s.noSignal || []),
+              ...(((data.sections as any)?.needsData) || []),
+            ]
+          : freeAll
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+            {allForDisplay.map((r: any) => (
+              <RowItem key={r.id} row={r} isMember={isMember} />
+            ))}
+          </div>
+        )
+      })()}
       {/* "Too Much Noise" category removed */}
     </section>
   )
@@ -333,40 +324,105 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
     const signed = pct >= 0 ? `+${pct}` : String(pct)
     return `${signed}% energy`
   })()
+  const testingActive = Boolean((row as any).testingActive)
+  const userSuppId = String((row as any).userSuppId || (row as any).id || '')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showStopModal, setShowStopModal] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const toggleTesting = async (next: 'testing' | 'inactive') => {
+    if (!userSuppId) return
+    setBusy(true)
+    setErr(null)
+    try {
+      try {
+        console.log('[testing-toggle] Toggling testing for supplement:', {
+          id: (row as any).id,
+          userSuppId,
+          name: (row as any).name,
+          next
+        })
+      } catch {}
+      const r = await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/testing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next })
+      })
+      if (r.status === 403) {
+        const j = await r.json().catch(() => ({}))
+        if (j?.error === 'limit_reached') {
+          setShowUpgrade(true)
+          setShowUpgradeModal(true)
+          return
+        }
+      }
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}))
+        setErr(j?.error || 'Update failed')
+        return
+      }
+      try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
+    } finally {
+      setBusy(false)
+    }
+  }
+  const muted = !testingActive
   return (
-    <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4">
+    <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4" style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
           <span>{abbreviateSupplementName(String(row.name || ''))}</span>
           {badge ? (
-            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
+            (badge.label === '🔒 Verdict Ready' && !isMember) ? (
+              <button
+                type="button"
+                onClick={() => setShowPaywall(true)}
+                className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}
+                style={{ cursor: 'pointer' }}
+              >
+                {badge.label}
+              </button>
+            ) : (
+              <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
+            )
           ) : null}
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
+          {testingActive ? (
+            <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
+          ) : null}
         </div>
       </div>
-      {effectLine && (
+      {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
       )}
       {/* Inconclusive reason for paid, ready but unclear */}
-      {isMember && (daysOn >= reqDays && daysOff >= reqOff) && String((row as any).verdict || '').toLowerCase() === 'unclear' && (row as any).inconclusiveText && (
+      {testingActive && isMember && (daysOn >= reqDays && daysOff >= reqOff) && String((row as any).verdict || '').toLowerCase() === 'unclear' && (row as any).inconclusiveText && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
           {(row as any).inconclusiveText}
         </div>
       )}
-      <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
-        {(() => {
-          const pct = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
-          return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
-        })()}
-      </div>
-      <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-        Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
-        Days tracked: <span className="font-medium">{row.daysOfData}</span>
-        {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
-      </div>
-      {(daysOn + daysOff) > 0 && (
+      {testingActive ? (
+        <>
+          <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
+            {(() => {
+              const pct = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
+              return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
+            })()}
+          </div>
+          <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+            Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
+            Days tracked: <span className="font-medium">{row.daysOfData}</span>
+            {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+          </div>
+        </>
+      ) : (
+        <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+          {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
+        </div>
+      )}
+      {testingActive && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
           OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
@@ -377,33 +433,8 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
           Needs skip days to compare — keep following your rotation schedule
         </div>
       )}
-      {!isMember && (Boolean(effectCat) || row.progressPercent >= 100 || (daysOn >= reqDays && daysOff >= reqOff)) && (
-        <div className="mt-2">
-          <button
-            className="text-[11px] font-medium"
-            style={{ color: '#3A2F2A' }}
-            onClick={async () => {
-              try {
-                const r = await fetch('/api/billing/info', { cache: 'no-store' })
-                const j = r.ok ? await r.json() : {}
-                const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
-                if (isPaid) {
-                  window.location.href = '/results'
-                } else {
-                  window.location.href = '/checkout'
-                }
-              } catch {
-                window.location.href = '/checkout'
-              }
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
-          >
-            🔒 Unlock verdict
-          </button>
-        </div>
-      )}
-      {isMember && (daysOn >= reqDays && daysOff >= reqOff) && (
+      {/* Removed duplicate "Unlock verdict" link; badge is now the CTA */}
+      {testingActive && isMember && (daysOn >= reqDays && daysOff >= reqOff) && (
         <div className="mt-2">
           <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
             View full report →
@@ -433,6 +464,97 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
       {!isMember && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
+      <div className="mt-3 flex justify-end">
+        {testingActive ? (
+          <button
+            disabled={busy}
+            onClick={() => setShowStopModal(true)}
+            className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {busy ? 'Updating…' : 'Testing ✓'}
+          </button>
+        ) : (
+          <button
+            disabled={busy}
+            onClick={async () => {
+              try {
+                console.log('[testing-toggle] Start testing clicked:', {
+                  id: (row as any).id,
+                  userSuppId,
+                  name: (row as any).name
+                })
+              } catch {}
+              await toggleTesting('testing')
+            }}
+            className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {busy ? 'Starting…' : 'Start testing →'}
+          </button>
+        )}
+      </div>
+      {/* Styled modal: Stop testing */}
+      {showStopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowStopModal(false)} />
+          <div className="relative z-10 w-full max-w-[420px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Stop testing?</div>
+            <div className="mt-2 text-sm text-gray-600">
+              This supplement will stay in your stack but won&apos;t build toward a verdict.
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={() => setShowStopModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90"
+                onClick={async () => {
+                  try {
+                    console.log('[testing-toggle] Stop testing confirmed:', {
+                      id: (row as any).id,
+                      userSuppId,
+                      name: (row as any).name
+                    })
+                  } catch {}
+                  setShowStopModal(false);
+                  await toggleTesting('inactive')
+                }}
+              >
+                Stop testing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Styled modal: Upgrade needed */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowUpgradeModal(false)} />
+          <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">You&apos;re testing 5 supplements</div>
+            <div className="mt-2 text-sm text-gray-600">
+              Starter plan allows testing up to 5 supplements at a time. Upgrade to Premium for unlimited testing, or stop testing one to free up a slot.
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={() => setShowUpgradeModal(false)}
+              >
+                Got it
+              </button>
+              <a
+                href="/checkout"
+                className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90 flex items-center"
+              >
+                Upgrade to Premium
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+      {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
       {showPaywall && (
         <PaywallModal onClose={() => setShowPaywall(false)} />
       )}

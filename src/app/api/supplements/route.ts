@@ -235,14 +235,37 @@ export async function POST(request: Request) {
     }
     try { console.log('Insert payload:', insertPayload) } catch {}
 
+    // Determine tier (Starter vs Premium) and current testing count
+    let isPremium = false
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      const tierLc = String((prof as any)?.tier || '').toLowerCase()
+      isPremium = ['pro','premium','creator'].includes(tierLc)
+    } catch {}
+    let testingCount = 0
+    try {
+      const { count } = await supabase
+        .from('user_supplement')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('testing_status', 'testing')
+      testingCount = Number(count || 0)
+    } catch {}
+    const STARTER_TESTING_LIMIT = 5
+    const desiredTestingStatus = (!isPremium && testingCount >= STARTER_TESTING_LIMIT) ? 'inactive' : 'testing'
+
     const { data: userSupp, error: usErr } = await supabase
       .from('user_supplement')
-      .insert(insertPayload)
+      .insert({ ...insertPayload, testing_status: desiredTestingStatus })
       .select('id')
       .maybeSingle()
 
     if (!usErr && userSupp?.id) {
-      return NextResponse.json({ id: userSupp.id })
+      return NextResponse.json({ id: userSupp.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
     // If duplicate (unique user_id,supplement_id), fetch existing row and return its id
     const { data: existing } = await supabase
@@ -252,7 +275,7 @@ export async function POST(request: Request) {
       .eq('supplement_id', supplementRow.id)
       .maybeSingle()
     if (existing?.id) {
-      return NextResponse.json({ id: existing.id })
+      return NextResponse.json({ id: existing.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
 
     // 4) Fallback path removed: we must always create a FK-valid user_supplement
