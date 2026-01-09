@@ -398,7 +398,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                     window.addEventListener('popstate', onPop as any, { once: true } as any)
                   } catch {}
                 }}
-                className={`text-[10px] px-2.5 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium hover:bg-amber-100`}
+                className={`text-[10px] px-2.5 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
                 style={{ cursor: 'pointer' }}
               >
                 {badge.label}
