@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-export async function POST(req: NextRequest, ctx: any) {
+export async function POST(request: NextRequest, ctx: any) {
+  // Resolve Next 14+ params (can be a promise)
   let id: string | null = null
   try {
     const p = ctx?.params
@@ -11,6 +13,81 @@ export async function POST(req: NextRequest, ctx: any) {
       id = String(p?.id || '')
     }
   } catch {}
-  console.log('[testing API] HIT:', id, req.method, req.url)
-  return NextResponse.json({ received: id, ok: true })
+  console.log('[testing API] HIT:', id, request.method, request.url)
+
+  const supabase = await createClient()
+  try {
+    // Auth
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    }
+
+    // Body
+    const body = await request.json().catch(() => ({}))
+    const status = String(body?.status || '').toLowerCase()
+    if (!['inactive', 'testing', 'paused'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
+
+    // Ownership
+    const { data: row } = await supabase
+      .from('user_supplement')
+      .select('id,user_id,testing_status')
+      .eq('id', id)
+      .maybeSingle()
+    if (!row || String((row as any).user_id) !== user.id) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    // Enforce Starter limit when enabling testing
+    if (status === 'testing') {
+      // Determine tier
+      let isPremium = false
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('tier')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        const tierLc = String((profile as any)?.tier || '').toLowerCase()
+        isPremium = ['pro', 'premium', 'creator'].includes(tierLc)
+      } catch {}
+
+      if (!isPremium) {
+        const { count } = await supabase
+          .from('user_supplement')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('testing_status', 'testing')
+        const testingCount = Number(count || 0)
+        if (testingCount >= 5) {
+          return NextResponse.json({
+            error: 'limit_reached',
+            message: 'Starter plan allows testing up to 5 supplements.'
+          }, { status: 403 })
+        }
+      }
+    }
+
+    // Update testing_status
+    const { data: updated, error } = await supabase
+      .from('user_supplement')
+      .update({ testing_status: status })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select('id,testing_status')
+      .maybeSingle()
+    if (error || !updated) {
+      return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status })
+  } catch (e: any) {
+    console.error('[testing API] ERROR:', e?.message || e)
+    return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
+  }
 }

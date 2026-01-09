@@ -10,6 +10,7 @@ export default function CheckoutPage() {
   const [userId, setUserId] = useState<string>('')
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [authChecked, setAuthChecked] = useState(false)
+  const [spendMonthly, setSpendMonthly] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -31,6 +32,23 @@ export default function CheckoutPage() {
         }
       } finally {
         if (!cancelled) setAuthChecked(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load monthly spend to personalize copy
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/supplements', { cache: 'no-store' })
+        const rows = r.ok ? await r.json() : []
+        if (cancelled) return
+        const total = Array.isArray(rows) ? rows.reduce((sum: number, it: any) => sum + Number(it?.monthly_cost_usd || 0), 0) : 0
+        setSpendMonthly(Math.round(total))
+      } catch {
+        if (!cancelled) setSpendMonthly(null)
       }
     })()
     return () => { cancelled = true }
@@ -84,10 +102,19 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#F6F5F3]">
       <div className="max-w-xl mx-auto px-6 py-12">
         <div className="bg-white border border-[#E4E1DC] rounded-2xl p-6">
-          <h1 className="text-2xl font-semibold text-[#111111]">Unlock your results</h1>
-          <p className="mt-2 text-sm text-[#4B5563]">
-            See which supplements are working for you. Full verdicts with effect size, confidence, and savings.
+          <h1 className="text-2xl font-semibold text-[#111111]">Stop guessing. Start knowing.</h1>
+          <p className="mt-2 text-sm text-[#111111]">
+            You&apos;re spending <span className="font-semibold">{(spendMonthly && spendMonthly > 0) ? `$${spendMonthly}/month` : '$200+/month'}</span> on supplements. How many are actually working?
           </p>
+          <ul className="mt-4 text-sm text-[#111111] list-disc list-inside space-y-1">
+            <li>Verdicts for every supplement — Keep, Drop, or Test</li>
+            <li>Effect sizes — <span className="italic">“12% better sleep on Magnesium”</span></li>
+            <li>Confidence levels so you know what&apos;s real</li>
+            <li>Potential savings identified automatically</li>
+          </ul>
+          <div className="mt-3 text-sm text-[#4B5563]">
+            Most users find 2–3 supplements to drop. That&apos;s $50–150/month back in your pocket.
+          </div>
 
           <div className="mt-6 space-y-3">
             <label className="flex items-center justify-between rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4 cursor-pointer hover:bg-[#EEECE8]">
@@ -134,7 +161,7 @@ export default function CheckoutPage() {
           {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
 
           <div className="mt-4 text-xs text-[#6B7280]">
-            Payments handled by Stripe. You’ll be redirected to a secure checkout page.
+            Payments handled by Stripe. You&apos;ll be redirected to a secure checkout page.
           </div>
         </div>
       </div>

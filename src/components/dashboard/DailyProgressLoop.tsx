@@ -90,7 +90,7 @@ export function DailyProgressLoop() {
         // Debug: log userId and paid status
         try {
           const me = await fetch('/api/me', { cache: 'no-store' }).then(r => r.ok ? r.json() : {})
-          console.log('isPaid:', paid, 'userId:', me?.id || '(unknown)')
+          console.log('isPaid:', paid, 'userId:', (me as any)?.id || '(unknown)')
         } catch {}
       } catch {}
     })()
@@ -145,6 +145,9 @@ export function DailyProgressLoop() {
   const s = data.sections || { clearSignal: [], building: [], noSignal: [] }
   const allRows = [...s.clearSignal, ...s.building, ...s.noSignal]
   const totalSupps = allRows.length
+  const spendMonthly = Math.round(
+    (allRows as any[]).reduce((sum, r: any) => sum + Number(r?.monthlyCost || 0), 0)
+  )
   const analyzedCount = s.clearSignal.length + s.noSignal.length
   const stackPercent = totalSupps > 0 ? Math.round((analyzedCount / totalSupps) * 100) : 0
   const readyCount = s.clearSignal.length
@@ -253,7 +256,7 @@ export function DailyProgressLoop() {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             {allForDisplay.map((r: any) => (
-              <RowItem key={r.id} row={r} isMember={isMember} />
+              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} />
             ))}
           </div>
         )
@@ -274,7 +277,7 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
   )
 }
 
-function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean }) {
+function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number }) {
   // Progress bar colors per dashboard palette
   const trackColor = '#E4DDD6'
   const fillColor = '#C65A2E'
@@ -369,7 +372,8 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
   }
   const muted = !testingActive
   return (
-    <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4" style={muted ? { opacity: 0.7 } : undefined}>
+    <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4">
+      <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
           <span>{abbreviateSupplementName(String(row.name || ''))}</span>
@@ -377,7 +381,19 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
             (badge.label === '🔒 Verdict Ready' && !isMember) ? (
               <button
                 type="button"
-                onClick={() => setShowPaywall(true)}
+                onClick={() => {
+                  setShowPaywall(true)
+                  try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
+                  try {
+                    const onPop = (ev: PopStateEvent) => {
+                      // Close modal instead of navigating away
+                      setShowPaywall(false)
+                      // Remove listener after handling
+                      try { window.removeEventListener('popstate', onPop as any) } catch {}
+                    }
+                    window.addEventListener('popstate', onPop as any, { once: true } as any)
+                  } catch {}
+                }}
                 className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}
                 style={{ cursor: 'pointer' }}
               >
@@ -492,10 +508,12 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
           </button>
         )}
       </div>
+      {/* Close muted wrapper before modals */}
+      </div>
       {/* Styled modal: Stop testing */}
       {showStopModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowStopModal(false)} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowStopModal(false)} />
           <div className="relative z-10 w-full max-w-[420px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
             <div className="text-base font-semibold text-gray-900">Stop testing?</div>
             <div className="mt-2 text-sm text-gray-600">
@@ -531,7 +549,7 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
       {/* Styled modal: Upgrade needed */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowUpgradeModal(false)} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowUpgradeModal(false)} />
           <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
             <div className="text-base font-semibold text-gray-900">You&apos;re testing 5 supplements</div>
             <div className="mt-2 text-sm text-gray-600">
@@ -556,7 +574,17 @@ function RowItem({ row, ready, noSignal, isMember = false }: { row: Row; ready?:
       )}
       {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
       {showPaywall && (
-        <PaywallModal onClose={() => setShowPaywall(false)} />
+        <PaywallModal
+          onClose={() => {
+            setShowPaywall(false)
+            try {
+              if (window.location.hash === '#paywall') {
+                window.history.back()
+              }
+            } catch {}
+          }}
+          spendMonthly={spendMonthly}
+        />
       )}
     </div>
   )
@@ -580,32 +608,59 @@ function Popup({ title, body, cta, onClose }: { title: string; body: string; cta
   )
 }
 
-function PaywallModal({ onClose }: { onClose: () => void }) {
+function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMonthly?: number }) {
+  const spendDisplay = (typeof spendMonthly === 'number' && spendMonthly > 0)
+    ? `$${spendMonthly}/month`
+    : '$200+/month'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[520px] rounded-xl bg-white p-8 shadow-lg border border-gray-200">
-        <h3 className="text-2xl font-semibold text-center mb-3">Unlock your verdict</h3>
-        <p className="text-base text-gray-600">
-          You&apos;ve built enough signal to get a real answer.
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-[560px] rounded-2xl bg-white p-8 shadow-lg border border-gray-200">
+        <h3 className="text-2xl font-semibold text-center mb-2 text-gray-900">Stop guessing. Start knowing.</h3>
+        <p className="text-base text-gray-800 text-center">
+          You&apos;re spending <span className="font-semibold">{spendDisplay}</span> on supplements. How many are actually working?
         </p>
-        <ul className="mt-3 text-gray-700 text-sm space-y-1 list-disc list-inside">
-          <li>See which supplements are worth keeping — and which aren&apos;t</li>
-          <li>Get a clear verdict backed by your real data</li>
-          <li>Understand how confident the signal is</li>
-          <li>See what staying uncertain is costing you</li>
+        <ul className="mt-5 text-gray-800 text-sm space-y-2 list-disc list-inside">
+          <li>Verdicts for every supplement — Keep, Drop, or Test</li>
+          <li>Effect sizes — <span className="italic">“12% better sleep on Magnesium”</span></li>
+          <li>Confidence levels so you know what&apos;s real</li>
+          <li>Potential savings identified automatically</li>
         </ul>
+        <div className="mt-4 text-sm text-gray-700">
+          Most users find 2–3 supplements to drop. That&apos;s $50–150/month back in your pocket.
+        </div>
+        <div className="mt-6 space-y-3">
+          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+            <div className="flex items-center gap-3">
+              <input type="radio" name="plan" className="h-4 w-4" defaultChecked />
+              <div>
+                <div className="text-sm font-medium text-gray-900">$149/year</div>
+                <div className="text-xs text-gray-600">Save 35% • Recommended</div>
+              </div>
+            </div>
+            <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>
+          </label>
+          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+            <div className="flex items-center gap-3">
+              <input type="radio" name="plan" className="h-4 w-4" />
+              <div>
+                <div className="text-sm font-medium text-gray-900">$19/month</div>
+                <div className="text-xs text-gray-600">Cancel anytime</div>
+              </div>
+            </div>
+          </label>
+        </div>
         <a
           href="/checkout"
-          className="w-full h-12 mt-6 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-90 flex items-center justify-center"
+          className="w-full h-12 mt-6 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:opacity-90 flex items-center justify-center"
         >
-          Choose a plan — $19/month or $149/year
+          Continue to checkout
         </a>
-        <button onClick={onClose} className="w-full h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+        <button onClick={onClose} className="w-full h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-800 hover:bg-gray-50">
           Maybe later
         </button>
-        <div className="mt-3 text-[11px] text-center" style={{ color: '#8A7F78' }}>
-          No guessing. No vibes. Just a clear decision.
+        <div className="mt-3 text-[11px] text-center text-gray-600">
+          Payments handled by Stripe. You&apos;ll be redirected to a secure checkout page.
         </div>
       </div>
     </div>
