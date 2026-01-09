@@ -225,17 +225,18 @@ export function DailyProgressLoop() {
         <div className="text-base font-semibold text-gray-900">
           My Supplements
           <span className="ml-2 text-xs font-normal text-gray-600">
-            {isMember
-              ? (() => {
-                  const all = allRows as any[]
-                  const testing = all.filter(r => (r as any).testingActive).length
-                  return `• Testing ${testing}`
-                })()
-              : (() => {
-                  const all = allRows as any[]
-                  const testing = all.filter(r => (r as any).testingActive).length
-                  return `• Testing ${testing} of 5`
-                })()}
+            {(() => {
+              const all = allRows as any[]
+              const testing = all.filter(r => {
+                const active = Boolean((r as any).testingActive)
+                const pct = Number((r as any).progressPercent || 0)
+                const status = String((r as any).status || '').toLowerCase()
+                const verdictReady = pct >= 100 && status === 'ready'
+                const inconclusive = pct >= 100 && status === 'no_signal'
+                return active && !verdictReady && !inconclusive
+              }).length
+              return isMember ? `• Testing ${testing}` : `• Testing ${testing} of 5`
+            })()}
           </span>
         </div>
         <a href="/dashboard?add=1" className="inline-flex items-center justify-center rounded-full bg-[#111111] text-white text-sm px-4 py-2 hover:opacity-90">
@@ -296,10 +297,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
   const onComplete = daysOn >= reqDays
   const offComplete = daysOff >= reqOff
-  const hasVerdictData = Boolean((row as any)?.effectCategory) || Boolean((row as any)?.verdict)
-  const isReqMetForVerdict = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0) >= Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
-    && Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0) >= Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
-  const isVerdictReady = (row.progressPercent >= 100) || isReqMetForVerdict || hasVerdictData
   const [showPaywall, setShowPaywall] = useState(false)
   // Status badge (gated): show process states for free; show verdicts only if member
   const badge = (() => {
@@ -332,9 +329,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
     return `${signed}% energy`
   })()
   const testingActive = Boolean((row as any).testingActive)
-  const testingStatus = String((row as any).testingStatus || (testingActive ? 'testing' : 'inactive'))
-  const isComplete = testingStatus === 'complete'
-  const isInconclusive = testingStatus === 'inconclusive'
+  // Derive UI state from progress + status (not DB testing_status)
+  const isVerdictReady = (row.progressPercent >= 100) && (String(row.status || '').toLowerCase() === 'ready')
+  const isInconclusive = (row.progressPercent >= 100) && (String(row.status || '').toLowerCase() === 'no_signal')
+  const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
+  const isInactive = !testingActive && !isVerdictReady && !isInconclusive
   const userSuppId = String((row as any).userSuppId || (row as any).id || '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -377,16 +376,16 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       setBusy(false)
     }
   }
-  const muted = !testingActive && !isComplete && !isInconclusive
+  const muted = !isActivelyTesting && !isVerdictReady && !isInconclusive
   return (
-    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isComplete ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
+    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
           <span>{abbreviateSupplementName(String(row.name || ''))}</span>
           {(() => {
             // Override badge for state machine
-            if (isComplete) {
+            if (isVerdictReady) {
               if (!isMember) {
                 return (
                   <button
@@ -456,7 +455,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {(row as any).inconclusiveText}
         </div>
       )}
-      {(isComplete || isInconclusive) ? (
+      {(isVerdictReady || isInconclusive) ? (
         <>
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
@@ -467,7 +466,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
           </div>
         </>
-      ) : testingActive ? (
+      ) : isActivelyTesting ? (
         <>
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             {(() => {
@@ -486,22 +485,22 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {(testingActive || isComplete || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {(isActivelyTesting || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
           OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
-      {!isMember && !isComplete && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
+      {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule
         </div>
       )}
-      {!isMember && !isComplete && !isInconclusive && row.progressPercent < 100 && (
+      {!isMember && !isVerdictReady && !isInconclusive && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
       <div className="mt-3 flex justify-end">
-        {testingStatus === 'testing' && (
+        {isActivelyTesting && (
           <button
             disabled={busy}
             onClick={() => setShowStopModal(true)}
@@ -510,7 +509,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             {busy ? 'Updating…' : 'Testing ✓'}
           </button>
         )}
-        {testingStatus === 'complete' && !isMember && (
+        {isVerdictReady && !isMember && (
           <button
             onClick={() => {
               setShowPaywall(true)
@@ -528,7 +527,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             Unlock Verdict →
           </button>
         )}
-        {testingStatus === 'inconclusive' && (
+        {isInconclusive && (
           <div className="flex gap-2">
             <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
               View full report →
@@ -549,7 +548,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             </button>
           </div>
         )}
-        {testingStatus === 'inactive' && (
+        {isInactive && (
           <button
             disabled={busy}
             onClick={async () => {
