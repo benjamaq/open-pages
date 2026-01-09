@@ -329,9 +329,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
     return `${signed}% energy`
   })()
   const testingActive = Boolean((row as any).testingActive)
-  // Derive UI state from progress + status (not DB testing_status)
-  const isVerdictReady = (row.progressPercent >= 100) && (String(row.status || '').toLowerCase() === 'ready')
-  const isInconclusive = (row.progressPercent >= 100) && (String(row.status || '').toLowerCase() === 'no_signal')
+  // Derive UI state from progress + status (normalize values)
+  const statusLower = String(row.status || '').toLowerCase()
+  const isVerdictReady = (row.progressPercent >= 100) && (['ready', 'significant', 'complete'].includes(statusLower))
+  const isInconclusive = (row.progressPercent >= 100) && !isVerdictReady
   const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
   const isInactive = !testingActive && !isVerdictReady && !isInconclusive
   const userSuppId = String((row as any).userSuppId || (row as any).id || '')
@@ -340,6 +341,16 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [showStopModal, setShowStopModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showRetestModal, setShowRetestModal] = useState(false)
+  const handleRetest = async () => {
+    try {
+      await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
+      setShowRetestModal(false)
+      try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
+    } catch (e) {
+      console.error(e)
+    }
+  }
   const toggleTesting = async (next: 'testing' | 'inactive') => {
     if (!userSuppId) return
     setBusy(true)
@@ -449,6 +460,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
       )}
+      {(() => { try { console.log('[card-state]', { name: row.name, progressPercent: row.progressPercent, status: row.status, testingActive, isVerdictReady, isInconclusive, isActivelyTesting, isInactive }) } catch {} return null })()}
       {/* Inconclusive note for paid users */}
       {isInconclusive && isMember && (row as any).inconclusiveText && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
@@ -534,15 +546,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             </a>
             <button
               className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
-              onClick={async () => {
-                if (!confirm('Start a retest for this supplement?')) return
-                try {
-                  await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
-                  try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
-                } catch (e) {
-                  console.error(e)
-                }
-              }}
+              onClick={() => setShowRetestModal(true)}
             >
               Retest
             </button>
@@ -600,6 +604,32 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                 }}
               >
                 Stop testing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Styled modal: Retest confirmation */}
+      {showRetestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowRetestModal(false)} />
+          <div className="relative z-10 w-full max-w-[420px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Start a retest?</div>
+            <div className="mt-2 text-sm text-gray-600">
+              This will reset progress and start a fresh trial. Your previous data will be preserved.
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={() => setShowRetestModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90"
+                onClick={handleRetest}
+              >
+                Start Retest
               </button>
             </div>
           </div>
