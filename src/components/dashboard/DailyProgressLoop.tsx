@@ -296,6 +296,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
   const onComplete = daysOn >= reqDays
   const offComplete = daysOff >= reqOff
+  const hasVerdictData = Boolean((row as any)?.effectCategory) || Boolean((row as any)?.verdict)
+  const isReqMetForVerdict = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0) >= Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
+    && Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0) >= Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
+  const isVerdictReady = (row.progressPercent >= 100) || isReqMetForVerdict || hasVerdictData
   const [showPaywall, setShowPaywall] = useState(false)
   // Status badge (gated): show process states for free; show verdicts only if member
   const badge = (() => {
@@ -370,9 +374,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       setBusy(false)
     }
   }
-  const muted = !testingActive
+  const muted = !testingActive && !isVerdictReady
   return (
-    <div id={`supp-${row.id}`} className="rounded-lg border border-gray-200 bg-white p-4">
+    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4 ${isVerdictReady ? 'border-l-4' : ''}`} style={isVerdictReady ? ({ borderLeftColor: '#D97706' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
@@ -419,7 +423,18 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {(row as any).inconclusiveText}
         </div>
       )}
-      {testingActive ? (
+      {isVerdictReady ? (
+        <>
+          <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
+            <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
+          </div>
+          <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+            Signal strength: 100% <span className="mx-2">•</span>
+            Days tracked: <span className="font-medium">{row.daysOfData}</span>
+            {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+          </div>
+        </>
+      ) : testingActive ? (
         <>
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             {(() => {
@@ -438,13 +453,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {testingActive && (daysOn + daysOff) > 0 && (
+      {(testingActive || isVerdictReady) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
           OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
-      {!isMember && daysOff === 0 && row.progressPercent < 100 && (
+      {!isMember && !isVerdictReady && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule
         </div>
@@ -477,11 +492,28 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           )}
         </div>
       )}
-      {!isMember && row.progressPercent < 100 && (
+      {!isMember && !isVerdictReady && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
       <div className="mt-3 flex justify-end">
-        {testingActive ? (
+        {isVerdictReady ? (
+          <button
+            onClick={() => {
+              setShowPaywall(true)
+              try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
+              try {
+                const onPop = (ev: PopStateEvent) => {
+                  setShowPaywall(false)
+                  try { window.removeEventListener('popstate', onPop as any) } catch {}
+                }
+                window.addEventListener('popstate', onPop as any, { once: true } as any)
+              } catch {}
+            }}
+            className="text-[11px] px-3 py-1.5 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+          >
+            Unlock Verdict →
+          </button>
+        ) : testingActive ? (
           <button
             disabled={busy}
             onClick={() => setShowStopModal(true)}
