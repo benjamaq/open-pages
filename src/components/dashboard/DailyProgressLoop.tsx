@@ -332,6 +332,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
     return `${signed}% energy`
   })()
   const testingActive = Boolean((row as any).testingActive)
+  const testingStatus = String((row as any).testingStatus || (testingActive ? 'testing' : 'inactive'))
+  const isComplete = testingStatus === 'complete'
+  const isInconclusive = testingStatus === 'inconclusive'
   const userSuppId = String((row as any).userSuppId || (row as any).id || '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -374,14 +377,43 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       setBusy(false)
     }
   }
-  const muted = !testingActive && !isVerdictReady
+  const muted = !testingActive && !isComplete && !isInconclusive
   return (
-    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
+    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isComplete ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
           <span>{abbreviateSupplementName(String(row.name || ''))}</span>
-          {badge ? (
+          {(() => {
+            // Override badge for state machine
+            if (isComplete) {
+              if (!isMember) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPaywall(true)
+                      try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
+                      try {
+                        const onPop = (ev: PopStateEvent) => {
+                          setShowPaywall(false)
+                          try { window.removeEventListener('popstate', onPop as any) } catch {}
+                        }
+                        window.addEventListener('popstate', onPop as any, { once: true } as any)
+                      } catch {}
+                    }}
+                    className={`text-[10px] px-2.5 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    🔒 Verdict Ready
+                  </button>
+                )
+              }
+            }
+            if (isInconclusive) {
+              return <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">Inconclusive</span>
+            }
+            return badge ? (
             (badge.label === '🔒 Verdict Ready' && !isMember) ? (
               <button
                 type="button"
@@ -406,7 +438,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
             ) : (
               <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
             )
-          ) : null}
+            ) : null
+          })()}
         </div>
         <div className="flex items-center gap-2">
           {testingActive ? (
@@ -423,7 +456,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {(row as any).inconclusiveText}
         </div>
       )}
-      {isVerdictReady ? (
+      {(isComplete || isInconclusive) ? (
         <>
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
@@ -453,50 +486,46 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {(testingActive || isVerdictReady) && (daysOn + daysOff) > 0 && (
+      {(testingActive || isComplete || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
           OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
-      {!isMember && !isVerdictReady && daysOff === 0 && row.progressPercent < 100 && (
+      {!isMember && !isComplete && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule
         </div>
       )}
-      {/* Removed duplicate "Unlock verdict" link; badge is now the CTA */}
-      {testingActive && isMember && (daysOn >= reqDays && daysOff >= reqOff) && (
+      {/* Inconclusive: free report + retest */}
+      {isInconclusive && (
         <div className="mt-2">
           <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
             View full report →
           </a>
-          {String((row as any).verdict || '').toLowerCase() === 'unclear' && (
-            <button
-              className="ml-3 text-[11px] px-2 py-1 border border-gray-300 rounded"
-              onClick={async () => {
-                if (!confirm('Start a retest for this supplement?')) return
-                try {
-                  await fetch('/api/supplement/retest', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userSupplementId: (row as any).id })
-                  })
-                  try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
-                } catch (e) {
-                  console.error(e)
-                }
-              }}
-            >
-              Retest
-            </button>
-          )}
+          <button
+            className="ml-3 text-[11px] px-2 py-1 border border-gray-300 rounded"
+            onClick={async () => {
+              if (!confirm('Start a retest for this supplement?')) return
+              try {
+                await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, {
+                  method: 'POST'
+                })
+                try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
+              } catch (e) {
+                console.error(e)
+              }
+            }}
+          >
+            Retest
+          </button>
         </div>
       )}
-      {!isMember && !isVerdictReady && row.progressPercent < 100 && (
+      {!isMember && !isComplete && !isInconclusive && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
       <div className="mt-3 flex justify-end">
-        {isVerdictReady ? (
+        {isComplete && !isMember ? (
           <button
             onClick={() => {
               setShowPaywall(true)

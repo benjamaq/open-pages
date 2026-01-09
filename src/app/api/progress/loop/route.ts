@@ -546,6 +546,7 @@ export async function GET(request: Request) {
         const nm = String((r as any).name || '').trim().toLowerCase()
         const uid = nameToUserSuppId.get(nm) || String((r as any).id)
         ;(r as any).testingActive = testingActiveIds.has(uid)
+        ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
       } catch { (r as any).testingActive = true }
     }
     for (const r of progressRows) {
