@@ -376,7 +376,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   }
   const muted = !testingActive && !isVerdictReady
   return (
-    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4 ${isVerdictReady ? 'border-l-4' : ''}`} style={isVerdictReady ? ({ borderLeftColor: '#D97706' } as any) : undefined}>
+    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
@@ -398,7 +398,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                     window.addEventListener('popstate', onPop as any, { once: true } as any)
                   } catch {}
                 }}
-                className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}
+                className={`text-[10px] px-2.5 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium hover:bg-amber-100`}
                 style={{ cursor: 'pointer' }}
               >
                 {badge.label}
