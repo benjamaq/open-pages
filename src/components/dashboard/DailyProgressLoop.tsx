@@ -230,9 +230,12 @@ export function DailyProgressLoop() {
               const testing = all.filter(r => {
                 const active = Boolean((r as any).testingActive)
                 const pct = Number((r as any).progressPercent || 0)
-                const status = String((r as any).status || '').toLowerCase()
-                const verdictReady = pct >= 100 && status === 'ready'
-                const inconclusive = pct >= 100 && status === 'no_signal'
+                const verdictValue = String((r as any).verdict || '').toLowerCase()
+                const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
+                const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
+                const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+                const verdictReady = (pct >= 100) && (hasVerdict || isSignificant)
+                const inconclusive = (pct >= 100) && !verdictReady
                 return active && !verdictReady && !inconclusive
               }).length
               return isMember ? `• Testing ${testing}` : `• Testing ${testing} of 5`
@@ -329,9 +332,12 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
     return `${signed}% energy`
   })()
   const testingActive = Boolean((row as any).testingActive)
-  // Derive UI state from progress + status (normalize values)
-  const statusLower = String(row.status || '').toLowerCase()
-  const isVerdictReady = (row.progressPercent >= 100) && (['ready', 'significant', 'complete'].includes(statusLower))
+  // Derive UI state from progress + verdict/significance + effect categories
+  const verdictValue = String((row as any).verdict || '').toLowerCase()
+  const effectCatLower = String((row as any).effectCategory || '').toLowerCase()
+  const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
+  const isSignificant = Boolean((row as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+  const isVerdictReady = (row.progressPercent >= 100) && (hasVerdict || isSignificant)
   const isInconclusive = (row.progressPercent >= 100) && !isVerdictReady
   const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
   const isInactive = !testingActive && !isVerdictReady && !isInconclusive
@@ -460,7 +466,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
       )}
-      {(() => { try { console.log('[card-state]', { name: row.name, progressPercent: row.progressPercent, status: row.status, testingActive, isVerdictReady, isInconclusive, isActivelyTesting, isInactive }) } catch {} return null })()}
+      {(() => { try { console.log('[card-state]', { name: row.name, progressPercent: row.progressPercent, status: row.status, verdict: (row as any).verdict, effectCategory: (row as any).effectCategory, isStatisticallySignificant: (row as any).isStatisticallySignificant, testingActive, hasVerdict, isSignificant, isVerdictReady, isInconclusive }) } catch {} return null })()}
       {/* Inconclusive note for paid users */}
       {isInconclusive && isMember && (row as any).inconclusiveText && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
