@@ -15,7 +15,7 @@ export async function sendEmail({
     process.env.RESEND_FROM ||
     process.env.EMAIL_FROM ||
     computedDomainFrom ||
-    'BioStackr <notifications@biostackr.io>'
+    'BioStackr <reminders@biostackr.io>'
   try {
     console.log('[email] Preparing to send via Resend REST API')
     console.log('[email] To:', to)
@@ -129,8 +129,9 @@ export async function sendContactEmail(data: ContactEmailData): Promise<void> {
     
     const template = emailTemplates.contactForm(data)
     
+    const FROM = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     await resend.emails.send({
-      from: 'noreply@biostackr.io',
+      from: FROM,
       to: 'ben09@mac.com',
       subject: template.subject,
       html: template.html
@@ -158,8 +159,9 @@ export async function sendAutoReplyEmail(data: AutoReplyEmailData): Promise<void
     
     const template = emailTemplates.autoReply(data)
     
+    const FROM = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     await resend.emails.send({
-      from: 'noreply@biostackr.io',
+      from: FROM,
       to: data.email,
       subject: template.subject,
       html: template.html
@@ -188,20 +190,21 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     const template = emailTemplates.welcome(data)
     
     // Use the same verified domain as daily reminder emails
-    const replyToAddress = process.env.REPLY_TO_EMAIL || 'ben@biostackr.com'
+    const replyToAddress = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
+    const FROM = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const emailPayload = {
-      from: 'Ben from BioStackr <notifications@biostackr.io>',
+      from: FROM,
       to: data.email,
       subject: template.subject,
       html: template.html,
-      replyTo: replyToAddress
+      ...(replyToAddress ? { reply_to: replyToAddress, headers: { 'Reply-To': replyToAddress } } : {})
     }
     
     console.log('📧 Sending welcome email with payload:', {
       from: emailPayload.from,
       to: emailPayload.to,
       subject: emailPayload.subject,
-      replyTo: emailPayload.replyTo
+      replyTo: replyToAddress || '(none)'
     })
     
     console.log('📧 Attempting to send via Resend API...')

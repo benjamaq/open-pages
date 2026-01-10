@@ -100,7 +100,7 @@ async function main() {
 
   // 4) SEND mode
   const resend = new Resend(resendKey!)
-  const from = 'Ben from BioStackr <notifications@biostackr.io>'
+  const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
   const replyTo = 'findbenhere@gmail.com'
   const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://biostackr.io'
 

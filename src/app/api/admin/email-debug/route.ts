@@ -6,7 +6,7 @@ function resolveFromAddress(): string {
   const configured = process.env.RESEND_FROM
   if (configured) return configured
   if (domain) return `BioStackr <noreply@${domain}>`
-  return 'BioStackr <notifications@biostackr.io>'
+  return 'BioStackr <reminders@biostackr.io>'
 }
 
 function resolveReplyTo(): string | undefined {

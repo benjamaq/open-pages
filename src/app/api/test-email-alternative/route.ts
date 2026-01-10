@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     // Try sending from a different verified domain if available
     const result = await resend.emails.send({
-      from: 'noreply@biostacker.io', // Try using the custom domain
+      from: process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>',
       to: email,
       subject: '🔍 Alternative Email Test - Custom Domain',
       html: `
@@ -31,19 +31,19 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       console.error('❌ Alternative email failed:', result.error)
       
-      // Fallback to notifications@biostackr.io
-      console.log('🔄 Trying fallback with notifications@biostackr.io...')
+      // Fallback to reminders@biostackr.io
+      console.log('🔄 Trying fallback with reminders@biostackr.io...')
       
       const fallbackResult = await resend.emails.send({
-        from: 'notifications@biostackr.io',
+        from: process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>',
         to: email,
         subject: '🔍 Fallback Email Test - Resend Domain',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a202c;">🔍 Fallback Email Test</h1>
-            <p>This email is sent from the fallback domain <strong>notifications@biostackr.io</strong></p>
+            <p>This email is sent from the fallback domain <strong>${process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'}</strong></p>
             <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-            <p><strong>From:</strong> notifications@biostackr.io</p>
+            <p><strong>From:</strong> ${process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'}</p>
             <p><strong>To:</strong> ${email}</p>
             <p>If you receive this, the fallback delivery works!</p>
           </div>

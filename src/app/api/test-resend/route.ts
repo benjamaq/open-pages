@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     // Try to send a simple test email using the verified domain
     const testPayload = {
-      from: 'notifications@biostackr.io', // Use the same domain as daily emails
+      from: process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>',
       to: 'ben09@mac.com',
       subject: 'Test from BioStackr',
       html: '<p>This is a test email from BioStackr to verify Resend is working.</p>'

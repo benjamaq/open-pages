@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
     const subject = `${readinessScore}% complete`
     const resend = new Resend(process.env.RESEND_API_KEY!)
-    const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
+    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const result = await resend.emails.send({ from, to, subject, html, ...(reply_to ? { reply_to } : {}) })
     if (result.error) return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 })
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const subject = `${readinessScore}% complete`
     const resend = new Resend(process.env.RESEND_API_KEY!)
-    const from = process.env.RESEND_FROM || 'BioStackr <onboarding@resend.dev>'
+    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const result = await resend.emails.send({ from, to, subject, html, ...(reply_to ? { reply_to } : {}) })
     if (result.error) return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 })

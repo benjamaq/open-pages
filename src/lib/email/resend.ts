@@ -245,7 +245,7 @@ export async function sendNewFollowerNotification(ownerEmail: string, ownerName:
     to: ownerEmail,
     subject: 'You have a new follower on Biostackr 🎉',
     html,
-    from: 'Biostackr <notifications@biostackr.io>'
+    from: process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
   })
 }
 
@@ -266,13 +266,13 @@ export async function sendWelcomeEmail(followerEmail: string, ownerName: string)
     to: followerEmail,
     subject: `Welcome to BioStackr! You're now following ${ownerName}'s stack`,
     html,
-    from: 'Biostackr <notifications@biostackr.io>'
+    from: process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
   })
 }
 
 export async function sendDay2TipsEmail(params: { userEmail: string; userName: string }): Promise<{ success: boolean; id?: string; error?: string }> {
   const html = generateDay2TipsHTML({ userName: params.userName })
-  const fromAddress = process.env.RESEND_FROM || 'Biostackr <notifications@biostackr.io>'
+  const fromAddress = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
   const replyTo = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
   return sendEmail({
     to: params.userEmail,
