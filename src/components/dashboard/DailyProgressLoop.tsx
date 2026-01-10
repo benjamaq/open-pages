@@ -234,8 +234,8 @@ export function DailyProgressLoop() {
                 const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
                 const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
                 const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-                const verdictReady = (pct >= 100) && (hasVerdict || isSignificant)
-                const inconclusive = (pct >= 100) && !verdictReady
+                const verdictReady = (pct >= 100) && (!isMember || hasVerdict || isSignificant)
+                const inconclusive = (pct >= 100) && isMember && !hasVerdict && !isSignificant
                 return active && !verdictReady && !inconclusive
               }).length
               return isMember ? `• Testing ${testing}` : `• Testing ${testing} of 5`
@@ -337,8 +337,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   const effectCatLower = String((row as any).effectCategory || '').toLowerCase()
   const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
   const isSignificant = Boolean((row as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-  const isVerdictReady = (row.progressPercent >= 100) && (hasVerdict || isSignificant)
-  const isInconclusive = (row.progressPercent >= 100) && !isVerdictReady
+  // Free users: any 100% is shown as Verdict Ready (paywall). Paid users require verdict/significance.
+  const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
+  // Inconclusive only applies to paid users at 100% without a verdict/significance
+  const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
   const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
   const isInactive = !testingActive && !isVerdictReady && !isInconclusive
   const userSuppId = String((row as any).userSuppId || (row as any).id || '')
@@ -466,7 +468,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
       {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
       )}
-      {(() => { try { console.log('[card-state]', { name: row.name, progressPercent: row.progressPercent, status: row.status, verdict: (row as any).verdict, effectCategory: (row as any).effectCategory, isStatisticallySignificant: (row as any).isStatisticallySignificant, testingActive, hasVerdict, isSignificant, isVerdictReady, isInconclusive }) } catch {} return null })()}
+      {(() => { try { console.log('[card-state]', { name: row.name, progressPercent: row.progressPercent, status: row.status, verdict: (row as any).verdict, effectCategory: (row as any).effectCategory, isStatisticallySignificant: (row as any).isStatisticallySignificant, testingActive, isMember, hasVerdict, isSignificant, isVerdictReady, isInconclusive }) } catch {} return null })()}
       {/* Inconclusive note for paid users */}
       {isInconclusive && isMember && (row as any).inconclusiveText && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F7F' }}>
