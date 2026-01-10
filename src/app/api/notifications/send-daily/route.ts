@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
+import { Resend } from 'resend'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -46,6 +47,11 @@ async function handleSend() {
     })
 
     const supabaseAdmin = createAdminClient()
+    const resend = new Resend(process.env.RESEND_API_KEY!)
+    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
+    const reply_to = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
+    const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
+    const readinessPercent = 0
     const currentUtcTime = new Date()
 
     // Helper: compute YYYY-MM-DD in user's timezone
