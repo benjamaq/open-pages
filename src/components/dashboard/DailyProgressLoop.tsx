@@ -78,9 +78,9 @@ export function DailyProgressLoop() {
         // Fallback to payments/status
         if (!paid) {
           try {
-            const pr = await fetch('/api/payments/status', { cache: 'no-store' })
-            if (pr.ok) {
-              const j = await pr.json()
+        const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+        if (pr.ok) {
+          const j = await pr.json()
               paid = !!(j as any)?.is_member
             }
           } catch {}
@@ -337,7 +337,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
     const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
     const isReady = on >= reqOn && off >= reqOff
     if (isReady) {
-      if (isMember) {
+    if (isMember) {
         if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
         if (cat === 'no_effect' || cat === 'drop') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
         if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
@@ -481,14 +481,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                 {badge.label}
               </button>
             ) : (
-              <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
             )
             ) : null
           })()}
         </div>
         <div className="flex items-center gap-2">
           {testingActive ? (
-            <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
+          <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
           ) : null}
         </div>
       </div>
@@ -515,17 +515,17 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
         </>
       ) : isActivelyTesting ? (
         <>
-          <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
+      <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             {(() => {
               const pct = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
               return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
             })()}
-          </div>
-          <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-            Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
-            Days tracked: <span className="font-medium">{row.daysOfData}</span>
-            {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
-          </div>
+      </div>
+      <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+        Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
+        Days tracked: <span className="font-medium">{row.daysOfData}</span>
+        {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+      </div>
         </>
       ) : (
         <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
@@ -759,7 +759,7 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
               <input type="radio" name="plan" className="h-4 w-4" defaultChecked />
               <div>
                 <div className="text-sm font-medium text-gray-900">$149/year</div>
-                <div className="text-xs text-gray-600">Save 35% • Recommended</div>
+                <div className="text-xs text-gray-600">$12.42/mo • Billed annually</div>
               </div>
             </div>
             <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>
