@@ -227,18 +227,37 @@ export function DailyProgressLoop() {
           <span className="ml-2 text-xs font-normal text-gray-600">
             {(() => {
               const all = allRows as any[]
-              const tested = all.filter(r => {
+              let testing = 0
+              let ready = 0
+              let inconclusive = 0
+              for (const r of all) {
+                const active = Boolean((r as any).testingActive)
                 const pct = Number((r as any).progressPercent || 0)
                 const verdictValue = String((r as any).verdict || '').toLowerCase()
                 const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
                 const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
-                const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-                const verdictReady = (pct >= 100) && (!isMember || hasVerdict || isSignificant)
-                const inconclusive = (pct >= 100) && isMember && !hasVerdict && !isSignificant
-                const activelyTesting = Boolean((r as any).testingActive) && !verdictReady && !inconclusive
-                return verdictReady || inconclusive || activelyTesting
-              }).length
-              return isMember ? `• Testing ${tested}` : `• Tested ${tested} of 5`
+                const isSignificant =
+                  Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+                const isVerdictReady = pct >= 100 && (!isMember || hasVerdict || isSignificant)
+                const isInc = pct >= 100 && isMember && !hasVerdict && !isSignificant
+                const isTesting = active && !isVerdictReady && !isInc
+                if (isTesting) {
+                  testing++
+                } else if (isVerdictReady) {
+                  ready++
+                } else if (isInc) {
+                  inconclusive++
+                }
+              }
+              if (isMember) {
+                const parts: string[] = []
+                parts.push(`${testing} testing`)
+                if (inconclusive > 0) parts.push(`${inconclusive} inconclusive`)
+                return `• ${parts.join(' • ')}`
+              } else {
+                const readyToUnlock = ready + inconclusive
+                return `• ${testing} testing • ${readyToUnlock} ready to unlock`
+              }
             })()}
           </span>
         </div>

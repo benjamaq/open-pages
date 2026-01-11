@@ -860,7 +860,7 @@ export async function GET(request: Request) {
     } catch {}
     // Build stack items exclusively from testing-active supplements to drive rotation
     const stackItems = progressRows
-      .filter(r => (r as any).testingActive)
+      .filter(r => (r as any).testingActive && r.progressPercent < 100)
       .map((r: any) => {
         const cat = inferCategory(String(r?.name || ''), (r?.primary_goal_tags || r?.tags))
         const cost = Number(r?.monthlyCost || 0)
