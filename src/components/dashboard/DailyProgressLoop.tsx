@@ -140,9 +140,8 @@ export function DailyProgressLoop() {
     setMilestone85(null)
   }
 
-  if (!data) return null
-  const tp = data.todaysProgress
-  const s = data.sections || { clearSignal: [], building: [], noSignal: [] }
+  const tp = data?.todaysProgress
+  const s = (data?.sections) || { clearSignal: [], building: [], noSignal: [] }
   const allRows = [...s.clearSignal, ...s.building, ...s.noSignal]
   const totalSupps = allRows.length
   const spendMonthly = Math.round(
