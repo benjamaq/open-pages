@@ -335,7 +335,7 @@ export function DailyProgressLoop() {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             {sortedForDisplay.map((r: any) => (
-              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} />
+              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} />
             ))}
           </div>
         )
@@ -356,7 +356,7 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
   )
 }
 
-function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number }) {
+function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number } }) {
   // Progress bar colors per dashboard palette
   const trackColor = '#E4DDD6'
   const fillColor = '#C65A2E'
@@ -610,7 +610,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
         {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
       </div>
-      {(headerCounts.verdicts != null && (headerCounts.testing || 0) >= 8) && isActivelyTesting && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
+      {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isActivelyTesting && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
         <div className="mt-1 text-xs text-gray-500">Slower due to parallel testing</div>
       )}
         </>
