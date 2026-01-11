@@ -169,22 +169,11 @@ export function DailyProgressLoop() {
     const hasVerdict = Boolean((r as any)?.effectCategory)
     return hasVerdict || pct >= 100
   })
-  // Header counts: testing vs verdicts (complete+inconclusive) with fallback when supplements array missing
+  // Header counts: derive from card logic (do NOT rely on DB testing_status)
   const headerCounts = useMemo(() => {
     let testing = 0
     let verdicts = 0
     let inconclusive = 0
-    const supps = (data as any)?.supplements as any[] | undefined
-    if (Array.isArray(supps) && supps.length > 0) {
-      for (const it of supps) {
-        const st = String((it as any)?.testing_status || '').toLowerCase()
-        if (st === 'testing') testing++
-        else if (st === 'inconclusive') { verdicts++; inconclusive++ }
-        else if (st === 'complete') { verdicts++ }
-      }
-      return { testing, verdicts, inconclusive }
-    }
-    // Fallback to derived states from displayed rows
     for (const r of (allRows as any[])) {
       const active = Boolean((r as any).testingActive)
       const pct = Number((r as any).progressPercent || 0)
@@ -192,14 +181,14 @@ export function DailyProgressLoop() {
       const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
       const hasVerdict = ['keep','drop','test','test_more'].includes(verdictValue)
       const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
-      const isVerdictReady = pct >= 100 && (hasVerdict || isSignificant)
-      const isInc = pct >= 100 && !isVerdictReady
+      const isVerdictReady = pct >= 100 && (!isMember || hasVerdict || isSignificant)
+      const isInc = pct >= 100 && isMember && !hasVerdict && !isSignificant
       if (active && !isVerdictReady && !isInc) testing++
       else if (isInc) { verdicts++; inconclusive++ }
       else if (isVerdictReady) { verdicts++ }
     }
     return { testing, verdicts, inconclusive }
-  }, [data, allRows])
+  }, [allRows, isMember])
   // Next likely result (closest to completion among building, excluding noisy)
   const nextLikely = (() => {
     const candidates = s.building
