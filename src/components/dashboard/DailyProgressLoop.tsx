@@ -155,9 +155,9 @@ export function DailyProgressLoop() {
   const freeAll = [
     ...(s.clearSignal || []),
     ...(s.noSignal || []),
-    ...((data.sections as any)?.inconsistent || []),
+    ...(((data?.sections as any)?.inconsistent) || []),
     ...(s.building || []),
-    ...((data.sections as any)?.needsData || []),
+    ...(((data?.sections as any)?.needsData) || []),
   ]
   const freeBuilding = freeAll.filter((r: any) => {
     const pct = Number(r?.progressPercent ?? 0)
