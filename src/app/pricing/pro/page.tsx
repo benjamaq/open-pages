@@ -109,7 +109,7 @@ export default function ProPricingPage() {
                 <span className="text-gray-600">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
               </div>
               {billingPeriod === 'yearly' && (
-                <p className="mt-2 text-gray-600 text-sm">Billed annually (Save 35%)</p>
+                <p className="mt-2 text-gray-600 text-sm">$12.42/mo • Billed annually</p>
               )}
               <p className="mt-2 text-gray-600">Everything in Free, plus unlimited tracking and priority support</p>
             </div>

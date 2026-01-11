@@ -67,7 +67,7 @@ export default async function SettingsPage() {
                   <li>Get verdicts: Keep, Drop, or Retest</li>
                   <li>Full access to Results page</li>
                 </ul>
-                <div className="mt-3 text-sm text-[#111111]">$19/month or $149/year (save 35%)</div>
+                <div className="mt-3 text-sm text-[#111111]">$19/month or $149/year • $12.42/mo • Billed annually</div>
                 <a
                   href="/checkout"
                   className="mt-4 inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"

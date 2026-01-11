@@ -128,7 +128,7 @@ export default function CheckoutPage() {
                 />
                 <div>
                   <div className="text-sm font-medium text-[#111111]">$149/year</div>
-                  <div className="text-xs text-[#6B7280]">Save 35% • Billed annually</div>
+                  <div className="text-xs text-[#6B7280]">$12.42/mo • Billed annually</div>
                 </div>
               </div>
               <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>

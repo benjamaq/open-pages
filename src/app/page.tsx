@@ -884,7 +884,7 @@ export default function Page() {
                 <span className="text-5xl font-bold text-black">$19</span>
                 <span className="text-neutral-600">/month</span>
               </div>
-              <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">(save 35%)</span></div>
+              <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">• $12.42/mo • Billed annually</span></div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">

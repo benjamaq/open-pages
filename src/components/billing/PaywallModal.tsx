@@ -90,7 +90,7 @@ export default function PaywallModal({
               />
               <div>
                 <div className="text-sm font-medium text-gray-900">$149/year</div>
-                <div className="text-xs text-gray-600">Save 35% • Billed annually</div>
+                <div className="text-xs text-gray-600">$12.42/mo • Billed annually</div>
               </div>
             </div>
             <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>

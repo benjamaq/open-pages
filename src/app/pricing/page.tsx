@@ -40,7 +40,7 @@ export default function PricingPage() {
             <h2 className="text-2xl font-bold text-neutral-900 mb-2">Premium</h2>
             <p className="text-sm text-neutral-600 mb-1">$19/month</p>
             <div className="text-5xl font-bold text-neutral-900 mb-1">$19<span className="text-base font-normal text-neutral-600">/month</span></div>
-            <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">(save 35%)</span></div>
+            <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">• $12.42/mo • Billed annually</span></div>
             <ul className="space-y-3 text-neutral-700 mb-8">
               <li>Unlimited supplements</li>
               <li>Wearable data analysis</li>
