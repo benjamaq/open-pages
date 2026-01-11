@@ -365,36 +365,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const onComplete = daysOn >= reqDays
   const offComplete = daysOff >= reqOff
   const [showPaywall, setShowPaywall] = useState(false)
-  // Status badge (gated): show process states for free; show verdicts only if member
-  const badge = (() => {
-    const cat = (effectCat || '').toLowerCase()
-    const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
-    const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
-    const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
-    const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
-    const isReady = on >= reqOn && off >= reqOff
-    if (isReady) {
-    if (isMember) {
-        if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
-        if (cat === 'no_effect' || cat === 'drop') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
-        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
-        return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
-      }
-      // Free user: locked verdict
-      return { label: '🔒 Verdict Ready', cls: 'bg-gray-100 text-gray-500 border border-gray-200' }
-    }
-    // Not ready yet — keep existing "Building" semantics
-    if (!isReady) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
-    return null as any
-  })()
-  const effectLine = (() => {
-    const isReady = String(row.status || '').toLowerCase() === 'ready'
-    if (!isMember || !isReady) return null
-    const pct = typeof row.effectPct === 'number' ? Math.round(row.effectPct) : null
-    if (pct == null) return null
-    const signed = pct >= 0 ? `+${pct}` : String(pct)
-    return `${signed}% energy`
-  })()
+  // Testing state derivation (used across badge, controls, etc.)
   const testingActive = Boolean((row as any).testingActive)
   // Derive UI state from progress + verdict/significance + effect categories
   const verdictValue = String((row as any).verdict || '').toLowerCase()
@@ -407,6 +378,41 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
   const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
   const isInactive = !testingActive && !isVerdictReady && !isInconclusive
+
+  // Status badge (gated): show process states for free; show verdicts only if member
+  const badge = (() => {
+    const cat = (effectCat || '').toLowerCase()
+    const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
+    const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
+    const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
+    const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
+    const isReady = on >= reqOn && off >= reqOff
+    if (isReady) {
+      if (isMember) {
+        if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+        if (cat === 'no_effect' || cat === 'drop') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
+        return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+      }
+      // Free user: locked verdict
+      return { label: '🔒 Verdict Ready', cls: 'bg-gray-100 text-gray-500 border border-gray-200' }
+    }
+    // Not ready yet
+    if (!isReady) {
+      if (isInactive) return null as any
+      if (isActivelyTesting) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+      return null as any
+    }
+    return null as any
+  })()
+  const effectLine = (() => {
+    const isReady = String(row.status || '').toLowerCase() === 'ready'
+    if (!isMember || !isReady) return null
+    const pct = typeof row.effectPct === 'number' ? Math.round(row.effectPct) : null
+    if (pct == null) return null
+    const signed = pct >= 0 ? `+${pct}` : String(pct)
+    return `${signed}% energy`
+  })()
   const userSuppId = String((row as any).userSuppId || (row as any).id || '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
