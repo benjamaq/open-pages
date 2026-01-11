@@ -139,6 +139,9 @@ async function handler(req: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY!)
     // Sender: prefer env, else enforced verified domain (use .io)
     const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
+    try {
+      console.log('[daily-cron] Using sender:', from, '| RESEND_FROM env:', process.env.RESEND_FROM || '(unset)')
+    } catch {}
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
 
