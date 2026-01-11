@@ -288,10 +288,10 @@ export function DailyProgressLoop() {
         const allForDisplay = isMember
           ? [
               ...(s.clearSignal || []),
-              ...(((data.sections as any)?.inconsistent) || []),
+              ...(((data?.sections as any)?.inconsistent) || []),
               ...(s.building || []),
               ...(s.noSignal || []),
-              ...(((data.sections as any)?.needsData) || []),
+              ...(((data?.sections as any)?.needsData) || []),
             ]
           : freeAll
         // Sort by state priority:
