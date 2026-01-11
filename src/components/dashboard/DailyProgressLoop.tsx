@@ -170,6 +170,37 @@ export function DailyProgressLoop() {
     const hasVerdict = Boolean((r as any)?.effectCategory)
     return hasVerdict || pct >= 100
   })
+  // Header counts: testing vs verdicts (complete+inconclusive) with fallback when supplements array missing
+  const headerCounts = useMemo(() => {
+    let testing = 0
+    let verdicts = 0
+    let inconclusive = 0
+    const supps = (data as any)?.supplements as any[] | undefined
+    if (Array.isArray(supps) && supps.length > 0) {
+      for (const it of supps) {
+        const st = String((it as any)?.testing_status || '').toLowerCase()
+        if (st === 'testing') testing++
+        else if (st === 'inconclusive') { verdicts++; inconclusive++ }
+        else if (st === 'complete') { verdicts++ }
+      }
+      return { testing, verdicts, inconclusive }
+    }
+    // Fallback to derived states from displayed rows
+    for (const r of (allRows as any[])) {
+      const active = Boolean((r as any).testingActive)
+      const pct = Number((r as any).progressPercent || 0)
+      const verdictValue = String((r as any).verdict || '').toLowerCase()
+      const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
+      const hasVerdict = ['keep','drop','test','test_more'].includes(verdictValue)
+      const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
+      const isVerdictReady = pct >= 100 && (hasVerdict || isSignificant)
+      const isInc = pct >= 100 && !isVerdictReady
+      if (active && !isVerdictReady && !isInc) testing++
+      else if (isInc) { verdicts++; inconclusive++ }
+      else if (isVerdictReady) { verdicts++ }
+    }
+    return { testing, verdicts, inconclusive }
+  }, [data, allRows])
   // Next likely result (closest to completion among building, excluding noisy)
   const nextLikely = (() => {
     const candidates = s.building
@@ -255,8 +286,7 @@ export function DailyProgressLoop() {
                 if (inconclusive > 0) parts.push(`${inconclusive} inconclusive`)
                 return `• ${parts.join(' • ')}`
               } else {
-                const readyToUnlock = ready + inconclusive
-                return `• ${testing} testing • ${readyToUnlock} ready to unlock`
+                return `• ${testing} testing • ${headerCounts.verdicts} verdicts`
               }
             })()}
           </span>
@@ -694,9 +724,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowUpgradeModal(false)} />
           <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
-            <div className="text-base font-semibold text-gray-900">You&apos;ve reached your testing limit</div>
+            <div className="text-base font-semibold text-gray-900">You have 5 verdicts on Starter plan.</div>
             <div className="mt-2 text-sm text-gray-600">
-              Starter plan includes 5 supplement tests. Upgrade to Premium for unlimited testing and to unlock your verdicts.
+              Upgrade to Premium to unlock them and continue testing.
             </div>
             <div className="mt-4 flex gap-2 justify-end">
               <button

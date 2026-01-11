@@ -246,17 +246,17 @@ export async function POST(request: Request) {
       const tierLc = String((prof as any)?.tier || '').toLowerCase()
       isPremium = ['pro','premium','creator'].includes(tierLc)
     } catch {}
-    let testedCount = 0
+    let verdictCount = 0
     try {
       const { count } = await supabase
         .from('user_supplement')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .in('testing_status', ['testing','complete','inconclusive'])
-      testedCount = Number(count || 0)
+        .in('testing_status', ['complete','inconclusive'])
+      verdictCount = Number(count || 0)
     } catch {}
     const STARTER_TESTING_LIMIT = 5
-    const desiredTestingStatus = (!isPremium && testedCount >= STARTER_TESTING_LIMIT) ? 'inactive' : 'testing'
+    const desiredTestingStatus = (!isPremium && verdictCount >= STARTER_TESTING_LIMIT) ? 'inactive' : 'testing'
 
     const { data: userSupp, error: usErr } = await supabase
       .from('user_supplement')

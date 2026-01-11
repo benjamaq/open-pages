@@ -62,12 +62,12 @@ export async function POST(request: NextRequest, ctx: any) {
           .from('user_supplement')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
-          .in('testing_status', ['testing','complete','inconclusive'])
-        const testedCount = Number(count || 0)
-        if (testedCount >= 5) {
+          .in('testing_status', ['complete','inconclusive'])
+        const verdictCount = Number(count || 0)
+        if (verdictCount >= 5) {
           return NextResponse.json({
             error: 'limit_reached',
-            message: 'Starter plan includes 5 supplement tests. Upgrade to test more.'
+            message: 'You have 5 verdicts on Starter plan. Upgrade to Premium to unlock them and continue testing.'
           }, { status: 403 })
         }
       }
