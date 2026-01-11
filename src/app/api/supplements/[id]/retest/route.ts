@@ -44,17 +44,9 @@ export async function POST(request: NextRequest, ctx: any) {
       const tier = String((profile as any)?.tier || '').toLowerCase()
       isPremium = ['pro','premium','creator'].includes(tier)
     } catch {}
-    if (!isPremium) {
-      const { count } = await supabase
-        .from('user_supplement')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('testing_status', 'testing')
-      const testingCount = Number(count || 0)
-      if (testingCount >= 5) {
-        return NextResponse.json({ error: 'limit_reached' }, { status: 403 })
-      }
-    }
+    // For Starter, retesting an already tested supplement does not increase lifetime count,
+    // so we allow retest even if they have reached the 5-tested limit.
+    // No additional limit check here.
 
     const newTrial = (Number((row as any).trial_number || 1) || 1) + 1
     const { data: updated, error } = await supabase

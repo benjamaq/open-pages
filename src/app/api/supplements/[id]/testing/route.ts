@@ -62,12 +62,12 @@ export async function POST(request: NextRequest, ctx: any) {
           .from('user_supplement')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
-          .eq('testing_status', 'testing')
-        const testingCount = Number(count || 0)
-        if (testingCount >= 5) {
+          .in('testing_status', ['testing','complete','inconclusive'])
+        const testedCount = Number(count || 0)
+        if (testedCount >= 5) {
           return NextResponse.json({
             error: 'limit_reached',
-            message: 'Starter plan allows testing up to 5 supplements.'
+            message: 'Starter plan includes 5 supplement tests. Upgrade to test more.'
           }, { status: 403 })
         }
       }

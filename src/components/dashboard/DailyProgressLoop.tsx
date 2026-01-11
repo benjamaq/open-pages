@@ -227,8 +227,7 @@ export function DailyProgressLoop() {
           <span className="ml-2 text-xs font-normal text-gray-600">
             {(() => {
               const all = allRows as any[]
-              const testing = all.filter(r => {
-                const active = Boolean((r as any).testingActive)
+              const tested = all.filter(r => {
                 const pct = Number((r as any).progressPercent || 0)
                 const verdictValue = String((r as any).verdict || '').toLowerCase()
                 const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
@@ -236,9 +235,10 @@ export function DailyProgressLoop() {
                 const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
                 const verdictReady = (pct >= 100) && (!isMember || hasVerdict || isSignificant)
                 const inconclusive = (pct >= 100) && isMember && !hasVerdict && !isSignificant
-                return active && !verdictReady && !inconclusive
+                const activelyTesting = Boolean((r as any).testingActive) && !verdictReady && !inconclusive
+                return verdictReady || inconclusive || activelyTesting
               }).length
-              return isMember ? `• Testing ${testing}` : `• Testing ${testing} of 5`
+              return isMember ? `• Testing ${tested}` : `• Tested ${tested} of 5`
             })()}
           </span>
         </div>
@@ -675,9 +675,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowUpgradeModal(false)} />
           <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
-            <div className="text-base font-semibold text-gray-900">You&apos;re testing 5 supplements</div>
+            <div className="text-base font-semibold text-gray-900">You&apos;ve reached your testing limit</div>
             <div className="mt-2 text-sm text-gray-600">
-              Starter plan allows testing up to 5 supplements at a time. Upgrade to Premium for unlimited testing, or stop testing one to free up a slot.
+              Starter plan includes 5 supplement tests. Upgrade to Premium for unlimited testing and to unlock your verdicts.
             </div>
             <div className="mt-4 flex gap-2 justify-end">
               <button
