@@ -257,9 +257,36 @@ export function DailyProgressLoop() {
               ...(((data.sections as any)?.needsData) || []),
             ]
           : freeAll
+        // Sort by state priority:
+        // 0: Verdict Ready, 1: Inconclusive, 2: Testing, 3: Inactive
+        const getPriority = (row: any) => {
+          const progressPct = Number(row?.progressPercent || 0)
+          const verdictValue = String((row as any)?.verdict || '').toLowerCase()
+          const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
+          const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
+          const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+          const testingActive = Boolean((row as any)?.testingActive)
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
+          const activelyTesting = testingActive && !verdictReady && !inconclusive
+          if (verdictReady) return 0
+          if (inconclusive) return 1
+          if (activelyTesting) return 2
+          return 3
+        }
+        const sortedForDisplay = allForDisplay
+          .map((r: any, i: number) => ({ r, i }))
+          .sort((a: any, b: any) => {
+            const pa = getPriority(a.r)
+            const pb = getPriority(b.r)
+            if (pa !== pb) return pa - pb
+            // Stable: fall back to original index (creation order)
+            return a.i - b.i
+          })
+          .map((x: any) => x.r)
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-            {allForDisplay.map((r: any) => (
+            {sortedForDisplay.map((r: any) => (
               <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} />
             ))}
           </div>
