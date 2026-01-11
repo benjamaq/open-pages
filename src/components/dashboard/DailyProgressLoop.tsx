@@ -426,6 +426,42 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
   const [showStopModal, setShowStopModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRetestModal, setShowRetestModal] = useState(false)
+  // Parallel testing soft warnings
+  const [showParallel8Modal, setShowParallel8Modal] = useState(false)
+  const [showParallel11Modal, setShowParallel11Modal] = useState(false)
+  const maybeStartTesting = async () => {
+    const currentTesting = Number((headerCounts as any)?.testing || 0)
+    const willBe = currentTesting + 1
+    try { console.log('[parallel-warning] check', { currentTesting, willBe, name: (row as any)?.name }) } catch {}
+    // Heavy first so it wins if somehow both conditions match
+    try {
+      if (willBe === 11) {
+        const dismissed = typeof window !== 'undefined' && localStorage.getItem('parallelTestingWarning11Dismissed') === '1'
+        if (!dismissed) {
+          setShowParallel11Modal(true)
+          return
+        }
+      }
+      if (willBe === 8) {
+        const dismissed = typeof window !== 'undefined' && localStorage.getItem('parallelTestingWarning8Dismissed') === '1'
+        if (!dismissed) {
+          setShowParallel8Modal(true)
+          return
+        }
+      }
+    } catch {}
+    await toggleTesting('testing')
+  }
+  const confirmParallel8 = async () => {
+    try { localStorage.setItem('parallelTestingWarning8Dismissed', '1') } catch {}
+    setShowParallel8Modal(false)
+    await toggleTesting('testing')
+  }
+  const confirmParallel11 = async () => {
+    try { localStorage.setItem('parallelTestingWarning11Dismissed', '1') } catch {}
+    setShowParallel11Modal(false)
+    await toggleTesting('testing')
+  }
   const handleRetest = async () => {
     try {
       await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
@@ -575,6 +611,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
         {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
       </div>
+      {(headerCounts.verdicts != null && (headerCounts.testing || 0) >= 8) && isActivelyTesting && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
+        <div className="mt-1 text-xs text-gray-500">Slower due to parallel testing</div>
+      )}
         </>
       ) : (
         <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
@@ -647,7 +686,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                   name: (row as any).name
                 })
               } catch {}
-              await toggleTesting('testing')
+              await maybeStartTesting()
             }}
             className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
           >
@@ -714,6 +753,46 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly }: { row
                 onClick={handleRetest}
               >
                 Start Retest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Styled modal: Parallel testing 8 warning */}
+      {showParallel8Modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowParallel8Modal(false)} />
+          <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">More tests = slower clarity</div>
+            <div className="mt-2 text-sm text-gray-600 whitespace-pre-line">
+              {`You're testing 8 supplements at the same time.\nResults will still work, but verdicts may take longer\nand some may be inconclusive.`}
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={confirmParallel8}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Styled modal: Parallel testing 11 warning */}
+      {showParallel11Modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowParallel11Modal(false)} />
+          <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Heavy parallel testing</div>
+            <div className="mt-2 text-sm text-gray-600 whitespace-pre-line">
+              {`You're testing 11 supplements simultaneously.\nExpect longer timelines and a higher chance of\nunclear results.`}
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={confirmParallel11}
+              >
+                Understood
               </button>
             </div>
           </div>
