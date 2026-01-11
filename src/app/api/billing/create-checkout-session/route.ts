@@ -51,6 +51,21 @@ export async function POST(request: NextRequest) {
       PRO_MONTHLY: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
       PRO_YEARLY: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID
     })
+    // Verify the price object to ensure billing interval is correct
+    try {
+      if (stripe?.prices?.retrieve) {
+        const priceObj = await stripe.prices.retrieve(priceId)
+        console.log('[checkout] Step 4a: Stripe price check:', {
+          id: priceObj?.id,
+          unit_amount: priceObj?.unit_amount,
+          currency: priceObj?.currency,
+          recurring: priceObj?.recurring,
+          nickname: priceObj?.nickname
+        })
+      }
+    } catch (e: any) {
+      console.warn('[checkout] Price retrieve failed:', e?.message || e)
+    }
     
     // Read attribution cookies from request for metadata
     const cookieHeader = request.headers.get('cookie') || ''
@@ -81,7 +96,7 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         plan: effectivePlan,
         period: period,
-        profile_slug: profile?.slug || '',
+        profile_slug: (profile as any)?.slug || '',
         first_touch: firstTouch || '',
         last_touch: lastTouch || '',
       },
