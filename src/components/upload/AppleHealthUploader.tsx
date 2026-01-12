@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 type Props = {
   onSuccess: () => void
@@ -15,6 +16,7 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
   async function handleFile(file: File) {
     setError(null)
     setFileName(file.name)
+    try { console.log('[uploader] File selected:', file?.name, file?.size) } catch {}
 
     const name = (file.name || '').toLowerCase()
     // Rejections with friendly messages
@@ -38,11 +40,33 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
 
     setIsUploading(true)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      const res = await fetch('/api/upload/apple-health', { method: 'POST', body: form })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(j?.error || 'Upload failed')
+      try { console.log('[uploader] Starting upload...') } catch {}
+      // Upload ZIP directly to Supabase Storage to avoid function body size limits
+      const supabase = createBrowserSupabase()
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData?.user?.id || 'anon'
+      const safeName = name.replace(/[^a-z0-9._-]+/g, '_')
+      const storagePath = `apple-health/${userId}/${Date.now()}-${safeName}`
+      const { error: upErr } = await supabase.storage
+        .from('uploads')
+        .upload(storagePath, file, { upsert: true, contentType: file.type || 'application/zip' })
+      if (upErr) throw new Error(upErr.message || 'Failed to store file')
+      try { console.log('[uploader] Storage upload complete:', { storagePath }) } catch {}
+
+      // Trigger server-side processing from storage
+      const res = await fetch('/api/upload/apple-health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storagePath, bucket: 'uploads' })
+      })
+      let j: any = {}
+      try {
+        j = await res.json()
+      } catch {
+        j = {}
+      }
+      try { console.log('[uploader] Response status:', res.status); console.log('[uploader] Response body:', j) } catch {}
+      if (!res.ok) throw new Error(j?.error || j?.details || 'Upload failed')
       setUploaded(true)
     } catch (e: any) {
       setError(e?.message || 'Upload failed')

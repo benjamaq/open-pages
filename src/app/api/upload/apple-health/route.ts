@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import JSZip from 'jszip'
 import sax from 'sax'
 
@@ -13,6 +14,9 @@ type Entry = {
   wearables?: Record<string, any>
 }
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 function parseDate(d: string | undefined): string | null {
   if (!d) return null
   try {
@@ -24,26 +28,67 @@ function parseDate(d: string | undefined): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  let step = 'init'
   try {
+    try { console.log('[apple-health] Step 1: Request received') } catch {}
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    try { console.log('[apple-health] Step 2: User authenticated:', !!user, 'userId:', (user as any)?.id || '(unknown)') } catch {}
 
-    const form = await req.formData()
-    const file = form.get('file') as File
-    if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-
-    const name = (file.name || '').toLowerCase()
-    if (!name.endsWith('.zip')) {
-      return NextResponse.json(
-        { error: 'Invalid file', details: 'This doesn’t look like a valid Apple Health export ZIP.' },
-        { status: 400 }
-      )
+    // Prefer JSON body with storagePath (large files uploaded directly to storage),
+    // fallback to multipart/form-data with 'file' (small files).
+    let zip: JSZip | null = null
+    const contentType = req.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      step = 'parse-json-body'
+      const body = await req.json().catch(() => ({} as any))
+      const storagePath = String(body?.storagePath || body?.path || '')
+      const bucket = String(body?.bucket || 'uploads')
+      try { console.log('[apple-health] Using storage path mode', { storagePath, bucket }) } catch {}
+      if (!storagePath) {
+        return NextResponse.json({ error: 'Missing storagePath' }, { status: 400 })
+      }
+      step = 'download-storage-file'
+      const { data: dl, error: dlErr } = await supabaseAdmin.storage.from(bucket).download(storagePath)
+      if (dlErr || !dl) {
+        return NextResponse.json({ error: 'Failed to download file', details: dlErr?.message || 'Unknown storage error' }, { status: 500 })
+      }
+      try { console.log('[apple-health] Step 6: Fetching file for processing... size:', (dl as any)?.size ?? '(n/a)') } catch {}
+      step = 'load-zip'
+      const arrayBuf = await dl.arrayBuffer()
+      zip = await JSZip.loadAsync(arrayBuf)
     }
 
-    // Unzip and find export.xml
-    const buf = await file.arrayBuffer()
-    const zip = await JSZip.loadAsync(buf)
+    if (!zip) {
+      step = 'read-formdata'
+      const form = await req.formData()
+      const file = form.get('file') as File
+      if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+
+      const name = (file.name || '').toLowerCase()
+      try { console.log('[apple-health] Step 3: File received', { name: file.name, size: (file as any)?.size ?? '(n/a)' }) } catch {}
+      if (!name.endsWith('.zip')) {
+        return NextResponse.json(
+          { error: 'Invalid file', details: 'This doesn’t look like a valid Apple Health export ZIP.' },
+          { status: 400 }
+        )
+      }
+
+      // Unzip and find export.xml
+      step = 'load-zip'
+      const buf = await file.arrayBuffer()
+      zip = await JSZip.loadAsync(buf)
+    }
+
+    if (!zip) {
+      return NextResponse.json({ error: 'Invalid ZIP' }, { status: 400 })
+    }
+    try {
+      let fileCount = 0
+      zip.forEach(() => { fileCount++ })
+      console.log('[apple-health] ZIP loaded. entries:', fileCount)
+    } catch {}
     let exportFile: JSZip.JSZipObject | null = null
     zip.forEach((path, zobj) => {
       if (!exportFile && /(^|\/)export\.xml$/i.test(path)) {
@@ -51,16 +96,21 @@ export async function POST(req: NextRequest) {
       }
     })
     if (!exportFile) {
+      try { console.log('[apple-health] export.xml not found in ZIP') } catch {}
       return NextResponse.json(
         { error: 'Missing export.xml', details: 'This ZIP does not contain export.xml from Apple Health.' },
         { status: 400 }
       )
     }
     // Stream-parse export.xml to avoid huge memory usage
+    step = 'parse-xml'
+    try { console.log('[apple-health] Step 7: Parsing XML...') } catch {}
     const daily: Record<string, any> = {}
     const saxStream = sax.createStream(true, { lowercase: false, trim: true })
+    let parsedRecords = 0
     saxStream.on('opentag', (node: any) => {
       if (node.name !== 'Record') return
+      parsedRecords++
       const a = node.attributes || {}
       const type = a.type as string | undefined
       const start = a.startDate as string | undefined
@@ -88,6 +138,7 @@ export async function POST(req: NextRequest) {
       stream.on('error', (err) => reject(err))
       stream.pipe(saxStream)
     })
+    try { console.log('[apple-health] Step 8: XML parsed. recordTags:', parsedRecords, 'days:', Object.keys(daily).length) } catch {}
 
     const entries: Entry[] = Object.entries(daily).map(([d, v]: any) => {
       let q = 5
@@ -103,7 +154,11 @@ export async function POST(req: NextRequest) {
         tags: [],
         journal: null,
         wearables: {
-          source: 'Apple Health'
+          source: 'Apple Health',
+          // Normalize common fields so downstream jobs can use them
+          sleep_min: typeof v.sleep_hours === 'number' ? Math.round(v.sleep_hours * 60) : undefined,
+          hrv_sdnn_ms: typeof v.hrv === 'number' ? Math.round(v.hrv) : undefined,
+          resting_hr_bpm: typeof v.resting_hr === 'number' ? Math.round(v.resting_hr) : undefined
         }
       }
     })
@@ -112,6 +167,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No valid data found', details: 'export.xml contained no usable records' }, { status: 400 })
     }
 
+    step = 'upsert'
+    try { console.log('[apple-health] Step 9: Upserting to daily_entries...', { days: entries.length }) } catch {}
     const { error: insErr } = await supabase
       .from('daily_entries')
       .upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
@@ -121,6 +178,7 @@ export async function POST(req: NextRequest) {
     }
 
     entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
+    try { console.log('[apple-health] Step 10: Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
     return NextResponse.json({
       success: true,
       message: 'Successfully imported Apple Health ZIP',
@@ -130,6 +188,7 @@ export async function POST(req: NextRequest) {
       dateRange: { from: entries[0].local_date, to: entries[entries.length - 1].local_date }
     })
   } catch (e: any) {
+    try { console.error('[apple-health] FAILED at step:', step, e?.message || e) } catch {}
     console.error('Apple Health ZIP import error:', e)
     return NextResponse.json(
       { error: 'Import failed', details: e?.message || 'Unknown error' },

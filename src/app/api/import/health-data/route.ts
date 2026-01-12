@@ -143,10 +143,15 @@ export async function POST(req: NextRequest) {
           user_id: userId,
           local_date: d,
           sleep_quality: Math.max(1, Math.min(10, Math.round(q))),
-          energy: null,
-          mood: null,
+          sleep_hours: v.sleep_hours ? Math.round(v.sleep_hours * 10) / 10 : null,
           tags: [],
-          notes: `Imported from ${detectedSource}`
+          journal: `Imported from ${detectedSource}`,
+          wearables: {
+            source: 'Apple Health',
+            sleep_min: typeof v.sleep_hours === 'number' ? Math.round(v.sleep_hours * 60) : undefined,
+            hrv_sdnn_ms: typeof v.hrv === 'number' ? Math.round(v.hrv) : undefined,
+            resting_hr_bpm: typeof v.resting_hr === 'number' ? Math.round(v.resting_hr) : undefined
+          }
         }
       })
     } else if (fileName.endsWith('.csv')) {

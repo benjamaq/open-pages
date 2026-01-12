@@ -27,7 +27,7 @@ export async function POST() {
       if (!userId) continue
       const { data: entries, error: eErr } = await sb
         .from('daily_entries')
-        .select('local_date,mood,energy,focus,tags')
+        .select('local_date,mood,energy,focus,tags,sleep_quality,wearables')
         .eq('user_id', userId)
         .gte('local_date', since.toISOString().slice(0,10))
       if (eErr) {
@@ -42,7 +42,7 @@ export async function POST() {
         retried = true
         const { data: allRows } = await sb
           .from('daily_entries')
-          .select('local_date,mood,energy,focus,tags')
+          .select('local_date,mood,energy,focus,tags,sleep_quality,wearables')
           .eq('user_id', userId)
           .order('local_date', { ascending: true })
           .limit(400)
@@ -57,6 +57,8 @@ export async function POST() {
         const focus = typeof (e as any).focus === 'number' ? (e as any).focus : null
         const tags: string[] = Array.isArray((e as any).tags) ? (e as any).tags : []
         const sleep = typeof (e as any).sleep_quality === 'number' ? (e as any).sleep_quality : null
+        const wear: any = (e as any).wearables || {}
+        const hrvMs: number | null = Number.isFinite(Number(wear.hrv_sdnn_ms)) ? Number(wear.hrv_sdnn_ms) : null
         const hrv = typeof (e as any).hrv === 'number' ? (e as any).hrv : null
         const recovery = typeof (e as any).recovery_score === 'number' ? (e as any).recovery_score : null
         const NOISE = new Set(['alcohol','travel','high_stress','illness','poor_sleep','intense_exercise','new_supplement'])
@@ -75,8 +77,9 @@ export async function POST() {
           composite_score: composite,
           noise_score: noiseScore,
           is_clean: isClean,
-          sleep_score: null,
-          hrv: null,
+          // Normalize sleep_quality (1–10) to 0–100 for cross-source comparison
+          sleep_score: sleep != null ? Math.max(0, Math.min(100, Math.round(Number(sleep) * 10))) : null,
+          hrv: hrvMs,
           recovery: null
         }, { onConflict: 'user_id,date' })
         processed++

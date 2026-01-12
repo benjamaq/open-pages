@@ -620,6 +620,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
+      {/* Strong ON baseline hint when progress is high but OFF days are lacking */}
+      {isActivelyTesting && row.progressPercent >= 60 && daysOff < Math.min(5, Math.max(3, Math.round((row.requiredDays || 14) / 4))) && (
+        <div className="mt-1 text-xs text-gray-600">Strong ON baseline • Need OFF days</div>
+      )}
       {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule
