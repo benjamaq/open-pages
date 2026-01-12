@@ -16,7 +16,7 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
   async function handleFile(file: File) {
     setError(null)
     setFileName(file.name)
-    try { console.log('[uploader] File selected:', file?.name, file?.size) } catch {}
+    try { console.log('[uploader] File selected:', file?.name, file?.size, file?.type) } catch {}
 
     const name = (file.name || '').toLowerCase()
     // Rejections with friendly messages
@@ -41,19 +41,21 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
     setIsUploading(true)
     try {
       try { console.log('[uploader] Starting upload...') } catch {}
+      try { console.log('[uploader] Uploading to storage...') } catch {}
       // Upload ZIP directly to Supabase Storage to avoid function body size limits
       const supabase = createBrowserSupabase()
       const { data: userData } = await supabase.auth.getUser()
       const userId = userData?.user?.id || 'anon'
       const safeName = name.replace(/[^a-z0-9._-]+/g, '_')
       const storagePath = `apple-health/${userId}/${Date.now()}-${safeName}`
-      const { error: upErr } = await supabase.storage
+      const { data: upData, error: upErr } = await supabase.storage
         .from('uploads')
         .upload(storagePath, file, { upsert: true, contentType: file.type || 'application/zip' })
       if (upErr) throw new Error(upErr.message || 'Failed to store file')
-      try { console.log('[uploader] Storage upload complete:', { storagePath }) } catch {}
+      try { console.log('[uploader] Storage result:', { storagePath, data: upData }) } catch {}
 
       // Trigger server-side processing from storage
+      try { console.log('[uploader] Calling API...') } catch {}
       const res = await fetch('/api/upload/apple-health', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +67,10 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
       } catch {
         j = {}
       }
-      try { console.log('[uploader] Response status:', res.status); console.log('[uploader] Response body:', j) } catch {}
+      try {
+        console.log('[uploader] API response status:', res.status)
+        console.log('[uploader] API response:', j)
+      } catch {}
       if (!res.ok) throw new Error(j?.error || j?.details || 'Upload failed')
       setUploaded(true)
     } catch (e: any) {

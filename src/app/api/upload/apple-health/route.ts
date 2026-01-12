@@ -30,11 +30,16 @@ function parseDate(d: string | undefined): string | null {
 export async function POST(req: NextRequest) {
   let step = 'init'
   try {
+    try { console.log('[apple-health] === UPLOAD START ===') } catch {}
     try { console.log('[apple-health] Step 1: Request received') } catch {}
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    try { console.log('[apple-health] Step 2: User authenticated:', !!user, 'userId:', (user as any)?.id || '(unknown)') } catch {}
+    try {
+      console.log('[apple-health] 1. Getting user...')
+      console.log('[apple-health] 2. User:', (user as any)?.id || 'NO USER')
+      console.log('[apple-health] Step 2: User authenticated:', !!user, 'userId:', (user as any)?.id || '(unknown)')
+    } catch {}
 
     // Prefer JSON body with storagePath (large files uploaded directly to storage),
     // fallback to multipart/form-data with 'file' (small files).
@@ -42,7 +47,12 @@ export async function POST(req: NextRequest) {
     const contentType = req.headers.get('content-type') || ''
     if (contentType.includes('application/json')) {
       step = 'parse-json-body'
+      try { console.log('[apple-health] 3. Reading request body...') } catch {}
       const body = await req.json().catch(() => ({} as any))
+      try {
+        console.log('[apple-health] 4. Body keys:', Object.keys(body || {}))
+        console.log('[apple-health] 5. Storage path:', body?.storagePath || '(none)')
+      } catch {}
       const storagePath = String(body?.storagePath || body?.path || '')
       const bucket = String(body?.bucket || 'uploads')
       try { console.log('[apple-health] Using storage path mode', { storagePath, bucket }) } catch {}
@@ -67,7 +77,9 @@ export async function POST(req: NextRequest) {
       if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
       const name = (file.name || '').toLowerCase()
-      try { console.log('[apple-health] Step 3: File received', { name: file.name, size: (file as any)?.size ?? '(n/a)' }) } catch {}
+      try {
+        console.log('[apple-health] Step 3: File received', { name: file.name, size: (file as any)?.size ?? '(n/a)' })
+      } catch {}
       if (!name.endsWith('.zip')) {
         return NextResponse.json(
           { error: 'Invalid file', details: 'This doesn’t look like a valid Apple Health export ZIP.' },
@@ -179,6 +191,7 @@ export async function POST(req: NextRequest) {
 
     entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
     try { console.log('[apple-health] Step 10: Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
+    try { console.log('[apple-health] === UPLOAD COMPLETE ===') } catch {}
     return NextResponse.json({
       success: true,
       message: 'Successfully imported Apple Health ZIP',
@@ -190,6 +203,11 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     try { console.error('[apple-health] FAILED at step:', step, e?.message || e) } catch {}
     console.error('Apple Health ZIP import error:', e)
+    try {
+      console.error('[apple-health] === UPLOAD FAILED ===')
+      console.error('[apple-health] Error:', e?.message)
+      console.error('[apple-health] Stack:', e?.stack)
+    } catch {}
     return NextResponse.json(
       { error: 'Import failed', details: e?.message || 'Unknown error' },
       { status: 500 }
