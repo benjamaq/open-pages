@@ -138,9 +138,9 @@ async function handler(req: NextRequest) {
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
     // Sender: prefer env, else enforced verified domain (use .io)
-    const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
+    const sender = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     try {
-      console.log('[daily-cron] Using sender:', from, '| RESEND_FROM env:', process.env.RESEND_FROM || '(unset)')
+      console.log('[daily-cron] Using sender:', sender, '(env:', process.env.RESEND_FROM || '(unset)', ')')
     } catch {}
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
@@ -319,14 +319,14 @@ async function handler(req: NextRequest) {
           // eslint-disable-next-line no-console
           console.log('[daily-cron] Sending to:', { user_id: p.user_id, email, subject })
           try {
-            const resp = await resend.emails.send({ from: from, to: email!, subject, html, ...(reply_to ? { reply_to: reply_to } : {}) })
+            const resp = await resend.emails.send({ from: sender, to: email!, subject, html, ...(reply_to ? { reply_to: reply_to } : {}) })
             const resendId = resp.data?.id || null
             const sendError = resp.error?.message || null
             const sentOk = !sendError
             // eslint-disable-next-line no-console
             console.log('[daily-cron] Resend response:', { user_id: p.user_id, email, resend_id: resendId, error: sendError })
             try {
-              console.log('[daily-cron] Resend payload:', { from, to: email, subject, html: (typeof html === 'string') ? html.substring(0, 300) : '(non-string)' })
+              console.log('[daily-cron] Resend payload:', { from: sender, to: email, subject, html: (typeof html === 'string') ? html.substring(0, 300) : '(non-string)' })
             } catch {}
             if (!sentOk) {
               console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })

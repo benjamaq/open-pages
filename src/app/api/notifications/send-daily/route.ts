@@ -49,6 +49,9 @@ async function handleSend() {
     const supabaseAdmin = createAdminClient()
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
+    try {
+      console.log('[daily-cron] Using sender:', from, '(env:', process.env.RESEND_FROM || '(unset)', ')')
+    } catch {}
     const reply_to = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
     const readinessPercent = 0
