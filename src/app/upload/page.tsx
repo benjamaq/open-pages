@@ -51,13 +51,14 @@ export default function UploadCenter() {
         const primary = files[0]
         const name = (primary?.name || '').toLowerCase()
         const isZip = name.endsWith('.zip') || name.includes('export.zip')
+        const isAppleXml = name === 'export.xml' || name === 'export_cda.xml' || (name.endsWith('.xml') && name.includes('export'))
         const isWhoop = files.some(f => /whoop|physiological|journal|sleeps/i.test(f.name))
         console.log('[UploadCenter] Health files selected:', files.map(f => `${f.name} (${f.size})`))
-        if (isZip && files.length === 1) {
+        if ((isZip || isAppleXml) && files.length === 1) {
           // Apple Health ZIP → send as single 'file'
           const formData = new FormData()
           formData.append('file', primary)
-          console.log('[UploadCenter] Routing to /api/upload/apple-health')
+          console.log('[UploadCenter] Routing to /api/upload/apple-health (apple health file:', name, ')')
           const res = await fetch('/api/upload/apple-health', { method: 'POST', body: formData })
           const data = await res.json().catch(() => ({}))
           console.log('[UploadCenter] /api/upload/apple-health status:', res.status, 'payload:', data)
