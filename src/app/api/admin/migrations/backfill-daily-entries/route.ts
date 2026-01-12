@@ -1,4 +1,5 @@
-export { POST, dynamic } from '../../backfill/daily-entries/route'
+export { POST } from '../../backfill/daily-entries/route'
+
 
 
 

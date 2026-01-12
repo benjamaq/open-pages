@@ -1,31 +1,3 @@
-"use client"
-
-import Link from "next/link"
-
-export default function ContactPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-neutral-200">
-        <div className="mx-auto max-w-6xl px-6 py-5 flex items-center justify-between">
-          <Link href="/" className="text-neutral-900 font-semibold">BioStackr</Link>
-          <Link href="/pricing" className="text-sm text-neutral-600 hover:text-neutral-900">Pricing</Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl sm:text-4xl font-semibold text-neutral-900">Contact</h1>
-        <p className="mt-3 text-neutral-700">We usually reply within one working day.</p>
-        <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <p className="text-neutral-800">
-            Email: <a href="mailto:support@biostackr.com" className="underline hover:text-neutral-900">support@biostackr.com</a>
-          </p>
-          <p className="mt-2 text-neutral-800">
-            For billing questions, include the email you used at signup.
-          </p>
-        </div>
-      </main>
-    </div>
-  )
-}
 import { Metadata } from 'next'
 import ContactForm from '@/components/ContactForm'
 

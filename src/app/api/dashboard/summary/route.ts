@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabase as supabaseAdmin } from '@/lib/supabase/admin'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { computeSignal } from '@/lib/engine/index'
 import { upsertPatternInsight } from '@/lib/engine/persist'
 

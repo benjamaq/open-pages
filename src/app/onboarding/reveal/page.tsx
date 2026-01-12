@@ -1,9 +1,3 @@
-import { redirect } from 'next/navigation'
-
-export default function LegacyRevealRedirect() {
-  redirect('/onboarding/upload')
-}
-
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
