@@ -47,53 +47,16 @@ export default function UploadCenter() {
     setLastError(null)
     try {
       if (uploadType === 'health') {
-        // Route based on file type(s)
-        const primary = files[0]
-        const name = (primary?.name || '').toLowerCase()
-        const isZip = name.endsWith('.zip') || name.includes('export.zip')
-        const isAppleXml = name === 'export.xml' || name === 'export_cda.xml' || (name.endsWith('.xml') && name.includes('export'))
-        const isWhoop = files.some(f => /whoop|physiological|journal|sleeps/i.test(f.name))
-        console.log('[UploadCenter] Health files selected:', files.map(f => `${f.name} (${f.size})`))
-        if ((isZip || isAppleXml) && files.length === 1) {
-          // Apple Health ZIP → send as single 'file'
-          const formData = new FormData()
-          formData.append('file', primary)
-          console.log('[UploadCenter] Routing to /api/upload/apple-health (apple health file:', name, ')')
-          const res = await fetch('/api/upload/apple-health', { method: 'POST', body: formData })
-          const data = await res.json().catch(() => ({}))
-          console.log('[UploadCenter] /api/upload/apple-health status:', res.status, 'payload:', data)
-          if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
-          toast.success(data.message || 'Imported', { description: data.details || 'Apple Health upload complete' })
-          setLastResult(data)
-        } else if (isWhoop) {
-          // WHOOP CSV(s) → batch field 'files'
-          const formData = new FormData()
-          files.forEach((file) => formData.append('files', file))
-          console.log('[UploadCenter] Routing to /api/upload/whoop with', files.length, 'files')
-          const res = await fetch('/api/upload/whoop', { method: 'POST', body: formData })
-          const data = await res.json().catch(() => ({}))
-          console.log('[UploadCenter] /api/upload/whoop status:', res.status, 'payload:', data)
-          if (!res.ok) throw new Error(data?.error || 'Import failed')
-          toast.success(data.message || 'Imported', { description: data.details || 'Whoop upload complete' })
-          setLastResult(data)
-        } else {
-          // Generic CSV/XML/JSON → import individually (auto-detects source)
-          console.log('[UploadCenter] Routing to /api/import/health-data for', files.length, 'file(s)')
-          let last
-          for (const file of files) {
-            const formData = new FormData()
-            formData.append('file', file)
-            const res = await fetch('/api/import/health-data', { method: 'POST', body: formData })
-            const data = await res.json().catch(() => ({}))
-            console.log('[UploadCenter] /api/import/health-data status:', res.status, 'file:', file.name, 'payload:', data)
-            if (!res.ok) throw new Error(data?.error || 'Import failed')
-            last = data
-          }
-          if (last) {
-            toast.success(last.message || 'Imported', { description: last.details || 'Import complete' })
-            setLastResult(last)
-          }
-        }
+        // Single endpoint: universal
+        console.log('[UploadCenter] Routing to /api/upload/universal with', files.length, 'file(s)')
+        const formData = new FormData()
+        files.forEach(file => formData.append('files', file))
+        const res = await fetch('/api/upload/universal', { method: 'POST', body: formData })
+        const data = await res.json().catch(() => ({}))
+        console.log('[UploadCenter] /api/upload/universal status:', res.status, 'payload:', data)
+        if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
+        toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
+        setLastResult(data)
       } else {
         for (const file of files) {
           const formData = new FormData()
@@ -171,16 +134,16 @@ export default function UploadCenter() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <input id="health-upload" type="file" multiple accept=".zip,.csv,.xml,.json" onChange={handleFileInput} disabled={isUploading} className="hidden" />
+              <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} className="hidden" />
               {isUploading ? (
                 <div className="space-y-4">
                   <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto" />
-                  <p className="font-medium">Processing your data…</p>
+                  <p className="font-medium">Processing your data… Large files may take a minute.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-lg font-medium">Drag & drop files here, or click to browse</p>
-                  <p className="text-sm text-gray-600">Whoop, Oura, Apple Health, Garmin, Fitbit, Bevel, Athlytic, Livity</p>
+                  <p className="text-lg font-medium">Drop any health export here</p>
+                  <p className="text-sm text-gray-600">Apple Health (ZIP or export.xml), WHOOP, Oura, Garmin, Fitbit — CSV or JSON</p>
                   <Button onClick={() => (document.getElementById('health-upload') as HTMLInputElement)?.click()}>Choose Files</Button>
                 </div>
               )}
