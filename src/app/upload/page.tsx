@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import UploadInstructions from '@/components/upload/UploadInstructions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 
@@ -124,6 +125,7 @@ export default function UploadCenter() {
           </div>
 
           <TabsContent value="health" className="p-6 space-y-6">
+            <UploadInstructions />
             <div
               className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${dragActive ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}
               onDragEnter={handleDrag}
