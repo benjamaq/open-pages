@@ -4,6 +4,7 @@ import Link from 'next/link'
 import UploadInstructions from '@/components/upload/UploadInstructions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-xl border border-gray-200 bg-white ${className}`}>{children}</div>
@@ -47,16 +48,46 @@ export default function UploadCenter() {
     setLastError(null)
     try {
       if (uploadType === 'health') {
-        // Single endpoint: universal
-        console.log('[UploadCenter] Routing to /api/upload/universal with', files.length, 'file(s)')
-        const formData = new FormData()
-        files.forEach(file => formData.append('files', file))
-        const res = await fetch('/api/upload/universal', { method: 'POST', body: formData })
-        const data = await res.json().catch(() => ({}))
-        console.log('[UploadCenter] /api/upload/universal status:', res.status, 'payload:', data)
-        if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
-        toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
-        setLastResult(data)
+        // If any file is large, upload all to storage and trigger server-side streaming
+        const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024 // 10MB
+        const anyLarge = files.some(f => (f as any)?.size >= LARGE_FILE_THRESHOLD)
+        if (anyLarge) {
+          console.log('[UploadCenter] Large file detected. Using storage-based upload flow.')
+          const supabase = createBrowserSupabase()
+          const { data: u } = await supabase.auth.getUser()
+          const userId = u?.user?.id || 'anon'
+          const storagePaths: string[] = []
+          for (const f of files) {
+            const safeName = (f.name || 'file').toLowerCase().replace(/[^a-z0-9._-]+/g, '_')
+            const path = `health/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`
+            console.log('[UploadCenter] Uploading to storage:', path, 'size:', (f as any)?.size)
+            const { error } = await supabase.storage.from('uploads').upload(path, f, { upsert: true, contentType: f.type || 'application/octet-stream' })
+            if (error) throw new Error(`Storage upload failed for ${f.name}: ${error.message}`)
+            storagePaths.push(path)
+          }
+          console.log('[UploadCenter] Calling universal endpoint with storagePaths:', storagePaths.length)
+          const res = await fetch('/api/upload/universal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storagePaths, bucket: 'uploads' })
+          })
+          const data = await res.json().catch(() => ({}))
+          console.log('[UploadCenter] /api/upload/universal (storage) status:', res.status, 'payload:', data)
+          if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
+          toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
+          setLastResult(data)
+        } else {
+          // Small files: send directly as multipart
+          console.log('[UploadCenter] Routing to /api/upload/universal with', files.length, 'small file(s)')
+          const formData = new FormData()
+          files.forEach(file => formData.append('files', file))
+          const res = await fetch('/api/upload/universal', { method: 'POST', body: formData })
+          const data = await res.json().catch(() => ({}))
+          console.log('[UploadCenter] /api/upload/universal status:', res.status, 'payload:', data)
+          if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
+          toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
+          setLastResult(data)
+        }
       } else {
         for (const file of files) {
           const formData = new FormData()

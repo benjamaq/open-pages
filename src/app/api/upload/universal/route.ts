@@ -98,16 +98,26 @@ export async function POST(req: NextRequest) {
 
       // XML → detect Apple Health by <HealthData ...>
       if (name.endsWith('.xml')) {
-        const text = await f.text()
-        if (/\<HealthData[\s>]/.test(text.slice(0, 2048))) {
-          const daily = await parseAppleHealthXMLStream(Readable.from([text]))
+        // Stream-parse XML directly without buffering whole file
+        try {
+          const webStream = (f as any).stream ? (f as any).stream() : null
+          if (!webStream) {
+            summary.messages.push(`XML stream not available: ${name}`)
+            continue
+          }
+          const nodeStream = (Readable as any).fromWeb ? (Readable as any).fromWeb(webStream) : (Readable as any).from(webStream as any)
+          const daily = await parseAppleHealthXMLStream(nodeStream)
           const entries = buildAppleHealthEntries(user.id, daily)
+          if (entries.length === 0) {
+            summary.messages.push(`XML contained no Apple Health metrics (possibly clinical CDA): ${name}`)
+            continue
+          }
           const up = await upsertDailyEntries(entries)
           summary.daysUpserted += up
           summary.sources['Apple Health'] = (summary.sources['Apple Health'] || 0) + up
           summary.messages.push(`Apple Health: ${up} day(s) imported from XML`)
-        } else {
-          summary.messages.push(`XML not recognized as Apple Health (HealthData tag missing): ${name}`)
+        } catch (err: any) {
+          summary.messages.push(`Failed to parse XML ${name}: ${err?.message || 'unknown error'}`)
         }
         continue
       }
@@ -174,14 +184,15 @@ async function handleStorageFiles(userId: string, bucket: string, storagePaths: 
   const sources: Record<string, number> = {}
   const messages: string[] = []
   for (const p of storagePaths) {
-    const { data: dl, error } = await supabaseAdmin.storage.from(bucket).download(p)
-    if (error || !dl) {
-      messages.push(`Failed to download ${p}: ${error?.message || 'unknown'}`)
-      continue
-    }
-    const buf = await dl.arrayBuffer()
     const name = p.toLowerCase()
     if (name.endsWith('.zip')) {
+      // For ZIP we still buffer; typical Apple Health ZIPs are manageable
+      const { data: dl, error } = await supabaseAdmin.storage.from(bucket).download(p)
+      if (error || !dl) {
+        messages.push(`Failed to download ${p}: ${error?.message || 'unknown'}`)
+        continue
+      }
+      const buf = await dl.arrayBuffer()
       const zip = await JSZip.loadAsync(buf)
       let exportXML: JSZip.JSZipObject | null = null
       zip.forEach((pp, obj) => { if (!exportXML && /(^|\/)export\.xml$/i.test(pp)) exportXML = obj })
@@ -196,17 +207,28 @@ async function handleStorageFiles(userId: string, bucket: string, storagePaths: 
         messages.push(`ZIP did not contain Apple Health export.xml: ${p}`)
       }
     } else if (name.endsWith('.xml')) {
-      const text = Buffer.from(buf).toString('utf8')
-      if (/\<HealthData[\s>]/.test(text.slice(0, 2048))) {
-        const daily = await parseAppleHealthXMLStream(Readable.from([text]))
-        const entries = buildAppleHealthEntries(userId, daily)
-        const up = await upsertDailyEntries(entries)
-        total += up
-        sources['Apple Health'] = (sources['Apple Health'] || 0) + up
-        messages.push(`Apple Health: ${up} day(s) imported from XML`)
-      } else {
-        messages.push(`XML not recognized as Apple Health (HealthData tag missing): ${p}`)
+      // Stream from storage using signed URL to avoid buffering
+      const { data: signed } = await supabaseAdmin.storage.from(bucket).createSignedUrl(p, 600)
+      if (!signed?.signedUrl) {
+        messages.push(`Failed to sign URL for ${p}`)
+        continue
       }
+      const res = await fetch(signed.signedUrl)
+      if (!res.ok || !res.body) {
+        messages.push(`Failed to stream ${p}: HTTP ${res.status}`)
+        continue
+      }
+      const nodeStream = (Readable as any).fromWeb ? (Readable as any).fromWeb(res.body as any) : (res as any).body
+      const daily = await parseAppleHealthXMLStream(nodeStream as any)
+      const entries = buildAppleHealthEntries(userId, daily)
+      if (entries.length === 0) {
+        messages.push(`XML contained no Apple Health metrics (possibly clinical CDA): ${p}`)
+        continue
+      }
+      const up = await upsertDailyEntries(entries)
+      total += up
+      sources['Apple Health'] = (sources['Apple Health'] || 0) + up
+      messages.push(`Apple Health: ${up} day(s) imported from XML (stream)`)
     } else {
       messages.push(`Unsupported storage file type: ${p}`)
     }

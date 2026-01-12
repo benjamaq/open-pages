@@ -82,12 +82,15 @@ export async function POST(req: NextRequest) {
         console.log('[apple-health] Step 3: File received', { name: file.name, size: (file as any)?.size ?? '(n/a)' })
       } catch {}
       if (name.endsWith('.xml')) {
-        // Direct XML upload path
+        // Direct XML upload path (stream, do not buffer entire file)
         step = 'parse-xml'
-        try { console.log('[apple-health] Detected direct XML upload') } catch {}
-        const xmlText = await file.text()
-        // Parse below using shared SAX logic
-        return await parseAndPersistAppleHealthXML(user.id, xmlText)
+        try { console.log('[apple-health] Detected direct XML upload (streaming)') } catch {}
+        const webStream = (file as any).stream ? (file as any).stream() : null
+        if (!webStream) {
+          return NextResponse.json({ error: 'Streaming not supported for this file' }, { status: 400 })
+        }
+        const nodeStream = (Readable as any).fromWeb ? (Readable as any).fromWeb(webStream) : (Readable as any).from(webStream as any)
+        return await parseAndPersistAppleHealthXMLStream(user.id, nodeStream)
       } else if (name.endsWith('.zip')) {
         // Unzip and find export.xml
         step = 'load-zip'
@@ -168,9 +171,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function parseAndPersistAppleHealthXML(userId: string, xmlText: string) {
-  // Parse XML text via SAX stream
-  const daily = await parseXMLDailyFromStream(Readable.from([xmlText]))
+async function parseAndPersistAppleHealthXMLStream(userId: string, stream: NodeJS.ReadableStream) {
+  // Parse XML via SAX stream (no full buffering)
+  const daily = await parseXMLDailyFromStream(stream)
   const entries: Entry[] = buildEntriesFromDaily(userId, daily)
   try { console.log('[apple-health] Step 8 (xml): days parsed:', Object.keys(daily).length) } catch {}
   if (!entries.length) {
