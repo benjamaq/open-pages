@@ -6,7 +6,7 @@ export default function UploadInstructions() {
       <div className="text-sm font-semibold text-gray-900">How to export your data</div>
       <div className="space-y-2">
         <details className="rounded-md border border-gray-200 p-3" open>
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Apple Health (recommended)</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Apple Health (recommended for iPhone)</summary>
           <ol className="mt-2 list-decimal list-inside text-sm text-gray-700 space-y-1">
             <li>Open the Health app on your iPhone</li>
             <li>Tap your profile picture (top right)</li>
@@ -14,6 +14,25 @@ export default function UploadInstructions() {
             <li>Wait for export to finish (few minutes)</li>
             <li>Save the export.zip file</li>
             <li>Upload the export.zip here</li>
+          </ol>
+        </details>
+        <details className="rounded-md border border-gray-200 p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Google Fit / Health Connect (recommended for Android)</summary>
+          <ol className="mt-2 list-decimal list-inside text-sm text-gray-700 space-y-1">
+            <li>Open Google Fit or Health Connect on your Android</li>
+            <li>Go to Settings → Data &amp; privacy</li>
+            <li>Export or Download your data (CSV/ZIP)</li>
+            <li>Transfer the file to your computer/phone</li>
+            <li>Upload it here</li>
+          </ol>
+        </details>
+        <details className="rounded-md border border-gray-200 p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Fitbit</summary>
+          <ol className="mt-2 list-decimal list-inside text-sm text-gray-700 space-y-1">
+            <li>Go to fitbit.com/settings/data/export</li>
+            <li>Request your data archive</li>
+            <li>Download when ready</li>
+            <li>Upload the ZIP or CSV here</li>
           </ol>
         </details>
         <details className="rounded-md border border-gray-200 p-3">
@@ -45,36 +64,28 @@ export default function UploadInstructions() {
           </ol>
         </details>
         <details className="rounded-md border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Fitbit</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Samsung Health</summary>
           <ol className="mt-2 list-decimal list-inside text-sm text-gray-700 space-y-1">
-            <li>Go to fitbit.com/settings/data/export</li>
-            <li>Request your data archive</li>
-            <li>Download when ready</li>
-            <li>Upload the ZIP or CSV here</li>
+            <li>Open Samsung Health</li>
+            <li>Menu → Settings → Download personal data</li>
+            <li>Export your data (ZIP/CSV)</li>
+            <li>Upload the exported file here</li>
           </ol>
         </details>
         <details className="rounded-md border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Athlytic</summary>
-          <div className="mt-2 text-sm text-gray-700">
-            Athlytic data is included via Apple Health. Export from Apple Health and upload the ZIP here.
-          </div>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Withings</summary>
+          <ol className="mt-2 list-decimal list-inside text-sm text-gray-700 space-y-1">
+            <li>Log in to withings.com (Health Mate)</li>
+            <li>Account → Data → Export</li>
+            <li>Download your data (CSV)</li>
+            <li>Upload the file here</li>
+          </ol>
         </details>
         <details className="rounded-md border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Livity</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Other (CSV, JSON, XML)</summary>
           <div className="mt-2 text-sm text-gray-700">
-            Livity data is included via Apple Health. Export from Apple Health and upload the ZIP here.
-          </div>
-        </details>
-        <details className="rounded-md border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Bevel</summary>
-          <div className="mt-2 text-sm text-gray-700">
-            Bevel data is included via Apple Health. Export from Apple Health and upload the ZIP here.
-          </div>
-        </details>
-        <details className="rounded-md border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">Generic CSV</summary>
-          <div className="mt-2 text-sm text-gray-700">
-            Use columns like <span className="font-mono">date,sleep_quality,energy,hrv,resting_hr</span>. We auto-detect source if possible.
+            Don’t see your device? Most health apps can export CSV or JSON. Upload any file with columns like{' '}
+            <span className="font-mono">date, sleep_quality, hrv, resting_hr</span>. We’ll auto-detect and import what we can.
           </div>
         </details>
       </div>
