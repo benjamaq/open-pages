@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -8,6 +8,14 @@ import { clearDraft } from '@/lib/onboarding/draft'
 import Link from 'next/link'
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center">Loading…</div>}>
+      <SignupInner />
+    </Suspense>
+  )
+}
+
+function SignupInner() {
   const router = useRouter()
   const params = useSearchParams()
   const [name, setName] = useState('')
