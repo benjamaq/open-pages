@@ -11,7 +11,7 @@
     "emails:compile": "node scripts/compile-daily-reminder-mjml.js"
   },
   "dependencies": {
-    "@next/third-parties": "^15.5.4",
+    "@next/third-parties": "^16.1.1",
     "@stripe/react-stripe-js": "^4.0.2",
     "@stripe/stripe-js": "^7.9.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
