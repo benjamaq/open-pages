@@ -17,6 +17,8 @@ type SaveCallbacks = {
     startDate: string
     endDate: string | null
     dose?: string | null
+    timing?: string | null
+    brand?: string | null
   }) => Promise<{ supplementId: string }>
   // (Optional) replace periods; if not provided, component will POST additional periods itself
   onReplacePeriods?: (supplementId: string, periods: { id: string; supplementId: string; startDate: string; endDate: string | null }[]) => Promise<void>
@@ -34,6 +36,7 @@ export default function AddSupplementModal({
   console.log('✅ DETAILED ADD MODAL LOADED')
   const [name, setName] = useState('')
   const [dose, setDose] = useState('')
+  const [timing, setTiming] = useState('')
   const [showDose, setShowDose] = useState(false)
   const [periods, setPeriods] = useState<UiPeriod[]>([
     { id: crypto.randomUUID(), startDate: new Date(), endDate: null }
@@ -71,6 +74,14 @@ export default function AddSupplementModal({
       setError('Enter supplement name')
       return
     }
+    if (!dose.trim()) {
+      setError('Enter the dose you take (e.g., 400mg, 2 caps)')
+      return
+    }
+    if (!timing.trim()) {
+      setError('Select when you take it')
+      return
+    }
     // Validate overlaps and single active
     const synthetic = periods.map<{
       id: string; supplementId: string; startDate: string; endDate: string | null; dose?: string | null; notes?: string | null
@@ -97,7 +108,13 @@ export default function AddSupplementModal({
           name: name.trim(),
           startDate: first.startDate,
           endDate: first.endDate,
-          dose: dose || undefined
+          dose: dose || undefined,
+          timing: timing || undefined,
+          // Auto-parse brand from name before first comma
+          brand: (() => {
+            const idx = name.indexOf(',')
+            return idx > 0 ? name.slice(0, idx).trim() : undefined
+          })()
         })
         const supplementId = create.supplementId
         const rest = synthetic.slice(1)
@@ -123,7 +140,15 @@ export default function AddSupplementModal({
         const res = await fetch('/api/supplements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name.trim() })
+          body: JSON.stringify({
+            name: name.trim(),
+            dose: dose || undefined,
+            timing: timing || undefined,
+            brand: (() => {
+              const idx = name.indexOf(',')
+              return idx > 0 ? name.slice(0, idx).trim() : undefined
+            })()
+          })
         })
         const created = await res.json().catch(() => ({}))
         if (!res.ok || !created?.id) {
@@ -233,18 +258,34 @@ export default function AddSupplementModal({
           </div>
 
           <div>
-            <button onClick={() => setShowDose(!showDose)} className="text-sm text-blue-600 hover:text-blue-700 underline underline-offset-2">
-              {showDose ? '− Hide' : '+'} Optional: Add dose
-            </button>
-            {showDose && (
-              <input
-                type="text"
-                value={dose}
-                onChange={(e) => setDose(e.target.value)}
-                placeholder="e.g., 400mg citrate, 2 capsules"
-                className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Dose *</label>
+                <input
+                  type="text"
+                  value={dose}
+                  onChange={(e) => setDose(e.target.value)}
+                  placeholder="e.g., 400mg, 2 caps"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Timing *</label>
+                <select
+                  value={timing}
+                  onChange={(e) => setTiming(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Afternoon">Afternoon</option>
+                  <option value="Evening">Evening</option>
+                  <option value="With food">With food</option>
+                  <option value="Before bed">Before bed</option>
+                  <option value="Any time">Any time</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 

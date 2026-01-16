@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
+import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
 type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
 
@@ -185,32 +186,22 @@ async function handler(req: NextRequest) {
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
         const tz = p.timezone || 'UTC'
         const localYesterdayStr = formatInTimeZone(addDays(new Date(), -1), tz, 'yyyy-MM-dd')
-        // Pull yesterday's metrics (Energy/Focus/Sleep) from daily_entries
+        // Pull yesterday entry (optional; do not skip)
         const { data: entry } = await supabaseAdmin
           .from('daily_entries')
           .select('energy, focus, sleep, sleep_quality, mood, meds, protocols, local_date')
           .eq('user_id', p.user_id)
           .eq('local_date', localYesterdayStr)
           .maybeSingle()
-
-        const energyVal = (entry as any)?.energy
-        const focusVal = (entry as any)?.focus
-        const sleepVal = (entry as any)?.sleep ?? (entry as any)?.sleep_quality
-        const energy = typeof energyVal === 'number' ? energyVal : 5
-        const focus = typeof focusVal === 'number' ? focusVal : 5
-        const sleep = typeof sleepVal === 'number' ? sleepVal : 5
-        const moodVal = (entry as any)?.mood
-        const mood = typeof moodVal === 'number' ? moodVal : null
-        if (!entry && !bypassAll) { results.push({ user_id: p.user_id, email, skip: 'no yesterday entry', stage: 'load-entry', tz, localYesterdayStr }); continue }
-
-        // Calculate readiness from Energy/Focus/Sleep
-        const readinessPercent = Math.round(((energy + focus + sleep) / 3) * 10)
-        const readinessEmoji = readinessPercent >= 70 ? '🌞' : readinessPercent >= 40 ? '💧' : '🌙'
-        const readinessMessage = readinessPercent >= 70
-          ? 'High energy — great day to move'
-          : readinessPercent >= 40
-            ? 'Take it steady — light activity today'
-            : 'Low-energy day — rest is progress'
+        // Resolve latest daily metrics (yesterday in user's local tz)
+        const latest = await getLatestDailyMetrics(supabaseAdmin as any, p.user_id, { targetLocalYmd: localYesterdayStr })
+        try {
+          console.log('[daily-cron] Latest metrics:', latest)
+        } catch {}
+        const energy = (typeof latest?.energy === 'number') ? latest!.energy : null
+        const focus  = (typeof latest?.focus  === 'number') ? latest!.focus  : null
+        const sleep  = (typeof latest?.sleep  === 'number') ? latest!.sleep  : null
+        const mood   = (typeof latest?.mood   === 'number') ? latest!.mood   : null
 
         // Generate magic token
         const rawToken = crypto.randomBytes(32).toString('hex')
@@ -281,21 +272,18 @@ async function handler(req: NextRequest) {
           ? '👏 Five days in — this is where useful patterns start to emerge. Keep going; consistency unlocks real insight.'
           : undefined
 
-        // New simplified V3 reminder content (single-column card)
-        // Progress should match dashboard: approximate by days-of-data / 14 averaged across stack.
-        // As an interim alignment, use user's total daily_entries count across stack / 14.
-        const progressPercent = Math.max(0, Math.min(100, Math.round(((totalEntries || 0) / 14) * 100)))
+        // Real stack progress to match dashboard
+        const progressPercent = await getStackProgressForUser(supabaseAdmin as any, p.user_id)
         console.log('[daily-cron] TEMPLATE: templates/daily-reminder.tsx | Labels: Energy/Focus/Sleep')
         const html = renderV3Reminder({
           firstName: firstName || 'there',
           supplementCount,
           progressPercent,
           checkinUrl: `${base}/dashboard?checkin=open`,
-          // Pass yesterday's metrics
-          energy,
-          focus,
-          sleep,
-          ...(mood != null ? { mood } : {})
+          ...(energy != null ? { energy } : {}),
+          ...(focus  != null ? { focus }  : {}),
+          ...(sleep  != null ? { sleep }  : {}),
+          ...(mood   != null ? { mood }   : {})
         })
 
         try {

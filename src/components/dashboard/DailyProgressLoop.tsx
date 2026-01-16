@@ -43,6 +43,7 @@ export function DailyProgressLoop() {
   const [milestone50, setMilestone50] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [milestone85, setMilestone85] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [isMember, setIsMember] = useState<boolean>(false)
+  const [hasWearables, setHasWearables] = useState<boolean>(false)
 
   // Debug: confirm membership gating value on each change
   useEffect(() => {
@@ -92,6 +93,15 @@ export function DailyProgressLoop() {
           const me = await fetch('/api/me', { cache: 'no-store' }).then(r => r.ok ? r.json() : {})
           console.log('isPaid:', paid, 'userId:', (me as any)?.id || '(unknown)')
         } catch {}
+      } catch {}
+      // Load wearables presence for subtle UI enhancements
+      try {
+        const d = await fetch('/api/data/has-daily', { cache: 'no-store' })
+        if (!mounted) return
+        if (d.ok) {
+          const j = await d.json()
+          setHasWearables(Boolean(j?.hasWearables))
+        }
       } catch {}
     })()
     // Listen for explicit refresh events after check-in completes
@@ -324,7 +334,7 @@ export function DailyProgressLoop() {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             {sortedForDisplay.map((r: any) => (
-              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} />
+              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
             ))}
           </div>
         )
@@ -345,7 +355,7 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
   )
 }
 
-function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number } }) {
+function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts, hasWearables }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number }, hasWearables?: boolean }) {
   // Progress bar colors per dashboard palette
   const trackColor = '#E4DDD6'
   const fillColor = '#C65A2E'
@@ -507,7 +517,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-center justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2">
-          <span>{abbreviateSupplementName(String(row.name || ''))}</span>
+          <span className="truncate max-w-[60vw]">{abbreviateSupplementName(String(row.name || ''))}</span>
           {(() => {
             // Override badge for state machine
             if (isVerdictReady) {
@@ -535,7 +545,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               }
             }
             if (isInconclusive) {
-              return <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">Inconclusive</span>
+              return <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">No clear effect</span>
             }
             return badge ? (
             (badge.label === '🔒 Verdict Ready' && !isMember) ? (
@@ -560,14 +570,20 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                 {badge.label}
               </button>
             ) : (
-            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label}</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label === 'Inconclusive' ? 'No clear effect' : badge.label}</span>
             )
             ) : null
           })()}
         </div>
         <div className="flex items-center gap-2">
+          {hasWearables ? (
+            <span className="text-[10px] text-gray-500" title="Wearables data connected">⚡ Enhanced</span>
+          ) : null}
+          {(!isVerdictReady && !isInconclusive && row.progressPercent >= 85) ? (
+            <div className="text-[11px] font-medium" style={{ color: '#C65A2E' }}>Almost there</div>
+          ) : null}
           {testingActive ? (
-          <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
+            <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
           ) : null}
         </div>
       </div>
@@ -631,6 +647,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       )}
       {!isMember && !isVerdictReady && !isInconclusive && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
+      )}
+      {(hasWearables && (isActivelyTesting || isVerdictReady || isInconclusive)) && (
+        <div className="mt-1 text-[11px] text-gray-600">Signal powered by check-ins and wearable data</div>
       )}
       <div className="mt-3 flex justify-end">
         {isActivelyTesting && (

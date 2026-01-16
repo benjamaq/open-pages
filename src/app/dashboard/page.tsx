@@ -67,7 +67,7 @@ export default async function DashboardPage() {
           </a>
           <nav className="flex items-center gap-3 sm:gap-4 text-sm overflow-x-auto whitespace-nowrap py-1">
             <a href="/dashboard" className="font-medium">Dashboard</a>
-            <a href="/results" className="text-slate-600">{(billing?.isPaid || (billing?.subscription && (billing.subscription.status === 'active' || billing.subscription.status === 'trialing'))) ? 'Results' : 'Results 🔒'}</a>
+            <a href="/results" className="text-slate-600">My Stack</a>
             <a href="/upload" className="text-slate-600 border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-50">
               ⌚ Upload Wearable Data
             </a>

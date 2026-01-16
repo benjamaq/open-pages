@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+async function resolveId(paramsLike: any): Promise<string> {
+  try {
+    // If params is a Promise (some App Router setups), await it
+    if (paramsLike && typeof paramsLike.then === 'function') {
+      const resolved = await paramsLike
+      return String(resolved?.id || '').trim()
+    }
+    return String(paramsLike?.id || '').trim()
+  } catch {
+    return ''
+  }
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const supabase = await createClient();
@@ -14,11 +27,16 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const id = await resolveId(params)
+    if (!id) {
+      return NextResponse.json({ error: 'Invalid supplement id' }, { status: 400 });
+    }
+
     // First, try by user_supplement.id (legacy/detail page expectation)
     const { data: supplement, error } = await supabase
       .from('user_supplement')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -42,7 +60,7 @@ export async function GET(
     const { data: stackItem, error: sErr } = await supabase
       .from('stack_items')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('profile_id', (profile as any).id)
       .maybeSingle();
     if (sErr) {
@@ -155,9 +173,18 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const id = await resolveId(params)
+    // Debug incoming params
+    try {
+      // eslint-disable-next-line no-console
+      console.log('PATCH /api/supplements/[id] resolved id:', id, '| type:', typeof id)
+    } catch {}
+    if (!id || id === 'undefined' || id === 'null') {
+      return NextResponse.json({ error: 'Invalid supplement id' }, { status: 400 })
+    }
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -165,6 +192,19 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
+    try {
+      // eslint-disable-next-line no-console
+      console.log('PATCH body:', body)
+    } catch {}
+    // Support direct user_supplement field updates
+    const updateSupplementFields: Record<string, any> = {}
+    if (typeof body?.dose === 'string') updateSupplementFields.dose = String(body.dose).trim()
+    if (typeof body?.timing === 'string') updateSupplementFields.timing = String(body.timing).trim()
+    if (typeof body?.brand === 'string') updateSupplementFields.brand = String(body.brand).trim()
+    // notes column may not exist on user_supplement in some schemas; skip updating here to avoid errors
+    // frequency stored on stack_items only for now
+    const hasFrequency = typeof body?.frequency === 'string' && String(body.frequency).trim().length > 0
+    const restartTesting = body?.restartTesting === true
     const hasCategory = typeof body?.category === 'string' && body.category.trim().length > 0
     const wantsCostUpdate =
       typeof body?.monthly_cost === 'number' ||
@@ -186,6 +226,52 @@ export async function PATCH(
       .maybeSingle();
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+
+    // Update user_supplement fields (dose/timing/brand/notes) and optionally restart testing
+    // Update user_supplement only when there are fields to update
+    let usUpdated: any = null
+    if (Object.keys(updateSupplementFields).length > 0) {
+      const payload = { ...updateSupplementFields } as any
+      const { data, error: usErr } = await supabase
+        .from('user_supplement')
+        .update(payload)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select('id,dose,timing,brand')
+        .maybeSingle()
+      if (usErr) {
+        // eslint-disable-next-line no-console
+        console.error('user_supplement update error:', usErr)
+        return NextResponse.json({ error: usErr.message }, { status: 500 })
+      }
+      usUpdated = data
+    }
+
+    // Reflect metadata and restart flag into stack_items unconditionally (best-effort)
+    try {
+      const stackUpdate: Record<string, any> = {}
+      if (updateSupplementFields.dose != null) stackUpdate.dose = updateSupplementFields.dose
+      if (updateSupplementFields.timing != null) stackUpdate.timing = updateSupplementFields.timing
+      if (updateSupplementFields.brand != null) stackUpdate.brand = updateSupplementFields.brand
+      if (typeof body?.notes === 'string') stackUpdate.notes = String(body.notes).trim()
+      if (hasFrequency) stackUpdate.frequency = String(body.frequency).trim()
+      if (restartTesting) {
+        const todayIso = new Date().toISOString().slice(0, 10)
+        stackUpdate.start_date = todayIso
+      }
+      if (Object.keys(stackUpdate).length > 0) {
+        await supabase
+          .from('stack_items')
+          .update(stackUpdate)
+          .eq('id', id)
+          .eq('profile_id', (profile as any).id)
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('stack_items update error:', e)
+    }
+
+    return NextResponse.json({ ok: true, id, updated: usUpdated })
 
     // If updating cost, write to stack_items.monthly_cost (used across UI)
     if (monthlyCost != null && Number.isFinite(monthlyCost)) {

@@ -63,9 +63,11 @@ export async function GET() {
     if (profileId) {
       const { data: si } = await supabaseAdmin
         .from('stack_items')
-        .select('id,name,created_at,monthly_cost,primary_goal_tags,tags')
+        .select('id,name,created_at,monthly_cost,primary_goal_tags,tags,dose,timing,brand,notes')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
+      // eslint-disable-next-line no-console
+      console.log('stack_items count:', (si || []).length)
       stackItems = si || []
     }
     if (Array.isArray(stackItems) && stackItems.length > 0) {
@@ -92,15 +94,22 @@ export async function GET() {
             ? r.primary_goal_tags
             : (tagsByName.get(nm) || (Array.isArray(r.tags) ? r.tags : []))
         return {
-        id: r.id,
-        user_id: user.id,
-        name: r.name,
-        is_active: true,
-        created_at: r.created_at,
-        // Map stack_items.monthly_cost → monthly_cost_usd for unified downstream consumption
+          id: r.id,
+          user_id: user.id,
+          name: r.name,
+          is_active: true,
+          // Expose both created_at and started_at for clients that expect either
+          created_at: r.created_at,
+          started_at: r.created_at,
+          // Map stack_items.monthly_cost → monthly_cost_usd for unified downstream consumption
           monthly_cost_usd,
-        // Prefer explicit stack_items.primary_goal_tags, else user_supplement tags, else stack_items.tags, else empty
+          // Prefer explicit stack_items.primary_goal_tags, else user_supplement tags, else stack_items.tags, else empty
           primary_goal_tags: mergedTags,
+          // Pass through descriptive fields used by Cabinet UI
+          dose: r.dose ?? null,
+          timing: r.timing ?? null,
+          brand: r.brand ?? null,
+          notes: r.notes ?? null,
         }
       })
       // Use stack_items as the single source of truth when present to avoid double-counting
@@ -123,6 +132,8 @@ export async function GET() {
       }
     })
 
+    // eslint-disable-next-line no-console
+    console.log('Normalized supplements (count):', normalized.length)
     return NextResponse.json(normalized)
   } catch (e: any) {
     // eslint-disable-next-line no-console
@@ -140,6 +151,16 @@ export async function POST(request: Request) {
     try { console.log('RECEIVED:', body) } catch {}
     const rawName = String(body?.name || '').trim()
     if (!rawName) return NextResponse.json({ error: 'Name required' }, { status: 400 })
+    // Dose/timing/brand from client (new fields)
+    const doseFromBody = typeof body?.dose === 'string' ? String(body.dose).trim() : undefined
+    const timingFromBody = typeof body?.timing === 'string' ? String(body.timing).trim() : undefined
+    // brand passed explicitly or parsed from name before the first comma
+    const brandFromBody = typeof body?.brand === 'string' ? String(body.brand).trim() : undefined
+    const parsedBrand = (() => {
+      const idx = rawName.indexOf(',')
+      if (idx > 0) return rawName.slice(0, idx).trim()
+      return undefined
+    })()
     const normalizedName = rawName.toLowerCase()
     // Optional monthly cost from client
     const rawMonthlyFromBody = Number(body?.monthly_cost_usd)
@@ -227,6 +248,10 @@ export async function POST(request: Request) {
     // Many schemas include a free-text name/label; set if column exists (harmless if ignored)
     insertPayload.name = rawName
     insertPayload.label = rawName
+    // Persist dose/timing/brand if provided
+    if (doseFromBody) insertPayload.dose = doseFromBody
+    if (timingFromBody) insertPayload.timing = timingFromBody
+    if (brandFromBody || parsedBrand) insertPayload.brand = (brandFromBody || parsedBrand)
     if (monthlyFromBody != null) {
       insertPayload.monthly_cost_usd = monthlyFromBody
     }

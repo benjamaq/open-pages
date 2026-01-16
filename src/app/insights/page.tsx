@@ -19,7 +19,7 @@ export default function InsightsPage() {
           </a>
           <nav className="flex items-center gap-4">
             <a href="/dashboard" className="text-sm text-slate-600">Dashboard</a>
-            <a href="/results" className="text-sm font-medium">Results</a>
+            <a href="/results" className="text-sm font-medium">My Stack</a>
           </nav>
         </div>
       </header>

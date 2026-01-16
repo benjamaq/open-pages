@@ -19,22 +19,10 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
     try { console.log('[uploader] File selected:', file?.name, file?.size, file?.type) } catch {}
 
     const name = (file.name || '').toLowerCase()
-    // Rejections with friendly messages
-    if (name.endsWith('.xml')) {
-      setError('Please upload the full Apple Health ZIP file. Apple includes everything we need inside it.')
-      return
-    }
-    if (name.endsWith('.csv')) {
-      setError('Please upload the ZIP file you downloaded from Apple Health — not a CSV.')
-      return
-    }
-    // Browsers won’t provide folders directly; if they do, reject by no extension
-    if (!name.includes('.') || (!name.endsWith('.zip') && file.type !== 'application/zip' && file.type !== 'application/x-zip-compressed')) {
-      setError('Please upload the ZIP file you downloaded from Apple Health — not a folder.')
-      return
-    }
-    if (!name.endsWith('.zip')) {
-      setError('Please upload the full Apple Health ZIP file.')
+    const isZip = name.endsWith('.zip')
+    const isXml = name.endsWith('.xml')
+    if (!isZip && !isXml) {
+      setError('Please upload Apple Health export.zip or export.xml')
       return
     }
 
@@ -45,21 +33,27 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
       // Upload ZIP directly to Supabase Storage to avoid function body size limits
       const supabase = createBrowserSupabase()
       const { data: userData } = await supabase.auth.getUser()
+      if (!userData?.user?.id) {
+        setError('Please sign in to upload your data.')
+        return
+      }
       const userId = userData?.user?.id || 'anon'
       const safeName = name.replace(/[^a-z0-9._-]+/g, '_')
-      const storagePath = `apple-health/${userId}/${Date.now()}-${safeName}`
+      const storagePath = `health/${userId}/${Date.now()}-${safeName}`
+      // Ensure bucket exists and has permissive mime rules
+      try { await fetch('/api/storage/ensure-uploads', { method: 'POST' }) } catch {}
       const { data: upData, error: upErr } = await supabase.storage
         .from('uploads')
-        .upload(storagePath, file, { upsert: true, contentType: file.type || 'application/zip' })
+        .upload(storagePath, file, { upsert: true, contentType: 'application/octet-stream' })
       if (upErr) throw new Error(upErr.message || 'Failed to store file')
       try { console.log('[uploader] Storage result:', { storagePath, data: upData }) } catch {}
 
-      // Trigger server-side processing from storage
-      try { console.log('[uploader] Calling API...') } catch {}
-      const res = await fetch('/api/upload/apple-health', {
+      // Trigger server-side processing from storage via universal endpoint (streaming)
+      try { console.log('[uploader] Calling universal API...') } catch {}
+      const res = await fetch('/api/upload/universal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storagePath, bucket: 'uploads' })
+        body: JSON.stringify({ storagePath, bucket: 'uploads', fileName: file.name })
       })
       let j: any = {}
       try {
@@ -68,8 +62,8 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
         j = {}
       }
       try {
-        console.log('[uploader] API response status:', res.status)
-        console.log('[uploader] API response:', j)
+        console.log('[uploader] Universal API response status:', res.status)
+        console.log('[uploader] Universal API response:', j)
       } catch {}
       if (!res.ok) throw new Error(j?.error || j?.details || 'Upload failed')
       setUploaded(true)
@@ -117,7 +111,7 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
           <input
             id="apple-health-zip"
             type="file"
-            accept=".zip"
+            accept=".zip,.xml"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0]

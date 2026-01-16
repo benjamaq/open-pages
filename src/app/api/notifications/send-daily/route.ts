@@ -3,6 +3,7 @@ import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
 import { Resend } from 'resend'
+import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -54,7 +55,6 @@ async function handleSend() {
     } catch {}
     const reply_to = process.env.REPLY_TO_EMAIL || process.env.SUPPORT_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
-    const readinessPercent = 0
     const currentUtcTime = new Date()
 
     // Helper: compute YYYY-MM-DD in user's timezone
@@ -212,13 +212,26 @@ async function handleSend() {
           console.log(`📧 Sending reminder to ${userEmail}`)
           // Use the new single-column V3 template
           const supplementCount = (supplements?.length || 0) + (protocols?.length || 0) + (movement?.length || 0) + (mindfulness?.length || 0)
-          const progressPercent = Math.max(0, Math.min(100, Math.round(readinessPercent)))
+          // Use shared progress to match dashboard
+          const progressPercent = await getStackProgressForUser(supabaseAdmin as any, profile.user_id)
+          // Fetch yesterday in user's timezone, fallback to latest
+          const yesterdayLocal = ymdInTz(new Date(Date.now() - 24*60*60*1000), userTimezone)
+          const latest = await getLatestDailyMetrics(supabaseAdmin as any, profile.user_id, { targetLocalYmd: yesterdayLocal })
+          try {
+            console.log('[email] User ID:', profile.user_id)
+            console.log('[email] Metrics returned:', JSON.stringify(latest))
+          } catch {}
           const html = renderV3Reminder({
             firstName: userName || 'there',
             supplementCount: Math.max(1, supplementCount),
             progressPercent,
             checkinUrl: `${process.env.NEXT_PUBLIC_APP_URL || base}/dashboard?checkin=open`,
+            ...(latest?.energy != null ? { energy: latest.energy } : {}),
+            ...(latest?.focus != null ? { focus: latest.focus } : {}),
+            ...(latest?.sleep != null ? { sleep: latest.sleep } : {}),
+            ...(latest?.mood != null ? { mood: latest.mood } : {})
           })
+          try { console.log('[notifications/send-daily] Latest metrics:', latest) } catch {}
           const subject = `${progressPercent}% complete`
           const sendResp = await resend.emails.send({
             from,

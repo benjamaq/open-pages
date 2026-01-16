@@ -49,10 +49,50 @@ export default function DashboardAddSupplementGate() {
   async function handleSave(details: SupplementDetails) {
     // Create supplement by name
     const safeName = (details.name || '').trim() || 'Custom supplement'
+    // Build dose string from structured fields (required)
+    const unitRaw = (details.doseUnit || '').trim()
+    const unitNorm = (() => {
+      const lc = unitRaw.toLowerCase()
+      if (!lc) return ''
+      if (lc === 'capsule' || lc === 'capsules') return 'caps'
+      if (lc === 'iu') return 'IU'
+      return lc
+    })()
+    const doseText = `${Number(details.dailyDose || 0) || ''}${unitNorm ? (unitNorm === 'IU' ? ' IU' : ` ${unitNorm}`) : ''}`.trim()
+    // Require at least one time of day; map to single timing label
+    const timingLabel = (() => {
+      const t = Array.isArray(details.timeOfDay) ? details.timeOfDay : []
+      if (!t || t.length === 0) return ''
+      if (t.includes('morning')) return 'Morning'
+      if (t.includes('afternoon')) return 'Afternoon'
+      if (t.includes('evening')) return 'Evening'
+      if (t.includes('night')) return 'Before bed'
+      return ''
+    })()
+    if (!doseText) {
+      alert('Please enter your daily dose (e.g., 400mg, 2 caps).')
+      return
+    }
+    if (!timingLabel) {
+      alert('Please choose when you usually take it (Morning / Afternoon / Evening / Before bed).')
+      return
+    }
+    // Brand: prefer explicit brand, else parse from name before comma
+    const explicitBrand = (details.brandName || '').trim()
+    const parsedFromName = (() => {
+      const idx = safeName.indexOf(',')
+      if (idx > 0) return safeName.slice(0, idx).trim()
+      return ''
+    })()
+    const brand = explicitBrand || parsedFromName
     const payload = { 
       name: safeName,
       monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
-      primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : []
+      primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
+      // New required fields
+      dose: doseText,
+      timing: timingLabel,
+      ...(brand ? { brand } : {})
     }
     try { console.log('POSTING:', payload) } catch {}
     const create = await fetch('/api/supplements', {

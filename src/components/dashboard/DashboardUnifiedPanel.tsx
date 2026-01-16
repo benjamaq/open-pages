@@ -18,6 +18,7 @@ export function DashboardUnifiedPanel() {
   const [effects, setEffects] = useState<Record<string, any>>({})
   const [hasDaily, setHasDaily] = useState<boolean | null>(null)
   const [wearableDays, setWearableDays] = useState<number>(0)
+  const [wearableStatus, setWearableStatus] = useState<any | null>(null)
   const [showBaselineHelp, setShowBaselineHelp] = useState<boolean>(false)
   const [isMember, setIsMember] = useState<boolean>(false)
   const [settings, setSettings] = useState<any | null>(null)
@@ -25,6 +26,7 @@ export function DashboardUnifiedPanel() {
   const [showReminder, setShowReminder] = useState<boolean>(false)
   const [showCommitment, setShowCommitment] = useState<boolean>(false)
   const [overrideSkipNames, setOverrideSkipNames] = useState<string[] | null>(null)
+  const [showUploadSuccess, setShowUploadSuccess] = useState<{ days?: number; source?: string } | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -69,6 +71,15 @@ export function DashboardUnifiedPanel() {
           setHasDaily(false)
         }
       } catch { setHasDaily(false) }
+      // Detailed wearable status for enhanced UI
+      try {
+        const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+        if (!mounted) return
+        if (ws.ok) {
+          const wj = await ws.json()
+          setWearableStatus(wj)
+        }
+      } catch {}
       try {
         const pr = await fetch('/api/payments/status', { cache: 'no-store' })
         if (!mounted) return
@@ -101,6 +112,22 @@ export function DashboardUnifiedPanel() {
       } catch {}
     })()
     return () => { mounted = false }
+  }, [])
+
+  // Show post-upload success modal only when explicitly signaled by URL
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href)
+      const up = url.searchParams.get('upload')
+      if (up === 'success') {
+        const days = Number(url.searchParams.get('days') || '')
+        const source = url.searchParams.get('source') || undefined
+        setShowUploadSuccess({ days: isFinite(days) && days > 0 ? days : undefined, source })
+        // Clear the flag from URL
+        url.searchParams.delete('upload'); url.searchParams.delete('days'); url.searchParams.delete('source'); url.searchParams.delete('first')
+        window.history.replaceState({}, '', url.toString())
+      }
+    } catch {}
   }, [])
 
   // Debug: show today's summary coming from API for Sleep verification
@@ -534,7 +561,7 @@ export function DashboardUnifiedPanel() {
                       }}
                       className="text-sm text-gray-700 hover:underline"
                     >
-                      View your result →
+                      View verdict →
                     </button>
                   </div>
                 ) : (
@@ -554,12 +581,30 @@ export function DashboardUnifiedPanel() {
           <div className="w-full">
             <Progress value={isMember ? progressPercent : Math.min(progressPercent, 90)} className="h-2 w-full" />
           </div>
-          <div className="mt-2 text-xs text-gray-500">Based on clean days collected across your supplements.</div>
+          <div className="mt-2 text-xs text-gray-500">
+            {wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.'}
+          </div>
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Days tracked</span>
-              <span className="font-medium">{streak}</span>
+              <span className="font-medium">
+                {wearableStatus?.wearable_connected
+                  ? (Number(wearableStatus?.total_unique_days ?? (Number(wearableStatus?.wearable_days_imported || 0) + Number(wearableStatus?.checkin_days || 0))))
+                  : streak}
+              </span>
             </div>
+            {wearableStatus?.wearable_connected && (
+              <>
+                <div className="flex items-center justify-between text-sm pl-4">
+                  <span className="text-gray-500">└─ from wearables</span>
+                  <span className="font-medium">{Number(wearableStatus?.wearable_days_imported || 0)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm pl-4">
+                  <span className="text-gray-500">└─ from check-ins</span>
+                  <span className="font-medium">{Number(wearableStatus?.checkin_days || 0)}</span>
+                </div>
+              </>
+            )}
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Gaps (missed days)</span>
               <span className="font-medium">{gapsDays}</span>
@@ -673,46 +718,80 @@ export function DashboardUnifiedPanel() {
               )
             })()}
             <a href="/results" className="text-sm hover:underline" style={{ color: '#6A3F2B' }}>
-              See what’s actually working →
+              View My Stack →
             </a>
           </div>
         </div>
       </div>
       {/* Baseline bar inside the same container, spanning both columns */}
       <div className="p-6 md:col-span-2 border-t border-gray-100">
-        <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">YOUR BASELINE</div>
-        {wearableDays > 0 ? (
+        <div className="flex items-center gap-2 mb-2">
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500">YOUR BASELINE</div>
+          <div className="text-[11px] text-gray-600 border border-gray-300 rounded-full px-2 py-0.5"> 
+            {wearableStatus?.wearable_connected ? 'Enhanced' : 'Basic'}
+          </div>
+        </div>
+        {wearableStatus?.wearable_connected ? (
           <>
-            <div className="text-sm text-gray-800">Built from {wearableDays} {wearableDays === 1 ? 'day' : 'days'} of data • Wearable + check-ins</div>
-            <div className="mt-2 text-sm text-gray-600">Your sleep and recovery patterns form this baseline. More clean days increase confidence.</div>
-            <button
-              type="button"
-              onClick={() => setShowBaselineHelp(v => !v)}
-              className="mt-2 text-sm text-gray-600 hover:underline"
-            >
-              How this works →
-            </button>
-            {showBaselineHelp && (
-              <div
-                role="dialog"
-                aria-modal="false"
-                className="mt-2 rounded-lg border border-gray-200 bg-white p-3 text-[13px] text-gray-700 shadow-sm"
-              >
-                Results compare your supplement ON days vs OFF days against your personal baseline to estimate whether a supplement is helping you.
+            <div className="text-sm text-gray-800">
+              Head start: <span className="font-medium">{Number(wearableStatus?.wearable_days_imported || 0)}</span> {Number(wearableStatus?.wearable_days_imported || 0) === 1 ? 'usable day' : 'usable days'} imported
+            </div>
+            {wearableStatus?.wearable_date_range_start && wearableStatus?.wearable_date_range_end && (
+              <div className="mt-1 text-sm text-gray-800">
+                Date range: {new Date(wearableStatus.wearable_date_range_start).toLocaleString(undefined, { month: 'short', year: 'numeric' })} – {new Date(wearableStatus.wearable_date_range_end).toLocaleString(undefined, { month: 'short', year: 'numeric' })}
               </div>
             )}
+            <div className="mt-4 text-sm text-gray-500 italic">
+              Combined with your daily check-ins, this increases confidence across all results.
+            </div>
           </>
         ) : (
           <>
-            <div className="text-sm text-gray-800">Built from daily check-ins • {Math.max(0, Number(progress?.checkins?.last30?.clean || 0))} {Number(progress?.checkins?.last30?.clean || 0) === 1 ? 'clean day' : 'clean days'} collected</div>
-            <div className="mt-2 text-sm text-gray-600">Results compare supplement ON vs OFF days against this baseline. More clean days increase confidence.</div>
-            <a href="/onboarding/wearables" className="mt-2 inline-block text-sm text-gray-600 hover:underline">
-              Connect wearable for deeper analysis →
-            </a>
+            <div className="text-sm text-gray-800">
+              Built from daily check-ins • {Math.max(0, Number(progress?.checkins?.last30?.clean || 0))} {Number(progress?.checkins?.last30?.clean || 0) === 1 ? 'clean day' : 'clean days'} collected
+            </div>
+            <div className="mt-4 text-sm text-gray-500 italic">
+              Results compare supplement ON vs OFF days against this baseline. More clean days increase confidence.
+            </div>
           </>
         )}
       </div>
     </section>
+    {/* Post-upload success modal (explicitly triggered via ?upload=success) */}
+    {showUploadSuccess && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50" onClick={() => setShowUploadSuccess(null)} />
+        <div className="relative z-10 w-full max-w-[520px] rounded-xl bg-white p-6 sm:p-8 border border-gray-200">
+          <div className="text-xl sm:text-2xl font-semibold text-center">Baseline enhanced</div>
+          <div className="mt-2 text-center text-sm text-gray-700">
+            {(() => {
+              const days = showUploadSuccess.days ?? Number(wearableStatus?.wearable_days_imported || 0)
+              const src = showUploadSuccess.source || (Array.isArray(wearableStatus?.wearable_sources) && wearableStatus!.wearable_sources.length > 0 ? wearableStatus!.wearable_sources[0] : undefined)
+              return `${days} ${days === 1 ? 'day' : 'days'} of usable health data imported${src ? ` from ${src}` : ''}.`
+            })()}
+          </div>
+          <div className="mt-4 text-sm text-gray-800 space-y-3">
+            <p>
+              This data is used to strengthen your baseline — the reference point we compare against when supplements are ON vs OFF.
+            </p>
+            <p>
+              Where available, objective metrics (such as sleep and resting heart rate) are used to help separate real effects from day‑to‑day noise.
+            </p>
+            <p>
+              This improves confidence and can reduce the time needed to reach clear results.
+            </p>
+          </div>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => setShowUploadSuccess(null)}
+              className="inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90"
+            >
+              Continue to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <ReminderNudgeModal open={showReminder} onClose={dismissReminder} onEnable={enableReminder} />
     </>
   )

@@ -21,6 +21,10 @@ export default function UploadCenter() {
   const [dragActive, setDragActive] = useState(false)
   const [lastResult, setLastResult] = useState<any | null>(null)
   const [lastError, setLastError] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+  const [postUploadOpen, setPostUploadOpen] = useState(false)
+  const [wearableStatus, setWearableStatus] = useState<any | null>(null)
+  const [firstTimeUpload, setFirstTimeUpload] = useState<boolean>(false)
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -55,27 +59,81 @@ export default function UploadCenter() {
           console.log('[UploadCenter] Large file detected. Using storage-based upload flow.')
           const supabase = createBrowserSupabase()
           const { data: u } = await supabase.auth.getUser()
+          if (!u?.user?.id) {
+            throw new Error('Please sign in to upload your data.')
+          }
+          const { data: s } = await supabase.auth.getSession()
+          const accessToken = (s as any)?.session?.access_token
+          if (!accessToken) throw new Error('Please sign in to upload your data.')
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
+          const BUCKET = 'uploads'
+          // Make sure bucket exists and allows required MIME types and size
+          try { await fetch('/api/storage/ensure-uploads', { method: 'POST' }) } catch {}
           const userId = u?.user?.id || 'anon'
           const storagePaths: string[] = []
           for (const f of files) {
             const safeName = (f.name || 'file').toLowerCase().replace(/[^a-z0-9._-]+/g, '_')
             const path = `health/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`
             console.log('[UploadCenter] Uploading to storage:', path, 'size:', (f as any)?.size)
-            const { error } = await supabase.storage.from('uploads').upload(path, f, { upsert: true, contentType: f.type || 'application/octet-stream' })
-            if (error) throw new Error(`Storage upload failed for ${f.name}: ${error.message}`)
+            // Use XHR for progress and reliability in a single request
+            await new Promise<void>((resolve, reject) => {
+              try {
+                const xhr = new XMLHttpRequest()
+                xhr.open('POST', `${supabaseUrl}/storage/v1/object/${BUCKET}/${encodeURIComponent(path)}`)
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
+                xhr.setRequestHeader('x-upsert', 'true')
+                // Use a generic content type to avoid bucket MIME restrictions blocking zip/xml
+                xhr.setRequestHeader('Content-Type', 'application/octet-stream')
+                xhr.upload.onprogress = (e) => {
+                  if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100)
+                    setUploadProgress(pct)
+                  }
+                }
+                xhr.onerror = () => reject(new Error('Upload failed'))
+                xhr.onload = () => {
+                  if (xhr.status >= 200 && xhr.status < 300) resolve()
+                  else reject(new Error(`Upload failed: HTTP ${xhr.status}${xhr.responseText ? ` — ${xhr.responseText}` : ''}`))
+                }
+                xhr.send(f)
+              } catch (err) {
+                reject(err as any)
+              }
+            })
             storagePaths.push(path)
           }
           console.log('[UploadCenter] Calling universal endpoint with storagePaths:', storagePaths.length)
           const res = await fetch('/api/upload/universal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ storagePaths, bucket: 'uploads' })
+            body: JSON.stringify({ storagePaths, bucket: BUCKET })
           })
           const data = await res.json().catch(() => ({}))
           console.log('[UploadCenter] /api/upload/universal (storage) status:', res.status, 'payload:', data)
           if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
           toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
           setLastResult(data)
+          setUploadProgress(null)
+          // Fetch wearable status then navigate (no modal here)
+          try {
+            const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+            if (ws.ok) {
+              const wj = await ws.json()
+              setWearableStatus(wj)
+              const connectedNow = Boolean(wj?.wearable_connected)
+              const days = Number((data?.results?.daysUpserted ?? wj?.wearable_days_imported ?? 0) || 0)
+              if (connectedNow && days > 0) {
+                try {
+                  const params = new URLSearchParams()
+                  params.set('upload', 'success')
+                  params.set('days', String(days))
+                  const src = Array.isArray(wj?.wearable_sources) && wj.wearable_sources.length > 0 ? wj.wearable_sources[0] : undefined
+                  if (src) params.set('source', String(src))
+                  window.location.href = `/dashboard?${params.toString()}`
+                } catch {}
+              }
+            }
+          } catch {}
         } else {
           // Small files: send directly as multipart
           console.log('[UploadCenter] Routing to /api/upload/universal with', files.length, 'small file(s)')
@@ -87,6 +145,26 @@ export default function UploadCenter() {
           if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
           toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
           setLastResult(data)
+          // Fetch wearable status then navigate (no modal here)
+          try {
+            const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+            if (ws.ok) {
+              const wj = await ws.json()
+              setWearableStatus(wj)
+              const connectedNow = Boolean(wj?.wearable_connected)
+              const days = Number((data?.results?.daysUpserted ?? wj?.wearable_days_imported ?? 0) || 0)
+              if (connectedNow && days > 0) {
+                try {
+                  const params = new URLSearchParams()
+                  params.set('upload', 'success')
+                  params.set('days', String(days))
+                  const src = Array.isArray(wj?.wearable_sources) && wj.wearable_sources.length > 0 ? wj.wearable_sources[0] : undefined
+                  if (src) params.set('source', String(src))
+                  window.location.href = `/dashboard?${params.toString()}`
+                } catch {}
+              }
+            }
+          } catch {}
         }
       } else {
         for (const file of files) {
@@ -144,7 +222,7 @@ export default function UploadCenter() {
           <h1 className="text-3xl font-bold">Upload Your Data</h1>
           <p className="text-gray-600">Import health data and supplement logs. We’ll handle the rest.</p>
         </div>
-        <Link href="/onboarding/report-ready"><Button>Skip for now</Button></Link>
+        <Link href="/dashboard"><Button>Skip for now</Button></Link>
       </div>
 
       <Card className="overflow-hidden p-0">
@@ -159,7 +237,7 @@ export default function UploadCenter() {
           <TabsContent value="health" className="p-6 space-y-6">
             <UploadInstructions />
             <div
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${dragActive ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}
+              className={`border-2 border-dashed rounded-lg p-8 sm:p-12 text-center transition-colors ${dragActive ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -167,9 +245,17 @@ export default function UploadCenter() {
             >
               <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} className="hidden" />
               {isUploading ? (
-                <div className="space-y-4">
-                  <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto" />
-                  <p className="font-medium">Processing your data… Large files may take a minute.</p>
+                <div className="space-y-3">
+                  <div className="h-2 w-full bg-gray-200 rounded">
+                    <div
+                      className="h-2 bg-blue-600 rounded"
+                      style={{ width: `${uploadProgress ?? 10}%`, transition: 'width 0.2s ease' }}
+                    />
+                  </div>
+                  <div className="text-sm text-gray-700 text-center">
+                    {uploadProgress != null ? `Uploading… ${uploadProgress}%` : 'Preparing upload…'}
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">Processing your data… Large files may take a minute.</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -239,16 +325,32 @@ export default function UploadCenter() {
       </Card>
 
       {/* Result/Confirmation */}
-      {lastResult && (
+      {!postUploadOpen && lastResult && (
         <Card className="p-4">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-lg font-semibold">Upload complete</div>
-              <div className="text-sm text-gray-600 mt-1">{lastResult.message}</div>
-              {lastResult.details && <div className="text-sm text-gray-700 mt-2">{lastResult.details}</div>}
+              {firstTimeUpload ? (
+                <>
+                  <div className="text-lg font-semibold">Baseline enhanced</div>
+                  <div className="text-sm text-gray-700 mt-1">
+                    {Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0))} usable day{Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0)) === 1 ? '' : 's'} imported{Array.isArray(Object.keys(lastResult?.results?.sources || {})) && Object.keys(lastResult.results.sources).length > 0 ? ` from ${Object.keys(lastResult.results.sources)[0]}` : ''}.
+                  </div>
+                  <div className="text-sm text-gray-700 mt-2">
+                    This data strengthens your baseline and improves confidence across every supplement you test.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg font-semibold">Data updated</div>
+                  <div className="text-sm text-gray-700 mt-1">
+                    {Number(lastResult?.results?.daysUpserted || 0)} additional usable day{Number(lastResult?.results?.daysUpserted || 0) === 1 ? '' : 's'} imported.
+                  </div>
+                  <div className="text-sm text-gray-700 mt-2">Your baseline has been updated.</div>
+                </>
+              )}
               <div className="mt-4">
-                <Button onClick={() => (window.location.href = '/onboarding/report-ready')}>
-                  See my results →
+                <Button onClick={() => (window.location.href = '/dashboard')}>
+                  Continue to dashboard
                 </Button>
               </div>
             </div>
@@ -269,6 +371,45 @@ export default function UploadCenter() {
         </Card>
       )}
 
+      {/* Post-upload modal (kept for fallback paths; dashboard shows the primary success modal) */}
+      {postUploadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl border border-gray-200 max-w-lg w-[92%] p-6 sm:p-8">
+            <>
+              <div className="text-xl sm:text-2xl font-semibold text-center">Baseline enhanced</div>
+              <div className="mt-2 text-center text-sm text-gray-700">
+                {(() => {
+                  const days = Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0))
+                  const src = Array.isArray(wearableStatus?.wearable_sources) && wearableStatus!.wearable_sources.length > 0 ? wearableStatus!.wearable_sources[0] : undefined
+                  return `${days} ${days === 1 ? 'day' : 'days'} of usable health data imported${src ? ` from ${src}` : ''}.`
+                })()}
+              </div>
+              <div className="mt-4 text-sm text-gray-800 space-y-3">
+                <p>
+                  This data is used to strengthen your baseline — the reference point we compare against when supplements are ON vs OFF.
+                </p>
+                <p>
+                  Where available, objective metrics (such as sleep and resting heart rate) are used to help separate real effects from day‑to‑day noise.
+                </p>
+                <p>
+                  This improves confidence and can reduce the time needed to reach clear results.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={() => {
+                    setPostUploadOpen(false)
+                    try { localStorage.setItem('wearable_postupload_seen', '1') } catch {}
+                    try { window.location.href = '/dashboard' } catch {}
+                  }}
+                >
+                  Continue to Dashboard
+                </Button>
+              </div>
+            </>
+          </div>
+        </div>
+      )}
       {lastError && (
         <Card className="p-4 bg-red-50 border-red-200">
           <div className="text-sm text-red-700">
