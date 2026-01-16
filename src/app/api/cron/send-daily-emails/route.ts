@@ -196,7 +196,7 @@ async function handler(req: NextRequest) {
         // Resolve latest daily metrics (yesterday in user's local tz)
         const latest = await getLatestDailyMetrics(supabaseAdmin as any, p.user_id, { targetLocalYmd: localYesterdayStr })
         try {
-          console.log('[daily-cron] Latest metrics:', latest)
+          console.log('[daily-cron] Metrics for user:', p.user_id, 'Result:', JSON.stringify(latest))
         } catch {}
         const energy = (typeof latest?.energy === 'number') ? latest!.energy : null
         const focus  = (typeof latest?.focus  === 'number') ? latest!.focus  : null

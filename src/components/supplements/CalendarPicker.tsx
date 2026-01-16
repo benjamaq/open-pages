@@ -7,13 +7,15 @@ export default function CalendarPicker({
   onChange,
   maxDate = new Date(),
   placeholder = 'Click to select date',
-  className = ''
+  className = '',
+  minDate = new Date(1900, 0, 1)
 }: {
   selected: Date | null
   onChange: (d: Date) => void
   maxDate?: Date
   placeholder?: string
   className?: string
+  minDate?: Date
 }) {
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState<Date>(() => {
@@ -45,7 +47,7 @@ export default function CalendarPicker({
     // This month
     for (let d = 1; d <= end.getDate(); d++) {
       const date = new Date(month.getFullYear(), month.getMonth(), d)
-      const disabled = date > maxDate
+      const disabled = date > maxDate || date < minDate
       grid.push({ date, inMonth: true, disabled })
     }
     // Fill to complete 6 rows
@@ -60,6 +62,15 @@ export default function CalendarPicker({
 
   const display = selected ? selected.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''
 
+  const canPrevMonth = useMemo(() => {
+    const prev = new Date(month.getFullYear(), month.getMonth() - 1, 1)
+    return prev >= new Date(minDate.getFullYear(), minDate.getMonth(), 1)
+  }, [month, minDate])
+  const canNextMonth = useMemo(() => {
+    const next = new Date(month.getFullYear(), month.getMonth() + 1, 1)
+    return next <= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)
+  }, [month, maxDate])
+
   return (
     <div className={`relative ${className}`} ref={ref}>
       <button
@@ -69,26 +80,75 @@ export default function CalendarPicker({
       >
         {display || <span className="text-gray-400">{placeholder}</span>}
       </button>
-      {open && (
-        <div className="absolute z-50 mt-2 w-[18rem] rounded-xl border border-gray-200 bg-white shadow-2xl p-3">
-          <div className="flex items-center justify-between mb-2">
+  {open && (
+        <div className="absolute z-50 mt-2 w-[20rem] rounded-xl border border-gray-200 bg-white shadow-2xl p-3">
+          <div className="flex items-center justify-between mb-2 gap-2">
             <button
               type="button"
-              onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-              className="px-2 py-1 rounded-lg hover:bg-gray-100"
+              onClick={() => canPrevMonth && setMonth(new Date(month.getFullYear(), month.getMonth() - 12, 1))}
+              className={`px-2 py-1 rounded-lg hover:bg-gray-100 ${!canPrevMonth ? 'opacity-40 cursor-not-allowed' : ''}`}
+              aria-label="Previous year"
+              disabled={!canPrevMonth}
+            >
+              «
+            </button>
+            <button
+              type="button"
+              onClick={() => canPrevMonth && setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+              className={`px-2 py-1 rounded-lg hover:bg-gray-100 ${!canPrevMonth ? 'opacity-40 cursor-not-allowed' : ''}`}
               aria-label="Previous month"
+              disabled={!canPrevMonth}
             >
               ‹
             </button>
-            <div className="text-sm font-semibold">
-              {month.toLocaleString(undefined, { month: 'long' })} {month.getFullYear()}
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-300 rounded-md text-sm px-2 py-1"
+                value={month.getMonth()}
+                onChange={(e) => {
+                  const m = Number(e.target.value)
+                  const next = new Date(month.getFullYear(), m, 1)
+                  if (next >= new Date(minDate.getFullYear(), minDate.getMonth(), 1) &&
+                      next <= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)) {
+                    setMonth(next)
+                  }
+                }}
+              >
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <option key={i} value={i}>{new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                className="w-20 border border-gray-300 rounded-md text-sm px-2 py-1"
+                value={month.getFullYear()}
+                onChange={(e) => {
+                  const y = Number(e.target.value)
+                  if (!isNaN(y)) {
+                    const next = new Date(y, month.getMonth(), 1)
+                    if (next >= new Date(minDate.getFullYear(), minDate.getMonth(), 1) &&
+                        next <= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)) {
+                      setMonth(next)
+                    }
+                  }
+                }}
+              />
             </div>
             <button
               type="button"
-              onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-              className="px-2 py-1 rounded-lg hover:bg-gray-100 disabled:opacity-40"
+              onClick={() => canNextMonth && setMonth(new Date(month.getFullYear() + 1, month.getMonth(), 1))}
+              className={`px-2 py-1 rounded-lg hover:bg-gray-100 ${!canNextMonth ? 'opacity-40' : ''}`}
+              aria-label="Next year"
+              disabled={!canNextMonth}
+            >
+              »
+            </button>
+            <button
+              type="button"
+              onClick={() => canNextMonth && setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+              className={`px-2 py-1 rounded-lg hover:bg-gray-100 ${!canNextMonth ? 'opacity-40' : ''}`}
               aria-label="Next month"
-              disabled={new Date(month.getFullYear(), month.getMonth() + 1, 1) > maxDate}
+              disabled={!canNextMonth}
             >
               ›
             </button>

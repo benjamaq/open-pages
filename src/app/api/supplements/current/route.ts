@@ -29,7 +29,6 @@ export async function GET(req: Request) {
       .from('user_supplement')
       .select('id,user_id,is_active,created_at,name,label,monthly_cost_usd,dose,timing,brand')
       .eq('user_id', user.id)
-      .or('is_active.eq.true,is_active.is.null')
       .order('created_at', { ascending: false })
     if (usErr) return NextResponse.json({ error: usErr.message }, { status: 500 })
     let rows: any[] = us || []

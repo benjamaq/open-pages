@@ -508,7 +508,11 @@ export default function ResultsPage() {
         {/* Today's Protocol */}
         <div className="mt-6 section-todays-protocol">
           {(() => {
-            const active = uiRows.filter(r => r.lifecycle !== 'Archived' && !paused[r.id])
+            const active = uiRows.filter(r => {
+              const s = supps.find(x => x.id === r.id) as any
+              const isActive = (s as any)?.is_active !== false
+              return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+            })
             // Debug monthly inputs
             try {
               console.log('[results] Active monthly inputs:', active.map(r => ({ id: r.id, name: r.name, monthly: r.monthly })))
@@ -519,7 +523,11 @@ export default function ResultsPage() {
             try {
               console.log('[results] Totals: daily=', daily, 'monthly=', monthly, 'included=', includedIds)
             } catch {}
-            const potentialSavingsYear = Math.round(uiRows.filter(r => r.lifecycle === 'Not working' && !paused[r.id]).reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0) * 12)
+            const potentialSavingsYear = Math.round(uiRows.filter(r => {
+              const s = supps.find(x => x.id === r.id) as any
+              const isActive = (s as any)?.is_active !== false
+              return r.lifecycle === 'Not working' && isActive && !paused[r.id]
+            }).reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0) * 12)
             return (
               <div className="mb-3 flex items-start justify-between">
                 <div>
@@ -553,7 +561,11 @@ export default function ResultsPage() {
               <div className="brand-name uppercase tracking-wide">Brand</div>
               <div className="dosewhen uppercase tracking-wide text-right">Dose • When</div>
             </div>
-            {uiRows.filter(u => u.lifecycle !== 'Archived' && !paused[u.id]).map(r => {
+            {uiRows.filter(u => {
+              const s = supps.find(x => x.id === u.id) as any
+              const isActive = (s as any)?.is_active !== false
+              return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+            }).map(r => {
               const s = supps.find(x => x.id === r.id) as any
               const { brand, shortName } = parseBrandAndShortName(s)
               let dose = getDose(s)
@@ -603,11 +615,19 @@ export default function ResultsPage() {
               <div>
                 <div className="section-header">Your Active Stack</div>
                 <div className="section-subtitle">
-                  {uiRows.filter(u => u.lifecycle !== 'Archived' && !paused[u.id]).length} supplements you&apos;re currently testing
+                  {uiRows.filter(u => {
+                    const s = supps.find(x => x.id === u.id) as any
+                    const isActive = (s as any)?.is_active !== false
+                    return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+                  }).length} supplements you&apos;re currently testing
                 </div>
               </div>
               {(() => {
-                const active = uiRows.filter(r => r.lifecycle !== 'Archived' && !paused[r.id])
+                const active = uiRows.filter(r => {
+                  const s = supps.find(x => x.id === r.id) as any
+                  const isActive = (s as any)?.is_active !== false
+                  return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+                })
                 const monthly = active.reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0)
                 const yearly = Math.round(monthly * 12)
                 return (
@@ -634,7 +654,11 @@ export default function ResultsPage() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {uiRows
-              .filter(r => r.lifecycle !== 'Archived' && !paused[r.id])
+              .filter(r => {
+                const s = supps.find(x => x.id === r.id) as any
+                const isActive = (s as any)?.is_active !== false
+                return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+              })
               .filter(r => !categoryFilter || getCategoryFor(r.id) === categoryFilter)
               .map(r => {
                 const s = supps.find(x => x.id === r.id) as any
@@ -789,11 +813,16 @@ export default function ResultsPage() {
                         </button>
                         <button
                           className="text-xs underline text-[#111111] hover:text-[#000000]"
-                          onClick={() => setPaused(p => {
-                            const next = { ...p }
-                            if (next[r.id]) delete next[r.id]; else next[r.id] = new Date().toISOString()
-                            return next
-                          })}
+                          onClick={async () => {
+                            try {
+                              await fetch(`/api/supplements/${encodeURIComponent(r.id)}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ is_active: false })
+                              })
+                              setSupps(prev => prev.map(su => su.id === r.id ? { ...su, is_active: false } as any : su))
+                            } catch {}
+                          }}
                         >
                           Pause
                         </button>
@@ -815,7 +844,11 @@ export default function ResultsPage() {
           </div>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {uiRows
-              .filter(r => r.lifecycle === 'Archived' || paused[r.id])
+              .filter(r => {
+                const s = supps.find(x => x.id === r.id) as any
+                const isInactive = (s as any)?.is_active === false
+                return r.lifecycle === 'Archived' || paused[r.id] || isInactive
+              })
               .map(r => {
                 const s = supps.find(x => x.id === r.id) as any
                 const cat = getCategoryFor(r.id) || 'General'
@@ -888,12 +921,20 @@ export default function ResultsPage() {
                     </div>
                     <div className="mt-auto pt-3 flex items-center justify-between tile-footer">
                       <div className="text-[13px] text-[#6B7280]">{`Was $${(typeof r.monthly === 'number' ? r.monthly : 0).toLocaleString()}/month`}</div>
-                      {paused[r.id] && (
+                      { (paused[r.id] || (s as any)?.is_active === false) && (
                         <button
                           className="text-xs underline text-[#111111] hover:text-[#000000]"
-                          onClick={() => setPaused(p => {
-                            const next = { ...p }; delete next[r.id]; return next
-                          })}
+                          onClick={async () => {
+                            try {
+                              await fetch(`/api/supplements/${encodeURIComponent(r.id)}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ is_active: true })
+                              })
+                              setSupps(prev => prev.map(su => su.id === r.id ? { ...su, is_active: true } as any : su))
+                              setPaused(p => { const next = { ...p }; delete next[r.id]; return next })
+                            } catch {}
+                          }}
                         >
                           Resume
                         </button>
@@ -1058,7 +1099,12 @@ export default function ResultsPage() {
                             const rf = r.reqOff ?? 0
                             const needOff = Math.max(0, rf - off)
                             const micro = (() => {
-                              if (group === 'Active') return `ON ${on}/${ro} • OFF ${off}/${rf} • Need ${needOff} OFF`
+                              if (group === 'Active') {
+                                const onPart = ro ? (on >= ro ? `ON ${on} ✓` : `ON ${on} of ${ro}`) : `ON ${on}`
+                                const offPart = rf ? (off >= rf ? `OFF ${off} ✓` : `OFF ${off} of ${rf}`) : `OFF ${off}`
+                                const needPart = rf ? ` • Need ${needOff} OFF` : ''
+                                return `${onPart} • ${offPart}${needPart}`
+                              }
                               if (group === 'Working') return `${r.effectText ? r.effectText.replace('Clear positive effect: ', '+') : 'Positive signal'}${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`
                               if (group === 'Not working') return `Negative signal${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`
                               if (group === 'No clear effect') return `No measurable change${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`
@@ -1105,7 +1151,18 @@ export default function ResultsPage() {
                                         <>
                                           <div className="text-xs font-semibold text-[#6B7280] uppercase mb-2">Progress Evidence</div>
                                           {(typeof r.daysOn === 'number' || typeof r.daysOff === 'number') && (
-                                            <div className="text-xs text-[#4B5563]">Clean ON: {on} • Clean OFF: {off} • Verdict after: {Math.max(0, rf - off)} more OFF day{Math.max(0, rf - off) === 1 ? '' : 's'}</div>
+                                            <div className="text-xs text-[#4B5563]">
+                                              {(() => {
+                                                const onTxt = (r.reqOn != null && r.daysOn != null)
+                                                  ? (r.daysOn >= (r.reqOn as number) ? `Clean ON: ${r.daysOn} ✓` : `Clean ON: ${r.daysOn} of ${r.reqOn}`)
+                                                  : (r.daysOn != null ? `Clean ON: ${r.daysOn}` : null)
+                                                const offTxt = (r.reqOff != null && r.daysOff != null)
+                                                  ? (r.daysOff >= (r.reqOff as number) ? `Clean OFF: ${r.daysOff} ✓` : `Clean OFF: ${r.daysOff} of ${r.reqOff}`)
+                                                  : (r.daysOff != null ? `Clean OFF: ${r.daysOff}` : null)
+                                                const need = (typeof r.reqOff === 'number' && typeof r.daysOff === 'number') ? Math.max(0, (r.reqOff as number) - (r.daysOff as number)) : null
+                                                return `${onTxt ?? ''}${onTxt && offTxt ? ' • ' : ''}${offTxt ?? ''}${need != null ? ` • Verdict after: ${need} more OFF day${need === 1 ? '' : 's'}` : ''}`
+                                              })()}
+                                            </div>
                                           )}
                                           {(typeof r.onAvg === 'number' || typeof r.offAvg === 'number') ? (
                                             <div className="mt-2 grid grid-cols-2 gap-3">
@@ -1143,7 +1200,17 @@ export default function ResultsPage() {
                                             <div className="text-xs text-[#4B5563]">ON/OFF averages not available yet.</div>
                                           )}
                                           {(typeof r.daysOn === 'number' || typeof r.daysOff === 'number') && (
-                                            <div className="mt-2 text-xs text-[#4B5563]">Clean days used — ON {on} • OFF {off}</div>
+                                            <div className="mt-2 text-xs text-[#4B5563]">
+                                              {(() => {
+                                                const onTxt = (r.reqOn != null && r.daysOn != null)
+                                                  ? (r.daysOn >= (r.reqOn as number) ? `Clean ON: ${r.daysOn} ✓` : `Clean ON: ${r.daysOn} of ${r.reqOn}`)
+                                                  : (r.daysOn != null ? `Clean ON: ${r.daysOn}` : null)
+                                                const offTxt = (r.reqOff != null && r.daysOff != null)
+                                                  ? (r.daysOff >= (r.reqOff as number) ? `Clean OFF: ${r.daysOff} ✓` : `Clean OFF: ${r.daysOff} of ${r.reqOff}`)
+                                                  : (r.daysOff != null ? `Clean OFF: ${r.daysOff}` : null)
+                                                return `${onTxt ?? ''}${onTxt && offTxt ? ' • ' : ''}${offTxt ?? ''}`
+                                              })()}
+                                            </div>
                                           )}
                                           <div className="mt-2 text-xs text-[#4B5563]">
                                             {(group === 'Working' && 'Recommendation: Keep taking.') ||

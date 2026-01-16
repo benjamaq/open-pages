@@ -120,6 +120,10 @@ export async function getLatestDailyMetrics(
   userId: string,
   opts?: { targetLocalYmd?: string }
 ): Promise<Metrics> {
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[email-stats] getLatestDailyMetrics start', { userId, targetLocalYmd: opts?.targetLocalYmd })
+  } catch {}
   const since = new Date()
   since.setDate(since.getDate() - 7)
   // If a target local date is provided, try that exact date first
@@ -130,6 +134,9 @@ export async function getLatestDailyMetrics(
       .eq('user_id', userId)
       .eq('local_date', opts.targetLocalYmd)
       .limit(1)
+    try {
+      console.log('[email-stats] exact date query rows', { userId, date: opts?.targetLocalYmd, count: (exactRows || []).length, sample: (exactRows && exactRows[0]) })
+    } catch {}
     if (exactRows && exactRows.length > 0) {
       const r = exactRows[0] as any
       const energy = toNumOrUndef(r.energy)
@@ -138,6 +145,7 @@ export async function getLatestDailyMetrics(
       const sleepRaw = (r.sleep_quality != null ? r.sleep_quality : r.sleep)
       const sleep = toNumOrUndef(sleepRaw)
       if (energy != null || focus != null || sleep != null || mood != null) {
+        try { console.log('[email-stats] return exact metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood }) } catch {}
         return { energy, focus, sleep, mood, date: (r.local_date ? String(r.local_date).slice(0,10) : undefined) }
       }
     }
@@ -150,6 +158,9 @@ export async function getLatestDailyMetrics(
     .gte('local_date', since.toISOString().slice(0,10))
     .order('local_date', { ascending: false })
     .limit(1)
+  try {
+    console.log('[email-stats] window query rows', { userId, since: since.toISOString().slice(0,10), count: (rows || []).length, sample: (rows && rows[0]) })
+  } catch {}
   if (!rows || rows.length === 0) return null
   const r = rows[0] as any
   const energy = toNumOrUndef(r.energy)
@@ -174,8 +185,10 @@ export async function getLatestDailyMetrics(
     const csRaw = (c.sleep_quality != null ? c.sleep_quality : c.sleep)
     const cs = toNumOrUndef(csRaw)
     if (ce == null && cf == null && cs == null && cm == null) return null
+    try { console.log('[email-stats] return fallback checkin metrics', { userId, date: String(c.created_at).slice(0,10), energy: ce, focus: cf, sleep: cs, mood: cm }) } catch {}
     return { energy: ce, focus: cf, sleep: cs, mood: cm, date: (c.created_at ? String(c.created_at).slice(0,10) : undefined) }
   }
+  try { console.log('[email-stats] return window metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood }) } catch {}
   return { energy, focus, sleep, mood, date: (r.local_date ? String(r.local_date).slice(0,10) : undefined) }
 }
 

@@ -201,6 +201,7 @@ export async function PATCH(
     if (typeof body?.dose === 'string') updateSupplementFields.dose = String(body.dose).trim()
     if (typeof body?.timing === 'string') updateSupplementFields.timing = String(body.timing).trim()
     if (typeof body?.brand === 'string') updateSupplementFields.brand = String(body.brand).trim()
+    if (typeof body?.is_active === 'boolean') updateSupplementFields.is_active = body.is_active
     // notes column may not exist on user_supplement in some schemas; skip updating here to avoid errors
     // frequency stored on stack_items only for now
     const hasFrequency = typeof body?.frequency === 'string' && String(body.frequency).trim().length > 0
