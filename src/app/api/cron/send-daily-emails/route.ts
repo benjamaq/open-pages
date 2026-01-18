@@ -7,7 +7,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
-type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null }
+type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null; profile_id?: string }
 
 async function handler(req: NextRequest) {
   try {
@@ -67,7 +67,7 @@ async function handler(req: NextRequest) {
     console.log('[daily-cron] Querying profiles...')
     const { data: profiles, error } = await supabaseAdmin
       .from('profiles')
-      .select('user_id, display_name, timezone')
+      .select('id, user_id, display_name, timezone')
       .limit(10000)
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Found profiles:', (profiles as any)?.length || 0)
@@ -78,7 +78,33 @@ async function handler(req: NextRequest) {
     }
 
     // Start with all profiles; in force mode we'll scope AFTER resolving emails via RPC
-    let scopedProfiles: ProfileRow[] = ((profiles as any) || []) as ProfileRow[]
+    let scopedProfiles: ProfileRow[] = (((profiles as any) || []) as Array<any>).map((p: any) => ({
+      user_id: p.user_id,
+      display_name: p.display_name,
+      timezone: p.timezone,
+      profile_id: p.id
+    }))
+
+    // STEP 1b: Filter by notification preferences (email + daily reminder enabled; null treated as enabled)
+    try {
+      const { data: prefs } = await supabaseAdmin
+        .from('notification_preferences')
+        .select('profile_id, email_enabled, daily_reminder_enabled')
+      const allowedProfileIds = new Set<string>()
+      for (const pref of (prefs as any[]) || []) {
+        const emailOk = (pref.email_enabled === null || pref.email_enabled === true || typeof pref.email_enabled === 'undefined')
+        const dailyOk = (pref.daily_reminder_enabled === null || pref.daily_reminder_enabled === true || typeof pref.daily_reminder_enabled === 'undefined')
+        if (emailOk && dailyOk && pref.profile_id) {
+          allowedProfileIds.add(String(pref.profile_id))
+        }
+      }
+      const beforeCount = scopedProfiles.length
+      scopedProfiles = scopedProfiles.filter(p => !p.profile_id || allowedProfileIds.has(String(p.profile_id)))
+      // eslint-disable-next-line no-console
+      console.log('[daily-cron] Pref filter:', { before: beforeCount, after: scopedProfiles.length })
+    } catch (e) {
+      console.warn('[daily-cron] Pref filter skipped due to error:', (e as any)?.message)
+    }
 
     // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues
     // eslint-disable-next-line no-console
@@ -150,16 +176,22 @@ async function handler(req: NextRequest) {
     const now = new Date()
     const profilesInWindow = scopedProfiles.filter(p => {
       if (bypassAll) return true // bypass hour gate for targeted dry/force
-    const tz = p.timezone || 'UTC'
-    const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
-    const hour = userTime.getHours()
-    return hour >= 7 && hour < 8
-  })
+      const tz = p.timezone || 'UTC'
+      const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
+      const hour = userTime.getHours()
+      return hour >= 7 && hour < 8
+    })
 
     // eslint-disable-next-line no-console
     console.log(`[daily-cron] Users in 7-8am window: ${profilesInWindow.length} (bypassAll=${bypassAll})`)
     // eslint-disable-next-line no-console
     console.log(`[daily-cron] Preparing to send ${profilesInWindow.length} emails (dry=${dryRun})`)
+
+    // Active user window for engagement checks
+    const ACTIVE_DAYS_THRESHOLD = 30
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - ACTIVE_DAYS_THRESHOLD)
+    const cutoffYmd = cutoffDate.toISOString().slice(0, 10) // YYYY-MM-DD
 
     const results: any[] = []
     let successCount = 0
@@ -169,7 +201,34 @@ async function handler(req: NextRequest) {
         const email = emailMap.get(p.user_id)
         if (!email) { results.push({ user_id: p.user_id, skip: 'no email', stage: 'email-lookup' }); continue }
         if (filterEmail && email !== filterEmail) { continue }
-        // profiles.daily_reminders_enabled already filtered by the .or above
+
+        // Engagement filter: Only send to active users (recent activity OR at least 1 active supplement)
+        if (!bypassAll) {
+          // Count supplements (active OR legacy-null)
+          let supplementCount = 0
+          try {
+            const { count: suppCount } = await supabaseAdmin
+              .from('user_supplement')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', p.user_id)
+              .or('is_active.eq.true,is_active.is.null')
+            supplementCount = Number(suppCount || 0)
+          } catch {}
+          // Any daily entry in the last 30 days (based on local_date)
+          let recentActive = false
+          try {
+            const { count: recentCount } = await supabaseAdmin
+              .from('daily_entries')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', p.user_id)
+              .gte('local_date', cutoffYmd)
+            recentActive = Number(recentCount || 0) > 0
+          } catch {}
+          if (!recentActive && supplementCount === 0) {
+            results.push({ user_id: p.user_id, skip: 'inactive_30d_and_no_supplements' })
+            continue
+          }
+        }
 
         // Deduplicate by email_sends same day
         if (!bypassAll) {
@@ -202,6 +261,29 @@ async function handler(req: NextRequest) {
         const focus  = (typeof latest?.focus  === 'number') ? latest!.focus  : null
         const sleep  = (typeof latest?.sleep  === 'number') ? latest!.sleep  : null
         const mood   = (typeof latest?.mood   === 'number') ? latest!.mood   : null
+
+        // Debug block for forced emails
+        if (authorizedForce) {
+          const debugInfo = {
+            userId: p.user_id,
+            targetDate: localYesterdayStr,
+            metricsResult: latest,
+            energy, focus, sleep, mood
+          }
+          try { console.log('[daily-cron] DEBUG:', JSON.stringify(debugInfo)) } catch {}
+        }
+
+        // TEMP DEBUG: return metrics for target email to verify mapping in prod
+        if (email === 'ben09@icloud.com') {
+          return NextResponse.json({
+            debug: true,
+            userId: p.user_id,
+            targetDate: localYesterdayStr,
+            timezone: tz,
+            metricsResult: latest,
+            derived: { energy, focus, sleep, mood }
+          })
+        }
 
         // Generate magic token
         const rawToken = crypto.randomBytes(32).toString('hex')

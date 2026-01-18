@@ -69,7 +69,7 @@ export default function StackPillGrid({ items, fmtMoney, title, muted = false, e
 										{it.status === 'Not working' && 'Negative signal'}
 										{it.status === 'No clear effect' && 'No measurable change'}
 										{it.status === 'Testing' && (typeof it.details?.daysOn === 'number' || typeof it.details?.daysOff === 'number')
-											? `ON ${it.details?.daysOn ?? 0}/${it.details?.reqOn ?? 0} • OFF ${it.details?.daysOff ?? 0}/${it.details?.reqOff ?? 0}`
+											? `ON ${((it.details?.daysOn ?? 0) >= (it.details?.reqOn ?? 0)) ? `${it.details?.daysOn ?? 0} ✓` : `${it.details?.daysOn ?? 0} of ${it.details?.reqOn ?? 0}`} • OFF ${((it.details?.daysOff ?? 0) >= (it.details?.reqOff ?? 0)) ? `${it.details?.daysOff ?? 0} ✓` : `${it.details?.daysOff ?? 0} of ${it.details?.reqOff ?? 0}`}`
 											: ''}
 									</div>
 								</div>

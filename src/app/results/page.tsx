@@ -183,9 +183,16 @@ export default function ResultsPage() {
         return 'No clear effect'
       })()
       const confidenceText = (typeof e?.effect_confidence === 'number') ? `${Math.round(e!.effect_confidence!)}% confidence` : null
-      const periodText = (typeof daysOn === 'number' || typeof daysOff === 'number') && (typeof reqOn === 'number' || typeof reqOff === 'number')
-        ? `Clean ON/OFF: ${daysOn ?? 0}/${daysOff ?? 0} • Required: ${reqOn ?? 0}/${reqOff ?? 0}`
-        : null
+      const periodText = (() => {
+        const onNum = typeof daysOn === 'number' ? daysOn as number : undefined
+        const offNum = typeof daysOff === 'number' ? daysOff as number : undefined
+        const roNum = typeof reqOn === 'number' ? reqOn as number : undefined
+        const rfNum = typeof reqOff === 'number' ? reqOff as number : undefined
+        const onStr = onNum != null ? (roNum != null ? (onNum >= roNum ? `Clean ON: ${onNum} ✓` : `Clean ON: ${onNum} of ${roNum}`) : `Clean ON: ${onNum}`) : null
+        const offStr = offNum != null ? (rfNum != null ? (offNum >= rfNum ? `Clean OFF: ${offNum} ✓` : `Clean OFF: ${offNum} of ${rfNum}`) : `Clean OFF: ${offNum}`) : null
+        if (!onStr && !offStr) return null
+        return `${onStr || ''}${onStr && offStr ? ' • ' : ''}${offStr || ''}`
+      })()
       return {
         id: s.id,
         name: s.name,
@@ -1262,7 +1269,12 @@ export default function ResultsPage() {
                         const on = r.daysOn ?? 0, off = r.daysOff ?? 0, ro = r.reqOn ?? 0, rf = r.reqOff ?? 0
                         const needOff = Math.max(0, rf - off)
                         const micro = (() => {
-                          if (group === 'Active') return `ON ${on}/${ro} • OFF ${off}/${rf} • Need ${needOff} OFF`
+                          if (group === 'Active') {
+                            const onPart = ro ? (on >= ro ? `ON ${on} ✓` : `ON ${on} of ${ro}`) : `ON ${on}`
+                            const offPart = rf ? (off >= rf ? `OFF ${off} ✓` : `OFF ${off} of ${rf}`) : `OFF ${off}`
+                            const needPart = rf ? ` • Need ${needOff} OFF` : ''
+                            return `${onPart} • ${offPart}${needPart}`
+                          }
                           if (group === 'Working') return `${r.effectText ? r.effectText.replace('Clear positive effect: ', '+') : 'Positive signal'}${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`
                           if (group === 'Not working') return `Negative signal${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`
                           if (group === 'No clear effect') return `No measurable change${r.confidenceText ? ` • ${r.confidenceText.replace(' confidence',' conf')}` : ''}`

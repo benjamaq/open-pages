@@ -632,8 +632,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       )}
       {(isActivelyTesting || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
-          ON: <span className="font-medium">{daysOn}</span>/<span className="font-medium">{reqDays}</span>{onComplete ? ' ✓' : ''} <span className="mx-2">•</span>
-          OFF: <span className="font-medium">{daysOff}</span>/<span className="font-medium">{reqOff}</span>{offComplete ? ' ✓' : ''}{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
+          ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
+          OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
       {/* Strong ON baseline hint when progress is high but OFF days are lacking */}

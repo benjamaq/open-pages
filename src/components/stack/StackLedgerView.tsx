@@ -43,7 +43,7 @@ export default function StackLedgerView({ rows, fmtMoney }: Props) {
 												<div className="text-[15px] font-medium text-[#111111] truncate">{r.name}</div>
 												<div className="mt-0.5 text-xs text-[#4B5563]">
 													{g === 'Active'
-														? `ON ${r.daysOn ?? 0}/${r.reqOn ?? 0} • OFF ${r.daysOff ?? 0}/${r.reqOff ?? 0}`
+														? `ON ${((r.daysOn ?? 0) >= (r.reqOn ?? 0)) ? `${r.daysOn ?? 0} ✓` : `${r.daysOn ?? 0} of ${r.reqOn ?? 0}`} • OFF ${((r.daysOff ?? 0) >= (r.reqOff ?? 0)) ? `${r.daysOff ?? 0} ✓` : `${r.daysOff ?? 0} of ${r.reqOff ?? 0}`}`
 														: r.effectText || 'No clear effect'}{r.confidenceText ? ` • ${r.confidenceText}` : ''}
 												</div>
 											</div>
