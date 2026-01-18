@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { StackCostCard } from '@/components/insights/StackCostCard'
+import TruthReportModal from '@/components/TruthReportModal'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 
 type Row = {
@@ -475,7 +476,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const [showStopModal, setShowStopModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRetestModal, setShowRetestModal] = useState(false)
-  const [showVerdictModal, setShowVerdictModal] = useState(false)
+  const [showTruthReport, setShowTruthReport] = useState(false)
+  const [reportId, setReportId] = useState<string | null>(null)
   // Parallel testing soft warnings
   const [showParallel8Modal, setShowParallel8Modal] = useState(false)
   const [showParallel11Modal, setShowParallel11Modal] = useState(false)
@@ -730,7 +732,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             <button
               className="text-[11px] font-medium"
               style={{ color: '#3A2F2A' }}
-              onClick={() => setShowVerdictModal(true)}
+              onClick={() => {
+                // Determine best ID and open modal
+                const idCandidate = String((row as any).userSuppId || (row as any).userSupplementId || (row as any).id || '')
+                try { console.log('[report] Opening modal for supplement:', { idCandidate, name: (row as any)?.name }) } catch {}
+                setReportId(idCandidate || null)
+                setShowTruthReport(true)
+              }}
             >
               View full report →
             </button>
@@ -892,14 +900,12 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
       )}
       {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
-      {/* Verdict detail modal */}
-      {showVerdictModal && (
-        <VerdictModal
-          row={row as any}
-          onClose={() => setShowVerdictModal(false)}
-          onRetest={handleRetest}
-        />
-      )}
+      {/* Truth Report modal (full analysis) */}
+      <TruthReportModal
+        isOpen={showTruthReport}
+        onClose={() => setShowTruthReport(false)}
+        userSupplementId={String(reportId || userSuppId)}
+      />
       {showPaywall && (
         <PaywallModal
           onClose={() => {

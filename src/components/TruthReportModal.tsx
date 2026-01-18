@@ -20,7 +20,10 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId }: 
     ;(async () => {
       try {
         setLoading(true); setError(null)
-        const res = await fetch(`/api/truth-report/${encodeURIComponent(userSupplementId)}`, { cache: 'no-store', credentials: 'include' })
+        try { console.log('[report] Modal received ID:', userSupplementId) } catch {}
+        const url = `/api/truth-report/${encodeURIComponent(userSupplementId)}`
+        try { console.log('[report] API called with ID:', userSupplementId, 'url:', url) } catch {}
+        const res = await fetch(url, { cache: 'no-store', credentials: 'include' })
         const json = await res.json()
         if (!mounted) return
         if (!res.ok) throw new Error(json?.error || 'Failed')
