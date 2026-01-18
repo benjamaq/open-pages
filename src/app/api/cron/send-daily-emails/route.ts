@@ -77,7 +77,7 @@ async function handler(req: NextRequest) {
       return NextResponse.json({ ok:false, error: error.message }, { status: 500 })
     }
 
-    // Start with all profiles; in force mode we'll scope AFTER resolving emails via RPC
+    // Start with all profiles
     let scopedProfiles: ProfileRow[] = (((profiles as any) || []) as Array<any>).map((p: any) => ({
       user_id: p.user_id,
       display_name: p.display_name,
@@ -85,25 +85,82 @@ async function handler(req: NextRequest) {
       profile_id: p.id
     }))
 
-    // STEP 1b: Filter by notification preferences (email + daily reminder enabled; null treated as enabled)
-    try {
-      const { data: prefs } = await supabaseAdmin
-        .from('notification_preferences')
-        .select('profile_id, email_enabled, daily_reminder_enabled')
-      const allowedProfileIds = new Set<string>()
-      for (const pref of (prefs as any[]) || []) {
-        const emailOk = (pref.email_enabled === null || pref.email_enabled === true || typeof pref.email_enabled === 'undefined')
-        const dailyOk = (pref.daily_reminder_enabled === null || pref.daily_reminder_enabled === true || typeof pref.daily_reminder_enabled === 'undefined')
-        if (emailOk && dailyOk && pref.profile_id) {
-          allowedProfileIds.add(String(pref.profile_id))
+    // If forcing to a specific email, resolve that user immediately and bypass all filters
+    if (authorizedForce && filterEmail) {
+      let targetUserId: string | undefined
+      try {
+        const adminApi = (supabaseAdmin as any).auth?.admin
+        if (adminApi?.getUserByEmail) {
+          const { data: byEmail } = await adminApi.getUserByEmail(filterEmail)
+          if (byEmail?.user?.id) {
+            targetUserId = byEmail.user.id as string
+            // Try to get an existing profile for display/timezone
+            const { data: profRow } = await supabaseAdmin
+              .from('profiles')
+              .select('id, user_id, display_name, timezone')
+              .eq('user_id', targetUserId)
+              .maybeSingle()
+            const display_name = (profRow as any)?.display_name || (byEmail.user?.user_metadata?.name as string) || (filterEmail.split('@')[0] || 'there')
+            const timezone = (profRow as any)?.timezone || 'UTC'
+            const profile_id = (profRow as any)?.id
+            scopedProfiles = [{ user_id: targetUserId, display_name, timezone, profile_id }]
+            console.log('[daily-cron] Force targeting user (direct):', { user_id: targetUserId, email: filterEmail })
+          }
+        }
+      } catch (e) {
+        console.warn('[daily-cron] Force email lookup failed:', (e as any)?.message)
+      }
+      // Fallback: direct query to auth.users via schema if admin API failed
+      if (!targetUserId) {
+        try {
+          const { data: authUser } = await (supabaseAdmin as any)
+            .schema('auth')
+            .from('users')
+            .select('id, email, raw_user_meta_data')
+            .eq('email', filterEmail)
+            .maybeSingle()
+          if (authUser?.id) {
+            targetUserId = String(authUser.id)
+            const { data: profRow } = await supabaseAdmin
+              .from('profiles')
+              .select('id, user_id, display_name, timezone')
+              .eq('user_id', targetUserId)
+              .maybeSingle()
+            const display_name = (profRow as any)?.display_name || (authUser?.raw_user_meta_data?.name as string) || (filterEmail.split('@')[0] || 'there')
+            const timezone = (profRow as any)?.timezone || 'UTC'
+            const profile_id = (profRow as any)?.id
+            scopedProfiles = [{ user_id: targetUserId, display_name, timezone, profile_id }]
+            console.log('[daily-cron] Force targeting user (auth.users fallback):', { user_id: targetUserId, email: filterEmail })
+          }
+        } catch (e) {
+          console.warn('[daily-cron] auth.users fallback lookup failed:', (e as any)?.message)
         }
       }
-      const beforeCount = scopedProfiles.length
-      scopedProfiles = scopedProfiles.filter(p => !p.profile_id || allowedProfileIds.has(String(p.profile_id)))
-      // eslint-disable-next-line no-console
-      console.log('[daily-cron] Pref filter:', { before: beforeCount, after: scopedProfiles.length })
-    } catch (e) {
-      console.warn('[daily-cron] Pref filter skipped due to error:', (e as any)?.message)
+      if (!targetUserId) {
+        console.error('[daily-cron] Target email not found in admin lookup:', filterEmail)
+        return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
+      }
+    } else {
+      // STEP 1b: Filter by notification preferences (email + daily reminder enabled; null treated as enabled)
+      try {
+        const { data: prefs } = await supabaseAdmin
+          .from('notification_preferences')
+          .select('profile_id, email_enabled, daily_reminder_enabled')
+        const allowedProfileIds = new Set<string>()
+        for (const pref of (prefs as any[]) || []) {
+          const emailOk = (pref.email_enabled === null || pref.email_enabled === true || typeof pref.email_enabled === 'undefined')
+          const dailyOk = (pref.daily_reminder_enabled === null || pref.daily_reminder_enabled === true || typeof pref.daily_reminder_enabled === 'undefined')
+          if (emailOk && dailyOk && pref.profile_id) {
+            allowedProfileIds.add(String(pref.profile_id))
+          }
+        }
+        const beforeCount = scopedProfiles.length
+        scopedProfiles = scopedProfiles.filter(p => !p.profile_id || allowedProfileIds.has(String(p.profile_id)))
+        // eslint-disable-next-line no-console
+        console.log('[daily-cron] Pref filter:', { before: beforeCount, after: scopedProfiles.length })
+      } catch (e) {
+        console.warn('[daily-cron] Pref filter skipped due to error:', (e as any)?.message)
+      }
     }
 
     // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues
@@ -126,42 +183,14 @@ async function handler(req: NextRequest) {
       }
     }
 
-    // In force mode + target email, ensure we have the target user's id/email even if they lack a profile row
+    // In force mode + target email, scope to that user and bypass any subsequent list filters
     if (authorizedForce && filterEmail) {
-      let targetEntry = Array.from(emailMap.entries()).find(([, email]) => (email || '').toLowerCase() === String(filterEmail).toLowerCase())
-      let targetUserId = targetEntry?.[0] as string | undefined
-      if (!targetUserId) {
-        try {
-          const adminApi = (supabaseAdmin as any).auth?.admin
-          if (adminApi?.getUserByEmail) {
-            const { data: byEmail } = await adminApi.getUserByEmail(filterEmail)
-            if (byEmail?.user?.id) {
-              targetUserId = byEmail.user.id as string
-              emailMap.set(targetUserId, filterEmail)
-              const existing = scopedProfiles.some(p => p.user_id === targetUserId)
-              if (!existing) {
-                // Create a minimal in-memory profile for targeting
-                const { data: profRow } = await supabaseAdmin
-                  .from('profiles')
-                  .select('user_id, display_name, timezone')
-                  .eq('user_id', targetUserId)
-                  .maybeSingle()
-                const display_name = (profRow as any)?.display_name || (byEmail.user?.user_metadata?.name as string) || (filterEmail.split('@')[0] || 'there')
-                const timezone = (profRow as any)?.timezone || 'UTC'
-                scopedProfiles.push({ user_id: targetUserId, display_name, timezone })
-              }
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
+      const forcedId = scopedProfiles[0]?.user_id
+      if (forcedId) {
+        emailMap.set(forcedId, filterEmail)
+        scopedProfiles = scopedProfiles.filter(p => p.user_id === forcedId)
+        console.log('[daily-cron] Force scoped to user:', { user_id: forcedId, email: filterEmail })
       }
-      if (!targetUserId) {
-        console.error('[daily-cron] Target email not found after RPC resolution:', filterEmail)
-        return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
-      }
-      scopedProfiles = scopedProfiles.filter(p => p.user_id === targetUserId)
-      console.log('[daily-cron] Force targeting user:', { user_id: targetUserId, email: filterEmail })
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
     // Sender: prefer env, else enforced verified domain (use .io)
@@ -176,11 +205,11 @@ async function handler(req: NextRequest) {
     const now = new Date()
     const profilesInWindow = scopedProfiles.filter(p => {
       if (bypassAll) return true // bypass hour gate for targeted dry/force
-      const tz = p.timezone || 'UTC'
-      const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
-      const hour = userTime.getHours()
-      return hour >= 7 && hour < 8
-    })
+    const tz = p.timezone || 'UTC'
+    const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
+    const hour = userTime.getHours()
+    return hour >= 7 && hour < 8
+  })
 
     // eslint-disable-next-line no-console
     console.log(`[daily-cron] Users in 7-8am window: ${profilesInWindow.length} (bypassAll=${bypassAll})`)

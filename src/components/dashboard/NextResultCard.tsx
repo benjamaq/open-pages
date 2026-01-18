@@ -80,7 +80,15 @@ export function NextResultCard() {
             </div>
           )}
           <div className="mt-2 text-xs text-gray-700">
-            <div>Clean: <span className="font-medium">{data.cleanDays}</span>/<span className="font-medium">{data.requiredDays}</span> days</div>
+            <div>
+              Clean:{' '}
+              <span className="font-medium">
+                {data.cleanDays >= data.requiredDays
+                  ? `${data.cleanDays} ✓`
+                  : `${data.cleanDays} of ${data.requiredDays}`}
+              </span>
+              {data.cleanDays < data.requiredDays ? ' days' : ''}
+            </div>
           </div>
           {data.disruptions.length > 0 && (
             <div className="mt-3">

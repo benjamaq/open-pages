@@ -536,10 +536,10 @@ export function DashboardUnifiedPanel() {
                 </div>
                 <div className="mt-2 text-xs text-gray-700 space-y-1">
                   <div>
-                    Clean ON days: <span className="font-medium">{onClean}</span>/<span className="font-medium">{reqOn}</span> {!onMet ? `(need ${needOn} more)` : '✓'}
+                    Clean ON days: <span className="font-medium">{onMet ? `${onClean}` : `${onClean} of ${reqOn}`}</span> {!onMet ? `(need ${needOn} more)` : '✓'}
                   </div>
                   <div>
-                    Clean OFF days: <span className="font-medium">{offClean}</span>/<span className="font-medium">{reqOff}</span> {offMet ? '✓' : `(need ${needOff} more)`}
+                    Clean OFF days: <span className="font-medium">{offMet ? `${offClean}` : `${offClean} of ${reqOff}`}</span> {offMet ? '✓' : `(need ${needOff} more)`}
                   </div>
                 </div>
                 {ready ? (
