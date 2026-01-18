@@ -325,16 +325,17 @@ async function handler(req: NextRequest) {
           try { console.log('[daily-cron] DEBUG:', JSON.stringify(debugInfo)) } catch {}
         }
 
-        // TEMP DEBUG: return metrics for target email to verify mapping in prod
+        // TEMP DEBUG (disabled return): log metrics for target email but continue to send
         if (email === 'ben09@icloud.com') {
-          return NextResponse.json({
-            debug: true,
-            userId: p.user_id,
-            targetDate: localYesterdayStr,
-            timezone: tz,
-            metricsResult: latest,
-            derived: { energy, focus, sleep, mood }
-          })
+          try {
+            console.log('[force] DEBUG for target email', {
+              userId: p.user_id,
+              targetDate: localYesterdayStr,
+              timezone: tz,
+              metricsResult: latest,
+              derived: { energy, focus, sleep, mood }
+            })
+          } catch {}
         }
 
         // Generate magic token
