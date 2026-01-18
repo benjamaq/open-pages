@@ -293,7 +293,7 @@ export function DailyProgressLoop() {
           + Add Supplement
         </a>
       </div>
-      {/* Flat grid of cards (no status sub-grouping) */}
+      {/* Decision Lifecycle split: Testing in progress + Completed */}
       {(() => {
         const allForDisplay = isMember
           ? [
@@ -331,11 +331,56 @@ export function DailyProgressLoop() {
             return a.i - b.i
           })
           .map((x: any) => x.r)
+        // Partition into Testing vs Completed
+        const testingRows = sortedForDisplay.filter((row: any) => {
+          const progressPct = Number(row?.progressPercent || 0)
+          const verdictValue = String((row as any)?.verdict || '').toLowerCase()
+          const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
+          const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
+          const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+          const testingActive = Boolean((row as any)?.testingActive)
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
+          return testingActive && !verdictReady && !inconclusive
+        })
+        const completedRows = sortedForDisplay.filter((row: any) => {
+          const progressPct = Number(row?.progressPercent || 0)
+          const verdictValue = String((row as any)?.verdict || '').toLowerCase()
+          const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
+          const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
+          const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
+          return verdictReady || inconclusive
+        })
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-            {sortedForDisplay.map((r: any) => (
-              <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
-            ))}
+          <div className="space-y-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Testing in progress</div>
+                <a href="/dash/stack" className="text-xs text-gray-700 hover:underline">Manage in My Stack →</a>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                {testingRows.length === 0 ? (
+                  <div className="text-xs text-gray-600">No active tests right now.</div>
+                ) : testingRows.map((r: any) => (
+                  <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Completed</div>
+                <a href="/results" className="text-xs text-gray-700 hover:underline">View full report →</a>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                {completedRows.length === 0 ? (
+                  <div className="text-xs text-gray-600">No completed results yet.</div>
+                ) : completedRows.map((r: any) => (
+                  <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
+                ))}
+              </div>
+            </div>
           </div>
         )
       })()}

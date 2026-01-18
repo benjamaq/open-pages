@@ -288,7 +288,14 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2 break-words">{item.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{item.name}</h3>
+              {/* Decision state badge placeholder (derived): show Testing/Complete where possible */}
+              <div className="mb-1">
+                <span className="inline-block text-[10px] px-2 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200">
+                  {/* Since full decision data isn't loaded here, label as “Testing” by default; server can enhance later */}
+                  Testing
+                </span>
+              </div>
               {item.dose && <p className="text-sm text-gray-600 break-words">Dose: {item.dose}</p>}
               {item.brand && <p className="text-sm text-gray-600 break-words">Brand: {item.brand}</p>}
               {item.timing && <p className="text-sm text-gray-600 break-words">Timing: {item.timing}</p>}
@@ -308,6 +315,8 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
                   {item.public ? 'Public' : 'Private'}
                 </span>
                 <div className="flex items-center space-x-2">
+                  {/* Retest button (visible on complete state; we’ll expose once decision state is wired) */}
+                  {/* <button className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">Retest</button> */}
                   <button
                     onClick={() => setEditingItem(item)}
                     className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"

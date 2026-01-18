@@ -457,7 +457,7 @@ export function DashboardUnifiedPanel() {
                       const names = Array.isArray(apiToday) ? apiToday : []
                       return names.length > 0 ? (
                       <div>
-                        <div className="font-medium">Skipped today ({names.length}):</div>
+                        <div className="font-medium">Scheduled OFF today ({names.length}):</div>
                         <ul className="mt-1 list-disc list-inside">
                           {names.map((nm: string) => (
                             <li key={nm}>{abbreviateSupplementName(String(nm || ''))}</li>
