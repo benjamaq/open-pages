@@ -475,6 +475,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const [showStopModal, setShowStopModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRetestModal, setShowRetestModal] = useState(false)
+  const [showVerdictModal, setShowVerdictModal] = useState(false)
   // Parallel testing soft warnings
   const [showParallel8Modal, setShowParallel8Modal] = useState(false)
   const [showParallel11Modal, setShowParallel11Modal] = useState(false)
@@ -724,11 +725,15 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-        {isInconclusive && (
+        {(isInconclusive || (isVerdictReady && isMember)) && (
           <div className="flex gap-2">
-            <a href="/results" className="text-[11px] font-medium" style={{ color: '#3A2F2A' }}>
+            <button
+              className="text-[11px] font-medium"
+              style={{ color: '#3A2F2A' }}
+              onClick={() => setShowVerdictModal(true)}
+            >
               View full report →
-            </a>
+            </button>
             <button
               className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
               onClick={() => setShowRetestModal(true)}
@@ -887,6 +892,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
       )}
       {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
+      {/* Verdict detail modal */}
+      {showVerdictModal && (
+        <VerdictModal
+          row={row as any}
+          onClose={() => setShowVerdictModal(false)}
+          onRetest={handleRetest}
+        />
+      )}
       {showPaywall && (
         <PaywallModal
           onClose={() => {
@@ -975,6 +988,106 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
         </button>
         <div className="mt-3 text-[11px] text-center text-gray-600">
           Payments handled by Stripe. You&apos;ll be redirected to a secure checkout page.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VerdictModal({ row, onClose, onRetest }: { row: any; onClose: () => void; onRetest: () => void }) {
+  const name = String(row?.name || 'Supplement')
+  const effectCat = String(row?.effectCategory || '').toLowerCase()
+  const confidence = typeof row?.confidence === 'number' ? Math.round((row.confidence as number) * 100) : null
+  const daysTested = Number(row?.daysOfData || 0)
+  const daysOnClean = Number(row?.daysOnClean ?? row?.daysOn ?? 0)
+  const daysOffClean = Number(row?.daysOffClean ?? row?.daysOff ?? 0)
+  const monthlyCost = Number(row?.monthlyCost || 0)
+  const yearly = monthlyCost > 0 ? monthlyCost * 12 : 0
+  const verdictBadge = (() => {
+    if (effectCat === 'works' || effectCat === 'keep') return { label: 'Positive Effect', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+    if (effectCat === 'no_effect' || effectCat === 'drop') return { label: 'No Clear Effect', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+    if (effectCat === 'inconsistent' || effectCat === 'negative') return { label: 'Negative Effect', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+    return { label: 'No Clear Effect', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+  })()
+  const recommendation = (() => {
+    if (effectCat === 'works' || effectCat === 'keep') return 'Recommended: keep taking'
+    if (effectCat === 'inconsistent' || effectCat === 'negative' || effectCat === 'no_effect' || effectCat === 'drop') return 'Recommended: consider stopping'
+    return 'Recommended: consider stopping'
+  })()
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-lg border border-gray-200">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-lg font-bold text-gray-900">{name}</div>
+            <div className="mt-1">
+              <span className={`text-[10px] px-2 py-0.5 rounded ${verdictBadge.cls}`}>{verdictBadge.label}</span>
+              <span className="ml-2 text-sm text-gray-800">{recommendation}</span>
+            </div>
+          </div>
+          <button className="text-sm text-gray-600 hover:text-gray-800" onClick={onClose}>Close</button>
+        </div>
+        {/* Analysis */}
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded border border-gray-200 p-3">
+            <div className="text-xs text-gray-500">Days tested</div>
+            <div className="font-semibold text-gray-900">{daysTested}</div>
+          </div>
+          <div className="rounded border border-gray-200 p-3">
+            <div className="text-xs text-gray-500">Statistical confidence</div>
+            <div className="font-semibold text-gray-900">{confidence != null ? `${confidence}%` : '—'}</div>
+          </div>
+          <div className="rounded border border-gray-200 p-3">
+            <div className="text-xs text-gray-500">Clean ON days</div>
+            <div className="font-semibold text-gray-900">{daysOnClean}</div>
+          </div>
+          <div className="rounded border border-gray-200 p-3">
+            <div className="text-xs text-gray-500">Clean OFF days</div>
+            <div className="font-semibold text-gray-900">{daysOffClean}</div>
+          </div>
+        </div>
+        {/* Metrics compared */}
+        <div className="mt-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 mb-2">Metrics compared</div>
+          <div className="text-sm text-gray-700">
+            Detailed metric breakdown not yet available in this view. We’ll add Energy, Focus, Sleep, and Mood comparisons soon.
+          </div>
+        </div>
+        {/* Explanation */}
+        <div className="mt-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 mb-2">Explanation</div>
+          <div className="text-sm text-gray-800">
+            After {daysTested} days of testing with {daysOnClean} ON days and {daysOffClean} OFF days, we {effectCat === 'works' ? 'found a positive signal' : effectCat === 'negative' ? 'found a negative signal' : 'did not find a statistically clear difference'} when taking vs not taking this supplement.
+          </div>
+        </div>
+        {/* Cost Impact */}
+        {monthlyCost > 0 && (
+          <div className="mt-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 mb-2">Cost impact</div>
+            <div className="text-sm text-gray-800">
+              {recommendation.includes('consider stopping')
+                ? <>Stopping this supplement would save ${monthlyCost}/month ({`$${yearly}/year`}).</>
+                : <>Continuing this supplement costs ${monthlyCost}/month ({`$${yearly}/year`}).</>}
+            </div>
+          </div>
+        )}
+        {/* Actions */}
+        <div className="mt-6 flex items-center justify-end gap-2">
+          <a href="/dash/stack" className="text-sm text-gray-800 underline">View in My Stack</a>
+          <button
+            className="text-sm px-3 py-2 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+            onClick={onRetest}
+          >
+            Retest
+          </button>
+          <button
+            className="text-sm px-3 py-2 rounded bg-[#111111] text-white hover:opacity-90"
+            onClick={onClose}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
