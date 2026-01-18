@@ -23,13 +23,14 @@ async function handler(req: NextRequest) {
   const url = new URL(req.url)
   const dryParam = url.searchParams.get('dry')
   const rawEmail = url.searchParams.get('email') || undefined
+  const forceUserId = url.searchParams.get('user_id') || undefined
   // Normalize email query (strip accidental quotes)
   const filterEmail = rawEmail ? rawEmail.replace(/^"+|"+$/g, '') : undefined
   const dryRun = dryParam === '1'
   const forceFlag = url.searchParams.get('force') === '1'
   // Allow force when explicitly targeting an email, even without auth header (scoped to that user only)
   const hasAuth = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
-  const authorizedForce = forceFlag && (hasAuth || !!filterEmail)
+  const authorizedForce = forceFlag && (hasAuth || !!filterEmail || !!forceUserId)
   const bypassAll = (dryRun && !!filterEmail) || authorizedForce
     // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
@@ -86,12 +87,32 @@ async function handler(req: NextRequest) {
     }))
 
     // If forcing to a specific email, resolve that user immediately and bypass all filters
-    if (authorizedForce && filterEmail) {
+    if (authorizedForce && (filterEmail || forceUserId)) {
       let targetUserId: string | undefined
       try {
         const adminApi = (supabaseAdmin as any).auth?.admin
-        if (adminApi?.getUserByEmail) {
+        if (forceUserId && adminApi?.getUserById) {
+          // Force by user_id first
+          console.log('[force] Using user_id override:', forceUserId)
+          const { data: byId } = await adminApi.getUserById(forceUserId)
+          try { console.log('[force] getUserById result:', { ok: !!byId?.user, id: byId?.user?.id, email: byId?.user?.email }) } catch {}
+          targetUserId = byId?.user?.id as string | undefined
+          // Lookup profile
+          const { data: profRow } = await supabaseAdmin
+            .from('profiles')
+            .select('id, user_id, display_name, timezone')
+            .eq('user_id', forceUserId)
+            .maybeSingle()
+          const display_name = (profRow as any)?.display_name || (byId?.user?.user_metadata?.name as string) || (byId?.user?.email?.split('@')[0] || 'there')
+          const timezone = (profRow as any)?.timezone || 'UTC'
+          const profile_id = (profRow as any)?.id
+          scopedProfiles = [{ user_id: forceUserId, display_name, timezone, profile_id }]
+          console.log('[daily-cron] Force targeting user (by user_id):', { user_id: forceUserId, email: byId?.user?.email })
+        } else if (filterEmail && adminApi?.getUserByEmail) {
+          // Else force by email via admin API
+          console.log('[force] Looking up email:', filterEmail)
           const { data: byEmail } = await adminApi.getUserByEmail(filterEmail)
+          try { console.log('[force] getUserByEmail result:', { ok: !!byEmail?.user, id: byEmail?.user?.id, email: byEmail?.user?.email }) } catch {}
           if (byEmail?.user?.id) {
             targetUserId = byEmail.user.id as string
             // Try to get an existing profile for display/timezone
@@ -111,14 +132,16 @@ async function handler(req: NextRequest) {
         console.warn('[daily-cron] Force email lookup failed:', (e as any)?.message)
       }
       // Fallback: direct query to auth.users via schema if admin API failed
-      if (!targetUserId) {
+      if (!targetUserId && filterEmail) {
         try {
+          console.log('[force] Fallback querying auth.users by email:', filterEmail)
           const { data: authUser } = await (supabaseAdmin as any)
             .schema('auth')
             .from('users')
             .select('id, email, raw_user_meta_data')
             .eq('email', filterEmail)
             .maybeSingle()
+          try { console.log('[force] auth.users query result:', { ok: !!authUser?.id, id: authUser?.id, email: authUser?.email }) } catch {}
           if (authUser?.id) {
             targetUserId = String(authUser.id)
             const { data: profRow } = await supabaseAdmin
@@ -137,8 +160,8 @@ async function handler(req: NextRequest) {
         }
       }
       if (!targetUserId) {
-        console.error('[daily-cron] Target email not found in admin lookup:', filterEmail)
-        return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail })
+        console.error('[daily-cron] Target not found in force lookup:', { email: filterEmail, user_id: forceUserId })
+        return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail, user_id: forceUserId })
       }
     } else {
       // STEP 1b: Filter by notification preferences (email + daily reminder enabled; null treated as enabled)
