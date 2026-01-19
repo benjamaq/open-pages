@@ -7,12 +7,20 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest, context: { params: { userSupplementId: string } }) {
   try {
     const { userSupplementId } = context.params
+    try {
+      // eslint-disable-next-line no-console
+      console.log('[truth-report] Received ID:', userSupplementId)
+      console.log('[truth-report] Full params:', context?.params)
+    } catch {}
     if (!userSupplementId) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) {
+      try { console.log('[truth-report] Unauthorized request') } catch {}
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const force = request.nextUrl.searchParams.get('force') === 'true'
 
@@ -32,6 +40,7 @@ export async function GET(request: NextRequest, context: { params: { userSupplem
     }
 
     // Generate fresh report
+    try { console.log('[truth-report] Generating report for', { userId: user.id, userSupplementId }) } catch {}
     const report = await generateTruthReportForSupplement(user.id, userSupplementId)
 
     // Save
@@ -59,7 +68,11 @@ export async function GET(request: NextRequest, context: { params: { userSupplem
       science_note: report.scienceNote,
       raw_context: report
     }
-    await supabase.from('supplement_truth_reports').insert(payloadToStore)
+    try {
+      await supabase.from('supplement_truth_reports').insert(payloadToStore)
+    } catch (e: any) {
+      try { console.log('[truth-report] insert failed (non-fatal):', e?.message || e) } catch {}
+    }
 
     // Mark supplement record flag if present
     try {
@@ -68,6 +81,7 @@ export async function GET(request: NextRequest, context: { params: { userSupplem
 
     return NextResponse.json(report)
   } catch (e: any) {
+    try { console.error('[truth-report] Error:', e) } catch {}
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }
 }
