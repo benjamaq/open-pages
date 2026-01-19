@@ -4,15 +4,23 @@ import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest, context: { params: { userSupplementId: string } }) {
+export async function GET(request: NextRequest, context: any) {
   try {
-    const { userSupplementId } = context.params
+    // Robust param resolution for Next.js 14 (params can be a Promise) and different param keys
+    let userSupplementId: string = ''
     try {
+      const p = context?.params
+      if (p && typeof p?.then === 'function') {
+        const resolved = await p
+        userSupplementId = String(resolved?.userSupplementId || resolved?.id || '')
+      } else {
+        userSupplementId = String((p as any)?.userSupplementId || (p as any)?.id || '')
+      }
       // eslint-disable-next-line no-console
       console.log('[truth-report] Received ID:', userSupplementId)
-      console.log('[truth-report] Full params:', context?.params)
+      console.log('[truth-report] Full params:', p)
     } catch {}
-    if (!userSupplementId) {
+    if (!userSupplementId || userSupplementId === 'undefined') {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
     const supabase = await createClient()
