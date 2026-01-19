@@ -13,24 +13,51 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   const supabase = await createClient()
 
   // Load supplement row
+  let primaryMetric: string = 'sleep_latency_minutes'
+  let secondaryKeys: string[] = []
+  let canonicalId: string | null = null
+  let supplementName: string | null = null
+  // Prefer user_supplement
   const { data: supp, error: suppError } = await supabase
     .from('user_supplement')
-    .select('id, user_id, canonical_id, primary_metric, secondary_metrics')
+    .select('id, user_id, canonical_id, primary_metric, secondary_metrics, name')
     .eq('id', userSupplementId)
     .maybeSingle()
-  if (suppError || !supp || supp.user_id !== userId) {
-    throw new Error('Not found')
+  if (!suppError && supp && supp.user_id === userId) {
+    primaryMetric = (supp as any)?.primary_metric || primaryMetric
+    secondaryKeys = Array.isArray((supp as any)?.secondary_metrics) ? (supp as any).secondary_metrics : []
+    canonicalId = (supp as any)?.canonical_id || null
+    supplementName = (supp as any)?.name || null
+  } else {
+    // Fallback: treat id as stack_items id for this user
+    // Resolve profile id for the user
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+    const profileId = (profile as any)?.id || null
+    const { data: stackItem } = await supabase
+      .from('stack_items')
+      .select('id, profile_id, name')
+      .eq('id', userSupplementId)
+      .maybeSingle()
+    if (!stackItem || !profileId || String((stackItem as any).profile_id) !== String(profileId)) {
+      throw new Error('Not found')
+    }
+    // When using stack_items id, we won't have canonical or custom metrics; defaults apply
+    supplementName = (stackItem as any)?.name || null
+    canonicalId = null
+    secondaryKeys = []
   }
-  const primaryMetric: string = (supp as any)?.primary_metric || 'sleep_latency_minutes'
-  const secondaryKeys: string[] = Array.isArray((supp as any)?.secondary_metrics) ? (supp as any).secondary_metrics : []
 
   // Load canonical
   let canonical: CanonicalSupplement | null = null
-  if ((supp as any)?.canonical_id) {
+  if (canonicalId) {
     const { data: cano } = await supabase
       .from('canonical_supplements')
       .select('id, name, generic_name, category, primary_goals, mechanism_tags, pathway_summary')
-      .eq('id', (supp as any).canonical_id)
+      .eq('id', canonicalId)
       .maybeSingle()
     if (cano) canonical = cano as any
   }
