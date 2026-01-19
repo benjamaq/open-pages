@@ -32,6 +32,25 @@ export async function GET(request: NextRequest, context: any) {
 
     const force = request.nextUrl.searchParams.get('force') === 'true'
 
+    try { console.log('[truth-report] Starting report generation for:', userSupplementId, 'user:', user.id) } catch {}
+
+    // Verify supplement exists and belongs to user (avoid generating for missing/foreign IDs)
+    try {
+      const { data: supplement, error: suppError } = await supabase
+        .from('user_supplement')
+        .select('*')
+        .eq('id', userSupplementId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      try { console.log('[truth-report] Supplement lookup:', { found: !!supplement, error: suppError?.message }) } catch {}
+      if (!supplement) {
+        return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+      }
+    } catch (lookupErr: any) {
+      try { console.error('[truth-report] Supplement lookup failed:', lookupErr?.message || lookupErr) } catch {}
+      return NextResponse.json({ error: 'Supplement lookup failed', details: lookupErr?.message || 'lookup_failed' }, { status: 500 })
+    }
+
     if (!force) {
       // Return cached report if exists
       const { data: existing } = await supabase
@@ -49,7 +68,15 @@ export async function GET(request: NextRequest, context: any) {
 
     // Generate fresh report
     try { console.log('[truth-report] Generating report for', { userId: user.id, userSupplementId }) } catch {}
-    const report = await generateTruthReportForSupplement(user.id, userSupplementId)
+    let report: any = null
+    try {
+      // Note: signature is (userId, userSupplementId)
+      report = await generateTruthReportForSupplement(user.id, userSupplementId)
+      try { console.log('[truth-report] Report generated') } catch {}
+    } catch (reportError: any) {
+      try { console.error('[truth-report] Report generation failed:', reportError?.message || reportError) } catch {}
+      return NextResponse.json({ error: 'Report generation failed', details: reportError?.message || 'generate_failed' }, { status: 500 })
+    }
 
     // Save
     const payloadToStore = {
