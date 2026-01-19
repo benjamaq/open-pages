@@ -6,6 +6,10 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest, context: any) {
   try {
+    // eslint-disable-next-line no-console
+    console.log('=== TRUTH REPORT API START ===')
+  } catch {}
+  try {
     // Robust param resolution for Next.js 14 (params can be a Promise) and different param keys
     let userSupplementId: string = ''
     try {
@@ -23,8 +27,10 @@ export async function GET(request: NextRequest, context: any) {
     if (!userSupplementId || userSupplementId === 'undefined') {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
+    try { console.log('[truth-report] ID extracted:', userSupplementId) } catch {}
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    try { console.log('[truth-report] User:', (user as any)?.id || null) } catch {}
     if (!user) {
       try { console.log('[truth-report] Unauthorized request') } catch {}
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -67,12 +73,15 @@ export async function GET(request: NextRequest, context: any) {
     }
 
     // Generate fresh report
-    try { console.log('[truth-report] Generating report for', { userId: user.id, userSupplementId }) } catch {}
+    try { console.log('[truth-report] Calling generateTruthReportForSupplement') } catch {}
     let report: any = null
     try {
       // Note: signature is (userId, userSupplementId)
       report = await generateTruthReportForSupplement(user.id, userSupplementId)
-      try { console.log('[truth-report] Report generated') } catch {}
+      try {
+        const preview = typeof report === 'string' ? String(report).slice(0, 200) : JSON.stringify(report || {}).slice(0, 200)
+        console.log('[truth-report] Report generated:', preview)
+      } catch {}
     } catch (reportError: any) {
       try { console.error('[truth-report] Report generation failed:', reportError?.message || reportError) } catch {}
       return NextResponse.json({ error: 'Report generation failed', details: reportError?.message || 'generate_failed' }, { status: 500 })
@@ -116,8 +125,16 @@ export async function GET(request: NextRequest, context: any) {
 
     return NextResponse.json(report)
   } catch (e: any) {
-    try { console.error('[truth-report] Error:', e) } catch {}
-    return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
+    try {
+      console.error('=== TRUTH REPORT ERROR ===')
+      console.error('Error message:', e?.message)
+      console.error('Error stack:', e?.stack)
+      console.error('Full error:', e)
+    } catch {}
+    return NextResponse.json({
+      error: 'Internal server error',
+      message: e?.message || 'Failed'
+    }, { status: 500 })
   }
 }
 
