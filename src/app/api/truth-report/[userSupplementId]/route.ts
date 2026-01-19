@@ -41,16 +41,52 @@ export async function GET(request: NextRequest, context: any) {
     try { console.log('[truth-report] Starting report generation for:', userSupplementId, 'user:', user.id) } catch {}
 
     // Verify supplement exists and belongs to user (avoid generating for missing/foreign IDs)
+    let effectiveUserSuppId: string = userSupplementId
     try {
       const { data: supplement, error: suppError } = await supabase
         .from('user_supplement')
         .select('*')
-        .eq('id', userSupplementId)
+        .eq('id', effectiveUserSuppId)
         .eq('user_id', user.id)
         .maybeSingle()
       try { console.log('[truth-report] Supplement lookup:', { found: !!supplement, error: suppError?.message }) } catch {}
       if (!supplement) {
-        return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+        // Fallback: sometimes the frontend passes a stack_items id — resolve to user_supplement by name
+        try {
+          const { data: stackItem } = await supabase
+            .from('stack_items')
+            .select('id,name,profile_id')
+            .eq('id', userSupplementId)
+            .maybeSingle()
+          if (stackItem?.name) {
+            // Find user's profile id
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle()
+            const nm = String(stackItem.name).trim()
+            // Try to locate a matching user_supplement by (case-insensitive) name
+            const { data: usMatches } = await supabase
+              .from('user_supplement')
+              .select('id,name')
+              .eq('user_id', user.id)
+              .ilike('name', nm)
+              .limit(2)
+            if (usMatches && usMatches.length === 1) {
+              effectiveUserSuppId = String(usMatches[0].id)
+              console.log('[truth-report] Resolved stack_item id to user_supplement id:', { from: userSupplementId, to: effectiveUserSuppId })
+            } else {
+              console.log('[truth-report] Name-based resolution found none or multiple matches:', { name: nm, count: usMatches?.length || 0 })
+              return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+            }
+          } else {
+            return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+          }
+        } catch (resolveErr: any) {
+          try { console.error('[truth-report] Resolution attempt failed:', resolveErr?.message || resolveErr) } catch {}
+          return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+        }
       }
     } catch (lookupErr: any) {
       try { console.error('[truth-report] Supplement lookup failed:', lookupErr?.message || lookupErr) } catch {}
@@ -63,7 +99,7 @@ export async function GET(request: NextRequest, context: any) {
         .from('supplement_truth_reports')
         .select('*')
         .eq('user_id', user.id)
-        .eq('user_supplement_id', userSupplementId)
+        .eq('user_supplement_id', effectiveUserSuppId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -98,7 +134,7 @@ export async function GET(request: NextRequest, context: any) {
     let report: any = null
     try {
       // Note: signature is (userId, userSupplementId)
-      report = await generateTruthReportForSupplement(user.id, userSupplementId)
+      report = await generateTruthReportForSupplement(user.id, effectiveUserSuppId)
       try {
         const preview = typeof report === 'string' ? String(report).slice(0, 200) : JSON.stringify(report || {}).slice(0, 200)
         console.log('[truth-report] Report generated:', preview)
@@ -111,7 +147,7 @@ export async function GET(request: NextRequest, context: any) {
     // Save
     const payloadToStore = {
       user_id: user.id,
-      user_supplement_id: userSupplementId,
+      user_supplement_id: effectiveUserSuppId,
       canonical_id: null as string | null,
       status: report.status,
       primary_metric: report.primaryMetricLabel, // store label for readability; also could store key
@@ -141,7 +177,7 @@ export async function GET(request: NextRequest, context: any) {
 
     // Mark supplement record flag if present
     try {
-      await supabase.from('user_supplement').update({ has_truth_report: true }).eq('id', userSupplementId).eq('user_id', user.id)
+      await supabase.from('user_supplement').update({ has_truth_report: true }).eq('id', effectiveUserSuppId).eq('user_id', user.id)
     } catch {}
 
     return NextResponse.json(debugMode ? { ...report, _debug: debugInfo } : report)
