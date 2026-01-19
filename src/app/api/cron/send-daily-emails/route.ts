@@ -332,9 +332,9 @@ async function handler(req: NextRequest) {
               userId: p.user_id,
               targetDate: localYesterdayStr,
               timezone: tz,
-              metricsResult: latest,
-              derived: { energy, focus, sleep, mood }
-            })
+            metricsResult: latest,
+            derived: { energy, focus, sleep, mood }
+          })
           } catch {}
         }
 
@@ -407,8 +407,11 @@ async function handler(req: NextRequest) {
           ? '👏 Five days in — this is where useful patterns start to emerge. Keep going; consistency unlocks real insight.'
           : undefined
 
-        // Real stack progress to match dashboard
+        // Real stack progress to match dashboard (align with /api/progress/loop)
         const progressPercent = await getStackProgressForUser(supabaseAdmin as any, p.user_id)
+        try {
+          console.log('[daily-cron] Progress for user:', p.user_id, 'Progress:', progressPercent)
+        } catch {}
         console.log('[daily-cron] TEMPLATE: templates/daily-reminder.tsx | Labels: Energy/Focus/Sleep')
         const html = renderV3Reminder({
           firstName: firstName || 'there',
