@@ -72,6 +72,27 @@ export async function GET(request: NextRequest, context: any) {
       }
     }
 
+    // Optional debug: surface environment readiness without relying on server logs
+    const debugMode = request.nextUrl.searchParams.get('debug') === '1'
+    let debugInfo: any = {}
+    if (debugMode) {
+      try {
+        const since = new Date(); since.setDate(since.getDate() - 60)
+        const sinceStr = since.toISOString().slice(0,10)
+        const dm = await supabase.from('daily_metrics').select('date', { count: 'exact', head: true }).eq('user_id', user.id).gte('date', sinceStr)
+        const si = await supabase.from('supplement_intake_days').select('date', { count: 'exact', head: true }).eq('user_id', user.id).eq('user_supplement_id', userSupplementId).gte('date', sinceStr)
+        debugInfo = {
+          dailyMetricsCount: dm.count ?? null,
+          dailyMetricsError: (dm as any)?.error?.message || null,
+          intakeDaysCount: si.count ?? null,
+          intakeDaysError: (si as any)?.error?.message || null
+        }
+        console.log('[truth-report] Debug table counts:', debugInfo)
+      } catch (dbgErr: any) {
+        try { console.log('[truth-report] Debug counts failed:', dbgErr?.message || dbgErr) } catch {}
+      }
+    }
+
     // Generate fresh report
     try { console.log('[truth-report] Calling generateTruthReportForSupplement') } catch {}
     let report: any = null
@@ -123,7 +144,7 @@ export async function GET(request: NextRequest, context: any) {
       await supabase.from('user_supplement').update({ has_truth_report: true }).eq('id', userSupplementId).eq('user_id', user.id)
     } catch {}
 
-    return NextResponse.json(report)
+    return NextResponse.json(debugMode ? { ...report, _debug: debugInfo } : report)
   } catch (e: any) {
     try {
       console.error('=== TRUTH REPORT ERROR ===')
