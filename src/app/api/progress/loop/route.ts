@@ -20,6 +20,12 @@ export async function GET(request: Request) {
   if (VERBOSE) console.log('[progress/loop] === V2 CODE RUNNING ===')
   if (VERBOSE) console.log('[progress/loop] === START ===')
   try {
+    // Optional deep intake debug for a specific user_supplement id
+    let debugSuppId: string | null = null
+    try {
+      const url = new URL(request.url)
+      debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
+    } catch {}
     // Attach rotation selection debug in response for easier inspection
     let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
     const supabase = await createClient()
@@ -121,7 +127,7 @@ export async function GET(request: Request) {
     if (profileId) {
       const res = await supabase
         .from('stack_items')
-        .select('id,name,inferred_start_at,start_date,monthly_cost,created_at,primary_goal_tags,tags')
+        .select('id,name,start_date,monthly_cost,created_at,category,user_supplement_id')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: true })
       items = res.data as any[] | null
@@ -413,9 +419,9 @@ export async function GET(request: Request) {
     for (const it of items || []) {
       const id = (it as any).id as string
       const name = (it as any).name || 'Supplement'
-      const startDate = ((it as any).inferred_start_at as string | null) || ((it as any).start_date as string | null)
+      const startDate = ((it as any).start_date as string | null) || ((it as any).inferred_start_at as string | null)
       const createdAtRaw = (it as any).created_at as string | null
-      const goals = (it as any).primary_goal_tags || (it as any).tags || []
+      const goals = (it as any).category ? [String((it as any).category)] : []
       const category = inferCategory(name, goals)
 
       // Days of data = ALL check-in days since start_date (count today's check-in even if noisy)
@@ -466,7 +472,7 @@ export async function GET(request: Request) {
       // Quality modifier placeholder (will refine after effect attach)
       let qualityModifier = 0
       let progressPercent = Math.min(100, Math.max(0, Math.floor(baseProgress + staggerOffset + rotationBonus + qualityModifier + microOffset)))
-      if (VERBOSE) { try { console.log('[progress/loop] row:', { id, name, startDate: (it as any).inferred_start_at || (it as any).start_date, daysOfData, progressPercent }) } catch {} }
+      if (VERBOSE) { try { console.log('[progress/loop] row:', { id, name, startDate: (it as any).start_date || (it as any).inferred_start_at, daysOfData, progressPercent }) } catch {} }
 
       const insight = insightsById.get(id)
       let status: SupplementProgress['status'] = 'building'
@@ -506,12 +512,43 @@ export async function GET(request: Request) {
     }
 
     // Attach effect categories when available (map by user_supplement_id; aligns with fallback path)
+    // Also overlay with latest truth-engine reports for consistency with TruthReport
     const { data: effects } = await supabase
       .from('user_supplement_effect')
       .select('user_supplement_id,effect_category,effect_magnitude,effect_confidence,days_on,days_off,clean_days')
       .eq('user_id', user.id)
     const effBySupp = new Map<string, any>()
     for (const e of effects || []) effBySupp.set((e as any).user_supplement_id, e)
+    // Load latest truth reports (ordered newest first); first seen per id wins
+    const { data: truths } = await supabase
+      .from('supplement_truth_reports')
+      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null }>()
+    for (const t of truths || []) {
+      const uid = String((t as any).user_supplement_id || '')
+      if (!uid) continue
+      if (!truthBySupp.has(uid)) {
+        truthBySupp.set(uid, {
+          status: String((t as any).status || ''),
+          effect_direction: (t as any).effect_direction ?? null,
+          effect_size: (t as any).effect_size ?? null,
+          percent_change: (t as any).percent_change ?? null,
+          confidence_score: (t as any).confidence_score ?? null
+        })
+      }
+    }
+    const mapTruthToCategory = (status: string): string | undefined => {
+      const s = String(status || '').toLowerCase()
+      if (s === 'proven_positive') return 'works'
+      if (s === 'no_effect') return 'no_effect'
+      // Map 'negative' to DROP badge by using 'no_effect' category in the dashboard schema
+      if (s === 'negative') return 'no_effect'
+      if (s === 'confounded') return 'inconsistent'
+      if (s === 'too_early') return 'needs_more_data'
+      return undefined
+    }
     // Build intakeByDate map for ON/OFF derivation
     const intakeByDate = new Map<string, Record<string, any>>()
     for (const e of entries365 || []) {
@@ -544,9 +581,16 @@ export async function GET(request: Request) {
     for (const r of progressRows) {
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        const uid = nameToUserSuppId.get(nm) || String((r as any).id)
+        const explicitUid = (() => {
+          try {
+            const match = (items || []).find((it: any) => String(it?.name || '').trim().toLowerCase() === nm)
+            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
+          } catch { return null }
+        })()
+        const uid = explicitUid || nameToUserSuppId.get(nm) || String((r as any).id)
         ;(r as any).testingActive = testingActiveIds.has(uid)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
+        ;(r as any).userSuppId = uid
       } catch { (r as any).testingActive = true }
     }
     for (const r of progressRows) {
@@ -569,65 +613,111 @@ export async function GET(request: Request) {
         ;(r as any).daysOff = (eff as any).days_off ?? null
         ;(r as any).cleanDays = (eff as any).clean_days ?? null
       }
+      // Truth overlay: if a truth report exists for this supplement, override effectCategory and key metrics
+      try {
+        const uid = (r as any).userSuppId || (nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())) || String((r as any).id)
+        const truth = uid ? truthBySupp.get(String(uid)) : undefined
+        const mapped = truth ? mapTruthToCategory(truth.status) : undefined
+        if (mapped) {
+          ;(r as any).effectCategory = mapped
+          // Also align effect magnitude/confidence with the Truth Report so UI text matches
+          if (truth && typeof truth.percent_change === 'number') {
+            r.effectPct = Number(truth.percent_change)
+          } else if (truth && typeof truth.effect_size === 'number') {
+            // If only effect_size is provided, prefer that as a fallback magnitude
+            r.effectPct = Number(truth.effect_size)
+          }
+          if (truth && typeof truth.confidence_score === 'number') {
+            r.confidence = Number(truth.confidence_score)
+          }
+        }
+        if (VERBOSE && debugSuppId && (debugSuppId === uid || debugSuppId === String((r as any).id))) {
+          try {
+            console.log('[overlay-debug]', {
+              id: (r as any).id,
+              name: (r as any).name,
+              userSuppId: uid,
+              truthStatus: truth?.status,
+              mappedCategory: mapped,
+              finalCategory: (r as any).effectCategory
+            })
+          } catch {}
+        }
+      } catch {}
       // Derive daysOn/Off from daily_entries intake; if retest is active, recompute from retest start
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        const suppId = nameToUserSuppId.get(nm) || String((r as any).id)
+        // Prefer explicit linkage if available
+        const explicitUid = (() => {
+          try {
+            const match = (items || []).find((it: any) => String(it?.name || '').trim().toLowerCase() === nm)
+            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
+          } catch { return null }
+        })()
+        const suppId = explicitUid || nameToUserSuppId.get(nm) || String((r as any).id)
         ;(r as any).userSuppId = suppId
         const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
-        const currentOn = Number((r as any).daysOn || 0)
-        const currentOff = Number((r as any).daysOff || 0)
-        const needRecompute = !!restartIso || (currentOn + currentOff) === 0
-        if (needRecompute) {
-          let on = 0, off = 0
-          let onClean = 0, offClean = 0
-          for (const entry of (entries365 || [])) {
-            const dKey = String((entry as any).local_date).slice(0,10)
-            if (restartIso && dKey < restartIso.slice(0,10)) continue
-            const intake = (entry as any).supplement_intake || null
-            let isOff = false
-            let isTaken = false
-            let hasRecord = false
-            if (intake && typeof intake === 'object') {
-              const v = (intake as any)[suppId]
-              if (v !== undefined) {
-                hasRecord = true
-                const s = String(v).toLowerCase()
-                if (s === 'skipped' || s === 'off' || s === 'not_taken' || s === 'false' || s === '0') {
-                  isOff = true
-                } else if (s === 'taken' || s === 'true' || s === '1') {
-                  isTaken = true
-                }
+        // Always recompute to avoid stale effect table counts
+        let on = 0, off = 0
+        let onClean = 0, offClean = 0
+        for (const entry of (entries365 || [])) {
+          const dKey = String((entry as any).local_date).slice(0,10)
+          if (restartIso && dKey < restartIso.slice(0,10)) continue
+          const intake = (entry as any).supplement_intake || null
+          let isOff = false
+          let isTaken = false
+          let hasRecord = false
+          if (intake && typeof intake === 'object') {
+            const v = (intake as any)[suppId]
+            if (v !== undefined) {
+              hasRecord = true
+              const s = String(v).toLowerCase()
+              if (s === 'skipped' || s === 'off' || s === 'not_taken' || s === 'false' || s === '0') {
+                isOff = true
+              } else if (s === 'taken' || s === 'true' || s === '1') {
+                isTaken = true
               }
             }
-            if (!hasRecord) continue
-            const isClean = !(Array.isArray((entry as any).tags) && (entry as any).tags.length > 0)
-            if (isOff) {
-              if (isClean) { off++; offClean++ }
-            } else if (isTaken) {
-              on++
-              if (isClean) onClean++
-            }
           }
-          ;(r as any).daysOn = on
-          ;(r as any).daysOff = off
-          ;(r as any).daysOnClean = onClean
-          ;(r as any).daysOffClean = offClean
-          if (restartIso) {
-            ;(r as any).retestStartedAt = restartIso
-            ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId) ? (suppMetaById.get(suppId) as any).trial : null) ?? null
-            ;(r as any).effectCategory = undefined
-            r.effectPct = null
-            r.confidence = null
-            r.trend = undefined
+          if (!hasRecord) continue
+          const isClean = !(Array.isArray((entry as any).tags) && (entry as any).tags.length > 0)
+          if (VERBOSE && debugSuppId && debugSuppId === suppId) {
+            try {
+              console.log('[daysOn]', { suppId, date: dKey, intake: (intake ? (intake as any)[suppId] : undefined), tags: (entry as any).tags, isClean })
+            } catch {}
           }
+          if (isOff) {
+            if (isClean) { off++; offClean++ }
+          } else if (isTaken) {
+            on++
+            if (isClean) onClean++
+          }
+        }
+        ;(r as any).daysOn = on
+        ;(r as any).daysOff = off
+        ;(r as any).daysOnClean = onClean
+        ;(r as any).daysOffClean = offClean
+        // Days tracked for this supplement = ON + OFF (any quality)
+        ;(r as any).daysOfData = on + off
+        if (restartIso) {
+          ;(r as any).retestStartedAt = restartIso
+          ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId) ? (suppMetaById.get(suppId) as any).trial : null) ?? null
+          ;(r as any).effectCategory = undefined
+          r.effectPct = null
+          r.confidence = null
+          r.trend = undefined
+        }
+        if (VERBOSE && debugSuppId && debugSuppId === suppId) {
+          try {
+            console.log('[daysOn] totals:', { suppId, on, off, onClean, offClean, restartIso })
+          } catch {}
         }
       } catch {}
       // Recompute progressPercent with bonuses now that we have some quality data
       try {
         const name = (r as any).name || ''
-        const goals = (r as any).primary_goal_tags || (r as any).tags || []
+        const goals = (r as any).category ? [String((r as any).category)] : []
         const category = inferCategory(name, goals)
         const requiredDays = requiredDaysFor(category)
         const baseProgress = (r.daysOfData / requiredDays) * 100
@@ -820,7 +910,7 @@ export async function GET(request: Request) {
     const supplementStartDates: Record<string, string | null> = {}
     for (const it of items || []) {
       const name = (it as any).name || 'Supplement'
-      const sdRaw = (it as any).inferred_start_at || (it as any).start_date
+      const sdRaw = (it as any).start_date || (it as any).inferred_start_at
       const sd = sdRaw ? String(sdRaw).slice(0,10) : null
       supplementStartDates[name] = sd
     }
@@ -862,7 +952,7 @@ export async function GET(request: Request) {
     const stackItems = progressRows
       .filter(r => (r as any).testingActive && r.progressPercent < 100)
       .map((r: any) => {
-        const cat = inferCategory(String(r?.name || ''), (r?.primary_goal_tags || r?.tags))
+        const cat = inferCategory(String(r?.name || ''), ((r as any)?.category ? [String((r as any).category)] : []))
         const cost = Number(r?.monthlyCost || 0)
         return { id: String(r?.id), name: String(r?.name || 'Supplement'), category: cat, monthlyCost: cost }
       })
@@ -902,6 +992,22 @@ export async function GET(request: Request) {
     const cycleLenDays = 3
     const baselineDaysNeeded = 3
     const rotation: any = {}
+    // Collect eligible candidates that need OFF days (testing-active, not complete)
+    const testingCandidates = progressRows.filter(r => (r as any).testingActive && r.progressPercent < 100)
+    const offNeedCandidates = testingCandidates.filter(r => {
+      const id = String((r as any).id || '')
+      const p = id ? (progressById[id] || null) : null
+      return !!(p && p.daysOff < p.reqOff)
+    })
+    try {
+      console.log('[rotation] eligibility', {
+        testingCandidates: testingCandidates.length,
+        offNeedCandidates: offNeedCandidates.length,
+        stackSize,
+        groupEntries: groupEntries.length,
+        totalProgressRows: progressRows.length,
+      })
+    } catch {}
     if (totalDistinctDays < baselineDaysNeeded) {
       rotation.phase = 'baseline'
       rotation.action = {
@@ -989,12 +1095,45 @@ export async function GET(request: Request) {
         digestion: "This helps us isolate digestion effects.",
         other: "This helps us isolate effects in this category."
       }
-      rotation.action = {
-        headline: "TODAY'S ACTION",
-        skipCategory: cat,
-        skip: skipList.map(s => ({ id: s.id, name: s.name })),
-        take: takeList.map(s => ({ id: s.id, name: s.name })),
-        reason: reasonByCat[cat] || "This helps us isolate category effects."
+      // If the category pass did not pick anyone but we have deficits, schedule a fallback single OFF
+      if (skipList.length === 0 && offNeedCandidates.length > 0) {
+        try {
+          // Deterministic pick based on day index
+          const todayStr = new Date().toISOString().slice(0,10)
+          const hash01 = (s: string): number => {
+            let h = 2166136261
+            for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0 }
+            return h % 1000 / 1000
+          }
+          const idx = Math.floor(hash01(todayStr) * offNeedCandidates.length)
+          const chosen = offNeedCandidates[idx]
+          const chosenId = String((chosen as any)?.id)
+          const chosenName = String((chosen as any)?.name || 'Supplement')
+          const takeListFallback = stackItems.filter(s => s.id !== chosenId)
+          rotation.action = {
+            headline: "TODAY'S ACTION",
+            skipCategory: 'priority_override',
+            skip: [{ id: chosenId, name: chosenName }],
+            take: takeListFallback.map(s => ({ id: s.id, name: s.name })),
+            reason: "This supplement needs OFF days to complete testing."
+          }
+          console.log('[rotation] fallback scheduled OFF:', { chosenId, chosenName })
+        } catch (e) {
+          console.log('[rotation] fallback error:', (e as any)?.message || e)
+          rotation.action = {
+            headline: "TODAY'S ACTION",
+            primary: 'Take your supplements as normal.',
+            note: "Rotation fallback failed to select a skip candidate."
+          }
+        }
+      } else {
+        rotation.action = {
+          headline: "TODAY'S ACTION",
+          skipCategory: cat,
+          skip: skipList.map(s => ({ id: s.id, name: s.name })),
+          take: takeList.map(s => ({ id: s.id, name: s.name })),
+          reason: reasonByCat[cat] || "This helps us isolate category effects."
+        }
       }
     }
     try { console.log('[loop] todaySummary being returned:', todaySummary) } catch {}
