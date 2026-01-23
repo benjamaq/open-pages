@@ -876,7 +876,10 @@ export async function GET(request: Request) {
     // - Needs Data: effectCategory='needs_more_data'
     // - Building: no effectCategory (includes <100% and 100% "Ready for verdict")
     const clearSignal = progressRows.filter(r => (r as any).effectCategory === 'works')
-    const noEffect = progressRows.filter(r => (r as any).effectCategory === 'no_effect')
+    const noEffect = progressRows.filter(r => {
+      const cat = String((r as any).effectCategory || '').toLowerCase()
+      return cat === 'no_effect' || cat === 'no_detectable_effect'
+    })
     const inconsistent = progressRows.filter(r => (r as any).effectCategory === 'inconsistent')
     const needsData = progressRows.filter(r => (r as any).effectCategory === 'needs_more_data')
     const building = progressRows.filter(r => !(r as any).effectCategory)
