@@ -449,8 +449,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'needs_more_data') return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
-    // Fallback: if API hasn’t set category yet, show collecting state while data builds
-    return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+    // If API didn’t provide a verdict/category, surface explicit error to catch pipeline issues
+    return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
   })()
   const effectLine = (() => {
     const isReady = String(row.status || '').toLowerCase() === 'ready'
@@ -560,43 +560,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {
-            // Render a consistently sized verdict chip on the right
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
-            if (isVerdictReady) {
-              if (!isMember) {
-                return (
-                  <button
-                    type="button"
-                      onClick={() => {
-                      try { console.log('setShowPaywall(true) called from LINE 581') } catch {}
-                      setShowPaywall(true)
-                    }}
-                    className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    🔒 Verdict Ready
-                  </button>
-                )
-              }
-            }
-            // Render from mapped badge only; do not generate local verdict copy
-            return badge ? (
-              (badge.label === '🔒 Verdict Ready' && !isMember) ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                      try { console.log('setShowPaywall(true) called from LINE 599') } catch {}
-                      setShowPaywall(true)
-                  }}
-                  className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {badge.label}
-                </button>
-              ) : (
-                <span className={`${baseChipClass} ${badge.cls || ''}`}>{badge.label}</span>
-              )
-            ) : <span className={`${baseChipClass} invisible`}>placeholder</span>
+            return <span className={`${baseChipClass} ${badge.cls || ''}`}>{badge.label}</span>
           })()}
           {testingActive ? (
             <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
