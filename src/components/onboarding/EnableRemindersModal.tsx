@@ -111,7 +111,6 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
           {saved ? (
             <>
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">✅</span>
                 <h3 className="text-lg font-semibold text-gray-900">Reminders enabled</h3>
               </div>
               <div className="text-sm text-gray-800 space-y-2 mb-4">
@@ -120,10 +119,10 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
                 <div className="text-gray-700 text-sm">You can change this anytime in Settings.</div>
               </div>
               <div className="flex items-center gap-3 pt-1">
-                <a href="/settings" className="flex-1 px-4 py-2 text-center bg-gray-900 text-white rounded-lg hover:bg-gray-800">
+                <a href="/settings" className="flex-1 px-4 py-2 text-center bg-[#111111] text-white rounded-lg hover:opacity-90">
                   Go to Settings
                 </a>
-                <button onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg bg-[#111111] text-white hover:opacity-90">
                   Done
                 </button>
               </div>
@@ -131,7 +130,6 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
           ) : (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">🔔</span>
               <h3 className="text-lg font-semibold text-gray-900">Get a reminder to check in</h3>
             </div>
             <p className="text-sm text-gray-600 mb-4">
@@ -150,9 +148,9 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
             </div>
 
             {permission === 'denied' && (
-              <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
-                Notifications are blocked in your browser settings. You can still save reminders; we’ll email you if enabled.
-              </div>
+              <p className="mb-3 text-xs text-gray-600">
+                Browser notifications are blocked. We’ll send email reminders instead.
+              </p>
             )}
 
             {error && (
@@ -171,7 +169,7 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
               <button
                 onClick={handleEnable}
                 disabled={saving}
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#111111] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Enable'}
               </button>
