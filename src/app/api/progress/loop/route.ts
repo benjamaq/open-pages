@@ -847,30 +847,9 @@ export async function GET(request: Request) {
         } else {
           ;(r as any).confidenceText = null
         }
-        // Heuristic inconclusive reason/text for ready-but-unclear cases
-        if (isReady && (!cat || cat === 'needs_more_data' || (r as any).verdict === 'unclear')) {
-          const eff = Number((r as any).effectPercent || 0)
-          const clean = Number((r as any).cleanDays || 0)
-          const total = Number(r.daysOfData || 0)
-          const ratio = total > 0 ? (clean / total) : 0
-          let reason: string | null = null
-          let text: string | null = null
-          if (Math.abs(eff) <= 5) {
-            reason = 'small_effect'
-            text = 'Small effect (<5%) — not statistically clear'
-          } else if (ratio < 0.6) {
-            reason = 'high_noise'
-            text = 'High noise — many disrupted days reduce clarity'
-          } else {
-            reason = 'insufficient_signal'
-            text = 'More data needed for a confident verdict'
-          }
-          ;(r as any).inconclusiveReason = reason
-          ;(r as any).inconclusiveText = text
-        } else {
-          ;(r as any).inconclusiveReason = null
-          ;(r as any).inconclusiveText = null
-        }
+        // Remove heuristic inconclusive text; rely solely on truth report mapping
+        ;(r as any).inconclusiveReason = null
+        ;(r as any).inconclusiveText = null
       } catch {}
     }
 
@@ -1198,7 +1177,7 @@ export async function GET(request: Request) {
         isStatisticallySignificant: significant,
       }
     })
-    return NextResponse.json({
+    return new NextResponse(JSON.stringify({
       debug,
       userId: user.id,
       daysTracked: totalDistinctDays,
@@ -1229,6 +1208,15 @@ export async function GET(request: Request) {
       },
       _debug: rotationDebug,
       sections: { clearSignal, noSignal: noEffect, inconsistent, building, needsData }
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store'
+      }
     })
   } catch (error: any) {
     console.error('[progress/loop] FATAL ERROR:', error?.message || error)
