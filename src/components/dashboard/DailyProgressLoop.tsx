@@ -436,33 +436,21 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
   const isInactive = !testingActive && !isVerdictReady && !isInconclusive
 
-  // Status badge (gated): show process states for free; show verdicts only if member
+  // Status badge: render strictly from API-provided effectCategory or verdict
   const badge = (() => {
     const cat = (effectCat || '').toLowerCase()
-    const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
-    const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
-    const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
-    const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
-    const isReady = on >= reqOn && off >= reqOff
-    if (isReady) {
-      if (isMember) {
-        if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
-        if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
-        if (cat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-        // No explicit category: let inconclusive path handle the copy
-        return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
-      }
-      // Free user: locked verdict
-      return { label: '🔒 Verdict Ready', cls: 'bg-gray-100 text-gray-500 border border-gray-200' }
-    }
-    // Not ready yet
-    if (!isReady) {
-      if (isInactive) return null as any
-      if (isActivelyTesting) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
-      return null as any
-    }
-    return null as any
+    const verdict = String((row as any).verdict || '').toLowerCase()
+    const mappedCat =
+      cat || (verdict === 'keep' ? 'works'
+      : verdict === 'drop' ? 'no_effect'
+      : '')
+    if (mappedCat === 'works') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+    if (mappedCat === 'no_effect') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+    if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    if (mappedCat === 'needs_more_data') return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+    // Fallback: if API hasn’t set category yet, show collecting state while data builds
+    return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
   })()
   const effectLine = (() => {
     const isReady = String(row.status || '').toLowerCase() === 'ready'
@@ -591,23 +579,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                 )
               }
             }
-            if (isInconclusive) {
-              // If we already have a mapped category from overlay, honor it even in inconclusive state
-              const cat = String((row as any).effectCategory || '').toLowerCase()
-              if (cat === 'works' || cat === 'keep') {
-                return <span className={`${baseChipClass} bg-emerald-100 text-emerald-800 border border-emerald-200`}>✓ KEEP</span>
-              }
-              if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') {
-                return <span className={`${baseChipClass} bg-rose-100 text-rose-800 border border-rose-200`}>✗ DROP</span>
-              }
-              if (cat === 'inconsistent' || cat === 'needs_more_data') {
-                return <span className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200`}>◐ TESTING</span>
-              }
-              if (cat === 'no_detectable_effect') {
-                return <span className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200`}>No detectable effect</span>
-              }
-              return <span className={`${baseChipClass} bg-gray-100 text-gray-700 border border-gray-200`}>No clear effect</span>
-            }
+            // Render from mapped badge only; do not generate local verdict copy
             return badge ? (
               (badge.label === '🔒 Verdict Ready' && !isMember) ? (
                 <button
@@ -622,17 +594,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                   {badge.label}
                 </button>
               ) : (
-                <span className={`${baseChipClass} ${badge.cls || ''}`}>{(() => {
-                  if (badge.label === 'Inconclusive') {
-                    const cat = String((row as any).effectCategory || '').toLowerCase()
-                    if (cat === 'works' || cat === 'keep') return '✓ KEEP'
-                    if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') return '✗ DROP'
-                    if (cat === 'no_detectable_effect') return 'No detectable effect'
-                    if (cat === 'inconsistent' || cat === 'needs_more_data') return '◐ TESTING'
-                    return 'No clear effect'
-                  }
-                  return badge.label
-                })()}</span>
+                <span className={`${baseChipClass} ${badge.cls || ''}`}>{badge.label}</span>
               )
             ) : <span className={`${baseChipClass} invisible`}>placeholder</span>
           })()}
