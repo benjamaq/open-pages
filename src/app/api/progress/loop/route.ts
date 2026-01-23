@@ -807,6 +807,7 @@ export async function GET(request: Request) {
         const verdict =
           cat === 'works' ? 'keep' :
           cat === 'no_effect' ? 'drop' :
+          cat === 'no_detectable_effect' ? 'drop' :
           cat === 'inconsistent' ? 'testing' :
           cat === 'needs_more_data' ? 'testing' :
           isReady ? 'unclear' : null
