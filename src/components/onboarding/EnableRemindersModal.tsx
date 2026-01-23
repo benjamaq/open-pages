@@ -8,10 +8,11 @@ type EnableRemindersModalProps = {
 }
 
 export default function EnableRemindersModal({ isOpen, onClose }: EnableRemindersModalProps) {
-  const [time, setTime] = useState<string>('09:00')
+  const [time, setTime] = useState<string>('08:00')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string>('')
   const [permission, setPermission] = useState<NotificationPermission>(typeof Notification !== 'undefined' ? Notification.permission : 'default')
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     try {
@@ -84,7 +85,8 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
       } catch {}
 
           try { localStorage.setItem('pushPromptShown', '1') } catch {}
-      onClose()
+      try { localStorage.setItem('pushPromptShown', '1') } catch {}
+      setSaved(true)
     } catch (e: any) {
       setError(e?.message || 'Failed to enable reminders')
     } finally {
@@ -106,6 +108,27 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="absolute inset-x-0 top-16 mx-auto max-w-md w-[92%] bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="p-5 sm:p-6">
+          {saved ? (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">✅</span>
+                <h3 className="text-lg font-semibold text-gray-900">Reminders enabled</h3>
+              </div>
+              <div className="text-sm text-gray-800 space-y-2 mb-4">
+                <div>You’ll get a reminder every day at <span className="font-semibold">{time}</span>.</div>
+                <div className="text-gray-600 text-xs">Times are in your local timezone (<span className="font-medium">{timezone}</span>).</div>
+                <div className="text-gray-700 text-sm">You can change this anytime in Settings.</div>
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <a href="/settings" className="flex-1 px-4 py-2 text-center bg-gray-900 text-white rounded-lg hover:bg-gray-800">
+                  Go to Settings
+                </a>
+                <button onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  Done
+                </button>
+              </div>
+            </>
+          ) : (
           <div className="flex items-center gap-3 mb-3">
             <span className="text-2xl">🔔</span>
             <h3 className="text-lg font-semibold text-gray-900">Get a reminder to check in</h3>
@@ -152,6 +175,7 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
               {saving ? 'Saving…' : 'Enable'}
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>

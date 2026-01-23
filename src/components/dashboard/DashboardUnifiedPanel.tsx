@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
-import { ReminderNudgeModal } from '@/components/settings/ReminderNudgeModal'
+import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal'
 import { HEALTH_PRIORITIES } from '@/lib/types'
 
 type Suggestion = { id: string; name: string }
@@ -843,7 +843,7 @@ export function DashboardUnifiedPanel() {
         </div>
       </div>
     )}
-    <ReminderNudgeModal open={showReminder} onClose={dismissReminder} onEnable={enableReminder} />
+    <EnableRemindersModal isOpen={showReminder} onClose={dismissReminder} />
     </>
   )
 }
