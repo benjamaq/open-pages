@@ -200,6 +200,34 @@ export default function AddSupplementModal({
               className="w-full px-4 py-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               autoFocus
             />
+            {/* Popular suggestions (quick add) */}
+            <div className="mt-3">
+              <div className="text-xs font-medium text-gray-600 mb-2">Popular picks</div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Magnesium Glycinate',
+                  'Vitamin D3',
+                  'Omega‑3 Fish Oil',
+                  'Creatine Monohydrate',
+                  'Ashwagandha',
+                  'Probiotic',
+                  'Melatonin',
+                ].map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      setName(label)
+                      setShowDose(true)
+                      setTiming(timing || '')
+                    }}
+                    className="px-3 py-1.5 rounded-full border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Mini timeline */}
