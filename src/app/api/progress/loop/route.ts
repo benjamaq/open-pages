@@ -578,11 +578,21 @@ export async function GET(request: Request) {
       if (isTesting) testingActiveIds.add(uid)
       testingStatusById.set(uid, status)
     }
-    // Mark rows with testingActive and optionally drop non-testing from rotation/progress candidates
+    // Fast map from stack_items.id -> user_supplement_id when present to avoid name fuzziness
+    const stackIdToUserSuppId = new Map<string, string>()
+    try {
+      for (const it of (items || [])) {
+        const stackId = String((it as any)?.id || '')
+        const uid = (it as any)?.user_supplement_id ? String((it as any).user_supplement_id) : ''
+        if (stackId && uid) stackIdToUserSuppId.set(stackId, uid)
+      }
+    } catch {}
+    // Mark rows with testingActive and resolve userSuppId early for reliable overlay
     for (const r of progressRows) {
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        const explicitUid = (() => {
+        const byStack = stackIdToUserSuppId.get(String((r as any).id || '')) || null
+        const explicitUid = byStack || (() => {
           try {
             const match = (items || []).find((it: any) => String(it?.name || '').trim().toLowerCase() === nm)
             return match && match.user_supplement_id ? String(match.user_supplement_id) : null
