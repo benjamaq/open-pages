@@ -373,7 +373,7 @@ export function DailyProgressLoop() {
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Completed</div>
-                <a href="/results" className="text-xs text-gray-700 hover:underline">View full report →</a>
+                <a href="/dashboard" className="text-xs text-gray-700 hover:underline">View full report →</a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {completedRows.length === 0 ? (

@@ -5,43 +5,83 @@ import { inferMechanism, inferBiologyProfile } from './inference'
 import { verdictLabels, verdictTitles, fill } from './copyTemplates'
 import { buildNextSteps, buildScienceNote } from './nextSteps'
 import { getCohortStats, percentileFromDistribution, responderLabelForPercentile } from './cohort'
+import fs from 'fs'
 
-const MIN_ON_DAYS = 7
-const MIN_OFF_DAYS = 7
+// Align truth-engine readiness thresholds with dashboard logic
+function requiredOnDaysForMetric(metricKey: string): number {
+  const k = (metricKey || '').toLowerCase()
+  if (k === 'sleep_quality' || k === 'sleep_score') return 10
+  if (k === 'subjective_energy') return 12
+  if (k === 'subjective_mood') return 14
+  if (k === 'focus') return 14
+  return 14
+}
+function requiredOffDaysForMetric(metricKey: string): number {
+  const on = requiredOnDaysForMetric(metricKey)
+  return Math.min(5, Math.max(3, Math.round(on / 4)))
+}
 
 export async function generateTruthReportForSupplement(userId: string, userSupplementId: string): Promise<TruthReport> {
   const supabase = await createClient()
+  // Write to file since console output may be suppressed in some runtimes
+  const debugLog = (msg: string) => {
+    try {
+      const line = `${new Date().toISOString()} - ${msg}\n`
+      fs.appendFileSync('/tmp/truth-debug.log', line)
+    } catch {
+      // ignore fs errors
+    }
+  }
+  debugLog(`START: userId=${userId}, userSupplementId=${userSupplementId}`)
 
   // Load supplement row
-  let primaryMetric: string = 'sleep_latency_minutes'
+  let primaryMetric: string = 'subjective_energy'
   let secondaryKeys: string[] = []
   let canonicalId: string | null = null
   let supplementName: string | null = null
-  // Prefer user_supplement
-  const { data: supp, error: suppError } = await supabase
-    .from('user_supplement')
-    .select('id, user_id, canonical_id, primary_metric, secondary_metrics, name')
-    .eq('id', userSupplementId)
-    .maybeSingle()
-  if (!suppError && supp && supp.user_id === userId) {
-    primaryMetric = (supp as any)?.primary_metric || primaryMetric
-    secondaryKeys = Array.isArray((supp as any)?.secondary_metrics) ? (supp as any).secondary_metrics : []
-    canonicalId = (supp as any)?.canonical_id || null
-    supplementName = (supp as any)?.name || null
-  } else {
-    // Fallback: treat id as stack_items id for this user
-    // Resolve profile id for the user
-    const { data: profile } = await supabase
+  // Resolve profile id for the user (needed to map stack_items keys)
+  let profileId: string | null = null
+  // Lower bound for analysis window (prefer start date; else inferred; else created; else wide fallback)
+  let sinceLowerBound: string | null = null
+  try {
+    const { data: profileRow } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', userId)
       .maybeSingle()
-    const profileId = (profile as any)?.id || null
+    profileId = (profileRow as any)?.id || null
+  } catch {}
+  // Prefer user_supplement
+  const { data: supp, error: suppError } = await supabase
+    .from('user_supplement')
+    .select('id, user_id, name, monthly_cost_usd, created_at, retest_started_at, inferred_start_at')
+    .eq('id', userSupplementId)
+    .maybeSingle()
+  debugLog(
+    `LOOKUP: found=${!!supp}, suppUserId=${(supp as any)?.user_id || 'null'}, inputUserId=${userId}, match=${
+      !!supp && String((supp as any).user_id) === String(userId)
+    }, error=${(supp as any)?.message || (suppError as any)?.message || 'null'}`
+  )
+  if (!suppError && supp && supp.user_id === userId) {
+    // Keep defaults for primaryMetric/secondaryKeys/canonicalId; set name from record
+    supplementName = (supp as any)?.name || null
+    // Determine analysis lower bound for this supplement
+    const restart = (supp as any)?.retest_started_at ? String((supp as any).retest_started_at).slice(0,10) : null
+    const inferred = (supp as any)?.inferred_start_at ? String((supp as any).inferred_start_at).slice(0,10) : null
+    const created = (supp as any)?.created_at ? String((supp as any).created_at).slice(0,10) : null
+    sinceLowerBound = restart || inferred || created || null
+  } else {
+    // Fallback: treat id as stack_items id for this user
     const { data: stackItem } = await supabase
       .from('stack_items')
-      .select('id, profile_id, name')
+      .select('id, profile_id, name, user_supplement_id, start_date, created_at')
       .eq('id', userSupplementId)
       .maybeSingle()
+    debugLog(
+      `FALLBACK_STACK_ITEM: profileId=${profileId || 'null'}, stackItemFound=${!!stackItem}, stackProfileId=${
+        (stackItem as any)?.profile_id || 'null'
+      }, name=${(stackItem as any)?.name || 'null'}`
+    )
     if (!stackItem || !profileId || String((stackItem as any).profile_id) !== String(profileId)) {
       throw new Error('Not found')
     }
@@ -49,7 +89,27 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     supplementName = (stackItem as any)?.name || null
     canonicalId = null
     secondaryKeys = []
+    const startDate = (stackItem as any)?.start_date ? String((stackItem as any).start_date).slice(0,10) : null
+    const created = (stackItem as any)?.created_at ? String((stackItem as any).created_at).slice(0,10) : null
+    sinceLowerBound = startDate || created || null
   }
+
+  // Build candidate intake keys: prefer user_supplement id, but also include any linked stack_items ids
+  const candidateIntakeKeys = new Set<string>([String(userSupplementId)])
+  try {
+    if (profileId) {
+      const { data: linkedItems } = await supabase
+        .from('stack_items')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('user_supplement_id', userSupplementId)
+      for (const li of linkedItems || []) {
+        const kid = String((li as any).id || '')
+        if (kid) candidateIntakeKeys.add(kid)
+      }
+    }
+  } catch {}
+  debugLog(`CANDIDATE_KEYS: ${Array.from(candidateIntakeKeys).join(',')}`)
 
   // Load canonical
   let canonical: CanonicalSupplement | null = null
@@ -62,86 +122,91 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     if (cano) canonical = cano as any
   }
 
-  // Time window: last 60 days
-  const since = new Date()
-  since.setDate(since.getDate() - 60)
-  const sinceStr = since.toISOString().slice(0, 10)
-
-  // Load daily metrics for user (fallback to daily_entries if daily_metrics not available)
-  let metrics: any[] | null = null
-  try {
-    const r = await supabase
-      .from('daily_metrics')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('date', sinceStr)
-      .order('date', { ascending: true })
-    metrics = (r as any)?.data || null
-  } catch {}
-
-  // Load intake days for this supplement (fallback to daily_entries.supplement_intake if table missing)
-  let intake: any[] | null = null
-  try {
-    const r = await supabase
-      .from('supplement_intake_days')
-      .select('date, taken, dose_fraction')
-      .eq('user_id', userId)
-      .eq('user_supplement_id', userSupplementId)
-      .gte('date', sinceStr)
-      .order('date', { ascending: true })
-    intake = (r as any)?.data || null
-  } catch {}
-
-  // Fallback path: derive metrics and intake from daily_entries if needed
-  if (!metrics || metrics.length === 0 || !intake) {
-    try {
-      const { data: rows } = await supabase
-        .from('daily_entries')
-        .select('local_date,energy,focus,mood,sleep,sleep_quality,tags,supplement_intake')
-        .eq('user_id', userId)
-        .gte('local_date', sinceStr)
-        .order('local_date', { ascending: true })
-      const fallback = rows || []
-      // Build metrics array compatible with downstream mapping
-      const toMetricVal = (pm: string, r: any): number | null => {
-        const key = (pm || '').toLowerCase()
-        if (key === 'subjective_energy') return safeNum(r.energy)
-        if (key === 'subjective_mood') return safeNum(r.mood)
-        // sleep proxies if provided
-        if (key === 'sleep_quality' || key === 'sleep_score') {
-          return safeNum(r.sleep_quality ?? r.sleep)
-        }
-        // Default unknown metric → null (will likely produce "too_early")
-        return null
-      }
-      const mapped = fallback.map((r: any) => ({
-        date: String(r.local_date || '').slice(0,10),
-        subjective_energy: safeNum(r.energy),
-        subjective_mood: safeNum(r.mood),
-        sleep_quality: safeNum(r.sleep_quality ?? r.sleep),
-        // allow direct lookup by chosen primaryMetric later
-        _raw: r
-      }))
-      metrics = mapped
-      // Intake fallback: read supplement_intake object by user_supplement_id
-      const intakeMapped = fallback.map((r: any) => {
-        const obj = (r as any).supplement_intake || null
-        let taken: boolean | null = null
-        if (obj && typeof obj === 'object') {
-          const v = (obj as any)[userSupplementId]
-          if (v !== undefined) {
-            const s = String(v).toLowerCase()
-            if (s === 'taken' || s === 'true' || s === '1') taken = true
-            else if (s === 'off' || s === 'skipped' || s === 'false' || s === '0') taken = false
-          }
-        }
-        return { date: String(r.local_date || '').slice(0,10), taken, dose_fraction: null as number | null }
-      }).filter((x: any) => x.taken !== null)
-      if (!intake || intake.length === 0) intake = intakeMapped
-      // Overwrite primary metric mapping to use fallback when computing samples below
-      // Attach helper in metricsByDate lookup section
-    } catch {}
+  // ===== LOAD DATA FROM DAILY_ENTRIES =====
+  console.log('[truth-engine] Loading daily_entries for user:', userId)
+  // Choose the widest safe range: prefer supplement start/restart; otherwise 365-day fallback
+  let querySince: string | null = sinceLowerBound
+  if (!querySince) {
+    const since365 = new Date()
+    since365.setDate(since365.getDate() - 365)
+    querySince = since365.toISOString().slice(0,10)
   }
+  debugLog(`QUERY daily_entries: user_id=${userId}, since=${querySince || 'NONE'}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake`)
+
+  const { data: dailyRows, error: dailyError } = await supabase
+    .from('daily_entries')
+    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake')
+    .eq('user_id', userId)
+    // Only apply lower bound when we actually have it; else read broad set
+    .gte('local_date', querySince as any)
+    .order('local_date', { ascending: false })
+  
+  console.log('[truth-engine] daily_entries result:', {
+    count: dailyRows?.length || 0,
+    error: dailyError?.message || null,
+    firstDate: dailyRows?.[0]?.local_date || null
+  })
+  try {
+    const allKeys = new Set<string>()
+    for (const r of dailyRows || []) {
+      const intake = (r as any)?.supplement_intake || {}
+      if (intake && typeof intake === 'object') {
+        for (const k of Object.keys(intake)) allKeys.add(String(k))
+      }
+    }
+    debugLog(`INTAKE_KEYS_PRESENT: ${Array.from(allKeys).slice(0, 15).join(',')}${allKeys.size > 15 ? ',...' : ''}`)
+  } catch {}
+  
+  if (!dailyRows || dailyRows.length === 0) {
+    console.log('[truth-engine] No daily_entries found!')
+  }
+  
+  // Map to metrics format (coerce to numbers)
+  const metrics = (dailyRows || []).map((r: any) => ({
+    date: r.local_date,
+    subjective_energy: safeNum(r.energy),
+    subjective_mood: safeNum(r.mood),
+    sleep_quality: safeNum(r.sleep_quality),
+    focus: safeNum(r.focus)
+  }))
+  
+  // Normalize various encodings of intake into taken/off
+  function normalizeTaken(val: any): boolean | null {
+    if (val === 'taken' || val === 'on') return true
+    if (val === 'off' || val === 'skipped' || val === 'skip') return false
+    if (val === true || val === 1 || val === '1' || val === 'true') return true
+    if (val === false || val === 0 || val === '0' || val === 'false') return false
+    return null
+  }
+
+  // Parse intake for this specific supplement
+  const intake = (dailyRows || []).map((r: any) => {
+    const intakeObj = r.supplement_intake || {}
+    // Try all candidate keys; first match wins
+    let value: any = undefined
+    for (const k of candidateIntakeKeys) {
+      if (k in intakeObj) { value = (intakeObj as any)[k]; break }
+    }
+    const taken = normalizeTaken(value)
+    return { date: r.local_date, taken, raw: value }
+  }).filter((x: any) => x.taken !== null)
+  
+  console.log('[truth-engine] Parsed data:', {
+    metricsCount: metrics.length,
+    intakeCount: intake.length,
+    sampleIntake: intake.slice(0, 3)
+  })
+  try {
+    // Summarize ON/OFF counts by raw value for debugging
+    const rawMap: Record<string, number> = {}
+    for (const i of intake as any[]) {
+      const key = String((i as any).raw)
+      rawMap[key] = (rawMap[key] || 0) + 1
+    }
+    debugLog(`INTAKE_VALUE_COUNTS: ${JSON.stringify(rawMap)}`)
+  } catch {}
+  
+  // ===== END DATA LOADING =====
 
   // Join per-day samples
   const metricsByDate = new Map<string, any>()
@@ -159,7 +224,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   })
 
   const allDates = Array.from(new Set<string>([...metricsByDate.keys(), ...intakeByDate.keys()])).sort()
-  const samples: DaySample[] = allDates.map(d => {
+  const samplesPre: DaySample[] = allDates.map(d => {
     const m = metricsByDate.get(d) || {}
     const i = intakeByDate.get(d) || {}
     // Confound flags: prefer explicit flags, else infer from tags array
@@ -184,18 +249,43 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       date: d,
       metric: metricValue,
       secondaryMetrics,
-      taken: !!i.taken,
+      taken: (typeof i.taken === 'boolean') ? i.taken : (null as any),
       confounded
     }
   })
+  const samples: DaySample[] = samplesPre.filter(s => s.taken === true || s.taken === false)
+  try {
+    const total = samples.length
+    const withMetric = samples.filter(s => s.metric !== null && s.metric !== undefined).length
+    const onDays = samples.filter(s => s.taken === true).length
+    const offDays = samples.filter(s => s.taken === false).length
+    try { console.log('[truth-engine] Samples:', { total, withMetric, onDays, offDays }) } catch {}
+    debugLog(`SAMPLES_JOINED: total=${total}, withMetric=${withMetric}, onDays=${onDays}, offDays=${offDays}`)
+  } catch {}
 
   // Exclude confounded days for effect calculation
   const cleanSamples = samples.filter(s => !s.confounded)
   const effect: EffectStats = computeEffectStats(cleanSamples, primaryMetric)
+  try {
+    console.log('[truth-engine] Effect computed:', {
+      metric: primaryMetric,
+      meanOn: effect.meanOn,
+      meanOff: effect.meanOff,
+      absoluteChange: effect.absoluteChange,
+      effectSize: effect.effectSize,
+      percentChange: effect.percentChange,
+      direction: effect.direction,
+      sampleOn: effect.sampleOn,
+      sampleOff: effect.sampleOff
+    })
+  } catch {}
 
-  // Early exit if too few days
-  if (effect.sampleOn < MIN_ON_DAYS || effect.sampleOff < MIN_OFF_DAYS) {
+  // Early exit if too few days — use same thresholds as dashboard/email
+  const REQ_ON = requiredOnDaysForMetric(primaryMetric)
+  const REQ_OFF = requiredOffDaysForMetric(primaryMetric)
+  if (effect.sampleOn < REQ_ON || effect.sampleOff < REQ_OFF) {
     return buildReport({
+      supplementName: supplementName || undefined,
       status: 'too_early',
       effect,
       primaryMetric,
@@ -206,12 +296,25 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   }
 
   const confidence = estimateConfidence(effect.effectSize, effect.sampleOn, effect.sampleOff)
-  const status: TruthStatus = classifyStatus(effect, confidence)
+  // Decision tree when thresholds are met:
+  // If small effect OR low confidence → completed test with no detectable effect
+  // Else classify positive/negative as usual
+  let status: TruthStatus
+  if (Math.abs(effect.effectSize) < 0.5 || confidence < 0.6) {
+    status = 'no_detectable_effect'
+  } else if (effect.direction === 'positive') {
+    status = 'proven_positive'
+  } else if (effect.direction === 'negative') {
+    status = 'negative'
+  } else {
+    status = 'no_detectable_effect'
+  }
 
   // Cohort stats
-  const cohort = await getCohortStats((supp as any)?.canonical_id || null, primaryMetric)
+  const cohort = await getCohortStats(canonicalId, primaryMetric)
 
   return buildReport({
+    supplementName: supplementName || undefined,
     status,
     effect,
     primaryMetric,
@@ -223,6 +326,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 }
 
 function buildReport(args: {
+  supplementName?: string
   status: TruthStatus
   effect: EffectStats
   primaryMetric: string
@@ -263,6 +367,7 @@ function buildReport(args: {
   const confoundsSummary = `${effect.sampleOn + effect.sampleOff} days analysed, ${args.confoundedDays} day(s) excluded due to confounds`
 
   return {
+    supplementName: args.supplementName,
     status: args.status,
     verdictTitle,
     verdictLabel,
