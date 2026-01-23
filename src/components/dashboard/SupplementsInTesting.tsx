@@ -1,6 +1,6 @@
 'use client'
 
-import { } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function SupplementsInTesting({
   activeTests,
@@ -16,13 +16,15 @@ export function SupplementsInTesting({
     return ['hypothesis', 'early_signal', 'validating', 'HYPOTHESIS', 'EARLY_SIGNAL', 'VALIDATING_POSITIVE', 'VALIDATING_NEGATIVE'].includes(stage)
   })
   const validated = (supplements || []).filter((s: any) => ['proven', 'PROVEN_BENEFICIAL', 'PROVEN_NEUTRAL', 'PROVEN_HARMFUL'].includes(String(s.stage)))
+  const pathname = usePathname()
+  const returnTo = typeof pathname === 'string' ? pathname : '/dashboard'
   return (
     <div className="space-y-8">
       {/* Proven first, per brief */}
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-slate-900">Proven Supplements</h2>
-        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">+ Add supplement</a>
+        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800">+ Add supplement</a>
         </div>
         {validated.length > 0 ? (
           <div className="mt-4 space-y-4">
@@ -39,7 +41,7 @@ export function SupplementsInTesting({
                   <p className="text-green-900"><strong>Result:</strong> Positive effect suggested</p>
                   <p className="text-green-800"><strong>Effect size:</strong> Cohort-adjusted</p>
                 </div>
-                <a className="mt-4 inline-block text-sm font-medium text-green-700 hover:text-green-900" href={`/supplements/${encodeURIComponent(supp.id)}/truth-report`}>View Full Truth Report →</a>
+                <a className="mt-4 inline-block text-sm font-medium text-green-700 hover:text-green-900" href={`/supplements/${encodeURIComponent(supp.id)}/truth-report?returnTo=${encodeURIComponent(returnTo)}`}>View Full Truth Report →</a>
               </div>
             ))}
           </div>
@@ -54,7 +56,7 @@ export function SupplementsInTesting({
       {/* Testing next */}
       <div className="flex items-center justify-between pt-2">
         <h2 className="text-xl font-semibold text-slate-900">Testing in Progress</h2>
-        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">+ Add supplement</a>
+        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800">+ Add supplement</a>
       </div>
       {testing.length > 0 ? (
         <div>
@@ -150,7 +152,7 @@ export function SupplementsInTesting({
                   <p className="text-green-900"><strong>Result:</strong> Positive effect suggested</p>
                   <p className="text-green-800"><strong>Effect size:</strong> Cohort-adjusted</p>
                 </div>
-                <a className="mt-4 inline-block text-sm font-medium text-green-700 hover:text-green-900" href={`/supplements/${encodeURIComponent(supp.id)}/truth-report`}>View Full Truth Report →</a>
+                <a className="mt-4 inline-block text-sm font-medium text-green-700 hover:text-green-900" href={`/supplements/${encodeURIComponent(supp.id)}/truth-report?returnTo=${encodeURIComponent(returnTo)}`}>View Full Truth Report →</a>
               </div>
             ))}
           </div>
