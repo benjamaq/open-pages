@@ -10,6 +10,7 @@ import {
   type UsageInfo
 } from '../../../lib/actions/subscriptions'
 import BackgroundColorPicker from '../../../components/BackgroundColorPicker'
+import { createClient } from '../../../lib/supabase/client'
 
 interface SettingsClientProps {
   profile: any
@@ -1664,6 +1665,31 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
         <p className="text-sm text-gray-500 mt-3">
           We typically respond within 24 hours. Pro users get priority support.
         </p>
+      </div>
+
+      {/* Account - Sign out */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Account</h2>
+        <button
+          onClick={async () => {
+            const supabase = createClient()
+            try { await supabase.auth.signOut() } catch {}
+            try {
+              if (typeof window !== 'undefined') {
+                window.localStorage.clear()
+                window.sessionStorage.clear()
+                document.cookie.split(';').forEach(c => {
+                  document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/')
+                })
+              }
+            } catch {}
+            try { window.location.href = '/login' } catch { window.location.href = '/' }
+          }}
+          className="inline-flex items-center px-4 py-2 bg-[#111111] text-white rounded-lg text-sm font-medium hover:opacity-90"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign out
+        </button>
       </div>
 
 
