@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { statusToCategory } from '@/lib/verdictMapping'
+import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
   type SupplementProgress = {
   id: string
@@ -539,17 +541,7 @@ export async function GET(request: Request) {
         })
       }
     }
-    const mapTruthToCategory = (status: string): string | undefined => {
-      const s = String(status || '').toLowerCase()
-      if (s === 'proven_positive') return 'works'
-      if (s === 'no_effect') return 'no_effect'
-      if (s === 'no_detectable_effect') return 'no_detectable_effect'
-      // Map 'negative' to DROP badge by using 'no_effect' category in the dashboard schema
-      if (s === 'negative') return 'no_effect'
-      if (s === 'confounded') return 'inconsistent'
-      if (s === 'too_early') return 'needs_more_data'
-      return undefined
-    }
+    const mapTruthToCategory = (status: string): string | undefined => statusToCategory(status)
     // Build intakeByDate map for ON/OFF derivation
     const intakeByDate = new Map<string, Record<string, any>>()
     for (const e of entries365 || []) {
@@ -607,17 +599,7 @@ export async function GET(request: Request) {
     for (const r of progressRows) {
       const eff = effBySupp.get(r.id)
       if (eff) {
-        // Normalize effect_category from various schemas:
-        // positive -> works, none/neutral -> no_effect, negative/harmful -> inconsistent
-        const rawCat = String((eff as any).effect_category || '').toLowerCase()
-        const normalizedCat =
-          rawCat === 'positive' ? 'works' :
-          rawCat === 'none' ? 'no_effect' :
-          rawCat === 'neutral' ? 'no_effect' :
-          rawCat === 'negative' ? 'inconsistent' :
-          rawCat === 'harmful' ? 'inconsistent' :
-          rawCat // passthrough for 'works','no_effect','inconsistent','needs_more_data'
-        ;(r as any).effectCategory = normalizedCat
+        // Do not set effectCategory from historical effect table; truth report is sole source of verdicts
         r.effectPct = typeof (eff as any).effect_magnitude === 'number' ? Number((eff as any).effect_magnitude) : r.effectPct ?? null
         r.confidence = typeof (eff as any).effect_confidence === 'number' ? Number((eff as any).effect_confidence) : r.confidence ?? null
         ;(r as any).daysOn = (eff as any).days_on ?? null
@@ -627,6 +609,36 @@ export async function GET(request: Request) {
       // Truth overlay: if a truth report exists for this supplement, override effectCategory and key metrics
       try {
         const uid = (r as any).userSuppId || (nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())) || String((r as any).id)
+        // Ensure a relatively fresh truth exists; regenerate if missing or stale (>1h)
+        try {
+          const truthRec = uid ? (truths || []).find((t: any) => String((t as any).user_supplement_id || '') === String(uid)) : null
+          const createdAt = truthRec ? (new Date((truthRec as any).created_at as any)).getTime() : 0
+          const STALE_MS = 60 * 60 * 1000
+          const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
+          if (stale && uid) {
+            try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', uid) } catch {}
+            await generateTruthReportForSupplement(user.id, uid)
+            // Requery latest truth for this UID
+            try {
+              const { data: latest } = await supabase
+                .from('supplement_truth_reports')
+                .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,created_at')
+                .eq('user_id', user.id)
+                .eq('user_supplement_id', uid)
+                .order('created_at', { ascending: false })
+                .limit(1)
+              if ((latest || []).length > 0) {
+                truthBySupp.set(String(uid), {
+                  status: String((latest![0] as any).status || ''),
+                  effect_direction: (latest![0] as any).effect_direction ?? null,
+                  effect_size: (latest![0] as any).effect_size ?? null,
+                  percent_change: (latest![0] as any).percent_change ?? null,
+                  confidence_score: (latest![0] as any).confidence_score ?? null
+                })
+              }
+            } catch {}
+          }
+        } catch {}
         const truth = uid ? truthBySupp.get(String(uid)) : undefined
         const mapped = truth ? mapTruthToCategory(truth.status) : undefined
         if (mapped) {
