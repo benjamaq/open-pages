@@ -281,6 +281,33 @@ export function DashboardUnifiedPanel() {
   async function enableReminder(payload: { time: string; timezone: string | null }) {
     setShowReminder(false)
     try {
+      // 1) Request browser notification permission (user gesture)
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+          await Notification.requestPermission()
+        }
+      } catch {}
+      // 2) Best-effort: register service worker and subscribe to push with VAPID (if configured)
+      try {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          const existing = await reg.pushManager.getSubscription()
+          let sub = existing
+          if (!sub) {
+            const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as any
+            const appServerKey = vapid ? urlBase64ToUint8Array(String(vapid)) : undefined
+            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey })
+          }
+          try {
+            await fetch('/api/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ subscription: (sub as any)?.toJSON?.() || sub })
+            })
+          } catch {}
+        }
+      } catch {}
+      // 3) Persist reminder settings server-side
       await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -293,7 +320,23 @@ export function DashboardUnifiedPanel() {
       })
       const s = await fetch('/api/settings', { cache: 'no-store' })
       if (s.ok) setSettings(await s.json())
+      // 4) Local confirmation or guidance
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification('Reminders enabled', { body: `We will nudge you daily at ${payload.time}` })
+        } else if (typeof window !== 'undefined') {
+          window.alert('Reminders enabled. If you don’t see notifications, enable them in your browser settings.')
+        }
+      } catch {}
     } catch {}
+  }
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = typeof window !== 'undefined' ? window.atob(base64) : Buffer.from(base64, 'base64').toString('binary')
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+    return outputArray
   }
 
   // Economics donut + spend
@@ -429,7 +472,7 @@ export function DashboardUnifiedPanel() {
               <div className="flex flex-col items-stretch">
                 <button
                   onClick={() => { window.location.href = '/dashboard?checkin=open' }}
-                  className="w-full inline-flex items-center justify-center rounded-full bg-[#111111] px-6 py-3 text-sm font-medium text-white"
+                  className="w-full inline-flex items-center justify-center rounded-full bg-[#111111] px-4 py-2 text-xs sm:px-6 sm:py-3 sm:text-sm font-medium text-white whitespace-nowrap"
                 >
                   Complete Today’s Check‑In →
                 </button>
@@ -454,16 +497,24 @@ export function DashboardUnifiedPanel() {
                     {/* Skip list */}
                     {(() => {
                       const apiToday = (progress as any)?.checkins?.todaySkippedNames
-                      const names = Array.isArray(apiToday) ? apiToday : []
+                      let names: string[] = Array.isArray(apiToday) ? apiToday as string[] : []
+                      // Fallback: if today's actual OFF not saved yet, show planned rotation skip names
+                      if (names.length === 0) {
+                        if (Array.isArray(overrideSkipNames) && overrideSkipNames.length > 0) {
+                          names = overrideSkipNames
+                        } else if (Array.isArray((progress as any)?.rotation?.action?.skip)) {
+                          names = ((progress as any).rotation.action.skip as Array<{ id: string; name: string }>).map(x => String(x.name || ''))
+                        }
+                      }
                       return names.length > 0 ? (
-                      <div>
-                        <div className="font-medium">Scheduled OFF today ({names.length}):</div>
-                        <ul className="mt-1 list-disc list-inside">
-                          {names.map((nm: string) => (
-                            <li key={nm}>{abbreviateSupplementName(String(nm || ''))}</li>
-                          ))}
-                        </ul>
-                      </div>
+                        <div>
+                          <div className="font-medium">Scheduled OFF today ({names.length}):</div>
+                          <ul className="mt-1 list-disc list-inside">
+                            {names.map((nm: string) => (
+                              <li key={nm}>{abbreviateSupplementName(String(nm || ''))}</li>
+                            ))}
+                          </ul>
+                        </div>
                       ) : null
                     })()}
                     {/* Reason */}
@@ -641,9 +692,9 @@ export function DashboardUnifiedPanel() {
             <span className="font-medium">${(totalYearly || 0).toLocaleString()}/yr</span> • {supps.length} supplements
           </div>
           {/* Chart + Legend Row */}
-          <div className="flex items-start gap-8 mb-5">
+          <div className="flex items-start gap-4 sm:gap-8 mb-5">
             {/* Donut Chart */}
-            <div className="w-24 h-24 flex-shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={chartData} dataKey="value" innerRadius={28} outerRadius={40} paddingAngle={2}>
@@ -655,14 +706,14 @@ export function DashboardUnifiedPanel() {
               </ResponsiveContainer>
             </div>
             {/* Legend - Vertical Stack */}
-            <div className="space-y-2 text-sm w-full">
+            <div className="space-y-2 text-xs sm:text-sm w-full">
               {chartData.slice(0, 8).map((seg, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: (seg as any).color || '#94a3b8' }} />
-                    <span className="text-gray-600">{(seg as any).name}</span>
+                    <span className="text-gray-600 truncate">{(seg as any).name}</span>
                   </div>
-                  <span className="font-medium">${Number((seg as any).value || 0).toLocaleString()}/yr</span>
+                  <span className="font-medium text-right sm:text-left sm:mt-0 mt-0.5">${Number((seg as any).value || 0).toLocaleString()}/yr</span>
                 </div>
               ))}
             </div>
