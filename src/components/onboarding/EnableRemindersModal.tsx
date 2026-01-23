@@ -129,52 +129,54 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
               </div>
             </>
           ) : (
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">🔔</span>
-            <h3 className="text-lg font-semibold text-gray-900">Get a reminder to check in</h3>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            20 seconds a day. We’ll nudge you at the time you choose.
-          </p>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reminder time</label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">Timezone: {timezone}</p>
-          </div>
-
-          {permission === 'denied' && (
-            <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
-              Notifications are blocked in your browser settings. You can still save reminders; we’ll email you if enabled.
+          <>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">🔔</span>
+              <h3 className="text-lg font-semibold text-gray-900">Get a reminder to check in</h3>
             </div>
-          )}
+            <p className="text-sm text-gray-600 mb-4">
+              20 seconds a day. We’ll nudge you at the time you choose.
+            </p>
 
-          {error && (
-            <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2">
-              {error}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reminder time</label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Timezone: {timezone}</p>
             </div>
-          )}
 
-          <div className="flex items-center gap-3 pt-1">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              Not now
-            </button>
-            <button
-              onClick={handleEnable}
-              disabled={saving}
-              className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Enable'}
-            </button>
-          </div>
+            {permission === 'denied' && (
+              <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                Notifications are blocked in your browser settings. You can still save reminders; we’ll email you if enabled.
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Not now
+              </button>
+              <button
+                onClick={handleEnable}
+                disabled={saving}
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Enable'}
+              </button>
+            </div>
+          </>
           )}
         </div>
       </div>
