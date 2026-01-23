@@ -147,7 +147,7 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
               <p className="text-xs text-gray-500 mt-1">Timezone: {timezone}</p>
             </div>
 
-            {permission === 'denied' && (
+            {typeof Notification !== 'undefined' && permission === 'denied' && (
               <p className="mb-3 text-xs text-gray-600">
                 Browser notifications are blocked. We’ll send email reminders instead.
               </p>
