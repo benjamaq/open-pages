@@ -111,8 +111,26 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   } catch {}
   debugLog(`CANDIDATE_KEYS: ${Array.from(candidateIntakeKeys).join(',')}`)
 
-  // Load canonical
+  // Load canonical and derive primary metric from stack_items category when available
   let canonical: CanonicalSupplement | null = null
+  try {
+    if (!canonicalId && profileId) {
+      const { data: si } = await supabase
+        .from('stack_items')
+        .select('id,category')
+        .eq('profile_id', profileId)
+        .eq('user_supplement_id', userSupplementId)
+        .limit(1)
+        .maybeSingle()
+      const cat = (si as any)?.category ? String((si as any).category).toLowerCase() : ''
+      if (cat) {
+        if (cat.includes('mood') || cat.includes('stress')) primaryMetric = 'subjective_mood'
+        else if (cat.includes('sleep')) primaryMetric = 'sleep_quality'
+        else if (cat.includes('cogn') || cat.includes('focus') || cat.includes('memory')) primaryMetric = 'focus'
+        else if (cat.includes('energy') || cat.includes('stamina')) primaryMetric = 'subjective_energy'
+      }
+    }
+  } catch {}
   if (canonicalId) {
     const { data: cano } = await supabase
       .from('canonical_supplements')
@@ -135,7 +153,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   const { data: dailyRows, error: dailyError } = await supabase
     .from('daily_entries')
-    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake')
+    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags')
     .eq('user_id', userId)
     // Only apply lower bound when we actually have it; else read broad set
     .gte('local_date', querySince as any)
@@ -167,7 +185,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     subjective_energy: safeNum(r.energy),
     subjective_mood: safeNum(r.mood),
     sleep_quality: safeNum(r.sleep_quality),
-    focus: safeNum(r.focus)
+    focus: safeNum(r.focus),
+    _raw: { tags: Array.isArray((r as any)?.tags) ? (r as any).tags : [] }
   }))
   
   // Normalize various encodings of intake into taken/off

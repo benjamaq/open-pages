@@ -709,6 +709,23 @@ export async function GET(request: Request) {
           r.confidence = null
           r.trend = undefined
         }
+        // Re-apply truth overlay AFTER any reset due to retest so category is not wiped
+        try {
+          const uid = (r as any).userSuppId || (nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())) || String((r as any).id)
+          const truth = uid ? truthBySupp.get(String(uid)) : undefined
+          const mapped = truth ? mapTruthToCategory(truth.status) : undefined
+          if (mapped) {
+            ;(r as any).effectCategory = mapped
+            if (truth && typeof truth.percent_change === 'number') {
+              r.effectPct = Number(truth.percent_change)
+            } else if (truth && typeof truth.effect_size === 'number') {
+              r.effectPct = Number(truth.effect_size)
+            }
+            if (truth && typeof truth.confidence_score === 'number') {
+              r.confidence = Number(truth.confidence_score)
+            }
+          }
+        } catch {}
         if (VERBOSE && debugSuppId && debugSuppId === suppId) {
           try {
             console.log('[daysOn] totals:', { suppId, on, off, onClean, offClean, restartIso })
