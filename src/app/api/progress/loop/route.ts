@@ -543,6 +543,7 @@ export async function GET(request: Request) {
       const s = String(status || '').toLowerCase()
       if (s === 'proven_positive') return 'works'
       if (s === 'no_effect') return 'no_effect'
+      if (s === 'no_detectable_effect') return 'no_detectable_effect'
       // Map 'negative' to DROP badge by using 'no_effect' category in the dashboard schema
       if (s === 'negative') return 'no_effect'
       if (s === 'confounded') return 'inconsistent'

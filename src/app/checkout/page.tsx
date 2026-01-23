@@ -104,7 +104,7 @@ export default function CheckoutPage() {
         <div className="bg-white border border-[#E4E1DC] rounded-2xl p-6">
           <h1 className="text-2xl font-semibold text-[#111111]">Stop guessing. Start knowing.</h1>
           <p className="mt-2 text-sm text-[#111111]">
-            You&apos;re spending <span className="font-semibold">{(spendMonthly && spendMonthly > 0) ? `$${spendMonthly}/month` : '$200+/month'}</span> on supplements. How many are actually working?
+            You&apos;re spending <span className="font-semibold">{(spendMonthly && spendMonthly > 0) ? `$${spendMonthly}/month` : ''}</span>{(spendMonthly && spendMonthly > 0) ? ' on supplements. How many are actually working?' : 'Track and evaluate your supplements with clear evidence.'}
           </p>
           <ul className="mt-4 text-sm text-[#111111] list-disc list-inside space-y-1">
             <li>Verdicts for every supplement — Keep, Drop, or Test</li>

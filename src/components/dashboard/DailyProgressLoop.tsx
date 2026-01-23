@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { StackCostCard } from '@/components/insights/StackCostCard'
 import TruthReportModal from '@/components/TruthReportModal'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
+import { createClient } from '@/lib/supabase/client'
 
 type Row = {
   id: string
@@ -240,7 +241,7 @@ export function DailyProgressLoop() {
   })()
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-8 px-3 sm:px-0">
       {/* Milestone popups */}
       {milestone85 && (
         <Popup title="Almost ready" body={`${milestone85.name} is at ${milestone85.percent}% signal.\n\nJust a few more days until we can show you whether it's actually working.`} cta="Can’t wait" onClose={dismiss85} />
@@ -251,7 +252,7 @@ export function DailyProgressLoop() {
       {/* TODAY'S ACTION lives in the unified panel (top-left). No duplicate here. */}
       {/* Header removed; hero card now provided by <DashboardHero /> */}
       {/* Supplements section heading with Add button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1 sm:px-0">
         <div className="text-base font-semibold text-gray-900">
           My Supplements
           <span className="ml-2 text-xs font-normal text-gray-600">
@@ -290,8 +291,8 @@ export function DailyProgressLoop() {
             })()}
           </span>
         </div>
-        <a href="/dashboard?add=1" className="inline-flex items-center justify-center rounded-full bg-[#111111] text-white text-sm px-4 py-2 hover:opacity-90">
-          + Add Supplement
+        <a href="/dashboard?add=1" className="inline-flex items-center justify-center rounded-full bg-[#111111] text-white text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 hover:opacity-90 whitespace-nowrap">
+          + Add supplement
         </a>
       </div>
       {/* Decision Lifecycle split: Testing in progress + Completed */}
@@ -359,7 +360,7 @@ export function DailyProgressLoop() {
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Testing in progress</div>
-                <a href="/dash/stack" className="text-xs text-gray-700 hover:underline">Manage in My Stack →</a>
+                <a href="/results" className="text-xs text-gray-700 hover:underline">Manage in My Stack →</a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {testingRows.length === 0 ? (
@@ -446,8 +447,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (isReady) {
       if (isMember) {
         if (cat === 'works' || cat === 'keep') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
-        if (cat === 'no_effect' || cat === 'drop') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
-        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
+        if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+        if (cat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+        if (cat === 'inconsistent' || cat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+        // No explicit category: let inconclusive path handle the copy
         return { label: 'Inconclusive', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
       }
       // Free user: locked verdict
@@ -561,30 +564,26 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   }
   const muted = !isActivelyTesting && !isVerdictReady && !isInconclusive
   return (
-    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-4`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
+    <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-3 sm:p-4 overflow-hidden`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
-      <div className="flex items-center justify-between">
-        <div className="font-semibold text-gray-900 flex items-center gap-2">
-          <span className="truncate max-w-[60vw]">{abbreviateSupplementName(String(row.name || ''))}</span>
+      <div className="flex items-start justify-between">
+        <div className="font-semibold text-gray-900 flex items-center gap-2 min-w-0 text-[15px] sm:text-base">
+          <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{abbreviateSupplementName(String(row.name || ''))}</span>
+        </div>
+        <div className="flex items-center gap-2 ml-3">
           {(() => {
-            // Override badge for state machine
+            // Render a consistently sized verdict chip on the right
+            const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
             if (isVerdictReady) {
               if (!isMember) {
                 return (
                   <button
                     type="button"
-                    onClick={() => {
+                      onClick={() => {
+                      try { console.log('setShowPaywall(true) called from LINE 581') } catch {}
                       setShowPaywall(true)
-                      try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
-                      try {
-                        const onPop = (ev: PopStateEvent) => {
-                          setShowPaywall(false)
-                          try { window.removeEventListener('popstate', onPop as any) } catch {}
-                        }
-                        window.addEventListener('popstate', onPop as any, { once: true } as any)
-                      } catch {}
                     }}
-                    className={`text-[10px] px-2.5 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
+                    className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
                     style={{ cursor: 'pointer' }}
                   >
                     🔒 Verdict Ready
@@ -593,47 +592,63 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               }
             }
             if (isInconclusive) {
-              return <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">No clear effect</span>
+              // If we already have a mapped category from overlay, honor it even in inconclusive state
+              const cat = String((row as any).effectCategory || '').toLowerCase()
+              if (cat === 'works' || cat === 'keep') {
+                return <span className={`${baseChipClass} bg-emerald-100 text-emerald-800 border border-emerald-200`}>✓ KEEP</span>
+              }
+              if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') {
+                return <span className={`${baseChipClass} bg-rose-100 text-rose-800 border border-rose-200`}>✗ DROP</span>
+              }
+              if (cat === 'inconsistent' || cat === 'needs_more_data') {
+                return <span className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200`}>◐ TESTING</span>
+              }
+              if (cat === 'no_detectable_effect') {
+                return <span className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200`}>No detectable effect</span>
+              }
+              return <span className={`${baseChipClass} bg-gray-100 text-gray-700 border border-gray-200`}>No clear effect</span>
             }
             return badge ? (
-            (badge.label === '🔒 Verdict Ready' && !isMember) ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPaywall(true)
-                  try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
-                  try {
-                    const onPop = (ev: PopStateEvent) => {
-                      // Close modal instead of navigating away
-                      setShowPaywall(false)
-                      // Remove listener after handling
-                      try { window.removeEventListener('popstate', onPop as any) } catch {}
-                    }
-                    window.addEventListener('popstate', onPop as any, { once: true } as any)
-                  } catch {}
-                }}
-                className={`text-[10px] px-2.5 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
-                style={{ cursor: 'pointer' }}
-              >
-                {badge.label}
-              </button>
-            ) : (
-            <span className={`text-[10px] px-2 py-0.5 rounded ${badge.cls || ''}`}>{badge.label === 'Inconclusive' ? 'No clear effect' : badge.label}</span>
-            )
-            ) : null
+              (badge.label === '🔒 Verdict Ready' && !isMember) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                      try { console.log('setShowPaywall(true) called from LINE 599') } catch {}
+                      setShowPaywall(true)
+                  }}
+                  className={`${baseChipClass} bg-gray-100 text-gray-800 border border-gray-200 font-medium hover:bg-gray-200`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {badge.label}
+                </button>
+              ) : (
+                <span className={`${baseChipClass} ${badge.cls || ''}`}>{(() => {
+                  if (badge.label === 'Inconclusive') {
+                    const cat = String((row as any).effectCategory || '').toLowerCase()
+                    if (cat === 'works' || cat === 'keep') return '✓ KEEP'
+                    if (cat === 'no_effect' || cat === 'drop' || cat === 'negative') return '✗ DROP'
+                    if (cat === 'no_detectable_effect') return 'No detectable effect'
+                    if (cat === 'inconsistent' || cat === 'needs_more_data') return '◐ TESTING'
+                    return 'No clear effect'
+                  }
+                  return badge.label
+                })()}</span>
+              )
+            ) : <span className={`${baseChipClass} invisible`}>placeholder</span>
           })()}
-        </div>
-        <div className="flex items-center gap-2">
-          {hasWearables ? (
-            <span className="text-[10px] text-gray-500" title="Wearables data connected">⚡ Enhanced</span>
-          ) : null}
-          {(!isVerdictReady && !isInconclusive && row.progressPercent >= 85) ? (
-            <div className="text-[11px] font-medium" style={{ color: '#C65A2E' }}>Almost there</div>
-          ) : null}
           {testingActive ? (
             <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
           ) : null}
         </div>
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-1.5 md:gap-3">
+          {hasWearables ? (
+            <span className="text-[10px] text-gray-500" title="Wearables data connected">⚡ Enhanced</span>
+          ) : null}
+          {(!isVerdictReady && !isInconclusive && row.progressPercent >= 85) ? (
+            <div className="text-[11px] font-medium mt-1 sm:mt-0 ml-1 md:ml-2" style={{ color: '#C65A2E' }}>Almost ready</div>
+          ) : null}
+      </div>
       </div>
       {testingActive && effectLine && (
         <div className="mt-1 text-sm text-gray-900">{effectLine}</div>
@@ -712,15 +727,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         {isVerdictReady && !isMember && (
           <button
             onClick={() => {
+              // Open upgrade modal without manipulating browser history
+              try { console.log('setShowPaywall(true) called from LINE 703') } catch {}
               setShowPaywall(true)
-              try { window.history.pushState({ modal: 'paywall' }, '', '#paywall') } catch {}
-              try {
-                const onPop = (ev: PopStateEvent) => {
-                  setShowPaywall(false)
-                  try { window.removeEventListener('popstate', onPop as any) } catch {}
-                }
-                window.addEventListener('popstate', onPop as any, { once: true } as any)
-              } catch {}
             }}
             className="text-[11px] px-3 py-1.5 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
           >
@@ -768,8 +777,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {busy ? 'Starting…' : 'Start testing →'}
           </button>
         )}
-      </div>
-      {/* Close muted wrapper before modals */}
       </div>
       {/* Styled modal: Stop testing */}
       {showStopModal && (
@@ -944,52 +951,95 @@ function Popup({ title, body, cta, onClose }: { title: string; body: string; cta
 function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMonthly?: number }) {
   const spendDisplay = (typeof spendMonthly === 'number' && spendMonthly > 0)
     ? `$${spendMonthly}/month`
-    : '$200+/month'
+    : null
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const startCheckout = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      // If not signed in, push to signup; Stripe will be invoked from /checkout after sign-in
+      if (!user) {
+        window.location.href = '/signup'
+        return;
+      }
+      const res = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'premium',
+          period: 'yearly',
+          userId: user.id,
+          userEmail: user.email
+        })
+      })
+      const j = await res.json().catch(() => ({}))
+      if (res.ok && j?.url) {
+        window.location.href = j.url
+      } else {
+        setError(String(j?.error || 'Unable to start checkout. Please try again.'))
+        setLoading(false)
+      }
+    } catch {
+      setError('Unable to start checkout. Please try again.')
+      setLoading(false)
+    }
+  }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[560px] rounded-2xl bg-white p-8 shadow-lg border border-gray-200">
-        <h3 className="text-2xl font-semibold text-center mb-2 text-gray-900">Stop guessing. Start knowing.</h3>
-        <p className="text-base text-gray-800 text-center">
-          You&apos;re spending <span className="font-semibold">{spendDisplay}</span> on supplements. How many are actually working?
-        </p>
-        <ul className="mt-5 text-gray-800 text-sm space-y-2 list-disc list-inside">
+      <div className="relative z-10 w-[94%] sm:w-full max-w-[420px] sm:max-w-[480px] rounded-xl bg-white p-4 sm:p-6 shadow-lg border border-gray-200 max-h-[88vh] overflow-y-auto">
+        <h3 className="text-lg sm:text-2xl font-semibold text-center mb-2 text-gray-900">Stop guessing. Start knowing.</h3>
+        {spendDisplay ? (
+          <p className="text-sm text-gray-800 text-center">
+            You&apos;re spending <span className="font-semibold">{spendDisplay}</span> on supplements. How many are actually working?
+          </p>
+        ) : (
+          <p className="text-sm text-gray-800 text-center">
+            Track and evaluate your supplements with clear evidence.
+          </p>
+        )}
+        <ul className="mt-3 sm:mt-4 text-gray-800 text-sm space-y-1.5 list-disc list-inside">
           <li>Verdicts for every supplement — Keep, Drop, or Test</li>
           <li>Effect sizes — <span className="italic">“12% better sleep on Magnesium”</span></li>
           <li>Confidence levels so you know what&apos;s real</li>
           <li>Potential savings identified automatically</li>
         </ul>
-        <div className="mt-4 text-sm text-gray-700">
+        <div className="mt-2 sm:mt-3 text-sm text-gray-700">
           Most users find 2–3 supplements to drop. That&apos;s $50–150/month back in your pocket.
         </div>
-        <div className="mt-6 space-y-3">
-          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+        <div className="mt-4 sm:mt-5 space-y-2.5">
+          <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
             <div className="flex items-center gap-3">
               <input type="radio" name="plan" className="h-4 w-4" defaultChecked />
               <div>
-                <div className="text-sm font-medium text-gray-900">$149/year</div>
+                <div className="text-sm sm:text-base font-medium text-gray-900">$149/year</div>
                 <div className="text-xs text-gray-600">$12.42/mo • Billed annually</div>
               </div>
             </div>
-            <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>
+            <span className="text-[10px] sm:text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">Recommended</span>
           </label>
-          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
             <div className="flex items-center gap-3">
               <input type="radio" name="plan" className="h-4 w-4" />
               <div>
-                <div className="text-sm font-medium text-gray-900">$19/month</div>
+                <div className="text-sm sm:text-base font-medium text-gray-900">$19/month</div>
                 <div className="text-xs text-gray-600">Cancel anytime</div>
               </div>
             </div>
           </label>
         </div>
-        <a
-          href="/checkout"
-          className="w-full h-12 mt-6 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:opacity-90 flex items-center justify-center"
+        <button
+          onClick={() => { try { console.log('CHECKOUT BUTTON CLICKED') } catch {} ; startCheckout() }}
+          disabled={loading}
+          className="w-full h-10 sm:h-12 mt-4 sm:mt-5 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:opacity-90 flex items-center justify-center"
         >
-          Continue to checkout
-        </a>
-        <button onClick={onClose} className="w-full h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-800 hover:bg-gray-50">
+          {loading ? 'Redirecting…' : 'Continue to checkout'}
+        </button>
+        {error ? <div className="mt-2 text-xs sm:text-sm text-red-600">{error}</div> : null}
+        <button onClick={onClose} className="w-full h-9 sm:h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-800 hover:bg-gray-50">
           Maybe later
         </button>
         <div className="mt-3 text-[11px] text-center text-gray-600">
@@ -1081,7 +1131,7 @@ function VerdictModal({ row, onClose, onRetest }: { row: any; onClose: () => voi
         )}
         {/* Actions */}
         <div className="mt-6 flex items-center justify-end gap-2">
-          <a href="/dash/stack" className="text-sm text-gray-800 underline">View in My Stack</a>
+          <a href="/results" className="text-sm text-gray-800 underline">View in My Stack</a>
           <button
             className="text-sm px-3 py-2 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
             onClick={onRetest}

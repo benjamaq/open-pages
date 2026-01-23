@@ -1,4 +1,4 @@
-export type TruthStatus = 'proven_positive' | 'no_effect' | 'negative' | 'confounded' | 'too_early'
+export type TruthStatus = 'proven_positive' | 'no_effect' | 'no_detectable_effect' | 'negative' | 'confounded' | 'too_early'
 
 export type DaySample = {
   date: string
@@ -30,6 +30,7 @@ export type CanonicalSupplement = {
 }
 
 export type TruthReport = {
+  supplementName?: string
   status: TruthStatus
   verdictTitle: string
   verdictLabel: string

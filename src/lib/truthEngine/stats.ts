@@ -49,15 +49,15 @@ export function estimateConfidence(effectSize: number, sampleOn: number, sampleO
   return clamp01(raw)
 }
 
-export function classifyStatus(effect: EffectStats, confidence: number): 'proven_positive' | 'no_effect' | 'negative' | 'confounded' | 'too_early' {
-  const MIN_ON_DAYS = 7
-  const MIN_OFF_DAYS = 7
-  if (effect.sampleOn < MIN_ON_DAYS || effect.sampleOff < MIN_OFF_DAYS) return 'too_early'
+export function classifyStatus(effect: EffectStats, confidence: number): 'proven_positive' | 'no_detectable_effect' | 'negative' | 'confounded' | 'too_early' {
+  // Treat very low confidence as confounded (needs more/cleaner data upstream)
   if (confidence < 0.4) return 'confounded'
-  if (Math.abs(effect.effectSize) < 0.2) return 'no_effect'
+  // New rule: when thresholds are met (handled upstream) but the effect is small OR confidence is still low-ish,
+  // call it a completed test with no detectable effect.
+  if (Math.abs(effect.effectSize) < 0.5 || confidence < 0.6) return 'no_detectable_effect'
   if (effect.direction === 'positive') return 'proven_positive'
   if (effect.direction === 'negative') return 'negative'
-  return 'no_effect'
+  return 'no_detectable_effect'
 }
 
 function isFiniteNumber(n: unknown): n is number {

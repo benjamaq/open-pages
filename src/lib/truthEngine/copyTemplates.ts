@@ -1,6 +1,7 @@
 export const verdictLabels: Record<string, string> = {
   proven_positive: 'PROVEN EFFECT',
   no_effect: 'NO MEASURABLE EFFECT',
+  no_detectable_effect: 'NO DETECTABLE EFFECT',
   negative: 'NEGATIVE EFFECT',
   confounded: 'CAN’T TRUST THIS YET',
   too_early: 'TOO EARLY TO CALL'
@@ -9,6 +10,7 @@ export const verdictLabels: Record<string, string> = {
 export const verdictTitles: Record<string, string> = {
   proven_positive: 'Strong positive effect on {{metricLabel}}',
   no_effect: 'No meaningful change detected',
+  no_detectable_effect: 'No detectable effect',
   negative: 'Net-negative effect on {{metricLabel}}',
   confounded: 'Signal is too noisy to trust yet',
   too_early: 'We don’t have enough clean data yet'

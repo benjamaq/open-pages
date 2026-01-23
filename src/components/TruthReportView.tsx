@@ -6,15 +6,23 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const statusColor = colorForStatus(report.status)
   const phenotype = derivePhenotype(report)
   const deficiency = deriveDeficiencyHint(report)
+  const decision = decisionFor(report)
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <header className="space-y-2">
+          {report.supplementName && (
+            <div className="text-sm text-slate-300">{report.supplementName}</div>
+          )}
           <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${statusColor.badge}`}>
             {report.verdictLabel}
           </div>
           <h1 className="text-xl md:text-2xl font-semibold">{report.verdictTitle}</h1>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
+          <div className="mt-2 text-sm text-slate-200 space-y-0.5">
+            <div><span className="text-slate-400">Verdict:</span> {decision.verdict}</div>
+            <div><span className="text-slate-400">Recommendation:</span> {decision.recommendation}</div>
+          </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {phenotype && (
               <span className="text-[10px] font-semibold inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40">
@@ -35,10 +43,26 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
             <div className="space-y-1 font-mono">
               <div>Absolute change: {fmt(report.effect.absoluteChange)}</div>
               <div>Effect size (d): {report.effect.effectSize.toFixed(2)}</div>
-              <div>Direction: {report.effect.direction}</div>
+              {report.status === 'no_detectable_effect' ? null : (
+                <div>Direction: {report.effect.direction}</div>
+              )}
               <div>Confidence: {report.confidence.label.toUpperCase()}</div>
             </div>
           </Card>
+          {report.status === 'no_detectable_effect' && (
+            <Card>
+              <div className="text-sm text-slate-400 mb-2">Interpretation</div>
+              <div className="text-sm text-slate-200 whitespace-pre-line">
+{`This supplement did not produce a meaningful change in your tracked 
+symptoms or outcomes at your current dose and timing.
+
+If you're taking it to improve how you feel or perform, consider 
+pausing or dropping it. If you're taking it for general health, 
+you may still choose to keep it—this test simply can't detect 
+that kind of benefit.`}
+              </div>
+            </Card>
+          )}
           <Card>
             <div className="text-sm text-slate-400 mb-2">ON vs OFF</div>
             <table className="w-full text-sm font-mono">
@@ -199,6 +223,45 @@ function fmt(n: number | null | undefined) {
   if (n == null || !Number.isFinite(n)) return '—'
   if (Math.abs(n) < 1) return n.toFixed(2)
   return n.toFixed(0)
+}
+
+function decisionFor(report: any): { verdict: string; recommendation: string } {
+  const metric = String(report?.primaryMetricLabel || 'your metric')
+  switch (String(report?.status)) {
+    case 'proven_positive':
+      return {
+        verdict: `This supplement meaningfully improved your ${metric}.`,
+        recommendation: 'Keep it in your stack.'
+      }
+    case 'no_detectable_effect':
+      return {
+        verdict: 'No detectable effect.',
+        recommendation: `This supplement did not produce a meaningful change in your tracked symptoms or outcomes at your current dose and timing.
+
+If you're taking it to improve how you feel or perform, consider pausing or dropping it. If you're taking it for general health, you may still choose to keep it—this test simply can't detect that kind of benefit.`
+      }
+    case 'no_effect':
+      return {
+        verdict: `This supplement did not show a clear effect on your ${metric}.`,
+        recommendation: 'Consider stopping.'
+      }
+    case 'negative':
+      return {
+        verdict: `This supplement likely worsened your ${metric}.`,
+        recommendation: 'Consider stopping.'
+      }
+    case 'confounded':
+      return {
+        verdict: 'Data are too noisy to make a confident call.',
+        recommendation: 'Collect a few more clean days and retest.'
+      }
+    case 'too_early':
+    default:
+      return {
+        verdict: 'We don’t have enough clean data yet.',
+        recommendation: 'Keep collecting data before deciding.'
+      }
+  }
 }
 
 function derivePhenotype(report: any): { label: string; icon: string } | null {
