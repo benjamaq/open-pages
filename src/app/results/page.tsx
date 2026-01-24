@@ -374,6 +374,13 @@ export default function ResultsPage() {
         }
         return ''
       })()
+      // Use loop verdict/state to align with dashboard truth overlay
+      const isReady = Boolean(loopData && (loopData as any).isReady)
+      const catLower = String((loopData as any)?.effectCategory || '').toLowerCase()
+      const loopVerdictRaw = String(loopData?.verdict || '').toLowerCase()
+      const verdictKeep = loopVerdictRaw === 'keep' || catLower === 'works'
+      const verdictDrop = loopVerdictRaw === 'drop' || catLower === 'no_effect'
+      const verdictNoDetect = catLower === 'no_detectable_effect'
       // Dumb badge purely from API verdict/category
       const badge = (() => {
         if (isReady) {
