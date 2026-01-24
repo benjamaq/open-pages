@@ -165,8 +165,8 @@ export default function ResultsPage() {
       const yearly = (monthly != null) ? Math.round(monthly * 12) : null
       const reqOn = l?.requiredOnDays ?? l?.requiredDays ?? null
       const reqOff = l?.requiredOffDays ?? (l?.requiredDays ? Math.min(5, Math.max(3, Math.round(l.requiredDays / 4))) : null)
-      const daysOn = l?.daysOnClean ?? null
-      const daysOff = l?.daysOffClean ?? null
+      const daysOn = (l?.daysOnClean ?? l?.daysOn ?? null)
+      const daysOff = (l?.daysOffClean ?? l?.daysOff ?? null)
       const isReady = typeof l?.isReady === 'boolean'
         ? Boolean(l.isReady)
         : Boolean(daysOn != null && daysOff != null && reqOn != null && reqOff != null && (daysOn as number) >= (reqOn as number) && (daysOff as number) >= (reqOff as number))
@@ -686,13 +686,10 @@ export default function ResultsPage() {
                 // Start date: prefer started_at, else created_at, else fallback to 0 days
                 const startIso = (s?.started_at as string) || (s?.created_at as string) || ''
                 const startDate = startIso ? new Date(startIso) : null
-                const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? 0) + (loopById[r.id]?.daysOffClean ?? 0))
-                // Mask verdicts for free users
-                const showVerdict = paid === true
-                const statusLabel = showVerdict ? (r.lifecycle === 'Active' ? 'Testing' : r.lifecycle) : 'Testing'
-                const statusIcon = showVerdict
-                  ? (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
-                  : '●'
+                const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? loopById[r.id]?.daysOn ?? 0) + (loopById[r.id]?.daysOffClean ?? loopById[r.id]?.daysOff ?? 0))
+                // Show status strictly from lifecycle (dumb renderer)
+                const statusLabel = (r.lifecycle === 'Active' ? 'Testing' : r.lifecycle)
+                const statusIcon = (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
                 const monthlyCost = typeof r.monthly === 'number' ? r.monthly : 0
                 return (
                   <div key={r.id} className="current-tile">
