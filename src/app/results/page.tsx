@@ -775,17 +775,13 @@ export default function ResultsPage() {
                         })()}
                       </div>
                       <div className="mt-2 text-[13px]">
-                        {showVerdict ? (
-                          r.lifecycle === 'Active'
-                            ? <span className="text-[#6B7280]">Testing in progress</span>
-                            : (
-                              <>
-                                <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
-                                {r.confidenceText && <div className="text-[#6B7280]">{r.confidenceText}</div>}
-                              </>
-                            )
-                        ) : (
+                        {r.lifecycle === 'Active' ? (
                           <span className="text-[#6B7280]">Testing in progress</span>
+                        ) : (
+                          <>
+                            <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
+                            {r.confidenceText && <div className="text-[#6B7280]">{r.confidenceText}</div>}
+                          </>
                         )}
                       </div>
                     </div>
