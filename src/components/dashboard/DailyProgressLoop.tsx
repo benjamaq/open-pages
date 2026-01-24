@@ -449,7 +449,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'needs_more_data') return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
-    // If API didn’t provide a verdict/category, surface explicit error to catch pipeline issues
+    // If API didn’t provide a verdict/category, decide between building vs error
+    const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
+    const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
+    const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
+    const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
+    const isReady = on >= reqOn && off >= reqOff
+    if (!isReady) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
     return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
   })()
   const effectLine = (() => {
@@ -556,7 +562,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-start justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2 min-w-0 text-[15px] sm:text-base">
-          <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{abbreviateSupplementName(String(row.name || ''))}</span>
+          <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{String(row.name || '')}</span>
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {
