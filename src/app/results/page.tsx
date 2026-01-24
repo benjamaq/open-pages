@@ -149,6 +149,11 @@ export default function ResultsPage() {
             // @ts-ignore
             isReady: Boolean((row as any).isReady),
           }
+          // Alias lookup by user_supplement_id as well to avoid id mismatches
+          const userSuppId = String((row as any).userSuppId || '')
+          if (userSuppId) {
+            ;(byId as any)[userSuppId] = byId[id]
+          }
         }
         if (!cancelled) setLoopById(byId)
       } catch {}
