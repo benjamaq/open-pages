@@ -180,11 +180,12 @@ export default function ResultsPage() {
       const verdictKeep = loopVerdict === 'keep' || catLower === 'works'
       const verdictDrop = loopVerdict === 'drop' || catLower === 'no_effect'
       const verdictNoDetect = catLower === 'no_detectable_effect'
-      // Lifecycle derived strictly from API verdict/category (no readiness gate)
+      // Lifecycle derived from effectCategory with correct precedence:
+      // no_detectable_effect must not be overridden by a 'drop' gating verdict.
       let lifecycle: UiRow['lifecycle'] =
-        verdictKeep ? 'Working'
+        verdictNoDetect ? 'No clear effect'
+        : verdictKeep ? 'Working'
         : verdictDrop ? 'Not working'
-        : verdictNoDetect ? 'No clear effect'
         : 'Active'
       try {
         console.log('[MyStack/uiRows]', {
@@ -698,7 +699,9 @@ export default function ResultsPage() {
                 const startDate = startIso ? new Date(startIso) : null
                 const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? loopById[r.id]?.daysOn ?? 0) + (loopById[r.id]?.daysOffClean ?? loopById[r.id]?.daysOff ?? 0))
                 // Show status strictly from lifecycle (dumb renderer)
-                const statusLabel = (r.lifecycle === 'Active' ? 'Testing' : r.lifecycle)
+                const statusLabel = (r.lifecycle === 'Active'
+                  ? 'Testing'
+                  : (r.lifecycle === 'No clear effect' ? 'No detectable effect' : r.lifecycle))
                 const statusIcon = (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
                 const monthlyCost = typeof r.monthly === 'number' ? r.monthly : 0
                 return (
