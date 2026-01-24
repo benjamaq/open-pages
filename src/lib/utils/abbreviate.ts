@@ -31,6 +31,14 @@ export function abbreviateSupplementName(fullName: string): string {
       .slice(0, 2)
       .join(' ')
   }
+  // Avoid duplication when compound already appears in brand/full name
+  if (compound) {
+    const brandLower = brand.toLowerCase()
+    const compLower = compound.toLowerCase()
+    if (brandLower.includes(compLower)) {
+      compound = ''
+    }
+  }
   let abbreviated = `${brand} ${compound}`.trim()
 
   // Add differentiator for flavor/variant to avoid collisions
