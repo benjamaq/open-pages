@@ -141,6 +141,13 @@ export default function ResultsPage() {
             daysOffClean: typeof row.daysOffClean === 'number' ? row.daysOffClean : undefined,
             requiredOnDays: typeof row.requiredOnDays === 'number' ? row.requiredOnDays : undefined,
             requiredOffDays: typeof row.requiredOffDays === 'number' ? row.requiredOffDays : undefined,
+            // Include canonical verdict/category from API for dumb rendering
+            // @ts-ignore
+            verdict: (row as any).verdict,
+            // @ts-ignore
+            effectCategory: (row as any).effectCategory,
+            // @ts-ignore
+            isReady: Boolean((row as any).isReady),
           }
         }
         if (!cancelled) setLoopById(byId)
@@ -153,34 +160,37 @@ export default function ResultsPage() {
   const uiRows = useMemo<UiRow[]>(() => {
     return supps.map(s => {
       const e = effects[s.id]
-      const l = loopById[s.id]
+      const l = loopById[s.id] as any
       const monthly = getMonthlyFromSupplement(s)
       const yearly = (monthly != null) ? Math.round(monthly * 12) : null
       const reqOn = l?.requiredOnDays ?? l?.requiredDays ?? null
       const reqOff = l?.requiredOffDays ?? (l?.requiredDays ? Math.min(5, Math.max(3, Math.round(l.requiredDays / 4))) : null)
       const daysOn = l?.daysOnClean ?? null
       const daysOff = l?.daysOffClean ?? null
-      const isReady = Boolean(daysOn != null && daysOff != null && reqOn != null && reqOff != null && (daysOn as number) >= (reqOn as number) && (daysOff as number) >= (reqOff as number))
-      const effCat = String(e?.effect_category || '').toLowerCase()
-      const dir = String(e?.effect_direction || '').toLowerCase()
-      const mag = typeof e?.effect_magnitude === 'number' ? e!.effect_magnitude! : null
-      const signedMag = typeof mag === 'number' ? (dir === 'negative' ? -Math.abs(mag) : Math.abs(mag)) : null
+      const isReady = typeof l?.isReady === 'boolean'
+        ? Boolean(l.isReady)
+        : Boolean(daysOn != null && daysOff != null && reqOn != null && reqOff != null && (daysOn as number) >= (reqOn as number) && (daysOff as number) >= (reqOff as number))
+      const catLower = String(l?.effectCategory || '').toLowerCase()
+      const loopVerdict = String(l?.verdict || '').toLowerCase()
+      const verdictKeep = loopVerdict === 'keep' || catLower === 'works'
+      const verdictDrop = loopVerdict === 'drop' || catLower === 'no_effect'
+      const verdictNoDetect = catLower === 'no_detectable_effect'
       let lifecycle: UiRow['lifecycle'] = 'Active'
       if (isReady) {
-        if (effCat === 'works' || (typeof signedMag === 'number' && signedMag > 0)) lifecycle = 'Working'
-        else if (effCat === 'no_effect') lifecycle = 'No clear effect'
-        else if (typeof signedMag === 'number' && signedMag < 0) lifecycle = 'Not working'
-        else lifecycle = 'No clear effect'
+        if (verdictKeep) lifecycle = 'Working'
+        else if (verdictDrop) lifecycle = 'Not working'
+        else if (verdictNoDetect) lifecycle = 'No clear effect'
+        else lifecycle = 'Active'
+      } else {
+        lifecycle = 'Active'
       }
+      // Optional explanatory text (kept minimal)
       const effectText = (() => {
         if (!isReady) return null
-        if (typeof signedMag === 'number') {
-          const pct = Math.round(signedMag)
-          if (pct > 0) return `Clear positive effect: +${pct}%`
-          if (pct < 0) return `Clear negative effect: ${pct}%`
-        }
-        if (effCat === 'no_effect') return 'No clear effect'
-        return 'No clear effect'
+        if (verdictKeep) return 'Clear positive effect'
+        if (verdictDrop) return 'Clear negative effect'
+        if (verdictNoDetect) return 'No detectable effect'
+        return null
       })()
       const confidenceText = (typeof e?.effect_confidence === 'number') ? `${Math.round(e!.effect_confidence!)}% confidence` : null
       const periodText = (() => {
@@ -364,30 +374,15 @@ export default function ResultsPage() {
         }
         return ''
       })()
-      // Use loop verdict/state to align with dashboard
-      // (loop computed above)
-      const isReady = Boolean(loopData && (loopData as any).isReady)
-      const loopVerdictRaw = String(loopData?.verdict || '').toLowerCase()
-      if (isReady) {
-        if (loopVerdictRaw === 'keep') verdict = 'KEEP'
-        else if (loopVerdictRaw === 'drop') verdict = 'DROP'
-        else verdict = 'INCONCLUSIVE'
-      }
-      // Progressive status badge (prioritize loop readiness)
+      // Dumb badge purely from API verdict/category
       const badge = (() => {
         if (isReady) {
-          if (verdict === 'KEEP') return { label: 'KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
-          if (verdict === 'DROP') return { label: 'DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
-          return { label: 'No clear effect', cls: 'bg-gray-100 text-gray-700 border border-gray-200' }
+          if (verdictKeep) return { label: 'KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+          if (verdictDrop) return { label: 'DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+          if (verdictNoDetect) return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+          return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
         }
-        // Not ready yet → use magnitude/confidence to show interim state
-        const c = conf ?? 0
-        if (typeof signedMag === 'number' && Math.abs(signedMag) >= 5) {
-          if (c >= 80) return { label: signedMag > 0 ? 'KEEP' : 'DROP', cls: signedMag > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200' }
-          if (c >= 60) return { label: signedMag > 0 ? 'Likely keep' : 'Likely drop', cls: signedMag > 0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200' }
-          return { label: 'Early read', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
-        }
-        return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+        return { label: 'Testing', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
       })()
       // Distance to verdict and context
       const onClean = loopData?.daysOnClean ?? null
@@ -438,7 +433,9 @@ export default function ResultsPage() {
         if (rotationHint) return 'Why OFF days matter →'
         return 'Keep tracking →'
       })()
-      return { id: s.id, name: s.name, verdict, badge, conf, mag: signedMag, monthly, yearly, costText, onAvg, offAvg, daysOn, daysOff, onClean, offClean, reqOn, reqOff, distance, rotationHint, contextLines, actionText }
+      const verdictUpper: 'KEEP' | 'DROP' | 'INCONCLUSIVE' =
+        verdictKeep ? 'KEEP' : verdictDrop ? 'DROP' : 'INCONCLUSIVE'
+      return { id: s.id, name: s.name, verdict: verdictUpper, badge, conf, mag: null, monthly, yearly, costText, onAvg, offAvg, daysOn, daysOff, onClean, offClean, reqOn, reqOff, distance, rotationHint, contextLines, actionText }
     })
   }, [supps, effects, loopById])
 
@@ -536,7 +533,7 @@ export default function ResultsPage() {
               return r.lifecycle === 'Not working' && isActive && !paused[r.id]
             }).reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0) * 12)
             return (
-              <div className="mb-3 flex items-start justify-between">
+              <div className="mb-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div>
                   <div className="section-header">Today&apos;s Protocol</div>
                   <div className="section-subtitle">
@@ -544,18 +541,18 @@ export default function ResultsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <div className="text-xs text-[#6B7280] uppercase">Today</div>
-                      <div className="text-xl font-semibold text-[#111111]">{fmtCurrency(daily)}</div>
+                      <div className="text-[10px] sm:text-xs text-[#6B7280] uppercase">Today</div>
+                      <div className="text-lg sm:text-xl font-semibold text-[#111111]">{fmtCurrency(daily)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-[#6B7280] uppercase">This Month</div>
-                      <div className="text-xl font-semibold text-[#111111]">{fmtMoney(monthly)}</div>
+                      <div className="text-[10px] sm:text-xs text-[#6B7280] uppercase">This Month</div>
+                      <div className="text-lg sm:text-xl font-semibold text-[#111111]">{fmtMoney(monthly)}</div>
                     </div>
                   </div>
                   {potentialSavingsYear > 0 && (
-                    <div className="mt-1 text-xs text-[#6B7280]">Potential savings: ${potentialSavingsYear.toLocaleString()}/year</div>
+                    <div className="mt-1 text-[10px] sm:text-xs text-[#6B7280]">Potential savings: ${potentialSavingsYear.toLocaleString()}/year</div>
                   )}
                 </div>
               </div>
@@ -1000,6 +997,19 @@ export default function ResultsPage() {
           .supplement-name { font-weight: 500; color: #1F2937; }
           .brand-name { color: #9CA3AF; }
           .dosewhen { color: #1F2937; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          /* Mobile responsiveness for Today's Protocol */
+          @media (max-width: 640px) {
+            .section-todays-protocol { padding: 12px; }
+            .section-header { font-size: 20px; padding-left: 12px; }
+            .section-subtitle { font-size: 12px; margin-bottom: 12px; }
+            .protocol-row {
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+              padding: 10px 12px;
+            }
+            .brand-name { display: none; }
+            .dosewhen { text-align: left; white-space: normal; }
+          }
           .current-tile {
             border: 1.5px solid #C9A227;
             border-radius: 10px;
