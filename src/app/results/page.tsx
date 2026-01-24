@@ -175,21 +175,26 @@ export default function ResultsPage() {
       const verdictKeep = loopVerdict === 'keep' || catLower === 'works'
       const verdictDrop = loopVerdict === 'drop' || catLower === 'no_effect'
       const verdictNoDetect = catLower === 'no_detectable_effect'
-      let lifecycle: UiRow['lifecycle'] = 'Active'
-      if (isReady) {
-        if (verdictKeep) lifecycle = 'Working'
-        else if (verdictDrop) lifecycle = 'Not working'
-        else if (verdictNoDetect) lifecycle = 'No clear effect'
-        else lifecycle = 'Active'
-      } else {
-        lifecycle = 'Active'
-      }
+      // Lifecycle derived strictly from API verdict/category (no readiness gate)
+      let lifecycle: UiRow['lifecycle'] =
+        verdictKeep ? 'Working'
+        : verdictDrop ? 'Not working'
+        : verdictNoDetect ? 'No clear effect'
+        : 'Active'
+      try {
+        console.log('[MyStack/uiRows]', {
+          id: s.id,
+          name: s.name,
+          loop: { effectCategory: l?.effectCategory, verdict: l?.verdict, isReady },
+          computed: { catLower, verdictKeep, verdictDrop, verdictNoDetect, lifecycle }
+        })
+      } catch {}
       // Optional explanatory text (kept minimal)
       const effectText = (() => {
-        if (!isReady) return null
-        if (verdictKeep) return 'Clear positive effect'
-        if (verdictDrop) return 'Clear negative effect'
-        if (verdictNoDetect) return 'No detectable effect'
+        if (lifecycle === 'Active') return null
+        if (lifecycle === 'Working') return 'Clear positive effect'
+        if (lifecycle === 'Not working') return 'Clear negative effect'
+        if (lifecycle === 'No clear effect') return 'No detectable effect'
         return null
       })()
       const confidenceText = (typeof e?.effect_confidence === 'number') ? `${Math.round(e!.effect_confidence!)}% confidence` : null
