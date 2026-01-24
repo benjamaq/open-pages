@@ -626,11 +626,16 @@ export default function ResultsPage() {
               <div>
                 <div className="section-header">Your Active Stack</div>
                 <div className="section-subtitle">
-                  {uiRows.filter(u => {
-                    const s = supps.find(x => x.id === u.id) as any
-                    const isActive = (s as any)?.is_active !== false
-                    return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
-                  }).length} supplements you&apos;re currently testing
+                  {(() => {
+                    const active = uiRows.filter(u => {
+                      const s = supps.find(x => x.id === u.id) as any
+                      const isActive = (s as any)?.is_active !== false
+                      return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+                    })
+                    const testing = active.filter(u => u.lifecycle === 'Active').length
+                    const completed = active.filter(u => u.lifecycle !== 'Active').length
+                    return `${testing} testing • ${completed} complete`
+                  })()}
                 </div>
               </div>
               {(() => {
@@ -703,7 +708,12 @@ export default function ResultsPage() {
                       </div>
                       <div className="mt-2">
                         <div className="text-[16px] font-semibold text-[#111] line-clamp-2">{r.name}</div>
-                        {brand ? <div className="text-[13px] text-[#6B7280]">{brand}</div> : null}
+                        {(() => {
+                          const nameLc = String(r.name || '').toLowerCase().trim()
+                          const brandLc = String(brand || '').toLowerCase().trim()
+                          const showBrand = Boolean(brandLc && !nameLc.includes(brandLc))
+                          return showBrand ? <div className="text-[13px] text-[#6B7280]">{brand}</div> : null
+                        })()}
                       </div>
                       <div className="mt-2 text-[13px] text-[#4B5563]">
                         {(() => {
