@@ -216,7 +216,7 @@ export default function ResultsPage() {
       })()
       return {
         id: s.id,
-        name: s.name,
+        name: String(l?.name || s.name || ''),
         monthly,
         yearly,
         lifecycle,
@@ -589,7 +589,8 @@ export default function ResultsPage() {
               return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
             }).map(r => {
               const s = supps.find(x => x.id === r.id) as any
-              const { brand, shortName } = parseBrandAndShortName(s)
+              const fallbackName = String(s?.name || (loopById[r.id] as any)?.name || r.name || '')
+              const { brand, shortName } = parseBrandAndShortName({ ...s, name: fallbackName })
               let dose = getDose(s)
               // If dose is purely numeric (legacy), add 'x' to improve clarity
               if (dose && /^\d+(\.\d+)?$/.test(dose)) dose = `${dose}x`

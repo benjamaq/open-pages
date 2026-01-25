@@ -541,6 +541,11 @@ export async function GET(request: Request) {
         })
       }
     }
+    if (VERBOSE) {
+      try {
+        console.log('[truths] rows:', (truths || []).length, 'unique ids:', Array.from(truthBySupp.keys()).slice(0, 10))
+      } catch {}
+    }
     const mapTruthToCategory = (status: string): string | undefined => statusToCategory(status)
     // Build intakeByDate map for ON/OFF derivation
     const intakeByDate = new Map<string, Record<string, any>>()
@@ -635,6 +640,7 @@ export async function GET(request: Request) {
                   percent_change: (latest![0] as any).percent_change ?? null,
                   confidence_score: (latest![0] as any).confidence_score ?? null
                 })
+                if (VERBOSE) { try { console.log('[overlay-refresh] updated truth map for', uid, 'status=', String((latest![0] as any).status || '')) } catch {} }
               }
             } catch {}
           }
@@ -666,6 +672,18 @@ export async function GET(request: Request) {
             })
           } catch {}
         }
+        if (VERBOSE) {
+          try {
+            console.log('[overlay-trace]', {
+              id: (r as any).id,
+              name: (r as any).name,
+              userSuppId: uid,
+              hasTruth: !!truthBySupp.get(String(uid)),
+              status: truthBySupp.get(String(uid))?.status || null,
+              effectCategory: (r as any).effectCategory || null
+            })
+          } catch {}
+        }
       } catch {}
       // Derive daysOn/Off from daily_entries intake; if retest is active, recompute from retest start
       try {
@@ -692,10 +710,14 @@ export async function GET(request: Request) {
           let isTaken = false
           let hasRecord = false
           if (intake && typeof intake === 'object') {
-            const v = (intake as any)[suppId]
-            if (v !== undefined) {
+            // Try multiple candidate keys to handle historical data keyed by stack_items.id
+            const candidates = [suppId, String((r as any).id || '')].filter(Boolean)
+            for (const k of candidates) {
+              if (hasRecord) break
+              const val = (intake as any)[k]
+              if (val === undefined) continue
               hasRecord = true
-              const s = String(v).toLowerCase()
+              const s = String(val).toLowerCase()
               if (s === 'skipped' || s === 'off' || s === 'not_taken' || s === 'false' || s === '0') {
                 isOff = true
               } else if (s === 'taken' || s === 'true' || s === '1') {
