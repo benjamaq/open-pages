@@ -433,8 +433,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
   // Inconclusive only applies to paid users at 100% without a verdict/significance
   const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
-  const isActivelyTesting = !isVerdictReady && !isInconclusive && testingActive
-  const isInactive = !testingActive && !isVerdictReady && !isInconclusive
+  // Treat any in-progress (<100%) item as "testing" for display, even if testingActive flag is false
+  const isBuilding = (row.progressPercent < 100) && !isVerdictReady && !isInconclusive
+  const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive
 
   // Status badge: render strictly from API-provided effectCategory or verdict
   const badge = (() => {
@@ -556,7 +557,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       setBusy(false)
     }
   }
-  const muted = !isActivelyTesting && !isVerdictReady && !isInconclusive
+  const muted = !isBuilding && !isVerdictReady && !isInconclusive
   return (
     <div id={`supp-${row.id}`} className={`rounded-lg border border-gray-200 bg-white p-3 sm:p-4 overflow-hidden`} style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}>
       <div style={muted ? { opacity: 0.7 } : undefined}>
@@ -604,7 +605,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
           </div>
         </>
-      ) : isActivelyTesting ? (
+      ) : isBuilding ? (
         <>
       <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             {(() => {
@@ -617,7 +618,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
         {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
       </div>
-      {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isActivelyTesting && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
+      {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isBuilding && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
         <div className="mt-1 text-xs text-gray-500">Slower due to parallel testing</div>
       )}
         </>
@@ -626,7 +627,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {(isActivelyTesting || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {(isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
@@ -644,11 +645,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       {!isMember && !isVerdictReady && !isInconclusive && row.progressPercent < 100 && (
         <div className="mt-2 text-[11px] text-gray-600">Keep tracking</div>
       )}
-      {(hasWearables && (isActivelyTesting || isVerdictReady || isInconclusive)) && (
+      {(hasWearables && (isBuilding || isVerdictReady || isInconclusive)) && (
         <div className="mt-1 text-[11px] text-gray-600">Signal powered by check-ins and wearable data</div>
       )}
       <div className="mt-3 flex justify-end">
-        {isActivelyTesting && (
+        {isBuilding && (
           <button
             disabled={busy}
             onClick={() => setShowStopModal(true)}
