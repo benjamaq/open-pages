@@ -52,13 +52,14 @@ export function PersonalHeader() {
               const progressPct = Number(r?.progressPercent || 0)
               const verdictValue = String((r as any)?.verdict || '').toLowerCase()
               const effectCatLower = String((r as any)?.effectCategory || '').toLowerCase()
+              const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
               const hasVerdict = ['keep','drop','test','test_more'].includes(verdictValue)
               const isSignificant = Boolean((r as any)?.isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
               const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
               const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
               if (verdictReady || inconclusive) rdy++
-              // Align with card filter: any in-progress (<100%) item is "testing"
-              if (progressPct < 100 && !verdictReady && !inconclusive) testing++
+              // Align with card filter: testing = no final verdict and not completed
+              if (!hasFinalVerdict && !verdictReady && !inconclusive) testing++
             }
           }
         } catch {}

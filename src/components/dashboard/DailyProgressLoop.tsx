@@ -338,22 +338,25 @@ export function DailyProgressLoop() {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
+          const hasVerdictFlag = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-          // Treat any in-progress (<100%) item as testing, even if testingActive flag is false
-          return (progressPct < 100) && !verdictReady && !inconclusive
+          // Testing shows only items without any final verdict and not yet complete
+          return !hasVerdictFlag && !verdictReady && !inconclusive
         })
         const completedRows = sortedForDisplay.filter((row: any) => {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
+          const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-          return verdictReady || inconclusive
+          // Completed includes any final verdict OR a completed state (verdictReady/inconclusive)
+          return hasFinalVerdict || verdictReady || inconclusive
         })
         return (
           <div className="space-y-6">
