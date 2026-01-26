@@ -413,10 +413,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   // - If confidence from analysis exists (ready/no_signal), use it
   // - Otherwise, use current clean-days-based progressPercent
   const effectCat = (row as any).effectCategory as string | undefined
-  const progressForDisplay = effectCat === 'needs_more_data' ? 100 : (row.progressPercent >= 100 ? 100 : row.progressPercent)
+  const effectCatLower = String(effectCat || '').toLowerCase()
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
-  const strengthDisplay = (effectCat === 'needs_more_data' || row.progressPercent >= 100) ? 100 : strength
+  // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete
+  const hasFinalVerdictGlobal = ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+  const progressForDisplay = (effectCatLower === 'needs_more_data' || hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : row.progressPercent
+  const strengthDisplay = (effectCatLower === 'needs_more_data' || hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : strength
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)
@@ -429,15 +432,17 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const testingActive = Boolean((row as any).testingActive)
   // Derive UI state from progress + verdict/significance + effect categories
   const verdictValue = String((row as any).verdict || '').toLowerCase()
-  const effectCatLower = String((row as any).effectCategory || '').toLowerCase()
+  // reuse effectCatLower above
   const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
   const isSignificant = Boolean((row as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
   // Free users: any 100% is shown as Verdict Ready (paywall). Paid users require verdict/significance.
   const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
   // Inconclusive only applies to paid users at 100% without a verdict/significance
   const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
-  // Treat any in-progress (<100%) item as "testing" for display, even if testingActive flag is false
-  const isBuilding = (row.progressPercent < 100) && !isVerdictReady && !isInconclusive
+  const hasFinalVerdict = (verdictValue === 'keep' || verdictValue === 'drop' || hasFinalVerdictGlobal)
+  const isCompleted = hasFinalVerdict || isVerdictReady || isInconclusive
+  // Treat as building only if not completed and progress < 100
+  const isBuilding = !isCompleted && (row.progressPercent < 100)
   const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive
 
   // Status badge: render strictly from API-provided effectCategory or verdict
@@ -582,7 +587,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {hasWearables ? (
             <span className="text-[10px] text-gray-500" title="Wearables data connected">⚡ Enhanced</span>
           ) : null}
-          {(!isVerdictReady && !isInconclusive && row.progressPercent >= 85) ? (
+          {(!isCompleted && row.progressPercent >= 85) ? (
             <div className="text-[11px] font-medium mt-1 sm:mt-0 ml-1 md:ml-2" style={{ color: '#C65A2E' }}>Almost ready</div>
           ) : null}
       </div>
@@ -597,7 +602,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {(row as any).inconclusiveText}
         </div>
       )}
-      {(isVerdictReady || isInconclusive) ? (
+      {(isCompleted) ? (
         <>
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
@@ -673,7 +678,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-        {(isInconclusive || (isVerdictReady && isMember)) && (
+        {(isCompleted && (isMember || hasFinalVerdict)) && (
           <div className="flex gap-2">
             <button
               className="text-[11px] font-medium"
