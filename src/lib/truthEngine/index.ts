@@ -68,8 +68,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     // Determine analysis lower bound for this supplement
     const restart = (supp as any)?.retest_started_at ? String((supp as any).retest_started_at).slice(0,10) : null
     const inferred = (supp as any)?.inferred_start_at ? String((supp as any).inferred_start_at).slice(0,10) : null
-    const created = (supp as any)?.created_at ? String((supp as any).created_at).slice(0,10) : null
-    sinceLowerBound = restart || inferred || created || null
+    // IMPORTANT: Do NOT gate analysis by created_at; seeded entries may predate record creation
+    // Only use restart or inferred bounds; otherwise allow full 365d window
+    sinceLowerBound = restart || inferred || null
   } else {
     // Fallback: treat id as stack_items id for this user
     const { data: stackItem } = await supabase
@@ -90,8 +91,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     canonicalId = null
     secondaryKeys = []
     const startDate = (stackItem as any)?.start_date ? String((stackItem as any).start_date).slice(0,10) : null
-    const created = (stackItem as any)?.created_at ? String((stackItem as any).created_at).slice(0,10) : null
-    sinceLowerBound = startDate || created || null
+    // Prefer explicit start_date; avoid gating by created_at for backfilled data
+    sinceLowerBound = startDate || null
   }
 
   // Build candidate intake keys: prefer user_supplement id, but also include any linked stack_items ids
