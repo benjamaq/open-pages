@@ -56,10 +56,9 @@ export function PersonalHeader() {
               const isSignificant = Boolean((r as any)?.isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
               const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
               const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-              const activelyTesting = Boolean((r as any)?.testingActive) && !verdictReady && !inconclusive
-              if (verdictReady) rdy++
-              else if (inconclusive) rdy++ // counts toward "complete"
-              if (activelyTesting) testing++
+              if (verdictReady || inconclusive) rdy++
+              // Align with card filter: any in-progress (<100%) item is "testing"
+              if (progressPct < 100 && !verdictReady && !inconclusive) testing++
             }
           }
         } catch {}
@@ -108,7 +107,7 @@ export function PersonalHeader() {
 
   return (
     <section>
-      <h1 className="text-3xl font-semibold text-[#111111]">{getGreeting(firstName)}</h1>
+      <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#111111] break-words">{getGreeting(firstName)}</h1>
       <p className="mt-1 text-sm text-[#4B5563]">
         {(() => {
           const total = Math.max(0, suppCount)
