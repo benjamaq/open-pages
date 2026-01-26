@@ -340,10 +340,10 @@ export function DailyProgressLoop() {
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-          const testingActive = Boolean((row as any)?.testingActive)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-          return testingActive && !verdictReady && !inconclusive
+          // Treat any in-progress (<100%) item as testing, even if testingActive flag is false
+          return (progressPct < 100) && !verdictReady && !inconclusive
         })
         const completedRows = sortedForDisplay.filter((row: any) => {
           const progressPct = Number(row?.progressPercent || 0)
