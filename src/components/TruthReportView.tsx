@@ -15,6 +15,9 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     (report as any)?.meta?.supplementName ||
     ''
   ).trim()
+  try {
+    console.log('[TruthReportView] supName resolved:', supName || null, 'report.supplementName:', (report as any)?.supplementName || null)
+  } catch {}
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">

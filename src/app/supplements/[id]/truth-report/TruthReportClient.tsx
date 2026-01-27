@@ -29,6 +29,12 @@ export default function TruthReportClient() {
 				if (!mounted) return
 				if (!res.ok) throw new Error(json?.error || 'Failed')
 				setData(json)
+        try {
+          console.log('[TruthReportClient] Loaded report payload for', userSupplementId, {
+            hasSupplementName: !!json?.supplementName,
+            keys: Object.keys(json || {})
+          })
+        } catch {}
         // Try to resolve a human-friendly supplement name for the header
         try {
           const directName = String(
@@ -41,6 +47,7 @@ export default function TruthReportClient() {
           ).trim()
           if (directName) {
             setSupplementName(directName)
+            try { console.log('[TruthReportClient] supplementName (direct):', directName) } catch {}
           } else {
             const s = await fetch('/api/supplements', { cache: 'no-store' })
             if (s.ok) {
@@ -55,6 +62,7 @@ export default function TruthReportClient() {
                 })
                 const nm = String(hit?.name || hit?.label || '').trim()
                 if (nm) setSupplementName(nm)
+                try { console.log('[TruthReportClient] supplementName (fallback from /api/supplements):', nm || null) } catch {}
               }
             }
           }
@@ -92,6 +100,7 @@ export default function TruthReportClient() {
 					← Back
 				</button>
 			</div>
+      {(() => { try { console.log('[TruthReportClient] Passing supplementName to view:', supplementName) } catch {} return null })()}
 			<TruthReportView report={{ ...data, supplementName }} />
 		</div>
 	)

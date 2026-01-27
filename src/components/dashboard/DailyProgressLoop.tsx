@@ -181,11 +181,18 @@ export function DailyProgressLoop() {
     const hasVerdict = Boolean((r as any)?.effectCategory)
     return hasVerdict || pct >= 100
   })
-  // Header counts: derive from card logic (do NOT rely on DB testing_status)
+  // Header counts: derive from card logic (include needsData/inconsistent like the card list)
   const headerCounts = useMemo(() => {
+    const allCombined: any[] = [
+      ...(s.clearSignal || []),
+      ...(s.noSignal || []),
+      ...(((data?.sections as any)?.inconsistent) || []),
+      ...(s.building || []),
+      ...(((data?.sections as any)?.needsData) || []),
+    ]
     let testing = 0
     let verdicts = 0
-    for (const r of (allRows as any[])) {
+    for (const r of allCombined) {
       const verdictValue = String((r as any).verdict || '').toLowerCase()
       const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
       const hasFinal =
@@ -195,7 +202,7 @@ export function DailyProgressLoop() {
       else testing++
     }
     return { testing, verdicts, inconclusive: 0 }
-  }, [allRows, isMember])
+  }, [s.clearSignal, s.noSignal, s.building, (data?.sections as any)?.inconsistent, (data?.sections as any)?.needsData])
   // Next likely result (closest to completion among building, excluding noisy)
   const nextLikely = (() => {
     const candidates = s.building
@@ -252,7 +259,13 @@ export function DailyProgressLoop() {
           My Supplements
           <span className="ml-2 text-xs font-normal text-gray-600">
             {(() => {
-              const all = allRows as any[]
+              const all: any[] = [
+                ...(s.clearSignal || []),
+                ...(s.noSignal || []),
+                ...(((data?.sections as any)?.inconsistent) || []),
+                ...(s.building || []),
+                ...(((data?.sections as any)?.needsData) || []),
+              ]
               let testing = 0
               let verdicts = 0
               for (const r of all) {
