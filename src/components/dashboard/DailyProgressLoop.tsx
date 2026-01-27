@@ -478,6 +478,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const [showRetestModal, setShowRetestModal] = useState(false)
   const [showTruthReport, setShowTruthReport] = useState(false)
   const [reportId, setReportId] = useState<string | null>(null)
+  const [reportName, setReportName] = useState<string | null>(null)
   // Parallel testing soft warnings
   const [showParallel8Modal, setShowParallel8Modal] = useState(false)
   const [showParallel11Modal, setShowParallel11Modal] = useState(false)
@@ -682,6 +683,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                 const idCandidate = String((row as any).userSuppId || (row as any).userSupplementId || (row as any).id || '')
                 try { console.log('[report] Opening modal for supplement:', { idCandidate, name: (row as any)?.name }) } catch {}
                 setReportId(idCandidate || null)
+                setReportName(String((row as any)?.name || ''))
                 setShowTruthReport(true)
               }}
             >
@@ -848,6 +850,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         isOpen={showTruthReport}
         onClose={() => setShowTruthReport(false)}
         userSupplementId={String(reportId || userSuppId)}
+        supplementName={String(reportName || (row as any)?.name || '')}
       />
       {showPaywall && (
         <PaywallModal

@@ -7,9 +7,10 @@ export type TruthReportModalProps = {
   isOpen: boolean
   onClose: () => void
   userSupplementId: string
+  supplementName?: string
 }
 
-export default function TruthReportModal({ isOpen, onClose, userSupplementId }: TruthReportModalProps) {
+export default function TruthReportModal({ isOpen, onClose, userSupplementId, supplementName }: TruthReportModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<any>(null)
@@ -21,7 +22,7 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId }: 
       try {
         setLoading(true); setError(null)
         try { console.log('[report] Modal received ID:', userSupplementId) } catch {}
-        const url = `/api/truth-report/${encodeURIComponent(userSupplementId)}`
+        const url = `/api/truth-report/${encodeURIComponent(userSupplementId)}?force=true`
         try { console.log('[report] API called with ID:', userSupplementId, 'url:', url) } catch {}
         const res = await fetch(url, { cache: 'no-store', credentials: 'include' })
         const json = await res.json()
@@ -48,7 +49,12 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId }: 
         {error && !loading && (
           <div className="min-h-screen grid place-items-center text-rose-300 text-sm">{error}</div>
         )}
-        {data && !loading && <TruthReportView report={data} />}
+        {data && !loading && (
+          <>
+            {(() => { try { console.log('[TruthReportModal] Rendering view with supplementName:', supplementName || null) } catch {} return null })()}
+            <TruthReportView report={{ ...data, supplementName }} />
+          </>
+        )}
       </div>
     </div>
   )
