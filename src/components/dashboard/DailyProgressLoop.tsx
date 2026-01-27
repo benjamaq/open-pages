@@ -185,21 +185,16 @@ export function DailyProgressLoop() {
   const headerCounts = useMemo(() => {
     let testing = 0
     let verdicts = 0
-    let inconclusive = 0
     for (const r of (allRows as any[])) {
-      const active = Boolean((r as any).testingActive)
-      const pct = Number((r as any).progressPercent || 0)
       const verdictValue = String((r as any).verdict || '').toLowerCase()
       const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
-      const hasVerdict = ['keep','drop','test','test_more'].includes(verdictValue)
-      const isSignificant = Boolean((r as any).isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
-      const isVerdictReady = pct >= 100 && (!isMember || hasVerdict || isSignificant)
-      const isInc = pct >= 100 && isMember && !hasVerdict && !isSignificant
-      if (active && !isVerdictReady && !isInc) testing++
-      else if (isInc) { verdicts++; inconclusive++ }
-      else if (isVerdictReady) { verdicts++ }
+      const hasFinal =
+        ['keep','drop'].includes(verdictValue) ||
+        ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+      if (hasFinal) verdicts++
+      else testing++
     }
-    return { testing, verdicts, inconclusive }
+    return { testing, verdicts, inconclusive: 0 }
   }, [allRows, isMember])
   // Next likely result (closest to completion among building, excluding noisy)
   const nextLikely = (() => {

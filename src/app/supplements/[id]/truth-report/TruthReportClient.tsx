@@ -15,6 +15,7 @@ export default function TruthReportClient() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [data, setData] = useState<any>(null)
+  const [supplementName, setSupplementName] = useState<string>('')
 
 	useEffect(() => {
 		let mounted = true
@@ -28,6 +29,36 @@ export default function TruthReportClient() {
 				if (!mounted) return
 				if (!res.ok) throw new Error(json?.error || 'Failed')
 				setData(json)
+        // Try to resolve a human-friendly supplement name for the header
+        try {
+          const directName = String(
+            json?.supplementName ||
+            json?.name ||
+            json?.label ||
+            json?.supplement ||
+            json?.meta?.supplementName ||
+            ''
+          ).trim()
+          if (directName) {
+            setSupplementName(directName)
+          } else {
+            const s = await fetch('/api/supplements', { cache: 'no-store' })
+            if (s.ok) {
+              const arr = await s.json()
+              if (Array.isArray(arr)) {
+                const lowerId = String(userSupplementId || '').toLowerCase()
+                const hit = arr.find((x: any) => {
+                  const a = String(x?.id || '').toLowerCase()
+                  const b = String(x?.user_supplement_id || '').toLowerCase()
+                  const c = String(x?.intake_id || '').toLowerCase()
+                  return a === lowerId || b === lowerId || c === lowerId
+                })
+                const nm = String(hit?.name || hit?.label || '').trim()
+                if (nm) setSupplementName(nm)
+              }
+            }
+          }
+        } catch {}
 			} catch (e: any) {
 				setError(e?.message || 'Failed to load report')
 			} finally {
@@ -61,7 +92,7 @@ export default function TruthReportClient() {
 					← Back
 				</button>
 			</div>
-			<TruthReportView report={data} />
+			<TruthReportView report={{ ...data, supplementName }} />
 		</div>
 	)
 }
