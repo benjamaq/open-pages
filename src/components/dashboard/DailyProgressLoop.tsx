@@ -315,7 +315,7 @@ export function DailyProgressLoop() {
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const testingActive = Boolean((row as any)?.testingActive)
-          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const verdictReady = (progres                                                                                                                    INFO
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
           const activelyTesting = testingActive && !verdictReady && !inconclusive
           if (verdictReady) return 0
@@ -341,10 +341,11 @@ export function DailyProgressLoop() {
           const hasVerdictFlag = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-          // Testing shows only items without any final verdict and not yet complete
-          return !hasVerdictFlag && !verdictReady && !inconclusive
+          const isTooEarly = effectCatLower === 'needs_more_data'
+          // Keep "Too early" items in Testing; otherwise include non-final items that aren't complete
+          return isTooEarly || (!hasVerdictFlag && !verdictReady && !inconclusive)
         })
         const completedRows = sortedForDisplay.filter((row: any) => {
           const progressPct = Number(row?.progressPercent || 0)
@@ -353,10 +354,10 @@ export function DailyProgressLoop() {
           const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-          // Completed includes any final verdict OR a completed state (verdictReady/inconclusive)
-          return hasFinalVerdict || verdictReady || inconclusive
+          // Completed only when final verdict is present; "too early"/inconclusive remain in Testing
+          return hasFinalVerdict
         })
         return (
           <div className="space-y-6">
