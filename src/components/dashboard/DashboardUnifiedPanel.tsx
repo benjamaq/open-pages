@@ -203,11 +203,13 @@ export function DashboardUnifiedPanel() {
       ...(s.building || []),
     ]
     const readyCt = allRows.filter(r => {
+      const cat = String((r as any)?.effectCategory || '').toLowerCase()
+      const isFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
       const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
       const off = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
       const reqOn = Number((r as any).requiredOnDays ?? (r as any).requiredDays ?? 14)
       const reqOff = Number((r as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round(((r as any).requiredDays ?? 14) / 4))))
-      return on >= reqOn && off >= reqOff
+      return isFinal || (on >= reqOn && off >= reqOff)
     }).length
     return {
       progressPercent: pct,

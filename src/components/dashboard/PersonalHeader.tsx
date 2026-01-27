@@ -57,7 +57,7 @@ export function PersonalHeader() {
               const isSignificant = Boolean((r as any)?.isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
               const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
               const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-              if (verdictReady || inconclusive) rdy++
+              if (verdictReady || inconclusive || hasFinalVerdict) rdy++
               // Align with card filter: testing = no final verdict and not completed
               if (!hasFinalVerdict && !verdictReady && !inconclusive) testing++
             }
