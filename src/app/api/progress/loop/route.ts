@@ -622,7 +622,46 @@ export async function GET(request: Request) {
           const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
           if (stale && uid) {
             try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', uid) } catch {}
-            await generateTruthReportForSupplement(user.id, uid)
+            const fresh = await generateTruthReportForSupplement(user.id, uid)
+            // Persist the freshly generated report so downstream reads are consistent
+            try {
+              const payloadToStore = {
+                user_id: user.id,
+                user_supplement_id: uid,
+                canonical_id: null as string | null,
+                status: fresh.status,
+                primary_metric: fresh.primaryMetricLabel,
+                effect_direction: fresh.effect.direction,
+                effect_size: fresh.effect.effectSize,
+                absolute_change: fresh.effect.absoluteChange,
+                percent_change: fresh.effect.percentChange,
+                confidence_score: fresh.confidence.score,
+                sample_days_on: fresh.meta.sampleOn,
+                sample_days_off: fresh.meta.sampleOff,
+                days_excluded_confounds: fresh.meta.daysExcluded,
+                onset_days: fresh.meta.onsetDays,
+                responder_percentile: fresh.community.userPercentile,
+                responder_label: fresh.community.responderLabel,
+                confounds: [],
+                mechanism_inference: fresh.mechanism.label,
+                biology_profile: fresh.biologyProfile,
+                next_steps: fresh.nextSteps,
+                science_note: fresh.scienceNote,
+                raw_context: fresh
+              }
+              await supabase.from('supplement_truth_reports').insert(payloadToStore)
+              // Seed the truth map immediately to avoid a requery race
+              truthBySupp.set(String(uid), {
+                status: String(fresh.status),
+                effect_direction: fresh.effect.direction,
+                effect_size: fresh.effect.effectSize,
+                percent_change: fresh.effect.percentChange ?? null,
+                confidence_score: fresh.confidence.score
+              })
+              if (VERBOSE) { try { console.log('[overlay-refresh] saved fresh truth for', uid, 'status=', String(fresh.status)) } catch {} }
+            } catch (saveErr: any) {
+              try { console.log('[overlay-refresh] save failed:', saveErr?.message || saveErr) } catch {}
+            }
             // Requery latest truth for this UID
             try {
               const { data: latest } = await supabase
