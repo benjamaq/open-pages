@@ -912,6 +912,21 @@ export async function GET(request: Request) {
       console.log('[progress/loop] auto-transition error:', (e as any)?.message || e)
     }
 
+    // Debug: cards before section filtering
+    try {
+      console.log('[progress-loop] cards before filter:', {
+        count: progressRows.length,
+        sample: progressRows.slice(0, 12).map((r: any) => ({
+          id: String(r?.id || ''),
+          name: String(r?.name || ''),
+          effectCategory: String((r as any)?.effectCategory || '').toLowerCase(),
+          verdict: String((r as any)?.verdict || '').toLowerCase(),
+          progressPercent: Number(r?.progressPercent || 0),
+          isReady: Boolean((r as any)?.isReady || false)
+        }))
+      })
+    } catch {}
+
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'
@@ -926,6 +941,20 @@ export async function GET(request: Request) {
     const inconsistent = progressRows.filter(r => (r as any).effectCategory === 'inconsistent')
     const needsData = progressRows.filter(r => (r as any).effectCategory === 'needs_more_data')
     const building = progressRows.filter(r => !(r as any).effectCategory)
+
+    // Debug: cards after section filtering
+    try {
+      console.log('[progress-loop] cards after filter:', {
+        clearSignal: clearSignal.length,
+        noEffect: noEffect.length,
+        inconsistent: inconsistent.length,
+        needsData: needsData.length,
+        building: building.length,
+        sampleClear: clearSignal.slice(0, 5).map((r: any) => ({ id: r.id, name: r.name })),
+        sampleNoEffect: noEffect.slice(0, 5).map((r: any) => ({ id: r.id, name: r.name })),
+        sampleBuilding: building.slice(0, 5).map((r: any) => ({ id: r.id, name: r.name })),
+      })
+    } catch {}
 
     // Today’s progress + next likely
     const todaysProgress = {
@@ -1214,6 +1243,9 @@ export async function GET(request: Request) {
         isStatisticallySignificant: significant,
       }
     })
+    try {
+      console.log('[progress-loop] supplements payload sample:', supplements.slice(0, 10))
+    } catch {}
     return new NextResponse(JSON.stringify({
       debug,
       userId: user.id,
