@@ -351,6 +351,12 @@ export function DailyProgressLoop() {
           // Completed only when final verdict is present; "too early"/inconclusive remain in Testing
           return hasFinalVerdict
         })
+        try {
+          console.log('[dashboard] partition result:', {
+            testing: testingRows.length,
+            completed: completedRows.length
+          })
+        } catch {}
         return (
           <div className="space-y-6">
             <div className="rounded-lg border border-gray-200 bg-white p-4">
