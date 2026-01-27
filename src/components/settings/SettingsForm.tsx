@@ -45,10 +45,23 @@ export function SettingsForm({
     }
   }
 
-  function onDelete() {
-    if (!confirm('This will permanently delete all your data. Are you sure?')) return
-    // Placeholder; wire to real deletion endpoint when available
-    alert('Account deletion is not yet available. Please contact support.')
+  async function onDelete() {
+    if (!confirm('This will permanently delete your account and all associated data. This cannot be undone. Proceed?')) {
+      return
+    }
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST' })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        alert(`Delete failed: ${j?.error || 'Unknown error'}`)
+        return
+      }
+      // Redirect to landing page after deletion; session cookie will be invalidated server-side
+      window.location.href = '/'
+    } catch (e: any) {
+      console.error('[settings] delete error', e)
+      alert('Something went wrong deleting your account. Please try again.')
+    }
   }
 
   return (
