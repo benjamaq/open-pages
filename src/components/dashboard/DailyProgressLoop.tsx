@@ -259,34 +259,18 @@ export function DailyProgressLoop() {
             {(() => {
               const all = allRows as any[]
               let testing = 0
-              let ready = 0
-              let inconclusive = 0
+              let verdicts = 0
               for (const r of all) {
-                const active = Boolean((r as any).testingActive)
-                const pct = Number((r as any).progressPercent || 0)
                 const verdictValue = String((r as any).verdict || '').toLowerCase()
                 const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
-                const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
-                const isSignificant =
-                  Boolean((r as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
-                const isVerdictReady = pct >= 100 && (!isMember || hasVerdict || isSignificant)
-                const isInc = pct >= 100 && isMember && !hasVerdict && !isSignificant
-                const isTesting = active && !isVerdictReady && !isInc
-                if (isTesting) {
-                  testing++
-                } else if (isVerdictReady) {
-                  ready++
-                } else if (isInc) {
-                  inconclusive++
-                }
+                const hasFinal = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+                if (hasFinal) verdicts++
+                else testing++
               }
               if (isMember) {
-                const parts: string[] = []
-                parts.push(`${testing} testing`)
-                if (inconclusive > 0) parts.push(`${inconclusive} inconclusive`)
-                return `• ${parts.join(' • ')}`
+                return `• ${testing} testing`
               } else {
-                return `• ${testing} testing • ${headerCounts.verdicts} verdicts`
+                return `• ${testing} testing • ${verdicts} verdict${verdicts === 1 ? '' : 's'}`
               }
             })()}
           </span>
@@ -458,8 +442,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (mappedCat === 'no_effect') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-    // "too_early" maps to needs_more_data; show an explicit verdict-like badge instead of "Collecting data"
-    if (mappedCat === 'needs_more_data') return { label: 'Too early', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    // "too_early" maps to needs_more_data; in Testing section, prefer a neutral testing badge over a verdict-like badge
+    if (mappedCat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     // If API didn’t provide a verdict/category, decide between building vs error
     const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
     const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))

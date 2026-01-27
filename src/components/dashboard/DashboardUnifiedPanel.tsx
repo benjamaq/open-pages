@@ -152,16 +152,34 @@ export function DashboardUnifiedPanel() {
       ...((progress as any)?.sections?.inconsistent || []),
       ...((progress as any)?.sections?.needsData || []),
     ]
-    let pct = 0
-    if (rows.length > 0) {
-      const sum = rows.reduce((acc: number, r: any) => acc + Math.max(0, Math.min(100, Number(r?.progressPercent || 0))), 0)
-      pct = Math.round(sum / rows.length)
-    }
-    // Final verdict presence (for UI gating like 100% completed states)
-    const hasAnyFinal = rows.some(r => {
+    // Compute a collection-based progress across all rows (ON/OFF completeness),
+    // rather than averaging card progress which may include near-complete "too early" states.
+    const perRowCollectionPct: number[] = []
+    for (const r of rows) {
+      const verdictValue = String((r as any)?.verdict || '').toLowerCase()
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
-      return cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || ['keep','drop'].includes(String((r as any)?.verdict || '').toLowerCase())
-    })
+      const isFinal = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(cat)
+      if (isFinal) {
+        perRowCollectionPct.push(100)
+        continue
+      }
+      const reqOn = Number((r as any)?.requiredOnDays ?? (r as any)?.requiredDays ?? 14)
+      const reqOff = Number((r as any)?.requiredOffDays ?? Math.min(5, Math.max(3, Math.round(((r as any)?.requiredDays ?? 14) / 4))))
+      const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
+      const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+      if (reqOn > 0 && reqOff > 0) {
+        const onFrac = Math.max(0, Math.min(1, on / reqOn))
+        const offFrac = Math.max(0, Math.min(1, off / reqOff))
+        const rowPct = Math.round(((onFrac + offFrac) / 2) * 100)
+        perRowCollectionPct.push(rowPct)
+      } else {
+        // Fallback to provided progress when requirements missing, capped below "complete"
+        perRowCollectionPct.push(Math.max(0, Math.min(95, Number((r as any)?.progressPercent || 0))))
+      }
+    }
+    const pct = perRowCollectionPct.length > 0
+      ? Math.round(perRowCollectionPct.reduce((a, b) => a + b, 0) / perRowCollectionPct.length)
+      : 0
     const building: any[] = (s.building || [])
     const needsData: any[] = (s.needsData || [])
     const scheduledSkipIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.skip) ? (progress as any).rotation.action.skip.map((x: any) => String(x.id)) : [])
@@ -221,7 +239,7 @@ export function DashboardUnifiedPanel() {
     }).length
     return {
       progressPercent: pct,
-      displayedProgressPercent: hasAnyFinal ? pct : Math.min(pct, 99),
+      displayedProgressPercent: pct,
       streak: Number((progress as any)?.checkins?.totalDistinctDays || 0),
       gapsDays: Number((progress as any)?.checkins?.gapsDays || 0),
       readyCount: readyCt,

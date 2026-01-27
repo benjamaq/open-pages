@@ -7,17 +7,25 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const phenotype = derivePhenotype(report)
   const deficiency = deriveDeficiencyHint(report)
   const decision = decisionFor(report)
+  const supName = String(
+    (report as any)?.supplementName ||
+    (report as any)?.name ||
+    (report as any)?.label ||
+    (report as any)?.supplement ||
+    (report as any)?.meta?.supplementName ||
+    ''
+  ).trim()
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <header className="space-y-2">
-          {report.supplementName && (
-            <div className="text-sm text-slate-300">{report.supplementName}</div>
+          {supName && (
+            <h1 className="text-2xl md:text-3xl font-semibold">{supName}</h1>
           )}
           <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${statusColor.badge}`}>
             {report.verdictLabel}
           </div>
-          <h1 className="text-xl md:text-2xl font-semibold">{report.verdictTitle}</h1>
+          <h2 className="text-xl md:text-2xl font-semibold">{report.verdictTitle}</h2>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
           <div className="mt-2 text-sm text-slate-200 space-y-0.5">
             <div><span className="text-slate-400">Verdict:</span> {decision.verdict}</div>
