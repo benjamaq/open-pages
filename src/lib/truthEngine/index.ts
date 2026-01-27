@@ -108,6 +108,20 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         const kid = String((li as any).id || '')
         if (kid) candidateIntakeKeys.add(kid)
       }
+      // Also include sibling user_supplement ids with the same (case-insensitive) name
+      if (supplementName) {
+        const nm = String(supplementName).trim()
+        const { data: sameNameSupps } = await supabase
+          .from('user_supplement')
+          .select('id,name')
+          .eq('user_id', userId)
+          .ilike('name', nm)
+          .limit(50)
+        for (const us of sameNameSupps || []) {
+          const sid = String((us as any).id || '')
+          if (sid) candidateIntakeKeys.add(sid)
+        }
+      }
     }
   } catch {}
   debugLog(`CANDIDATE_KEYS: ${Array.from(candidateIntakeKeys).join(',')}`)
@@ -174,6 +188,23 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       }
     }
     debugLog(`INTAKE_KEYS_PRESENT: ${Array.from(allKeys).slice(0, 15).join(',')}${allKeys.size > 15 ? ',...' : ''}`)
+    // Per-candidate hit diagnostics
+    const hits: Record<string, { total: number; on: number; off: number }> = {}
+    for (const k of Array.from(candidateIntakeKeys)) {
+      hits[k] = { total: 0, on: 0, off: 0 }
+    }
+    for (const r of dailyRows || []) {
+      const intake = (r as any)?.supplement_intake || {}
+      for (const k of Array.from(candidateIntakeKeys)) {
+        if (k in (intake || {})) {
+          const v = String((intake as any)[k]).toLowerCase()
+          hits[k].total++
+          if (v === 'taken' || v === 'on' || v === 'true' || v === '1') hits[k].on++
+          if (v === 'off' || v === 'skipped' || v === 'false' || v === '0' || v === 'not_taken') hits[k].off++
+        }
+      }
+    }
+    debugLog(`INTAKE_KEY_HITS: ${JSON.stringify(hits)}`)
   } catch {}
   
   if (!dailyRows || dailyRows.length === 0) {
@@ -248,9 +279,14 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     const m = metricsByDate.get(d) || {}
     const i = intakeByDate.get(d) || {}
     // Confound flags: prefer explicit flags, else infer from tags array
+    const tagArr: string[] = Array.isArray((m as any)?._raw?.tags) ? (m as any)._raw.tags : []
+    const confoundTags = new Set(['alcohol','illness','high_stress','travel','poor_sleep','sick','jetlag','hangover'])
+    const hasConfoundTag = tagArr
+      .map(t => String(t || '').toLowerCase())
+      .some(t => confoundTags.has(t))
     const confounded =
       !!(m.alcohol_flag || m.late_caffeine_flag || m.travel_flag || m.illness_flag) ||
-      (Array.isArray((m as any)?._raw?.tags) && (m as any)._raw.tags.length > 0)
+      hasConfoundTag
     const secondaryMetrics: Record<string, number | null> = {}
     for (const key of secondaryKeys) {
       secondaryMetrics[key] = safeNum(m[key] ?? (m?._raw ? (m as any)._raw[key] : undefined))

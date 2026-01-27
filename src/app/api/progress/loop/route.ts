@@ -840,7 +840,7 @@ export async function GET(request: Request) {
     // Compute progress state labels and weighted stack progress
     const stateFor = (p: number): { label: string; color: 'gray'|'amber'|'green' } => {
       if (p <= 15) return { label: 'Collecting baseline', color: 'gray' }
-      if (p <= 40) return { label: 'Collecting data', color: 'gray' }
+      if (p <= 40) return { label: '◐ TESTING', color: 'gray' }
       if (p <= 70) return { label: 'Signal emerging', color: 'amber' }
       if (p <= 90) return { label: 'Approaching verdict', color: 'amber' }
       if (p < 100) return { label: 'Verdict pending', color: 'green' }

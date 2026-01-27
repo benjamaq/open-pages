@@ -369,7 +369,9 @@ export function DailyProgressLoop() {
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Completed</div>
-                <a href="/dashboard" className="text-xs text-gray-700 hover:underline">View full report →</a>
+                {completedRows.length > 0 && (
+                  <a href="/dashboard" className="text-xs text-gray-700 hover:underline">View full report →</a>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {completedRows.length === 0 ? (
@@ -458,7 +460,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     const on = Number((row as any).daysOnClean ?? (row as any).daysOn ?? 0)
     const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
     const isReady = on >= reqOn && off >= reqOff
-    if (!isReady) return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+    if (!isReady) return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
   })()
   const effectLine = (() => {
