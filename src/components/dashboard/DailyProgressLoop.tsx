@@ -457,7 +457,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (mappedCat === 'no_effect') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-    if (mappedCat === 'needs_more_data') return { label: 'Collecting data', cls: 'bg-stone-100 text-stone-600' }
+    // "too_early" maps to needs_more_data; show an explicit verdict-like badge instead of "Collecting data"
+    if (mappedCat === 'needs_more_data') return { label: 'Too early', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     // If API didn’t provide a verdict/category, decide between building vs error
     const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
     const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
