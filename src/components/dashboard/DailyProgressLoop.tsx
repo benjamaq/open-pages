@@ -336,8 +336,10 @@ export function DailyProgressLoop() {
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
           const isTooEarly = effectCatLower === 'needs_more_data'
-          // Keep "Too early" items in Testing; otherwise include non-final items that aren't complete
-          return isTooEarly || (!hasVerdictFlag && !verdictReady && !inconclusive)
+          // Testing includes:
+          // - "Too early" (needs_more_data)
+          // - Any non-final item that is not marked 'verdictReady' (including 'inconclusive')
+          return isTooEarly || (!hasVerdictFlag && !verdictReady)
         })
         const completedRows = sortedForDisplay.filter((row: any) => {
           const progressPct = Number(row?.progressPercent || 0)
