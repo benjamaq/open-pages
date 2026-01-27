@@ -417,10 +417,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const effectCatLower = String(effectCat || '').toLowerCase()
   // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete
   const hasFinalVerdictGlobal = ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
-  const progressForDisplay = (effectCatLower === 'needs_more_data' || hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : row.progressPercent
+  const progressForDisplay = (hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : row.progressPercent
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
-  const strengthDisplay = (effectCatLower === 'needs_more_data' || hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : strength
+  const strengthDisplay = (hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : strength
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)

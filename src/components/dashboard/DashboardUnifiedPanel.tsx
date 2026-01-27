@@ -139,8 +139,8 @@ export function DashboardUnifiedPanel() {
   }, [(progress as any)?.checkins?.todaySummary])
 
   // Derive progress stats
-    const {
-    progressPercent, streak, readyCount, buildingCount, needsDataCount, gapsDays,
+  const {
+    progressPercent, displayedProgressPercent, streak, readyCount, buildingCount, needsDataCount, gapsDays,
     nextResult, disruptions
   } = useMemo(() => {
     const s: any = (progress?.sections) || { clearSignal: [], building: [], noSignal: [] }
@@ -157,14 +157,22 @@ export function DashboardUnifiedPanel() {
       const sum = rows.reduce((acc: number, r: any) => acc + Math.max(0, Math.min(100, Number(r?.progressPercent || 0))), 0)
       pct = Math.round(sum / rows.length)
     }
-    const building: any[] = s.building || []
+    // Final verdict presence (for UI gating like 100% completed states)
+    const hasAnyFinal = rows.some(r => {
+      const cat = String((r as any)?.effectCategory || '').toLowerCase()
+      return cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || ['keep','drop'].includes(String((r as any)?.verdict || '').toLowerCase())
+    })
+    const building: any[] = (s.building || [])
+    const needsData: any[] = (s.needsData || [])
     const scheduledSkipIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.skip) ? (progress as any).rotation.action.skip.map((x: any) => String(x.id)) : [])
     const scheduledTakeIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.take) ? (progress as any).rotation.action.take.map((x: any) => String(x.id)) : [])
-    const nextPick = building
+    // Consider both Building and Needs Data (too early) for "Next result likely"
+    const nextPool = [...building, ...needsData]
+    const nextPick = nextPool
       .map((r: any) => {
         const reqOn = Math.max(0, Number(r?.requiredDays || 14))
         const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
-        const on = Math.max(0, Number(r?.days? r.days : r.daysOn || 0)) // backward compatibility
+        const on = Math.max(0, Number(r?.days ? r.days : r.daysOn || 0)) // backward compatibility
         const off = Math.max(0, Number(r?.daysOff || 0))
         const onDef = Math.max(0, reqOn - on)
         const offDef = Math.max(0, reqOff - off)
@@ -213,6 +221,7 @@ export function DashboardUnifiedPanel() {
     }).length
     return {
       progressPercent: pct,
+      displayedProgressPercent: hasAnyFinal ? pct : Math.min(pct, 99),
       streak: Number((progress as any)?.checkins?.totalDistinctDays || 0),
       gapsDays: Number((progress as any)?.checkins?.gapsDays || 0),
       readyCount: readyCt,
@@ -537,7 +546,9 @@ export function DashboardUnifiedPanel() {
           <div className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: '#55514A' }}>Next result likely</div>
           {(() => {
             // Clear, state-driven copy for Next Result Likely
-            if (!nextResult && (progress?.sections?.building?.length || 0) === 0) {
+            const buildingLen = Number(progress?.sections?.building?.length || 0)
+            const needsLen = Number(progress?.sections?.needsData?.length || 0)
+            if (!nextResult && (buildingLen + needsLen) === 0) {
               return <div className="text-sm text-gray-700">All supplements analyzed</div>
             }
             if (!nextResult) {
@@ -629,10 +640,10 @@ export function DashboardUnifiedPanel() {
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-4">Clarity</div>
           <div className="flex items-center justify-between text-sm text-gray-700 mb-2">
             <span className="text-gray-600">Progress</span>
-            <span className="font-medium">{progressPercent}%</span>
+            <span className="font-medium">{displayedProgressPercent}%</span>
           </div>
           <div className="w-full">
-            <Progress value={isMember ? progressPercent : Math.min(progressPercent, 90)} className="h-2 w-full" />
+            <Progress value={isMember ? displayedProgressPercent : Math.min(displayedProgressPercent, 90)} className="h-2 w-full" />
           </div>
           <div className="mt-2 text-xs text-gray-500">
             {wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.'}

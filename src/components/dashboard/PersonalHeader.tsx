@@ -49,17 +49,11 @@ export function PersonalHeader() {
             total = all.length
             // Derived state aligned with cards
             for (const r of all) {
-              const progressPct = Number(r?.progressPercent || 0)
               const verdictValue = String((r as any)?.verdict || '').toLowerCase()
               const effectCatLower = String((r as any)?.effectCategory || '').toLowerCase()
               const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
-              const hasVerdict = ['keep','drop','test','test_more'].includes(verdictValue)
-              const isSignificant = Boolean((r as any)?.isStatisticallySignificant) || ['works','no_effect'].includes(effectCatLower)
-              const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant)
-              const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
-              if (verdictReady || inconclusive || hasFinalVerdict) rdy++
-              // Align with card filter: testing = no final verdict and not completed
-              if (!hasFinalVerdict && !verdictReady && !inconclusive) testing++
+              if (hasFinalVerdict) rdy++
+              if (!hasFinalVerdict) testing++
             }
           }
         } catch {}
@@ -113,7 +107,7 @@ export function PersonalHeader() {
         {(() => {
           const total = Math.max(0, suppCount)
           if (total === 0) return 'No supplements added yet'
-          const completed = Math.max(0, readyCount) // derived as verdictReady + inconclusive
+          const completed = Math.max(0, readyCount) // final verdicts only
           const building = Math.max(0, testingCount)
           if (isMember) {
             if (completed <= 0) return `${total} supplements under evaluation • Building your baseline`
