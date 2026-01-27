@@ -726,7 +726,10 @@ export async function GET(request: Request) {
             }
           }
           if (!hasRecord) continue
-          const isClean = !(Array.isArray((entry as any).tags) && (entry as any).tags.length > 0)
+          // A day is "clean" unless it contains a known noise/confound tag
+          const entryTags: string[] = Array.isArray((entry as any).tags) ? (entry as any).tags : []
+          const hasNoiseTag = entryTags.some((t: any) => NOISE_TAGS.has(String(t || '').toLowerCase()))
+          const isClean = !hasNoiseTag
           if (VERBOSE && debugSuppId && debugSuppId === suppId) {
             try {
               console.log('[daysOn]', { suppId, date: dKey, intake: (intake ? (intake as any)[suppId] : undefined), tags: (entry as any).tags, isClean })
