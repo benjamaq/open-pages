@@ -21,17 +21,15 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <header className="space-y-2">
+        <header className="space-y-1.5">
           {supName && (
-            <h1 className="text-2xl md:text-3xl font-semibold">{supName}</h1>
+            <h1 className="text-3xl md:text-[32px] font-semibold leading-tight">{supName}</h1>
           )}
-          <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${statusColor.badge}`}>
+          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${statusColor.badge}`}>
             {report.verdictLabel}
           </div>
-          <h2 className="text-xl md:text-2xl font-semibold">{report.verdictTitle}</h2>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
           <div className="mt-2 text-sm text-slate-200 space-y-0.5">
-            <div><span className="text-slate-400">Verdict:</span> {decision.verdict}</div>
             <div><span className="text-slate-400">Recommendation:</span> {decision.recommendation}</div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
