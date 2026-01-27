@@ -315,7 +315,7 @@ export function DailyProgressLoop() {
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const testingActive = Boolean((row as any)?.testingActive)
-          const verdictReady = (progres                                                                                                                    INFO
+          const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
           const inconclusive = (progressPct >= 100) && isMember && !hasVerdict && !isSignificant
           const activelyTesting = testingActive && !verdictReady && !inconclusive
           if (verdictReady) return 0
