@@ -577,6 +577,11 @@ export function DashboardUnifiedPanel() {
             const reqOn = Math.max(0, Number(nextResult.req || 0))
             const offClean = Math.max(0, Number((nextResult as any).daysOffClean ?? nextResult.daysOff ?? 0))
             const reqOff = Math.max(0, Number(nextResult.reqOff || 0))
+            // Compute total ON/OFF (may include noisy days)
+            const onTotal = Math.max(0, Number((nextResult as any).daysOn ?? 0))
+            const offTotal = Math.max(0, Number((nextResult as any).daysOff ?? 0))
+            const noisyOn = Math.max(0, onTotal - onClean)
+            const noisyOff = Math.max(0, offTotal - offClean)
             const onMet = onClean >= reqOn
             const offMet = offClean >= reqOff
             const bothProgressing = onClean > 0 && offClean > 0
@@ -594,12 +599,16 @@ export function DashboardUnifiedPanel() {
               ready = true
             } else if (onMet && !offMet) {
               // State B — Blocked by OFF days
-              headline = 'Waiting for clean OFF days'
-              guidance = 'Recent OFF days had disruptions, so they aren\'t usable for comparison. Skip this supplement on a calm day to complete the test.'
+              headline = 'Waiting for OFF days'
+              guidance = noisyOff > 0
+                ? 'Recent OFF days had disruptions, so they aren’t usable for comparison. Skip this supplement on a calm day to complete the test.'
+                : 'Need more clean OFF days to complete the comparison.'
             } else if (!onMet && offMet) {
               // State C — Blocked by ON days
-              headline = 'Waiting for clean ON days'
-              guidance = 'Recent ON days had disruptions, so they aren\'t usable for comparison. Take this supplement on a calm day to build data.'
+              headline = 'Waiting for ON days'
+              guidance = noisyOn > 0
+                ? 'Recent ON days had disruptions, so they aren’t usable for comparison. Take this supplement on a calm day to build data.'
+                : 'Need more clean ON days to build a usable comparison.'
             } else if (!onMet && !offMet && bothProgressing) {
               // State A — Building normally (estimate)
               headline = daysToGo > 0 ? `~${daysToGo} clean ${daysToGo === 1 ? 'day' : 'days'} to go` : 'Building data'
