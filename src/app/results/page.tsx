@@ -166,7 +166,13 @@ export default function ResultsPage() {
     return supps.map(s => {
       const e = effects[s.id]
       const l = loopById[s.id] as any
-      const monthly = getMonthlyFromSupplement(s)
+      // Prefer supplement's own monthly cost; fallback to loop monthlyCost from progress API
+      const monthly = (() => {
+        const fromSupp = getMonthlyFromSupplement(s)
+        if (fromSupp != null) return fromSupp
+        const loopMonthly = typeof l?.monthlyCost === 'number' ? Number(l.monthlyCost) : null
+        return loopMonthly != null && Number.isFinite(loopMonthly) && loopMonthly > 0 ? loopMonthly : null
+      })()
       const yearly = (monthly != null) ? Math.round(monthly * 12) : null
       const reqOn = l?.requiredOnDays ?? l?.requiredDays ?? null
       const reqOff = l?.requiredOffDays ?? (l?.requiredDays ? Math.min(5, Math.max(3, Math.round(l.requiredDays / 4))) : null)
