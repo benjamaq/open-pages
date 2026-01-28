@@ -182,18 +182,14 @@ async function handler(req: NextRequest) {
         }
         const beforeCount = scopedProfiles.length
         scopedProfiles = scopedProfiles.filter((p: any) => {
+          // profiles.reminder_enabled is the source of truth
+          if ((p as any)?.reminder_enabled !== true) return false
           const pref = prefByProfile.get(String(p.profile_id))
-          // Rule:
-          // - If preferences row exists: require daily_reminder_enabled === true AND email_enabled !== false
-          // - Else fallback to profiles.reminder_enabled === true
-          // - Otherwise do not send
-          if (pref) {
-            const dailyOk = pref.daily_reminder_enabled === true
-            const emailOk = pref.email_enabled !== false
-            return dailyOk && emailOk
-          } else {
-            return (p as any)?.reminder_enabled === true
-          }
+          if (!pref) return true
+          const emailDisabled = (pref as any)?.email_enabled === false
+          const dailyDisabled = (pref as any)?.daily_reminder_enabled === false
+          // Preferences can only disable if explicitly set to false
+          return !(emailDisabled || dailyDisabled)
         })
         // eslint-disable-next-line no-console
         console.log('[daily-cron] Pref filter:', { before: beforeCount, after: scopedProfiles.length })
