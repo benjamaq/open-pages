@@ -457,6 +457,12 @@ export function DashboardUnifiedPanel() {
         }
       })
       .sort((a, b) => b.value - a.value)
+    try {
+      console.log('[econ] supps:', supps.length,
+        'monthlyTotal:', monthlyTotal,
+        'yearly:', yearly,
+        'segments:', segments.slice(0, 5))
+    } catch {}
     // Effective/waste/testing (used for members only)
     let effMonthly = 0, wasteMonthly = 0, testMonthly = 0
     for (const s of supps) {
