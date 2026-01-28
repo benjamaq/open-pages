@@ -122,7 +122,7 @@ export default function Page() {
                 size="lg"
                 className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all"
               >
-                Sign up — free
+                Get My Breakup Report
               </Button>
             </Link>
             <p className="text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
@@ -152,12 +152,12 @@ export default function Page() {
               BioStackr shows you what actually works — and what’s just wasting your money.
             </p>
             <div className="flex items-center gap-4">
-              <Link href={isAuthed ? "/dashboard" : "/signup"}>
+              <Link href="/signup">
                 <Button
                   size="lg"
                   className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
                 >
-                  {isAuthed ? 'Go to dashboard' : 'Sign up — free'}
+                  Get My Breakup Report
                 </Button>
               </Link>
               <p className="text-sm text-neutral-500">Free to start. Wearable optional.</p>
