@@ -98,36 +98,50 @@ export default function Page() {
 
       {/* Hero Section */}
       <section
-        className="relative pt-28 pb-16 px-6 sm:pt-32 sm:pb-20 lg:pt-40 lg:pb-28 overflow-hidden w-full min-h-[520px] sm:min-h-[600px] lg:min-h-[750px]"
-        style={{
-          backgroundImage: "url('/pill bottle.png')",
-          backgroundPosition: "right center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundColor: "#F8F8F8",
-        }}
+        className="relative pt-28 pb-10 px-6 sm:pt-32 sm:pb-20 lg:pt-40 lg:pb-28 overflow-hidden w-full min-h-[520px] sm:min-h-[600px] lg:min-h-[750px] bg-[#F8F8F8]"
       >
-        <div className="mx-auto max-w-7xl w-full">
+        {/* Desktop/Tablet right-side visual */}
+        <div
+          className="hidden md:block absolute inset-y-0 right-0 w-1/2"
+          style={{
+            backgroundImage: "url('/pill bottle.png')",
+            backgroundPosition: "right center",
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="relative mx-auto max-w-7xl w-full">
           <div className="max-w-xl lg:max-w-2xl">
-            <h1 className="mb-8 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-[1.05]">
+            <h1 className="mb-3 sm:mb-6 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black leading-[1.1] sm:leading-[1.05] text-center sm:text-left">
               Tinder for Your Supplements.
             </h1>
-            <p className="mb-6 text-xl lg:text-2xl text-black font-bold leading-relaxed">
+            <p className="mb-3 sm:mb-6 text-lg sm:text-2xl text-black font-bold leading-relaxed text-center sm:text-left">
               Swipe right on what works. Break up with what doesn’t.
             </p>
-            <p className="mb-10 text-lg text-neutral-600 leading-relaxed">
+            <p className="mb-6 sm:mb-10 text-base sm:text-lg text-neutral-600 leading-relaxed text-center sm:text-left">
               BioStackr shows you what actually works — and what’s just wasting your money.
             </p>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap:4">
+            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4 sm:justify-start justify-center">
               <Link href={isAuthed ? "/dashboard" : "/signup"}>
                 <Button
                   size="lg"
-                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
+                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold transition-all"
                 >
                   {isAuthed ? 'Go to dashboard' : 'Sign up — free'}
                 </Button>
               </Link>
-              <p className="text-sm text-neutral-500">Free to start. Wearable optional.</p>
+              <p className="text-sm text-neutral-500 sm:text-left text-center">Free to start. Wearable optional.</p>
+            </div>
+            {/* Mobile visual below CTA — artistic crop */}
+            <div className="sm:hidden mt-8">
+              <div className="relative w-full h-64 rounded-2xl overflow-hidden shadow-sm">
+                <img
+                  src="/pill bottle.png"
+                  alt="Supplement bottle"
+                  className="absolute inset-0 w-full h-full object-cover object-center scale-110"
+                  loading="eager"
+                />
+              </div>
             </div>
           </div>
         </div>
