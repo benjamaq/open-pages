@@ -99,12 +99,6 @@ export default function Page() {
       {/* Hero Section - Mobile only */}
       <section
         className="sm:hidden relative pt-28 pb-10 px-6 overflow-hidden w-full bg-[#F8F8F8]"
-        style={{
-          backgroundImage: "url('/pill bottle.png')",
-          backgroundPosition: "left center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat"
-        }}
       >
         <div className="mx-auto max-w-xl">
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-black leading-[1.1] text-center">
@@ -126,6 +120,15 @@ export default function Page() {
               </Button>
             </Link>
             <p className="text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
+          </div>
+          {/* Full‑bleed hero image below text */}
+          <div className="-mx-6 mt-8">
+            <img
+              src="/pill bottle.png"
+              alt="Supplement bottle"
+              className="w-screen h-[50vh] object-cover object-center"
+              loading="eager"
+            />
           </div>
         </div>
       </section>
@@ -436,12 +439,12 @@ export default function Page() {
                 </Button>
               </div>
             </div>
-            {/* Image moved below text for mobile */}
-            <div className="mt-8 flex justify-center">
+            {/* Image moved below text for mobile — make larger and full-bleed */}
+            <div className="-mx-6 mt-8">
               <img
                 src="/cash.png?v=2"
                 alt="Money spilling from supplement bottle"
-                className="w-full max-w-md h-auto object-contain"
+                className="w-screen h-72 object-contain object-center"
                 loading="lazy"
               />
             </div>
