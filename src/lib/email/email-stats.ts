@@ -38,17 +38,48 @@ function requiredDaysFor(category: string): number {
 }
 
 export async function getStackProgressForUser(admin: SupabaseAdmin, userId: string): Promise<number> {
-  // Fetch supplements
-  const { data: supps } = await admin
-    .from('user_supplement')
-    .select('id,name,monthly_cost_usd')
-    .eq('user_id', userId)
-    .or('is_active.eq.true,is_active.is.null')
-  const supplements = (supps || []).map((s: any) => ({
-    id: String(s.id),
-    name: String(s.name || 'Supplement'),
-    cost: Number(s.monthly_cost_usd || 0)
-  }))
+  // Prefer stack_items as the canonical set (matches dashboard), with user_supplement linkage for intake keys
+  // Resolve profile id
+  let profileId: string | null = null
+  try {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+    profileId = (profile as any)?.id || null
+  } catch {}
+  let supplements: Array<{ id: string; name: string; cost: number; created_at?: string; user_supplement_id?: string | null; primary_goal_tags?: string[]; tags?: string[] }> = []
+  if (profileId) {
+    const { data: items } = await admin
+      .from('stack_items')
+      .select('id,name,created_at,monthly_cost,user_supplement_id,primary_goal_tags,tags')
+      .eq('profile_id', profileId)
+    supplements = (items || []).map((it: any) => ({
+      id: String(it.id),
+      name: String(it.name || 'Supplement'),
+      cost: Number(it.monthly_cost || 0),
+      created_at: String(it.created_at || ''),
+      user_supplement_id: (it as any)?.user_supplement_id || null,
+      primary_goal_tags: Array.isArray((it as any)?.primary_goal_tags) ? (it as any).primary_goal_tags : [],
+      tags: Array.isArray((it as any)?.tags) ? (it as any).tags : [],
+    }))
+  }
+  // If no stack_items exist, fallback to user_supplement
+  if (supplements.length === 0) {
+    const { data: supps } = await admin
+      .from('user_supplement')
+      .select('id,name,monthly_cost_usd,created_at')
+      .eq('user_id', userId)
+      .or('is_active.eq.true,is_active.is.null')
+    supplements = (supps || []).map((s: any) => ({
+      id: String(s.id),
+      name: String(s.name || 'Supplement'),
+      cost: Number(s.monthly_cost_usd || 0),
+      created_at: String(s.created_at || ''),
+      user_supplement_id: String(s.id),
+    }))
+  }
   if (supplements.length === 0) return 0
 
   // Fetch last year of entries for ON/OFF derivation
@@ -62,14 +93,16 @@ export async function getStackProgressForUser(admin: SupabaseAdmin, userId: stri
 
   const bySupp: Record<string, { on: number; off: number }> = {}
   for (const s of supplements) bySupp[s.id] = { on: 0, off: 0 }
-
+  // Derive ON/OFF using both user_supplement_id and stack_items.id, matching dashboard logic
   for (const e of (entries || [])) {
     const intake = (e as any).supplement_intake || null
     if (!intake || typeof intake !== 'object') continue
-    const isClean = !(Array.isArray((e as any).tags) && (e as any).tags.length > 0)
-    // We count ON/OFF; "clean" is used downstream via required OFF limits. For emails we just need ON/OFF counts.
+    const tags = Array.isArray((e as any).tags) ? (e as any).tags : []
+    const isClean = !(tags && tags.length > 0)
     for (const s of supplements) {
-      const v = (intake as any)[s.id]
+      const keyA = (s as any).user_supplement_id ? String((s as any).user_supplement_id) : undefined
+      const keyB = String(s.id)
+      const v = (keyA && (intake as any)[keyA] !== undefined) ? (intake as any)[keyA] : (intake as any)[keyB]
       if (v === undefined) continue
       const vs = String(v).toLowerCase()
       if (vs === 'skipped' || vs === 'off' || vs === 'not_taken' || vs === 'false' || vs === '0') {
@@ -82,17 +115,36 @@ export async function getStackProgressForUser(admin: SupabaseAdmin, userId: stri
 
   // Compute evidence-based progress per supplement (same formula family as dashboard)
   const percs: Array<{ pct: number; cost: number }> = []
+  // Compute evidence-based progress per supplement (same as dashboard: ON+OFF evidence vs required)
+  const datesSet = new Set<string>((entries || []).map((e: any) => String((e as any).local_date || '').slice(0,10)).filter(Boolean))
+  const allDates = Array.from(datesSet).sort()
   for (const s of supplements) {
-    const cat = inferCategory(s.name)
+    const cat = inferCategory((s as any).name)
     const reqOn = requiredDaysFor(cat)
     const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
     const on = Math.max(0, bySupp[s.id]?.on || 0)
     const off = Math.max(0, bySupp[s.id]?.off || 0)
-    const onClamped = Math.min(on, reqOn)
-    const offClamped = Math.min(off, reqOff)
-    const denom = Math.max(1, reqOn + reqOff)
-    const pct = Math.max(0, Math.min(100, Math.round(((onClamped + offClamped) / denom) * 100)))
-    percs.push({ pct, cost: s.cost })
+    // If ON/OFF cannot be derived (no intake keys), fallback to days-of-data since created_at
+    let pct: number
+    if (on === 0 && off === 0) {
+      const createdRaw: string | undefined = (s as any)?.created_at
+      let daysOfData = 0
+      if (createdRaw) {
+        const startKey = String(createdRaw).slice(0,10)
+        const startTs = new Date(`${startKey}T00:00:00Z`).getTime()
+        daysOfData = allDates.reduce((acc, d) => acc + (new Date(`${d}T00:00:00Z`).getTime() >= startTs ? 1 : 0), 0)
+      } else {
+        daysOfData = allDates.length
+      }
+      if (daysOfData === 0 && allDates.length > 0) daysOfData = 1
+      pct = Math.max(0, Math.min(100, Math.round((daysOfData / Math.max(1, reqOn)) * 100)))
+    } else {
+      const onClamped = Math.min(on, reqOn)
+      const offClamped = Math.min(off, reqOff)
+      const denom = Math.max(1, reqOn + reqOff)
+      pct = Math.max(0, Math.min(100, Math.round(((onClamped + offClamped) / denom) * 100)))
+    }
+    percs.push({ pct, cost: (s as any).cost || 0 })
   }
 
   const totalCost = percs.reduce((s, x) => s + (x.cost || 0), 0)
@@ -118,11 +170,18 @@ type Metrics = { energy?: number; focus?: number; sleep?: number; mood?: number;
 export async function getLatestDailyMetrics(
   admin: SupabaseAdmin,
   userId: string,
-  opts?: { targetLocalYmd?: string }
+  opts?: { targetLocalYmd?: string, timezone?: string }
 ): Promise<Metrics> {
   try {
     // eslint-disable-next-line no-console
     console.log('[email-stats] getLatestDailyMetrics start', { userId, targetLocalYmd: opts?.targetLocalYmd })
+  } catch {}
+  try {
+    console.log('[email-stats] Looking for metrics:', {
+      userId,
+      targetDate: opts?.targetLocalYmd,
+      timezone: opts?.timezone || '(unknown)'
+    })
   } catch {}
   const since = new Date()
   since.setDate(since.getDate() - 7)
@@ -145,7 +204,14 @@ export async function getLatestDailyMetrics(
       const sleepRaw = (r.sleep_quality != null ? r.sleep_quality : r.sleep)
       const sleep = toNumOrUndef(sleepRaw)
       if (energy != null || focus != null || sleep != null || mood != null) {
-        try { console.log('[email-stats] return exact metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood }) } catch {}
+        try {
+          console.log('[email-stats] Query result (exact):', {
+            found: true,
+            date: String(r.local_date).slice(0,10),
+            energy, focus, sleep, mood
+          })
+          console.log('[email-stats] return exact metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood })
+        } catch {}
         return { energy, focus, sleep, mood, date: (r.local_date ? String(r.local_date).slice(0,10) : undefined) }
       }
     }
@@ -188,7 +254,14 @@ export async function getLatestDailyMetrics(
     try { console.log('[email-stats] return fallback checkin metrics', { userId, date: String(c.created_at).slice(0,10), energy: ce, focus: cf, sleep: cs, mood: cm }) } catch {}
     return { energy: ce, focus: cf, sleep: cs, mood: cm, date: (c.created_at ? String(c.created_at).slice(0,10) : undefined) }
   }
-  try { console.log('[email-stats] return window metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood }) } catch {}
+  try {
+    console.log('[email-stats] Query result (window):', {
+      found: true,
+      date: String(r.local_date).slice(0,10),
+      energy, focus, sleep, mood
+    })
+    console.log('[email-stats] return window metrics', { userId, date: String(r.local_date).slice(0,10), energy, focus, sleep, mood })
+  } catch {}
   return { energy, focus, sleep, mood, date: (r.local_date ? String(r.local_date).slice(0,10) : undefined) }
 }
 
