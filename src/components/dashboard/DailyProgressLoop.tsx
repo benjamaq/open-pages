@@ -479,7 +479,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     const signed = pct >= 0 ? `+${pct}` : String(pct)
     return `${signed}% energy`
   })()
-  const userSuppId = String((row as any).userSuppId || (row as any).id || '')
+  const userSuppId = String(
+    (row as any).userSuppId ||
+    (row as any).userSupplementId ||
+    (row as any).user_supplement_id ||
+    (row as any).intake_id ||
+    (row as any).id || ''
+  )
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
