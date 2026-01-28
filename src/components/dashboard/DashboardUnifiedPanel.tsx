@@ -370,10 +370,28 @@ export function DashboardUnifiedPanel() {
 
   // Economics donut + spend
   const { chartData, totalYearly, effYear, wasteYear, testYear } = useMemo(() => {
-    // Build spend segments from DECLARED INTENT only (no name inference)
+    // Build spend segments; prefer progress/loop monthlyCost when supplement lacks monthly_cost_usd
     type Acc = Record<string, number>
     const acc: Acc = {}
     let monthlyTotal = 0
+    // Flatten current progress sections to map id/name -> monthlyCost from progress API
+    const sec: any = (progress?.sections) || {}
+    const loopRows: any[] = [
+      ...(sec.clearSignal || []),
+      ...(sec.noSignal || []),
+      ...(sec.inconsistent || []),
+      ...(sec.needsData || []),
+      ...(sec.building || []),
+    ]
+    const costById = new Map<string, number>()
+    const costByName = new Map<string, number>()
+    for (const r of loopRows) {
+      const id = String((r as any)?.id || '')
+      const nm = String((r as any)?.name || '')
+      const mc = Number((r as any)?.monthlyCost ?? 0)
+      if (id) costById.set(id, mc)
+      if (nm) costByName.set(nm.toLowerCase(), mc)
+    }
     const normalizeKey = (k: string): string => {
       const x = String(k || '').toLowerCase()
       if (x === 'sleep_quality' || x === 'sleep') return 'sleep'
@@ -390,9 +408,17 @@ export function DashboardUnifiedPanel() {
       return x
     }
     for (const s of supps) {
-      const cost = Math.max(0, Math.min(80, Number(s.monthly_cost_usd ?? 0)))
+      const id = String((s as any)?.id || '')
+      const nameLc = String(s.name || '').toLowerCase()
+      const supCost = Number((s as any)?.monthly_cost_usd ?? 0)
+      // prefer declared cost; else fallback to loop monthlyCost by id, then by name
+      let cost = Number.isFinite(supCost) && supCost > 0 ? supCost
+                : (costById.get(id) && costById.get(id)! > 0 ? costById.get(id)! 
+                   : (costByName.get(nameLc) && costByName.get(nameLc)! > 0 ? costByName.get(nameLc)! : 0))
+      // clamp to sane range
+      cost = Math.max(0, Math.min(10000, Number(cost || 0)))
       monthlyTotal += cost
-      const tags: string[] = Array.isArray(s.primary_goal_tags) && s.primary_goal_tags.length > 0 ? s.primary_goal_tags : ['uncategorised']
+      const tags: string[] = Array.isArray((s as any).primary_goal_tags) && (s as any).primary_goal_tags.length > 0 ? (s as any).primary_goal_tags as string[] : ['uncategorised']
       const perTag = cost / Math.max(1, tags.length)
       for (const key of tags.map((t: string) => normalizeKey(t))) {
         acc[key] = (acc[key] || 0) + perTag
@@ -434,8 +460,14 @@ export function DashboardUnifiedPanel() {
     // Effective/waste/testing (used for members only)
     let effMonthly = 0, wasteMonthly = 0, testMonthly = 0
     for (const s of supps) {
-      const m = Math.max(0, Math.min(80, Number(s?.monthly_cost_usd ?? 0)))
-      const eff = (effects as any)[s.id]
+      const id = String((s as any)?.id || '')
+      const nameLc = String(s.name || '').toLowerCase()
+      const supCost = Number((s as any)?.monthly_cost_usd ?? 0)
+      let m = Number.isFinite(supCost) && supCost > 0 ? supCost
+              : (costById.get(id) && costById.get(id)! > 0 ? costById.get(id)!
+                 : (costByName.get(nameLc) && costByName.get(nameLc)! > 0 ? costByName.get(nameLc)! : 0))
+      m = Math.max(0, Math.min(10000, Number(m || 0)))
+      const eff = (effects as any)[id]
       const cat = eff?.effect_category as string | undefined
       if (cat === 'works') effMonthly += m
       else if (cat === 'no_effect') wasteMonthly += m
