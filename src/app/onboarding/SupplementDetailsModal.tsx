@@ -4,6 +4,16 @@ import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { HEALTH_PRIORITIES } from '@/lib/types';
 
+// Shorter labels for tight mobile chips
+const MOBILE_SHORT_LABEL: Record<string, string> = {
+  cognitive: 'Cognitive',
+  energy: 'Energy & stamina',
+  mood: 'Stress & mood',
+  athletic: 'Athletic',
+  joint: 'Joint & bone',
+  beauty: 'Skin & hair',
+};
+
 export interface ProductLike {
   id: string;
   productName: string;
@@ -321,9 +331,16 @@ export function SupplementDetailsModal({
            <div className="grid grid-cols-2 gap-2">
              {HEALTH_PRIORITIES.map(p => {
                const selected = primaryGoals.includes(p.key);
+               const labelSm = MOBILE_SHORT_LABEL[p.key] || p.label;
                return (
-                <button key={p.key} onClick={() => toggleGoal(p.key)} disabled={notSure} className={`rounded-full px-3.5 py-2 text-sm text-left border ${selected ? 'bg-[#F6F5F3] border-[#55514A] text-slate-900' : 'border-[#E4E1DC] bg-white text-slate-700'} ${notSure ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  <span>{p.label}</span>
+               <button
+                 key={p.key}
+                 onClick={() => toggleGoal(p.key)}
+                 disabled={notSure}
+                 className={`rounded-full h-9 sm:h-10 px-3 text-[13px] leading-tight text-left border flex items-center whitespace-nowrap overflow-hidden text-ellipsis ${selected ? 'bg-[#F6F5F3] border-[#55514A] text-slate-900' : 'border-[#E4E1DC] bg-white text-slate-700'} ${notSure ? 'opacity-50 cursor-not-allowed' : ''}`}
+               >
+                 <span className="sm:hidden">{labelSm}</span>
+                 <span className="hidden sm:inline">{p.label}</span>
                  </button>
                )
              })}
