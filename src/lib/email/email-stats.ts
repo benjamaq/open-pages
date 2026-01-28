@@ -128,7 +128,7 @@ export async function getStackProgressForUser(admin: SupabaseAdmin, userId: stri
   // Compute evidence-based progress per supplement (same as dashboard: ON+OFF evidence vs required)
   const datesSet = new Set<string>((entries || []).map((e: any) => String((e as any).local_date || '').slice(0,10)).filter(Boolean))
   const allDates = Array.from(datesSet).sort()
-  const percs: Array<{ pct: number; cost: number; id?: string; name?: string }> = []
+  const progressItems: Array<{ pct: number; cost: number; id?: string; name?: string }> = []
   for (const s of supplements) {
     const cat = inferCategory((s as any).name)
     const reqOn = requiredDaysFor(cat)
@@ -155,19 +155,19 @@ export async function getStackProgressForUser(admin: SupabaseAdmin, userId: stri
       const denom = Math.max(1, reqOn + reqOff)
       pct = Math.max(0, Math.min(100, Math.round(((onClamped + offClamped) / denom) * 100)))
     }
-    percs.push({ pct, cost: (s as any).cost || 0, id: s.id, name: s.name })
+    progressItems.push({ pct, cost: (s as any).cost || 0, id: s.id, name: s.name })
   }
   try {
     // eslint-disable-next-line no-console
-    console.log('[email-stats] per-supp progress:', JSON.stringify(percs))
+    console.log('[email-stats] per-supp progress:', JSON.stringify(progressItems))
   } catch {}
 
-  const totalCost = percs.reduce((s, x) => s + (x.cost || 0), 0)
+  const totalCost = progressItems.reduce((s, x) => s + (x.cost || 0), 0)
   let finalPct: number
   if (totalCost > 0) {
-    finalPct = Math.round(percs.reduce((s, x) => s + (x.pct * (x.cost || 0)), 0) / totalCost)
+    finalPct = Math.round(progressItems.reduce((s, x) => s + (x.pct * (x.cost || 0)), 0) / totalCost)
   } else {
-    finalPct = Math.round(percs.reduce((s, x) => s + x.pct, 0) / Math.max(percs.length, 1))
+    finalPct = Math.round(progressItems.reduce((s, x) => s + x.pct, 0) / Math.max(progressItems.length, 1))
   }
   try {
     // eslint-disable-next-line no-console
