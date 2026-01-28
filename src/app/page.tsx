@@ -359,10 +359,99 @@ export default function Page() {
         </div>
       </section>
 
-      {/* How Much Are You Spending Section (Calculator) */}
+      {/* How Much Are You Spending Section (Calculator) - Mobile */}
       <section
         id="calculator"
-        className="py-24 lg:py-32 px-6 bg-no-repeat bg-center bg-cover relative"
+        className="sm:hidden py-20 px-6 relative"
+        style={{ backgroundColor: "#f5f5f5" }}
+      >
+        <div className="mx-auto max-w-5xl relative z-10">
+          <h2 className="mb-3 text-center text-black font-semibold leading-tight tracking-tight">
+            <span className="block text-4xl mb-4">
+              The Average Divorce Costs $15,000.
+            </span>
+            <span className="block text-2xl">
+              Ten Years With the Wrong Supplements? About the Same.
+            </span>
+          </h2>
+          <p className="mb-8 text-lg text-neutral-800 font-medium text-center">
+            Let&apos;s talk about the relationship you&apos;ve been quietly paying for.
+          </p>
+          <div className="mx-auto max-w-xl text-center space-y-2 mb-8">
+            <p className="text-lg text-neutral-800">
+              You&apos;re not sure it&apos;s working. But you&apos;re not sure it isn&apos;t.
+            </p>
+            <p className="text-lg text-neutral-800">
+              So you keep paying. Month after month. Year after year.
+            </p>
+          </div>
+          {/* Input + Calculation */}
+          <div className="space-y-8 max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl p-6 border border-neutral-200">
+              <div className="flex items-end justify-between mb-3">
+                <label className="block text-base text-neutral-700">
+                  What&apos;s your current supplement relationship costing you?
+                </label>
+                <div className="text-2xl font-bold text-neutral-900">${monthlySpend}</div>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={400}
+                step={5}
+                value={monthlySpend}
+                onChange={(e) => setMonthlySpend(Number(e.target.value) || 0)}
+                className="w-full accent-black"
+              />
+              <div className="mt-2 flex justify-between text-xs text-neutral-500">
+                <span>$0</span>
+                <span>$200</span>
+                <span>$400</span>
+              </div>
+            </div>
+            {/* Yearly Waste */}
+            <div className="bg-neutral-100 rounded-2xl p-8 text-center">
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <div className="text-sm text-neutral-600 mb-2">Estimated wasted per year</div>
+                  <div className="text-4xl font-bold text-neutral-900">
+                    ${Math.round(monthlySpend * 12 * 0.5).toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-600 mb-2">Estimated wasted over 10 years</div>
+                  <div className="text-4xl font-bold text-neutral-900">
+                    ${Math.round(monthlySpend * 12 * 0.5 * 10).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="text-center space-y-4">
+              <p className="text-lg text-neutral-600 leading-relaxed">
+                For supplements you&apos;re not actually sure are doing anything.
+              </p>
+              <div className="pt-2">
+                <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
+                  Find out which ones are worth keeping →
+                </Button>
+              </div>
+            </div>
+            {/* Image moved below text for mobile */}
+            <div className="mt-8 flex justify-center">
+              <img
+                src="/cash.png?v=2"
+                alt="Money spilling from supplement bottle"
+                className="w-full max-w-md h-auto object-contain"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How Much Are You Spending Section (Calculator) - Desktop/Tablet (unchanged) */}
+      <section
+        className="hidden sm:block py-24 lg:py-32 px-6 bg-no-repeat bg-center bg-cover relative"
         style={{
           backgroundImage: "url('/cash.png?v=2')",
           backgroundColor: "#f5f5f5",
@@ -446,12 +535,12 @@ export default function Page() {
             </div>
           </div>
         </div>
-        {/* Small decorative image at bottom-right (keeps existing bg, adds subtle accent) */}
+        {/* Small decorative image (hidden on mobile) */}
         <img
           src="/final.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute right-4 bottom-6 w-24 sm:w-40 md:w-48"
+          className="hidden sm:block pointer-events-none select-none absolute right-4 bottom-6 w-40 md:w-48"
         />
       </section>
 
