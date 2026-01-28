@@ -480,7 +480,7 @@ export function DashboardUnifiedPanel() {
       wasteYear: Math.round(wasteMonthly * 12),
       testYear: Math.round(testMonthly * 12),
     }
-  }, [supps, effects])
+  }, [supps, effects, progress])
 
   // While loading, avoid flashing the empty-state card
   if (!suppsLoaded) {
