@@ -120,11 +120,11 @@ export default function Page() {
             <p className="text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
           </div>
           <div className="mt-8">
-            <div className="relative w-full h-64 rounded-2xl overflow-hidden shadow-sm">
+            <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-sm">
               <img
                 src="/pill bottle.png"
                 alt="Supplement bottle"
-                className="absolute inset-0 w-full h-full object-cover object-center scale-110"
+                className="absolute inset-0 w-full h-full object-cover object-[60%_50%] scale-150"
                 loading="eager"
               />
             </div>
