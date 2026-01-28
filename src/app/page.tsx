@@ -97,7 +97,15 @@ export default function Page() {
       </nav>
 
       {/* Hero Section - Mobile only */}
-      <section className="sm:hidden relative pt-28 pb-10 px-6 overflow-hidden w-full bg-[#F8F8F8]">
+      <section
+        className="sm:hidden relative pt-28 pb-10 px-6 overflow-hidden w-full bg-[#F8F8F8]"
+        style={{
+          backgroundImage: "url('/pill bottle.png')",
+          backgroundPosition: "left center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
         <div className="mx-auto max-w-xl">
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-black leading-[1.1] text-center">
             Tinder for Your Supplements.
@@ -109,25 +117,15 @@ export default function Page() {
             BioStackr shows you what actually works — and what’s just wasting your money.
           </p>
           <div className="flex flex-col items-center gap-3 justify-center">
-            <Link href={isAuthed ? "/dashboard" : "/signup"}>
+            <Link href="/signup">
               <Button
                 size="lg"
                 className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all"
               >
-                {isAuthed ? 'Go to dashboard' : 'Sign up — free'}
+                Sign up — free
               </Button>
             </Link>
             <p className="text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
-          </div>
-          <div className="mt-8">
-            <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-sm">
-              <img
-                src="/pill bottle.png"
-                alt="Supplement bottle"
-                className="absolute inset-0 w-full h-full object-cover object-[60%_50%] scale-150"
-                loading="eager"
-              />
-            </div>
           </div>
         </div>
       </section>
