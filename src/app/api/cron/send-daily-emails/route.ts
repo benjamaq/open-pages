@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
 import crypto from 'crypto'
@@ -68,7 +70,7 @@ async function handler(req: NextRequest) {
     console.log('[daily-cron] Querying profiles...')
     const { data: profiles, error } = await supabaseAdmin
       .from('profiles')
-      .select('id, user_id, display_name, timezone')
+      .select('id, user_id, display_name, timezone, reminder_enabled')
       .limit(10000)
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Found profiles:', (profiles as any)?.length || 0)
@@ -164,21 +166,35 @@ async function handler(req: NextRequest) {
         return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail, user_id: forceUserId })
       }
     } else {
-      // STEP 1b: Filter by notification preferences (email + daily reminder enabled; null treated as enabled)
+      // STEP 1b: Filter by notification preferences (require explicit enable)
       try {
         const { data: prefs } = await supabaseAdmin
           .from('notification_preferences')
           .select('profile_id, email_enabled, daily_reminder_enabled')
-        const allowedProfileIds = new Set<string>()
+        const prefByProfile = new Map<string, { email_enabled: boolean | null; daily_reminder_enabled: boolean | null }>()
         for (const pref of (prefs as any[]) || []) {
-          const emailOk = (pref.email_enabled === null || pref.email_enabled === true || typeof pref.email_enabled === 'undefined')
-          const dailyOk = (pref.daily_reminder_enabled === null || pref.daily_reminder_enabled === true || typeof pref.daily_reminder_enabled === 'undefined')
-          if (emailOk && dailyOk && pref.profile_id) {
-            allowedProfileIds.add(String(pref.profile_id))
+          if (pref?.profile_id) {
+            prefByProfile.set(String(pref.profile_id), {
+              email_enabled: (pref as any).email_enabled ?? null,
+              daily_reminder_enabled: (pref as any).daily_reminder_enabled ?? null
+            })
           }
         }
         const beforeCount = scopedProfiles.length
-        scopedProfiles = scopedProfiles.filter(p => !p.profile_id || allowedProfileIds.has(String(p.profile_id)))
+        scopedProfiles = scopedProfiles.filter((p: any) => {
+          const pref = prefByProfile.get(String(p.profile_id))
+          // Rule:
+          // - If preferences row exists: require daily_reminder_enabled === true AND email_enabled !== false
+          // - Else fallback to profiles.reminder_enabled === true
+          // - Otherwise do not send
+          if (pref) {
+            const dailyOk = pref.daily_reminder_enabled === true
+            const emailOk = pref.email_enabled !== false
+            return dailyOk && emailOk
+          } else {
+            return (p as any)?.reminder_enabled === true
+          }
+        })
         // eslint-disable-next-line no-console
         console.log('[daily-cron] Pref filter:', { before: beforeCount, after: scopedProfiles.length })
       } catch (e) {
@@ -305,7 +321,7 @@ async function handler(req: NextRequest) {
           .eq('local_date', localYesterdayStr)
           .maybeSingle()
         // Resolve latest daily metrics (yesterday in user's local tz)
-        const latest = await getLatestDailyMetrics(supabaseAdmin as any, p.user_id, { targetLocalYmd: localYesterdayStr })
+        const latest = await getLatestDailyMetrics(supabaseAdmin as any, p.user_id, { targetLocalYmd: localYesterdayStr, timezone: tz })
         try {
           console.log('[daily-cron] Metrics for user:', p.user_id, 'Result:', JSON.stringify(latest))
         } catch {}
@@ -411,6 +427,9 @@ async function handler(req: NextRequest) {
         const progressPercent = await getStackProgressForUser(supabaseAdmin as any, p.user_id)
         try {
           console.log('[daily-cron] Progress for user:', p.user_id, 'Progress:', progressPercent)
+        } catch {}
+        try {
+          console.log('[email] User progress:', { userId: p.user_id, progress: progressPercent })
         } catch {}
         console.log('[daily-cron] TEMPLATE: templates/daily-reminder.tsx | Labels: Energy/Focus/Sleep')
         const html = renderV3Reminder({
@@ -519,11 +538,47 @@ async function handler(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  return handler(req)
+  // Immediate entry log to debug route activation issues
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[daily-cron] ========== ROUTE START (GET) ==========')
+  } catch {}
+  try {
+    const u = new URL(req.url)
+    if (u.searchParams.get('ping') === '1' || u.searchParams.get('test') === '1') {
+      console.log('[daily-cron] ping/test short-circuit OK')
+      return NextResponse.json({ ok: true, test: 'ok', ts: Date.now() })
+    }
+  } catch {}
+  try {
+    return await handler(req)
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.error('[daily-cron] FATAL ERROR (GET):', err)
+    return NextResponse.json({ ok: false, error: String(err?.message || err) }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
-  return handler(req)
+  // Immediate entry log to debug route activation issues
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[daily-cron] ========== ROUTE START (POST) ==========')
+  } catch {}
+  try {
+    const u = new URL(req.url)
+    if (u.searchParams.get('ping') === '1' || u.searchParams.get('test') === '1') {
+      console.log('[daily-cron] ping/test short-circuit OK (POST)')
+      return NextResponse.json({ ok: true, test: 'ok', ts: Date.now() })
+    }
+  } catch {}
+  try {
+    return await handler(req)
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.error('[daily-cron] FATAL ERROR (POST):', err)
+    return NextResponse.json({ ok: false, error: String(err?.message || err) }, { status: 500 })
+  }
 }
 
 
