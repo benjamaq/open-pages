@@ -9,7 +9,13 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
-type ProfileRow = { user_id: string; display_name: string | null; timezone?: string | null; profile_id?: string }
+type ProfileRow = {
+  user_id: string;
+  display_name: string | null;
+  timezone?: string | null;
+  profile_id?: string;
+  reminder_enabled?: boolean | null;
+}
 
 async function handler(req: NextRequest) {
   try {
@@ -85,7 +91,8 @@ async function handler(req: NextRequest) {
       user_id: p.user_id,
       display_name: p.display_name,
       timezone: p.timezone,
-      profile_id: p.id
+      profile_id: p.id,
+      reminder_enabled: p.reminder_enabled
     }))
 
     // If forcing to a specific email, resolve that user immediately and bypass all filters
