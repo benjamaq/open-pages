@@ -80,7 +80,7 @@ export default function ResultsPage() {
   const [paused, setPaused] = useState<Record<string, string>>({})
   // Edit modal state for dose/timing/brand
   const [editOpen, setEditOpen] = useState(false)
-  const [editDraft, setEditDraft] = useState<{ id: string; dose: string; timing: string; brand: string; frequency: string }>({ id: '', dose: '', timing: '', brand: '', frequency: '' })
+  const [editDraft, setEditDraft] = useState<{ id: string; dose: string; timing: string; brand: string; frequency: string; monthly?: string }>({ id: '', dose: '', timing: '', brand: '', frequency: '', monthly: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -772,7 +772,8 @@ export default function ResultsPage() {
                                   dose: getDose(base) || '',
                                   timing: getTiming(base) || '',
                                   brand: base?.brand || parseBrandAndShortName(base).brand || '',
-                                  frequency: getFrequency(base) || ''
+                                  frequency: getFrequency(base) || '',
+                                  monthly: String((r as any)?.monthly ?? (base?.monthly_cost_usd ?? ''))
                                 })
                                 setEditOpen(true)
                               }}
@@ -838,7 +839,8 @@ export default function ResultsPage() {
                               dose: getDose(s0) || '',
                               timing: getTiming(s0) || '',
                               brand: s0?.brand || parseBrandAndShortName(s0).brand || '',
-                              frequency: getFrequency(s0) || ''
+                              frequency: getFrequency(s0) || '',
+                              monthly: String((r as any)?.monthly ?? (s0?.monthly_cost_usd ?? ''))
                             })
                             setEditOpen(true)
                           }}
@@ -1421,6 +1423,19 @@ export default function ResultsPage() {
                   className="w-full px-3 py-2 border border-[#E4E1DC] rounded-lg"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-[#111111] mb-1">Monthly cost (USD)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min={0}
+                  value={editDraft.monthly ?? ''}
+                  onChange={e => setEditDraft(d => ({ ...d, monthly: e.target.value }))}
+                  placeholder="e.g., 25"
+                  className="w-full px-3 py-2 border border-[#E4E1DC] rounded-lg"
+                />
+              </div>
               <div className="text-xs text-[#6B7280]">
                 Changing dose, timing, or brand will restart testing from today and preserve your history.
               </div>
@@ -1435,13 +1450,15 @@ export default function ResultsPage() {
                     dose: getDose(s0) || '',
                     timing: getTiming(s0) || '',
                     brand: s0?.brand || parseBrandAndShortName(s0).brand || '',
-                    frequency: getFrequency(s0) || ''
+                    frequency: getFrequency(s0) || '',
+                    monthly: String((r as any)?.monthly ?? (s0?.monthly_cost_usd ?? ''))
                   }
                   const meaningful = (
                     before.dose !== (editDraft.dose || '') ||
                     before.timing !== (editDraft.timing || '') ||
                     before.brand !== (editDraft.brand || '') ||
-                    before.frequency !== (editDraft.frequency || '')
+                    before.frequency !== (editDraft.frequency || '') ||
+                    String(before.monthly ?? '') !== String(editDraft.monthly ?? '')
                   )
                   if (meaningful) {
                     setConfirmOpen(true)
@@ -1488,6 +1505,7 @@ export default function ResultsPage() {
                           timing: editDraft.timing || '',
                           brand: editDraft.brand || '',
                           frequency: editDraft.frequency || '',
+                          monthly_cost: Number.isFinite(parseFloat(String(editDraft.monthly || ''))) ? parseFloat(String(editDraft.monthly)) : undefined,
                           restartTesting: true
                         })
                       })
@@ -1502,6 +1520,7 @@ export default function ResultsPage() {
                           timing: editDraft.timing || null,
                           brand: editDraft.brand || null,
                           frequency: editDraft.frequency || null,
+                          monthly_cost_usd: Number.isFinite(parseFloat(String(editDraft.monthly || ''))) ? parseFloat(String(editDraft.monthly)) : (s as any).monthly_cost_usd,
                           started_at: new Date().toISOString().slice(0,10)
                         } as any
                       }))

@@ -228,24 +228,29 @@ export async function PATCH(
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-    // Update user_supplement fields (dose/timing/brand/notes) and optionally restart testing
+    // Update user_supplement fields (dose/timing/brand/notes), cost, and optionally restart testing
     // Update user_supplement only when there are fields to update
     let usUpdated: any = null
-    if (Object.keys(updateSupplementFields).length > 0) {
-      const payload = { ...updateSupplementFields } as any
-      const { data, error: usErr } = await supabase
-        .from('user_supplement')
-        .update(payload)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select('id,dose,timing,brand')
-        .maybeSingle()
-      if (usErr) {
-        // eslint-disable-next-line no-console
-        console.error('user_supplement update error:', usErr)
-        return NextResponse.json({ error: usErr.message }, { status: 500 })
+    {
+      const payload: Record<string, any> = { ...updateSupplementFields }
+      if (monthlyCost != null && Number.isFinite(monthlyCost)) {
+        payload.monthly_cost_usd = monthlyCost
       }
-      usUpdated = data
+      if (Object.keys(payload).length > 0) {
+        const { data, error: usErr } = await supabase
+          .from('user_supplement')
+          .update(payload)
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select('id,dose,timing,brand,monthly_cost_usd')
+          .maybeSingle()
+        if (usErr) {
+          // eslint-disable-next-line no-console
+          console.error('user_supplement update error:', usErr)
+          return NextResponse.json({ error: usErr.message }, { status: 500 })
+        }
+        usUpdated = data
+      }
     }
 
     // Reflect metadata and restart flag into stack_items unconditionally (best-effort)
@@ -260,11 +265,20 @@ export async function PATCH(
         const todayIso = new Date().toISOString().slice(0, 10)
         stackUpdate.start_date = todayIso
       }
+      if (monthlyCost != null && Number.isFinite(monthlyCost)) {
+        stackUpdate.monthly_cost = monthlyCost
+      }
       if (Object.keys(stackUpdate).length > 0) {
         await supabase
           .from('stack_items')
           .update(stackUpdate)
           .eq('id', id)
+          .eq('profile_id', (profile as any).id)
+        // Also try by foreign key if present (when id is user_supplement.id)
+        await supabase
+          .from('stack_items')
+          .update(stackUpdate)
+          .eq('user_supplement_id', id)
           .eq('profile_id', (profile as any).id)
       }
     } catch (e) {
@@ -272,40 +286,30 @@ export async function PATCH(
       console.error('stack_items update error:', e)
     }
 
-    return NextResponse.json({ ok: true, id, updated: usUpdated })
-
-    // If updating cost, write to stack_items.monthly_cost (used across UI)
-    if (monthlyCost != null && Number.isFinite(monthlyCost)) {
-      const { data: updated, error: uErr } = await supabase
-        .from('stack_items')
-        .update({ monthly_cost: monthlyCost })
-        .eq('id', params.id)
-        .eq('profile_id', (profile as any).id)
-        .select('id, monthly_cost')
-        .maybeSingle();
-      if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
-      if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-
     // If updating category, try to update user_supplement.category and fall back to stack_items.tags
     if (hasCategory) {
       const category = String(body.category).trim()
       // Attempt user_supplement update by matching user_supplement.id = params.id first
-      const up1 = await supabase
+      await supabase
         .from('user_supplement')
         .update({ category })
-        .eq('id', params.id)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
-      // If no rows affected, try mapping stack_items.id to user_supplement via name or supplement_id (best effort)
-      // Non-fatal if this fails — also update stack_items.tags to include category label for charts
+        .eq('id', id)
+        .eq('user_id', user.id)
+      // Also update stack_items.tags for charts
       await supabase
         .from('stack_items')
         .update({ tags: [category] })
-        .eq('id', params.id)
         .eq('profile_id', (profile as any).id)
+        .or(`id.eq.${id},user_supplement_id.eq.${id}`)
     }
 
-    return NextResponse.json({ ok: true, id: params.id, ...(monthlyCost != null ? { monthly_cost: monthlyCost } : {}), ...(hasCategory ? { category: String(body.category).trim() } : {}) });
+    return NextResponse.json({
+      ok: true,
+      id,
+      ...(monthlyCost != null && Number.isFinite(monthlyCost) ? { monthly_cost: monthlyCost } : {}),
+      ...(hasCategory ? { category: String(body.category).trim() } : {}),
+      updated: usUpdated
+    });
   } catch (error: any) {
     console.error('Error updating monthly cost:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
