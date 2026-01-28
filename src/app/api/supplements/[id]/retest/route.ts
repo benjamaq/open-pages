@@ -29,8 +29,9 @@ export async function POST(request: NextRequest, ctx: any) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
     const currentStatus = String((row as any).testing_status || 'inactive')
-    if (!['inconclusive'].includes(currentStatus)) {
-      return NextResponse.json({ error: 'Invalid status for retest' }, { status: 400 })
+    // Allow retest from any non-testing state (complete, inconclusive, inactive)
+    if (currentStatus === 'testing') {
+      return NextResponse.json({ error: 'Already testing' }, { status: 400 })
     }
 
     // Starter limit check when re-entering testing
