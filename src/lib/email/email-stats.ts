@@ -125,8 +125,6 @@ export async function getStackProgressForUser(admin: SupabaseAdmin, userId: stri
     console.log('[email-stats] ON/OFF counts:', JSON.stringify(debugCounts))
   } catch {}
 
-  // Compute evidence-based progress per supplement (same formula family as dashboard)
-  const percs: Array<{ pct: number; cost: number }> = []
   // Compute evidence-based progress per supplement (same as dashboard: ON+OFF evidence vs required)
   const datesSet = new Set<string>((entries || []).map((e: any) => String((e as any).local_date || '').slice(0,10)).filter(Boolean))
   const allDates = Array.from(datesSet).sort()
