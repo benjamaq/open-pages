@@ -126,7 +126,7 @@ export default function Page() {
             <img
               src="/pill bottle.png"
               alt="Supplement bottle"
-              className="w-screen h-[50vh] object-cover object-center"
+              className="w-screen h-[50vh] object-cover object-[30%_50%]"
               loading="eager"
             />
           </div>
@@ -444,7 +444,7 @@ export default function Page() {
               <img
                 src="/cash.png?v=2"
                 alt="Money spilling from supplement bottle"
-                className="w-screen h-72 object-contain object-center"
+                className="w-screen h-[46vh] object-cover object-left"
                 loading="lazy"
               />
             </div>
