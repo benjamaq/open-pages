@@ -1036,7 +1036,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/signup?plan=premium">
+              <Link href="/pricing/pro">
                 <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Get Answers →
                 </Button>
