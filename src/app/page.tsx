@@ -459,20 +459,20 @@ export default function Page() {
               <p className="text-lg text-neutral-600 leading-relaxed">
                 For supplements you&apos;re not actually sure are doing anything.
               </p>
-              <div className="pt-2">
-                <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
-                  Find out which ones are worth keeping
-                </Button>
-              </div>
             </div>
-            {/* Image moved below text for mobile — make larger and full-bleed */}
-            <div className="-mx-6 mt-8">
+            {/* Image moved below text for mobile — full-bleed with CTA overlay */}
+            <div className="-mx-6 mt-4 relative">
               <img
                 src="/cash.png?v=2"
                 alt="Money spilling from supplement bottle"
                 className="w-screen h-[50vh] object-cover object-[90%_55%]"
                 loading="lazy"
               />
+              <div className="absolute top-3 left-1/2 -translate-x-1/2">
+                <Button className="bg-black/90 hover:bg-black text-white rounded-full px-5 py-2 text-sm font-semibold shadow-md">
+                  Find out which ones are worth keeping
+                </Button>
+              </div>
             </div>
           </div>
         </div>
