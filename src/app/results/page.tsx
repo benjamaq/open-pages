@@ -609,7 +609,7 @@ export default function ResultsPage() {
               const doseWhen = parts.length ? parts.join(' • ') : '—'
                 return (
                 <div key={r.id} className="protocol-row">
-                  <div className="supplement-name truncate">{shortName || r.name}</div>
+                  <div className="supplement-name line-clamp-2 sm:line-clamp-1">{shortName || r.name}</div>
                   <div className="brand-name truncate">{brand || '—'}</div>
                   <div className="dosewhen">{doseWhen}</div>
                 </div>
@@ -1039,6 +1039,7 @@ export default function ResultsPage() {
               gap: 8px;
               padding: 10px 12px;
             }
+            .supplement-name { white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word; }
             .brand-name { display: none; }
             .dosewhen { text-align: left; white-space: normal; }
           }

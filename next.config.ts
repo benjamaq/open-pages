@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
         destination: '/dashboard',
         permanent: false,
       },
+      {
+        source: '/pricing',
+        destination: '/pricing/pro',
+        permanent: false,
+      },
     ];
   },
 };
