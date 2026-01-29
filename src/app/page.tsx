@@ -407,16 +407,19 @@ export default function Page() {
                 aria-describedby="spend-slider-hint"
                 className="w-full accent-black cursor-pointer"
               />
+              <div className="mt-1 flex justify-center">
+                <span
+                  id="spend-slider-hint"
+                  className="inline-flex items-center gap-1 text-[11px] text-neutral-600 bg-white/70 px-2 py-[2px] rounded-full border border-neutral-200 shadow-sm"
+                >
+                  <span className="text-neutral-400">↔︎</span>
+                  Slide to adjust
+                </span>
+              </div>
               <div className="mt-2 flex justify-between text-xs text-neutral-500">
                 <span>$0</span>
                 <span>$200</span>
                 <span>$400</span>
-              </div>
-              <div className="mt-1 flex items-center justify-end">
-                <span id="spend-slider-hint" className="text-[11px] text-neutral-500 flex items-center gap-1">
-                  Slide to adjust
-                  <span className="text-neutral-400 animate-pulse">↔︎</span>
-                </span>
               </div>
             </div>
             {/* Yearly Waste */}
@@ -509,16 +512,19 @@ export default function Page() {
                 aria-describedby="spend-slider-hint-desktop"
                 className="w-full accent-black cursor-pointer"
               />
+              <div className="mt-1 flex justify-center">
+                <span
+                  id="spend-slider-hint-desktop"
+                  className="inline-flex items-center gap-1 text-[11px] text-neutral-600 bg-white/70 px-2 py-[2px] rounded-full border border-neutral-200 shadow-sm"
+                >
+                  <span className="text-neutral-400">↔︎</span>
+                  Slide to adjust
+                </span>
+              </div>
               <div className="mt-2 flex justify-between text-xs text-neutral-500">
                 <span>$0</span>
                 <span>$200</span>
                 <span>$400</span>
-              </div>
-              <div className="mt-1 flex items-center justify-end">
-                <span id="spend-slider-hint-desktop" className="text-[11px] text-neutral-500 flex items-center gap-1">
-                  Slide to adjust
-                  <span className="text-neutral-400 animate-pulse">↔︎</span>
-                </span>
               </div>
             </div>
 
