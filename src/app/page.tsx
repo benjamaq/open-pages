@@ -322,11 +322,14 @@ export default function Page() {
               Everyone&apos;s looking for &quot;The One.&quot;
             </span>
             <span className="block text-3xl sm:text-4xl lg:text-4xl lg:whitespace-nowrap">
-              We help you find the 3–5 that actually work. (Or 15. No judgement.)
+              We help you find the 3–5 that actually work.
+            </span>
+            <span className="block text-base sm:text-lg text-neutral-600 mt-1">
+              (Or 15. No judgement.)
             </span>
           </h2>
           {/* Subheader with breathing room */}
-          <p className="mt-6 mb-12 text-xl lg:text-2xl text-neutral-700 leading-relaxed font-medium">
+          <p className="mt-8 mb-12 text-xl lg:text-2xl text-neutral-700 leading-relaxed font-medium">
             It takes years to find the right partner. Your supplements? About two weeks.
           </p>
           {/* White container: wider, aligned to hero text, anchored toward bottle */}
