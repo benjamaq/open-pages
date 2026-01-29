@@ -126,7 +126,7 @@ export default function Page() {
             <img
               src="/pill bottle.png"
               alt="Supplement bottle"
-              className="w-screen h-[55vh] object-cover object-[90%_50%]"
+              className="w-screen h-[48vh] object-cover object-[90%_40%]"
               loading="eager"
             />
           </div>
