@@ -1085,7 +1085,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href={`/checkout?period=${billingPeriod}`}>
+              <Link href={`/api/billing/start?plan=premium&period=${billingPeriod}`}>
                 <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Get Answers →
                 </Button>
