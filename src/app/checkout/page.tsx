@@ -17,6 +17,14 @@ export default function CheckoutPage() {
     ;(async () => {
       const supabase = createClient()
       try {
+        // Capture preferred billing period from querystring if present
+        try {
+          const params = new URL(window.location.href).searchParams
+          const qp = String(params.get('period') || '').toLowerCase()
+          if (qp === 'monthly' || qp === 'yearly') {
+            setPeriod(qp as 'monthly' | 'yearly')
+          }
+        } catch {}
         const { data, error } = await supabase.auth.getUser()
         if (cancelled) return
         if (error || !data?.user) {

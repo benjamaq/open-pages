@@ -29,7 +29,7 @@ export default function ProPricingPage() {
     return 'Get started with Premium'
   }
 
-  const getCtaHref = () => '/signup?plan=premium'
+  const getCtaHref = () => `/checkout?period=${billingPeriod}`
 
   return (
     <div className="min-h-screen bg-white">
