@@ -2183,7 +2183,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
 
   const handleAdd = (type: string) => {
     if (type === 'supplements') {
-      window.location.href = '/dash/stack'
+      window.location.href = '/results'
     } else if (type === 'protocols') {
       window.location.href = '/dash/protocols'
     } else if (type === 'uploads') {
@@ -2907,7 +2907,7 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                 items={todayItems.supplements}
                 onToggleComplete={handleToggleComplete}
                 completedItems={completedItems}
-                onManage={() => router.push('/dash/stack')}
+                onManage={() => router.push('/results')}
                 onAdd={() => setShowAddSupplement(true)}
               />
             </div>

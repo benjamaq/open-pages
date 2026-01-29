@@ -355,7 +355,7 @@ export function TestingGrid({
         </div>
       )}
       <div>
-        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">+ Add supplement</a>
+        <a href="/dashboard?add=1" className="inline-flex items-center justify-center h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800">+ Add supplement</a>
       </div>
       {showCostModal && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">

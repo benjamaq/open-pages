@@ -236,14 +236,56 @@ export default function DailyCheckinModal({
   ]
 
   // Load saved data when modal opens
-  useEffect(() => {
-    if (isOpen) {
+useEffect(() => {
+  if (isOpen) {
       loadSavedData()
+      // Initialize default supplement selections based on today's rotation:
+      // take all by default except those explicitly listed in todayItems.skipNames.
+      try {
+        const skipNames: string[] = Array.isArray((todayItems as any)?.skipNames) ? (todayItems as any).skipNames : []
+        const skipSet = new Set(skipNames.map(n => String(n).trim().toLowerCase()))
+        const initial: Record<string, boolean> = {}
+        const supps: Array<{ id: string; name?: string; title?: string }> = Array.isArray((todayItems as any)?.supplements)
+          ? (todayItems as any).supplements
+          : []
+        for (const it of supps) {
+          const id = String((it as any).id || '')
+          const nmLower = String((it as any).name || (it as any).title || '').trim().toLowerCase()
+          if (!id) continue
+          // default taken unless explicitly in skip list
+          initial[id] = !skipSet.has(nmLower)
+        }
+      try {
+        console.log('[checkin-modal] skipNames:', skipNames)
+        console.log('[checkin-modal] initial selection:', initial)
+        console.log('[checkin-modal] existing selectedSupps keys:', Object.keys(selectedSupps || {}))
+      } catch {}
+      // Always enforce skip items to be unchecked; also seed any missing ids with their default
+      if (Object.keys(initial).length > 0) {
+        setSelectedSupps(prev => {
+          const next: Record<string, boolean> = { ...prev }
+          for (const it of supps) {
+            const id = String((it as any).id || '')
+            const nmLower = String((it as any).name || (it as any).title || '').trim().toLowerCase()
+            if (!id) continue
+            // Seed missing keys with default (taken unless skipped)
+            if (!(id in next)) {
+              next[id] = !skipSet.has(nmLower)
+            }
+            // Force scheduled OFF items to unchecked so the UI reflects the rotation
+            if (skipSet.has(nmLower)) {
+              next[id] = false
+            }
+          }
+          return next
+        })
+      }
+      } catch {}
     } else {
       // Reset state when modal closes
       setShowWearables(false)
     }
-  }, [isOpen])
+}, [isOpen, todayItems])
 
 
   // Symptom handling functions

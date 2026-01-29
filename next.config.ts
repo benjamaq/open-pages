@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/migraine',
-        destination: '/migraines',
+        destination: '/dashboard',
         permanent: false,
       },
     ];

@@ -89,10 +89,10 @@ export default function SupplementTimeline({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-zinc-900">{supplementName || 'Supplement'} — Timeline</h3>
-        <button onClick={handleOpenAdd} className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-800 hover:bg-zinc-50">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-3 sm:p-4 overflow-hidden">
+      <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+        <h3 className="text-sm sm:text-base font-semibold text-zinc-900 truncate max-w-full">{supplementName || 'Supplement'} — Timeline</h3>
+        <button onClick={handleOpenAdd} className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs sm:text-sm text-zinc-800 hover:bg-zinc-50 whitespace-nowrap">
           + Add Period
         </button>
       </div>
@@ -102,7 +102,7 @@ export default function SupplementTimeline({
       ) : (
         <>
           <div className="mb-3 overflow-x-auto">
-            <div className="min-w-[640px]">
+            <div className="min-w-[560px] sm:min-w-[640px]">
 							<TimelineView periods={periods} onEdit={handleEdit} months={12} />
             </div>
           </div>

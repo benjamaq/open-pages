@@ -167,7 +167,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
         </div>
 
         {/* Page Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Breadcrumb */}
       <div className="mb-6">
         <nav className="flex items-center space-x-2 text-sm">
@@ -180,13 +180,13 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
       </div>
 
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Supplements & Meds Management</h1>
-          <p className="text-gray-500 mt-1 text-sm">Manage what you take - supplements, medications, peptides, vitamins, nootropics.</p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8">
+        <div className="mb-3 lg:mb-0">
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900">Supplements & Meds Management</h1>
+          <p className="text-gray-500 mt-1 text-sm">Manage what you take — supplements, medications, peptides, vitamins, nootropics.</p>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {/* Search */}
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -195,7 +195,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search supplements..."
-              className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-48 sm:w-64"
+              className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-40 sm:w-64"
             />
           </div>
 
@@ -284,11 +284,11 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
       )}
 
       {/* Supplements Grid */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{item.name}</h3>
+            <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 overflow-hidden">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 break-words">{item.name}</h3>
               {/* Decision state badge placeholder (derived): show Testing/Complete where possible */}
               <div className="mb-1">
                 <span className="inline-block text-[10px] px-2 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200">
@@ -308,8 +308,8 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
                 />
               </div>
 
-              <div className="mt-4 flex justify-between items-center">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+              <div className="mt-4 flex flex-wrap justify-between items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium ${
                   item.public ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
                 }`}>
                   {item.public ? 'Public' : 'Private'}
@@ -319,7 +319,7 @@ export default function StackPageClient({ stackItems, profile }: StackPageClient
                   {/* <button className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">Retest</button> */}
                   <button
                     onClick={() => setEditingItem(item)}
-                    className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                    className="px-2.5 py-1 border border-gray-300 text-gray-700 rounded-lg text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
                   >
                     Edit
                   </button>

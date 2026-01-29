@@ -75,7 +75,7 @@ export async function addStackItem(formData: {
   }
 
   // Revalidate relevant pages
-  revalidatePath('/dash/stack')
+  revalidatePath('/results')
   revalidatePath('/dash/mindfulness')
   revalidatePath('/dash/movement')
   revalidatePath('/dash/protocols')
@@ -140,7 +140,7 @@ export async function updateStackItem(itemId: string, formData: {
   }
 
   // Revalidate the stack page
-  revalidatePath('/dash/stack')
+  revalidatePath('/results')
 }
 
 export async function deleteStackItem(itemId: string) {
@@ -180,5 +180,5 @@ export async function deleteStackItem(itemId: string) {
   }
 
   // Revalidate the stack page
-  revalidatePath('/dash/stack')
+  revalidatePath('/results')
 }

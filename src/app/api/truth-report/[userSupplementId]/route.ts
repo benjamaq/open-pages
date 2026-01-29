@@ -13,16 +13,15 @@ export async function GET(request: NextRequest, context: any) {
     // Robust param resolution for Next.js 14 (params can be a Promise) and different param keys
     let userSupplementId: string = ''
     try {
-      const p = context?.params
-      if (p && typeof p?.then === 'function') {
-        const resolved = await p
+      const rawParams = context?.params
+      if (rawParams && typeof (rawParams as any)?.then === 'function') {
+        const resolved = await rawParams
         userSupplementId = String(resolved?.userSupplementId || resolved?.id || '')
       } else {
-        userSupplementId = String((p as any)?.userSupplementId || (p as any)?.id || '')
+        userSupplementId = String((rawParams as any)?.userSupplementId || (rawParams as any)?.id || '')
       }
       // eslint-disable-next-line no-console
       console.log('[truth-report] Received ID:', userSupplementId)
-      console.log('[truth-report] Full params:', p)
     } catch {}
     if (!userSupplementId || userSupplementId === 'undefined') {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
@@ -43,6 +42,15 @@ export async function GET(request: NextRequest, context: any) {
     // Verify supplement exists and belongs to user (avoid generating for missing/foreign IDs)
     let effectiveUserSuppId: string = userSupplementId
     try {
+      // Capture auth user id for debug
+      const authUserId = (user as any)?.id || 'no_user'
+      // Pre-check existence without owner filter for better diagnosis
+      const { data: suppCheck } = await supabase
+        .from('user_supplement')
+        .select('id, user_id, name')
+        .eq('id', effectiveUserSuppId)
+        .maybeSingle()
+      // Actual lookup with owner filter
       const { data: supplement, error: suppError } = await supabase
         .from('user_supplement')
         .select('*')
@@ -78,14 +86,52 @@ export async function GET(request: NextRequest, context: any) {
               console.log('[truth-report] Resolved stack_item id to user_supplement id:', { from: userSupplementId, to: effectiveUserSuppId })
             } else {
               console.log('[truth-report] Name-based resolution found none or multiple matches:', { name: nm, count: usMatches?.length || 0 })
-              return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+              return NextResponse.json({
+                error: 'Supplement not found',
+                debug: {
+                  requestedId: userSupplementId,
+                  effectiveRequestedId: effectiveUserSuppId,
+                  authUserId,
+                  supplementExistsInDb: !!suppCheck,
+                  supplementOwnerId: (suppCheck as any)?.user_id || null,
+                  ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
+                  supplementName: (suppCheck as any)?.name || null,
+                  attemptedFallback: 'stack_items_name_match',
+                  fallbackMatches: (usMatches || []).map((m: any) => ({ id: m.id, name: m.name }))
+                }
+              }, { status: 404 })
             }
           } else {
-            return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+            return NextResponse.json({
+              error: 'Supplement not found',
+              debug: {
+                requestedId: userSupplementId,
+                effectiveRequestedId: effectiveUserSuppId,
+                authUserId,
+                supplementExistsInDb: !!suppCheck,
+                supplementOwnerId: (suppCheck as any)?.user_id || null,
+                ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
+                supplementName: (suppCheck as any)?.name || null,
+                attemptedFallback: 'stack_items_missing'
+              }
+            }, { status: 404 })
           }
         } catch (resolveErr: any) {
           try { console.error('[truth-report] Resolution attempt failed:', resolveErr?.message || resolveErr) } catch {}
-          return NextResponse.json({ error: 'Supplement not found', id: userSupplementId }, { status: 404 })
+          return NextResponse.json({
+            error: 'Supplement not found',
+            debug: {
+              requestedId: userSupplementId,
+              effectiveRequestedId: effectiveUserSuppId,
+              authUserId,
+              supplementExistsInDb: !!suppCheck,
+              supplementOwnerId: (suppCheck as any)?.user_id || null,
+              ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
+              supplementName: (suppCheck as any)?.name || null,
+              attemptedFallback: 'stack_items_resolution_failed',
+              resolutionError: resolveErr?.message || String(resolveErr)
+            }
+          }, { status: 404 })
         }
       }
     } catch (lookupErr: any) {

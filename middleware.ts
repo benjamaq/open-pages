@@ -9,6 +9,12 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
+  // Block legacy app surfaces and funnel to dashboard
+  if (/^\/(pain|entries|tracking|migraines)(\/|$)/.test(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
   // Public endpoint: allow unauthenticated access and skip session middleware
   if (pathname.startsWith('/api/checkin/magic')) {
     return NextResponse.next()

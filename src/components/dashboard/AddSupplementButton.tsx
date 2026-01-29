@@ -14,11 +14,11 @@ export default function AddSupplementButton({ onOpen, variant = 'header' }: Prop
         aria-label="Add supplement"
         title="Add a new supplement"
         onClick={onOpen}
-        className="fixed bottom-6 right-5 md:hidden z-50 w-14 h-14 rounded-full
+        className="fixed bottom-4 right-4 md:hidden z-50 w-12 h-12 rounded-full
                    bg-neutral-900 text-white shadow-2xl hover:scale-105 active:scale-95
                    transition-transform"
       >
-        <Plus className="w-6 h-6 mx-auto" />
+        <Plus className="w-5 h-5 mx-auto" />
       </button>
     )
   }

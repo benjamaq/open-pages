@@ -60,19 +60,28 @@ export default async function DashboardPage() {
         backgroundPosition: 'center'
       }}
     >
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 flex-wrap">
-          <a href="/dashboard" className="flex items-center">
-            <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-7 sm:h-8 w-auto" />
-          </a>
-          <nav className="flex items-center gap-3 sm:gap-4 text-sm overflow-x-auto whitespace-nowrap py-1">
-            <a href="/dashboard" className="font-medium">Dashboard</a>
-            <a href="/results" className="text-slate-600">My Stack</a>
-            <a href="/upload" className="text-slate-600 border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-50">
-              ⌚ Upload Wearable Data
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto">
+          {/* Row 1: Brand on left, CTA on right */}
+          <div className="flex items-center justify-between">
+            <a href="/dashboard" className="flex items-center">
+              <img src="/BIOSTACKR LOGO 2.png" alt="Biostackr" className="h-7 sm:h-8 w-auto" />
             </a>
-            <a href="/settings" className="text-slate-600">Settings</a>
-            {!billing?.isPaid && <UpgradeButton compact />}
+            <a
+              href="/upload"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50"
+              title="Upload Wearable Data"
+            >
+              <span aria-hidden="true">⌚</span>
+              <span>Upload&nbsp;Wearable&nbsp;Data</span>
+            </a>
+          </div>
+          {/* Row 2: Text nav (no buttons) */}
+          <nav className="mt-2 flex items-center gap-4 sm:gap-6 text-sm text-slate-700 justify-start sm:justify-end">
+            <a href="/dashboard" className="hover:underline">Dashboard</a>
+            <a href="/results" className="hover:underline">My Stack</a>
+            <a href="/settings" className="hover:underline">Settings</a>
+            <a href="/checkout" className="hover:underline">Upgrade</a>
           </nav>
         </div>
       </header>

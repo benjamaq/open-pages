@@ -63,7 +63,7 @@ export async function GET() {
     if (profileId) {
       const { data: si } = await supabaseAdmin
         .from('stack_items')
-        .select('id,name,created_at,monthly_cost,primary_goal_tags,tags,dose,timing,brand,notes')
+        .select('id,name,created_at,monthly_cost,primary_goal_tags,tags,dose,timing,brand,notes,user_supplement_id')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
       // eslint-disable-next-line no-console
@@ -74,6 +74,7 @@ export async function GET() {
       // Build fallback maps from user_supplement by normalized name
       const costByName = new Map<string, number>()
       const tagsByName = new Map<string, string[]>()
+      const idByName = new Map<string, string>()
       for (const r of rows) {
         const nm = String((r as any)?.name || '').trim().toLowerCase()
         const cost = Number((r as any)?.monthly_cost_usd)
@@ -84,6 +85,8 @@ export async function GET() {
         if (nm && tags.length > 0) {
           tagsByName.set(nm, tags)
         }
+        const uid = String((r as any)?.id || '')
+        if (nm && uid) idByName.set(nm, uid)
       }
       const converted = stackItems.map((r: any) => {
         const nm = String(r?.name || '').trim().toLowerCase()
@@ -93,6 +96,8 @@ export async function GET() {
           Array.isArray(r.primary_goal_tags) && r.primary_goal_tags.length > 0
             ? r.primary_goal_tags
             : (tagsByName.get(nm) || (Array.isArray(r.tags) ? r.tags : []))
+        // Intake linkage: prefer explicit FK if present; else fuzzy by normalized name
+        const intake_id = r.user_supplement_id || idByName.get(nm) || r.id
         return {
           id: r.id,
           user_id: user.id,
@@ -110,6 +115,9 @@ export async function GET() {
           timing: r.timing ?? null,
           brand: r.brand ?? null,
           notes: r.notes ?? null,
+          // NEW: explicit link for intake and engines
+          user_supplement_id: r.user_supplement_id ?? null,
+          intake_id,
         }
       })
       // Use stack_items as the single source of truth when present to avoid double-counting
@@ -129,6 +137,8 @@ export async function GET() {
         ...row,
         primary_goal_tags,
         monthly_cost_usd,
+        // Ensure intake_id always present for clients (CheckinModal)
+        intake_id: row.intake_id || row.user_supplement_id || row.id,
       }
     })
 
@@ -290,6 +300,38 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     if (!usErr && userSupp?.id) {
+      // Also ensure a stack_items row is created for UI/display
+      try {
+        // Resolve profile_id for the current user
+        let profileId: string | null = null
+        try {
+          const { data: p } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle()
+          profileId = (p as any)?.id ?? null
+        } catch {}
+        if (!profileId) {
+          try {
+            const { data: ap } = await supabaseAdmin
+              .from('profiles')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle()
+            profileId = (ap as any)?.id ?? null
+          } catch {}
+        }
+        if (profileId) {
+          const stackPayload: any = {
+            profile_id: profileId,
+            name: rawName,
+            user_supplement_id: String(userSupp.id),
+          }
+          if (typeof monthlyFromBody === 'number') stackPayload.monthly_cost = monthlyFromBody
+          await supabase.from('stack_items').insert(stackPayload)
+        }
+      } catch {}
       return NextResponse.json({ id: userSupp.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
     // If duplicate (unique user_id,supplement_id), fetch existing row and return its id

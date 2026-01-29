@@ -217,12 +217,16 @@ export default function UploadCenter() {
     >
       <div className="max-w-[760px] mx-auto px-6 py-16">
         <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-6 sm:p-10 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Upload Your Data</h1>
           <p className="text-gray-600">Import health data and supplement logs. We’ll handle the rest.</p>
         </div>
-        <Link href="/dashboard"><Button>Skip for now</Button></Link>
+        <Link href="/dashboard">
+          <Button className="px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap">
+            Skip for now
+          </Button>
+        </Link>
       </div>
 
       <Card className="overflow-hidden p-0">

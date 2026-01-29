@@ -33,7 +33,12 @@ export function CheckinModal({ isOpen, onClose, onSuccess }: CheckinModalProps) 
         const r = await fetch('/api/supplements', { cache: 'no-store' })
         if (!r.ok) return
         const arr = await r.json()
-        const mapped = Array.isArray(arr) ? arr.map((s: any) => ({ id: String(s.id), name: String(s.name || 'Supplement') })) : []
+        const mapped = Array.isArray(arr)
+          ? arr.map((s: any) => ({
+              id: String(s.intake_id || s.user_supplement_id || s.id),
+              name: String(s.name || 'Supplement')
+            }))
+          : []
         setSuppList(mapped)
         // Default: checked (taken)
         const def: Record<string, boolean> = {}

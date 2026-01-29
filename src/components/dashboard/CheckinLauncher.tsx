@@ -69,7 +69,7 @@ export function CheckinLauncher() {
         const supplements = rows
           .filter((row: any) => row?.is_active !== false)
           .map((row: any) => ({
-            id: String(row?.id ?? row?.supplement_id ?? ''),
+            id: String(row?.intake_id ?? row?.user_supplement_id ?? row?.id ?? row?.supplement_id ?? ''),
             name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement')
           }))
           .filter((s: any) => s.id)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -20,6 +20,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Read and sanitize ?next= for post-auth redirect (e.g., back to /api/billing/start...)
+  const nextUrl = useMemo(() => {
+    try {
+      if (typeof window === 'undefined') return null
+      const p = new URLSearchParams(window.location.search).get('next')
+      if (!p) return null
+      if (p.startsWith('/')) return p
+      const u = new URL(p, window.location.origin)
+      if (u.origin === window.location.origin) return u.pathname + (u.search || '')
+      return null
+    } catch {
+      return null
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -223,7 +238,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setTimeout(() => {
             try { sessionStorage.setItem('justSignedUp', '1') } catch {}
             try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
-            router.push('/onboarding')
+            if (nextUrl) {
+              router.push(nextUrl)
+            } else {
+              router.push('/onboarding')
+            }
             router.refresh()
           }, 1000)
         }
@@ -237,7 +256,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
           setError(error.message)
         } else {
           try { sessionStorage.setItem('justSignedUp', '1') } catch {}
-          router.push('/dash')
+          if (nextUrl) {
+            router.push(nextUrl)
+          } else {
+            router.push('/dashboard')
+          }
           router.refresh()
         }
       }
@@ -405,7 +428,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
             <div className="mt-6">
               <Link
-                href={isSignUp ? '/auth/signin' : '/auth/signup'}
+                href={
+                  isSignUp
+                    ? (`/auth/signin${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
+                    : (`/auth/signup${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
+                }
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
               >
                 {isSignUp ? 'Sign in instead' : 'Create an account'}

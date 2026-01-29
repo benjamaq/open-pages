@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripe, getPriceId } from '@/lib/stripe'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url)
@@ -9,20 +11,17 @@ export async function GET(req: NextRequest) {
     const rawPeriod = String(url.searchParams.get('period') || 'yearly').toLowerCase()
     const period: 'monthly' | 'yearly' = rawPeriod === 'monthly' ? 'monthly' : 'yearly'
 
-    const origin =
-      req.headers.get('origin') ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      'http://localhost:3009'
+    // Always prefer the URL's origin so local dev ports are respected (e.g. :3012)
+    const origin = url.origin || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
     const supabase = await createClient()
     const { data: auth } = await supabase.auth.getUser()
 
-    // If not signed in → go to signup, then bounce back here to start Stripe
+    // If not signed in → go to sign-in (with create option), then bounce back here to start Stripe
     if (!auth?.user) {
       const next = `/api/billing/start?plan=${encodeURIComponent(plan)}&period=${encodeURIComponent(period)}`
-      const signup = `${origin}/signup?next=${encodeURIComponent(next)}`
-      return NextResponse.redirect(signup)
+      const signin = `${origin}/auth/signin?next=${encodeURIComponent(next)}`
+      return NextResponse.redirect(signin)
     }
 
     if (!stripe) {

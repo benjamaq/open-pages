@@ -44,15 +44,15 @@ export default function PeriodList({
               onClick={() => onEdit(p)}
               className="w-full rounded-lg border border-zinc-200 bg-white p-3 text-left hover:border-zinc-300"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div className="flex items-center gap-2 min-w-0">
                   <span className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-green-500' : 'bg-zinc-400'}`} />
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium truncate">
                     {formatDate(p.start_date)} – {formatDate(p.end_date)}
                   </span>
                   <span className="text-xs text-zinc-500">({durationDays(p)} days)</span>
                 </div>
-                {p.dose && <span className="text-xs text-zinc-600">Dose: {p.dose}</span>}
+                {p.dose && <span className="text-xs text-zinc-600 break-words">Dose: {p.dose}</span>}
               </div>
               {p.notes && <div className="mt-1 text-xs italic text-zinc-500">“{p.notes}”</div>}
             </button>
