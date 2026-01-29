@@ -408,11 +408,7 @@ export default function Page() {
                 className="w-full accent-black cursor-pointer"
               />
               <div className="mt-1 flex justify-center">
-                <span
-                  id="spend-slider-hint"
-                  className="inline-flex items-center gap-1 text-[11px] text-neutral-600 bg-white/70 px-2 py-[2px] rounded-full border border-neutral-200 shadow-sm"
-                >
-                  <span className="text-neutral-400">↔︎</span>
+                <span id="spend-slider-hint" className="text-[12px] text-neutral-700">
                   Slide to adjust
                 </span>
               </div>
@@ -513,11 +509,7 @@ export default function Page() {
                 className="w-full accent-black cursor-pointer"
               />
               <div className="mt-1 flex justify-center">
-                <span
-                  id="spend-slider-hint-desktop"
-                  className="inline-flex items-center gap-1 text-[11px] text-neutral-600 bg-white/70 px-2 py-[2px] rounded-full border border-neutral-200 shadow-sm"
-                >
-                  <span className="text-neutral-400">↔︎</span>
+                <span id="spend-slider-hint-desktop" className="text-[12px] text-neutral-700">
                   Slide to adjust
                 </span>
               </div>
