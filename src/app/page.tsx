@@ -506,12 +506,19 @@ export default function Page() {
                 step={5}
                 value={monthlySpend}
                 onChange={(e) => setMonthlySpend(Number(e.target.value) || 0)}
-                className="w-full accent-black"
+                aria-describedby="spend-slider-hint-desktop"
+                className="w-full accent-black cursor-pointer"
               />
               <div className="mt-2 flex justify-between text-xs text-neutral-500">
                 <span>$0</span>
                 <span>$200</span>
                 <span>$400</span>
+              </div>
+              <div className="mt-1 flex items-center justify-end">
+                <span id="spend-slider-hint-desktop" className="text-[11px] text-neutral-500 flex items-center gap-1">
+                  Slide to adjust
+                  <span className="text-neutral-400 animate-pulse">↔︎</span>
+                </span>
               </div>
             </div>
 
@@ -545,13 +552,7 @@ export default function Page() {
             </div>
           </div>
         </div>
-        {/* Small decorative image (hidden on mobile) */}
-        <img
-          src="/final.png"
-          alt=""
-          aria-hidden="true"
-          className="hidden sm:block pointer-events-none select-none absolute right-4 bottom-6 w-40 md:w-48"
-        />
+        {/* Decorative image removed per feedback */}
       </section>
 
       {/* Getting to Know Each Other (How It Works) */}
