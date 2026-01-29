@@ -469,7 +469,7 @@ export default function Page() {
                 loading="lazy"
               />
               <div className="absolute top-3 left-1/2 -translate-x-1/2">
-                <Button className="bg-black/90 hover:bg-black text-white rounded-full px-5 py-2 text-sm font-semibold shadow-md">
+                <Button className="bg-black/90 hover:bg-black text-white rounded-full px-4 py-2 text-[13px] font-semibold shadow-md whitespace-nowrap">
                   Find out which ones are worth keeping
                 </Button>
               </div>
