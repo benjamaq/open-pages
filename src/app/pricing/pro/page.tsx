@@ -65,28 +65,32 @@ export default function ProPricingPage() {
           {/* Removed beta code messaging */}
         </div>
 
-        {/* Billing Toggle */}
+        {/* Billing Toggle (global) */}
         <div className="flex justify-center mb-8">
-          <div className="bg-purple-100 p-1 rounded-lg">
+          <div className="inline-flex rounded-full border border-neutral-300 bg-neutral-100 overflow-hidden shadow-sm">
             <button
+              type="button"
+              aria-pressed={billingPeriod === 'monthly'}
               onClick={() => setBillingPeriod('monthly')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition ${
                 billingPeriod === 'monthly'
-                  ? 'bg-white text-purple-900 shadow-sm'
-                  : 'text-purple-700 hover:text-purple-900'
+                  ? 'bg-white text-neutral-900'
+                  : 'bg-transparent text-neutral-600 hover:text-neutral-800'
               }`}
             >
               Monthly
             </button>
             <button
+              type="button"
+              aria-pressed={billingPeriod === 'yearly'}
               onClick={() => setBillingPeriod('yearly')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition border-l border-neutral-300 ${
                 billingPeriod === 'yearly'
-                  ? 'bg-white text-purple-900 shadow-sm'
-                  : 'text-purple-700 hover:text-purple-900'
+                  ? 'bg-white text-neutral-900'
+                  : 'bg-transparent text-neutral-600 hover:text-neutral-800'
               }`}
             >
-              Yearly <span className="text-gray-600 ml-1">(Save 17%)</span>
+              Yearly <span className="text-neutral-500 ml-1">(Save 17%)</span>
             </button>
           </div>
         </div>
@@ -102,6 +106,35 @@ export default function ProPricingPage() {
             
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900">Premium</h3>
+              {/* Inline, highly visible toggle */}
+              <div className="mt-3 flex justify-center">
+                <div className="inline-flex rounded-full border border-neutral-300 bg-neutral-100 overflow-hidden shadow-sm">
+                  <button
+                    type="button"
+                    aria-pressed={billingPeriod === 'monthly'}
+                    onClick={() => setBillingPeriod('monthly')}
+                    className={`px-3 py-1.5 text-xs font-medium transition ${
+                      billingPeriod === 'monthly'
+                        ? 'bg-white text-neutral-900'
+                        : 'bg-transparent text-neutral-600 hover:text-neutral-800'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={billingPeriod === 'yearly'}
+                    onClick={() => setBillingPeriod('yearly')}
+                    className={`px-3 py-1.5 text-xs font-medium transition border-l border-neutral-300 ${
+                      billingPeriod === 'yearly'
+                        ? 'bg-white text-neutral-900'
+                        : 'bg-transparent text-neutral-600 hover:text-neutral-800'
+                    }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+              </div>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">
                   ${billingPeriod === 'monthly' ? '19' : '149'}
