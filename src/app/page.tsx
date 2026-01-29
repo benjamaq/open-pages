@@ -13,6 +13,7 @@ export default function Page() {
   const carouselRef = useRef<HTMLDivElement | null>(null)
   const [testimonialIndex, setTestimonialIndex] = useState(0)
   const [isAuthed, setIsAuthed] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
 
   useEffect(() => {
     let mounted = true
@@ -1011,12 +1012,41 @@ export default function Page() {
 
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-black mb-2">Premium</h3>
-                <p className="text-sm text-neutral-600">$19/month</p>
+                <div className="mt-2 flex justify-start">
+                  <div className="inline-flex rounded-full border border-neutral-300 bg-neutral-100 overflow-hidden shadow-sm">
+                    <button
+                      type="button"
+                      aria-pressed={billingPeriod === 'monthly'}
+                      onClick={() => setBillingPeriod('monthly')}
+                      className={`px-3 py-1.5 text-xs font-medium transition ${
+                        billingPeriod === 'monthly'
+                          ? 'bg-white text-neutral-900'
+                          : 'bg-transparent text-neutral-600 hover:text-neutral-800'
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={billingPeriod === 'yearly'}
+                      onClick={() => setBillingPeriod('yearly')}
+                      className={`px-3 py-1.5 text-xs font-medium transition border-l border-neutral-300 ${
+                        billingPeriod === 'yearly'
+                          ? 'bg-white text-neutral-900'
+                          : 'bg-transparent text-neutral-600 hover:text-neutral-800'
+                      }`}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="mb-2">
-                <span className="text-5xl font-bold text-black">$19</span>
-                <span className="text-neutral-600">/month</span>
+                <span className="text-5xl font-bold text-black">
+                  {billingPeriod === 'monthly' ? '$19' : '$149'}
+                </span>
+                <span className="text-neutral-600">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
               </div>
               <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">• $12.42/mo • Billed annually</span></div>
 
@@ -1039,7 +1069,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/pricing/pro">
+              <Link href={`/checkout?period=${billingPeriod}`}>
                 <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Get Answers →
                 </Button>
