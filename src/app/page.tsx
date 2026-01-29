@@ -35,67 +35,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-[60] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-neutral-200 shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 lg:px-12 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center">
-            <img
-              src="/BIOSTACKR LOGO 2.png"
-              alt="BioStackr"
-              className="h-10 sm:h-12 w-auto"
-            />
-          </a>
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex items-center gap-6 text-sm text-neutral-600">
-              <a href="#pricing" className="hover:text-neutral-900 transition-colors">
-                Pricing
-              </a>
-              <Link href="/contact" className="hover:text-neutral-900 transition-colors">
-                Contact
-              </Link>
-            </div>
-            {isAuthed ? (
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault()
-                  try {
-                    const supabase = createClient()
-                    await supabase.auth.signOut()
-                    location.href = "/"
-                  } catch {}
-                }}
-              >
-                <Button
-                  size="sm"
-                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-5 font-semibold transition-all"
-                  type="submit"
-                >
-                  Sign out
-                </Button>
-              </form>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link href="/login">
-                  <Button
-                    size="sm"
-                    className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-5 font-semibold transition-all"
-                  >
-                    Sign in
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button
-                    size="sm"
-                    className="bg-[#F4B860] text-[#2C2C2C] hover:brightness-95 rounded-full px-5 font-semibold transition-all"
-                  >
-                    Sign up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
 
       {/* Hero Section - Mobile only */}
       <section
@@ -355,7 +294,7 @@ export default function Page() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start text-left">
               <div>
                 <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">THE PROBLEM</div>
-                <p className="text-[17px] md:text-[18px] text-neutral-800">Reddit isn&apos;t research.</p>
+                <p className="text-[17px] md:text-[18px] text-neutral-800">Instagram isn&apos;t research.</p>
               </div>
               <div>
                 <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">THE REALITY</div>
