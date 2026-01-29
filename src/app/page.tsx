@@ -194,7 +194,7 @@ export default function Page() {
           <div className="relative">
             <div
               ref={carouselRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-1"
+              className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth px-1"
               style={{ scrollSnapType: 'x mandatory' }}
               onScroll={() => {
                 const el = carouselRef.current
@@ -205,61 +205,77 @@ export default function Page() {
               }}
             >
               {/* 7 testimonials */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Identifying supplements that weren’t contributing</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Identifying supplements that weren’t contributing
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   Dropped 4 supplements. <span className="font-semibold">Saving €90/month.</span> Should’ve done this years ago.
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— Marcus T., saving €90/month</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— Marcus T., saving €90/month</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Reducing the stack without losing results</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Reducing the stack without losing results
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   From 12 bottles to 3 that actually moved the needle. <span className="font-semibold">Same results, less clutter.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— Jen, dropped 9 supplements</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— Jen, dropped 9 supplements</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Isolating what actually made a difference</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Isolating what actually made a difference
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   Thought it was all guesswork. <span className="font-semibold">Only one thing really helped.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— @biohack_ben, Whoop user</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— @biohack_ben, Whoop user</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Different brands can perform differently</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Different brands can perform differently
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   Same ingredient, two brands. One made a difference, one didn’t. <span className="font-semibold">Now I know which to keep.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— Sophie K., tested 2 brands</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— Sophie K., tested 2 brands</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Reducing complexity in the daily routine</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Reducing complexity in the daily routine
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   <span className="font-semibold">Less really is more.</span> Fewer pills, clearer routine.
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— David, simplified his stack</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— David, simplified his stack</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Sleep consistency on demanding schedules</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Sleep consistency on demanding schedules
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   HRV steadier on the nights I take it. <span className="font-semibold">Fewer 3am crashes.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— ER nurse, nights</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— ER nurse, nights</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Clarifying what’s worth paying for</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Clarifying what’s worth paying for
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   I stopped guessing. <span className="font-semibold">Now I know what’s worth paying for.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— Alex P.</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— Alex P.</p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm w-[300px] snap-start shrink-0">
-                <div className="text-xs tracking-widest uppercase text-neutral-500 font-semibold">Resetting after years of trial and error</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-900">
+              <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
+                <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
+                  Resetting after years of trial and error
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
                   After years of trying everything, I finally <span className="font-semibold">reset to what works.</span>
                 </p>
-                <p className="mt-3 text-xs text-neutral-600">— Priya, back to basics</p>
+                <p className="mt-4 text-[12px] text-neutral-500">— Priya, back to basics</p>
               </div>
             </div>
             {/* Arrows */}
