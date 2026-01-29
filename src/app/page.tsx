@@ -404,12 +404,19 @@ export default function Page() {
                 step={5}
                 value={monthlySpend}
                 onChange={(e) => setMonthlySpend(Number(e.target.value) || 0)}
-                className="w-full accent-black"
+                aria-describedby="spend-slider-hint"
+                className="w-full accent-black cursor-pointer"
               />
               <div className="mt-2 flex justify-between text-xs text-neutral-500">
                 <span>$0</span>
                 <span>$200</span>
                 <span>$400</span>
+              </div>
+              <div className="mt-1 flex items-center justify-end">
+                <span id="spend-slider-hint" className="text-[11px] text-neutral-500 flex items-center gap-1">
+                  Slide to adjust
+                  <span className="text-neutral-400 animate-pulse">↔︎</span>
+                </span>
               </div>
             </div>
             {/* Yearly Waste */}
