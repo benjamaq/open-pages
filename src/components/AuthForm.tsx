@@ -235,16 +235,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
             ? 'Account created successfully! Welcome from Reddit! 🎉 Redirecting...'
             : 'Account created successfully! Redirecting...'
           setMessage(successMessage)
-          setTimeout(() => {
-            try { sessionStorage.setItem('justSignedUp', '1') } catch {}
-            try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
-            if (nextUrl) {
-              router.push(nextUrl)
-            } else {
-              router.push('/onboarding')
+          try { sessionStorage.setItem('justSignedUp', '1') } catch {}
+          try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
+          // Redirect immediately to preserve checkout flow
+          if (nextUrl) {
+            // Use hard navigation to ensure cookies are seen by server route
+            if (typeof window !== 'undefined') {
+              window.location.assign(nextUrl)
+              return
             }
+            router.replace(nextUrl)
+            return
+          } else {
+            router.replace('/onboarding')
             router.refresh()
-          }, 1000)
+          }
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
