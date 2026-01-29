@@ -38,8 +38,8 @@ export async function GET(req: NextRequest) {
     // If not signed in → go to sign-in (with create option), then bounce back here to start Stripe
     if (!auth?.user) {
       const next = `/api/billing/start?plan=${encodeURIComponent(plan)}&period=${encodeURIComponent(period)}${safeFrom ? `&returnTo=${encodeURIComponent(safeFrom)}` : ''}`
-      const signin = `${origin}/auth/signin?next=${encodeURIComponent(next)}`
-      return NextResponse.redirect(signin)
+      const signup = `${origin}/auth/signup?next=${encodeURIComponent(next)}`
+      return NextResponse.redirect(signup)
     }
 
     if (!stripe) {
