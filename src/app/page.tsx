@@ -441,7 +441,7 @@ export default function Page() {
               </p>
               <div className="pt-2">
                 <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
-                  Find out which ones are worth keeping →
+                  Find out which ones are worth keeping
                 </Button>
               </div>
             </div>
@@ -544,7 +544,7 @@ export default function Page() {
               </p>
               <div className="pt-2">
                 <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
-                  Find out which ones are worth keeping →
+                  Find out which ones are worth keeping
                 </Button>
               </div>
             </div>
