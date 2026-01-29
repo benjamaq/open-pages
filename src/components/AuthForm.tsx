@@ -239,6 +239,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
           // Redirect immediately to preserve checkout flow
           if (nextUrl) {
+            // If next points to billing start, route via /checkout to ensure session is ready
+            try {
+              const u = new URL(nextUrl, window.location.origin)
+              if (u.pathname.startsWith('/api/billing/start')) {
+                const plan = u.searchParams.get('plan') || 'premium'
+                const period = u.searchParams.get('period') || 'monthly'
+                window.location.assign(`/checkout?plan=${encodeURIComponent(plan)}&period=${encodeURIComponent(period)}`)
+                return
+              }
+            } catch {}
             // Use hard navigation to ensure cookies are seen by server route
             if (typeof window !== 'undefined') {
               window.location.assign(nextUrl)
