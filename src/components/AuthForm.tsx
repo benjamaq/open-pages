@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { trackEvent, attachAttributionToParams, fireMetaEvent } from '@/lib/analytics'
 
@@ -19,22 +19,24 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
-  // Read and sanitize ?next= for post-auth redirect (e.g., back to /api/billing/start...)
+  // Read and sanitize ?next= without using window to avoid hydration mismatches
   const nextUrl = useMemo(() => {
     try {
-      if (typeof window === 'undefined') return null
-      const p = new URLSearchParams(window.location.search).get('next')
+      const p = searchParams?.get('next') || ''
+      // eslint-disable-next-line no-console
+      try { console.log('[auth] decoded next param (from useSearchParams):', p) } catch {}
       if (!p) return null
       if (p.startsWith('/')) return p
-      const u = new URL(p, window.location.origin)
-      if (u.origin === window.location.origin) return u.pathname + (u.search || '')
+      // As a safety, allow absolute same-origin links
+      // We don't have access to window.origin during SSR; assume relative only
       return null
     } catch {
       return null
     }
-  }, [])
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
