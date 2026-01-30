@@ -12,8 +12,13 @@ export default function UploadInstructions() {
             <li>Tap your profile picture (top right)</li>
             <li>Tap “Export All Health Data”</li>
             <li>Wait for export to finish (few minutes)</li>
-            <li>Save the export.zip file</li>
-            <li>Upload the export.zip here</li>
+            <li>Save the <span className="font-mono">export.zip</span> file</li>
+            <li>Upload the <span className="font-mono">export.zip</span> here
+              <span className="text-xs text-gray-500"> (no need to open it)</span>
+            </li>
+            <li className="text-gray-600">
+              Already unzipped? Upload the file named <span className="font-mono">export.xml</span> (not <span className="font-mono">export_cda.xml</span>).
+            </li>
           </ol>
         </details>
         <details className="rounded-md border border-gray-200 p-3">

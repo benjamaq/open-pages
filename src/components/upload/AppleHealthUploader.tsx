@@ -25,6 +25,18 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
       setError('Please upload Apple Health export.zip or export.xml')
       return
     }
+    // If the user picked an XML from the Apple Health export, enforce correct filename
+    if (isXml) {
+      const base = (name.split('/').pop() || name)
+      if (base === 'export_cda.xml') {
+        setError('Please select the Apple Health file named "export.xml" (not "export_cda.xml").')
+        return
+      }
+      if (base !== 'export.xml') {
+        setError('Please select the Apple Health file named "export.xml" from your exported folder.')
+        return
+      }
+    }
 
     setIsUploading(true)
     try {
@@ -80,8 +92,9 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Upload Apple Health data (optional)</h2>
         <p className="text-slate-700 mt-2">
-          If you use Apple Health, you can upload your data to speed things up.
-          BioStackr also works perfectly if you skip this and check in manually.
+          Easiest: upload the <span className="font-mono px-1.5 py-0.5 rounded bg-slate-100">export.zip</span> you downloaded from Apple&nbsp;Health.
+          If you already unzipped it, choose the file named <span className="font-mono px-1.5 py-0.5 rounded bg-slate-100">export.xml</span>
+          <span className="text-slate-500"> (not <span className="font-mono">export_cda.xml</span>)</span>. You can also continue without uploading.
         </p>
       </div>
 
@@ -93,8 +106,24 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
           <li>Tap your profile picture (top right)</li>
           <li>Tap Export All Health Data</li>
           <li>Wait for the export to finish</li>
-          <li>Upload the ZIP file here<br/><span className="text-xs text-slate-500">(You don’t need to open it)</span></li>
+          <li>Upload the <span className="font-mono">export.zip</span> here<br/><span className="text-xs text-slate-500">(no need to open it)</span></li>
         </ol>
+      </div>
+
+      {/* Visual hint for correct file */}
+      <div className="flex items-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+        <svg className="w-5 h-5 text-slate-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M4 2a2 2 0 00-2 2v12c0 1.1.9 2 2 2h8.5a1 1 0 00.7-.3l3-3a1 1 0 00.3-.7V4a2 2 0 00-2-2H4zm8 12h2l-2 2v-2zM6 6h6v2H6V6zm0 3h6v2H6V9z" />
+        </svg>
+        <div className="text-sm">
+          <div className="font-medium text-slate-900 mb="1">Choose the correct file</div>
+          <ul className="text-slate-700 text-sm space-y-1">
+            <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.zip</span> (recommended)</li>
+            <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.xml</span> (if you already unzipped)</li>
+            <li><span className="text-rose-600">✕</span> <span className="font-mono">export_cda.xml</span> (this is the clinical export — not supported)</li>
+            <li className="text-slate-500">Other folders like <span className="font-mono">workout-routes/</span> or <span className="font-mono">electrocardiograms/</span> can be ignored.</li>
+          </ul>
+        </div>
       </div>
 
       {/* Uploader */}
@@ -130,11 +159,11 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
                 onClick={() => (document.getElementById('apple-health-zip') as HTMLInputElement)?.click()}
                 className="h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
               >
-                Upload Apple Health ZIP
+                Upload export.zip (or choose export.xml)
               </button>
               {fileName && <div className="text-xs text-slate-600">Selected: {fileName}</div>}
               <div className="text-xs text-slate-500">
-                We automatically extract what we need. Extra folders and files are normal — you don’t need to touch them.
+                We’ll find <span className="font-mono">export.xml</span> inside your ZIP automatically. Extra folders/files are expected.
               </div>
             </div>
           )}
