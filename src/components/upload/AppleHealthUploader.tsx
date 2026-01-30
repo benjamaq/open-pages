@@ -116,12 +116,12 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
           <path d="M4 2a2 2 0 00-2 2v12c0 1.1.9 2 2 2h8.5a1 1 0 00.7-.3l3-3a1 1 0 00.3-.7V4a2 2 0 00-2-2H4zm8 12h2l-2 2v-2zM6 6h6v2H6V6zm0 3h6v2H6V9z" />
         </svg>
         <div className="text-sm">
-          <div className="font-medium text-slate-900 mb="1">Choose the correct file</div>
+          <div className="font-medium text-slate-900 mb-1">Choose the correct file</div>
           <ul className="text-slate-700 text-sm space-y-1">
             <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.zip</span> (recommended)</li>
             <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.xml</span> (if you already unzipped)</li>
-            <li><span className="text-rose-600">✕</span> <span className="font-mono">export_cda.xml</span> (this is the clinical export — not supported)</li>
-            <li className="text-slate-500">Other folders like <span className="font-mono">workout-routes/</span> or <span className="font-mono">electrocardiograms/</span> can be ignored.</li>
+            <li><span className="text-rose-600">✕</span> <span class="text-slate-700">export_cda.xml</span> (this is the clinical export — not supported)</li>
+            <li className="text-slate-500">Other folders like <span className="font-mono">workout-routes/</span> and <span className="text-slate-700">electrocardiograms/</span> are expected — you can ignore them.</li>
           </ul>
         </div>
       </div>

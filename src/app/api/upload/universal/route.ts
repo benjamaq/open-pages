@@ -126,7 +126,9 @@ export async function POST(req: NextRequest) {
       if (name.endsWith('.csv')) {
         const text = await f.text()
         const firstLine = text.split('\n')[0] || ''
-        const isWhoop = firstLine.startsWith('Cycle start time,')
+        const normalizedHead = firstLine.replace(/^\uFEFF/, '').trim().toLowerCase()
+        // WHOOP CSVs have a "Cycle start time" column (often quoted). Use regex for robustness.
+        const isWhoop = /\bcycle start time\b/.test(normalizedHead)
         if (isWhoop) {
           const parsed = parseWhoopFile(name, text)
           let sleepRows: any[] = []
@@ -366,6 +368,12 @@ async function upsertGenericCSV(userId: string, text: string): Promise<number> {
     sleep: headers.findIndex(h => h === 'sleep_quality' || h.includes('sleep')),
     hrv: headers.findIndex(h => h.includes('hrv')),
     rhr: headers.findIndex(h => h.includes('resting_hr') || h.includes('rhr')),
+    steps: headers.findIndex(h =>
+      h === 'steps' ||
+      h.includes('step count') ||
+      h.includes('total steps') ||
+      h.includes('daily steps')
+    ),
   }
   if (idx.date === -1) return 0
   const entries: Entry[] = []
@@ -376,6 +384,7 @@ async function upsertGenericCSV(userId: string, text: string): Promise<number> {
     const sleepVal = idx.sleep >= 0 ? parseFloat(parts[idx.sleep] || '') : NaN
     const hrvVal = idx.hrv >= 0 ? parseFloat(parts[idx.hrv] || '') : NaN
     const rhrVal = idx.rhr >= 0 ? parseFloat(parts[idx.rhr] || '') : NaN
+    const stepsVal = idx.steps >= 0 ? parseFloat(parts[idx.steps] || '') : NaN
     entries.push({
       user_id: userId,
       local_date: d,
@@ -384,7 +393,8 @@ async function upsertGenericCSV(userId: string, text: string): Promise<number> {
       wearables: {
         source: 'CSV',
         hrv: Number.isFinite(hrvVal) ? Math.round(hrvVal) : null,
-        resting_hr_bpm: Number.isFinite(rhrVal) ? Math.round(rhrVal) : null
+        resting_hr_bpm: Number.isFinite(rhrVal) ? Math.round(rhrVal) : null,
+        steps: Number.isFinite(stepsVal) ? Math.round(stepsVal) : null,
       }
     })
   }

@@ -337,7 +337,22 @@ export default function UploadCenter() {
                 <>
                   <div className="text-lg font-semibold">Baseline enhanced</div>
                   <div className="text-sm text-gray-700 mt-1">
-                    {Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0))} usable day{Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0)) === 1 ? '' : 's'} imported{Array.isArray(Object.keys(lastResult?.results?.sources || {})) && Object.keys(lastResult.results.sources).length > 0 ? ` from ${Object.keys(lastResult.results.sources)[0]}` : ''}.
+                    {(() => {
+                      const days = Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0))
+                      // Prefer detected source(s) from the upload response; fall back to wearableStatus
+                      const srcMap = (lastResult?.results?.sources && typeof lastResult.results.sources === 'object') ? lastResult.results.sources as Record<string, number> : {}
+                      const srcKey = (() => {
+                        const entries = Object.entries(srcMap || {})
+                        if (entries.length > 0) {
+                          // Pick the source with the highest day count
+                          entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+                          return entries[0]?.[0]
+                        }
+                        const ws = Array.isArray(wearableStatus?.wearable_sources) && wearableStatus.wearable_sources.length > 0 ? wearableStatus.wearable_sources[0] : undefined
+                        return ws
+                      })()
+                      return `${days} usable day${days === 1 ? '' : 's'} imported${srcKey ? ` from ${srcKey}` : ''}.`
+                    })()}
                   </div>
                   <div className="text-sm text-gray-700 mt-2">
                     This data strengthens your baseline and improves confidence across every supplement you test.
@@ -384,7 +399,16 @@ export default function UploadCenter() {
               <div className="mt-2 text-center text-sm text-gray-700">
                 {(() => {
                   const days = Number(((wearableStatus?.wearable_days_imported ?? lastResult?.results?.daysUpserted) ?? 0))
-                  const src = Array.isArray(wearableStatus?.wearable_sources) && wearableStatus!.wearable_sources.length > 0 ? wearableStatus!.wearable_sources[0] : undefined
+                  const srcMap = (lastResult?.results?.sources && typeof lastResult.results.sources === 'object') ? lastResult.results.sources as Record<string, number> : {}
+                  const src = (() => {
+                    const entries = Object.entries(srcMap || {})
+                    if (entries.length > 0) {
+                      entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+                      return entries[0]?.[0]
+                    }
+                    const ws = Array.isArray(wearableStatus?.wearable_sources) && wearableStatus!.wearable_sources.length > 0 ? wearableStatus!.wearable_sources[0] : undefined
+                    return ws
+                  })()
                   return `${days} ${days === 1 ? 'day' : 'days'} of usable health data imported${src ? ` from ${src}` : ''}.`
                 })()}
               </div>

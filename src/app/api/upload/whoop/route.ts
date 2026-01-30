@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import JSZip from 'jszip'
 
 // ============================================
 // PARSING HELPERS - TESTED AND WORKING
@@ -55,21 +56,20 @@ function toNum(val: string): number | null {
 // FILE TYPE DETECTION
 // ============================================
 
-type WhoopFileType = 'sleeps' | 'physiological' | 'journal' | 'workouts' | 'unknown'
+type WhoopType = 'sleeps' | 'physiological' | 'journal' | 'workouts' | 'unknown'
 
-function detectFileType(firstLine: string): WhoopFileType {
-  // All Whoop files start with "Cycle start time"
-  if (!firstLine.startsWith('Cycle start time')) {
-    return 'unknown'
-  }
-  
-  // Differentiate by unique columns
-  if (firstLine.includes('Question text')) return 'journal'
-  if (firstLine.includes('Workout start time')) return 'workouts'
-  if (firstLine.includes('Recovery score %')) return 'physiological'
-  if (firstLine.includes('Sleep performance %')) return 'sleeps'
-  
-  return 'unknown'
+function detectFileType(firstLine: string): WhoopType {
+  // Normalize header: strip BOM, trim, lowercase, remove quotes
+  const header = firstLine.replace(/^\uFEFF/, '').trim().toLowerCase().replace(/"/g, '')
+  // Must contain cycle start time somewhere in header row to be a WHOOP CSV
+  if (!header.includes('cycle start time')) return 'unknown'
+  // Decide specific WHOOP file type by distinctive column names
+  if (header.includes('question text')) return 'journal'
+  if (header.includes('workout start')) return 'workouts'
+  if (header.includes('recovery score')) return 'physiological'
+  if (header.includes('sleep performance')) return 'sleeps'
+  // Default to sleeps if it's clearly a WHOOP CSV but unknown variant
+  return 'sleeps'
 }
 
 // ============================================
@@ -238,58 +238,96 @@ export async function POST(request: NextRequest) {
     const physRows: PhysRow[] = []
     
     for (const file of files) {
-      console.log(`[Whoop Upload] Processing: ${file.name} (${file.size} bytes)`)
+      console.log(`[Whoop Upload] Processing: ${file.name} (${(file as any)?.size ?? 0} bytes)`)
+      const lower = (file.name || '').toLowerCase()
+      const isZip = lower.endsWith('.zip')
+      const isCsv = lower.endsWith('.csv')
+      if (isZip) {
+        // Accept WHOOP ZIP export (best UX). Extract CSVs and parse.
+        try {
+          const buf = await file.arrayBuffer()
+          const zip = await JSZip.loadAsync(buf)
+          const entries = Object.values(zip.files) as JSZip.JSZipObject[]
+          if (!entries.length) {
+            results.errors.push(`${file.name}: ZIP is empty`)
+            continue
+          }
+          for (const ent of entries) {
+            if (!ent.name.toLowerCase().endsWith('.csv')) continue
+            const text = await ent.async('string')
+            const firstLine = text.split('\n')[0] || ''
+            const fileType = detectFileType(firstLine)
+            if (fileType === 'sleeps') {
+              const data = parseSleeps(text)
+              sleepRows.push(...data)
+              results.sleeps += data.length
+              results.files_processed.push(`${ent.name}: ${data.length} sleep entries`)
+            } else if (fileType === 'physiological') {
+              const data = parsePhysiological(text)
+              physRows.push(...data)
+              results.physiological += data.length
+              results.files_processed.push(`${ent.name}: ${data.length} recovery/HRV entries`)
+            } else if (fileType === 'journal') {
+              const data = parseJournal(text)
+              results.journal += data.length
+              results.files_processed.push(`${ent.name}: ${data.length} journal entries`)
+            } else if (fileType === 'workouts') {
+              results.files_processed.push(`${ent.name}: Skipped (workouts not needed)`)
+            } else {
+              // Ignore unrelated CSVs inside the ZIP
+              results.files_processed.push(`${ent.name}: Unrecognized WHOOP CSV — skipped`)
+            }
+          }
+          continue
+        } catch (e: any) {
+          console.error('[Whoop Upload] ZIP parse failed:', e?.message || e)
+          results.errors.push(`${file.name}: Failed to read ZIP`)
+          continue
+        }
+      }
       
-      const text = await file.text()
-      
-      if (!text || text.trim().length === 0) {
-        results.errors.push(`${file.name}: Empty file`)
+      if (isCsv) {
+        const text = await file.text()
+        if (!text || text.trim().length === 0) {
+          results.errors.push(`${file.name}: Empty file`)
+          continue
+        }
+        const firstLine = text.split('\n')[0] || ''
+        const fileType = detectFileType(firstLine)
+        if (fileType === 'unknown') {
+          results.errors.push(`${file.name}: Not a recognized Whoop CSV (first header must be "Cycle start time")`)
+          continue
+        }
+        switch (fileType) {
+          case 'sleeps': {
+            const data = parseSleeps(text)
+            sleepRows.push(...data)
+            results.sleeps += data.length
+            results.files_processed.push(`${file.name}: ${data.length} sleep entries`)
+            break
+          }
+          case 'physiological': {
+            const data = parsePhysiological(text)
+            physRows.push(...data)
+            results.physiological += data.length
+            results.files_processed.push(`${file.name}: ${data.length} recovery/HRV entries`)
+            break
+          }
+          case 'journal': {
+            const data = parseJournal(text)
+            results.journal += data.length
+            results.files_processed.push(`${file.name}: ${data.length} journal entries`)
+            break
+          }
+          case 'workouts': {
+            results.files_processed.push(`${file.name}: Skipped (workouts not needed)`)
+            break
+          }
+        }
         continue
       }
       
-      const firstLine = text.split('\n')[0] || ''
-      console.log(`[Whoop Upload] First line preview: ${firstLine.substring(0, 100)}...`)
-      
-      const fileType = detectFileType(firstLine)
-      console.log(`[Whoop Upload] Detected type: ${fileType}`)
-      
-      if (fileType === 'unknown') {
-        results.errors.push(`${file.name}: Not a recognized Whoop CSV (first header must be "Cycle start time")`)
-        continue
-      }
-      
-      switch (fileType) {
-        case 'sleeps': {
-          const data = parseSleeps(text)
-          sleepRows.push(...data)
-          results.sleeps += data.length
-          results.files_processed.push(`${file.name}: ${data.length} sleep entries`)
-          console.log(`[Whoop Upload] Parsed ${data.length} sleep entries`)
-          break
-        }
-        
-        case 'physiological': {
-          const data = parsePhysiological(text)
-          physRows.push(...data)
-          results.physiological += data.length
-          results.files_processed.push(`${file.name}: ${data.length} recovery/HRV entries`)
-          console.log(`[Whoop Upload] Parsed ${data.length} physiological entries`)
-          break
-        }
-        
-        case 'journal': {
-          const data = parseJournal(text)
-          results.journal += data.length
-          results.files_processed.push(`${file.name}: ${data.length} journal entries`)
-          console.log(`[Whoop Upload] Parsed ${data.length} journal entries`)
-          break
-        }
-        
-        case 'workouts': {
-          results.files_processed.push(`${file.name}: Skipped (workouts not needed)`)
-          break
-        }
-      }
+      results.errors.push(`${file.name}: Unsupported file type (upload WHOOP ZIP or CSV)`)
     }
 
     // Merge by date and upsert into daily_entries

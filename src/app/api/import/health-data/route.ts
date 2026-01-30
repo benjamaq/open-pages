@@ -353,6 +353,12 @@ export async function POST(req: NextRequest) {
           }
         }
         if (finalSleep == null) continue
+        // Optional: steps (common across Fitbit/Garmin/Google Fit exports)
+        const stepsVal = extractValueCI(
+          row,
+          'steps', 'step count', 'total steps', 'daily steps'
+        )
+        const stepsNum = stepsVal != null && isFinite(stepsVal) ? Math.round(stepsVal) : null
         entries.push({
           user_id: userId,
           local_date: d,
@@ -360,7 +366,7 @@ export async function POST(req: NextRequest) {
           sleep_hours: null,
           tags: [],
           journal: null,
-          wearables: {}
+          wearables: (stepsNum != null ? { steps: stepsNum } : {})
         })
       }
       }
