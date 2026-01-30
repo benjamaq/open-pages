@@ -218,8 +218,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 setTimeout(() => {
                   try { sessionStorage.setItem('justSignedUp', '1') } catch {}
                   try { document.cookie = 'bs_cr=1; Max-Age=1800; Path=/; SameSite=Lax' } catch {}
-                  router.push('/onboarding')
-                  router.refresh()
+                  try {
+                    const urlParams = new URLSearchParams(window.location.search)
+                    const nxt = urlParams.get('next')
+                    if (nxt && nxt.startsWith('/')) {
+                      window.location.href = nxt
+                    } else {
+                      window.location.href = '/onboarding'
+                    }
+                  } catch {
+                    window.location.href = '/onboarding'
+                  }
                 }, 2000)
                 return
               }
@@ -257,8 +266,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
             router.replace(nextUrl)
             return
           } else {
-            router.replace('/onboarding')
-            router.refresh()
+            if (typeof window !== 'undefined') {
+              window.location.href = '/onboarding'
+            } else {
+              router.replace('/onboarding')
+              router.refresh()
+            }
           }
         }
       } else {
@@ -272,11 +285,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
         } else {
           try { sessionStorage.setItem('justSignedUp', '1') } catch {}
           if (nextUrl) {
-            router.push(nextUrl)
+            if (typeof window !== 'undefined') {
+              window.location.href = nextUrl
+            } else {
+              router.replace(nextUrl)
+            }
           } else {
-            router.push('/dashboard')
+            if (typeof window !== 'undefined') {
+              window.location.href = '/dashboard'
+            } else {
+              router.replace('/dashboard')
+            }
           }
-          router.refresh()
         }
       }
     } catch {
