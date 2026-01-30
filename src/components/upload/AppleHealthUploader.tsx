@@ -12,10 +12,22 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const [uploaded, setUploaded] = useState(false)
+  const [guidance, setGuidance] = useState<string | null>(null)
 
   async function handleFile(file: File) {
     setError(null)
     setFileName(file.name)
+    try {
+      const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent || '')
+      const mb = file.size / (1024 * 1024)
+      if (isMobile && mb > 50) {
+        setGuidance('Large files upload best from a computer. Please use desktop with Wi‑Fi for best results.')
+      } else if (!isMobile && mb > 50 && mb <= 200) {
+        setGuidance('This may take 1–2 minutes depending on your connection.')
+      } else {
+        setGuidance('Ready to upload')
+      }
+    } catch {}
     try { console.log('[uploader] File selected:', file?.name, file?.size, file?.type) } catch {}
 
     const name = (file.name || '').toLowerCase()
@@ -120,7 +132,7 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
           <ul className="text-slate-700 text-sm space-y-1">
             <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.zip</span> (recommended)</li>
             <li><span className="text-emerald-600">✔</span> <span className="font-mono">export.xml</span> (if you already unzipped)</li>
-            <li><span className="text-rose-600">✕</span> <span class="text-slate-700">export_cda.xml</span> (this is the clinical export — not supported)</li>
+            <li><span className="text-rose-600">✕</span> <span className="text-slate-700">export_cda.xml</span> (this is the clinical export — not supported)</li>
             <li className="text-slate-500">Other folders like <span className="font-mono">workout-routes/</span> and <span className="text-slate-700">electrocardiograms/</span> are expected — you can ignore them.</li>
           </ul>
         </div>
@@ -165,6 +177,7 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
               <div className="text-xs text-slate-500">
                 We’ll find <span className="font-mono">export.xml</span> inside your ZIP automatically. Extra folders/files are expected.
               </div>
+              {guidance && <div className="text-xs text-slate-700">{guidance}</div>}
             </div>
           )}
         </div>

@@ -73,7 +73,7 @@ export function DashboardUnifiedPanel() {
       } catch { setHasDaily(false) }
       // Detailed wearable status for enhanced UI
       try {
-        const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+        const ws = await fetch('/api/user/wearable-status?since=all', { cache: 'no-store' })
         if (!mounted) return
         if (ws.ok) {
           const wj = await ws.json()
@@ -123,6 +123,15 @@ export function DashboardUnifiedPanel() {
         const days = Number(url.searchParams.get('days') || '')
         const source = url.searchParams.get('source') || undefined
         setShowUploadSuccess({ days: isFinite(days) && days > 0 ? days : undefined, source })
+        // Snooze reminder prompts to avoid stacking modals after upload success
+        try {
+          const SNOOZE_MS = 10 * 60 * 1000 // 10 minutes
+          const until = Date.now() + SNOOZE_MS
+          localStorage.setItem('bs_reminder_snooze_until', String(until))
+          // Mark that user uploaded wearables in this session to skip education popups
+          localStorage.setItem('bs_uploaded_wearables', '1')
+          localStorage.setItem('bs_uploaded_at', String(Date.now()))
+        } catch {}
         // Clear the flag from URL
         url.searchParams.delete('upload'); url.searchParams.delete('days'); url.searchParams.delete('source'); url.searchParams.delete('first')
         window.history.replaceState({}, '', url.toString())
@@ -266,18 +275,29 @@ export function DashboardUnifiedPanel() {
       const totalDays = Number(progress?.checkins?.totalDistinctDays || 0)
       const enabled = Boolean(settings?.reminder_enabled)
       const dismissed = Boolean(settings?.reminder_popup_dismissed)
-      const shouldShow = totalDays >= 1 && !enabled && !dismissed
+      const shouldByDay = totalDays >= 1 && !enabled && !dismissed
+      // Snooze gating (avoid popping over other modals or right after uploads)
+      let blockedBySnooze = false
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('bs_reminder_snooze_until') : null
+        const until = raw ? Number(raw) : 0
+        blockedBySnooze = Number.isFinite(until) && Date.now() < until
+      } catch {}
+      const blockedByOtherModal = Boolean(showUploadSuccess)
+      const shouldShow = shouldByDay && !blockedBySnooze && !blockedByOtherModal
       setShowReminder(shouldShow)
       try {
         console.log('Reminder gating:', {
           totalDays,
           reminder_enabled: enabled,
           reminder_popup_dismissed: dismissed,
+          blockedBySnooze,
+          blockedByOtherModal,
           showReminder: shouldShow
         })
       } catch {}
     } catch {}
-  }, [progress, settings, settingsLoaded])
+  }, [progress, settings, settingsLoaded, showUploadSuccess])
 
   // Commitment moment trigger (Day 3-5 inclusive, once)
   useEffect(() => {
@@ -563,15 +583,26 @@ export function DashboardUnifiedPanel() {
                     </div>
                     {/* Skip list */}
                     {(() => {
+                      // Only show "Scheduled OFF" in active rotation phase, or when API reports actual OFF taken today.
+                      const phase = String((progress as any)?.rotation?.phase || '')
                       const apiToday = (progress as any)?.checkins?.todaySkippedNames
-                      let names: string[] = Array.isArray(apiToday) ? apiToday as string[] : []
-                      // Fallback: if today's actual OFF not saved yet, show planned rotation skip names
-                      if (names.length === 0) {
-                        if (Array.isArray(overrideSkipNames) && overrideSkipNames.length > 0) {
-                          names = overrideSkipNames
-                        } else if (Array.isArray((progress as any)?.rotation?.action?.skip)) {
-                          names = ((progress as any).rotation.action.skip as Array<{ id: string; name: string }>).map(x => String(x.name || ''))
-                        }
+                      const apiNames: string[] = Array.isArray(apiToday) ? apiToday as string[] : []
+                      if (apiNames.length > 0) {
+                        return (
+                          <div>
+                            <div className="font-medium">Scheduled OFF today ({apiNames.length}):</div>
+                            <ul className="mt-1 list-disc list-inside">
+                              {apiNames.map((nm: string) => (
+                                <li key={nm}>{abbreviateSupplementName(String(nm || ''))}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      }
+                      if (phase !== 'rotation') return null
+                      let names: string[] = []
+                      if (Array.isArray((progress as any)?.rotation?.action?.skip)) {
+                        names = ((progress as any).rotation.action.skip as Array<{ id: string; name: string }>).map(x => String(x.name || ''))
                       }
                       return names.length > 0 ? (
                         <div>
@@ -864,10 +895,19 @@ export function DashboardUnifiedPanel() {
           <>
             <div className="text-sm text-gray-800">
               Head start: <span className="font-medium">{Number(wearableStatus?.wearable_days_imported || 0)}</span> {Number(wearableStatus?.wearable_days_imported || 0) === 1 ? 'usable day' : 'usable days'} imported
+              {Array.isArray(wearableStatus?.wearable_sources) && wearableStatus.wearable_sources.length > 0 && (() => {
+                const clean = (wearableStatus.wearable_sources as string[]).filter((s: string) => String(s || '').toLowerCase() !== 'wearable')
+                return clean.length > 0 ? (<span className="text-gray-600"> ({clean.join(' + ')})</span>) : null
+              })()}
             </div>
             {wearableStatus?.wearable_date_range_start && wearableStatus?.wearable_date_range_end && (
               <div className="mt-1 text-sm text-gray-800">
-                Date range: {new Date(wearableStatus.wearable_date_range_start).toLocaleString(undefined, { month: 'short', year: 'numeric' })} – {new Date(wearableStatus.wearable_date_range_end).toLocaleString(undefined, { month: 'short', year: 'numeric' })}
+                Date range (all time): {new Date(wearableStatus.wearable_date_range_start).toLocaleString(undefined, { month: 'short', year: 'numeric' })} – {new Date(wearableStatus.wearable_date_range_end).toLocaleString(undefined, { month: 'short', year: 'numeric' })}
+              </div>
+            )}
+            {wearableStatus?.wearable_last_upload_at && (
+              <div className="mt-1 text-xs text-gray-600">
+                Last synced: {new Date(wearableStatus.wearable_last_upload_at).toLocaleString()}
               </div>
             )}
             <div className="mt-4 text-sm text-gray-500 italic">
@@ -910,10 +950,10 @@ export function DashboardUnifiedPanel() {
               This improves confidence and can reduce the time needed to reach clear results.
             </p>
           </div>
-          <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-center">
             <button
               onClick={() => setShowUploadSuccess(null)}
-              className="inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90"
+                className="inline-flex items-center justify-center h-10 rounded-lg bg-gray-900 text-white px-4 leading-none hover:opacity-90"
             >
               Continue to Dashboard
             </button>

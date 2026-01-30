@@ -40,6 +40,19 @@ function parseCSV(text: string): string[][] {
   })
 }
 
+function norm(s: string): string {
+  return String(s || '').replace(/^\uFEFF/, '').trim().toLowerCase().replace(/^"+|"+$/g, '')
+}
+
+function idxOf(h: string[], candidates: string[]): number {
+  const H = h.map(norm)
+  for (const cand of candidates) {
+    const j = H.indexOf(norm(cand))
+    if (j !== -1) return j
+  }
+  return -1
+}
+
 function toDate(dateStr: string): string {
   // "2025-09-12 22:43:24" -> "2025-09-12"
   if (!dateStr || dateStr.length < 10) return ''
@@ -89,11 +102,11 @@ function parseSleeps(text: string): SleepRow[] {
   if (rows.length < 2) return []
   
   const h = rows[0]
-  const iDate = h.indexOf('Cycle start time')
-  const iPerf = h.indexOf('Sleep performance %')
-  const iDeep = h.indexOf('Deep (SWS) duration (min)')
-  const iRem = h.indexOf('REM duration (min)')
-  const iEff = h.indexOf('Sleep efficiency %')
+  const iDate = idxOf(h, ['Cycle start time', 'cycle start time'])
+  const iPerf = idxOf(h, ['Sleep performance %', 'sleep performance %'])
+  const iDeep = idxOf(h, ['Deep (SWS) duration (min)', 'deep (sws) duration (min)', 'deep sleep (min)', 'deep minutes'])
+  const iRem = idxOf(h, ['REM duration (min)', 'rem duration (min)', 'rem sleep (min)', 'rem minutes'])
+  const iEff = idxOf(h, ['Sleep efficiency %', 'sleep efficiency %'])
   
   if (iDate === -1 || iPerf === -1) {
     console.log('[Whoop] sleeps.csv: missing columns. Headers:', h.slice(0, 8))
@@ -101,10 +114,12 @@ function parseSleeps(text: string): SleepRow[] {
   }
   
   const result: SleepRow[] = []
+  let totalRows = 0, skippedNoDate = 0
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]
+    totalRows++
     const date = toDate(r[iDate])
-    if (!date) continue
+    if (!date) { skippedNoDate++; continue }
     
     result.push({
       date,
@@ -115,6 +130,10 @@ function parseSleeps(text: string): SleepRow[] {
     })
   }
   
+  try {
+    const uniq = new Set(result.map(r => r.date)).size
+    console.log(`[Whoop] sleeps parsed: rows=${totalRows}, kept=${result.length}, unique_dates=${uniq}, skipped_no_date=${skippedNoDate}`)
+  } catch {}
   return result
 }
 
@@ -131,11 +150,11 @@ function parsePhysiological(text: string): PhysRow[] {
   if (rows.length < 2) return []
   
   const h = rows[0]
-  const iDate = h.indexOf('Cycle start time')
-  const iRec = h.indexOf('Recovery score %')
-  const iHrv = h.indexOf('Heart rate variability (ms)')
-  const iRhr = h.indexOf('Resting heart rate (bpm)')
-  const iStrain = h.indexOf('Day Strain')
+  const iDate = idxOf(h, ['Cycle start time', 'cycle start time'])
+  const iRec = idxOf(h, ['Recovery score %', 'recovery score %'])
+  const iHrv = idxOf(h, ['Heart rate variability (ms)', 'heart rate variability (ms)', 'hrv (ms)', 'hrv'])
+  const iRhr = idxOf(h, ['Resting heart rate (bpm)', 'resting heart rate (bpm)', 'rhr (bpm)', 'resting heart rate'])
+  const iStrain = idxOf(h, ['Day Strain', 'day strain', 'strain'])
   
   if (iDate === -1) {
     console.log('[Whoop] physiological.csv: missing date column')
@@ -143,24 +162,33 @@ function parsePhysiological(text: string): PhysRow[] {
   }
   
   const result: PhysRow[] = []
+  let totalRows = 0, skippedNoDate = 0, skippedNoMetrics = 0
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]
+    totalRows++
     const date = toDate(r[iDate])
-    if (!date) continue
+    if (!date) { skippedNoDate++; continue }
     
-    // Skip empty rows (many in this file)
+    // Keep row if at least one metric present (don’t require recovery)
     const recovery = iRec >= 0 ? toNum(r[iRec]) : null
-    if (recovery === null) continue
+    const hrv = iHrv >= 0 ? toNum(r[iHrv]) : null
+    const rhr = iRhr >= 0 ? toNum(r[iRhr]) : null
+    const strain = iStrain >= 0 ? toNum(r[iStrain]) : null
+    if (recovery === null && hrv === null && rhr === null && strain === null) { skippedNoMetrics++; continue }
     
     result.push({
       date,
       recovery,
-      hrv: iHrv >= 0 ? toNum(r[iHrv]) : null,
-      rhr: iRhr >= 0 ? toNum(r[iRhr]) : null,
-      strain: iStrain >= 0 ? toNum(r[iStrain]) : null,
+      hrv,
+      rhr,
+      strain,
     })
   }
   
+  try {
+    const uniq = new Set(result.map(r => r.date)).size
+    console.log(`[Whoop] physiological parsed: rows=${totalRows}, kept=${result.length}, unique_dates=${uniq}, skipped_no_date=${skippedNoDate}, skipped_no_metrics=${skippedNoMetrics}`)
+  } catch {}
   return result
 }
 
@@ -175,9 +203,9 @@ function parseJournal(text: string): JournalRow[] {
   if (rows.length < 2) return []
   
   const h = rows[0]
-  const iDate = h.indexOf('Cycle start time')
-  const iQ = h.indexOf('Question text')
-  const iA = h.indexOf('Answered yes')
+  const iDate = idxOf(h, ['Cycle start time', 'cycle start time'])
+  const iQ = idxOf(h, ['Question text', 'question text'])
+  const iA = idxOf(h, ['Answered yes', 'answered yes', 'answered true'])
   
   if (iDate === -1 || iQ === -1 || iA === -1) {
     console.log('[Whoop] journal.csv: missing columns')
@@ -185,10 +213,12 @@ function parseJournal(text: string): JournalRow[] {
   }
   
   const result: JournalRow[] = []
+  let totalRows = 0, skippedNoDate = 0
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]
+    totalRows++
     const date = toDate(r[iDate])
-    if (!date) continue
+    if (!date) { skippedNoDate++; continue }
     
     result.push({
       date,
@@ -197,6 +227,10 @@ function parseJournal(text: string): JournalRow[] {
     })
   }
   
+  try {
+    const uniq = new Set(result.map(r => r.date)).size
+    console.log(`[Whoop] journal parsed: rows=${totalRows}, kept=${result.length}, unique_dates=${uniq}, skipped_no_date=${skippedNoDate}`)
+  } catch {}
   return result
 }
 
@@ -357,24 +391,51 @@ export async function POST(request: NextRequest) {
       if (p.strain != null) m.strain = p.strain
       byDate.set(p.date, m)
     }
+    const allDates = Array.from(byDate.keys())
+    allDates.sort()
+    const dateRange = allDates.length > 0 ? { start: allDates[0], end: allDates[allDates.length - 1] } : null
+    console.log('[Whoop Upload] Unique dates to upsert:', byDate.size, 'range:', dateRange)
+
+    // Fetch existing rows for merge-by-date behavior (do not drop prior sources/metrics)
+    let existingMap = new Map<string, { wearables: any; sleep_quality: number | null }>()
+    if (allDates.length > 0) {
+      const { data: existing, error: exErr } = await supabase
+        .from('daily_entries')
+        .select('local_date, wearables, sleep_quality')
+        .eq('user_id', user!.id)
+        .in('local_date', allDates)
+      if (exErr) {
+        console.warn('[Whoop Upload] Existing rows query failed (merge will still proceed, may overwrite):', exErr.message)
+      } else {
+        for (const r of existing || []) {
+          existingMap.set(String((r as any).local_date).slice(0,10), { wearables: (r as any).wearables || {}, sleep_quality: (r as any).sleep_quality ?? null })
+        }
+      }
+    }
+
     const upserts = Array.from(byDate.entries()).map(([date, v]) => {
       const rawPerf = v.sleep_performance != null ? Math.round(v.sleep_performance) : null
       // Map 0–100 → 1–10 to satisfy daily_entries.check constraint
       const scaledQuality =
         rawPerf != null ? Math.max(1, Math.min(10, Math.round(rawPerf / 10))) : null
+      const prev = existingMap.get(date) || { wearables: {}, sleep_quality: null }
+      const newWearables = {
+        source: 'WHOOP',
+        sleep_performance_pct: rawPerf,
+        hrv: v.hrv ?? null,
+        resting_hr: v.rhr ?? null,
+        recovery_score: v.recovery ?? null,
+        strain: v.strain ?? null,
+        deep_sleep_min: v.deep_min ?? null,
+        rem_sleep_min: v.rem_min ?? null,
+      }
+      const mergedWearables = { ...(prev.wearables || {}), ...newWearables }
+      const mergedSleepQuality = prev.sleep_quality != null ? prev.sleep_quality : scaledQuality
       return {
         user_id: user!.id,
         local_date: date,
-        sleep_quality: scaledQuality,
-        wearables: {
-          sleep_performance_pct: rawPerf,
-          hrv: v.hrv ?? null,
-          resting_hr: v.rhr ?? null,
-          recovery_score: v.recovery ?? null,
-          strain: v.strain ?? null,
-          deep_sleep_min: v.deep_min ?? null,
-          rem_sleep_min: v.rem_min ?? null,
-        }
+        sleep_quality: mergedSleepQuality,
+        wearables: mergedWearables
       }
     })
     console.log('[Whoop Upload] Upserting rows:', upserts.length)
@@ -419,10 +480,21 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Report sources breakdown so UI can show correct provider
+    const sources: Record<string, number> = {}
+    if (byDate.size > 0) sources['WHOOP'] = byDate.size
+
     return NextResponse.json({
       message: `Successfully imported ${totalParsed} entries`,
       details: [...results.files_processed, `Upserts: ${results.upserts}`].join(', '),
-      results,
+      results: { ...results, sources },
+      debugSummary: {
+        sleep_rows: results.sleeps,
+        phys_rows: results.physiological,
+        journal_rows: results.journal,
+        merged_unique_dates: byDate.size,
+        date_range: dateRange
+      }
     })
     
   } catch (error) {

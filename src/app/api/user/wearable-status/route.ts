@@ -30,21 +30,35 @@ export async function GET(request: Request) {
     // Determine window: default last 2 years (to avoid scanning 5+ years of imports)
     const url = new URL(request.url)
     const sinceParam = url.searchParams.get('since')
-    const since = new Date()
-    if (sinceParam) {
-      // Expect YYYY-MM-DD
-      const d = new Date(sinceParam)
-      if (!isNaN(+d)) since.setTime(d.getTime())
-      else since.setFullYear(since.getFullYear() - 2)
+    let rows: any[] | null = null
+    let qErr: any = null
+    if (sinceParam === 'all') {
+      const q = await supabase
+        .from('daily_entries')
+        .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
+        .eq('user_id', user.id)
+        .order('local_date', { ascending: false })
+      rows = q.data as any[] | null
+      qErr = q.error
     } else {
-      since.setFullYear(since.getFullYear() - 2)
+      const since = new Date()
+      if (sinceParam) {
+        // Expect YYYY-MM-DD
+        const d = new Date(sinceParam)
+        if (!isNaN(+d)) since.setTime(d.getTime())
+        else since.setFullYear(since.getFullYear() - 2)
+      } else {
+        since.setFullYear(since.getFullYear() - 2)
+      }
+      const q = await supabase
+        .from('daily_entries')
+        .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
+        .eq('user_id', user.id)
+        .gte('local_date', since.toISOString().slice(0,10))
+        .order('local_date', { ascending: false }) // newest first so we hit recent manual entries within row cap
+      rows = q.data as any[] | null
+      qErr = q.error
     }
-    const { data: rows, error: qErr } = await supabase
-      .from('daily_entries')
-      .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
-      .eq('user_id', user.id)
-      .gte('local_date', since.toISOString().slice(0,10))
-      .order('local_date', { ascending: false }) // newest first so we hit recent manual entries within row cap
     if (qErr) {
       try { console.error('[wearable-status] Query error:', qErr.message) } catch {}
     }
@@ -58,6 +72,9 @@ export async function GET(request: Request) {
     let lastUploadAt: string | null = null
     let startDate: string | null = null
     let endDate: string | null = null
+    // Track any wearable object presence (even if metrics are null) for date range accuracy
+    let anyWearableStart: string | null = null
+    let anyWearableEnd: string | null = null
 
     const manualDates: string[] = []
     const manualTimestamps: string[] = []
@@ -67,6 +84,7 @@ export async function GET(request: Request) {
       const w = (r as any).wearables || null
       const created = (r as any).created_at || null
       const hasWearable = hasAnyWearableMetric(w)
+      const hasWearableObject = w && typeof w === 'object'
       // Manual check-in logic (strict): only count true app check-ins
       // Manual day = user provided any of energy / focus / mood.
       // Do NOT infer manual from sleep_quality (can be imported).
@@ -94,6 +112,13 @@ export async function GET(request: Request) {
         if (!startDate || d < startDate) startDate = d
         if (!endDate || d > endDate) endDate = d
       }
+      // For date range, also consider any wearable object (even if metrics are null)
+      if (hasWearableObject) {
+        const srcAny = typeof w.source === 'string' && w.source ? String(w.source) : 'Wearable'
+        sources.set(srcAny, (sources.get(srcAny) || 0) + 0) // ensure presence
+        if (!anyWearableStart || d < anyWearableStart) anyWearableStart = d
+        if (!anyWearableEnd || d > anyWearableEnd) anyWearableEnd = d
+      }
       if (hasWearable && manual) overlapDays.add(d)
     }
 
@@ -105,8 +130,8 @@ export async function GET(request: Request) {
       wearable_metrics: Array.from(metrics),
       wearable_first_upload_at: firstUploadAt,
       wearable_last_upload_at: lastUploadAt,
-      wearable_date_range_start: startDate,
-      wearable_date_range_end: endDate,
+      wearable_date_range_start: anyWearableStart || startDate,
+      wearable_date_range_end: anyWearableEnd || endDate,
       days_by_source: Object.fromEntries(sources),
       checkin_days: checkinDays.size,
       total_unique_days: new Set<string>([...wearableDays, ...checkinDays]).size,
@@ -132,7 +157,7 @@ export async function GET(request: Request) {
       try {
         // eslint-disable-next-line no-console
         console.log('[wearable-status][debug]', {
-          since: since.toISOString().slice(0,10),
+          since: sinceParam === 'all' ? 'all' : 'windowed',
           totalRows: (rows || []).length,
           energyCount, focusCount, moodCount,
           checkinDays: checkinDays.size,

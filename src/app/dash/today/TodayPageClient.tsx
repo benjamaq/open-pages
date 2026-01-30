@@ -73,7 +73,14 @@ export default function TodayPageClient({
           try {
             const seen = localStorage.getItem('reminderPromptSeen') === '1'
             const granted = typeof Notification !== 'undefined' && Notification.permission === 'granted'
-            if (!seen && !granted) setShowReminderPrompt(true)
+            // Snooze gating shared with dashboard to prevent stacking prompts
+            let blockedBySnooze = false
+            try {
+              const raw = localStorage.getItem('bs_reminder_snooze_until')
+              const until = raw ? Number(raw) : 0
+              blockedBySnooze = Number.isFinite(until) && Date.now() < until
+            } catch {}
+            if (!seen && !granted && !blockedBySnooze) setShowReminderPrompt(true)
           } catch {}
         }
       } catch {}

@@ -116,7 +116,7 @@ export default function UploadCenter() {
           setUploadProgress(null)
           // Fetch wearable status then navigate (no modal here)
           try {
-            const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+            const ws = await fetch('/api/user/wearable-status?since=all', { cache: 'no-store' })
             if (ws.ok) {
               const wj = await ws.json()
               setWearableStatus(wj)
@@ -147,7 +147,7 @@ export default function UploadCenter() {
           setLastResult(data)
           // Fetch wearable status then navigate (no modal here)
           try {
-            const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+            const ws = await fetch('/api/user/wearable-status?since=all', { cache: 'no-store' })
             if (ws.ok) {
               const wj = await ws.json()
               setWearableStatus(wj)

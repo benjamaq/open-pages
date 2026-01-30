@@ -26,6 +26,10 @@ export default function WearablesStep() {
   function goNext() {
     router.push('/onboarding/report-ready')
   }
+  function goDashboardAfterUpload() {
+    // Route to dashboard with baseline-success flag so we show the Baseline enhanced popup
+    router.push('/dashboard?upload=success&source=Apple%20Health')
+  }
 
   return (
     <main className="min-h-screen relative">
@@ -62,7 +66,7 @@ export default function WearablesStep() {
               <div className="space-y-4">
                 {(device === WearableDevice.APPLE_HEALTH || device === WearableDevice.BEVEL || device === WearableDevice.ATHLYTIC || device === WearableDevice.LIVITY) && (
                   <AppleHealthUploader
-                    onSuccess={goNext}
+                    onSuccess={goDashboardAfterUpload}
                     onSkip={goNext}
                   />
                 )}

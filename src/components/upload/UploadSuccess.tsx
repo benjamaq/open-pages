@@ -19,7 +19,7 @@ export default function UploadSuccess({ summary }: { summary?: UploadResult }) {
       )}
       <div className="mt-5 mb-1">
         <a
-          href="/onboarding/report-ready"
+          href="/dashboard?upload=success"
           className="inline-flex items-center justify-center h-11 px-5 rounded-full bg-emerald-700 text-white text-sm font-semibold leading-none hover:bg-emerald-800"
         >
           Continue

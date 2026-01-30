@@ -10,6 +10,27 @@ export function CheckinEducationModal() {
     let mounted = true
     ;(async () => {
       try {
+        // If user has just uploaded wearables in this session, skip education
+        try {
+          const uploaded = typeof window !== 'undefined' ? localStorage.getItem('bs_uploaded_wearables') === '1' : false
+          if (uploaded) {
+            setShow(false)
+            setLoaded(true)
+            return
+          }
+        } catch {}
+        // If server reports wearables connected/imported, skip education
+        try {
+          const ws = await fetch('/api/user/wearable-status', { cache: 'no-store' })
+          if (ws.ok) {
+            const wj = await ws.json()
+            if (wj?.wearable_connected || Number(wj?.wearable_days_imported || 0) > 0) {
+              setShow(false)
+              setLoaded(true)
+              return
+            }
+          }
+        } catch {}
         // Check server-side flag first to persist across devices
         const res = await fetch('/api/onboarding/context/status', { cache: 'no-store' })
         if (!mounted) return
