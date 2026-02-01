@@ -23,16 +23,28 @@ function hasAnyWearableMetric(w: any): boolean {
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ wearable_connected: false }, { status: 200 })
-
-    // Determine window: default last 2 years (to avoid scanning 5+ years of imports)
+    // DIAGNOSTIC: log endpoint hit and since param
     const url = new URL(request.url)
     const sinceParam = url.searchParams.get('since')
+    try {
+      console.log('[wearable-status] === ENDPOINT HIT ===')
+      console.log('[wearable-status] since param:', sinceParam || '(none)')
+    } catch {}
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    try {
+      console.log('[wearable-status] Auth:', { userId: (user as any)?.id || null, error: authError?.message || 'none' })
+    } catch {}
+    if (!user) {
+      return NextResponse.json({ wearable_connected: false, debug_reason: 'no_authenticated_user' }, { status: 200 })
+    }
+
+    // Determine window: default last 2 years (to avoid scanning 5+ years of imports)
     let rows: any[] | null = null
     let qErr: any = null
     if (sinceParam === 'all') {
+      try { console.log('[wearable-status] ENTER since=all branch for user', (user as any)?.id) } catch {}
       const q = await supabase
         .from('daily_entries')
         .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
@@ -40,7 +52,16 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: false })
       rows = q.data as any[] | null
       qErr = q.error
+      try {
+        console.log('[wearable-status] since=all result:', {
+          error: qErr?.message || 'none',
+          rowCount: (rows || []).length,
+          first: rows && rows[rows.length - 1] ? { local_date: String((rows[rows.length - 1] as any).local_date).slice(0,10) } : 'NONE',
+          last: rows && rows[0] ? { local_date: String((rows[0] as any).local_date).slice(0,10) } : 'NONE'
+        })
+      } catch {}
     } else {
+      try { console.log('[wearable-status] ENTER 2yr window branch for user', (user as any)?.id) } catch {}
       const since = new Date()
       if (sinceParam) {
         // Expect YYYY-MM-DD
@@ -58,6 +79,15 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: false }) // newest first so we hit recent manual entries within row cap
       rows = q.data as any[] | null
       qErr = q.error
+      try {
+        console.log('[wearable-status] 2yr window result:', {
+          error: qErr?.message || 'none',
+          rowCount: (rows || []).length,
+          since: since.toISOString().slice(0,10),
+          first: rows && rows[rows.length - 1] ? { local_date: String((rows[rows.length - 1] as any).local_date).slice(0,10) } : 'NONE',
+          last: rows && rows[0] ? { local_date: String((rows[0] as any).local_date).slice(0,10) } : 'NONE'
+        })
+      } catch {}
     }
     if (qErr) {
       try { console.error('[wearable-status] Query error:', qErr.message) } catch {}
