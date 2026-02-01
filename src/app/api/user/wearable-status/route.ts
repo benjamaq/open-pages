@@ -33,13 +33,65 @@ export async function GET(request: Request) {
     let rows: any[] | null = null
     let qErr: any = null
     if (sinceParam === 'all') {
-      const q = await supabase
+      // Return ALL data (no date restriction) without row-cap by using head count and targeted min/max queries
+      const { count: wearableCount = 0, error: countErr } = await supabase
         .from('daily_entries')
-        .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+      qErr = countErr
+      // Fetch min/max dates for range
+      let minDate: string | null = null
+      let maxDate: string | null = null
+      if (!countErr && (wearableCount || 0) > 0) {
+        const { data: minRow } = await supabase
+          .from('daily_entries')
+          .select('local_date')
+          .eq('user_id', user.id)
+          .not('wearables', 'is', null)
+          .order('local_date', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        const { data: maxRow } = await supabase
+          .from('daily_entries')
+          .select('local_date')
+          .eq('user_id', user.id)
+          .not('wearables', 'is', null)
+          .order('local_date', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        minDate = minRow ? String((minRow as any).local_date).slice(0,10) : null
+        maxDate = maxRow ? String((maxRow as any).local_date).slice(0,10) : null
+      }
+      // Sample recent rows to derive sources (small sample to avoid scanning)
+      const { data: sampleRows } = await supabase
+        .from('daily_entries')
+        .select('wearables')
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
         .order('local_date', { ascending: false })
-      rows = q.data as any[] | null
-      qErr = q.error
+        .limit(200)
+      const sources = new Set<string>()
+      for (const r of (sampleRows || [])) {
+        const w: any = (r as any)?.wearables
+        const src = w && typeof w === 'object' && typeof w.source === 'string' && w.source ? String(w.source) : null
+        if (src) sources.add(src)
+      }
+      const payloadAll = {
+        wearable_connected: (wearableCount || 0) > 0,
+        wearable_sources: Array.from(sources),
+        wearable_days_imported: wearableCount || 0,
+        wearable_metrics: [], // omit heavy metrics for all-time
+        wearable_first_upload_at: null,
+        wearable_last_upload_at: null,
+        wearable_date_range_start: minDate,
+        wearable_date_range_end: maxDate,
+        days_by_source: Object.fromEntries(Array.from(sources).map(s => [s, 0])),
+        checkin_days: 0,
+        total_unique_days: wearableCount || 0,
+        overlap_days: 0
+      }
+      return NextResponse.json(payloadAll)
     } else {
       const since = new Date()
       if (sinceParam) {
