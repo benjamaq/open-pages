@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -72,28 +71,11 @@ export async function GET(request: Request) {
     let qErr: any = null
     if (sinceParam === 'all') {
       try { console.log('[wearable-status] ENTER since=all branch (exact head count) for user', (user as any)?.id) } catch {}
-      // DEBUG: environment and admin client sanity
-      try {
-        console.log('[wearable-status] Admin client URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-        console.log('[wearable-status] Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
-        console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
-        console.log('[wearable-status] Querying for user_id:', (user as any)?.id)
-      } catch {}
-      // Lazily create admin client after env is available
-      const supabaseAdmin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-        process.env.SUPABASE_SERVICE_ROLE_KEY as string,
-        { auth: { persistSession: false } }
-      )
-      try {
-        console.log('[wearable-status] supabaseAdmin exists:', !!supabaseAdmin)
-        console.log('[wearable-status] Admin URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-        console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
-      } catch {}
-      // Use exact head count without row limit
-      const { count: exactCount = 0, error: countErr } = await supabaseAdmin
+      try { console.log('[wearable-status] Querying for user_id:', (user as any)?.id) } catch {}
+      // Use exact head count without row limit via authenticated client (RLS permits self-read)
+      const { count: exactCount = 0, error: countErr } = await supabase
         .from('daily_entries')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .not('wearables', 'is', null)
       try {
@@ -116,8 +98,8 @@ export async function GET(request: Request) {
           debug_details: JSON.stringify(countErr || null)
         })
       }
-      // Min/max dates via targeted 1-row queries
-      const { data: minRow } = await supabaseAdmin
+      // Min/max dates via targeted 1-row queries (authenticated client)
+      const { data: minRow } = await supabase
         .from('daily_entries')
         .select('local_date')
         .eq('user_id', user.id)
@@ -125,7 +107,7 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: true })
         .limit(1)
         .maybeSingle()
-      const { data: maxRow } = await supabaseAdmin
+      const { data: maxRow } = await supabase
         .from('daily_entries')
         .select('local_date')
         .eq('user_id', user.id)
@@ -134,7 +116,7 @@ export async function GET(request: Request) {
         .limit(1)
         .maybeSingle()
       // Sample recent rows for sources
-      const { data: sampleRows } = await supabaseAdmin
+      const { data: sampleRows } = await supabase
         .from('daily_entries')
         .select('wearables')
         .eq('user_id', user.id)
