@@ -36,12 +36,34 @@ export async function GET(request: Request) {
     } catch {}
 
     const supabase = await createClient()
+
+    // DEBUG: Log all cookies to see what's available
+    const { cookies: cookiesMod } = await import('next/headers')
+    const cookieStore = await cookiesMod()
+    const allCookies = cookieStore.getAll()
+    try {
+      console.log('[wearable-status] Available cookies:', allCookies.map((c: any) => c?.name))
+    } catch {}
+    // Check for Supabase auth cookie specifically (name contains 'auth-token')
+    const authCookie = allCookies.find((c: any) => String(c?.name || '').includes('auth-token'))
+    try {
+      console.log('[wearable-status] Auth cookie exists:', !!authCookie)
+    } catch {}
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     try {
-      console.log('[wearable-status] Auth:', { userId: (user as any)?.id || null, error: authError?.message || 'none' })
+      console.log('[wearable-status] Auth result:', {
+        userId: (user as any)?.id || null,
+        error: authError?.message || 'none'
+      })
     } catch {}
     if (!user) {
-      return NextResponse.json({ wearable_connected: false, debug_reason: 'no_authenticated_user' }, { status: 200 })
+      return NextResponse.json({
+        wearable_connected: false,
+        debug_reason: 'no_authenticated_user',
+        debug_cookies: allCookies.map((c: any) => c?.name),
+        debug_has_auth_cookie: !!authCookie
+      })
     }
 
     // Determine window: default last 2 years (to avoid scanning 5+ years of imports)
