@@ -11,7 +11,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
 import JSZip from 'jszip'
 
 // ============================================
@@ -400,7 +399,7 @@ export async function POST(request: NextRequest) {
     // Fetch existing rows for merge-by-date behavior (do not drop prior sources/metrics)
     let existingMap = new Map<string, { wearables: any; sleep_quality: number | null }>()
     if (allDates.length > 0) {
-      const { data: existing, error: exErr } = await supabaseAdmin
+      const { data: existing, error: exErr } = await supabase
         .from('daily_entries')
         .select('local_date, wearables, sleep_quality')
         .eq('user_id', user!.id)
@@ -441,10 +440,9 @@ export async function POST(request: NextRequest) {
     })
     console.log('[Whoop Upload] Upserting rows:', upserts.length)
     if (upserts.length > 0) {
-      const { data: saved, error: insErr } = await supabaseAdmin
+      const { error: insErr } = await supabase
         .from('daily_entries')
         .upsert(upserts, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
-        .select()
       if (insErr) {
         console.error('[Whoop Upload] Upsert error:', insErr)
         return NextResponse.json(
@@ -452,15 +450,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
-      if (!saved || saved.length === 0) {
-        console.error('[Whoop Upload] Upsert returned 0 rows')
-        return NextResponse.json(
-          { error: 'No data saved', debug: { attempted: upserts.length } },
-          { status: 500 }
-        )
-      }
-      results.upserts = saved.length
-      try { console.log(`[Whoop Upload] Saved ${saved.length} rows for user ${user!.id}`) } catch {}
+      results.upserts = upserts.length
     }
     
     const totalParsed = results.sleeps + results.physiological + results.journal
