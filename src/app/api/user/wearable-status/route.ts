@@ -48,22 +48,72 @@ export async function GET(request: Request) {
     let rows: any[] | null = null
     let qErr: any = null
     if (sinceParam === 'all') {
-      try { console.log('[wearable-status] ENTER since=all branch for user', (user as any)?.id) } catch {}
-      const q = await supabase
+      try { console.log('[wearable-status] ENTER since=all branch (exact head count) for user', (user as any)?.id) } catch {}
+      // Use exact head count without row limit
+      const { count: exactCount = 0, error: countErr } = await supabase
         .from('daily_entries')
-        .select('local_date, wearables, created_at, energy, mood, focus, sleep_quality')
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+      if (countErr) {
+        try { console.error('[wearable-status] count error (since=all):', countErr.message) } catch {}
+        return NextResponse.json({ wearable_connected: false, debug_reason: 'query_error_count', debug_error: countErr.message })
+      }
+      // Min/max dates via targeted 1-row queries
+      const { data: minRow } = await supabase
+        .from('daily_entries')
+        .select('local_date')
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+        .order('local_date', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      const { data: maxRow } = await supabase
+        .from('daily_entries')
+        .select('local_date')
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
         .order('local_date', { ascending: false })
-      rows = q.data as any[] | null
-      qErr = q.error
+        .limit(1)
+        .maybeSingle()
+      // Sample recent rows for sources
+      const { data: sampleRows } = await supabase
+        .from('daily_entries')
+        .select('wearables')
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+        .order('local_date', { ascending: false })
+        .limit(200)
+      const sourcesSet = new Set<string>()
+      for (const r of (sampleRows || [])) {
+        const w: any = (r as any)?.wearables
+        const src = w && typeof w === 'object' && typeof w.source === 'string' && w.source ? String(w.source) : null
+        if (src) sourcesSet.add(src)
+      }
+      const minDate = minRow ? String((minRow as any).local_date).slice(0,10) : null
+      const maxDate = maxRow ? String((maxRow as any).local_date).slice(0,10) : null
       try {
-        console.log('[wearable-status] since=all result:', {
-          error: qErr?.message || 'none',
-          rowCount: (rows || []).length,
-          first: rows && rows[rows.length - 1] ? { local_date: String((rows[rows.length - 1] as any).local_date).slice(0,10) } : 'NONE',
-          last: rows && rows[0] ? { local_date: String((rows[0] as any).local_date).slice(0,10) } : 'NONE'
+        console.log('[wearable-status] since=all head count result:', {
+          exactCount,
+          minDate,
+          maxDate,
+          sources: Array.from(sourcesSet)
         })
       } catch {}
+      return NextResponse.json({
+        wearable_connected: (exactCount || 0) > 0,
+        wearable_sources: Array.from(sourcesSet),
+        wearable_days_imported: exactCount || 0,
+        wearable_metrics: [],
+        wearable_first_upload_at: null,
+        wearable_last_upload_at: null,
+        wearable_date_range_start: minDate,
+        wearable_date_range_end: maxDate,
+        days_by_source: Object.fromEntries(Array.from(sourcesSet).map(s => [s, 0])),
+        checkin_days: 0,
+        total_unique_days: exactCount || 0,
+        overlap_days: 0
+      })
     } else {
       try { console.log('[wearable-status] ENTER 2yr window branch for user', (user as any)?.id) } catch {}
       const since = new Date()
