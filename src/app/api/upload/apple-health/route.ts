@@ -137,13 +137,19 @@ export async function POST(req: NextRequest) {
 
     step = 'upsert'
     try { console.log('[apple-health] Step 9: Upserting to daily_entries...', { days: entries.length }) } catch {}
-    const { error: insErr } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('daily_entries')
       .upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
-    if (insErr) {
-      console.error('Apple Health upsert error:', insErr)
-      return NextResponse.json({ error: 'Failed to save data', details: insErr.message }, { status: 500 })
+      .select()
+    if (error) {
+      console.error('Apple Health upsert error:', error)
+      return NextResponse.json({ error: 'Failed to save data', details: error.message }, { status: 500 })
     }
+    if (!data || data.length === 0) {
+      console.error('[apple-health] Upsert returned 0 rows')
+      return NextResponse.json({ error: 'No data saved' }, { status: 500 })
+    }
+    try { console.log(`[apple-health] Saved ${data.length} rows for user ${(user as any)?.id}`) } catch {}
 
     entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
     try { console.log('[apple-health] Step 10: Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
@@ -179,14 +185,19 @@ async function parseAndPersistAppleHealthXMLStream(userId: string, stream: NodeJ
   if (!entries.length) {
     return NextResponse.json({ error: 'No valid data found', details: 'export.xml contained no usable records' }, { status: 400 })
   }
-  const supabase = await createClient()
-  const { error: insErr } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('daily_entries')
     .upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
-  if (insErr) {
-    console.error('Apple Health upsert error:', insErr)
-    return NextResponse.json({ error: 'Failed to save data', details: insErr.message }, { status: 500 })
+    .select()
+  if (error) {
+    console.error('Apple Health upsert error:', error)
+    return NextResponse.json({ error: 'Failed to save data', details: error.message }, { status: 500 })
   }
+  if (!data || data.length === 0) {
+    console.error('[apple-health] Upsert returned 0 rows')
+    return NextResponse.json({ error: 'No data saved' }, { status: 500 })
+  }
+  try { console.log(`[apple-health] Saved ${data.length} rows for user ${userId}`) } catch {}
   entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
   try { console.log('[apple-health] Step 10 (xml): Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
   return NextResponse.json({
