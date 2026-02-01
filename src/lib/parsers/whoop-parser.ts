@@ -61,23 +61,36 @@ export interface ParsedWhoopData {
  * Detect if a CSV is from Whoop by checking the first header
  */
 export function isWhoopCSV(headerLine: string): boolean {
-  return headerLine.startsWith('Cycle start time,')
+  if (!headerLine) return false
+  const h = headerLine.replace(/^\uFEFF/, '').trim().toLowerCase().replace(/"/g, '')
+  // Detect by presence of distinctive WHOOP columns
+  const markers = [
+    'cycle start time',
+    'recovery score %',
+    'sleep performance %',
+    'sleep efficiency %',
+    'day strain',
+    'heart rate variability (ms)',
+    'resting heart rate (bpm)'
+  ]
+  return markers.some(m => h.includes(m))
 }
 
 /**
  * Detect which type of Whoop file this is
  */
 export function detectWhoopFileType(headerLine: string): 'sleep' | 'physiological' | 'journal' | 'workout' | 'unknown' {
-  if (headerLine.includes('Sleep performance %') && !headerLine.includes('Recovery score %')) {
+  const HL = headerLine || ''
+  if (HL.includes('Sleep performance %') && !HL.includes('Recovery score %')) {
     return 'sleep'
   }
-  if (headerLine.includes('Recovery score %')) {
+  if (HL.includes('Recovery score %')) {
     return 'physiological'
   }
-  if (headerLine.includes('Question text')) {
+  if (HL.includes('Question text')) {
     return 'journal'
   }
-  if (headerLine.includes('Activity Strain') || headerLine.includes('Workout start time')) {
+  if (HL.includes('Activity Strain') || HL.includes('Workout start time')) {
     return 'workout'
   }
   return 'unknown'

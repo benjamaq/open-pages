@@ -126,9 +126,9 @@ export async function POST(req: NextRequest) {
       if (name.endsWith('.csv')) {
         const text = await f.text()
         const firstLine = text.split('\n')[0] || ''
-        const normalizedHead = firstLine.replace(/^\uFEFF/, '').trim().toLowerCase()
-        // WHOOP CSVs have a "Cycle start time" column (often quoted). Use regex for robustness.
-        const isWhoop = /\bcycle start time\b/.test(normalizedHead)
+        // Robust WHOOP detection using header columns
+        const normalizedHead = firstLine.replace(/^\uFEFF/, '').trim()
+        const isWhoop = /cycle start time|recovery score %|sleep performance %|sleep efficiency %|day strain/i.test(normalizedHead)
         if (isWhoop) {
           const parsed = parseWhoopFile(name, text)
           let sleepRows: any[] = []
