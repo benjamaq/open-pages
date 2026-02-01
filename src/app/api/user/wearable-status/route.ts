@@ -117,7 +117,8 @@ export async function GET(request: Request) {
       const d = String((r as any).local_date).slice(0,10)
       const w = (r as any).wearables || null
       const created = (r as any).created_at || null
-      const hasWearable = hasAnyWearableMetric(w)
+      // Count ANY non-empty wearables object (older data may use different keys/types)
+      const hasWearable = w && typeof w === 'object' && Object.keys(w).length > 0
       const hasWearableObject = w && typeof w === 'object'
       // Manual check-in logic (strict): only count true app check-ins
       // Manual day = user provided any of energy / focus / mood.
