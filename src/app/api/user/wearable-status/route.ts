@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
     if (sinceParam === 'all') {
       try { console.log('[wearable-status] ENTER since=all branch (exact head count) for user', (user as any)?.id) } catch {}
       // Use exact head count without row limit
-      const { count: exactCount = 0, error: countErr } = await supabase
+      const { count: exactCount = 0, error: countErr } = await supabaseAdmin
         .from('daily_entries')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ wearable_connected: false, debug_reason: 'query_error_count', debug_error: countErr.message })
       }
       // Min/max dates via targeted 1-row queries
-      const { data: minRow } = await supabase
+      const { data: minRow } = await supabaseAdmin
         .from('daily_entries')
         .select('local_date')
         .eq('user_id', user.id)
@@ -90,7 +91,7 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: true })
         .limit(1)
         .maybeSingle()
-      const { data: maxRow } = await supabase
+      const { data: maxRow } = await supabaseAdmin
         .from('daily_entries')
         .select('local_date')
         .eq('user_id', user.id)
@@ -99,7 +100,7 @@ export async function GET(request: Request) {
         .limit(1)
         .maybeSingle()
       // Sample recent rows for sources
-      const { data: sampleRows } = await supabase
+      const { data: sampleRows } = await supabaseAdmin
         .from('daily_entries')
         .select('wearables')
         .eq('user_id', user.id)
