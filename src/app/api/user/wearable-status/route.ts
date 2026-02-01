@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -77,8 +77,18 @@ export async function GET(request: Request) {
         console.log('[wearable-status] Admin client URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
         console.log('[wearable-status] Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
         console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
-        console.log('[wearable-status] supabaseAdmin exists:', !!supabaseAdmin)
         console.log('[wearable-status] Querying for user_id:', (user as any)?.id)
+      } catch {}
+      // Lazily create admin client after env is available
+      const supabaseAdmin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+        process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+        { auth: { persistSession: false } }
+      )
+      try {
+        console.log('[wearable-status] supabaseAdmin exists:', !!supabaseAdmin)
+        console.log('[wearable-status] Admin URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+        console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
       } catch {}
       // Use exact head count without row limit
       const { count: exactCount = 0, error: countErr } = await supabaseAdmin
