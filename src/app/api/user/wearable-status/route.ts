@@ -72,15 +72,36 @@ export async function GET(request: Request) {
     let qErr: any = null
     if (sinceParam === 'all') {
       try { console.log('[wearable-status] ENTER since=all branch (exact head count) for user', (user as any)?.id) } catch {}
+      // DEBUG: environment and admin client sanity
+      try {
+        console.log('[wearable-status] Admin client URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+        console.log('[wearable-status] Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+        console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
+      } catch {}
       // Use exact head count without row limit
       const { count: exactCount = 0, error: countErr } = await supabaseAdmin
         .from('daily_entries')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .not('wearables', 'is', null)
+      try {
+        console.log('[wearable-status] Count query result:', {
+          count: exactCount,
+          error: countErr,
+          errorMessage: (countErr as any)?.message,
+          errorCode: (countErr as any)?.code,
+          errorDetails: (countErr as any)?.details
+        })
+      } catch {}
       if (countErr) {
-        try { console.error('[wearable-status] count error (since=all):', countErr.message) } catch {}
-        return NextResponse.json({ wearable_connected: false, debug_reason: 'query_error_count', debug_error: countErr.message })
+        try { console.error('[wearable-status] count error (since=all):', (countErr as any)?.message || countErr) } catch {}
+        return NextResponse.json({
+          wearable_connected: false,
+          debug_reason: 'query_error_count',
+          debug_error: (countErr as any)?.message || 'unknown',
+          debug_code: (countErr as any)?.code || null,
+          debug_details: JSON.stringify(countErr || null)
+        })
       }
       // Min/max dates via targeted 1-row queries
       const { data: minRow } = await supabaseAdmin
