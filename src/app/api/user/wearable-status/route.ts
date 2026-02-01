@@ -77,6 +77,8 @@ export async function GET(request: Request) {
         console.log('[wearable-status] Admin client URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
         console.log('[wearable-status] Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
         console.log('[wearable-status] Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY ? String(process.env.SUPABASE_SERVICE_ROLE_KEY).length : 0)
+        console.log('[wearable-status] supabaseAdmin exists:', !!supabaseAdmin)
+        console.log('[wearable-status] Querying for user_id:', (user as any)?.id)
       } catch {}
       // Use exact head count without row limit
       const { count: exactCount = 0, error: countErr } = await supabaseAdmin
@@ -92,6 +94,7 @@ export async function GET(request: Request) {
           errorCode: (countErr as any)?.code,
           errorDetails: (countErr as any)?.details
         })
+        console.log('[wearable-status] Full count result:', JSON.stringify({ count: exactCount, error: countErr }, null, 2))
       } catch {}
       if (countErr) {
         try { console.error('[wearable-status] count error (since=all):', (countErr as any)?.message || countErr) } catch {}
