@@ -73,9 +73,9 @@ export default function WearablesStep() {
                 {device === WearableDevice.WHOOP && (
                   <HealthDataUploader
                     endpoint="/api/upload/whoop"
-                    accept=".csv"
-                    title="Upload WHOOP CSV"
-                    helper="Upload WHOOP CSV exports (sleeps, physiological, journal)."
+                    accept=".zip,.csv"
+                    title="Upload WHOOP export"
+                    helper="ZIP or CSV files supported (physiological_cycles.csv, sleeps.csv, etc.)."
                     onUploadComplete={(r) => setResult(r)}
                   />
                 )}
