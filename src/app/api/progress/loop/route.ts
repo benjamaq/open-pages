@@ -543,10 +543,10 @@ export async function GET(request: Request) {
     // Load latest truth reports (ordered newest first); first seen per id wins
     const { data: truths } = await supabase
       .from('supplement_truth_reports')
-      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,created_at')
+      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null }>()
+    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null }>()
     for (const t of truths || []) {
       const uid = String((t as any).user_supplement_id || '')
       if (!uid) continue
@@ -556,7 +556,9 @@ export async function GET(request: Request) {
           effect_direction: (t as any).effect_direction ?? null,
           effect_size: (t as any).effect_size ?? null,
           percent_change: (t as any).percent_change ?? null,
-          confidence_score: (t as any).confidence_score ?? null
+          confidence_score: (t as any).confidence_score ?? null,
+          sample_days_on: (t as any).sample_days_on ?? null,
+          sample_days_off: (t as any).sample_days_off ?? null
         })
       }
     }
@@ -675,7 +677,9 @@ export async function GET(request: Request) {
                 effect_direction: fresh.effect.direction,
                 effect_size: fresh.effect.effectSize,
                 percent_change: fresh.effect.percentChange ?? null,
-                confidence_score: fresh.confidence.score
+                confidence_score: fresh.confidence.score,
+                sample_days_on: Number(fresh.meta.sampleOn || 0),
+                sample_days_off: Number(fresh.meta.sampleOff || 0)
               })
               if (VERBOSE) { try { console.log('[overlay-refresh] saved fresh truth for', uid, 'status=', String(fresh.status)) } catch {} }
             } catch (saveErr: any) {
@@ -685,7 +689,7 @@ export async function GET(request: Request) {
             try {
               const { data: latest } = await supabase
                 .from('supplement_truth_reports')
-                .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,created_at')
+                .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,created_at')
                 .eq('user_id', user.id)
                 .eq('user_supplement_id', uid)
                 .order('created_at', { ascending: false })
@@ -696,7 +700,9 @@ export async function GET(request: Request) {
                   effect_direction: (latest![0] as any).effect_direction ?? null,
                   effect_size: (latest![0] as any).effect_size ?? null,
                   percent_change: (latest![0] as any).percent_change ?? null,
-                  confidence_score: (latest![0] as any).confidence_score ?? null
+                  confidence_score: (latest![0] as any).confidence_score ?? null,
+                  sample_days_on: (latest![0] as any).sample_days_on ?? null,
+                  sample_days_off: (latest![0] as any).sample_days_off ?? null
                 })
                 if (VERBOSE) { try { console.log('[overlay-refresh] updated truth map for', uid, 'status=', String((latest![0] as any).status || '')) } catch {} }
               }
@@ -738,7 +744,9 @@ export async function GET(request: Request) {
               userSuppId: uid,
               hasTruth: !!truthBySupp.get(String(uid)),
               status: truthBySupp.get(String(uid))?.status || null,
-              effectCategory: (r as any).effectCategory || null
+              effectCategory: (r as any).effectCategory || null,
+              sampleDaysOn: truthBySupp.get(String(uid))?.sample_days_on ?? null,
+              sampleDaysOff: truthBySupp.get(String(uid))?.sample_days_off ?? null
             })
           } catch {}
         }
@@ -841,6 +849,16 @@ export async function GET(request: Request) {
             }
             if (truth && typeof truth.confidence_score === 'number') {
               r.confidence = Number(truth.confidence_score)
+            }
+            // If Truth Engine provided sample day counts, override derived days so UI reflects implicit ON/OFF
+            const tOn = (truth && typeof truth.sample_days_on === 'number') ? Number(truth.sample_days_on) : null
+            const tOff = (truth && typeof truth.sample_days_off === 'number') ? Number(truth.sample_days_off) : null
+            if (tOn !== null || tOff !== null) {
+              const newOn = tOn ?? Number((r as any).daysOn || 0)
+              const newOff = tOff ?? Number((r as any).daysOff || 0)
+              ;(r as any).daysOn = newOn
+              ;(r as any).daysOff = newOff
+              ;(r as any).daysOfData = newOn + newOff
             }
           }
         } catch {}
