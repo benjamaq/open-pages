@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     // Fetch current stack rows
     const { data: us, error: usErr } = await supabase
       .from('user_supplement')
-      .select('id,user_id,is_active,created_at,name,label,monthly_cost_usd,dose,timing,brand')
+      .select('id,user_id,is_active,created_at,name,label,monthly_cost_usd,dose,timing,brand,inferred_start_at,retest_started_at,started_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (usErr) return NextResponse.json({ error: usErr.message }, { status: 500 })
@@ -94,6 +94,16 @@ export async function GET(req: Request) {
               const mc = Number(match?.monthly_cost)
               return Number.isFinite(mc) && mc > 0 ? Math.max(0, Math.min(1000, mc)) : (monthlyRaw || 0)
             })()
+        // Choose the canonical started_at for clients:
+        // 1) retest_started_at (active retest window)
+        // 2) inferred_start_at (backfilled historical start)
+        // 3) stack_items.start_date (UI-managed)
+        // 4) created_at (fallback)
+        const started_at =
+          (r as any)?.retest_started_at
+          || (r as any)?.inferred_start_at
+          || (match as any)?.start_date
+          || (r as any)?.created_at
         return {
           ...r,
           monthly_cost_usd,
@@ -102,8 +112,7 @@ export async function GET(req: Request) {
           brand: r?.brand ?? match?.brand ?? null,
           notes: r?.notes ?? match?.notes ?? null,
           frequency: (r as any)?.frequency ?? match?.frequency ?? null,
-          // Expose a unified started_at for clients; fallback to stack_items.start_date
-          started_at: (r as any)?.started_at ?? (match as any)?.start_date ?? (r as any)?.created_at ?? null,
+          started_at,
         }
       })
     }
