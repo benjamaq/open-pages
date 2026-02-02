@@ -952,7 +952,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/signup">
+              <Link href="/signup?plan=free">
                 <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Start Casual →
                 </Button>
@@ -1024,7 +1024,7 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href={`/checkout?plan=premium&period=${billingPeriod}`}>
+              <Link href={`/signup?plan=premium&period=${billingPeriod}`}>
                 <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                   Get Answers →
                 </Button>
