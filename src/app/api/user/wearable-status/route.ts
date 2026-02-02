@@ -115,6 +115,26 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: false })
         .limit(1)
         .maybeSingle()
+      // Compute distinct day count to avoid over-reporting due to multiple sources per day
+      let uniqueDayCount = exactCount || 0
+      try {
+        const { data: dayRows, error: dayErr } = await supabase
+          .from('daily_entries')
+          .select('local_date')
+          .eq('user_id', user.id)
+          .not('wearables', 'is', null)
+          .order('local_date', { ascending: true })
+          .limit(50000)
+        if (!dayErr && Array.isArray(dayRows)) {
+          const uniq = new Set<string>()
+          for (const r of dayRows) {
+            const d = String((r as any)?.local_date || '').slice(0,10)
+            if (d) uniq.add(d)
+          }
+          uniqueDayCount = uniq.size
+        }
+        try { console.log('[wearable-status] Unique day count:', uniqueDayCount) } catch {}
+      } catch {}
       // Get all distinct sources from user's wearable data (avoid sampling so we don't miss older sources)
       const { data: sourceRows } = await supabase
         .from('daily_entries')
@@ -157,6 +177,7 @@ export async function GET(request: Request) {
       try {
         console.log('[wearable-status] since=all head count result:', {
           exactCount,
+          uniqueDayCount,
           minDate,
           maxDate,
           sources: Array.from(sourcesSet)
@@ -166,6 +187,7 @@ export async function GET(request: Request) {
         wearable_connected: (exactCount || 0) > 0,
         wearable_sources: Array.from(sourcesSet),
         wearable_days_imported: exactCount || 0,
+        wearable_unique_days: uniqueDayCount || 0,
         wearable_metrics: [],
         wearable_first_upload_at: null,
         wearable_last_upload_at: null,
@@ -173,7 +195,7 @@ export async function GET(request: Request) {
         wearable_date_range_end: maxDate,
         days_by_source: daysBySource,
         checkin_days: checkinCount || 0,
-        total_unique_days: exactCount || 0,
+        total_unique_days: uniqueDayCount || (exactCount || 0),
         overlap_days: 0
       })
     } else {

@@ -456,6 +456,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       cat || (verdict === 'keep' ? 'works'
       : verdict === 'drop' ? 'no_effect'
       : '')
+    // Mask final verdicts for free users until upgrade
+    if (!isMember && ['works','no_effect','no_detectable_effect'].includes(mappedCat)) {
+      return { label: '🔒 Verdict ready', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    }
     if (mappedCat === 'works') return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
     if (mappedCat === 'no_effect') return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
