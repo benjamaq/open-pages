@@ -693,7 +693,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-        {(isCompleted && (isMember || hasFinalVerdict)) && (
+      {(isCompleted && isMember) && (
           <div className="flex gap-2">
             <button
               className="text-[11px] font-medium"
