@@ -37,6 +37,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   // Load supplement row
   let primaryMetric: string = 'subjective_energy'
+  // If we fall back to wearables-derived metric, set a more accurate display label
+  let metricLabelOverride: string | null = null
   let secondaryKeys: string[] = []
   let canonicalId: string | null = null
   let supplementName: string | null = null
@@ -422,6 +424,18 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         // Include sleep_performance_pct as general fallback as well so non-sleep primaries (e.g., energy) can still use it
         'sleep_performance_pct', 'recovery_score', 'readiness', 'hrv_rmssd', 'hrv_ms', 'hrv', 'hrv_sdnn_ms', 'strain', 'resting_hr_bpm', 'resting_hr', 'deep_sleep_min', 'rem_sleep_min'
       ]
+      const labelForWearableKey = (k: string): string | null => {
+        const kk = String(k || '').toLowerCase()
+        if (kk === 'sleep_performance_pct' || kk === 'sleep_score' || kk === 'sleep_quality') return 'Sleep Performance'
+        if (kk === 'sleep_hours' || kk === 'sleep_min') return 'Sleep Duration'
+        if (kk === 'deep_sleep_min') return 'Deep Sleep (h)'
+        if (kk === 'rem_sleep_min') return 'REM Sleep (h)'
+        if (kk === 'recovery_score' || kk === 'readiness') return 'Recovery'
+        if (kk === 'hrv' || kk === 'hrv_ms' || kk === 'hrv_rmssd' || kk === 'hrv_sdnn_ms') return 'HRV'
+        if (kk === 'resting_hr' || kk === 'resting_hr_bpm' || kk === 'rhr') return 'Resting HR'
+        if (kk === 'strain') return 'Strain'
+        return null
+      }
       for (const k of tryKeys) {
         const raw = (w as any)[k]
         if (raw == null) continue
@@ -431,6 +445,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         if (String(k).endsWith('_pct') && num <= 1) num = num * 100
         // Convert minutes to hours for readability if minutes key
         if ((k === 'sleep_min' || k === 'deep_sleep_min' || k === 'rem_sleep_min') && num > 0) num = num / 60
+        // Capture effective label for report display if not set yet
+        if (!metricLabelOverride) {
+          metricLabelOverride = labelForWearableKey(k)
+        }
         if (debugExtractCount < 10) {
           try {
             console.log('[truth-engine] metric extraction', {
@@ -515,7 +533,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       confoundedDays: samples.length - cleanSamples.length,
       cohort: null,
       sampleOnOverride: sampleOnCount,
-      sampleOffOverride: sampleOffCount
+      sampleOffOverride: sampleOffCount,
+      metricLabelOverride: metricLabelOverride || undefined
     })
   }
 
@@ -547,7 +566,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     cohort,
     confidenceOverride: confidence,
     sampleOnOverride: sampleOnCount,
-    sampleOffOverride: sampleOffCount
+    sampleOffOverride: sampleOffCount,
+    metricLabelOverride: metricLabelOverride || undefined
   })
 }
 
@@ -562,6 +582,7 @@ function buildReport(args: {
   confidenceOverride?: number
   sampleOnOverride?: number
   sampleOffOverride?: number
+  metricLabelOverride?: string
 }): TruthReport {
   const { effect, primaryMetric, canonical, cohort } = args
   const confidenceScore = typeof args.confidenceOverride === 'number'
@@ -581,7 +602,9 @@ function buildReport(args: {
   const scienceNote = buildScienceNote(canonical, mechanism.mechanismLabel)
   const nextSteps = buildNextSteps({ status: args.status, effect, canonical: canonical })
 
-  const metricLabel = labelForMetric(primaryMetric)
+  const metricLabel = (args.metricLabelOverride && String(args.metricLabelOverride).trim().length > 0)
+    ? String(args.metricLabelOverride)
+    : labelForMetric(primaryMetric)
   const verdictLabel = verdictLabels[args.status]
   const verdictTitle = fill(verdictTitles[args.status], { metricLabel })
 
