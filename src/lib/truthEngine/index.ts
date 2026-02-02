@@ -10,11 +10,12 @@ import fs from 'fs'
 // Align truth-engine readiness thresholds with dashboard logic
 function requiredOnDaysForMetric(metricKey: string): number {
   const k = (metricKey || '').toLowerCase()
+  // Align product expectation: 10 ON days across primary metrics
   if (k === 'sleep_quality' || k === 'sleep_score') return 10
-  if (k === 'subjective_energy') return 12
-  if (k === 'subjective_mood') return 14
-  if (k === 'focus') return 14
-  return 14
+  if (k === 'subjective_energy') return 10
+  if (k === 'subjective_mood') return 10
+  if (k === 'focus') return 10
+  return 10
 }
 function requiredOffDaysForMetric(metricKey: string): number {
   const on = requiredOnDaysForMetric(metricKey)
@@ -520,10 +521,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   const confidence = estimateConfidence(effect.effectSize, effect.sampleOn, effect.sampleOff)
   // Decision tree when thresholds are met:
-  // If small effect OR low confidence → completed test with no detectable effect
+  // If small effect (|d| < 0.3) OR low confidence → completed test with no detectable effect
   // Else classify positive/negative as usual
   let status: TruthStatus
-  if (Math.abs(effect.effectSize) < 0.5 || confidence < 0.6) {
+  if (Math.abs(effect.effectSize) < 0.3 || confidence < 0.6) {
     status = 'no_detectable_effect'
   } else if (effect.direction === 'positive') {
     status = 'proven_positive'
