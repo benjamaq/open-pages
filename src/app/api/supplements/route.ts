@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json().catch(() => ({})) as any
-    try { console.log('RECEIVED:', body) } catch {}
+    try { console.log('[supplements][POST] RECEIVED:', body) } catch {}
     const rawName = String(body?.name || '').trim()
     if (!rawName) return NextResponse.json({ error: 'Name required' }, { status: 400 })
     // Dose/timing/brand from client (new fields)
@@ -188,7 +188,10 @@ export async function POST(request: Request) {
       d.setHours(0,0,0,0); t.setHours(0,0,0,0)
       return d.getTime() > t.getTime()
     }
-    const inferredStartISO = (bodyStartDate && !isFuture(bodyStartDate)) ? bodyStartDate : undefined
+    // Accept alternate keys just in case
+    const altStart = typeof body?.start_date === 'string' ? String(body.start_date).slice(0, 10) : undefined
+    const inferredStartISO = (bodyStartDate || altStart) && !isFuture(bodyStartDate || altStart) ? (bodyStartDate || altStart) : undefined
+    try { console.log('[supplements] startDate received:', bodyStartDate || altStart, '-> inferredStartISO:', inferredStartISO) } catch {}
 
     // 1) Try to map via canonical_supplement (if table exists)
     let canonicalName: string | null = null
@@ -348,6 +351,17 @@ export async function POST(request: Request) {
           await supabase.from('stack_items').insert(stackPayload)
         }
       } catch {}
+      // Hardening: if inferred_start_at did not persist on insert, set it explicitly now
+      if (inferredStartISO) {
+        try {
+          const { error: fixErr } = await supabase
+            .from('user_supplement')
+            .update({ inferred_start_at: inferredStartISO })
+            .eq('id', String(userSupp.id))
+            .eq('user_id', user.id)
+          if (fixErr) { try { console.warn('[supplements] post-insert inferred_start_at update failed:', fixErr.message) } catch {} }
+        } catch {}
+      }
       return NextResponse.json({ id: userSupp.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
     // If duplicate (unique user_id,supplement_id), fetch existing row and return its id

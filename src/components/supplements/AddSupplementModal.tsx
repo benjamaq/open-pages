@@ -137,11 +137,14 @@ export default function AddSupplementModal({
         }
       } else {
         // Fallback: direct API calls so Save works even if no callbacks wired
+        const first = synthetic[0]
         const res = await fetch('/api/supplements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: name.trim(),
+            startDate: first.startDate,
+            endDate: first.endDate,
             dose: dose || undefined,
             timing: timing || undefined,
             brand: (() => {
