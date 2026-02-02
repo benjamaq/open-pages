@@ -187,6 +187,30 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     error: dailyError?.message || null,
     firstDate: dailyRows?.[0]?.local_date || null
   })
+  // Debug: show a small sample of wearables keys to validate extraction
+  try {
+    const sampleWearables = []
+    let shown = 0
+    for (const r of dailyRows || []) {
+      const w = (r as any)?.wearables
+      if (w && (typeof w === 'object' || typeof w === 'string')) {
+        let obj: any = w
+        if (typeof obj === 'string') {
+          try { obj = JSON.parse(obj) } catch {}
+        }
+        if (obj && typeof obj === 'object') {
+          sampleWearables.push({ date: String((r as any).local_date).slice(0,10), keys: Object.keys(obj).slice(0, 12) })
+          shown++
+          if (shown >= 5) break
+        }
+      }
+    }
+    if (sampleWearables.length > 0) {
+      console.log('[truth-engine] wearables keys sample:', sampleWearables)
+    } else {
+      console.log('[truth-engine] wearables keys sample: none')
+    }
+  } catch {}
   try {
     const allKeys = new Set<string>()
     for (const r of dailyRows || []) {
@@ -335,7 +359,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         if (v != null) return v
       }
       // 3) Wearables fallback: infer a usable metric from wearables blob
-      const w = (m as any)._raw?.wearables || null
+      let w = (m as any)._raw?.wearables || null
+      if (w && typeof w === 'string') {
+        try { w = JSON.parse(w) } catch {}
+      }
       if (!w || typeof w !== 'object') return null
       // Prefer sleep-related if primary metric is sleep-like
       const isSleep = key.includes('sleep')
@@ -355,6 +382,11 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         if (k === 'sleep_min' && num > 0) num = num / 60
         return num
       }
+      // Debug when no wearable key matched
+      try {
+        const keys = Object.keys(w as any)
+        console.log('[truth-engine] wearable metric not found. primary=', key, 'availableKeys=', keys.slice(0, 20))
+      } catch {}
       return null
     })()
     return {
