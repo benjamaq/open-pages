@@ -160,22 +160,27 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   // ===== LOAD DATA FROM DAILY_ENTRIES =====
   console.log('[truth-engine] Loading daily_entries for user:', userId)
-  // Choose the widest safe range: prefer supplement start/restart; otherwise 365-day fallback
+  // Load ALL history when we have an inferred start date to allow implicit OFF (pre-start) + ON (post-start).
+  // Otherwise, fall back to the widest safe range: restart date if present, else 365 days.
+  const loadAllForImplicit = !!(typeof inferredStartGlobal === 'string' && inferredStartGlobal)
   let querySince: string | null = sinceLowerBound
-  if (!querySince) {
-    const since365 = new Date()
-    since365.setDate(since365.getDate() - 365)
-    querySince = since365.toISOString().slice(0,10)
+  if (!loadAllForImplicit) {
+    if (!querySince) {
+      const since365 = new Date()
+      since365.setDate(since365.getDate() - 365)
+      querySince = since365.toISOString().slice(0,10)
+    }
   }
-  debugLog(`QUERY daily_entries: user_id=${userId}, since=${querySince || 'NONE'}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake`)
+  debugLog(`QUERY daily_entries: user_id=${userId}, since=${loadAllForImplicit ? 'ALL' : (querySince || 'NONE')}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake,wearables`)
 
-  const { data: dailyRows, error: dailyError } = await supabase
+  let q = supabase
     .from('daily_entries')
     .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
     .eq('user_id', userId)
-    // Only apply lower bound when we actually have it; else read broad set
-    .gte('local_date', querySince as any)
-    .order('local_date', { ascending: false })
+  if (!loadAllForImplicit && querySince) {
+    q = q.gte('local_date', querySince as any)
+  }
+  const { data: dailyRows, error: dailyError } = await q.order('local_date', { ascending: false })
   
   console.log('[truth-engine] daily_entries result:', {
     count: dailyRows?.length || 0,
