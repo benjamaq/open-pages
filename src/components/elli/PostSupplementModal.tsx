@@ -139,7 +139,7 @@ export default function PostSupplementModal({
           {/* Continue Button */}
           <button
             onClick={onContinue}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center leading-none"
           >
             Continue to Dashboard →
           </button>

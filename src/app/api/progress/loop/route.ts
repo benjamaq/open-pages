@@ -426,18 +426,17 @@ export async function GET(request: Request) {
       const goals = (it as any).category ? [String((it as any).category)] : []
       const category = inferCategory(name, goals)
 
-      // Days of data = ONLY days that have a supplement_intake record for THIS supplement
+      // Days of data = ONLY days that have a supplement_intake record for THIS user_supplement_id
       let daysOfData = 0
       try {
         const nm = String((it as any).name || '').trim().toLowerCase()
-        const explicitUid = (() => {
-          try {
-            const match = (items || []).find((x: any) => String(x?.name || '').trim().toLowerCase() === nm)
-            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
-          } catch { return null }
-        })()
-        const suppId = explicitUid || nameToUserSuppId.get(nm) || String((it as any).id)
-        const candidates = [suppId, String((it as any).id || '')].filter(Boolean)
+        // Resolve a definitive user_supplement_id; do NOT fall back to stack_items.id for counting
+        const directUid = (it as any).user_supplement_id ? String((it as any).user_supplement_id) : null
+        const nameUid = nameToUserSuppId.get(nm) || null
+        const suppId = directUid || nameUid || (queryTable === 'user_supplement' ? String((it as any).id) : null)
+        if (!suppId) {
+          if (VERBOSE) { try { console.log('[progress/loop] WARN: unable to resolve user_supplement_id for', nm, 'skipping daysOfData count') } catch {} }
+        }
         // Respect start date if available
         const effectiveStart = (startDate && String(startDate).slice(0,10)) || (createdAtRaw ? String(createdAtRaw).slice(0,10) : earliestEntryDate)
         const startTs = effectiveStart ? toTs(String(effectiveStart).slice(0,10)) : Number.NEGATIVE_INFINITY
@@ -445,12 +444,8 @@ export async function GET(request: Request) {
           const dKey = String((entry as any).local_date).slice(0,10)
           if (toTs(dKey) < startTs) continue
           const intake = (entry as any).supplement_intake || null
-          if (!intake || typeof intake !== 'object') continue
-          let has = false
-          for (const k of candidates) {
-            if ((intake as any)[k] !== undefined) { has = true; break }
-          }
-          if (has) daysOfData++
+          if (!intake || typeof intake !== 'object' || !suppId) continue
+          if ((intake as any)[suppId] !== undefined) daysOfData++
         }
       } catch {}
       // Ensure day 1 shows immediate progress if user checked in today
