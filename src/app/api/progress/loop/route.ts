@@ -919,13 +919,19 @@ export async function GET(request: Request) {
         ;(r as any).isReady = isReady
         // Verdict mapping (if effect category present)
         const cat = String((r as any).effectCategory || '').toLowerCase()
-        const verdict =
+        let verdict =
           cat === 'works' ? 'keep' :
           cat === 'no_effect' ? 'drop' :
           cat === 'no_detectable_effect' ? 'drop' :
           cat === 'inconsistent' ? 'testing' :
           cat === 'needs_more_data' ? 'testing' :
           isReady ? 'unclear' : null
+        // Hard override: if latest truth status is 'too_early', force Testing badge
+        try {
+          const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
+          const ts = uid ? (truthBySupp.get(String(uid))?.status || '').toLowerCase() : ''
+          if (ts === 'too_early') verdict = 'testing'
+        } catch {}
         ;(r as any).verdict = verdict
         ;(r as any).effectPercent = typeof r.effectPct === 'number' ? Math.round(r.effectPct) : null
         ;(r as any).effectMetric = (cat === 'works' || cat === 'no_effect' || cat === 'inconsistent') ? 'energy' : null
