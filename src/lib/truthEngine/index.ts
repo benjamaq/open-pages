@@ -338,11 +338,14 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     }
   })
   const samples: DaySample[] = samplesPre.filter(s => s.taken === true || s.taken === false)
+  // Total ON/OFF day counts for persistence (independent of metric presence or confound removal)
+  const sampleOnCount = samples.filter(s => s.taken === true).length
+  const sampleOffCount = samples.filter(s => s.taken === false).length
   try {
     const total = samples.length
     const withMetric = samples.filter(s => s.metric !== null && s.metric !== undefined).length
-    const onDays = samples.filter(s => s.taken === true).length
-    const offDays = samples.filter(s => s.taken === false).length
+    const onDays = sampleOnCount
+    const offDays = sampleOffCount
     try { console.log('[truth-engine] Samples:', { total, withMetric, onDays, offDays }) } catch {}
     debugLog(`SAMPLES_JOINED: total=${total}, withMetric=${withMetric}, onDays=${onDays}, offDays=${offDays}`)
   } catch {}
@@ -388,7 +391,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       primaryMetric,
       canonical,
       confoundedDays: samples.length - cleanSamples.length,
-      cohort: null
+      cohort: null,
+      sampleOnOverride: sampleOnCount,
+      sampleOffOverride: sampleOffCount
     })
   }
 
@@ -418,7 +423,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     canonical,
     confoundedDays: samples.length - cleanSamples.length,
     cohort,
-    confidenceOverride: confidence
+    confidenceOverride: confidence,
+    sampleOnOverride: sampleOnCount,
+    sampleOffOverride: sampleOffCount
   })
 }
 
@@ -431,6 +438,8 @@ function buildReport(args: {
   confoundedDays: number
   cohort: Awaited<ReturnType<typeof getCohortStats>> | null
   confidenceOverride?: number
+  sampleOnOverride?: number
+  sampleOffOverride?: number
 }): TruthReport {
   const { effect, primaryMetric, canonical, cohort } = args
   const confidenceScore = typeof args.confidenceOverride === 'number'
@@ -490,8 +499,8 @@ function buildReport(args: {
     nextSteps,
     scienceNote,
     meta: {
-      sampleOn: effect.sampleOn,
-      sampleOff: effect.sampleOff,
+      sampleOn: typeof args.sampleOnOverride === 'number' ? args.sampleOnOverride : effect.sampleOn,
+      sampleOff: typeof args.sampleOffOverride === 'number' ? args.sampleOffOverride : effect.sampleOff,
       daysExcluded: args.confoundedDays,
       onsetDays: null,
       generatedAt: new Date().toISOString()
