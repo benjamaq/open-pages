@@ -22,6 +22,7 @@ export default function WearablesStep() {
   const [hasWearable, setHasWearable] = useState<boolean | null>(null)
   const [device, setDevice] = useState<WearableDevice | null>(null)
   const [result, setResult] = useState<UploadResult | null>(null)
+  const [showMobileWarn, setShowMobileWarn] = useState<boolean>(false)
 
   function goNext() {
     router.push('/onboarding/report-ready')
@@ -48,6 +49,43 @@ export default function WearablesStep() {
         {/* Yes-wearable path */}
         {hasWearable === true && (
           <div className="space-y-6">
+            {/* Mobile warning modal (shown once per device if on mobile) */}
+            {(() => {
+              const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+              const shouldShow = isMobile && showMobileWarn
+              if (!shouldShow) return null
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/60" onClick={() => setShowMobileWarn(false)} />
+                  <div className="relative z-10 w-full max-w-[440px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+                    <div className="text-base font-semibold text-gray-900">Better on desktop</div>
+                    <div className="mt-2 text-sm text-gray-700">
+                      Uploading health data works best on desktop. Would you like to continue on mobile or switch to desktop?
+                    </div>
+                    <div className="mt-4 flex gap-2 justify-end">
+                      <button
+                        className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                        onClick={() => {
+                          try { localStorage.setItem('wearablesMobileWarnDismissed', '1') } catch {}
+                          setShowMobileWarn(false)
+                        }}
+                      >
+                        Continue on mobile
+                      </button>
+                      <a
+                        className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90 flex items-center"
+                        href="/onboarding/wearables"
+                        onClick={() => {
+                          try { localStorage.removeItem('wearablesMobileWarnDismissed') } catch {}
+                        }}
+                      >
+                        I’ll use desktop
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Great — you can use that here.</h1>
               <p className="text-slate-700 mt-2">
@@ -59,6 +97,15 @@ export default function WearablesStep() {
             <UploadClarification />
 
             <DeviceSelector selected={device} onSelect={(d) => setDevice(d)} />
+            {(() => {
+              // When a device is selected on mobile, show the warning once
+              const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+              const dismissed = typeof window !== 'undefined' && localStorage.getItem('wearablesMobileWarnDismissed') === '1'
+              if (device && isMobile && !dismissed && !showMobileWarn) {
+                setShowMobileWarn(true)
+              }
+              return null
+            })()}
             {device && <DeviceInstructions device={device} />}
 
             {/* Only show upload after device chosen */}
