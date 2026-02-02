@@ -115,19 +115,18 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: false })
         .limit(1)
         .maybeSingle()
-      // Sample recent rows for sources
-      const { data: sampleRows } = await supabase
+      // Get all distinct sources from user's wearable data (avoid sampling so we don't miss older sources)
+      const { data: sourceRows } = await supabase
         .from('daily_entries')
-        .select('wearables')
+        .select('wearables->source')
         .eq('user_id', user.id)
         .not('wearables', 'is', null)
-        .order('local_date', { ascending: false })
-        .limit(200)
+        .not('wearables->source', 'is', null)
+        .limit(5000)
       const sourcesSet = new Set<string>()
-      for (const r of (sampleRows || [])) {
-        const w: any = (r as any)?.wearables
-        const src = w && typeof w === 'object' && typeof w.source === 'string' && w.source ? String(w.source) : null
-        if (src) sourcesSet.add(src)
+      for (const row of (sourceRows || [])) {
+        const src = (row as any)['source'] || (row as any)?.wearables?.source
+        if (typeof src === 'string' && src) sourcesSet.add(src)
       }
       // 4. Count check-in days (energy/mood/focus present)
       const { count: checkinCount, error: checkinErr } = await supabase
