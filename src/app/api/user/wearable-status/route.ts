@@ -129,6 +129,30 @@ export async function GET(request: Request) {
         const src = w && typeof w === 'object' && typeof w.source === 'string' && w.source ? String(w.source) : null
         if (src) sourcesSet.add(src)
       }
+      // 4. Count check-in days (energy/mood/focus present)
+      const { count: checkinCount, error: checkinErr } = await supabase
+        .from('daily_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .or('energy.not.is.null,mood.not.is.null,focus.not.is.null')
+      try {
+        console.log('[wearable-status] Check-in count:', checkinCount, (checkinErr as any)?.message || 'none')
+      } catch {}
+
+      // 5. days_by_source counts using JSON contains by detected sources
+      const daysBySource: Record<string, number> = {}
+      for (const src of Array.from(sourcesSet)) {
+        const { count: srcCount, error: srcErr } = await supabase
+          .from('daily_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .contains('wearables', { source: src } as any)
+        daysBySource[src] = srcCount || 0
+        try {
+          console.log('[wearable-status] days_by_source:', src, srcCount, (srcErr as any)?.message || 'none')
+        } catch {}
+      }
+
       const minDate = minRow ? String((minRow as any).local_date).slice(0,10) : null
       const maxDate = maxRow ? String((maxRow as any).local_date).slice(0,10) : null
       try {
@@ -148,8 +172,8 @@ export async function GET(request: Request) {
         wearable_last_upload_at: null,
         wearable_date_range_start: minDate,
         wearable_date_range_end: maxDate,
-        days_by_source: Object.fromEntries(Array.from(sourcesSet).map(s => [s, 0])),
-        checkin_days: 0,
+        days_by_source: daysBySource,
+        checkin_days: checkinCount || 0,
         total_unique_days: exactCount || 0,
         overlap_days: 0
       })
