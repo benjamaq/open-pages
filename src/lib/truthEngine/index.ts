@@ -226,7 +226,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     subjective_mood: safeNum(r.mood),
     sleep_quality: safeNum(r.sleep_quality),
     focus: safeNum(r.focus),
-    _raw: { tags: Array.isArray((r as any)?.tags) ? (r as any).tags : [] }
+    _raw: { 
+      tags: Array.isArray((r as any)?.tags) ? (r as any).tags : [],
+      wearables: (r as any)?.wearables || null
+    }
   }))
   
   // Normalize various encodings of intake into taken/off
@@ -319,16 +322,41 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     for (const key of secondaryKeys) {
       secondaryMetrics[key] = safeNum(m[key] ?? (m?._raw ? (m as any)._raw[key] : undefined))
     }
-    const metricValue =
-      m[primaryMetric] != null
-        ? safeNum(m[primaryMetric])
-        : (m?._raw ? (() => {
-            const key = (primaryMetric || '').toLowerCase()
-            if (key === 'subjective_energy') return safeNum((m as any)._raw?.energy)
-            if (key === 'subjective_mood') return safeNum((m as any)._raw?.mood)
-            if (key === 'sleep_quality' || key === 'sleep_score') return safeNum((m as any)._raw?.sleep_quality ?? (m as any)._raw?.sleep)
-            return null
-          })() : null)
+    const metricValue = (() => {
+      // 1) Direct column value
+      if (m[primaryMetric] != null) return safeNum(m[primaryMetric])
+      const key = (primaryMetric || '').toLowerCase()
+      // 2) Legacy raw mappings (subjective fields)
+      if (key === 'subjective_energy') return safeNum((m as any)._raw?.energy)
+      if (key === 'subjective_mood') return safeNum((m as any)._raw?.mood)
+      if (key === 'focus') return safeNum((m as any)._raw?.focus)
+      if (key === 'sleep_quality' || key === 'sleep_score') {
+        const v = safeNum((m as any)._raw?.sleep_quality ?? (m as any)._raw?.sleep)
+        if (v != null) return v
+      }
+      // 3) Wearables fallback: infer a usable metric from wearables blob
+      const w = (m as any)._raw?.wearables || null
+      if (!w || typeof w !== 'object') return null
+      // Prefer sleep-related if primary metric is sleep-like
+      const isSleep = key.includes('sleep')
+      const tryKeys = [
+        ...(isSleep ? ['sleep_performance_pct', 'sleep_score', 'sleep_quality', 'sleep_hours', 'sleep_min'] : []),
+        // General fallbacks from WHOOP/Oura
+        'recovery_score', 'readiness', 'hrv_rmssd', 'hrv_ms', 'hrv', 'hrv_sdnn_ms', 'strain', 'resting_hr_bpm', 'resting_hr'
+      ]
+      for (const k of tryKeys) {
+        const raw = (w as any)[k]
+        if (raw == null) continue
+        let num = Number(raw)
+        if (!Number.isFinite(num)) continue
+        // Normalize percentages to 0-100 if they look like 0-1
+        if (String(k).endsWith('_pct') && num <= 1) num = num * 100
+        // Convert minutes to hours for readability if minutes key
+        if (k === 'sleep_min' && num > 0) num = num / 60
+        return num
+      }
+      return null
+    })()
     return {
       date: d,
       metric: metricValue,
