@@ -27,7 +27,7 @@ export default function PricingPage() {
               <li>Manual check-ins</li>
               <li>Basic pattern insights</li>
             </ul>
-            <Link href="/checkout?plan=free">
+            <Link href="/signup?plan=free">
               <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                 Start Casual →
               </Button>
@@ -47,7 +47,7 @@ export default function PricingPage() {
               <li>Cohen&apos;s d effect sizing</li>
               <li>Full Breakup Reports</li>
             </ul>
-            <Link href="/checkout?plan=pro">
+            <Link href="/signup?plan=premium">
               <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
                 Get Answers →
               </Button>
