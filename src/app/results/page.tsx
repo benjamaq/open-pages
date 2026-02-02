@@ -724,7 +724,7 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <div className="mt-2">
-                        <div className="text-[16px] font-semibold text-[#111] line-clamp-2">{r.name}</div>
+                        <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
                         {(() => {
                           const nameLc = String(r.name || '').toLowerCase().trim()
                           const brandLc = String(brand || '').toLowerCase().trim()
@@ -1337,7 +1337,7 @@ export default function ResultsPage() {
                                 </div>
                               </div>
                               <div className="bg-white px-4 py-3">
-                                <div className="text-[16px] font-semibold text-[#111111] line-clamp-2">{r.name}</div>
+                                <div className="text-[16px] font-semibold text-[#111111] break-words" title={r.name}>{r.name}</div>
                                 {brandText && <div className="text-[13px] text-[#6B7280] mt-0.5">{brandText}</div>}
                                 <div className="border-t border-dashed mt-3 mb-3" style={{ borderColor: '#E5E1DC' }} />
                                 <div className="flex items-center justify-between text-[13px] text-[#6B7280]">
