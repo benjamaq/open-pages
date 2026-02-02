@@ -950,7 +950,7 @@ export function DashboardUnifiedPanel() {
               This improves confidence and can reduce the time needed to reach clear results.
             </p>
           </div>
-            <div className="mt-6 flex justify-center">
+            <div className="mt-6 flex items-center justify-center">
             <button
               onClick={() => setShowUploadSuccess(null)}
                 className="inline-flex items-center justify-center h-10 rounded-lg bg-gray-900 text-white px-4 leading-none hover:opacity-90"

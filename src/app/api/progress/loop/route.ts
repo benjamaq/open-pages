@@ -426,21 +426,33 @@ export async function GET(request: Request) {
       const goals = (it as any).category ? [String((it as any).category)] : []
       const category = inferCategory(name, goals)
 
-      // Days of data = ALL check-in days since start_date (count today's check-in even if noisy)
-      // Clean/Noise is still tracked separately for insights, but baseline progress uses all days
+      // Days of data = ONLY days that have a supplement_intake record for THIS supplement
       let daysOfData = 0
-      // Prefer explicit start date; else created_at; else first entry date
-      const effectiveStart = (startDate && String(startDate).slice(0,10)) || (createdAtRaw ? String(createdAtRaw).slice(0,10) : earliestEntryDate)
-      if (effectiveStart) {
-        const startKey = String(effectiveStart).slice(0,10)
-        const startTs = toTs(startKey)
-        // Prefer daily_entries dates; fallback to distinctCheckinDays if daily_entries empty
-        const candidateDates = allEntryDatesSet.size > 0 ? Array.from(allEntryDatesSet) : Array.from(distinctCheckinDays)
-        daysOfData = candidateDates.reduce((acc, d) => acc + (toTs(d) >= startTs ? 1 : 0), 0)
-      } else {
-        // If no explicit start date, use all entry days (not just clean)
-        daysOfData = allEntryDatesSet.size > 0 ? allEntryDatesSet.size : distinctCheckinDays.size
-      }
+      try {
+        const nm = String((it as any).name || '').trim().toLowerCase()
+        const explicitUid = (() => {
+          try {
+            const match = (items || []).find((x: any) => String(x?.name || '').trim().toLowerCase() === nm)
+            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
+          } catch { return null }
+        })()
+        const suppId = explicitUid || nameToUserSuppId.get(nm) || String((it as any).id)
+        const candidates = [suppId, String((it as any).id || '')].filter(Boolean)
+        // Respect start date if available
+        const effectiveStart = (startDate && String(startDate).slice(0,10)) || (createdAtRaw ? String(createdAtRaw).slice(0,10) : earliestEntryDate)
+        const startTs = effectiveStart ? toTs(String(effectiveStart).slice(0,10)) : Number.NEGATIVE_INFINITY
+        for (const entry of (entries365 || [])) {
+          const dKey = String((entry as any).local_date).slice(0,10)
+          if (toTs(dKey) < startTs) continue
+          const intake = (entry as any).supplement_intake || null
+          if (!intake || typeof intake !== 'object') continue
+          let has = false
+          for (const k of candidates) {
+            if ((intake as any)[k] !== undefined) { has = true; break }
+          }
+          if (has) daysOfData++
+        }
+      } catch {}
       // Ensure day 1 shows immediate progress if user checked in today
       if (daysOfData === 0) {
         if (hasCheckedInToday) {
