@@ -1065,7 +1065,7 @@ export async function GET(request: Request) {
     } catch {}
     // Rotation intelligence
     // Build ON/OFF requirement status per supplement id to prioritize OFF-day needs
-    const progressById: Record<string, { daysOn: number; daysOff: number; reqOn: number; reqOff: number }> = {}
+    const progressById: Record<string, { daysOn: number; daysOff: number; reqOn: number; reqOff: number; daysOfData: number }> = {}
     try {
       for (const r of progressRows) {
         const id = String((r as any).id || '')
@@ -1074,7 +1074,8 @@ export async function GET(request: Request) {
         const daysOff = Number((r as any).daysOff || 0)
         const reqOn = Number((r as any).requiredDays || 14)
         const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
-        progressById[id] = { daysOn, daysOff, reqOn, reqOff }
+        const daysOfData = Number((r as any).daysOfData || 0)
+        progressById[id] = { daysOn, daysOff, reqOn, reqOff, daysOfData }
       }
     } catch {}
     // Build stack items exclusively from testing-active supplements to drive rotation
@@ -1120,13 +1121,18 @@ export async function GET(request: Request) {
     }
     const cycleLenDays = 3
     const baselineDaysNeeded = 3
+    // New supplements should build baseline before OFF days are scheduled
+    const perItemBaselineDays = 3
     const rotation: any = {}
     // Collect eligible candidates that need OFF days (testing-active, not complete)
     const testingCandidates = progressRows.filter(r => (r as any).testingActive && r.progressPercent < 100)
     const offNeedCandidates = testingCandidates.filter(r => {
       const id = String((r as any).id || '')
       const p = id ? (progressById[id] || null) : null
-      return !!(p && p.daysOff < p.reqOff)
+      if (!p) return false
+      // Require a few baseline days before considering OFF scheduling
+      if (p.daysOfData < perItemBaselineDays) return false
+      return p.daysOff < p.reqOff
     })
     try {
       console.log('[rotation] eligibility', {
@@ -1198,6 +1204,11 @@ export async function GET(request: Request) {
       }
       const toSkipCount = Math.min(skipPerCycle(stackSize), groupSupps.length)
       const skipList = [...groupSupps]
+        // Exclude very new supplements from OFF scheduling
+        .filter(s => {
+          const p = progressById[s.id]
+          return p ? p.daysOfData >= perItemBaselineDays : false
+        })
         .sort((a, b) => {
           const pa = progressById[a.id]; const pb = progressById[b.id]
           const aOnMet = pa ? (pa.daysOn >= pa.reqOn) : false
