@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import JSZip from 'jszip'
 
 // ============================================
@@ -399,7 +400,7 @@ export async function POST(request: NextRequest) {
     // Fetch existing rows for merge-by-date behavior (do not drop prior sources/metrics)
     let existingMap = new Map<string, { wearables: any; sleep_quality: number | null }>()
     if (allDates.length > 0) {
-      const { data: existing, error: exErr } = await supabase
+      const { data: existing, error: exErr } = await supabaseAdmin
         .from('daily_entries')
         .select('local_date, wearables, sleep_quality')
         .eq('user_id', user!.id)
@@ -438,11 +439,12 @@ export async function POST(request: NextRequest) {
         wearables: mergedWearables
       }
     })
-    console.log('[Whoop Upload] Upserting rows:', upserts.length)
+    console.log('[Whoop Upload] Upserting rows (admin client):', upserts.length)
     if (upserts.length > 0) {
-      const { error: insErr } = await supabase
+      const { data: saved, error: insErr } = await supabaseAdmin
         .from('daily_entries')
         .upsert(upserts, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
+        .select()
       if (insErr) {
         console.error('[Whoop Upload] Upsert error:', insErr)
         return NextResponse.json(
@@ -450,7 +452,25 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
-      results.upserts = upserts.length
+      const savedLen = Array.isArray(saved) ? saved.length : 0
+      if (!saved || savedLen === 0) {
+        console.error('[Whoop Upload] Upsert returned 0 rows (admin client).')
+        return NextResponse.json(
+          { error: 'No data saved', debug: { attempted: upserts.length, user_id: user!.id } },
+          { status: 500 }
+        )
+      }
+      results.upserts = savedLen
+      try { console.log(`[Whoop Upload] Saved ${savedLen} rows for user ${user!.id}`) } catch {}
+      // Post-verify by re-counting dates we attempted
+      try {
+        const { count: verifyCount, error: verifyErr } = await supabaseAdmin
+          .from('daily_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user!.id)
+          .in('local_date', allDates)
+        console.log('[Whoop Upload] Post-verify count for attempted dates:', verifyCount, verifyErr?.message || 'ok')
+      } catch {}
     }
     
     const totalParsed = results.sleeps + results.physiological + results.journal
