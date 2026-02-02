@@ -178,6 +178,17 @@ export async function POST(request: Request) {
     // Optional declared intent categories
     const bodyTags = Array.isArray(body?.primary_goal_tags) ? body.primary_goal_tags : undefined
     try { console.log('Saving primary_goal_tags:', bodyTags) } catch {}
+    // Optional backdated start date for implicit ON/OFF (from add-supplement flow)
+    const bodyStartDate = typeof body?.startDate === 'string' ? String(body.startDate).slice(0, 10) : undefined
+    const bodyEndDate = typeof body?.endDate === 'string' ? String(body.endDate).slice(0, 10) : undefined
+    // Defensive: ignore future dates
+    const isFuture = (iso?: string) => {
+      if (!iso) return false
+      const d = new Date(iso); const t = new Date()
+      d.setHours(0,0,0,0); t.setHours(0,0,0,0)
+      return d.getTime() > t.getTime()
+    }
+    const inferredStartISO = (bodyStartDate && !isFuture(bodyStartDate)) ? bodyStartDate : undefined
 
     // 1) Try to map via canonical_supplement (if table exists)
     let canonicalName: string | null = null
@@ -268,6 +279,10 @@ export async function POST(request: Request) {
     if (bodyTags) {
       insertPayload.primary_goal_tags = bodyTags
     }
+    // Persist inferred_start_at when provided by client (backdated start)
+    if (inferredStartISO) {
+      insertPayload.inferred_start_at = inferredStartISO
+    }
     try { console.log('Insert payload:', insertPayload) } catch {}
 
     // Determine tier (Starter vs Premium) and current testing count
@@ -329,6 +344,7 @@ export async function POST(request: Request) {
             user_supplement_id: String(userSupp.id),
           }
           if (typeof monthlyFromBody === 'number') stackPayload.monthly_cost = monthlyFromBody
+          if (inferredStartISO) stackPayload.start_date = inferredStartISO
           await supabase.from('stack_items').insert(stackPayload)
         }
       } catch {}
