@@ -850,15 +850,14 @@ export async function GET(request: Request) {
             if (truth && typeof truth.confidence_score === 'number') {
               r.confidence = Number(truth.confidence_score)
             }
-            // If Truth Engine provided sample day counts, override derived days so UI reflects implicit ON/OFF
-            const tOn = (truth && typeof truth.sample_days_on === 'number') ? Number(truth.sample_days_on) : null
-            const tOff = (truth && typeof truth.sample_days_off === 'number') ? Number(truth.sample_days_off) : null
-            if (tOn !== null || tOff !== null) {
-              const newOn = tOn ?? Number((r as any).daysOn || 0)
-              const newOff = tOff ?? Number((r as any).daysOff || 0)
-              ;(r as any).daysOn = newOn
-              ;(r as any).daysOff = newOff
-              ;(r as any).daysOfData = newOn + newOff
+            // If Truth Engine provided sample day counts and they are non-zero, override derived days
+            const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
+            const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
+            const sum = (tOn ?? 0) + (tOff ?? 0)
+            if (sum > 0) {
+              ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
+              ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
+              ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
             }
           }
         } catch {}
