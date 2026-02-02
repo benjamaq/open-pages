@@ -89,8 +89,14 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
         console.log('[uploader] Universal API response status:', res.status)
         console.log('[uploader] Universal API response:', j)
       } catch {}
-      if (!res.ok) throw new Error(j?.error || j?.details || 'Upload failed')
+      // Consider partial successes acceptable (some deployments may return non-200 with upserted days)
+      const days = Number(j?.results?.daysUpserted || 0)
+      const accepted = res.ok || j?.success === true || days > 0
+      if (!accepted) {
+        throw new Error(j?.error || j?.details || 'Upload failed')
+      }
       setUploaded(true)
+      setError(null)
     } catch (e: any) {
       setError(e?.message || 'Upload failed')
     } finally {
