@@ -33,7 +33,24 @@ export default function UniversalHeader() {
     "inline-flex items-center justify-center h-9 sm:h-10 rounded-full border border-neutral-300 px-4 text-gray-800 hover:bg-neutral-100";
 
   const homeHref = isAuthed ? "/dashboard" : "/";
-  const signUpHref = pathname === "/" ? "#pricing" : "/pricing";
+  const signUpHref = pathname === "/" ? "/#pricing" : "/pricing";
+  const handleSignUpClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/") {
+      try {
+        e.preventDefault();
+        const el = document.getElementById("pricing");
+        if (el && typeof el.scrollIntoView === "function") {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          // Fallback to hash navigation
+          window.location.hash = "pricing";
+        }
+      } catch {
+        // Fallback to hash navigation on any error
+        try { window.location.hash = "pricing"; } catch {}
+      }
+    }
+  };
 
   return (
     <header className={headerClass}>
@@ -49,7 +66,7 @@ export default function UniversalHeader() {
                 <Link href="/auth/signin" className={navLinkBase}>
                   Sign In
                 </Link>
-                <Link href={signUpHref} className={signUpBtn}>
+                <Link href={signUpHref} onClick={handleSignUpClick} className={signUpBtn}>
                   Sign Up
                 </Link>
               </>
