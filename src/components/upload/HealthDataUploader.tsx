@@ -5,9 +5,9 @@ import type { UploadResult } from '@/types/UploadResult'
 export default function HealthDataUploader({
   onUploadComplete,
   endpoint = '/api/import/health-data',
-  accept = '.csv,.json,.xml',
+  accept = '.zip,.xml,.csv,.json',
   title = 'Upload your health data file',
-  helper = 'CSV or JSON from your health app.',
+  helper = 'ZIP (Apple Health), XML, CSV, or JSON exports.',
 }: {
   onUploadComplete: (result: UploadResult) => void
   endpoint?: string

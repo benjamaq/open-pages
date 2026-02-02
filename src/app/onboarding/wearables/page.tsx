@@ -82,9 +82,9 @@ export default function WearablesStep() {
                 {(device === WearableDevice.OURA || device === WearableDevice.GARMIN || device === WearableDevice.FITBIT || device === WearableDevice.OTHER || device === WearableDevice.NOT_SURE) && (
                   <HealthDataUploader
                     endpoint="/api/import/health-data"
-                    accept=".csv,.json,.xml"
+                    accept=".zip,.xml,.csv,.json"
                     title="Upload your export file"
-                    helper="CSV, JSON, or XML supported."
+                    helper="ZIP (Apple Health), XML, CSV, or JSON supported."
                     onUploadComplete={(r) => setResult(r)}
                   />
                 )}
