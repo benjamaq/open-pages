@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useMemo } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,11 +18,6 @@ export default function SignupPage() {
 function SignupInner() {
   const router = useRouter()
   const params = useSearchParams()
-  const initialPlan = useMemo(() => {
-    const p = (params.get('plan') || '').toLowerCase()
-    return p === 'premium' || p === 'pro' ? 'premium' : 'free'
-  }, [params])
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>(initialPlan as any)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,8 +28,8 @@ function SignupInner() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    // Debug: trace selected plan
-    try { console.log('Selected plan:', selectedPlan) } catch {}
+    // Debug: trace plan params
+    try { console.log('Plan param:', params.get('plan'), 'Period param:', params.get('period')) } catch {}
     let createdUserId: string | null = null
     try {
       const supabase = createClient()
@@ -101,8 +96,10 @@ function SignupInner() {
     setLoading(false)
     // Prevent cross-account bleed: clear any previous onboarding draft
     try { clearDraft() } catch {}
-    // Redirect based on selected plan
-    if (selectedPlan === 'premium') {
+    // Redirect based on plan from URL
+    const plan = (params.get('plan') || '').toLowerCase()
+    const period = (params.get('period') || 'monthly').toLowerCase()
+    if (plan === 'premium' || plan === 'pro') {
       try {
         console.log('Creating Stripe session...')
         const res = await fetch('/api/billing/create-checkout-session', {
@@ -110,7 +107,7 @@ function SignupInner() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             plan: 'premium',
-            period: 'monthly',
+            period,
             userId: createdUserId,
             userEmail: email.trim()
           })
@@ -141,23 +138,6 @@ function SignupInner() {
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-slate-900">Create your BioStackr account</h1>
           <p className="mt-2 text-gray-600">Start testing your supplements.</p>
-        </div>
-        {/* Plan selection */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setSelectedPlan('free')}
-            className={`rounded-xl border text-sm py-2 ${selectedPlan === 'free' ? 'border-slate-900 text-slate-900 font-semibold bg-slate-50' : 'border-gray-300 text-gray-700'}`}
-          >
-            Free
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedPlan('premium')}
-            className={`rounded-xl border text-sm py-2 ${selectedPlan === 'premium' ? 'border-amber-500 text-amber-900 font-semibold bg-amber-50' : 'border-gray-300 text-gray-700'}`}
-          >
-            Premium
-          </button>
         </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="grid gap-1">

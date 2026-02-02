@@ -33,6 +33,7 @@ export default function UniversalHeader() {
     "inline-flex items-center justify-center h-9 sm:h-10 rounded-full border border-neutral-300 px-4 text-gray-800 hover:bg-neutral-100";
 
   const homeHref = isAuthed ? "/dashboard" : "/";
+  const signUpHref = pathname === "/" ? "#pricing" : "/pricing";
 
   return (
     <header className={headerClass}>
@@ -48,7 +49,7 @@ export default function UniversalHeader() {
                 <Link href="/auth/signin" className={navLinkBase}>
                   Sign In
                 </Link>
-                <Link href="/auth/signup" className={signUpBtn}>
+                <Link href={signUpHref} className={signUpBtn}>
                   Sign Up
                 </Link>
               </>

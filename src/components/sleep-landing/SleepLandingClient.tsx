@@ -49,7 +49,7 @@ export default function SleepLandingClient() {
           </Link>
           <nav className="flex items-center gap-3">
             <Link href="/auth/signin" className="text-sm text-gray-700 hover:text-gray-900">Sign in</Link>
-            <Link href="/auth/signup" className="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800">Sign up</Link>
+            <Link href="/pricing" className="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800">Sign up</Link>
             <Link href="/contact" className="text-sm text-gray-700 hover:text-gray-900">Contact</Link>
           </nav>
         </div>
