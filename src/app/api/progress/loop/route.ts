@@ -269,7 +269,7 @@ export async function GET(request: Request) {
     since365.setDate(since365.getDate() - 365)
     const { data: entries365 } = await supabase
       .from('daily_entries')
-      .select('local_date,mood,energy,focus,sleep_quality,tags,skipped_supplements,supplement_intake')
+      .select('local_date,mood,energy,focus,sleep_quality,tags,wearables,skipped_supplements,supplement_intake')
       .eq('user_id', user.id)
       .gte('local_date', since365.toISOString().slice(0,10))
     const allEntryDatesSet = new Set<string>((entries365 || []).map((e: any) => String(e.local_date).slice(0,10)))
@@ -444,8 +444,20 @@ export async function GET(request: Request) {
           const dKey = String((entry as any).local_date).slice(0,10)
           if (toTs(dKey) < startTs) continue
           const intake = (entry as any).supplement_intake || null
-          if (!intake || typeof intake !== 'object' || !suppId) continue
-          if ((intake as any)[suppId] !== undefined) daysOfData++
+          let has = false
+          if (suppId && intake && typeof intake === 'object') {
+            if ((intake as any)[suppId] !== undefined) {
+              has = true
+            }
+          }
+            // if no explicit intake, count wearable day as implicit data when a start date is known
+          if (!has) {
+            const wear = (entry as any).wearables
+            if (wear && (startDate || createdAtRaw)) {
+              has = true
+            }
+          }
+          if (has) daysOfData++
         }
       } catch {}
       // Ensure day 1 shows immediate progress if user checked in today
@@ -564,11 +576,11 @@ export async function GET(request: Request) {
     // Map names -> user_supplement ids for when items are from stack_items
     const { data: userSuppRows } = await supabase
       .from('user_supplement')
-      .select('id,name,retest_started_at,trial_number,testing_status')
+      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status')
       .eq('user_id', user.id)
     const nameToUserSuppId = new Map<string, string>()
     const userSuppIdToName = new Map<string, string>()
-    const suppMetaById = new Map<string, { restart?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
+    const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
     const testingActiveIds = new Set<string>()
     const testingStatusById = new Map<string, string>()
     for (const u of userSuppRows || []) {
@@ -578,7 +590,7 @@ export async function GET(request: Request) {
       userSuppIdToName.set(uid, String((u as any).name || ''))
       const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
       const status = String((u as any).testing_status || 'inactive')
-      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting, status })
+      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, inferred: (u as any).inferred_start_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting, status })
       if (isTesting) testingActiveIds.add(uid)
       testingStatusById.set(uid, status)
     }
@@ -771,6 +783,19 @@ export async function GET(request: Request) {
               }
             }
           }
+          // Implicit ON/OFF from wearables if no explicit intake record:
+          if (!hasRecord) {
+            const hasWearable = (entry as any)?.wearables != null
+            const inferred = (suppMetaById.get(suppId || '') as any)?.inferred as string | null
+            if (hasWearable && inferred) {
+              if (dKey < inferred.slice(0,10)) {
+                isOff = true
+              } else {
+                isTaken = true
+              }
+              hasRecord = true
+            }
+          }
           if (!hasRecord) continue
           // A day is "clean" unless it contains a known noise/confound tag
           const entryTags: string[] = Array.isArray((entry as any).tags) ? (entry as any).tags : []
@@ -899,9 +924,11 @@ export async function GET(request: Request) {
       ;(r as any).progressState = stateFor(r.progressPercent).label
     }
     const totalCost = progressRows.reduce((s, r) => s + (Number(r.monthlyCost || 0)), 0)
-    const stackProgress = totalCost > 0
-      ? Math.round(progressRows.reduce((s, r) => s + (r.progressPercent * (Number(r.monthlyCost || 0))), 0) / totalCost)
-      : Math.round(progressRows.reduce((s, r) => s + r.progressPercent, 0) / Math.max(progressRows.length, 1))
+    // Overall clarity progress = arithmetic mean of individual progress to ensure monotonicity:
+    // if all individuals decrease, overall cannot increase.
+    const stackProgress = Math.round(
+      progressRows.reduce((s, r) => s + r.progressPercent, 0) / Math.max(progressRows.length, 1)
+    )
 
     // Compute readiness and derived summary fields (used by client for gating)
     for (const r of progressRows) {

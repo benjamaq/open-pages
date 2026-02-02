@@ -69,8 +69,11 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     const restart = (supp as any)?.retest_started_at ? String((supp as any).retest_started_at).slice(0,10) : null
     const inferred = (supp as any)?.inferred_start_at ? String((supp as any).inferred_start_at).slice(0,10) : null
     // IMPORTANT: Do NOT gate analysis by created_at; seeded entries may predate record creation
-    // Only use restart or inferred bounds; otherwise allow full 365d window
-    sinceLowerBound = restart || inferred || null
+    // Only use restart bound; DO NOT clamp by inferred_start_at or we lose implicit OFF days
+    sinceLowerBound = restart || null
+    // Preserve inferred for implicit ON/OFF boundary later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    var inferredStartGlobal: string | null = inferred || null
   } else {
     // Fallback: treat id as stack_items id for this user
     const { data: stackItem } = await supabase
@@ -168,7 +171,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   const { data: dailyRows, error: dailyError } = await supabase
     .from('daily_entries')
-    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags')
+    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
     .eq('user_id', userId)
     // Only apply lower bound when we actually have it; else read broad set
     .gte('local_date', querySince as any)
@@ -231,6 +234,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   }
 
   // Parse intake for this specific supplement
+  let implicitOn = 0, implicitOff = 0, explicitOn = 0, explicitOff = 0
   const intake = (dailyRows || []).map((r: any) => {
     const intakeObj = r.supplement_intake || {}
     // Try all candidate keys; first match wins
@@ -238,7 +242,26 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     for (const k of candidateIntakeKeys) {
       if (k in intakeObj) { value = (intakeObj as any)[k]; break }
     }
-    const taken = normalizeTaken(value)
+    let taken = normalizeTaken(value)
+    // Implicit ON/OFF from wearables when no explicit intake and inferred start exists
+    if (taken === null) {
+      const hasWearable = r?.wearables != null
+      const inferredStart: string | null = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
+      if (hasWearable && inferredStart) {
+        const dKey = String(r.local_date).slice(0,10)
+        if (dKey >= inferredStart) {
+          taken = true
+          implicitOn++
+        } else {
+          taken = false
+          implicitOff++
+        }
+      }
+    } else {
+      // Explicit record present
+      if (taken === true) explicitOn++
+      if (taken === false) explicitOff++
+    }
     return { date: r.local_date, taken, raw: value }
   }).filter((x: any) => x.taken !== null)
   
@@ -322,6 +345,19 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Exclude confounded days for effect calculation
   const cleanSamples = samples.filter(s => !s.confounded)
   const effect: EffectStats = computeEffectStats(cleanSamples, primaryMetric)
+  try {
+    console.log('[truth-engine][implicit-summary]', {
+      userId,
+      userSupplementId,
+      inferredStart: (typeof inferredStartGlobal === 'string' ? inferredStartGlobal : null),
+      explicitOn,
+      explicitOff,
+      implicitOn,
+      implicitOff,
+      samplesTotal: samples.length,
+      cleanSamples: cleanSamples.length
+    })
+  } catch {}
   try {
     console.log('[truth-engine] Effect computed:', {
       metric: primaryMetric,
