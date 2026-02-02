@@ -104,6 +104,19 @@ export default function AddSupplementModal({
       const first = synthetic[0]
       if (save && typeof save.onCreate === 'function') {
         // Use provided callback path
+        try {
+          console.log('[AddSupplementModal] submitting (callback):', {
+            name: name.trim(),
+            startDate: first.startDate,
+            endDate: first.endDate,
+            dose: dose || undefined,
+            timing: timing || undefined,
+            brand: (() => {
+              const idx = name.indexOf(',')
+              return idx > 0 ? name.slice(0, idx).trim() : undefined
+            })()
+          })
+        } catch {}
         const create = await save.onCreate({
           name: name.trim(),
           startDate: first.startDate,
@@ -138,6 +151,19 @@ export default function AddSupplementModal({
       } else {
         // Fallback: direct API calls so Save works even if no callbacks wired
         const first = synthetic[0]
+        try {
+          console.log('[AddSupplementModal] submitting (fallback):', {
+            name: name.trim(),
+            startDate: first.startDate,
+            endDate: first.endDate,
+            dose: dose || undefined,
+            timing: timing || undefined,
+            brand: (() => {
+              const idx = name.indexOf(',')
+              return idx > 0 ? name.slice(0, idx).trim() : undefined
+            })()
+          })
+        } catch {}
         const res = await fetch('/api/supplements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
