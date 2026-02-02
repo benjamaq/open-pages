@@ -96,6 +96,45 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       console.error('[POST periods] supabase insert error:', error, 'payload:', insertPayload)
       return NextResponse.json({ error: error.message || 'Failed to create period' }, { status: 500 })
     }
+    // After creating a period, ensure the parent records reflect the earliest start date:
+    // - Update stack_items.start_date (used as fallback by Truth Engine)
+    // - If linked, update user_supplement.inferred_start_at so historical OFF days can be computed
+    try {
+      // Find earliest start date for this intervention
+      const { data: earliestRow } = await supabase
+        .from('intervention_periods')
+        .select('start_date')
+        .eq('intervention_id', params.id)
+        .order('start_date', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      const earliest = (earliestRow as any)?.start_date ? String((earliestRow as any).start_date).slice(0,10) : String(body.start_date).slice(0,10)
+      // Update stack_items.start_date
+      await supabase
+        .from('stack_items')
+        .update({ start_date: earliest })
+        .eq('id', params.id)
+      // Look up a linked user_supplement_id on this stack item
+      const { data: si } = await supabase
+        .from('stack_items')
+        .select('user_supplement_id')
+        .eq('id', params.id)
+        .maybeSingle()
+      const userSuppId = (si as any)?.user_supplement_id ? String((si as any).user_supplement_id) : null
+      if (userSuppId) {
+        const { error: usErr } = await supabase
+          .from('user_supplement')
+          .update({ inferred_start_at: earliest })
+          .eq('id', userSuppId)
+          .eq('user_id', user.id)
+        if (usErr) {
+          console.warn('[POST periods] failed to update user_supplement.inferred_start_at:', usErr.message)
+        }
+      }
+      console.log('[POST periods] start dates updated:', { earliest, userSuppId: userSuppId || null })
+    } catch (e: any) {
+      console.warn('[POST periods] post-insert start date sync warning:', e?.message || e)
+    }
     return NextResponse.json({ period: data })
   } catch (err: any) {
     console.error('[POST periods] unhandled error:', err?.stack || err?.message || err)
