@@ -1016,6 +1016,11 @@ export async function GET(request: Request) {
           cat === 'inconsistent' ? 'testing' :
           cat === 'needs_more_data' ? 'testing' :
           isReady ? 'unclear' : null
+        // Upload-only analyses should never surface KEEP/DROP on the dashboard
+        try {
+          const src = String(((r as any).analysisSource || '')).toLowerCase()
+          if (src === 'implicit') verdict = 'testing'
+        } catch {}
         // Hard override: if latest truth status is 'too_early', force Testing badge
         try {
           const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
