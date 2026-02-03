@@ -162,16 +162,23 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   }
   debugLog(`QUERY daily_entries: user_id=${userId}, since=${loadAllForImplicit ? 'ALL' : (querySince || 'NONE')}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake,wearables`)
 
-  let dailyRows: any[] | null = null
+  let dailyRows: any[] = []
   let dailyError: any = null
-  const res = await supabase
-    .from('daily_entries')
-    .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
-    .eq('user_id', userId)
-    .limit(10000)
-    .order('local_date', { ascending: false })
-  dailyRows = (res as any)?.data || null
-  dailyError = (res as any)?.error || null
+  let offset = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('daily_entries')
+      .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
+      .eq('user_id', userId)
+      .order('local_date', { ascending: false })
+      .range(offset, offset + batchSize - 1)
+    if (error) { dailyError = error; break }
+    if (!data || data.length === 0) break
+    dailyRows.push(...data)
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
   
   console.log('[truth-engine] daily_entries result:', {
     count: dailyRows?.length || 0,
