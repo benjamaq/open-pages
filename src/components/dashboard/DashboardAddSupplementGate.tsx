@@ -92,9 +92,12 @@ export default function DashboardAddSupplementGate() {
       // New required fields
       dose: doseText,
       timing: timingLabel,
+      // Include backdated start to seed inferred_start_at on create
+      ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),
+      ...(details.isActive === false && details.stoppedAt ? { endDate: String(details.stoppedAt).slice(0, 10) } : {}),
       ...(brand ? { brand } : {})
     }
-    try { console.log('POSTING:', payload) } catch {}
+    try { console.log('[DashboardAddSupplementGate] POST /api/supplements payload:', payload) } catch {}
     const create = await fetch('/api/supplements', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,8 +115,9 @@ export default function DashboardAddSupplementGate() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            startDate: details.startedAt,
-            endDate: details.isActive === false && details.stoppedAt ? details.stoppedAt : null
+            // API expects snake_case keys
+            start_date: String(details.startedAt).slice(0, 10),
+            end_date: (details.isActive === false && details.stoppedAt) ? String(details.stoppedAt).slice(0, 10) : null
           })
         })
       } catch {}
