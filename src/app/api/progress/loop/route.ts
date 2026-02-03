@@ -612,16 +612,11 @@ export async function GET(request: Request) {
         // Prefer explicit mapping from stack_items.id → user_supplement_id
         const idKey = String((r as any).id || '')
         let uid = stackIdToUserSuppId.get(idKey) || null
-        // If this list came directly from user_supplement, use that id as authoritative
+        // If coming from user_supplement, id is authoritative user_supplement_id
         if (!uid && queryTable === 'user_supplement') {
           uid = idKey
         }
-        // Fallback to name-based mapping only if no explicit linkage exists
-        if (!uid) {
-          uid = nameToUserSuppId.get(nm) || null
-        }
-        // As a last resort, keep idKey (may be stack_items.id) to avoid nulls, but truth generation will skip if unresolved
-        uid = uid || idKey
+        // Do NOT use name-based fallback here to avoid cross-supplement leakage
         ;(r as any).testingActive = testingActiveIds.has(uid)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
         ;(r as any).userSuppId = uid
@@ -642,7 +637,7 @@ export async function GET(request: Request) {
       }
       // Truth overlay: if a truth report exists for this supplement, override effectCategory and key metrics
       try {
-        const uid = (r as any).userSuppId || (nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())) || String((r as any).id)
+        const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
         // Ensure a relatively fresh truth exists; regenerate if missing or stale (>1h)
         try {
           const truthRec = uid ? (truths || []).find((t: any) => String((t as any).user_supplement_id || '') === String(uid)) : null
@@ -650,7 +645,7 @@ export async function GET(request: Request) {
           const STALE_MS = 60 * 60 * 1000
           const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
           if (stale && uid) {
-            try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', uid) } catch {}
+            try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', { uid, cardId: (r as any).id, name: (r as any).name }) } catch {}
             const fresh = await generateTruthReportForSupplement(user.id, uid)
             // Persist the freshly generated report so downstream reads are consistent
             try {
@@ -762,16 +757,14 @@ export async function GET(request: Request) {
       // Derive daysOn/Off from daily_entries intake; if retest is active, recompute from retest start
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        // Prefer explicit mapping by stack_items.id, then direct user_supplement id, then name-map
+        // Prefer explicit mapping by stack_items.id, then direct user_supplement id. No name fallback.
         const idKey = String((r as any).id || '')
         let suppId = stackIdToUserSuppId.get(idKey) || null
         if (!suppId && queryTable === 'user_supplement') {
           suppId = idKey
         }
-        if (!suppId) {
-          suppId = nameToUserSuppId.get(nm) || null
-        }
-        suppId = suppId || idKey
+        // If still unresolved (e.g., legacy stack row without linkage), skip truth overlay for this row
+        suppId = suppId || null
         ;(r as any).userSuppId = suppId
         const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
@@ -847,7 +840,7 @@ export async function GET(request: Request) {
         }
         // Re-apply truth overlay AFTER any reset due to retest so category is not wiped
         try {
-          const uid = (r as any).userSuppId || (nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())) || String((r as any).id)
+          const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
           const truth = uid ? truthBySupp.get(String(uid)) : undefined
           const mapped = truth ? mapTruthToCategory(truth.status) : undefined
           if (mapped) {
