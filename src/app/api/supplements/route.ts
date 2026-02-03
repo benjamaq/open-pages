@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
 export async function GET() {
   const supabase = await createClient()
@@ -361,6 +362,52 @@ export async function POST(request: Request) {
             .eq('user_id', user.id)
           if (fixErr) { try { console.warn('[supplements] post-insert inferred_start_at update failed:', fixErr.message) } catch {} }
         } catch {}
+        // If the user has wearable data, trigger truth-engine immediately for instant verdicts
+        try {
+          const { count: wearableCount } = await supabase
+            .from('daily_entries')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .not('wearables', 'is', null)
+          if ((wearableCount || 0) > 0) {
+            try { console.log('[supplements] Triggering Truth Engine for', String(userSupp.id), 'wearableCount=', wearableCount, 'start=', inferredStartISO) } catch {}
+            const fresh = await generateTruthReportForSupplement(user.id, String(userSupp.id))
+            // Persist the report immediately so dashboard reads it on next load
+            try {
+              const payloadToStore = {
+                user_id: user.id,
+                user_supplement_id: String(userSupp.id),
+                canonical_id: null as string | null,
+                status: fresh.status,
+                primary_metric: fresh.primaryMetricLabel,
+                effect_direction: fresh.effect.direction,
+                effect_size: fresh.effect.effectSize,
+                absolute_change: fresh.effect.absoluteChange,
+                percent_change: fresh.effect.percentChange,
+                confidence_score: fresh.confidence.score,
+                sample_days_on: fresh.meta.sampleOn,
+                sample_days_off: fresh.meta.sampleOff,
+                days_excluded_confounds: fresh.meta.daysExcluded,
+                onset_days: fresh.meta.onsetDays,
+                responder_percentile: fresh.community.userPercentile,
+                responder_label: fresh.community.responderLabel,
+                confounds: [],
+                mechanism_inference: fresh.mechanism.label,
+                biology_profile: fresh.biologyProfile,
+                next_steps: fresh.nextSteps,
+                science_note: fresh.scienceNote,
+                raw_context: fresh
+              }
+              await supabase.from('supplement_truth_reports').insert(payloadToStore)
+            } catch (saveErr: any) {
+              try { console.warn('[supplements] truth save failed:', saveErr?.message || saveErr) } catch {}
+            }
+          } else {
+            try { console.log('[supplements] Skipping Truth Engine trigger — no wearable data') } catch {}
+          }
+        } catch (teErr: any) {
+          try { console.warn('[supplements] Truth Engine trigger failed:', teErr?.message || teErr) } catch {}
+        }
       }
       return NextResponse.json({ id: userSupp.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
