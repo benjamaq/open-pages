@@ -1524,8 +1524,8 @@ async function getStreakDays(supabase: any, userId: string): Promise<number> {
 
 // Upload-aware progress: give a head start for historical (implicit) data without exceeding 60%
 function computeUploadProgress(onDays: number, offDays: number): number {
-  const P_MIN = 30
-  const P_MAX = 60
+  const P_MIN = 25
+  const P_MAX = 70
   const N_TARGET = 180
   const nEff = Math.min(onDays, offDays)
   const balance = nEff / Math.max(onDays, offDays, 1)
