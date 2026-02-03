@@ -652,6 +652,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
             })()}
       </div>
+      {((row as any)?.progressLabel) && (
+        <div className="mt-1 text-[11px] text-gray-500">{String((row as any).progressLabel)}</div>
+      )}
       <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
         Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
@@ -685,6 +688,16 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       {(effectCatLower === 'needs_more_data') && (
         <div className="mt-1 text-xs text-gray-600">Waiting for more usable metric data (e.g., sleep) to compare ON vs OFF.</div>
       )}
+      {(() => {
+        const ap = Number((row as any).activeProgress || 0)
+        const up = Number((row as any).uploadProgress || 0)
+        const label = String((row as any).progressLabel || (
+          (row.progressPercent >= 100 && (hasFinalVerdictGlobal)) ? 'Test complete'
+          : ((String((row as any).analysisSource || '') === 'implicit' && up > ap) ? 'Signal from historical data — confirm with check-ins'
+          : (ap > 0 ? 'Actively testing' : 'Gathering data'))
+        ))
+        return <div className="mt-1 text-[11px] text-gray-500">{label}</div>
+      })()}
       {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule

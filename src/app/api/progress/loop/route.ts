@@ -905,7 +905,28 @@ export async function GET(request: Request) {
         const denom = Math.max(1, requiredOnDays + requiredOffDays)
         const evidencePct = ((onClamped + offClamped) / denom) * 100
         // Use ON/OFF evidence as the progress value (UX: shows momentum from day one)
-        const finalPct = Math.max(0, Math.min(100, Math.round(evidencePct)))
+        const activeProgress = Math.max(0, Math.min(100, Math.round(evidencePct)))
+        // Upload-aware head start for implicit analyses
+        const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+        const truthRec = uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined
+        const analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        const isImplicit = analysisSrc === 'implicit'
+        const computeUploadProgress = (onDays: number, offDays: number): number => {
+          const P_MIN = 30, P_MAX = 60, N_TARGET = 180
+          const nEff = Math.min(onDays, offDays)
+          const balance = nEff / Math.max(onDays, offDays, 1)
+          const exposure = Math.min(nEff / N_TARGET, 1)
+          const quality = balance * exposure
+          const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
+          return Math.min(P_MAX, Math.max(P_MIN, progress))
+        }
+        let uploadProgress: number | null = null
+        if (isImplicit) {
+          const sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
+          const sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
+          uploadProgress = computeUploadProgress(sOn, sOff)
+        }
+        const finalPct = Math.max(activeProgress, uploadProgress ?? 0)
         // Debug: emit full calculation per supplement
         if (VERBOSE) {
           try {
@@ -925,11 +946,47 @@ export async function GET(request: Request) {
             })
           } catch {}
         }
-        r.progressPercent = finalPct
+        const activeProgress = finalPct
+        // Use upload-aware head-start for implicit (upload-only) analyses
+        const analysisSource = (r as any).analysisSource || null
+        const isImplicit = String(analysisSource || '').toLowerCase() === 'implicit'
+        let displayProgress = activeProgress
+        let uploadProgress = 0
+        if (isImplicit) {
+          const onUpload = Number((r as any).daysOn || 0)
+          const offUpload = Number((r as any).daysOff || 0)
+          uploadProgress = computeUploadProgress(onUpload, offUpload)
+          displayProgress = Math.max(uploadProgress, activeProgress)
+        }
+        r.progressPercent = displayProgress
         r.requiredDays = requiredDays
         // Persist required ON/OFF for client-side gating
         ;(r as any).requiredOnDays = requiredOnDays
         ;(r as any).requiredOffDays = requiredOffDays
+        // Microcopy for card
+        ;(r as any).progressLabel =
+          (displayProgress >= 100 && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase())))
+            ? 'Test complete'
+            : (isImplicit && uploadProgress > activeProgress)
+              ? 'Signal from historical data — confirm with check-ins'
+              : (activeProgress > 0)
+                ? 'Actively testing'
+                : 'Gathering data'
+        ;(r as any).activeProgress = activeProgress
+        ;(r as any).uploadProgress = uploadProgress
+        // Progress microcopy for UI
+        const hasFinalVerdict = ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory || '').toLowerCase())
+        let progressLabel = ''
+        if (finalPct >= 100 && hasFinalVerdict) {
+          progressLabel = 'Test complete'
+        } else if (isImplicit && (uploadProgress ?? 0) > activeProgress) {
+          progressLabel = 'Signal from historical data — confirm with check-ins'
+        } else if (activeProgress > 0) {
+          progressLabel = 'Actively testing'
+        } else {
+          progressLabel = 'Gathering data'
+        }
+        ;(r as any).progressLabel = progressLabel
       }
       catch {}
     }
@@ -1463,6 +1520,19 @@ async function getStreakDays(supabase: any, userId: string): Promise<number> {
     }
   }
   return streak
+}
+
+// Upload-aware progress: give a head start for historical (implicit) data without exceeding 60%
+function computeUploadProgress(onDays: number, offDays: number): number {
+  const P_MIN = 30
+  const P_MAX = 60
+  const N_TARGET = 180
+  const nEff = Math.min(onDays, offDays)
+  const balance = nEff / Math.max(onDays, offDays, 1)
+  const exposure = Math.min(nEff / N_TARGET, 1)
+  const quality = balance * exposure
+  const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
+  return Math.min(P_MAX, Math.max(P_MIN, progress))
 }
 
 function getPhaseLabel(day: number): string {
