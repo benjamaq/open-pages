@@ -330,7 +330,8 @@ export function DailyProgressLoop() {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const hasVerdictFlag = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+          const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
+          const hasVerdictFlag = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -345,7 +346,8 @@ export function DailyProgressLoop() {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+          const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
+          const hasFinalVerdict = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -415,19 +417,20 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   // - Otherwise, use current clean-days-based progressPercent
   const effectCat = (row as any).effectCategory as string | undefined
   const effectCatLower = String(effectCat || '').toLowerCase()
-  // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete
+  const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
+  // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete (except for upload-only implicit)
   const hasFinalVerdictGlobal = ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
   // Prevent 100% display for "needs_more_data" (Truth Engine too_early) even if raw progress hit 100 on labeled days
   let progressForDisplay = row.progressPercent
   if (effectCatLower === 'needs_more_data') {
     progressForDisplay = Math.min(progressForDisplay, 95)
   }
-  if (hasFinalVerdictGlobal || progressForDisplay >= 100) {
+  if ((hasFinalVerdictGlobal || progressForDisplay >= 100) && !isImplicit) {
     progressForDisplay = 100
   }
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
-  const strengthDisplay = (hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : strength
+  const strengthDisplay = ((hasFinalVerdictGlobal || row.progressPercent >= 100) && !isImplicit) ? 100 : strength
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)
