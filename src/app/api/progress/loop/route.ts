@@ -521,7 +521,7 @@ export async function GET(request: Request) {
 
       progressRows.push({
         id, name,
-        progressPercent,
+        progressPercent: 0,
         daysOfData,
         requiredDays,
         status,
