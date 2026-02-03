@@ -920,13 +920,6 @@ export async function GET(request: Request) {
           const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
           return Math.min(P_MAX, Math.max(P_MIN, progress))
         }
-        let uploadProgress: number | null = null
-        if (isImplicit) {
-          const sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
-          const sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
-          uploadProgress = computeUploadProgress(sOn, sOff)
-        }
-        const finalPct = Math.max(activeProgress, uploadProgress ?? 0)
         // Debug: emit full calculation per supplement
         if (VERBOSE) {
           try {
@@ -974,19 +967,6 @@ export async function GET(request: Request) {
                 : 'Gathering data'
         ;(r as any).activeProgress = activeProgress
         ;(r as any).uploadProgress = uploadProgress
-        // Progress microcopy for UI
-        const hasFinalVerdict = ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory || '').toLowerCase())
-        let progressLabel = ''
-        if (finalPct >= 100 && hasFinalVerdict) {
-          progressLabel = 'Test complete'
-        } else if (isImplicit && (uploadProgress ?? 0) > activeProgress) {
-          progressLabel = 'Signal from historical data — confirm with check-ins'
-        } else if (activeProgress > 0) {
-          progressLabel = 'Actively testing'
-        } else {
-          progressLabel = 'Gathering data'
-        }
-        ;(r as any).progressLabel = progressLabel
       }
       catch {}
     }
