@@ -906,20 +906,13 @@ export async function GET(request: Request) {
         const evidencePct = ((onClamped + offClamped) / denom) * 100
         // Use ON/OFF evidence as the progress value (UX: shows momentum from day one)
         const activeProgress = Math.max(0, Math.min(100, Math.round(evidencePct)))
-        // Upload-aware head start for implicit analyses
+        // Determine analysis source from truth overlay/row
         const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
         const truthRec = uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined
         const analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
         const isImplicit = analysisSrc === 'implicit'
-        const computeUploadProgress = (onDays: number, offDays: number): number => {
-          const P_MIN = 30, P_MAX = 60, N_TARGET = 180
-          const nEff = Math.min(onDays, offDays)
-          const balance = nEff / Math.max(onDays, offDays, 1)
-          const exposure = Math.min(nEff / N_TARGET, 1)
-          const quality = balance * exposure
-          const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
-          return Math.min(P_MAX, Math.max(P_MIN, progress))
-        }
+        // For logging compatibility
+        const finalPct = activeProgress
         // Debug: emit full calculation per supplement
         if (VERBOSE) {
           try {
@@ -939,18 +932,14 @@ export async function GET(request: Request) {
             })
           } catch {}
         }
-        const activeProgress = finalPct
         // Use upload-aware head-start for implicit (upload-only) analyses
-        const analysisSource = (r as any).analysisSource || null
-        const isImplicit = String(analysisSource || '').toLowerCase() === 'implicit'
-        let displayProgress = activeProgress
         let uploadProgress = 0
         if (isImplicit) {
-          const onUpload = Number((r as any).daysOn || 0)
-          const offUpload = Number((r as any).daysOff || 0)
-          uploadProgress = computeUploadProgress(onUpload, offUpload)
-          displayProgress = Math.max(uploadProgress, activeProgress)
+          const sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
+          const sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
+          uploadProgress = computeUploadProgress(sOn, sOff)
         }
+        const displayProgress = Math.max(uploadProgress, activeProgress)
         r.progressPercent = displayProgress
         r.requiredDays = requiredDays
         // Persist required ON/OFF for client-side gating
