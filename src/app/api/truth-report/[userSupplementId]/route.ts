@@ -59,48 +59,25 @@ export async function GET(request: NextRequest, context: any) {
         .maybeSingle()
       try { console.log('[truth-report] Supplement lookup:', { found: !!supplement, error: suppError?.message }) } catch {}
       if (!supplement) {
-        // Fallback: sometimes the frontend passes a stack_items id — resolve to user_supplement by name
+        // Strict fallback: frontend may pass a stack_items.id — resolve to user_supplement_id via linkage only
         try {
           const { data: stackItem } = await supabase
             .from('stack_items')
-            .select('id,name,profile_id')
+            .select('id,profile_id,user_supplement_id')
             .eq('id', userSupplementId)
             .maybeSingle()
-          if (stackItem?.name) {
-            // Find user's profile id
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('user_id', user.id)
-              .maybeSingle()
-            const nm = String(stackItem.name).trim()
-            // Try to locate a matching user_supplement by (case-insensitive) name
-            const { data: usMatches } = await supabase
-              .from('user_supplement')
-              .select('id,name')
-              .eq('user_id', user.id)
-              .ilike('name', nm)
-              .limit(2)
-            if (usMatches && usMatches.length === 1) {
-              effectiveUserSuppId = String(usMatches[0].id)
-              console.log('[truth-report] Resolved stack_item id to user_supplement id:', { from: userSupplementId, to: effectiveUserSuppId })
-            } else {
-              console.log('[truth-report] Name-based resolution found none or multiple matches:', { name: nm, count: usMatches?.length || 0 })
-              return NextResponse.json({
-                error: 'Supplement not found',
-                debug: {
-                  requestedId: userSupplementId,
-                  effectiveRequestedId: effectiveUserSuppId,
-                  authUserId,
-                  supplementExistsInDb: !!suppCheck,
-                  supplementOwnerId: (suppCheck as any)?.user_id || null,
-                  ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
-                  supplementName: (suppCheck as any)?.name || null,
-                  attemptedFallback: 'stack_items_name_match',
-                  fallbackMatches: (usMatches || []).map((m: any) => ({ id: m.id, name: m.name }))
-                }
-              }, { status: 404 })
-            }
+          // Resolve the caller's profile id to validate ownership
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle()
+          const profileId = (profile as any)?.id || null
+          const stackProfileId = (stackItem as any)?.profile_id || null
+          const linkedUserSuppId = (stackItem as any)?.user_supplement_id || null
+          if (stackItem && profileId && String(stackProfileId) === String(profileId) && linkedUserSuppId) {
+            effectiveUserSuppId = String(linkedUserSuppId)
+            try { console.log('[truth-report] Resolved via stack_items linkage:', { from: userSupplementId, to: effectiveUserSuppId }) } catch {}
           } else {
             return NextResponse.json({
               error: 'Supplement not found',
@@ -112,7 +89,10 @@ export async function GET(request: NextRequest, context: any) {
                 supplementOwnerId: (suppCheck as any)?.user_id || null,
                 ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
                 supplementName: (suppCheck as any)?.name || null,
-                attemptedFallback: 'stack_items_missing'
+                attemptedFallback: 'stack_items_linkage',
+                stackItemFound: !!stackItem,
+                stackProfileMatches: (profileId && stackProfileId) ? (String(stackProfileId) === String(profileId)) : null,
+                linkedUserSupplementId: linkedUserSuppId || null
               }
             }, { status: 404 })
           }
@@ -128,7 +108,7 @@ export async function GET(request: NextRequest, context: any) {
               supplementOwnerId: (suppCheck as any)?.user_id || null,
               ownerMatches: ((suppCheck as any)?.user_id || null) === authUserId,
               supplementName: (suppCheck as any)?.name || null,
-              attemptedFallback: 'stack_items_resolution_failed',
+              attemptedFallback: 'stack_items_linkage_failed',
               resolutionError: resolveErr?.message || String(resolveErr)
             }
           }, { status: 404 })
