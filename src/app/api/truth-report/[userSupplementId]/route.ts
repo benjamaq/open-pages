@@ -193,7 +193,8 @@ export async function GET(request: NextRequest, context: any) {
       biology_profile: report.biologyProfile,
       next_steps: report.nextSteps,
       science_note: report.scienceNote,
-      raw_context: report
+      raw_context: report,
+      analysis_source: (report as any)?.analysisSource || null
     }
     try {
       await supabase.from('supplement_truth_reports').insert(payloadToStore)
@@ -230,6 +231,7 @@ function toResponse(row: any) {
     verdictTitle: '',
     verdictLabel: '',
     primaryMetricLabel: row?.primary_metric || 'Metric',
+    analysisSource: row?.analysis_source || 'implicit',
     effect: {
       meanOn: 0,
       meanOff: 0,

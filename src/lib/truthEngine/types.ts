@@ -35,6 +35,7 @@ export type TruthReport = {
   verdictTitle: string
   verdictLabel: string
   primaryMetricLabel: string
+  analysisSource?: 'explicit' | 'implicit'
   effect: EffectStats
   confidence: {
     score: number

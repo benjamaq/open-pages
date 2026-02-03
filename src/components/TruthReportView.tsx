@@ -9,6 +9,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const deficiency = deriveDeficiencyHint(report)
   const decision = decisionFor(report)
   const dynamic = generateReportCopy(report)
+  const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -23,6 +24,13 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {isImplicit && (
+          <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-200">
+            <div className="font-semibold">This is an observed signal from historical wearable data.</div>
+            <div className="text-indigo-200/90">To confirm, start active testing with daily check-ins.</div>
+            <a href="/results" className="inline-block mt-2 text-[12px] px-2 py-1 rounded border border-indigo-500/40 text-indigo-200 hover:bg-indigo-500/10">Start Active Test →</a>
+          </div>
+        )}
         <header className="space-y-1.5">
           {supName && (
             <h1 className="text-3xl md:text-[32px] font-semibold leading-tight">{supName}</h1>
@@ -106,7 +114,7 @@ that kind of benefit.`}
         </section>
 
         <Card>
-          <div className="text-sm text-slate-400 mb-2">{report.status === 'proven_positive' ? 'Why this worked for you' : report.status === 'negative' ? 'Why this didn’t work for you' : 'What we see so far'}</div>
+          <div className="text-sm text-slate-400 mb-2">{isImplicit ? 'What your data suggests' : (report.status === 'proven_positive' ? 'Why this worked for you' : report.status === 'negative' ? 'Why this didn’t work for you' : 'What we see so far')}</div>
           <div className="space-y-2">
             <div className="text-slate-200">{dynamic.effectSummary}</div>
             {deficiency && (

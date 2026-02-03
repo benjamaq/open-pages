@@ -4,16 +4,30 @@ export function buildNextSteps(ctx: {
   status: TruthStatus
   effect: EffectStats
   canonical: CanonicalSupplement | null
+  analysisSource?: 'explicit' | 'implicit'
 }): string {
-  const { status } = ctx
+  const { status, analysisSource } = ctx
+  const implicit = analysisSource === 'implicit'
+  if (implicit) {
+    if (status === 'proven_positive')
+      return 'Your historical data shows a positive signal. Start active testing with daily check-ins to confirm whether this effect is real — we’ll rotate this supplement on and off to isolate its impact.'
+    if (status === 'negative')
+      return 'Your historical data shows a negative signal. It may be unlikely to matter — consider dropping or confirm with a short active test.'
+    if (status === 'no_effect' || status === 'no_detectable_effect')
+      return 'No clear signal from historical data. Consider a short active test with daily check-ins to confirm, or remove it from your stack.'
+    if (status === 'confounded')
+      return 'Historical data are too noisy to trust. Start a short active test with daily check-ins to get a clear answer.'
+    return 'We need more data. Start active testing with daily check-ins to build a clearer picture.'
+  }
+  // explicit
   if (status === 'proven_positive')
-    return 'Keep this in your stack. Consider a brief "3-days off, 3-days on" retest in 6–8 weeks to confirm the effect is stable, not just a lucky streak.'
-  if (status === 'no_effect')
-    return 'You can safely drop this from your stack for now. Your data doesn’t show a meaningful benefit at this dose and schedule.'
+    return 'Keep this in your stack. Active testing confirms a measurable benefit.'
+  if (status === 'no_effect' || status === 'no_detectable_effect')
+    return 'Active testing did not show a measurable benefit at this dose and schedule. Consider stopping.'
   if (status === 'negative')
-    return 'This looks net-negative for you. Consider stopping and re-testing later at a lower dose or in a different context.'
+    return 'Active testing suggests this is net‑negative for you. Consider stopping.'
   if (status === 'confounded')
-    return 'The data’s too noisy to trust yet. If you want a clear answer, run a short, cleaner protocol with fewer alcohol or travel days.'
+    return 'The data’s too noisy to trust yet. If you want a clear answer, run a short, cleaner protocol with fewer confounds.'
   return 'Let’s collect a few more clean days of data before calling it.'
 }
 

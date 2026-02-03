@@ -579,7 +579,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       sampleOffOverride: sampleOffCount,
       metricLabelOverride: metricLabelOverride || undefined,
       missingOnMetrics,
-      missingOffMetrics
+      missingOffMetrics,
+      analysisSource: hasExplicitIntake ? 'explicit' : 'implicit'
     })
   }
 
@@ -614,7 +615,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     sampleOffOverride: sampleOffCount,
     metricLabelOverride: metricLabelOverride || undefined,
     missingOnMetrics,
-    missingOffMetrics
+    missingOffMetrics,
+    analysisSource: hasExplicitIntake ? 'explicit' : 'implicit'
   })
 }
 
@@ -632,6 +634,7 @@ function buildReport(args: {
   metricLabelOverride?: string
   missingOnMetrics?: number
   missingOffMetrics?: number
+  analysisSource?: 'explicit' | 'implicit'
 }): TruthReport {
   const { effect, primaryMetric, canonical, cohort } = args
   const confidenceScore = typeof args.confidenceOverride === 'number'
@@ -649,13 +652,36 @@ function buildReport(args: {
   })
   const biologyProfile = inferBiologyProfile({ canonical, effect, status: args.status, primaryMetric })
   const scienceNote = buildScienceNote(canonical, mechanism.mechanismLabel)
-  const nextSteps = buildNextSteps({ status: args.status, effect, canonical: canonical })
+  const nextSteps = buildNextSteps({ status: args.status, effect, canonical: canonical, analysisSource: args.analysisSource })
 
   const metricLabel = (args.metricLabelOverride && String(args.metricLabelOverride).trim().length > 0)
     ? String(args.metricLabelOverride)
     : labelForMetric(primaryMetric)
-  const verdictLabel = verdictLabels[args.status]
-  const verdictTitle = fill(verdictTitles[args.status], { metricLabel })
+  let verdictLabel = verdictLabels[args.status]
+  let verdictTitle = fill(verdictTitles[args.status], { metricLabel })
+  if (args.analysisSource === 'implicit') {
+    if (args.status === 'proven_positive') {
+      verdictLabel = 'OBSERVED SIGNAL'
+      verdictTitle = `Positive signal on ${metricLabel}`
+    } else if (args.status === 'negative') {
+      verdictLabel = 'NEGATIVE SIGNAL'
+      verdictTitle = `Negative signal on ${metricLabel}`
+    } else if (args.status === 'no_effect' || args.status === 'no_detectable_effect') {
+      verdictLabel = 'NO CLEAR SIGNAL'
+      verdictTitle = `No clear signal on ${metricLabel}`
+    } else if (args.status === 'too_early' || args.status === 'confounded') {
+      verdictLabel = 'INSUFFICIENT DATA'
+      verdictTitle = 'Not enough data to assess'
+    }
+  } else if (args.analysisSource === 'explicit') {
+    if (args.status === 'proven_positive') {
+      verdictLabel = 'CONFIRMED EFFECT'
+      verdictTitle = `Confirmed positive effect on ${metricLabel}`
+    } else if (args.status === 'negative') {
+      verdictLabel = 'CONFIRMED NEGATIVE'
+      verdictTitle = `Confirmed negative effect on ${metricLabel}`
+    }
+  }
 
   let userPercentile: number | null = null
   let responderLabel: string | null = null
@@ -672,6 +698,7 @@ function buildReport(args: {
     verdictTitle,
     verdictLabel,
     primaryMetricLabel: metricLabel,
+    analysisSource: args.analysisSource,
     effect,
     confidence: {
       score: confidenceScore,

@@ -543,10 +543,10 @@ export async function GET(request: Request) {
     // Load latest truth reports (ordered newest first); first seen per id wins
     const { data: truths } = await supabase
       .from('supplement_truth_reports')
-      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,created_at')
+      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null }>()
+    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
     for (const t of truths || []) {
       const uid = String((t as any).user_supplement_id || '')
       if (!uid) continue
@@ -558,7 +558,8 @@ export async function GET(request: Request) {
           percent_change: (t as any).percent_change ?? null,
           confidence_score: (t as any).confidence_score ?? null,
           sample_days_on: (t as any).sample_days_on ?? null,
-          sample_days_off: (t as any).sample_days_off ?? null
+          sample_days_off: (t as any).sample_days_off ?? null,
+          analysis_source: (t as any).analysis_source ?? null
         })
       }
     }
@@ -692,7 +693,7 @@ export async function GET(request: Request) {
             try {
               const { data: latest } = await supabase
                 .from('supplement_truth_reports')
-                .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,created_at')
+                .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
                 .eq('user_id', user.id)
                 .eq('user_supplement_id', uid)
                 .order('created_at', { ascending: false })
@@ -705,7 +706,8 @@ export async function GET(request: Request) {
                   percent_change: (latest![0] as any).percent_change ?? null,
                   confidence_score: (latest![0] as any).confidence_score ?? null,
                   sample_days_on: (latest![0] as any).sample_days_on ?? null,
-                  sample_days_off: (latest![0] as any).sample_days_off ?? null
+                  sample_days_off: (latest![0] as any).sample_days_off ?? null,
+                  analysis_source: (latest![0] as any).analysis_source ?? null
                 })
                 if (VERBOSE) { try { console.log('[overlay-refresh] updated truth map for', uid, 'status=', String((latest![0] as any).status || '')) } catch {} }
               }
@@ -716,6 +718,7 @@ export async function GET(request: Request) {
         const mapped = truth ? mapTruthToCategory(truth.status) : undefined
         if (mapped) {
           ;(r as any).effectCategory = mapped
+          ;(r as any).analysisSource = truth?.analysis_source || null
           // Also align effect magnitude/confidence with the Truth Report so UI text matches
           if (truth && typeof truth.percent_change === 'number') {
             r.effectPct = Number(truth.percent_change)
