@@ -1,0 +1,68 @@
+{
+  "magnesium": {
+    "short_name": "Magnesium",
+    "positive": "Magnesium supports GABA receptor activation and melatonin regulation. A positive response suggests your body benefits from additional magnesium, which is common — most adults are deficient.",
+    "negative": "Magnesium plays a role in GABA receptor activation and melatonin regulation. A negative response may indicate you're already sufficient, or that this form isn't well absorbed. Consider trying a different form (glycinate, threonate, or taurate)."
+  },
+  "magnesium l-threonate": {
+    "short_name": "Mag Threonate",
+    "positive": "Magnesium L-threonate is the only form shown to cross the blood-brain barrier effectively, boosting brain magnesium levels. A positive response suggests enhanced cognitive function and neuronal magnesium status.",
+    "negative": "Mag threonate specifically targets brain magnesium. A negative response is uncommon — if you're not noticing cognitive benefits, the issue may not be brain magnesium. Try glycinate for sleep or taurate for heart."
+  },
+  "collagen": {
+    "short_name": "Collagen",
+    "positive": "Collagen peptides provide glycine, which supports inhibitory neurotransmission and connective tissue repair. A positive sleep response likely reflects glycine's calming effect on the nervous system.",
+    "negative": "Collagen peptides support connective tissue repair. Effects on sleep are indirect — typically through glycine content. A negative response may indicate glycine isn't a limiting factor for you."
+  },
+  "vitamin d": {
+    "short_name": "Vitamin D",
+    "positive": "Vitamin D regulates circadian rhythm signaling and immune function. A positive response is common — deficiency affects over 40% of adults and supplementation often shows measurable improvements.",
+    "negative": "Vitamin D regulates circadian rhythm signaling. A negative response may indicate you're already sufficient, or that you're taking it too late in the day. Morning dosing with fat is optimal."
+  },
+  "vitamin c": {
+    "short_name": "Vitamin C",
+    "positive": "Vitamin C supports immune function, acts as an antioxidant, and aids cortisol regulation. A positive response suggests reduced oxidative stress is benefiting your recovery.",
+    "negative": "Vitamin C supports immune function and acts as an antioxidant. Sleep effects are typically indirect. A negative response may relate to its mild stimulatory effect — try taking it earlier in the day."
+  },
+  "b complex": {
+    "short_name": "B Complex",
+    "positive": "B vitamins support energy metabolism and neurotransmitter synthesis including serotonin and melatonin. A positive response suggests improved methylation and neurotransmitter balance.",
+    "negative": "B vitamins support energy metabolism and neurotransmitter synthesis. A negative sleep response is common when taken later in the day — B6 and B12 can be stimulating. Try morning dosing."
+  },
+  "ashwagandha": {
+    "short_name": "Ashwagandha",
+    "positive": "Ashwagandha modulates cortisol and HPA axis activity. A positive response likely reflects reduced stress signaling, which is one of the most well-supported effects in clinical research.",
+    "negative": "Ashwagandha modulates cortisol and HPA axis activity. A negative response is uncommon but can occur — some people experience thyroid stimulation or mild GI disruption that affects sleep."
+  },
+  "omega 3": {
+    "short_name": "Omega-3",
+    "positive": "Omega-3 fatty acids (EPA/DHA) reduce systemic inflammation and support cell membrane fluidity. A positive response often correlates with lower inflammatory markers and improved brain function.",
+    "negative": "Omega-3 fatty acids reduce inflammation and support brain function. A negative response is rare — consider whether the source quality is sufficient or if you're already getting enough from diet."
+  },
+  "fish oil": {
+    "short_name": "Fish Oil",
+    "positive": "Fish oil provides EPA and DHA, which reduce systemic inflammation and support neuronal membrane health. A positive response suggests your body benefits from additional omega-3 intake.",
+    "negative": "Fish oil provides EPA and DHA for inflammation reduction. A negative response may relate to oxidation of the oil (check freshness), GI disruption, or already sufficient dietary intake."
+  },
+  "zinc": {
+    "short_name": "Zinc",
+    "positive": "Zinc supports immune function, neurotransmitter metabolism, and plays a role in melatonin synthesis from serotonin. A positive response suggests you were likely running low.",
+    "negative": "Zinc supports immune function and melatonin synthesis. A negative response may indicate excess zinc, which can disrupt copper balance. Consider testing your levels or reducing dose."
+  },
+  "melatonin": {
+    "short_name": "Melatonin",
+    "positive": "Melatonin directly regulates your circadian sleep-wake cycle. A positive response suggests your natural melatonin production may be suppressed (common with screen exposure or irregular schedules).",
+    "negative": "Melatonin regulates the sleep-wake cycle. A negative response may indicate you're taking too high a dose (try 0.3-0.5mg), wrong timing, or that your sleep issue isn't melatonin-related."
+  },
+  "curcumin": {
+    "short_name": "Curcumin",
+    "positive": "Curcumin is a potent anti-inflammatory that crosses the blood-brain barrier. A positive response suggests reduced neuroinflammation and improved recovery signaling.",
+    "negative": "Curcumin has potent anti-inflammatory properties but very low bioavailability. A negative response may reflect poor absorption — look for formulations with piperine or liposomal delivery."
+  },
+  "elderberry": {
+    "short_name": "Elderberry",
+    "positive": "Elderberry is rich in anthocyanins with strong immune-modulating and antioxidant properties. A positive response suggests reduced low-grade inflammation supporting better recovery.",
+    "negative": "Elderberry supports immune function through anthocyanin antioxidants. A negative response is uncommon — it may relate to its mild immune-stimulating effect. Not recommended during active autoimmune flares."
+  }
+}
+

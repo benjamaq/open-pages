@@ -1,6 +1,7 @@
 'use client'
 
 import type { TruthReport } from '@/lib/truthEngine/types'
+import bioMap from '@/lib/truthEngine/supplement-biology-map-full.json'
 
 export default function TruthReportView({ report }: { report: TruthReport }) {
   const statusColor = colorForStatus(report.status)
@@ -235,7 +236,14 @@ function colorForStatus(status: string) {
 
 function generateReportCopy(report: any): { effectSummary: string; biologyText: string; nextSteps: string } {
   const fullName = String(report?.supplementName || '').trim() || 'this supplement'
-  const name = shortSupplementName(fullName)
+  // Determine mapping key by best match (prefer longest key that appears in the full name or short name)
+  const sn = shortSupplementName(fullName)
+  const lcFull = fullName.toLowerCase()
+  const lcShort = sn.toLowerCase()
+  const keys = Object.keys(bioMap as Record<string, any>).sort((a, b) => b.length - a.length)
+  const matchedKey = keys.find(k => lcFull.includes(k) || lcShort.includes(k)) || ''
+  const mapped = (bioMap as any)[matchedKey] || null
+  const name = (mapped?.short_name as string) || sn
   const metric = String(report?.primaryMetricLabel || 'your metric')
   const d = typeof report?.effect?.effectSize === 'number' ? Number(report.effect.effectSize) : null
   const absChange = typeof report?.effect?.absoluteChange === 'number' ? Number(report.effect.absoluteChange) : null
@@ -260,19 +268,13 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   } else {
     effectSummary = `Your data shows a pattern in ${metric} when taking ${name}.`
   }
-  // Biology text mapping by supplement name
-  const nm = name.toLowerCase()
+  // Biology text from mapping, chosen by direction when available
   let biologyText: string | null = null
-  if (nm.includes('magnesium')) {
-    biologyText = `Magnesium plays a role in GABA receptor activation and melatonin regulation. A ${dir === 'negative' ? 'negative' : dir} sleep response may indicate you're already sufficient, or that this form isn't well absorbed.`
-  } else if (nm.includes('collagen')) {
-    biologyText = `Collagen peptides support connective tissue repair. Effects on sleep are indirect — typically through glycine content.`
-  } else if (nm.includes('b-complex') || nm.includes('b complex') || nm.includes('vitamin b') || nm.includes('b vitamin')) {
-    biologyText = `B vitamins support energy metabolism and neurotransmitter synthesis. Timing matters — taking them too late in the day can disrupt sleep.`
-  } else if (nm.includes('vitamin c')) {
-    biologyText = `Vitamin C supports immune function and acts as an antioxidant. Sleep effects are typically indirect.`
-  } else if (nm.includes('vitamin d')) {
-    biologyText = `Vitamin D helps regulate circadian rhythm signaling. Deficiency is common and supplementation often shows measurable sleep improvements.`
+  const dirKey = status === 'proven_positive' || dir === 'positive'
+    ? 'positive'
+    : (status === 'negative' || dir === 'negative') ? 'negative' : ''
+  if (mapped && dirKey) {
+    biologyText = (mapped as any)[dirKey] || null
   }
   if (!biologyText) {
     const dirText = dir === 'positive' ? 'your body may benefit from continued use' : dir === 'negative' ? 'this may not align with your biology at this dose' : 'the effect may be subtle or context‑dependent'
