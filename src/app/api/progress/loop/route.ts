@@ -609,17 +609,25 @@ export async function GET(request: Request) {
     for (const r of progressRows) {
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        const byStack = stackIdToUserSuppId.get(String((r as any).id || '')) || null
-        const explicitUid = byStack || (() => {
-          try {
-            const match = (items || []).find((it: any) => String(it?.name || '').trim().toLowerCase() === nm)
-            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
-          } catch { return null }
-        })()
-        const uid = explicitUid || nameToUserSuppId.get(nm) || String((r as any).id)
+        // Prefer explicit mapping from stack_items.id → user_supplement_id
+        const idKey = String((r as any).id || '')
+        let uid = stackIdToUserSuppId.get(idKey) || null
+        // If this list came directly from user_supplement, use that id as authoritative
+        if (!uid && queryTable === 'user_supplement') {
+          uid = idKey
+        }
+        // Fallback to name-based mapping only if no explicit linkage exists
+        if (!uid) {
+          uid = nameToUserSuppId.get(nm) || null
+        }
+        // As a last resort, keep idKey (may be stack_items.id) to avoid nulls, but truth generation will skip if unresolved
+        uid = uid || idKey
         ;(r as any).testingActive = testingActiveIds.has(uid)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
         ;(r as any).userSuppId = uid
+        if (VERBOSE) {
+          try { console.log('[id-resolve:init]', { rowId: idKey, name: nm, resolvedUserSuppId: uid, byStack: stackIdToUserSuppId.get(idKey) || null }) } catch {}
+        }
       } catch { (r as any).testingActive = true }
     }
     for (const r of progressRows) {
@@ -754,14 +762,16 @@ export async function GET(request: Request) {
       // Derive daysOn/Off from daily_entries intake; if retest is active, recompute from retest start
       try {
         const nm = String((r as any).name || '').trim().toLowerCase()
-        // Prefer explicit linkage if available
-        const explicitUid = (() => {
-          try {
-            const match = (items || []).find((it: any) => String(it?.name || '').trim().toLowerCase() === nm)
-            return match && match.user_supplement_id ? String(match.user_supplement_id) : null
-          } catch { return null }
-        })()
-        const suppId = explicitUid || nameToUserSuppId.get(nm) || String((r as any).id)
+        // Prefer explicit mapping by stack_items.id, then direct user_supplement id, then name-map
+        const idKey = String((r as any).id || '')
+        let suppId = stackIdToUserSuppId.get(idKey) || null
+        if (!suppId && queryTable === 'user_supplement') {
+          suppId = idKey
+        }
+        if (!suppId) {
+          suppId = nameToUserSuppId.get(nm) || null
+        }
+        suppId = suppId || idKey
         ;(r as any).userSuppId = suppId
         const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
