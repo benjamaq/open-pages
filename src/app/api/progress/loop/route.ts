@@ -941,7 +941,10 @@ export async function GET(request: Request) {
           sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
           uploadProgress = computeUploadProgress(sOn, sOff)
         }
-        const displayProgress = Math.max(uploadProgress, activeProgress)
+        const hasCheckinData = (distinctCheckinDays?.size || 0) > 0
+        const displayProgress = isImplicit
+          ? (hasCheckinData ? Math.max(uploadProgress, activeProgress) : uploadProgress)
+          : activeProgress
         try {
           console.log('[upload-debug]', {
             id: r.id,
@@ -953,6 +956,7 @@ export async function GET(request: Request) {
             sampleOn: sOn,
             sampleOff: sOff,
             activeProgress,
+            hasCheckinData,
             uploadProgress,
             displayProgress
           })
