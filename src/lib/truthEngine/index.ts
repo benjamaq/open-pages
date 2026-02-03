@@ -442,6 +442,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
           try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'direct:sleep_quality', metricValue: v }) } catch {}
           debugExtractCount++
         }
+        // Ensure the report labels reflect the actual metric being used
+        primaryMetric = 'sleep_quality'
+        if (!metricLabelOverride) metricLabelOverride = 'Sleep Quality'
         return v
       }
       // Priority 2: wearables metrics in strict order (sleep → HRV → resting HR). Exclude behavioral metrics like strain/active_energy_kcal.
@@ -703,6 +706,8 @@ function buildReport(args: {
 
 function labelForMetric(key: string): string {
   const map: Record<string, string> = {
+    sleep_quality: 'Sleep Quality',
+    sleep_score: 'Sleep Quality',
     sleep_latency_minutes: 'Sleep latency',
     deep_sleep_pct: 'Deep sleep %',
     hrv_evening: 'Evening HRV',
