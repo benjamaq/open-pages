@@ -373,122 +373,75 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       secondaryMetrics[key] = safeNum(m[key] ?? (m?._raw ? (m as any)._raw[key] : undefined))
     }
     const metricValue = (() => {
-      // 1) Direct column value
-      if (m[primaryMetric] != null) {
-        const v = safeNum(m[primaryMetric])
+      // Priority 1: direct sleep_quality value (subjective sleep)
+      if (m['sleep_quality'] != null) {
+        const v = safeNum(m['sleep_quality'])
         if (debugExtractCount < 10) {
-          try {
-            console.log('[truth-engine] metric extraction', {
-              date: (m as any).date,
-              primaryMetric,
-              source: 'direct',
-              primaryValue: m[primaryMetric],
-              metricValue: v
-            })
-          } catch {}
+          try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'direct:sleep_quality', metricValue: v }) } catch {}
           debugExtractCount++
         }
         return v
       }
-      const key = (primaryMetric || '').toLowerCase()
-      // 2) Legacy raw mappings (subjective fields)
-      if (key === 'subjective_energy') {
-        const v = safeNum((m as any)._raw?.energy)
-        if (v != null) {
-          if (debugExtractCount < 10) {
-            try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:energy', metricValue: v }) } catch {}
-            debugExtractCount++
-          }
-          return v
-        }
-      }
-      if (key === 'subjective_mood') {
-        const v = safeNum((m as any)._raw?.mood)
-        if (v != null) {
-          if (debugExtractCount < 10) {
-            try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:mood', metricValue: v }) } catch {}
-            debugExtractCount++
-          }
-          return v
-        }
-      }
-      if (key === 'focus') {
-        const v = safeNum((m as any)._raw?.focus)
-        if (v != null) {
-          if (debugExtractCount < 10) {
-            try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:focus', metricValue: v }) } catch {}
-            debugExtractCount++
-          }
-          return v
-        }
-      }
-      if (key === 'sleep_quality' || key === 'sleep_score') {
-        const v = safeNum((m as any)._raw?.sleep_quality ?? (m as any)._raw?.sleep)
-        if (v != null) {
-          if (debugExtractCount < 10) {
-            try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:sleep', metricValue: v }) } catch {}
-            debugExtractCount++
-          }
-          return v
-        }
-      }
-      // 3) Wearables fallback: infer a usable metric from wearables blob
+      // Priority 2: wearables metrics in strict order (sleep → HRV → resting HR). Exclude behavioral metrics like strain/active_energy_kcal.
       let w = (m as any)._raw?.wearables || null
       if (w && typeof w === 'string') {
         try { w = JSON.parse(w) } catch {}
       }
-      if (!w || typeof w !== 'object') return null
-      // Prefer sleep-related if primary metric is sleep-like
-      const isSleep = key.includes('sleep')
-      const tryKeys = [
-        ...(isSleep ? ['sleep_performance_pct', 'sleep_score', 'sleep_quality', 'sleep_hours', 'sleep_min', 'deep_sleep_min', 'rem_sleep_min'] : []),
-        // General fallbacks from WHOOP/Oura
-        // Include sleep_performance_pct as general fallback as well so non-sleep primaries (e.g., energy) can still use it
-        'sleep_performance_pct', 'recovery_score', 'readiness', 'hrv_rmssd', 'hrv_ms', 'hrv', 'hrv_sdnn_ms', 'strain', 'resting_hr_bpm', 'resting_hr', 'deep_sleep_min', 'rem_sleep_min'
-      ]
-      const labelForWearableKey = (k: string): string | null => {
-        const kk = String(k || '').toLowerCase()
-        if (kk === 'sleep_performance_pct' || kk === 'sleep_score' || kk === 'sleep_quality') return 'Sleep Performance'
-        if (kk === 'sleep_hours' || kk === 'sleep_min') return 'Sleep Duration'
-        if (kk === 'deep_sleep_min') return 'Deep Sleep (h)'
-        if (kk === 'rem_sleep_min') return 'REM Sleep (h)'
-        if (kk === 'recovery_score' || kk === 'readiness') return 'Recovery'
-        if (kk === 'hrv' || kk === 'hrv_ms' || kk === 'hrv_rmssd' || kk === 'hrv_sdnn_ms') return 'HRV'
-        if (kk === 'resting_hr' || kk === 'resting_hr_bpm' || kk === 'rhr') return 'Resting HR'
-        if (kk === 'strain') return 'Strain'
-        return null
-      }
-      for (const k of tryKeys) {
-        const raw = (w as any)[k]
-        if (raw == null) continue
-        let num = Number(raw)
-        if (!Number.isFinite(num)) continue
-        // Normalize percentages to 0-100 if they look like 0-1
-        if (String(k).endsWith('_pct') && num <= 1) num = num * 100
-        // Convert minutes to hours for readability if minutes key
-        if ((k === 'sleep_min' || k === 'deep_sleep_min' || k === 'rem_sleep_min') && num > 0) num = num / 60
-        // Capture effective label for report display if not set yet
-        if (!metricLabelOverride) {
-          metricLabelOverride = labelForWearableKey(k)
+      const useWearables = w && typeof w === 'object'
+      if (useWearables) {
+        const sleepKeys = ['sleep_performance_pct', 'sleep_score', 'sleep_quality', 'sleep_hours', 'sleep_min', 'deep_sleep_min', 'rem_sleep_min']
+        const hrvKeys = ['hrv_sdnn_ms', 'hrv_ms', 'hrv_rmssd', 'hrv']
+        const rhrKeys = ['resting_hr_bpm', 'resting_hr', 'rhr']
+        const labelForWearableKey = (k: string): string | null => {
+          const kk = String(k || '').toLowerCase()
+          if (kk === 'sleep_performance_pct' || kk === 'sleep_score' || kk === 'sleep_quality') return 'Sleep Performance'
+          if (kk === 'sleep_hours' || kk === 'sleep_min') return 'Sleep Duration'
+          if (kk === 'deep_sleep_min') return 'Deep Sleep (h)'
+          if (kk === 'rem_sleep_min') return 'REM Sleep (h)'
+          if (kk === 'hrv' || kk === 'hrv_ms' || kk === 'hrv_rmssd' || kk === 'hrv_sdnn_ms') return 'HRV'
+          if (kk === 'resting_hr' || kk === 'resting_hr_bpm' || kk === 'rhr') return 'Resting HR'
+          return null
         }
-        if (debugExtractCount < 10) {
-          try {
-            console.log('[truth-engine] metric extraction', {
-              date: (m as any).date,
-              primaryMetric,
-              source: `wearables:${k}`,
-              metricValue: num
-            })
-          } catch {}
-          debugExtractCount++
+        const tryPick = (keys: string[]) => {
+          for (const k of keys) {
+            if ((w as any)[k] == null) continue
+            let num = Number((w as any)[k])
+            if (!Number.isFinite(num)) continue
+            if (String(k).endsWith('_pct') && num <= 1) num = num * 100
+            if ((k === 'sleep_min' || k === 'deep_sleep_min' || k === 'rem_sleep_min') && num > 0) num = num / 60
+            if (!metricLabelOverride) metricLabelOverride = labelForWearableKey(k)
+            if (debugExtractCount < 10) {
+              try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: `wearables:${k}`, metricValue: num }) } catch {}
+              debugExtractCount++
+            }
+            return num
+          }
+          return null as number | null
         }
-        return num
+        const sleepVal = tryPick(sleepKeys)
+        if (sleepVal != null) return sleepVal
+        const hrvVal = tryPick(hrvKeys)
+        if (hrvVal != null) return hrvVal
+        const rhrVal = tryPick(rhrKeys)
+        if (rhrVal != null) return rhrVal
       }
-      // Debug when no wearable key matched
-      try {
-        const keys = Object.keys(w as any)
-        console.log('[truth-engine] wearable metric not found. primary=', key, 'availableKeys=', keys.slice(0, 20))
-      } catch {}
+      // Priority 3: subjective check-ins (energy, focus, mood) last
+      const subjEnergy = safeNum((m as any)._raw?.energy)
+      if (subjEnergy != null) {
+        if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:energy', metricValue: subjEnergy }) } catch {}; debugExtractCount++ }
+        return subjEnergy
+      }
+      const subjMood = safeNum((m as any)._raw?.mood)
+      if (subjMood != null) {
+        if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:mood', metricValue: subjMood }) } catch {}; debugExtractCount++ }
+        return subjMood
+      }
+      const subjFocus = safeNum((m as any)._raw?.focus)
+      if (subjFocus != null) {
+        if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:focus', metricValue: subjFocus }) } catch {}; debugExtractCount++ }
+        return subjFocus
+      }
+      // No metric available
       return null
     })()
     return {
