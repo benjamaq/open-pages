@@ -248,6 +248,15 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     }
   }))
   
+  const inferredStart = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
+  console.log('[truth-engine][pre-classify]', {
+    inferredStart,
+    totalRows: (dailyRows || []).length,
+    candidateKeysCount: candidateIntakeKeys.size,
+    candidateKeys: Array.from(candidateIntakeKeys),
+    userSupplementId
+  })
+  
   // Normalize various encodings of intake into taken/off
   function normalizeTaken(val: any): boolean | null {
     if (val === 'taken' || val === 'on') return true
