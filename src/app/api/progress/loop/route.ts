@@ -934,12 +934,29 @@ export async function GET(request: Request) {
         }
         // Use upload-aware head-start for implicit (upload-only) analyses
         let uploadProgress = 0
+        let sOn = 0
+        let sOff = 0
         if (isImplicit) {
-          const sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
-          const sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
+          sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
+          sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
           uploadProgress = computeUploadProgress(sOn, sOff)
         }
         const displayProgress = Math.max(uploadProgress, activeProgress)
+        try {
+          console.log('[upload-debug]', {
+            id: r.id,
+            name,
+            analysisSource: analysisSrc || null,
+            isImplicit,
+            daysOn,
+            daysOff,
+            sampleOn: sOn,
+            sampleOff: sOff,
+            activeProgress,
+            uploadProgress,
+            displayProgress
+          })
+        } catch {}
         r.progressPercent = displayProgress
         r.requiredDays = requiredDays
         // Persist required ON/OFF for client-side gating
