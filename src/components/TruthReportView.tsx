@@ -53,7 +53,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
             <div className="text-sm text-slate-400 mb-1">Your effect ({report.primaryMetricLabel})</div>
             <div className="space-y-1 font-mono">
               <div>Absolute change: {fmt(report.effect.absoluteChange)}</div>
-              <div>Effect size (d): {report.effect.effectSize.toFixed(2)}</div>
+              <div>Effect size (d): {Number.isFinite(report?.effect?.effectSize as any) ? (Number(report.effect.effectSize).toFixed(2)) : '—'}</div>
               {report.status === 'no_detectable_effect' ? null : (
                 <div>Direction: {report.effect.direction}</div>
               )}
