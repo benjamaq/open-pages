@@ -114,20 +114,6 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         const kid = String((li as any).id || '')
         if (kid) candidateIntakeKeys.add(kid)
       }
-      // Also include sibling user_supplement ids with the same (case-insensitive) name
-      if (supplementName) {
-        const nm = String(supplementName).trim()
-        const { data: sameNameSupps } = await supabase
-          .from('user_supplement')
-          .select('id,name')
-          .eq('user_id', userId)
-          .ilike('name', nm)
-          .limit(50)
-        for (const us of sameNameSupps || []) {
-          const sid = String((us as any).id || '')
-          if (sid) candidateIntakeKeys.add(sid)
-        }
-      }
     }
   } catch {}
   debugLog(`CANDIDATE_KEYS: ${Array.from(candidateIntakeKeys).join(',')}`)
@@ -285,6 +271,14 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       const inferredStart: string | null = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
       if (hasWearable && inferredStart) {
         const dKey = String(r.local_date).slice(0,10)
+        // Debug: emit implicit classification decision
+        try {
+          console.log('[truth-engine][implicit-classify]', {
+            date: dKey,
+            inferredStart,
+            label: dKey >= inferredStart ? 'ON' : 'OFF'
+          })
+        } catch {}
         if (dKey >= inferredStart) {
           taken = true
           implicitOn++
@@ -292,6 +286,16 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
           taken = false
           implicitOff++
         }
+      }
+      else {
+        // Debug: why implicit path was skipped
+        try {
+          console.log('[truth-engine][implicit-skip]', {
+            date: String(r.local_date).slice(0,10),
+            hasWearable,
+            inferredStart
+          })
+        } catch {}
       }
     } else {
       // Explicit record present
