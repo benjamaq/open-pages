@@ -195,9 +195,12 @@ export function DailyProgressLoop() {
     for (const r of allCombined) {
       const verdictValue = String((r as any).verdict || '').toLowerCase()
       const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
+      const isImplicit = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
       const hasFinal =
-        ['keep','drop'].includes(verdictValue) ||
-        ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+        (!isImplicit) && (
+          ['keep','drop'].includes(verdictValue) ||
+          ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+        )
       if (hasFinal) verdicts++
       else testing++
     }
@@ -430,7 +433,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   }
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
-  const strengthDisplay = ((hasFinalVerdictGlobal || row.progressPercent >= 100) && !isImplicit) ? 100 : strength
+  const strengthDisplay = isImplicit ? progressForDisplay : (((hasFinalVerdictGlobal || row.progressPercent >= 100) && !isImplicit) ? 100 : strength)
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)
@@ -655,9 +658,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
             })()}
       </div>
-      {((row as any)?.progressLabel) && (
-        <div className="mt-1 text-[11px] text-gray-500">{String((row as any).progressLabel)}</div>
-      )}
+      <div className="mt-1 text-[11px] text-gray-500">
+        {isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || '')}
+      </div>
       <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
         Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
@@ -692,13 +695,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="mt-1 text-xs text-gray-600">Waiting for more usable metric data (e.g., sleep) to compare ON vs OFF.</div>
       )}
       {(() => {
-        const ap = Number((row as any).activeProgress || 0)
-        const up = Number((row as any).uploadProgress || 0)
-        const label = String((row as any).progressLabel || (
-          (row.progressPercent >= 100 && (hasFinalVerdictGlobal)) ? 'Test complete'
-          : ((String((row as any).analysisSource || '') === 'implicit' && up > ap) ? 'Signal from historical data — confirm with check-ins'
-          : (ap > 0 ? 'Actively testing' : 'Gathering data'))
-        ))
+        const label = isImplicit ? 'Signal from historical data' : (String((row as any).progressLabel || '') || (row.progressPercent >= 100 && hasFinalVerdictGlobal ? 'Test complete' : (Number((row as any).activeProgress || 0) > 0 ? 'Actively testing' : 'Gathering data')))
         return <div className="mt-1 text-[11px] text-gray-500">{label}</div>
       })()}
       {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
