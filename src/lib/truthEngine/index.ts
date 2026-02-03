@@ -162,22 +162,81 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   }
   debugLog(`QUERY daily_entries: user_id=${userId}, since=${loadAllForImplicit ? 'ALL' : (querySince || 'NONE')}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake,wearables`)
 
+  // Determine whether this supplement has ANY explicit intake records across history
+  let hasExplicitIntake: boolean = false
+  try {
+    let off = 0
+    const size = 1000
+    while (!hasExplicitIntake) {
+      const { data } = await supabase
+        .from('daily_entries')
+        .select('supplement_intake')
+        .eq('user_id', userId)
+        .order('local_date', { ascending: false })
+        .range(off, off + size - 1)
+      const batch = (data || []) as any[]
+      if (!batch || batch.length === 0) break
+      for (const r of batch) {
+        const intake = (r as any)?.supplement_intake || {}
+        if (intake && typeof intake === 'object') {
+          for (const k of Array.from(candidateIntakeKeys)) {
+            if ((intake as any)[k] !== undefined) { hasExplicitIntake = true; break }
+          }
+          if (hasExplicitIntake) break
+        }
+      }
+      if (batch.length < size) break
+      off += size
+    }
+  } catch {}
+
+  // Load daily_entries per path:
+  // - If explicit intake exists, load from inferred start (bounded) and classify ONLY explicit days
+  // - Else, load ALL history (paginated) for implicit ON/OFF by inferredStart
   let dailyRows: any[] = []
   let dailyError: any = null
-  let offset = 0
-  const batchSize = 1000
-  while (true) {
-    const { data, error } = await supabase
-      .from('daily_entries')
-      .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
-      .eq('user_id', userId)
-      .order('local_date', { ascending: false })
-      .range(offset, offset + batchSize - 1)
-    if (error) { dailyError = error; break }
-    if (!data || data.length === 0) break
-    dailyRows.push(...data)
-    if (data.length < batchSize) break
-    offset += batchSize
+  if (hasExplicitIntake) {
+    let since = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
+    if (!since) {
+      // fallback to restart bound or last 365 days if neither present
+      since = querySince
+    }
+    let off = 0
+    const size = 1000
+    while (true) {
+      let q = supabase
+        .from('daily_entries')
+        .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
+        .eq('user_id', userId)
+        .order('local_date', { ascending: false })
+        .range(off, off + size - 1)
+      if (since) {
+        // Note: range is applied after filters; filter by date floor first
+        q = q.gte('local_date', since as any)
+      }
+      const { data, error } = await q
+      if (error) { dailyError = error; break }
+      if (!data || data.length === 0) break
+      dailyRows.push(...data)
+      if (data.length < size) break
+      off += size
+    }
+  } else {
+    let off = 0
+    const size = 1000
+    while (true) {
+      const { data, error } = await supabase
+        .from('daily_entries')
+        .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
+        .eq('user_id', userId)
+        .order('local_date', { ascending: false })
+        .range(off, off + size - 1)
+      if (error) { dailyError = error; break }
+      if (!data || data.length === 0) break
+      dailyRows.push(...data)
+      if (data.length < size) break
+      off += size
+    }
   }
   
   console.log('[truth-engine] daily_entries result:', {
@@ -279,17 +338,25 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     const intakeObj = r.supplement_intake || {}
     // Try all candidate keys; first match wins
     let value: any = undefined
+    let hadKey = false
     for (const k of candidateIntakeKeys) {
-      if (k in intakeObj) { value = (intakeObj as any)[k]; break }
+      if (k in intakeObj) { value = (intakeObj as any)[k]; hadKey = true; break }
     }
+    // Path A: explicit intake exists globally → only use days that have explicit records; skip others entirely
+    if (hasExplicitIntake) {
+      if (!hadKey) return null
+      const taken = normalizeTaken(value)
+      if (taken === true) explicitOn++
+      if (taken === false) explicitOff++
+      return { date: r.local_date, taken, raw: value }
+    }
+    // Path B: no explicit intake anywhere → use implicit classification by inferredStart
     let taken = normalizeTaken(value)
-    // Implicit ON/OFF from wearables when no explicit intake and inferred start exists
     if (taken === null) {
       const hasWearable = r?.wearables != null
       const inferredStart: string | null = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
       if (hasWearable && inferredStart) {
         const dKey = String(r.local_date).slice(0,10)
-        // Debug: emit implicit classification decision
         try {
           console.log('[truth-engine][implicit-classify]', {
             date: dKey,
@@ -305,23 +372,12 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
           implicitOff++
         }
       }
-      else {
-        // Debug: why implicit path was skipped
-        try {
-          console.log('[truth-engine][implicit-skip]', {
-            date: String(r.local_date).slice(0,10),
-            hasWearable,
-            inferredStart
-          })
-        } catch {}
-      }
     } else {
-      // Explicit record present
       if (taken === true) explicitOn++
       if (taken === false) explicitOff++
     }
     return { date: r.local_date, taken, raw: value }
-  }).filter((x: any) => x.taken !== null)
+  }).filter((x: any) => x && x.taken !== null)
   
   console.log('[truth-engine] Parsed data:', {
     metricsCount: metrics.length,
