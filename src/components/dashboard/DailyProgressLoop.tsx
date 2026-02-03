@@ -475,13 +475,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (mappedCat === 'works') {
       const src = String((row as any)?.analysisSource || '')
       return src === 'implicit'
-        ? { label: 'Worth Testing ↑', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+        ? { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
         : { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
     }
     if (mappedCat === 'no_effect') {
       const src = String((row as any)?.analysisSource || '')
       return src === 'implicit'
-        ? { label: 'Unlikely to Matter ↓', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+        ? { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
         : { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
     }
     if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
