@@ -494,6 +494,7 @@ export async function GET(request: Request) {
       let qualityModifier = 0
       let progressPercent = Math.min(100, Math.max(0, Math.floor(baseProgress + staggerOffset + rotationBonus + qualityModifier + microOffset)))
       if (VERBOSE) { try { console.log('[progress/loop] row:', { id, name, startDate: (it as any).start_date || (it as any).inferred_start_at, daysOfData, progressPercent }) } catch {} }
+      try { console.log('[progress-percent-initial]', { id, name, progressPercent }) } catch {}
 
       const insight = insightsById.get(id)
       let status: SupplementProgress['status'] = 'building'
@@ -960,6 +961,7 @@ export async function GET(request: Request) {
           })
         } catch {}
         r.progressPercent = displayProgress
+        try { console.log('[progress-percent-final]', { id: r.id, name, rProgressPercent: r.progressPercent, activeProgress, uploadProgress, isImplicit }) } catch {}
         r.requiredDays = requiredDays
         // Persist required ON/OFF for client-side gating
         ;(r as any).requiredOnDays = requiredOnDays
