@@ -108,8 +108,6 @@ that kind of benefit.`}
           <div className="text-sm text-slate-400 mb-2">{report.status === 'proven_positive' ? 'Why this worked for you' : report.status === 'negative' ? 'Why this didn’t work for you' : 'What we see so far'}</div>
           <div className="space-y-2">
             <div className="text-slate-200">{dynamic.effectSummary}</div>
-            <div className="font-semibold mt-2">{report.mechanism.label}</div>
-            <div className="text-slate-200">{report.mechanism.text}</div>
             {deficiency && (
               <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-200 text-xs px-3 py-2">
                 <span className="font-semibold">Deficiency hint:</span> {deficiency}
@@ -236,7 +234,8 @@ function colorForStatus(status: string) {
 }
 
 function generateReportCopy(report: any): { effectSummary: string; biologyText: string; nextSteps: string } {
-  const name = String(report?.supplementName || '').trim() || 'this supplement'
+  const fullName = String(report?.supplementName || '').trim() || 'this supplement'
+  const name = shortSupplementName(fullName)
   const metric = String(report?.primaryMetricLabel || 'your metric')
   const d = typeof report?.effect?.effectSize === 'number' ? Number(report.effect.effectSize) : null
   const absChange = typeof report?.effect?.absoluteChange === 'number' ? Number(report.effect.absoluteChange) : null
@@ -295,6 +294,36 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
     nextSteps = `Keep tracking and consider standardizing dose/timing for clearer comparisons.`
   }
   return { effectSummary, biologyText, nextSteps }
+}
+
+function shortSupplementName(full: string): string {
+  try {
+    let s = full.replace(/\[[^\]]+\]/g, ' ')
+    // Keep first two comma-separated parts (brand + product), drop the rest
+    const parts = s.split(',').map(p => p.trim()).filter(Boolean)
+    s = parts.slice(0, 2).join(' ')
+    // Remove dose and count patterns
+    s = s.replace(/\b\d+(\.\d+)?\s?(mg|mcg|g|iu|ml)\b/gi, ' ')
+    s = s.replace(/\b\d+\s?(tablets?|capsules?|softgels?|tabs?|caps?|count)\b/gi, ' ')
+    // Common container descriptors
+    s = s.replace(/\b(high absorption|extra strength|time[-\s]?release|fast[-\s]?acting)\b/gi, ' ')
+    s = s.replace(/\s{2,}/g, ' ').trim()
+    // Prefer Brand + Key ingredient if possible
+    const keyMap = ['magnesium','collagen','vitamin d','vitamin c','b complex','b-complex','melatonin','ashwagandha','creatine','omega','fish oil','zinc','glycine','theanine','probiotic']
+    const lower = s.toLowerCase()
+    const hit = keyMap.find(k => lower.includes(k))
+    if (hit) {
+      const brand = parts[0] || ''
+      // If brand already includes the key, keep as-is; else combine
+      const hasBrand = brand && !brand.toLowerCase().includes(hit)
+      const label = hit.split(' ').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')
+      const out = (hasBrand ? `${brand} ${label}` : s).trim()
+      return out.length > 60 ? out.slice(0, 60).trim() : out
+    }
+    return s.length > 60 ? s.slice(0, 60).trim() : s
+  } catch {
+    return full
+  }
 }
 
 function fmt(n: number | null | undefined) {
