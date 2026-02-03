@@ -1521,7 +1521,7 @@ async function getStreakDays(supabase: any, userId: string): Promise<number> {
 function computeUploadProgress(onDays: number, offDays: number): number {
   const P_MIN = 50
   const P_MAX = 80
-  const N_TARGET = 180
+  const N_TARGET = 90
   const nEff = Math.min(onDays, offDays)
   const balance = nEff / Math.max(onDays, offDays, 1)
   const exposure = Math.min(nEff / N_TARGET, 1)
