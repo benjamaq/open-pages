@@ -60,7 +60,8 @@ export default function WearablesStep() {
                   <div className="relative z-10 w-full max-w-[440px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
                     <div className="text-base font-semibold text-gray-900">Better on desktop</div>
                     <div className="mt-2 text-sm text-gray-700">
-                      Uploading health data works best on desktop. Would you like to continue on mobile or switch to desktop?
+                      Uploading health data works best on desktop. The export process on mobile can be complicated.
+                      Would you like to continue on mobile or switch to desktop?
                     </div>
                     <div className="mt-4 flex gap-2 justify-end">
                       <button

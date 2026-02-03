@@ -95,6 +95,11 @@ that kind of benefit.`}
                 </tr>
               </tbody>
             </table>
+            {String(report.status) === 'too_early' && typeof (report as any)?.meta?.missingOffMetrics === 'number' && (report as any).meta.missingOffMetrics > 0 && (
+              <div className="mt-3 text-xs text-amber-300">
+                We found {(report as any).meta.sampleOff} OFF day(s) with usable metrics. {(report as any).meta.missingOffMetrics} OFF day(s) didn’t include {String(report.primaryMetricLabel).toLowerCase()} data. Connect a device that tracks sleep for older dates to speed up results.
+              </div>
+            )}
           </Card>
         </section>
 

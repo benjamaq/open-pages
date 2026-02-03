@@ -506,6 +506,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       cleanSamples: cleanSamples.length
     })
   } catch {}
+  // Compute missing-metric counts (labeled ON/OFF days that lacked usable metric)
+  const missingOnMetrics = Math.max(0, sampleOnCount - (effect.sampleOn || 0))
+  const missingOffMetrics = Math.max(0, sampleOffCount - (effect.sampleOff || 0))
   try {
     console.log('[truth-engine] Effect computed:', {
       metric: primaryMetric,
@@ -534,7 +537,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       cohort: null,
       sampleOnOverride: sampleOnCount,
       sampleOffOverride: sampleOffCount,
-      metricLabelOverride: metricLabelOverride || undefined
+      metricLabelOverride: metricLabelOverride || undefined,
+      missingOnMetrics,
+      missingOffMetrics
     })
   }
 
@@ -567,7 +572,9 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     confidenceOverride: confidence,
     sampleOnOverride: sampleOnCount,
     sampleOffOverride: sampleOffCount,
-    metricLabelOverride: metricLabelOverride || undefined
+    metricLabelOverride: metricLabelOverride || undefined,
+    missingOnMetrics,
+    missingOffMetrics
   })
 }
 
@@ -583,6 +590,8 @@ function buildReport(args: {
   sampleOnOverride?: number
   sampleOffOverride?: number
   metricLabelOverride?: string
+  missingOnMetrics?: number
+  missingOffMetrics?: number
 }): TruthReport {
   const { effect, primaryMetric, canonical, cohort } = args
   const confidenceScore = typeof args.confidenceOverride === 'number'
@@ -648,6 +657,8 @@ function buildReport(args: {
       sampleOff: typeof args.sampleOffOverride === 'number' ? args.sampleOffOverride : effect.sampleOff,
       daysExcluded: args.confoundedDays,
       onsetDays: null,
+      missingOnMetrics: typeof args.missingOnMetrics === 'number' ? args.missingOnMetrics : 0,
+      missingOffMetrics: typeof args.missingOffMetrics === 'number' ? args.missingOffMetrics : 0,
       generatedAt: new Date().toISOString()
     }
   }
