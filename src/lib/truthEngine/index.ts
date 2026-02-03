@@ -193,6 +193,12 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Load daily_entries per path:
   // - If explicit intake exists, load from inferred start (bounded) and classify ONLY explicit days
   // - Else, load ALL history (paginated) for implicit ON/OFF by inferredStart
+  console.log('[truth-engine][path-decision]', {
+    userSupplementId,
+    hasExplicitIntake,
+    pathChosen: hasExplicitIntake ? 'explicit' : 'implicit',
+    candidateKeys: Array.from(candidateIntakeKeys)
+  })
   let dailyRows: any[] = []
   let dailyError: any = null
   if (hasExplicitIntake) {
