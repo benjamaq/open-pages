@@ -417,7 +417,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const effectCatLower = String(effectCat || '').toLowerCase()
   // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete
   const hasFinalVerdictGlobal = ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
-  const progressForDisplay = (hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : row.progressPercent
+  // Prevent 100% display for "needs_more_data" (Truth Engine too_early) even if raw progress hit 100 on labeled days
+  let progressForDisplay = row.progressPercent
+  if (effectCatLower === 'needs_more_data') {
+    progressForDisplay = Math.min(progressForDisplay, 95)
+  }
+  if (hasFinalVerdictGlobal || progressForDisplay >= 100) {
+    progressForDisplay = 100
+  }
   const baseStrength = progressForDisplay
   const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
   const strengthDisplay = (hasFinalVerdictGlobal || row.progressPercent >= 100) ? 100 : strength
@@ -654,9 +661,18 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
         </div>
       )}
+      {/* Start-date nudge: when wearables exist but no labeled days yet */}
+      {(hasWearables && (daysOn + daysOff) === 0) && (
+        <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+          ⚠️ Add a start date to unlock your verdict
+        </div>
+      )}
       {/* Strong ON baseline hint when progress is high but OFF days are lacking */}
       {isBuilding && row.progressPercent >= 60 && daysOff < Math.min(5, Math.max(3, Math.round((row.requiredDays || 14) / 4))) && (
         <div className="mt-1 text-xs text-gray-600">Strong ON baseline • Need OFF days</div>
+      )}
+      {(effectCatLower === 'needs_more_data') && (
+        <div className="mt-1 text-xs text-gray-600">Waiting for more usable metric data (e.g., sleep) to compare ON vs OFF.</div>
       )}
       {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>

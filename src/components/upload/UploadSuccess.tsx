@@ -6,8 +6,9 @@ export default function UploadSuccess({ summary }: { summary?: UploadResult }) {
   return (
     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
       <div className="text-lg font-semibold text-emerald-900">Data uploaded</div>
-      <div className="text-sm text-emerald-800 mt-1 max-w-prose">
-        We’re processing your data in the background. You can continue — results will improve as data is added.
+      <div className="text-sm text-emerald-900 mt-1 max-w-prose">
+        <span className="mr-1">⚡</span>
+        Now add your supplements — include when you started each one so we can compare before vs after.
       </div>
       {summary?.detectedMetrics && summary.detectedMetrics.length > 0 && (
         <div className="mt-3 text-sm text-emerald-900">

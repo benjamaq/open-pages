@@ -351,7 +351,10 @@ export function SupplementDetailsModal({
          {/* Section C — Timing & context */}
          <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Timing & context</div>
-          <div className="text-xs text-slate-500 mb-2 max-w-prose">Used to compare before vs after.</div>
+          <div className="text-xs text-slate-700 mb-2 max-w-prose">
+            <span className="mr-1">⚡</span>
+            <span className="font-semibold">Accurate dates = accurate verdicts.</span> We compare your health before vs after you started.
+          </div>
            <div className="grid grid-cols-2 gap-3">
              <label className="text-xs text-slate-700">
                When did you start?
@@ -378,11 +381,17 @@ export function SupplementDetailsModal({
                </button>
                </div>
              </div>
-             {!isActive && (
+            {!isActive && (
                <>
                  <label className="text-xs text-slate-700">
                    Stopped on
-                   <input type="date" value={stoppedAt} onChange={(e) => setStoppedAt(e.target.value)} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
+                   <input
+                     type="date"
+                     value={stoppedAt}
+                     onChange={(e) => setStoppedAt(e.target.value)}
+                     className={`mt-1 w-full px-3 py-2 border rounded-md ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
+                     required
+                   />
                  </label>
                  <label className="text-xs text-slate-700">
                    Restarted later? (optional)
@@ -493,6 +502,12 @@ export function SupplementDetailsModal({
          <button
            onClick={() =>
               (function() {
+                // Require a stop date if user is not currently taking it
+                if (!isActive && !stoppedAt) {
+                  // Simple form validation feedback via red border; also prevent submit
+                  try { alert('Please enter the date you stopped taking it.'); } catch {}
+                  return
+                }
                 // Debug logs for price-save issues
                 // These print to the browser console when saving
                 // eslint-disable-next-line no-console
