@@ -377,9 +377,7 @@ export function DailyProgressLoop() {
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Completed</div>
-                {completedRows.length > 0 && (
-                  <a href="/dashboard" className="text-xs text-gray-700 hover:underline">View full report →</a>
-                )}
+                {/* Removed extraneous link; individual cards provide report access */}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {completedRows.length === 0 ? (
@@ -913,6 +911,7 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
     : null
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const startCheckout = async () => {
     try {
       setLoading(true)
@@ -929,7 +928,7 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: 'premium',
-          period: 'yearly',
+          period,
           userId: user.id,
           userEmail: user.email
         })
@@ -972,7 +971,13 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
         <div className="mt-4 sm:mt-5 space-y-2.5">
           <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
             <div className="flex items-center gap-3">
-              <input type="radio" name="plan" className="h-4 w-4" defaultChecked />
+              <input
+                type="radio"
+                name="plan"
+                className="h-4 w-4"
+                checked={period === 'yearly'}
+                onChange={() => setPeriod('yearly')}
+              />
               <div>
                 <div className="text-sm sm:text-base font-medium text-gray-900">$149/year</div>
                 <div className="text-xs text-gray-600">$12.42/mo • Billed annually</div>
@@ -982,7 +987,13 @@ function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMon
           </label>
           <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
             <div className="flex items-center gap-3">
-              <input type="radio" name="plan" className="h-4 w-4" />
+              <input
+                type="radio"
+                name="plan"
+                className="h-4 w-4"
+                checked={period === 'monthly'}
+                onChange={() => setPeriod('monthly')}
+              />
               <div>
                 <div className="text-sm sm:text-base font-medium text-gray-900">$19/month</div>
                 <div className="text-xs text-gray-600">Cancel anytime</div>

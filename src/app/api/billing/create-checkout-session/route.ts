@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         ],
         mode: 'subscription',
         success_url: `${origin}/onboarding`,
-        cancel_url: `${origin}/pricing`,
+        cancel_url: `${origin}/dashboard`,
         metadata: {
           user_id: userId,
           plan: effectivePlan,
