@@ -7,6 +7,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const phenotype = derivePhenotype(report)
   const deficiency = deriveDeficiencyHint(report)
   const decision = decisionFor(report)
+  const dynamic = generateReportCopy(report)
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -106,7 +107,8 @@ that kind of benefit.`}
         <Card>
           <div className="text-sm text-slate-400 mb-2">{report.status === 'proven_positive' ? 'Why this worked for you' : report.status === 'negative' ? 'Why this didn’t work for you' : 'What we see so far'}</div>
           <div className="space-y-2">
-            <div className="font-semibold">{report.mechanism.label}</div>
+            <div className="text-slate-200">{dynamic.effectSummary}</div>
+            <div className="font-semibold mt-2">{report.mechanism.label}</div>
             <div className="text-slate-200">{report.mechanism.text}</div>
             {deficiency && (
               <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-200 text-xs px-3 py-2">
@@ -137,12 +139,12 @@ that kind of benefit.`}
 
         <Card>
           <div className="text-sm text-slate-400 mb-2">What this suggests about your biology</div>
-          <div className="text-sm text-slate-200">{report.biologyProfile}</div>
+          <div className="text-sm text-slate-200 whitespace-pre-line">{dynamic.biologyText || report.biologyProfile}</div>
         </Card>
 
         <Card>
           <div className="text-sm text-slate-400 mb-2">Next steps</div>
-          <div className="text-sm text-slate-200 whitespace-pre-line">{report.nextSteps}</div>
+          <div className="text-sm text-slate-200 whitespace-pre-line">{dynamic.nextSteps}</div>
         </Card>
 
         <footer className="flex items-center justify-between border-t border-slate-800 pt-4">
@@ -231,6 +233,68 @@ function colorForStatus(status: string) {
   if (status === 'negative') return { badge: 'bg-rose-500/10 text-rose-300 border-rose-500/40' }
   if (status === 'confounded') return { badge: 'bg-amber-500/10 text-amber-300 border-amber-500/40' }
   return { badge: 'bg-slate-600/10 text-slate-300 border-slate-600/40' }
+}
+
+function generateReportCopy(report: any): { effectSummary: string; biologyText: string; nextSteps: string } {
+  const name = String(report?.supplementName || '').trim() || 'this supplement'
+  const metric = String(report?.primaryMetricLabel || 'your metric')
+  const d = typeof report?.effect?.effectSize === 'number' ? Number(report.effect.effectSize) : null
+  const absChange = typeof report?.effect?.absoluteChange === 'number' ? Number(report.effect.absoluteChange) : null
+  const dir = String(report?.effect?.direction || '').toLowerCase() // 'positive' | 'negative' | 'neutral'
+  const status = String(report?.status || '').toLowerCase()
+  const conf = String(report?.confidence?.label || '').toUpperCase()
+  const magnitude = d != null
+    ? (Math.abs(d) >= 0.8 ? 'large' : Math.abs(d) >= 0.5 ? 'medium' : Math.abs(d) >= 0.3 ? 'moderate' : 'small')
+    : 'small'
+  const points = absChange != null && Number.isFinite(absChange) ? Math.round(Math.abs(absChange)) : null
+  const changePhrase = points != null ? `${points} point${points === 1 ? '' : 's'}` : `a ${magnitude} amount`
+  // Effect summary
+  let effectSummary = ''
+  if (status === 'proven_positive') {
+    effectSummary = `Your ${metric} improved by ${changePhrase} on ${name}. This is a ${magnitude} positive effect${d != null ? ` (d = ${d.toFixed(2)})` : ''}, with ${conf} confidence.`
+  } else if (status === 'negative') {
+    effectSummary = `Your ${metric} dropped by ${changePhrase} on ${name}. This is a ${magnitude} negative effect${d != null ? ` (d = ${d.toFixed(2)})` : ''}, with ${conf} confidence.`
+  } else if (status === 'no_effect' || status === 'no_detectable_effect') {
+    effectSummary = `We did not detect a meaningful change in ${metric} on ${name}${d != null ? ` (d = ${d.toFixed(2)})` : ''}.`
+  } else if (status === 'too_early') {
+    effectSummary = `We don't have enough comparable data yet to call this one. Keep tracking and we'll update your verdict as data builds.`
+  } else {
+    effectSummary = `Your data shows a pattern in ${metric} when taking ${name}.`
+  }
+  // Biology text mapping by supplement name
+  const nm = name.toLowerCase()
+  let biologyText: string | null = null
+  if (nm.includes('magnesium')) {
+    biologyText = `Magnesium plays a role in GABA receptor activation and melatonin regulation. A ${dir === 'negative' ? 'negative' : dir} sleep response may indicate you're already sufficient, or that this form isn't well absorbed.`
+  } else if (nm.includes('collagen')) {
+    biologyText = `Collagen peptides support connective tissue repair. Effects on sleep are indirect — typically through glycine content.`
+  } else if (nm.includes('b-complex') || nm.includes('b complex') || nm.includes('vitamin b') || nm.includes('b vitamin')) {
+    biologyText = `B vitamins support energy metabolism and neurotransmitter synthesis. Timing matters — taking them too late in the day can disrupt sleep.`
+  } else if (nm.includes('vitamin c')) {
+    biologyText = `Vitamin C supports immune function and acts as an antioxidant. Sleep effects are typically indirect.`
+  } else if (nm.includes('vitamin d')) {
+    biologyText = `Vitamin D helps regulate circadian rhythm signaling. Deficiency is common and supplementation often shows measurable sleep improvements.`
+  }
+  if (!biologyText) {
+    const dirText = dir === 'positive' ? 'your body may benefit from continued use' : dir === 'negative' ? 'this may not align with your biology at this dose' : 'the effect may be subtle or context‑dependent'
+    biologyText = `This supplement targets pathways related to your primary goals. Your ${dir || 'observed'} response suggests ${dirText}.`
+  }
+  // Next steps by verdict
+  let nextSteps = ''
+  if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') {
+    if (nm.includes('magnesium')) {
+      nextSteps = `Consider stopping ${name}. You could re‑test at a different dose, time of day, or form (e.g., switch from oxide to glycinate).`
+    } else {
+      nextSteps = `Consider stopping ${name}. You could re‑test at a different dose or time of day if you still suspect benefit.`
+    }
+  } else if (status === 'proven_positive') {
+    nextSteps = `Keep taking ${name}. Your data supports continued use. We'll keep monitoring as more data comes in.`
+  } else if (status === 'too_early') {
+    nextSteps = `Keep tracking — we need more clean ON and OFF days with usable ${metric.toLowerCase()} data to give you a confident verdict.`
+  } else {
+    nextSteps = `Keep tracking and consider standardizing dose/timing for clearer comparisons.`
+  }
+  return { effectSummary, biologyText, nextSteps }
 }
 
 function fmt(n: number | null | undefined) {
