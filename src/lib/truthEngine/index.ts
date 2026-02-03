@@ -162,44 +162,16 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   }
   debugLog(`QUERY daily_entries: user_id=${userId}, since=${loadAllForImplicit ? 'ALL' : (querySince || 'NONE')}, fields=local_date,energy,focus,mood,sleep_quality,supplement_intake,wearables`)
 
-  let baseQuery = supabase
+  let dailyRows: any[] | null = null
+  let dailyError: any = null
+  const res = await supabase
     .from('daily_entries')
     .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
     .eq('user_id', userId)
-  let dailyRows: any[] | null = null
-  let dailyError: any = null
-  if (!loadAllForImplicit && querySince) {
-    // First run with a date floor; if no explicit intake keys exist, re-run without a floor
-    const bounded = await baseQuery.gte('local_date', querySince as any).limit(10000).order('local_date', { ascending: false })
-    dailyRows = (bounded as any)?.data || null
-    dailyError = (bounded as any)?.error || null
-    let hasExplicit = false
-    try {
-      for (const r of (dailyRows || [])) {
-        const intake = (r as any)?.supplement_intake || {}
-        if (intake && typeof intake === 'object') {
-          for (const k of Array.from(candidateIntakeKeys)) {
-            if ((intake as any)[k] !== undefined) { hasExplicit = true; break }
-          }
-        }
-        if (hasExplicit) break
-      }
-    } catch {}
-    if (!hasExplicit) {
-      const unbounded = await supabase
-        .from('daily_entries')
-        .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
-        .eq('user_id', userId)
-        .limit(10000)
-        .order('local_date', { ascending: false })
-      dailyRows = (unbounded as any)?.data || null
-      dailyError = (unbounded as any)?.error || null
-    }
-  } else {
-    const res = await baseQuery.limit(10000).order('local_date', { ascending: false })
-    dailyRows = (res as any)?.data || null
-    dailyError = (res as any)?.error || null
-  }
+    .limit(10000)
+    .order('local_date', { ascending: false })
+  dailyRows = (res as any)?.data || null
+  dailyError = (res as any)?.error || null
   
   console.log('[truth-engine] daily_entries result:', {
     count: dailyRows?.length || 0,
