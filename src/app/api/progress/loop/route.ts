@@ -933,17 +933,20 @@ export async function GET(request: Request) {
             })
           } catch {}
         }
-        // Use upload-aware head-start for implicit (upload-only) analyses
+        // Upload-aware head-start only when truly implicit AND upload samples exist
         let uploadProgress = 0
         let sOn = 0
         let sOff = 0
         if (isImplicit) {
           sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
           sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
-          uploadProgress = computeUploadProgress(sOn, sOff)
+          if ((sOn + sOff) > 0) {
+            uploadProgress = computeUploadProgress(sOn, sOff)
+          }
         }
-        // For implicit analyses, always use upload-based progress
-        let displayProgress = isImplicit ? uploadProgress : activeProgress
+        // Only use upload-based progress when implicit AND upload samples are present; otherwise use check‑in progress
+        const useUploadProgress = isImplicit && (sOn + sOff) > 0
+        let displayProgress = useUploadProgress ? uploadProgress : activeProgress
         // If absolutely no data exists (no ON, no OFF, no samples), force 0% and a starter label
         try {
           const onAny = Number((r as any).daysOn || 0)
@@ -967,6 +970,7 @@ export async function GET(request: Request) {
             activeProgress,
             hasCheckinData,
             uploadProgress,
+            useUploadProgress,
             displayProgress
           })
         } catch {}
