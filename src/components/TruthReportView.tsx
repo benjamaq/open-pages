@@ -26,9 +26,8 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {isImplicit && (
           <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-200">
-            <div className="font-semibold">This is an observed signal from historical wearable data.</div>
-            <div className="text-indigo-200/90">To confirm, start active testing with daily check-ins.</div>
-            <a href="/results" className="inline-block mt-2 text-[12px] px-2 py-1 rounded border border-indigo-500/40 text-indigo-200 hover:bg-indigo-500/10">Start Active Test →</a>
+            <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
+            <div className="text-indigo-200/90">Daily check-ins will sharpen this into a confirmed verdict.</div>
           </div>
         )}
         <header className="space-y-1.5">
