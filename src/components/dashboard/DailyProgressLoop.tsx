@@ -694,10 +694,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       {(effectCatLower === 'needs_more_data') && (
         <div className="mt-1 text-xs text-gray-600">Waiting for more usable metric data (e.g., sleep) to compare ON vs OFF.</div>
       )}
-      {!isImplicit && (() => {
-        const label = String((row as any).progressLabel || '') || (row.progressPercent >= 100 && hasFinalVerdictGlobal ? 'Test complete' : (Number((row as any).activeProgress || 0) > 0 ? 'Actively testing' : 'Gathering data'))
-        return <div className="mt-1 text-[11px] text-gray-500">{label}</div>
-      })()}
       {!isMember && !isVerdictReady && !isInconclusive && daysOff === 0 && row.progressPercent < 100 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           Needs skip days to compare — keep following your rotation schedule
