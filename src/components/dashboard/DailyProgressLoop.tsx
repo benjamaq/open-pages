@@ -210,6 +210,14 @@ export function DailyProgressLoop() {
   const nextLikely = (() => {
     const candidates = s.building
       .filter(r => r.status === 'building')
+      // Ignore brand-new zero-data rows; surface once they have any progress or tracked days
+      .filter((r: any) => {
+        const on = Number((r as any)?.daysOn || 0)
+        const off = Number((r as any)?.daysOff || 0)
+        const tracked = Number((r as any)?.daysTracked ?? r.daysOfData ?? 0)
+        const pct = Number((r as any)?.progressPercent || 0)
+        return (on + off + tracked + pct) > 0
+      })
       .map(r => ({ row: r, remaining: Math.max(0, (r.requiredDays || 14) - (r.daysOfData || 0)) }))
       .sort((a, b) => a.remaining - b.remaining)
     return candidates[0] || null
@@ -426,6 +434,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const daysOff = Number((row as any).daysOff || 0)
   const daysTracked = Number(((row as any)?.daysTracked ?? row.daysOfData ?? 0) || 0)
   const hasNoData = (daysTracked === 0) && (daysOn === 0) && (daysOff === 0)
+  if (hasNoData) {
+    try { /* Force progress to 0 for true zero-data state */ } catch {}
+    progressForDisplay = 0
+  }
   const reqDays = Number(row.requiredDays || 14)
   const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
   const onComplete = daysOn >= reqDays
@@ -725,11 +737,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-        {(isImplicit || (isCompleted && isMember)) && (() => {
-          const anyTracked = (Number((row as any)?.daysOfData || 0) > 0) || ((daysOn + daysOff) > 0)
-          if (!anyTracked) {
-            return <div className="text-[11px] text-gray-500">Collecting data…</div>
-          }
+        {(!isImplicit && isCompleted && isMember) && (() => {
           return (
             <div className="flex gap-2">
               <button
@@ -744,16 +752,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                   setShowTruthReport(true)
                 }}
               >
-                {isImplicit ? 'View signal →' : 'View full report →'}
+                View full report →
               </button>
-              {!isImplicit && (
-                <button
-                  className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
-                  onClick={() => setShowRetestModal(true)}
-                >
-                  Retest
-                </button>
-              )}
+              <button
+                className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+                onClick={() => setShowRetestModal(true)}
+              >
+                Retest
+              </button>
             </div>
           )
         })()}

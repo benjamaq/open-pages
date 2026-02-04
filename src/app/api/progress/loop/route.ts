@@ -943,7 +943,17 @@ export async function GET(request: Request) {
           uploadProgress = computeUploadProgress(sOn, sOff)
         }
         // For implicit analyses, always use upload-based progress
-        const displayProgress = isImplicit ? uploadProgress : activeProgress
+        let displayProgress = isImplicit ? uploadProgress : activeProgress
+        // If absolutely no data exists (no ON, no OFF, no samples), force 0% and a starter label
+        try {
+          const onAny = Number((r as any).daysOn || 0)
+          const offAny = Number((r as any).daysOff || 0)
+          const noAnySamples = (Number(sOn || 0) === 0) && (Number(sOff || 0) === 0)
+          const noAnyData = (onAny === 0 && offAny === 0 && noAnySamples)
+          if (noAnyData) {
+            displayProgress = 0
+          }
+        } catch {}
         try {
           console.log('[upload-debug]', {
             id: r.id,
@@ -967,12 +977,16 @@ export async function GET(request: Request) {
         ;(r as any).requiredOnDays = requiredOnDays
         ;(r as any).requiredOffDays = requiredOffDays
         // Microcopy for card
-        ;(r as any).progressLabel =
-          isImplicit
-            ? 'Signal from historical data'
-            : ((displayProgress >= 100 && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase())))
-              ? 'Test complete'
-              : ((activeProgress > 0) ? 'Actively testing' : 'Gathering data'))
+        ;(r as any).progressLabel = (() => {
+          const onAny = Number((r as any).daysOn || 0)
+          const offAny = Number((r as any).daysOff || 0)
+          const noAnySamples = (Number(sOn || 0) === 0) && (Number(sOff || 0) === 0)
+          const noAnyData = (onAny === 0 && offAny === 0 && noAnySamples)
+          if (noAnyData) return 'Just added — start checking in'
+          if (isImplicit) return 'Signal from historical data'
+          if ((displayProgress >= 100) && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase()))) return 'Test complete'
+          return (activeProgress > 0) ? 'Actively testing' : 'Gathering data'
+        })()
         ;(r as any).activeProgress = activeProgress
         ;(r as any).uploadProgress = uploadProgress
       }
