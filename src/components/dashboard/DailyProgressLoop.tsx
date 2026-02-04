@@ -262,22 +262,9 @@ export function DailyProgressLoop() {
           My Supplements
           <span className="ml-2 text-xs font-normal text-gray-600">
             {(() => {
-              const all: any[] = [
-                ...(s.clearSignal || []),
-                ...(s.noSignal || []),
-                ...(((data?.sections as any)?.inconsistent) || []),
-                ...(s.building || []),
-                ...(((data?.sections as any)?.needsData) || []),
-              ]
-              let testing = 0
-              let verdicts = 0
-              for (const r of all) {
-                const verdictValue = String((r as any).verdict || '').toLowerCase()
-                const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
-                const hasFinal = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
-                if (hasFinal) verdicts++
-                else testing++
-              }
+              const counts = (headerCounts as any) || {}
+              const testing = Number(counts.testing || 0)
+              const verdicts = Number(counts.verdicts || 0)
               if (isMember) {
                 return `• ${testing} testing`
               } else {
