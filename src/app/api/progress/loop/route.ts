@@ -541,6 +541,16 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
     const effBySupp = new Map<string, any>()
     for (const e of effects || []) effBySupp.set((e as any).user_supplement_id, e)
+    // Diagnostics: inspect effects map keys and a sample entry
+    try {
+      const mapKeys = Array.from(effBySupp.keys()).slice(0, 5)
+      const sampleVal = Array.from(effBySupp.values())[0] as any
+      console.log('[EFFECTS-MAP]', {
+        mapSize: effBySupp.size,
+        mapKeys,
+        sampleEntry: sampleVal ? { keys: Object.keys(sampleVal || {}), days_on: sampleVal?.days_on, sample_days_on: (sampleVal as any)?.sample_days_on } : 'empty'
+      })
+    } catch {}
     // Load latest truth reports (ordered newest first); first seen per id wins
     const { data: truths } = await supabase
       .from('supplement_truth_reports')
@@ -564,6 +574,13 @@ export async function GET(request: Request) {
         })
       }
     }
+    // Diagnostics: inspect truths map keys as well
+    try {
+      console.log('[TRUTHS-MAP]', {
+        mapSize: truthBySupp.size,
+        mapKeys: Array.from(truthBySupp.keys()).slice(0, 5)
+      })
+    } catch {}
     if (VERBOSE) {
       try {
         console.log('[truths] rows:', (truths || []).length, 'unique ids:', Array.from(truthBySupp.keys()).slice(0, 10))
@@ -953,7 +970,9 @@ export async function GET(request: Request) {
           } catch {}
           // Use stored effect table day counts (same source used by NEXT-RESULT) rather than live re-run samples
           const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-          const effStored = uidForTruth ? (effBySupp.get(String(uidForTruth)) as any | undefined) : undefined
+          const effLookupKey = String(uidForTruth || '')
+          try { console.log('[EFFECTS-LOOKUP]', { name, lookupKey: effLookupKey, found: effBySupp.has(effLookupKey) }) } catch {}
+          const effStored = effLookupKey ? (effBySupp.get(effLookupKey) as any | undefined) : undefined
           const storedDaysOn = Number(effStored?.days_on ?? 0)
           const storedDaysOff = Number(effStored?.days_off ?? 0)
           try {
