@@ -148,6 +148,8 @@ export default function ResultsPage() {
             effectCategory: (row as any).effectCategory,
             // @ts-ignore
             isReady: Boolean((row as any).isReady),
+            // @ts-ignore include analysis source for implicit gating
+            analysisSource: String(((row as any).analysisSource ?? (row as any).analysis_source) || '').toLowerCase()
           }
           // Alias lookup by user_supplement_id as well to avoid id mismatches
           const userSuppId = String((row as any).userSuppId || '')
@@ -166,6 +168,8 @@ export default function ResultsPage() {
     return supps.map(s => {
       const e = effects[s.id]
       const l = loopById[s.id] as any
+      const analysisSrc = String((l?.analysisSource ?? (l as any)?.analysis_source ?? '') || '').toLowerCase()
+      const isImplicit = analysisSrc === 'implicit'
       // Prefer supplement's own monthly cost; fallback to loop monthlyCost from progress API
       const monthly = (() => {
         const fromSupp = getMonthlyFromSupplement(s)
@@ -193,6 +197,10 @@ export default function ResultsPage() {
         : verdictKeep ? 'Working'
         : verdictDrop ? 'Not working'
         : 'Active'
+      // Upload-only implicit sources should never be considered completed; keep them in Active/Testing
+      if (isImplicit) {
+        lifecycle = 'Active'
+      }
       try {
         console.log('[MyStack/uiRows]', {
           id: s.id,
@@ -203,6 +211,7 @@ export default function ResultsPage() {
       } catch {}
       // Optional explanatory text (kept minimal)
       const effectText = (() => {
+        if (isImplicit) return 'Signal from wearable data'
         if (lifecycle === 'Active') return null
         if (lifecycle === 'Working') return 'Clear positive effect'
         if (lifecycle === 'Not working') return 'Clear negative effect'
@@ -797,7 +806,7 @@ export default function ResultsPage() {
                       </div>
                       <div className="mt-2 text-[13px]">
                         {r.lifecycle === 'Active' ? (
-                          <span className="text-[#6B7280]">Testing in progress</span>
+                          <span className="text-[#6B7280]">{String((loopById[r.id] as any)?.analysisSource || (loopById[r.id] as any)?.analysis_source || '').toLowerCase() === 'implicit' ? 'Signal from wearable data' : 'Testing in progress'}</span>
                         ) : (
                           <>
                             <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
