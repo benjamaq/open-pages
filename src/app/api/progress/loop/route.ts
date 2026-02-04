@@ -951,10 +951,22 @@ export async function GET(request: Request) {
               sampleDaysOn: (r as any).sampleDaysOn
             })
           } catch {}
-          // Use the stored Truth Engine day counts already applied to the row,
-          // not the live re-run samples that may reflect only recent check-ins.
-          sOn = Number((r as any)?.daysOn || 0)
-          sOff = Number((r as any)?.daysOff || 0)
+          // Use stored effect table day counts (same source used by NEXT-RESULT) rather than live re-run samples
+          const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+          const effStored = uidForTruth ? (effBySupp.get(String(uidForTruth)) as any | undefined) : undefined
+          const storedDaysOn = Number(effStored?.days_on ?? 0)
+          const storedDaysOff = Number(effStored?.days_off ?? 0)
+          try {
+            console.log('[UPLOAD-FIX]', {
+              name,
+              rowDaysOn: (r as any).daysOn,
+              storedDaysOn,
+              rowDaysOff: (r as any).daysOff,
+              storedDaysOff
+            })
+          } catch {}
+          sOn = storedDaysOn
+          sOff = storedDaysOff
           if ((sOn + sOff) > 0) {
             uploadProgress = computeUploadProgress(sOn, sOff)
           }
