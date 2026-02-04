@@ -1523,7 +1523,8 @@ function computeUploadProgress(onDays: number, offDays: number): number {
   const P_MAX = 80
   const N_TARGET = 90
   const nEff = Math.min(onDays, offDays)
-  const balance = nEff / Math.max(onDays, offDays, 1)
+  const ratio = nEff / Math.max(onDays, offDays, 1)
+  const balance = Math.pow(ratio, 0.3)
   const exposure = Math.min(nEff / N_TARGET, 1)
   const quality = balance * exposure
   const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
