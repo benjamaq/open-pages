@@ -812,9 +812,13 @@ export function DashboardUnifiedPanel() {
               <span className="text-gray-500">Days tracked</span>
               <span className="font-medium">
                 {wearableStatus?.wearable_connected
-                  ? (Number(wearableStatus?.checkin_days || 0) === 0
-                      ? Number(wearableStatus?.wearable_days_imported ?? wearableStatus?.wearable_unique_days ?? 0) // prefer exact entries count for upload-only
-                      : Number(wearableStatus?.total_unique_days ?? (Number(wearableStatus?.wearable_unique_days || 0) + Number(wearableStatus?.checkin_days || 0))))
+                  ? Math.max(
+                      Number(wearableStatus?.wearable_days_imported || 0),
+                      Number(
+                        (wearableStatus as any)?.total_unique_days ??
+                        (Number(wearableStatus?.wearable_unique_days || 0) + Number(wearableStatus?.checkin_days || 0))
+                      ) || 0
+                    )
                   : streak}
               </span>
             </div>
