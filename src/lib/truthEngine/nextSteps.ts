@@ -9,8 +9,11 @@ export function buildNextSteps(ctx: {
   const { status, analysisSource } = ctx
   const implicit = analysisSource === 'implicit'
   if (implicit) {
-    if (status === 'proven_positive')
-      return 'Your historical data shows a positive signal. Start active testing with daily check-ins to confirm whether this effect is real — we’ll rotate this supplement on and off to isolate its impact.'
+    if (status === 'proven_positive') {
+      const sup = String(ctx?.canonical?.name || '').trim()
+      const namePart = sup ? ` for ${sup}` : ''
+      return `Your historical data shows a promising signal${namePart}. Start daily check-ins to confirm this result.`
+    }
     if (status === 'negative')
       return 'Your historical data shows a negative signal. It may be unlikely to matter — consider dropping or confirm with a short active test.'
     if (status === 'no_effect' || status === 'no_detectable_effect')

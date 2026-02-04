@@ -241,16 +241,29 @@ export function DashboardUnifiedPanel() {
       ...(s.needsData || []),
       ...(s.building || []),
     ]
-    const readyCt = allRows.filter(r => {
+    const readyRows = allRows.filter(r => {
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
       const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
-      const isFinal = (!isImplicit) && (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
+      if (isImplicit) return false // Upload-only should never be counted Ready
+      const isFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
       const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
       const off = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
       const reqOn = Number((r as any).requiredOnDays ?? (r as any).requiredDays ?? 14)
       const reqOff = Number((r as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round(((r as any).requiredDays ?? 14) / 4))))
       return isFinal || (on >= reqOn && off >= reqOff)
-    }).length
+    })
+    try {
+      // eslint-disable-next-line no-console
+      console.log('[Clarity] Ready classification sample:', readyRows.slice(0, 10).map((r: any) => ({
+        id: String(r?.id || ''),
+        name: String(r?.name || ''),
+        analysisSource: String((r?.analysisSource || '')).toLowerCase(),
+        effectCategory: String((r?.effectCategory || '')).toLowerCase(),
+        daysOn: Number(r?.daysOnClean ?? r?.daysOn ?? 0),
+        daysOff: Number(r?.daysOffClean ?? r?.daysOff ?? 0),
+      })))
+    } catch {}
+    const readyCt = readyRows.length
     return {
       progressPercent: pct,
       displayedProgressPercent: dpct,
