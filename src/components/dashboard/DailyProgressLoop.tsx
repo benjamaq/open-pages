@@ -662,7 +662,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         {isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || '')}
       </div>
       <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-        Signal strength: {strengthDisplay}% <span className="mx-2">•</span>
+        Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
         Days tracked: <span className="font-medium">{row.daysOfData}</span>
         {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
       </div>
@@ -675,7 +675,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {(isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {!isImplicit && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
@@ -719,7 +719,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {busy ? 'Updating…' : 'Testing ✓'}
           </button>
         )}
-        {isVerdictReady && !isMember && (
+        {(isImplicit || isVerdictReady && !isMember) && (
           <button
             onClick={() => {
               // Open upgrade modal without manipulating browser history
@@ -731,7 +731,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-      {(isCompleted && isMember) && (
+      {(isImplicit || (isCompleted && isMember)) && (
           <div className="flex gap-2">
             <button
               className="text-[11px] font-medium"

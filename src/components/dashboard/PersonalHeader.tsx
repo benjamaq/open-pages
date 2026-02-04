@@ -51,9 +51,10 @@ export function PersonalHeader() {
             for (const r of all) {
               const verdictValue = String((r as any)?.verdict || '').toLowerCase()
               const effectCatLower = String((r as any)?.effectCategory || '').toLowerCase()
-              const hasFinalVerdict = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+              const isImplicit = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
+              const hasFinalVerdict = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
               if (hasFinalVerdict) rdy++
-              if (!hasFinalVerdict) testing++
+              else testing++
             }
           }
         } catch {}

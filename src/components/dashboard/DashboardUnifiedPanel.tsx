@@ -636,7 +636,16 @@ export function DashboardUnifiedPanel() {
             const buildingLen = Number(progress?.sections?.building?.length || 0)
             const needsLen = Number(progress?.sections?.needsData?.length || 0)
             if (!nextResult && (buildingLen + needsLen) === 0) {
-              return <div className="text-sm text-gray-700">All supplements analyzed</div>
+              // If no active testing items, prefer a gentle nudge for upload-only scenarios
+              const all: any[] = [
+                ...((progress?.sections?.clearSignal) || []),
+                ...((progress?.sections?.noSignal) || []),
+                ...((progress?.sections?.building) || []),
+                ...(((progress as any)?.sections?.inconsistent) || []),
+                ...(((progress as any)?.sections?.needsData) || [])
+              ]
+              const allImplicit = all.length > 0 && all.every((r: any) => String((r as any)?.analysisSource || '').toLowerCase() === 'implicit')
+              return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'All supplements analyzed'}</div>
             }
             if (!nextResult) {
               return <div className="text-sm text-gray-700">—</div>
