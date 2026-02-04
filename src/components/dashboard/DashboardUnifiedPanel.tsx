@@ -840,7 +840,7 @@ export function DashboardUnifiedPanel() {
                 )}
               </>
             )}
-            {(Number(wearableStatus?.checkin_days || 0) > 0) && (
+            {(Number(wearableStatus?.checkin_days || 0) >= 7) && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Gaps (missed days)</span>
                 <span className="font-medium">{gapsDays}</span>
