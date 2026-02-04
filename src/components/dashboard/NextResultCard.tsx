@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-type Row = { id: string; name: string; daysOfData: number; requiredDays: number }
+type Row = {
+  id: string
+  name: string
+  daysOfData: number
+  requiredDays: number
+  daysOn?: number
+  daysOff?: number
+  progressPercent?: number
+}
 
 export function NextResultCard() {
   const [building, setBuilding] = useState<Row[]>([])
@@ -24,7 +32,8 @@ export function NextResultCard() {
               daysOfData: r.daysOfData,
               requiredDays: r.requiredDays,
               daysOn: Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0),
-              daysOff: Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+              daysOff: Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0),
+              progressPercent: Number((r as any)?.progressPercent || 0)
             }))
             .filter((x: any) => (Number(x.daysOn) + Number(x.daysOff)) > 0)
           setBuilding(b)
@@ -39,8 +48,8 @@ export function NextResultCard() {
   const data = useMemo(() => {
     if (!Array.isArray(building) || building.length === 0) return null
     const next = building
-      .map(r => ({ r, remaining: Math.max(0, (r.requiredDays || 14) - (r.daysOfData || 0)) }))
-      .sort((a, b) => a.remaining - b.remaining)[0]
+      .slice()
+      .sort((a, b) => Number((b as any)?.progressPercent || 0) - Number((a as any)?.progressPercent || 0))[0]
     const tagCounts = (checkins && checkins.last7 && checkins.last7.tagCounts) ? checkins.last7.tagCounts : null
     const labelMap: Record<string, string> = {
       alcohol: 'alcohol',
@@ -60,10 +69,10 @@ export function NextResultCard() {
     const shown = disruptions.slice(0, 4)
     const extra = disruptions.length > 4 ? disruptions.length - 4 : 0
     return {
-      name: next?.r?.name || null,
-      cleanDays: next?.r?.daysOfData || 0,
-      requiredDays: next?.r?.requiredDays || 14,
-      remainingDays: next?.remaining || 0,
+      name: next?.name || null,
+      cleanDays: next?.daysOfData || 0,
+      requiredDays: next?.requiredDays || 14,
+      remainingDays: Math.max(0, (next?.requiredDays || 14) - (next?.daysOfData || 0)),
       disruptions: shown,
       extra
     }

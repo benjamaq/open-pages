@@ -63,14 +63,20 @@ export function DashboardHero() {
       const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
       return (on + off) > 0
     })
-    const next = building
-      .map(r => ({ r, remaining: Math.max(0, (r.requiredDays || 14) - (r.daysOfData || 0)) }))
-      .sort((a, b) => a.remaining - b.remaining)[0]
-    const etaBase = next ? Math.max(0, (next.r.requiredDays || 14) - (next.r.daysOfData || 0)) : 0
+    const needsData = ((sections as any)?.needsData || []).filter((r: any) => {
+      const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
+      const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+      return (on + off) > 0
+    })
+    const pool: any[] = [...building, ...needsData]
+    const next = pool
+      .slice()
+      .sort((a: any, b: any) => Number((b as any)?.progressPercent || 0) - Number((a as any)?.progressPercent || 0))[0]
+    const etaBase = next ? Math.max(0, (next.requiredDays || 14) - (next.daysOfData || 0)) : 0
     const last7Noise = (checkins && checkins.last7 && typeof checkins.last7.noise === 'number') ? checkins.last7.noise : 0
     const penalty = last7Noise >= 4 ? 2 : 0
     const adjusted = Math.max(0, etaBase + penalty)
-    const detail = next ? { cleanDays: next.r.daysOfData, requiredDays: next.r.requiredDays, remainingDays: adjusted, id: next.r.id, name: next.r.name } : undefined
+    const detail = next ? { cleanDays: next.daysOfData, requiredDays: next.requiredDays, remainingDays: adjusted, id: next.id, name: next.name } : undefined
     // Personalized disruptions list
     const tagCounts = (checkins && checkins.last7 && checkins.last7.tagCounts) ? checkins.last7.tagCounts : null
     const labelMap: Record<string, string> = {

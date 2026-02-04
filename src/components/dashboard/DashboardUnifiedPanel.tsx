@@ -204,24 +204,10 @@ export function DashboardUnifiedPanel() {
       const offClean = Number(r?.daysOffClean ?? r?.daysOff ?? 0)
       return (onClean + offClean) > 0
     })
-    const nextPick = nextPool
-      .map((r: any) => {
-        const reqOn = Math.max(0, Number(r?.requiredDays || 14))
-        const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
-        const on = Math.max(0, Number(r?.days ? r.days : r.daysOn || 0)) // backward compatibility
-        const off = Math.max(0, Number(r?.daysOff || 0))
-        const onDef = Math.max(0, reqOn - on)
-        const offDef = Math.max(0, reqOff - off)
-        let eff = onDef + offDef
-        if (offDef > 0 && !scheduledSkipIds.has(String(r?.id || ''))) {
-          eff += 1000
-        }
-        if (onDef > 0 && (scheduledSkipIds.has(String(r?.id || '')) && !scheduledTakeIds.has(String(r?.id || '')))) {
-          eff += 100
-        }
-        return { r, eff, on, off, reqOn, reqOff }
-      })
-      .sort((a: any, b: any) => a.eff - b.eff)[0]
+    // Pick the candidate with the highest overall progressPercent
+    const nextRow: any | undefined = nextPool
+      .slice()
+      .sort((a: any, b: any) => Number(b?.progressPercent || 0) - Number(a?.progressPercent || 0))[0]
     const tagCounts = (progress && (progress as any).checkins && (progress as any).checkins.last30 && (progress as any).checkins.last30.tagCounts) ? (progress as any).checkins.last30.tagCounts : null
     const labelMap: Record<string, string> = {
       alcohol: 'alcohol',
@@ -294,15 +280,15 @@ export function DashboardUnifiedPanel() {
       readyCount: readyCt,
       buildingCount: Math.max(0, allRows.length - readyCt),
       needsDataCount: Number(((progress as any)?.sections?.needsData || []).length || 0),
-      nextResult: nextPick ? {
-        name: nextPick.r?.name,
-        remaining: Math.max(0, nextPick.reqOn - nextPick.on) + Math.max(0, nextPick.reqOff - nextPick.off),
-        clean: nextPick.r?.daysOfData,
-        req: nextPick.reqOn,
-        daysOn: Number(nextPick.on || 0),
-        daysOff: Number(nextPick.off || 0),
-        reqOff: Number(nextPick.reqOff || 0),
-        id: String(nextPick.r?.id || '')
+      nextResult: nextRow ? {
+        name: nextRow?.name,
+        remaining: Math.max(0, Number(nextRow?.requiredDays || 14) - Number(nextRow?.daysOfData || 0)),
+        clean: Number(nextRow?.daysOfData || 0),
+        req: Number(nextRow?.requiredDays || 14),
+        daysOn: Number(nextRow?.daysOnClean ?? nextRow?.daysOn ?? 0),
+        daysOff: Number(nextRow?.daysOffClean ?? nextRow?.daysOff ?? 0),
+        reqOff: Math.min(5, Math.max(3, Math.round(Number(nextRow?.requiredDays || 14) / 4))),
+        id: String(nextRow?.id || '')
       } : null,
       disruptions: disruptionArr
     }
