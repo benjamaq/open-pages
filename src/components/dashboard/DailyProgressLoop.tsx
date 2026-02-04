@@ -453,7 +453,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
   // Inconclusive only applies to paid users at 100% without a verdict/significance
   const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
-  const hasFinalVerdict = (verdictValue === 'keep' || verdictValue === 'drop' || hasFinalVerdictGlobal)
+  const hasFinalVerdict = (!isImplicit) && (verdictValue === 'keep' || verdictValue === 'drop' || hasFinalVerdictGlobal)
   // Only treat as completed for free users if there is a final verdict; members can also complete on significance/ready
   const isCompleted = hasFinalVerdict || (isVerdictReady && isMember) || (isInconclusive && isMember)
   // Treat as building only if not completed and progress < 100

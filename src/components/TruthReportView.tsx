@@ -344,29 +344,50 @@ function fmt(n: number | null | undefined) {
 
 function decisionFor(report: any): { verdict: string; recommendation: string } {
   const metric = String(report?.primaryMetricLabel || 'your metric')
+  const isImplicit = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
   switch (String(report?.status)) {
     case 'proven_positive':
-      return {
-        verdict: `This supplement meaningfully improved your ${metric}.`,
-        recommendation: 'Keep it in your stack.'
-      }
+      return isImplicit
+        ? {
+            verdict: `Signal suggests a positive effect on ${metric}.`,
+            recommendation: 'Confirm with daily check-ins.'
+          }
+        : {
+            verdict: `This supplement meaningfully improved your ${metric}.`,
+            recommendation: 'Keep it in your stack.'
+          }
     case 'no_detectable_effect':
-      return {
-        verdict: 'No detectable effect.',
-        recommendation: `This supplement did not produce a meaningful change in your tracked symptoms or outcomes at your current dose and timing.
+      return isImplicit
+        ? {
+            verdict: 'No clear signal.',
+            recommendation: 'Signal suggests little effect — confirm with daily check-ins.'
+          }
+        : {
+            verdict: 'No detectable effect.',
+            recommendation: `This supplement did not produce a meaningful change in your tracked symptoms or outcomes at your current dose and timing.
 
 If you're taking it to improve how you feel or perform, consider pausing or dropping it. If you're taking it for general health, you may still choose to keep it—this test simply can't detect that kind of benefit.`
-      }
+          }
     case 'no_effect':
-      return {
-        verdict: `This supplement did not show a clear effect on your ${metric}.`,
-        recommendation: 'Consider stopping.'
-      }
+      return isImplicit
+        ? {
+            verdict: `No clear signal on ${metric}.`,
+            recommendation: 'Signal suggests little effect — confirm with daily check-ins.'
+          }
+        : {
+            verdict: `This supplement did not show a clear effect on your ${metric}.`,
+            recommendation: 'Consider stopping.'
+          }
     case 'negative':
-      return {
-        verdict: `This supplement likely worsened your ${metric}.`,
-        recommendation: 'Consider stopping.'
-      }
+      return isImplicit
+        ? {
+            verdict: `Signal suggests little or negative effect on ${metric}.`,
+            recommendation: 'Confirm with daily check-ins before making changes.'
+          }
+        : {
+            verdict: `This supplement likely worsened your ${metric}.`,
+            recommendation: 'Consider stopping.'
+          }
     case 'confounded':
       return {
         verdict: 'Data are too noisy to make a confident call.',

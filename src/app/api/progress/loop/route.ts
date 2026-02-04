@@ -968,13 +968,11 @@ export async function GET(request: Request) {
         ;(r as any).requiredOffDays = requiredOffDays
         // Microcopy for card
         ;(r as any).progressLabel =
-          (displayProgress >= 100 && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase())))
-            ? 'Test complete'
-            : (isImplicit && uploadProgress > activeProgress)
-              ? 'Signal from historical data — confirm with check-ins'
-              : (activeProgress > 0)
-                ? 'Actively testing'
-                : 'Gathering data'
+          isImplicit
+            ? 'Signal from historical data'
+            : ((displayProgress >= 100 && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase())))
+              ? 'Test complete'
+              : ((activeProgress > 0) ? 'Actively testing' : 'Gathering data'))
         ;(r as any).activeProgress = activeProgress
         ;(r as any).uploadProgress = uploadProgress
       }
@@ -997,7 +995,11 @@ export async function GET(request: Request) {
     // Overall clarity progress = arithmetic mean of individual progress to ensure monotonicity:
     // if all individuals decrease, overall cannot increase.
     const stackProgress = Math.round(
-      progressRows.reduce((s, r) => s + r.progressPercent, 0) / Math.max(progressRows.length, 1)
+      progressRows.reduce((s, r) => {
+        const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
+        const pct = isImplicit ? Number((r as any)?.uploadProgress || r.progressPercent || 0) : r.progressPercent
+        return s + pct
+      }, 0) / Math.max(progressRows.length, 1)
     )
 
     // Compute readiness and derived summary fields (used by client for gating)
