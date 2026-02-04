@@ -974,6 +974,18 @@ export async function GET(request: Request) {
             displayProgress
           })
         } catch {}
+        // Diagnostic: confirm which progress path is used per supplement
+        try {
+          console.log('[PROGRESS-DEBUG]', {
+            name,
+            analysisSource: (r as any).analysisSource || analysisSrc || null,
+            sampleDaysOn: sOn,
+            sampleDaysOff: sOff,
+            useUploadProgress,
+            uploadProgress,
+            displayProgress
+          })
+        } catch {}
         r.progressPercent = displayProgress
         try { console.log('[progress-percent-final]', { id: r.id, name, rProgressPercent: r.progressPercent, activeProgress, uploadProgress, isImplicit }) } catch {}
         r.requiredDays = requiredDays
