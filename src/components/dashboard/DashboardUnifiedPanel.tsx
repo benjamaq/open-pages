@@ -264,6 +264,23 @@ export function DashboardUnifiedPanel() {
       })))
     } catch {}
     const readyCt = readyRows.length
+    try {
+      const readyIds = new Set<string>(readyRows.map((r: any) => String(r?.id || '')))
+      // eslint-disable-next-line no-console
+      console.log('[Clarity] Per-row classification', (allRows || []).map((r: any) => {
+        const id = String(r?.id || '')
+        return {
+          id,
+          name: String(r?.name || ''),
+          analysisSource: String((r?.analysisSource || '')).toLowerCase(),
+          effectCategory: String((r?.effectCategory || '')).toLowerCase(),
+          verdict: String((r?.verdict || '')).toLowerCase(),
+          daysOn: Number(r?.daysOnClean ?? r?.daysOn ?? 0),
+          daysOff: Number(r?.daysOffClean ?? r?.daysOff ?? 0),
+          bucket: readyIds.has(id) ? 'Ready' : 'Building'
+        }
+      }))
+    } catch {}
     return {
       progressPercent: pct,
       displayedProgressPercent: dpct,
