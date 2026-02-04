@@ -938,8 +938,10 @@ export async function GET(request: Request) {
         let sOn = 0
         let sOff = 0
         if (isImplicit) {
-          sOn = typeof (truthRec as any)?.sample_days_on === 'number' ? Number((truthRec as any)?.sample_days_on) : 0
-          sOff = typeof (truthRec as any)?.sample_days_off === 'number' ? Number((truthRec as any)?.sample_days_off) : 0
+          // Use the stored Truth Engine day counts already applied to the row,
+          // not the live re-run samples that may reflect only recent check-ins.
+          sOn = Number((r as any)?.daysOn || 0)
+          sOff = Number((r as any)?.daysOff || 0)
           if ((sOn + sOff) > 0) {
             uploadProgress = computeUploadProgress(sOn, sOff)
           }
