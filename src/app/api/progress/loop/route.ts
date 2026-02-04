@@ -978,14 +978,23 @@ export async function GET(request: Request) {
               sampleDaysOn: (r as any).sampleDaysOn
             })
           } catch {}
-          // Use stored effect table day counts (same source used by NEXT-RESULT) rather than live re-run samples
-          const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-          const effLookupKey = String(uidForTruth || '')
-          try { console.log('[EFFECTS-LOOKUP]', { name, lookupKey: effLookupKey, found: effBySupp.has(effLookupKey) }) } catch {}
-          // Prefer implicit truth report sample counts captured earlier
-          const implicitCounts = effLookupKey ? (implicitSampleBySupp.get(effLookupKey) as any | undefined) : undefined
-          const storedDaysOn = Number(implicitCounts?.on ?? 0)
-          const storedDaysOff = Number(implicitCounts?.off ?? 0)
+          // Prefer clean ON/OFF counts computed earlier (same as NEXT-RESULT uses)
+          let storedDaysOn = Number((r as any)?.daysOnClean ?? 0)
+          let storedDaysOff = Number((r as any)?.daysOffClean ?? 0)
+          // Fallback to implicit truth sample counts captured earlier
+          if ((storedDaysOn + storedDaysOff) === 0) {
+            const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+            const effLookupKey = String(uidForTruth || '')
+            try { console.log('[EFFECTS-LOOKUP]', { name, lookupKey: effLookupKey, found: implicitSampleBySupp.has(effLookupKey) }) } catch {}
+            const implicitCounts = effLookupKey ? (implicitSampleBySupp.get(effLookupKey) as any | undefined) : undefined
+            storedDaysOn = Number(implicitCounts?.on ?? 0)
+            storedDaysOff = Number(implicitCounts?.off ?? 0)
+          }
+          // Final fallback: row totals
+          if ((storedDaysOn + storedDaysOff) === 0) {
+            storedDaysOn = Number((r as any)?.daysOn ?? 0)
+            storedDaysOff = Number((r as any)?.daysOff ?? 0)
+          }
           try {
             console.log('[UPLOAD-FIX]', {
               name,
