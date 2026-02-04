@@ -167,7 +167,8 @@ export function DashboardUnifiedPanel() {
     for (const r of rows) {
       const verdictValue = String((r as any)?.verdict || '').toLowerCase()
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
-      const isFinal = ['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(cat)
+      const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
+      const isFinal = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(cat))
       if (isFinal) {
         perRowCollectionPct.push(100)
         continue
@@ -242,7 +243,8 @@ export function DashboardUnifiedPanel() {
     ]
     const readyCt = allRows.filter(r => {
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
-      const isFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
+      const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
+      const isFinal = (!isImplicit) && (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
       const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
       const off = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
       const reqOn = Number((r as any).requiredOnDays ?? (r as any).requiredDays ?? 14)
@@ -754,14 +756,18 @@ export function DashboardUnifiedPanel() {
             <Progress value={isMember ? displayedProgressPercent : Math.min(displayedProgressPercent, 90)} className="h-2 w-full" />
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            {wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.'}
+            {wearableStatus?.wearable_connected && Number(wearableStatus?.checkin_days || 0) === 0
+              ? 'Based on imported wearable data — check-ins will increase confidence.'
+              : (wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.')}
           </div>
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Days tracked</span>
               <span className="font-medium">
                 {wearableStatus?.wearable_connected
-                  ? (Number(wearableStatus?.total_unique_days ?? (Number(wearableStatus?.wearable_days_imported || 0) + Number(wearableStatus?.checkin_days || 0))))
+                  ? (Number(wearableStatus?.checkin_days || 0) === 0
+                      ? Number(wearableStatus?.wearable_days_imported ?? wearableStatus?.wearable_unique_days ?? 0) // prefer exact entries count for upload-only
+                      : Number(wearableStatus?.total_unique_days ?? (Number(wearableStatus?.wearable_unique_days || 0) + Number(wearableStatus?.checkin_days || 0))))
                   : streak}
               </span>
             </div>
@@ -769,18 +775,26 @@ export function DashboardUnifiedPanel() {
               <>
                 <div className="flex items-center justify-between text-sm pl-4">
                   <span className="text-gray-500">└─ from wearables</span>
-                  <span className="font-medium">{Number(wearableStatus?.wearable_unique_days ?? wearableStatus?.wearable_days_imported ?? 0)}</span>
+                  <span className="font-medium">
+                    {Number(wearableStatus?.checkin_days || 0) === 0
+                      ? Number(wearableStatus?.wearable_days_imported ?? wearableStatus?.wearable_unique_days ?? 0)
+                      : Number(wearableStatus?.wearable_unique_days ?? wearableStatus?.wearable_days_imported ?? 0)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between text-sm pl-4">
-                  <span className="text-gray-500">└─ from check-ins</span>
-                  <span className="font-medium">{Number(wearableStatus?.checkin_days || 0)}</span>
-                </div>
+                {Number(wearableStatus?.checkin_days || 0) > 0 && (
+                  <div className="flex items-center justify-between text-sm pl-4">
+                    <span className="text-gray-500">└─ from check-ins</span>
+                    <span className="font-medium">{Number(wearableStatus?.checkin_days || 0)}</span>
+                  </div>
+                )}
               </>
             )}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Gaps (missed days)</span>
-              <span className="font-medium">{gapsDays}</span>
-            </div>
+            {(Number(wearableStatus?.checkin_days || 0) > 0) && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Gaps (missed days)</span>
+                <span className="font-medium">{gapsDays}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Ready</span>
               <span className="font-medium">{readyCount}</span>
