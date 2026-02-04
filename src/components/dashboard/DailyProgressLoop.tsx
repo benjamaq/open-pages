@@ -710,7 +710,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="mt-1 text-[11px] text-gray-600">Signal powered by check-ins and wearable data</div>
       )}
       <div className="mt-3 flex justify-end">
-        {isBuilding && (
+        {isBuilding && !isImplicit && (
           <button
             disabled={busy}
             onClick={() => setShowStopModal(true)}
@@ -719,7 +719,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {busy ? 'Updating…' : 'Testing ✓'}
           </button>
         )}
-        {(isImplicit || isVerdictReady && !isMember) && (
+        {(!isImplicit && isVerdictReady && !isMember) && (
           <button
             onClick={() => {
               // Open upgrade modal without manipulating browser history
@@ -747,12 +747,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             >
               View full report →
             </button>
-            <button
-              className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
-              onClick={() => setShowRetestModal(true)}
-            >
-              Retest
-            </button>
+            {!isImplicit && (
+              <button
+                className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+                onClick={() => setShowRetestModal(true)}
+              >
+                Retest
+              </button>
+            )}
           </div>
         )}
         {isInactive && (
