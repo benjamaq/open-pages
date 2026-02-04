@@ -558,6 +558,8 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    // Also capture the latest implicit-source sample counts per supplement for upload progress
+    const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
     for (const t of truths || []) {
       const uid = String((t as any).user_supplement_id || '')
       if (!uid) continue
@@ -571,6 +573,14 @@ export async function GET(request: Request) {
           sample_days_on: (t as any).sample_days_on ?? null,
           sample_days_off: (t as any).sample_days_off ?? null,
           analysis_source: (t as any).analysis_source ?? null
+        })
+      }
+      // First seen per uid wins due to descending created_at; record implicit counts when available
+      const aSrc = String((t as any).analysis_source || '').toLowerCase()
+      if (aSrc === 'implicit' && !implicitSampleBySupp.has(uid)) {
+        implicitSampleBySupp.set(uid, {
+          on: Number((t as any).sample_days_on ?? 0),
+          off: Number((t as any).sample_days_off ?? 0)
         })
       }
     }
@@ -972,9 +982,10 @@ export async function GET(request: Request) {
           const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
           const effLookupKey = String(uidForTruth || '')
           try { console.log('[EFFECTS-LOOKUP]', { name, lookupKey: effLookupKey, found: effBySupp.has(effLookupKey) }) } catch {}
-          const effStored = effLookupKey ? (effBySupp.get(effLookupKey) as any | undefined) : undefined
-          const storedDaysOn = Number(effStored?.days_on ?? 0)
-          const storedDaysOff = Number(effStored?.days_off ?? 0)
+          // Prefer implicit truth report sample counts captured earlier
+          const implicitCounts = effLookupKey ? (implicitSampleBySupp.get(effLookupKey) as any | undefined) : undefined
+          const storedDaysOn = Number(implicitCounts?.on ?? 0)
+          const storedDaysOff = Number(implicitCounts?.off ?? 0)
           try {
             console.log('[UPLOAD-FIX]', {
               name,
