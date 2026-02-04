@@ -907,10 +907,15 @@ export async function GET(request: Request) {
         const evidencePct = ((onClamped + offClamped) / denom) * 100
         // Use ON/OFF evidence as the progress value (UX: shows momentum from day one)
         const activeProgress = Math.max(0, Math.min(100, Math.round(evidencePct)))
-        // Determine analysis source from truth overlay/row
+        // Determine analysis source from truth overlay/row, but prefer explicit if any check-ins exist
         const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
         const truthRec = uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined
-        const analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        let analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        const hasAnyCheckins = (((r as any).daysOn as number) || 0) + (((r as any).daysOff as number) || 0) > 0
+        if (hasAnyCheckins) {
+          analysisSrc = 'explicit'
+        }
+        ;(r as any).analysisSource = analysisSrc || null
         const isImplicit = analysisSrc === 'implicit'
         // For logging compatibility
         const finalPct = activeProgress
