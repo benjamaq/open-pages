@@ -803,7 +803,7 @@ export function DashboardUnifiedPanel() {
             <Progress value={isMember ? displayedProgressPercent : Math.min(displayedProgressPercent, 90)} className="h-2 w-full" />
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            {wearableStatus?.wearable_connected && Number(wearableStatus?.checkin_days || 0) === 0
+            {Number(wearableStatus?.wearable_days_imported || 0) > 0
               ? 'Based on imported wearable data — check-ins will increase confidence.'
               : (wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.')}
           </div>
