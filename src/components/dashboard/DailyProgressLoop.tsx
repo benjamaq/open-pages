@@ -714,32 +714,38 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-      {(isImplicit || (isCompleted && isMember)) && (
-          <div className="flex gap-2">
-            <button
-              className="text-[11px] font-medium"
-              style={{ color: '#3A2F2A' }}
-              onClick={() => {
-                // Determine best ID and open modal
-                const idCandidate = String((row as any).userSuppId || (row as any).userSupplementId || (row as any).id || '')
-                try { console.log('[report] Opening modal for supplement:', { idCandidate, name: (row as any)?.name }) } catch {}
-                setReportId(idCandidate || null)
-                setReportName(String((row as any)?.name || ''))
-                setShowTruthReport(true)
-              }}
-            >
-              View full report →
-            </button>
-            {!isImplicit && (
+        {(isImplicit || (isCompleted && isMember)) && (() => {
+          const anyTracked = (Number((row as any)?.daysOfData || 0) > 0) || ((daysOn + daysOff) > 0)
+          if (!anyTracked) {
+            return <div className="text-[11px] text-gray-500">Collecting data…</div>
+          }
+          return (
+            <div className="flex gap-2">
               <button
-                className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
-                onClick={() => setShowRetestModal(true)}
+                className="text-[11px] font-medium"
+                style={{ color: '#3A2F2A' }}
+                onClick={() => {
+                  // Determine best ID and open modal
+                  const idCandidate = String((row as any).userSuppId || (row as any).userSupplementId || (row as any).id || '')
+                  try { console.log('[report] Opening modal for supplement:', { idCandidate, name: (row as any)?.name }) } catch {}
+                  setReportId(idCandidate || null)
+                  setReportName(String((row as any)?.name || ''))
+                  setShowTruthReport(true)
+                }}
               >
-                Retest
+                {isImplicit ? 'View signal →' : 'View full report →'}
               </button>
-            )}
-          </div>
-        )}
+              {!isImplicit && (
+                <button
+                  className="text-[11px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
+                  onClick={() => setShowRetestModal(true)}
+                >
+                  Retest
+                </button>
+              )}
+            </div>
+          )
+        })()}
         {isInactive && (
           <button
             disabled={busy}
