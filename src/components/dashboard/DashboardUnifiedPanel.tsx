@@ -189,6 +189,9 @@ export function DashboardUnifiedPanel() {
     const pct = perRowCollectionPct.length > 0
       ? Math.round(perRowCollectionPct.reduce((a, b) => a + b, 0) / perRowCollectionPct.length)
       : 0
+    // Prefer server-computed stackProgress (uses uploadProgress for implicit rows)
+    const serverPctRaw = Number((progress as any)?.stackProgress)
+    const dpct = Number.isFinite(serverPctRaw) ? serverPctRaw : pct
     const building: any[] = (s.building || [])
     const needsData: any[] = (s.needsData || [])
     const scheduledSkipIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.skip) ? (progress as any).rotation.action.skip.map((x: any) => String(x.id)) : [])
@@ -248,7 +251,7 @@ export function DashboardUnifiedPanel() {
     }).length
     return {
       progressPercent: pct,
-      displayedProgressPercent: pct,
+      displayedProgressPercent: dpct,
       streak: Number((progress as any)?.checkins?.totalDistinctDays || 0),
       gapsDays: Number((progress as any)?.checkins?.gapsDays || 0),
       readyCount: readyCt,
