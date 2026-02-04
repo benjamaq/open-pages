@@ -424,6 +424,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)
+  const daysTracked = Number(((row as any)?.daysTracked ?? row.daysOfData ?? 0) || 0)
+  const hasNoData = (daysTracked === 0) && (daysOn === 0) && (daysOff === 0)
   const reqDays = Number(row.requiredDays || 14)
   const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
   const onComplete = daysOn >= reqDays
@@ -484,6 +486,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (!isReady) return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
   })()
+  const displayBadge = hasNoData ? { label: '◐ STARTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' } : badge
   const effectLine = (() => {
     const isReady = String(row.status || '').toLowerCase() === 'ready'
     if (!isMember || !isReady) return null
@@ -600,7 +603,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="flex items-center gap-2 ml-3">
           {(() => {
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
-            return <span className={`${baseChipClass} ${badge.cls || ''}`}>{badge.label}</span>
+            return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>
           })()}
           {testingActive ? (
             <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
@@ -641,18 +644,26 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <>
       <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             {(() => {
-              const pct = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
+              const pctBase = isMember ? progressForDisplay : (progressForDisplay === 100 ? 100 : Math.min(progressForDisplay, 90))
+              const pct = hasNoData ? 0 : pctBase
               return <div className="h-full" style={{ width: `${pct}%`, backgroundColor: fillColor }} />
             })()}
       </div>
       <div className="mt-1 text-[11px] text-gray-500">
-        {isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || '')}
+        {hasNoData ? 'Just added — start checking in' : (isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || ''))}
       </div>
-      <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-        Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
-        Days tracked: <span className="font-medium">{row.daysOfData}</span>
-        {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
-      </div>
+      {hasNoData ? (
+        <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+          Days tracked: <span className="font-medium">0</span>
+          {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+        </div>
+      ) : (
+        <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+          Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
+          Days tracked: <span className="font-medium">{row.daysOfData}</span>
+          {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+        </div>
+      )}
       {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isBuilding && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
         <div className="mt-1 text-xs text-gray-500">Slower due to parallel testing</div>
       )}
@@ -662,7 +673,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {!isImplicit && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {!hasNoData && !isImplicit && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
@@ -692,7 +703,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       {(hasWearables && (isBuilding || isVerdictReady || isInconclusive)) && (
         <div className="mt-1 text-[11px] text-gray-600">Signal powered by check-ins and wearable data</div>
       )}
-      <div className="mt-3 flex justify-end">
+      {!hasNoData && (<div className="mt-3 flex justify-end">
         {isBuilding && !isImplicit && (
           <button
             disabled={busy}
@@ -764,7 +775,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {busy ? 'Starting…' : 'Start testing →'}
           </button>
         )}
-      </div>
+      </div>)}
       {/* Styled modal: Stop testing */}
       {showStopModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
