@@ -198,7 +198,12 @@ export function DashboardUnifiedPanel() {
     const scheduledSkipIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.skip) ? (progress as any).rotation.action.skip.map((x: any) => String(x.id)) : [])
     const scheduledTakeIds = new Set<string>(Array.isArray((progress as any)?.rotation?.action?.take) ? (progress as any).rotation.action.take.map((x: any) => String(x.id)) : [])
     // Consider both Building and Needs Data (too early) for "Next result likely"
-    const nextPool = [...building, ...needsData]
+    // Only include items that have any check-in data (clean or total ON/OFF > 0)
+    const nextPool = [...building, ...needsData].filter((r: any) => {
+      const onClean = Number(r?.daysOnClean ?? r?.daysOn ?? 0)
+      const offClean = Number(r?.daysOffClean ?? r?.daysOff ?? 0)
+      return (onClean + offClean) > 0
+    })
     const nextPick = nextPool
       .map((r: any) => {
         const reqOn = Math.max(0, Number(r?.requiredDays || 14))
@@ -670,7 +675,19 @@ export function DashboardUnifiedPanel() {
             // Clear, state-driven copy for Next Result Likely
             const buildingLen = Number(progress?.sections?.building?.length || 0)
             const needsLen = Number(progress?.sections?.needsData?.length || 0)
-            if (!nextResult && (buildingLen + needsLen) === 0) {
+            const hasCheckinCandidate = (() => {
+              const pool = [
+                ...((progress?.sections?.building) || []),
+                ...((progress?.sections?.needsData) || [])
+              ]
+              for (const r of pool as any[]) {
+                const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
+                const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+                if ((on + off) > 0) return true
+              }
+              return false
+            })()
+            if (!nextResult && ((buildingLen + needsLen) === 0 || !hasCheckinCandidate)) {
               // If no active testing items, prefer a gentle nudge for upload-only scenarios
               const all: any[] = [
                 ...((progress?.sections?.clearSignal) || []),

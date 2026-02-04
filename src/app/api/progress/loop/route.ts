@@ -1138,7 +1138,23 @@ export async function GET(request: Request) {
     }
     // Next result likely
     try {
-      const candidates = progressRows.filter(r => (r as any).testingActive && r.progressPercent < 100)
+      const allCandidates = progressRows.filter(r => (r as any).testingActive && r.progressPercent < 100)
+      try {
+        console.log('[NEXT-RESULT] all candidates:', allCandidates.map((c: any) => ({
+          name: c.name,
+          daysOn: (c as any).daysOnClean ?? (c as any).daysOn ?? 0,
+          daysOff: (c as any).daysOffClean ?? (c as any).daysOff ?? 0,
+          analysisSource: (c as any).analysisSource
+        })))
+      } catch {}
+      const candidates = allCandidates.filter(r => {
+        const onClean = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
+        const offClean = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
+        return (onClean + offClean) > 0
+      })
+      try {
+        console.log('[NEXT-RESULT] filtered candidates:', candidates.map((c: any) => ({ name: c.name })))
+      } catch {}
       if (candidates.length > 0) {
         const next = candidates.sort((a, b) => (b.progressPercent - a.progressPercent))[0]
         const nm = (next as any).name || 'Supplement'

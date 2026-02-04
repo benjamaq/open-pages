@@ -17,9 +17,16 @@ export function NextResultCard() {
         if (!mounted) return
         if (r.ok) {
           const j = await r.json()
-          const b = (j?.sections?.building || []).map((r: any) => ({
-            id: r.id, name: r.name, daysOfData: r.daysOfData, requiredDays: r.requiredDays
-          }))
+          const b = (j?.sections?.building || [])
+            .map((r: any) => ({
+              id: r.id,
+              name: r.name,
+              daysOfData: r.daysOfData,
+              requiredDays: r.requiredDays,
+              daysOn: Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0),
+              daysOff: Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+            }))
+            .filter((x: any) => (Number(x.daysOn) + Number(x.daysOff)) > 0)
           setBuilding(b)
           setCheckins(j?.checkins || null)
           if (j?.todaysProgress?.nextLikely) setNextLikely(j.todaysProgress.nextLikely)

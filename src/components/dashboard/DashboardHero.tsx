@@ -58,7 +58,11 @@ export function DashboardHero() {
     const readyOnly = (sections?.clearSignal?.length || 0) + (sections?.noSignal?.length || 0)
     const denom = Array.isArray(supps) && supps.length > 0 ? supps.length : total
     const pct = denom > 0 ? Math.round((readyOnly / denom) * 100) : 0
-    const building = sections?.building || []
+    const building = (sections?.building || []).filter((r: any) => {
+      const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
+      const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+      return (on + off) > 0
+    })
     const next = building
       .map(r => ({ r, remaining: Math.max(0, (r.requiredDays || 14) - (r.daysOfData || 0)) }))
       .sort((a, b) => a.remaining - b.remaining)[0]
