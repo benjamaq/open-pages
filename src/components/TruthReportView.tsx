@@ -289,6 +289,7 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   }
   // Next steps by verdict
   let nextSteps = ''
+  const isImplicitSrc = String(report?.analysisSource || '').toLowerCase() === 'implicit'
   if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') {
     if (nm.includes('magnesium')) {
       nextSteps = `Consider stopping ${name}. You could re‑test at a different dose, time of day, or form (e.g., switch from oxide to glycinate).`
@@ -301,6 +302,10 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
     nextSteps = `Keep tracking — we need more clean ON and OFF days with usable ${metric.toLowerCase()} data to give you a confident verdict.`
   } else {
     nextSteps = `Keep tracking and consider standardizing dose/timing for clearer comparisons.`
+  }
+  // Override for upload-only implicit analyses: encourage confirmation via check-ins
+  if (isImplicitSrc) {
+    nextSteps = 'Your historical data shows a promising signal. Start daily check-ins to confirm this result.'
   }
   return { effectSummary, biologyText, nextSteps }
 }
