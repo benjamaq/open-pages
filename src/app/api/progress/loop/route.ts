@@ -938,6 +938,19 @@ export async function GET(request: Request) {
         let sOn = 0
         let sOff = 0
         if (isImplicit) {
+          // Diagnostic to inspect available row fields for day counts
+          try {
+            console.log('[ROW-FIELDS]', {
+              name,
+              keys: Object.keys(r as any),
+              daysOn: (r as any).daysOn,
+              days_on: (r as any).days_on,
+              daysOff: (r as any).daysOff,
+              days_off: (r as any).days_off,
+              sample_days_on: (r as any).sample_days_on,
+              sampleDaysOn: (r as any).sampleDaysOn
+            })
+          } catch {}
           // Use the stored Truth Engine day counts already applied to the row,
           // not the live re-run samples that may reflect only recent check-ins.
           sOn = Number((r as any)?.daysOn || 0)
