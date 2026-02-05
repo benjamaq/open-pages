@@ -2,7 +2,7 @@
 
 import type { TruthReport } from '@/lib/truthEngine/types'
 import bioMap from '@/lib/truthEngine/supplement-biology-map-full.json'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 export default function TruthReportView({ report }: { report: TruthReport }) {
   const reportRef = useRef<HTMLDivElement>(null)
@@ -11,6 +11,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const deficiency = deriveDeficiencyHint(report)
   const decision = decisionFor(report)
   const dynamic = generateReportCopy(report)
+  const [downloading, setDownloading] = useState(false)
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const supName = String(
     (report as any)?.supplementName ||
@@ -23,48 +24,40 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   try {
     console.log('[TruthReportView] supName resolved:', supName || null, 'report.supplementName:', (report as any)?.supplementName || null)
   } catch {}
-  function handleDownloadPdf() {
+  async function handleDownloadPdf() {
     try { console.log('[REPORT-FOOTER] Download PDF clicked') } catch {}
+    if (!reportRef.current) {
+      alert('Could not find report content to export.')
+      return
+    }
     try {
-      if (!reportRef.current) {
-        alert('Could not find report content to print.')
-        return
+      setDownloading(true)
+      const html2pdf = (await import('html2pdf.js')).default as any
+      const safeFile = (supName || 'truth-report')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      const opt = {
+        margin:       [0.4, 0.4, 0.6, 0.4], // top, left/right, bottom (inches)
+        filename:     `${safeFile}-truth-report.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0B0D13' },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
       }
-      const html = `
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${supName ? supName + ' — Truth Report' : 'Truth Report'}</title>
-    <style>
-      @media print {
-        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      }
-      body { background: #0B0D13; color: #E5E7EB; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
-      .container { max-width: 864px; margin: 0 auto; padding: 24px; }
-      a { color: #93C5FD; text-decoration: none; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      ${reportRef.current.innerHTML}
-    </div>
-    <script>window.focus(); setTimeout(function(){ window.print(); }, 300);</script>
-  </body>
-</html>`
-      const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=1400')
-      if (!win) {
-        // Fallback: open print dialog on current window
-        window.print()
-        return
-      }
-      win.document.open()
-      win.document.write(html)
-      win.document.close()
+      // Wrap the content in a dark background container so the PDF matches theme
+      const clone = reportRef.current.cloneNode(true) as HTMLElement
+      const wrapper = document.createElement('div')
+      wrapper.style.background = '#0B0D13'
+      wrapper.style.padding = '16px'
+      wrapper.style.color = '#E5E7EB'
+      wrapper.appendChild(clone)
+      await html2pdf().set(opt).from(wrapper).save()
     } catch (e) {
-      console.error('Print failed', e)
-      alert('Your browser blocked the print dialog. Please use the browser menu to print/save as PDF.')
+      console.error('PDF export failed', e)
+      alert('PDF export failed. Please try again.')
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -235,7 +228,7 @@ that kind of benefit.`}
         <footer className="flex items-center justify-between border-t border-slate-800 pt-4">
           <div className="text-xs text-slate-400">Science note: {report.scienceNote}</div>
           <div className="flex items-center gap-2">
-            <button onClick={handleDownloadPdf} className="text-xs text-slate-400 hover:text-slate-200">Download PDF</button>
+            <button onClick={handleDownloadPdf} disabled={downloading} className="text-xs text-slate-400 hover:text-slate-200 disabled:opacity-60">{downloading ? 'Preparing…' : 'Download PDF'}</button>
             <button onClick={handleShareSummary} className="text-xs text-slate-400 hover:text-slate-200">Share summary</button>
           </div>
         </footer>
