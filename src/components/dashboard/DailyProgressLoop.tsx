@@ -155,6 +155,16 @@ export function DailyProgressLoop() {
   const tp = data?.todaysProgress
   const s = (data?.sections) || { clearSignal: [], building: [], noSignal: [] }
   const allRows = [...s.clearSignal, ...s.building, ...s.noSignal]
+  useEffect(() => {
+    try {
+      console.log('[sections-debug]', {
+        clearSignal: (s.clearSignal || []).length,
+        noSignal: (s.noSignal || []).length,
+        building: (s.building || []).length,
+        needsData: ((data?.sections as any)?.needsData || []).length
+      })
+    } catch {}
+  }, [s.clearSignal, s.noSignal, s.building, (data?.sections as any)?.needsData])
   const totalSupps = allRows.length
   const spendMonthly = Math.round(
     (allRows as any[]).reduce((sum, r: any) => sum + Number(r?.monthlyCost || 0), 0)
@@ -195,12 +205,9 @@ export function DailyProgressLoop() {
     for (const r of allCombined) {
       const verdictValue = String((r as any).verdict || '').toLowerCase()
       const effectCatLower = String((r as any).effectCategory || '').toLowerCase()
-      const isImplicit = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
       const hasFinal =
-        (!isImplicit) && (
-          ['keep','drop'].includes(verdictValue) ||
-          ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
-        )
+        (['keep','drop'].includes(verdictValue) ||
+         ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
       if (hasFinal) verdicts++
       else testing++
     }
@@ -328,8 +335,7 @@ export function DailyProgressLoop() {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
-          const hasVerdictFlag = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
+          const hasVerdictFlag = (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -344,8 +350,7 @@ export function DailyProgressLoop() {
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
-          const hasFinalVerdict = (!isImplicit) && (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
+          const hasFinalVerdict = (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -423,7 +428,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   if (effectCatLower === 'needs_more_data') {
     progressForDisplay = Math.min(progressForDisplay, 95)
   }
-  if ((hasFinalVerdictGlobal || progressForDisplay >= 100) && !isImplicit) {
+  if ((hasFinalVerdictGlobal || progressForDisplay >= 100)) {
     progressForDisplay = 100
   }
   const baseStrength = progressForDisplay
@@ -454,7 +459,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
   // Inconclusive only applies to paid users at 100% without a verdict/significance
   const isInconclusive = (row.progressPercent >= 100) && isMember && !hasVerdict && !isSignificant
-  const hasFinalVerdict = (!isImplicit) && (verdictValue === 'keep' || verdictValue === 'drop' || hasFinalVerdictGlobal)
+  const hasFinalVerdict = (verdictValue === 'keep' || verdictValue === 'drop' || hasFinalVerdictGlobal)
   // Only treat as completed for free users if there is a final verdict; members can also complete on significance/ready
   const isCompleted = hasFinalVerdict || (isVerdictReady && isMember) || (isInconclusive && isMember)
   // Treat as building only if not completed and progress < 100
@@ -685,7 +690,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {!hasNoData && !isImplicit && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {!hasNoData && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
@@ -737,7 +742,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Unlock Verdict →
           </button>
         )}
-        {(!isImplicit && isCompleted && isMember) && (() => {
+        {(isCompleted && isMember) && (() => {
           return (
             <div className="flex gap-2">
               <button
