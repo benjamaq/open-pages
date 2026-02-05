@@ -191,17 +191,22 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   } catch {}
 
   // Load daily_entries per path:
-  // - If explicit intake exists, load from inferred start (bounded) and classify ONLY explicit days
+  // - If inferred start exists, FORCE implicit path to classify historical days relative to inferredStart
+  // - Else if explicit intake exists, use explicit path
   // - Else, load ALL history (paginated) for implicit ON/OFF by inferredStart
+  const hasInferredStart = !!(typeof inferredStartGlobal === 'string' && inferredStartGlobal)
+  const pathImplicit = hasInferredStart ? true : !hasExplicitIntake
   console.log('[truth-engine][path-decision]', {
     userSupplementId,
+    inferredStartAt: (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null,
     hasExplicitIntake,
-    pathChosen: hasExplicitIntake ? 'explicit' : 'implicit',
+    pathChosen: pathImplicit ? 'implicit' : 'explicit',
+    forced: hasInferredStart ? 'implicit due to inferred_start_at' : undefined,
     candidateKeys: Array.from(candidateIntakeKeys)
   })
   let dailyRows: any[] = []
   let dailyError: any = null
-  if (hasExplicitIntake) {
+  if (!pathImplicit) {
     let since = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
     if (!since) {
       // fallback to restart bound or last 365 days if neither present
@@ -348,15 +353,15 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     for (const k of candidateIntakeKeys) {
       if (k in intakeObj) { value = (intakeObj as any)[k]; hadKey = true; break }
     }
-    // Path A: explicit intake exists globally → only use days that have explicit records; skip others entirely
-    if (hasExplicitIntake) {
+    // Path A: explicit path → only use days that have explicit records; skip others entirely
+    if (!pathImplicit) {
       if (!hadKey) return null
       const taken = normalizeTaken(value)
       if (taken === true) explicitOn++
       if (taken === false) explicitOff++
       return { date: r.local_date, taken, raw: value }
     }
-    // Path B: no explicit intake anywhere → use implicit classification by inferredStart
+    // Path B: implicit path → use implicit classification by inferredStart
     let taken = normalizeTaken(value)
     if (taken === null) {
       const hasWearable = r?.wearables != null
