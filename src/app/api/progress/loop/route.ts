@@ -1109,6 +1109,13 @@ export async function GET(request: Request) {
             sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
             sOff = Math.max(sOff, Number((r as any).daysOffClean ?? 0))
           }
+          // Ensure daysOfData reflects implicit clean counts when available
+          try {
+            const implicitTracked = Number((r as any).daysOnClean || 0) + Number((r as any).daysOffClean || 0)
+            if (isImplicit && implicitTracked > Number((r as any).daysOfData || 0)) {
+              ;(r as any).daysOfData = implicitTracked
+            }
+          } catch {}
         } catch {}
         // Only use upload-based progress when implicit AND upload samples are present; otherwise use check‑in progress
         const useUploadProgress = isImplicit && (sOn + sOff) > 0
