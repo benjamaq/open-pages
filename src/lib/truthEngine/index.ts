@@ -566,6 +566,19 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Early exit if too few days — use same thresholds as dashboard/email
   const REQ_ON = requiredOnDaysForMetric(primaryMetric)
   const REQ_OFF = requiredOffDaysForMetric(primaryMetric)
+  try {
+    console.log('[TRUTH-THRESHOLD]', {
+      name: supplementName,
+      samplesOn: effect.sampleOn,
+      samplesOff: effect.sampleOff,
+      sampleOnOverride: sampleOnCount,
+      sampleOffOverride: sampleOffCount,
+      requiredOn: REQ_ON,
+      requiredOff: REQ_OFF,
+      willEarlyExit: (effect.sampleOn < REQ_ON || effect.sampleOff < REQ_OFF),
+      isImplicitPath: !hasExplicitIntake
+    })
+  } catch {}
   if (effect.sampleOn < REQ_ON || effect.sampleOff < REQ_OFF) {
     return buildReport({
       supplementName: supplementName || undefined,
