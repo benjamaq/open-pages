@@ -479,18 +479,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       return { label: '🔒 Verdict ready', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     }
     if (mappedCat === 'works') {
-      const src = String((row as any)?.analysisSource || '')
-      return src === 'implicit'
-        ? { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-        : { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+      return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
     }
-    if (mappedCat === 'no_effect') {
-      const src = String((row as any)?.analysisSource || '')
-      return src === 'implicit'
-        ? { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-        : { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+    if (mappedCat === 'no_effect' || mappedCat === 'no_detectable_effect') {
+      return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
     }
-    if (mappedCat === 'no_detectable_effect') return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
     // "too_early" maps to needs_more_data; in Testing section, prefer a neutral testing badge over a verdict-like badge
     if (mappedCat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
