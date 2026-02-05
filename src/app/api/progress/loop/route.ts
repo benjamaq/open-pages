@@ -558,6 +558,7 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    const implicitTruthBySupp = new Map<string, { status: string; sample_days_on: number; sample_days_off: number }>()
     // Also capture the latest implicit-source sample counts per supplement for upload progress
     const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
     for (const t of truths || []) {
@@ -582,6 +583,13 @@ export async function GET(request: Request) {
           on: Number((t as any).sample_days_on ?? 0),
           off: Number((t as any).sample_days_off ?? 0)
         })
+        if (!implicitTruthBySupp.has(uid)) {
+          implicitTruthBySupp.set(uid, {
+            status: String((t as any).status || ''),
+            sample_days_on: Number((t as any).sample_days_on ?? 0),
+            sample_days_off: Number((t as any).sample_days_off ?? 0),
+          })
+        }
       }
     }
     // Diagnostics: inspect truths map keys as well
@@ -1010,6 +1018,22 @@ export async function GET(request: Request) {
             uploadProgress = computeUploadProgress(sOn, sOff)
           }
         }
+        // If implicit, prefer implicit truth verdict for effectCategory (ensures card reflects upload verdict)
+        try {
+          if (isImplicit) {
+            const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+            const impl = uid ? implicitTruthBySupp.get(String(uid)) : undefined
+            if (impl && impl.status) {
+              const mapped = mapTruthToCategory(impl.status)
+              if (mapped) {
+                ;(r as any).effectCategory = mapped
+              }
+              // Also expose implicit clean counts for downstream logic (rotation)
+              ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
+              ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
+            }
+          }
+        } catch {}
         // Only use upload-based progress when implicit AND upload samples are present; otherwise use check‑in progress
         const useUploadProgress = isImplicit && (sOn + sOff) > 0
         let displayProgress = useUploadProgress ? uploadProgress : activeProgress
@@ -1116,11 +1140,7 @@ export async function GET(request: Request) {
           cat === 'inconsistent' ? 'testing' :
           cat === 'needs_more_data' ? 'testing' :
           isReady ? 'unclear' : null
-        // Upload-only analyses should never surface KEEP/DROP on the dashboard
-        try {
-          const src = String(((r as any).analysisSource || '')).toLowerCase()
-          if (src === 'implicit') verdict = 'testing'
-        } catch {}
+        // For implicit analyses, allow KEEP/DROP when implicit verdict exists; otherwise remain testing
         // Hard override: if latest truth status is 'too_early', force Testing badge
         try {
           const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
@@ -1286,8 +1306,9 @@ export async function GET(request: Request) {
       for (const r of progressRows) {
         const id = String((r as any).id || '')
         if (!id) continue
-        const daysOn = Number((r as any).daysOn || 0)
-        const daysOff = Number((r as any).daysOff || 0)
+        // Prefer clean counts; implicit rows will have daysOnClean/daysOffClean injected from implicit truth
+        const daysOn = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
+        const daysOff = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
         const reqOn = Number((r as any).requiredDays || 14)
         const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
         const daysOfData = Number((r as any).daysOfData || 0)
