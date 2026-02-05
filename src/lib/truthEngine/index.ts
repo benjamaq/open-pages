@@ -571,6 +571,11 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Early exit if too few days — use same thresholds as dashboard/email
   const REQ_ON = requiredOnDaysForMetric(primaryMetric)
   const REQ_OFF = requiredOffDaysForMetric(primaryMetric)
+  // For implicit analyses, base the threshold on implicit ON/OFF day classification
+  // (the same counts used by NEXT-RESULT readiness). For explicit analyses, use
+  // the metric-bearing counts from the computed effect.
+  const threshOn = pathImplicit ? sampleOnCount : (effect.sampleOn || 0)
+  const threshOff = pathImplicit ? sampleOffCount : (effect.sampleOff || 0)
   try {
     console.log('[TRUTH-THRESHOLD]', {
       name: supplementName,
@@ -580,11 +585,12 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       sampleOffOverride: sampleOffCount,
       requiredOn: REQ_ON,
       requiredOff: REQ_OFF,
-      willEarlyExit: (effect.sampleOn < REQ_ON || effect.sampleOff < REQ_OFF),
-      isImplicitPath: !hasExplicitIntake
+      usedForThreshold: { on: threshOn, off: threshOff },
+      willEarlyExit: (threshOn < REQ_ON || threshOff < REQ_OFF),
+      isImplicitPath: pathImplicit
     })
   } catch {}
-  if (effect.sampleOn < REQ_ON || effect.sampleOff < REQ_OFF) {
+  if (threshOn < REQ_ON || threshOff < REQ_OFF) {
     return buildReport({
       supplementName: supplementName || undefined,
       status: 'too_early',
@@ -598,7 +604,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       metricLabelOverride: metricLabelOverride || undefined,
       missingOnMetrics,
       missingOffMetrics,
-      analysisSource: hasExplicitIntake ? 'explicit' : 'implicit'
+      analysisSource: pathImplicit ? 'implicit' : 'explicit'
     })
   }
 
