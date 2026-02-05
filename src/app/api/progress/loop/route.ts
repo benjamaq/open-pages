@@ -690,7 +690,8 @@ export async function GET(request: Request) {
           const createdAt = truthRec ? (new Date((truthRec as any).created_at as any)).getTime() : 0
           const STALE_MS = 60 * 60 * 1000
           const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
-          if (stale && uid) {
+          // Do not refresh/overwrite if we already have an implicit truth for this supplement
+          if (stale && uid && !implicitTruthBySupp.has(String(uid))) {
             try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', { uid, cardId: (r as any).id, name: (r as any).name }) } catch {}
             const fresh = await generateTruthReportForSupplement(user.id, uid)
             // Persist the freshly generated report so downstream reads are consistent
@@ -913,7 +914,18 @@ export async function GET(request: Request) {
               ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
             }
             // Persist analysis source preferred for display
-            ;(r as any).analysisSource = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
+            const chosenSrc = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
+            ;(r as any).analysisSource = chosenSrc
+            // Log when implicit truth overrides explicit path
+            try {
+              if (tImplicit && chosenSrc === 'implicit') {
+                console.log('[IMPLICIT-OVERRIDE]', {
+                  name: (r as any).name,
+                  verdict: String(mapped),
+                  note: 'Using implicit truth verdict; skipping/overriding explicit re-run'
+                })
+              }
+            } catch {}
           }
         } catch {}
         if (VERBOSE && debugSuppId && debugSuppId === suppId) {
