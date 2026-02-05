@@ -248,7 +248,9 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   const lcFull = fullName.toLowerCase()
   const lcShort = sn.toLowerCase()
   const keys = Object.keys(bioMap as Record<string, any>).sort((a, b) => b.length - a.length)
-  const matchedKey = keys.find(k => lcFull.includes(k) || lcShort.includes(k)) || ''
+  // Prefer matching against the short product name (brand + primary name) to avoid picking up additive ingredients
+  // like "with Vitamin C" from long full names.
+  const matchedKey = keys.find(k => lcShort.includes(k)) || keys.find(k => lcFull.includes(k)) || ''
   const mapped = (bioMap as any)[matchedKey] || null
   const name = (mapped?.short_name as string) || sn
   const metric = String(report?.primaryMetricLabel || 'your metric')

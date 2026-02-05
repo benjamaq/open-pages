@@ -102,6 +102,7 @@ export default function ResultsPage() {
         const r1 = await fetch('/api/supplements/current', { cache: 'no-store' })
         const items = r1.ok ? await r1.json() : []
         if (!cancelled) setSupps(Array.isArray(items) ? items : [])
+        try { console.log('[MyStack] /api/supplements/current ->', Array.isArray(items) ? items.length : 0) } catch {}
       } catch {}
       try {
         const r2 = await fetch('/api/effect/summary', { cache: 'no-store' })
@@ -111,12 +112,21 @@ export default function ResultsPage() {
           Object.entries(j2.effects).forEach(([id, v]: any) => { map[id] = v as EffectRow })
         }
         if (!cancelled) setEffects(map)
+        try { console.log('[MyStack] /api/effect/summary -> keys', Object.keys(map).length) } catch {}
       } catch {}
       // Load progress loop for clean-day counts and requirements
       try {
         const r3 = await fetch('/api/progress/loop', { cache: 'no-store' })
         const j3 = r3.ok ? await r3.json() : {}
         setLoopSections(j3?.sections || null)
+        try {
+          console.log('[MyStack] /api/progress/loop sections:', {
+            clearSignal: (j3?.sections?.clearSignal || []).length,
+            noSignal: (j3?.sections?.noSignal || []).length,
+            building: (j3?.sections?.building || []).length,
+            needsData: (j3?.sections?.needsData || []).length
+          })
+        } catch {}
         const flatten: any[] = []
         if (j3?.sections && typeof j3.sections === 'object') {
           Object.values(j3.sections).forEach((arr: any) => {
@@ -160,6 +170,7 @@ export default function ResultsPage() {
           }
         }
         if (!cancelled) setLoopById(byId)
+        try { console.log('[MyStack] loopById count:', Object.keys(byId).length) } catch {}
       } catch {}
     })()
     return () => { cancelled = true }
@@ -254,7 +265,7 @@ export default function ResultsPage() {
         reqOn, reqOff, daysOn, daysOff
       }
     })
-  }, [supps, effects, loopById])
+  }, [supps, effects, loopById, loopSections])
 
   const categories = useMemo<string[]>(() => {
     const set = new Set<string>()
