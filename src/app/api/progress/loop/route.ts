@@ -1046,6 +1046,7 @@ export async function GET(request: Request) {
         }
         // If implicit, prefer implicit truth verdict for effectCategory (ensures card reflects upload verdict)
         try {
+          let finalImplicitVerdict = false
           if (isImplicit) {
             const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
             const impl = uid ? implicitTruthBySupp.get(String(uid)) : undefined
@@ -1053,11 +1054,30 @@ export async function GET(request: Request) {
               const mapped = mapTruthToCategory(impl.status)
               if (mapped) {
                 ;(r as any).effectCategory = mapped
+                // Log explicit implicit-verdict usage
+                try {
+                  console.log('[IMPLICIT-VERDICT]', {
+                    name,
+                    implicitEffectCategory: String(mapped),
+                    using: 'implicit'
+                  })
+                } catch {}
+                // Mark final implicit verdicts to force 100% and completion downstream
+                finalImplicitVerdict = ['works','no_effect','no_detectable_effect'].includes(String(mapped).toLowerCase())
+                if (finalImplicitVerdict) {
+                  ;(r as any).isReady = true
+                }
               }
               // Also expose implicit clean counts for downstream logic (rotation)
               ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
               ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
             }
+          }
+          // Promote displayProgress to 100% for implicit final verdicts
+          if (finalImplicitVerdict) {
+            uploadProgress = 100
+            sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
+            sOff = Math.max(sOff, Number((r as any).daysOffClean ?? 0))
           }
         } catch {}
         // Only use upload-based progress when implicit AND upload samples are present; otherwise use check‑in progress
@@ -1579,11 +1599,15 @@ export async function GET(request: Request) {
       const testingStatus = uid ? (testingStatusById.get(String(uid)) || 'inactive') : 'inactive'
       const insight = insightsById.get(String((r as any).id))
       const significant = !!(insight && String((insight as any).status || '').toLowerCase() === 'significant')
+      const cat = String((r as any)?.effectCategory || '').toLowerCase()
+      const isFinal = cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect'
+      const effectiveStatus = isFinal ? 'complete' : testingStatus
+      const progressOut = isFinal ? 100 : r.progressPercent
       return {
         id: r.id,
         name: r.name,
-        testing_status: testingStatus,
-        progressPercent: r.progressPercent,
+        testing_status: effectiveStatus,
+        progressPercent: progressOut,
         isStatisticallySignificant: significant,
       }
     })
