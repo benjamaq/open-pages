@@ -972,14 +972,34 @@ export async function GET(request: Request) {
         const truthImplicit = uidForTruth ? implicitTruthBySupp.get(String(uidForTruth)) : undefined
         const truthRec = (truthImplicit as any) || (uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined)
         let analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
-        // Bug 1: Sanity check — if implicit truth exists but has <=1 total samples, treat as explicit
+        // Bug 1 refinement: If implicit truth has <=1 samples BUT our derived implicit clean counts are present,
+        // prefer implicit path for progress and trigger regeneration; only force explicit when both are empty.
         try {
           const implOn = Number((truthImplicit as any)?.sample_days_on || 0)
           const implOff = Number((truthImplicit as any)?.sample_days_off || 0)
+          const derivedOn = Number((r as any).daysOnClean ?? 0)
+          const derivedOff = Number((r as any).daysOffClean ?? 0)
+          const derivedSum = derivedOn + derivedOff
           if (analysisSrc === 'implicit' && (implOn + implOff) <= 1) {
-            analysisSrc = 'explicit'
-            ;(r as any).analysisSource = 'explicit'
-            try { console.log('[IMPLICIT-SANITY]', { name, implOn, implOff, forced: 'explicit' }) } catch {}
+            if (derivedSum > 1) {
+              // Use derived implicit counts for progress and schedule a truth regeneration
+              analysisSrc = 'implicit'
+              ;(r as any).analysisSource = 'implicit'
+              try {
+                console.log('[IMPLICIT-DERIVED]', { name, implOn, implOff, derivedOn, derivedOff, action: 'prefer_implicit_for_progress_and_regen' })
+              } catch {}
+              try {
+                const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+                if (uid) {
+                  // Fire-and-forget regeneration to refresh truth with correct counts
+                  generateTruthReportForSupplement(user.id, String(uid)).catch(() => {})
+                }
+              } catch {}
+            } else {
+              analysisSrc = 'explicit'
+              ;(r as any).analysisSource = 'explicit'
+              try { console.log('[IMPLICIT-SANITY]', { name, implOn, implOff, forced: 'explicit' }) } catch {}
+            }
           }
         } catch {}
         const isImplicit = analysisSrc === 'implicit'
