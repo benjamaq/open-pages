@@ -682,16 +682,7 @@ export default function ResultsPage() {
               <div>
                 <div className="section-header">Your Active Stack</div>
                 <div className="section-subtitle">
-                  {(() => {
-                    const active = uiRows.filter(u => {
-                      const s = supps.find(x => x.id === u.id) as any
-                      const isActive = (s as any)?.is_active !== false
-                      return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
-                    })
-                    const testing = active.filter(u => u.lifecycle === 'Active').length
-                    const completed = active.filter(u => u.lifecycle !== 'Active').length
-                    return `${testing} testing • ${completed} complete`
-                  })()}
+                  HARDCODE TEST — if you see this, correct file
                 </div>
               </div>
               {(() => {
