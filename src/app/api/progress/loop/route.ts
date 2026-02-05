@@ -558,7 +558,7 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
-    const implicitTruthBySupp = new Map<string, { status: string; sample_days_on: number; sample_days_off: number }>()
+    const implicitTruthBySupp = new Map<string, { status: string; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
     // Also capture the latest implicit-source sample counts per supplement for upload progress
     const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
     for (const t of truths || []) {
@@ -574,6 +574,15 @@ export async function GET(request: Request) {
           sample_days_on: (t as any).sample_days_on ?? null,
           sample_days_off: (t as any).sample_days_off ?? null,
           analysis_source: (t as any).analysis_source ?? null
+        })
+      }
+      // Capture latest implicit truth separately (first seen due to descending order)
+      if (!implicitTruthBySupp.has(uid) && String((t as any).analysis_source || '').toLowerCase() === 'implicit') {
+        implicitTruthBySupp.set(uid, {
+          status: String((t as any).status || ''),
+          sample_days_on: (t as any).sample_days_on ?? null,
+          sample_days_off: (t as any).sample_days_off ?? null,
+          analysis_source: 'implicit'
         })
       }
       // First seen per uid wins due to descending created_at; record implicit counts when available
@@ -880,7 +889,9 @@ export async function GET(request: Request) {
         // Re-apply truth overlay AFTER any reset due to retest so category is not wiped
         try {
           const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-          const truth = uid ? truthBySupp.get(String(uid)) : undefined
+          // Prefer implicit truth verdicts for implicit-analysis supplements
+          const tImplicit = uid ? implicitTruthBySupp.get(String(uid)) : undefined
+          const truth = (tImplicit as any) || (uid ? truthBySupp.get(String(uid)) : undefined)
           const mapped = truth ? mapTruthToCategory(truth.status) : undefined
           if (mapped) {
             ;(r as any).effectCategory = mapped
@@ -901,6 +912,8 @@ export async function GET(request: Request) {
               ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
               ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
             }
+            // Persist analysis source preferred for display
+            ;(r as any).analysisSource = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
           }
         } catch {}
         if (VERBOSE && debugSuppId && debugSuppId === suppId) {
@@ -944,7 +957,8 @@ export async function GET(request: Request) {
         const activeProgress = Math.max(0, Math.min(100, Math.round(evidencePct)))
         // Determine analysis source from truth overlay/row
         const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-        const truthRec = uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined
+        const truthImplicit = uidForTruth ? implicitTruthBySupp.get(String(uidForTruth)) : undefined
+        const truthRec = (truthImplicit as any) || (uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined)
         const analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
         const isImplicit = analysisSrc === 'implicit'
         // For logging compatibility
@@ -1306,9 +1320,10 @@ export async function GET(request: Request) {
       for (const r of progressRows) {
         const id = String((r as any).id || '')
         if (!id) continue
+        const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
         // Prefer clean counts; implicit rows will have daysOnClean/daysOffClean injected from implicit truth
-        const daysOn = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
-        const daysOff = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)
+        const daysOn = isImplicit ? Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0) : Number((r as any).daysOn ?? 0)
+        const daysOff = isImplicit ? Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0) : Number((r as any).daysOff ?? 0)
         const reqOn = Number((r as any).requiredDays || 14)
         const reqOff = Math.min(5, Math.max(3, Math.round(reqOn / 4)))
         const daysOfData = Number((r as any).daysOfData || 0)
@@ -1339,6 +1354,23 @@ export async function GET(request: Request) {
       const offDef = Math.max(0, p.reqOff - p.daysOff)
       return onMet && offDef > 0
     })
+    // Log top-5 needs based on OFF deficits with implicit-aware counts
+    const top5 = priorityAll
+      .map(s => {
+        const p = progressById[s.id]
+        return {
+          name: s.name,
+          on: p.daysOn,
+          off: p.daysOff,
+          reqOn: p.reqOn,
+          reqOff: p.reqOff,
+          onMet: p.daysOn >= p.reqOn,
+          offDef: Math.max(0, p.reqOff - p.daysOff)
+        }
+      })
+      .sort((a, b) => b.offDef - a.offDef)
+      .slice(0, 5)
+    console.log('[rotation-debug] top5', top5)
     if (priorityAll.length > 0) {
       groupsByCategory.set('priority_override', priorityAll as any)
     }
