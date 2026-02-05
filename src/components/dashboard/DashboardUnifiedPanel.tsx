@@ -234,8 +234,6 @@ export function DashboardUnifiedPanel() {
     ]
     const readyRows = allRows.filter(r => {
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
-      const isImplicit = String(((r as any)?.analysisSource || '')).toLowerCase() === 'implicit'
-      if (isImplicit) return false // Upload-only should never be counted Ready
       const isFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
       const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
       const off = Number((r as any).daysOffClean ?? (r as any).daysOff ?? 0)

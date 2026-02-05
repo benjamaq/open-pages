@@ -197,10 +197,7 @@ export default function ResultsPage() {
         : verdictKeep ? 'Working'
         : verdictDrop ? 'Not working'
         : 'Active'
-      // Upload-only implicit sources should never be considered completed; keep them in Active/Testing
-      if (isImplicit) {
-        lifecycle = 'Active'
-      }
+      // Do NOT demote implicit final verdicts; completed implicit items should show as Working/Not working/No clear effect
       try {
         console.log('[MyStack/uiRows]', {
           id: s.id,
