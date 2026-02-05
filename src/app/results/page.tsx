@@ -85,6 +85,11 @@ export default function ResultsPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
+  // Mount diagnostic
+  useEffect(() => {
+    try { console.log('[MY-STACK-RENDER] component mounted') } catch {}
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -120,6 +125,8 @@ export default function ResultsPage() {
         const j3 = r3.ok ? await r3.json() : {}
         setLoopSections(j3?.sections || null)
         try {
+          // Explicitly log with requested label
+          console.log('[MY-STACK-FETCH] sections:', JSON.stringify(j3?.sections || null))
           console.log('[MyStack] /api/progress/loop sections:', {
             clearSignal: (j3?.sections?.clearSignal || []).length,
             noSignal: (j3?.sections?.noSignal || []).length,
