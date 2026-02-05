@@ -64,6 +64,7 @@ export default function ResultsPage() {
   const [openPaywall, setOpenPaywall] = useState(false)
   const [supps, setSupps] = useState<Supplement[]>([])
   const [effects, setEffects] = useState<Record<string, EffectRow | undefined>>({})
+  const [loopSections, setLoopSections] = useState<any | null>(null)
   const [loopById, setLoopById] = useState<Record<string, LoopRow>>({})
   const [showMethod, setShowMethod] = useState(false)
   const [filters, setFilters] = useState<Record<string, boolean>>({
@@ -115,6 +116,7 @@ export default function ResultsPage() {
       try {
         const r3 = await fetch('/api/progress/loop', { cache: 'no-store' })
         const j3 = r3.ok ? await r3.json() : {}
+        setLoopSections(j3?.sections || null)
         const flatten: any[] = []
         if (j3?.sections && typeof j3.sections === 'object') {
           Object.values(j3.sections).forEach((arr: any) => {
@@ -185,8 +187,21 @@ export default function ResultsPage() {
       const isReady = typeof l?.isReady === 'boolean'
         ? Boolean(l.isReady)
         : Boolean(daysOn != null && daysOff != null && reqOn != null && reqOff != null && (daysOn as number) >= (reqOn as number) && (daysOff as number) >= (reqOff as number))
-      const catLower = String(l?.effectCategory || '').toLowerCase()
-      const loopVerdict = String(l?.verdict || '').toLowerCase()
+      let catLower = String(l?.effectCategory || '').toLowerCase()
+      let loopVerdict = String(l?.verdict || '').toLowerCase()
+      // Fallback to sections if loop row is missing final category/verdict
+      if (!catLower && loopSections) {
+        const idStr = String(l?.id || s.id || '')
+        const nameStr = String(l?.name || s.name || '')
+        const inClear = (loopSections.clearSignal || []).find((x: any) =>
+          String(x.id) === idStr || String(x.userSuppId || '') === idStr || String(x.name || '') === nameStr
+        )
+        const inNo = (loopSections.noSignal || []).find((x: any) =>
+          String(x.id) === idStr || String(x.userSuppId || '') === idStr || String(x.name || '') === nameStr
+        )
+        if (inClear) { catLower = 'works'; loopVerdict = 'keep' }
+        else if (inNo) { catLower = 'no_effect'; loopVerdict = 'drop' }
+      }
       const verdictKeep = loopVerdict === 'keep' || catLower === 'works'
       const verdictDrop = loopVerdict === 'drop' || catLower === 'no_effect'
       const verdictNoDetect = catLower === 'no_detectable_effect'
@@ -208,8 +223,7 @@ export default function ResultsPage() {
       } catch {}
       // Optional explanatory text (kept minimal)
       const effectText = (() => {
-        if (isImplicit) return 'Signal from wearable data'
-        if (lifecycle === 'Active') return null
+        if (lifecycle === 'Active') return isImplicit ? 'Signal from wearable data' : null
         if (lifecycle === 'Working') return 'Clear positive effect'
         if (lifecycle === 'Not working') return 'Clear negative effect'
         if (lifecycle === 'No clear effect') return 'No detectable effect'
@@ -714,7 +728,7 @@ export default function ResultsPage() {
                 // Show status strictly from lifecycle (dumb renderer)
                 const statusLabel = (r.lifecycle === 'Active'
                   ? 'Testing'
-                  : (r.lifecycle === 'No clear effect' ? 'No detectable effect' : r.lifecycle))
+                  : (r.lifecycle === 'Working' ? 'KEEP' : r.lifecycle === 'Not working' ? 'DROP' : 'No detectable effect'))
                 const statusIcon = (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
                 const monthlyCost = typeof r.monthly === 'number' ? r.monthly : 0
                 return (
