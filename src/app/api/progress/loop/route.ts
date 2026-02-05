@@ -971,7 +971,17 @@ export async function GET(request: Request) {
         const uidForTruth = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
         const truthImplicit = uidForTruth ? implicitTruthBySupp.get(String(uidForTruth)) : undefined
         const truthRec = (truthImplicit as any) || (uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined)
-        const analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        let analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        // Bug 1: Sanity check — if implicit truth exists but has <=1 total samples, treat as explicit
+        try {
+          const implOn = Number((truthImplicit as any)?.sample_days_on || 0)
+          const implOff = Number((truthImplicit as any)?.sample_days_off || 0)
+          if (analysisSrc === 'implicit' && (implOn + implOff) <= 1) {
+            analysisSrc = 'explicit'
+            ;(r as any).analysisSource = 'explicit'
+            try { console.log('[IMPLICIT-SANITY]', { name, implOn, implOff, forced: 'explicit' }) } catch {}
+          }
+        } catch {}
         const isImplicit = analysisSrc === 'implicit'
         // For logging compatibility
         const finalPct = activeProgress
