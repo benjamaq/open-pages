@@ -626,8 +626,24 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Cohort stats
   const cohort = await getCohortStats(canonicalId, primaryMetric)
 
+  // Produce a cleaner display name for report text: prefer first 1–2 comma‑separated parts
+  const displaySupplementName = (() => {
+    const raw = String(supplementName || '')
+    if (!raw) return undefined
+    try {
+      let s = raw.replace(/\[[^\]]+\]/g, ' ')
+      const parts = s.split(',').map(p => p.trim()).filter(Boolean)
+      s = parts.slice(0, 2).join(' ')
+      // Drop trailing " with/with " additive descriptors
+      s = s.replace(/\s+with .*/i, '').trim()
+      s = s.replace(/\s{2,}/g, ' ')
+      return s || raw
+    } catch {
+      return raw
+    }
+  })()
   return buildReport({
-    supplementName: supplementName || undefined,
+    supplementName: displaySupplementName,
     status,
     effect,
     primaryMetric,

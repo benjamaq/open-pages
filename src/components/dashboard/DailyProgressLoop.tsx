@@ -431,9 +431,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   if ((hasFinalVerdictGlobal || progressForDisplay >= 100)) {
     progressForDisplay = 100
   }
+  // For implicit (upload) cards, show the upload-derived progress as signal strength.
+  // For explicit/testing cards, use progress while building; once completed, show confidence if present.
   const baseStrength = progressForDisplay
-  const strength = Math.max(0, Math.min(100, Math.round(row.confidence != null ? (row.confidence * 100) : baseStrength)))
-  const strengthDisplay = isImplicit ? progressForDisplay : (((hasFinalVerdictGlobal || row.progressPercent >= 100) && !isImplicit) ? 100 : strength)
+  const explicitStrength = (hasFinalVerdictGlobal || row.progressPercent >= 100)
+    ? Math.max(0, Math.min(100, Math.round((row.confidence != null ? row.confidence : 1) * 100)))
+    : Math.max(0, Math.min(100, Math.round(baseStrength)))
+  const strengthDisplay = isImplicit ? Math.round(baseStrength) : explicitStrength
   // ON/OFF details for contextual guidance
   const daysOn = Number((row as any).daysOn || 0)
   const daysOff = Number((row as any).daysOff || 0)
@@ -668,8 +672,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
         </div>
       ) : (
-        <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-          Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
+      <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+        Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
           Days tracked: <span className="font-medium">{row.daysOfData}</span>
           {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
         </div>

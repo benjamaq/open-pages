@@ -276,7 +276,9 @@ export function DashboardUnifiedPanel() {
       streak: Number((progress as any)?.checkins?.totalDistinctDays || 0),
       gapsDays: Number((progress as any)?.checkins?.gapsDays || 0),
       readyCount: readyCt,
-      buildingCount: Math.max(0, allRows.length - readyCt),
+      // Ensure categories are mutually exclusive: Building counts only sections.building
+      buildingCount: Number((s.building || []).length || 0),
+      // Needs data counts only sections.needsData
       needsDataCount: Number(((progress as any)?.sections?.needsData || []).length || 0),
       nextResult: nextRow ? {
         name: nextRow?.name,

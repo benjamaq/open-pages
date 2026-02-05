@@ -63,6 +63,11 @@
     "short_name": "Elderberry",
     "positive": "Elderberry is rich in anthocyanins with strong immune-modulating and antioxidant properties. A positive response suggests reduced low-grade inflammation supporting better recovery.",
     "negative": "Elderberry supports immune function through anthocyanin antioxidants. A negative response is uncommon — it may relate to its mild immune-stimulating effect. Not recommended during active autoimmune flares."
+  },
+  "iodine": {
+    "short_name": "Iodine",
+    "positive": "Iodine is essential for thyroid hormone (T3/T4) synthesis, which drives metabolic rate, thermogenesis, and sleep–wake regulation. A positive response may reflect correction of suboptimal iodine status and improved thyroid hormone availability.",
+    "negative": "Iodine fuels thyroid hormone production. Lack of benefit may indicate adequate baseline intake—or, rarely, sensitivity to increased iodine. If symptoms persist or worsen, consider checking thyroid function and discussing dose with your clinician."
   }
 }
 
