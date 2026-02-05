@@ -640,7 +640,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     metricLabelOverride: metricLabelOverride || undefined,
     missingOnMetrics,
     missingOffMetrics,
-    analysisSource: hasExplicitIntake ? 'explicit' : 'implicit'
+    analysisSource: pathImplicit ? 'implicit' : 'explicit'
   })
 }
 
