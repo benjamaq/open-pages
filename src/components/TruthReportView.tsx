@@ -2,8 +2,10 @@
 
 import type { TruthReport } from '@/lib/truthEngine/types'
 import bioMap from '@/lib/truthEngine/supplement-biology-map-full.json'
+import { useRef } from 'react'
 
 export default function TruthReportView({ report }: { report: TruthReport }) {
+  const reportRef = useRef<HTMLDivElement>(null)
   const statusColor = colorForStatus(report.status)
   const phenotype = derivePhenotype(report)
   const deficiency = deriveDeficiencyHint(report)
@@ -21,9 +23,86 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   try {
     console.log('[TruthReportView] supName resolved:', supName || null, 'report.supplementName:', (report as any)?.supplementName || null)
   } catch {}
+  function handleDownloadPdf() {
+    try { console.log('[REPORT-FOOTER] Download PDF clicked') } catch {}
+    try {
+      if (!reportRef.current) {
+        alert('Could not find report content to print.')
+        return
+      }
+      const html = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${supName ? supName + ' — Truth Report' : 'Truth Report'}</title>
+    <style>
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+      body { background: #0B0D13; color: #E5E7EB; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+      .container { max-width: 864px; margin: 0 auto; padding: 24px; }
+      a { color: #93C5FD; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      ${reportRef.current.innerHTML}
+    </div>
+    <script>window.focus(); setTimeout(function(){ window.print(); }, 300);</script>
+  </body>
+</html>`
+      const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=1400')
+      if (!win) {
+        // Fallback: open print dialog on current window
+        window.print()
+        return
+      }
+      win.document.open()
+      win.document.write(html)
+      win.document.close()
+    } catch (e) {
+      console.error('Print failed', e)
+      alert('Your browser blocked the print dialog. Please use the browser menu to print/save as PDF.')
+    }
+  }
+
+  async function handleShareSummary() {
+    try { console.log('[REPORT-FOOTER] Share summary clicked') } catch {}
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const title = supName ? `${supName} — BioStackr Truth Report` : 'BioStackr Truth Report'
+    const text = [
+      `${title}`,
+      `Verdict: ${String(report.verdictLabel || '').toUpperCase()}`,
+      `Primary metric: ${String(report.primaryMetricLabel || '—')}`,
+      dynamic?.effectSummary ? `Summary: ${dynamic.effectSummary}` : '',
+      dynamic?.nextSteps ? `Next: ${dynamic.nextSteps}` : '',
+      url ? `Link: ${url}` : ''
+    ].filter(Boolean).join('\n')
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url })
+        return
+      }
+    } catch {}
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('Summary copied to clipboard.')
+    } catch {
+      // Final fallback: open a small window with the text to let the user copy
+      const w = window.open('', '_blank', 'width=720,height=480')
+      if (w) {
+        w.document.write(`<pre style="white-space:pre-wrap;word-break:break-word;font:14px system-ui;padding:16px;margin:0">${text.replace(/</g,'&lt;')}</pre>`)
+      } else {
+        alert(text)
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div ref={reportRef} className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {isImplicit && (
           <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 text-sm text-indigo-200">
             <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
@@ -156,8 +235,8 @@ that kind of benefit.`}
         <footer className="flex items-center justify-between border-t border-slate-800 pt-4">
           <div className="text-xs text-slate-400">Science note: {report.scienceNote}</div>
           <div className="flex items-center gap-2">
-            <button className="text-xs text-slate-400 hover:text-slate-200">Download PDF</button>
-            <button className="text-xs text-slate-400 hover:text-slate-200">Share summary</button>
+            <button onClick={handleDownloadPdf} className="text-xs text-slate-400 hover:text-slate-200">Download PDF</button>
+            <button onClick={handleShareSummary} className="text-xs text-slate-400 hover:text-slate-200">Share summary</button>
           </div>
         </footer>
       </div>
