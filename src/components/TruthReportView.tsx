@@ -100,16 +100,18 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div ref={reportRef} className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {isImplicit && (
-          <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3 md:p-4 text-sm text-indigo-200 leading-snug">
-            <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
-            <div className="text-indigo-200/90">Daily check-ins will sharpen this into a confirmed verdict.</div>
+          <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-200 leading-snug">
+            <div className="space-y-1">
+              <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
+              <div className="text-indigo-200/90">Daily check-ins will sharpen this into a confirmed verdict.</div>
+            </div>
           </div>
         )}
         <header className="space-y-1.5">
           {supName && (
-            <h1 className="text-3xl md:text-[32px] font-semibold leading-tight">{supName}</h1>
+            <h1 className="text-3xl md:text-[32px] font-semibold leading-tight mb-2">{supName}</h1>
           )}
-          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border mt-1 ${statusColor.badge}`}>
+          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border mt-2 ${statusColor.badge}`}>
             {report.verdictLabel}
           </div>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
