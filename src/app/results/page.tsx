@@ -682,7 +682,24 @@ export default function ResultsPage() {
               <div>
                 <div className="section-header">Your Active Stack</div>
                 <div className="section-subtitle">
-                  HARDCODE TEST — if you see this, correct file
+                  {(() => {
+                    // Prefer server sections for accurate counts (implicit verdicts included)
+                    const secs = loopSections as any
+                    if (secs && typeof secs === 'object') {
+                      const testing = (secs.needsData?.length || 0) + (secs.building?.length || 0)
+                      const completed = (secs.clearSignal?.length || 0) + (secs.noSignal?.length || 0)
+                      return `${testing} testing • ${completed} complete`
+                    }
+                    // Fallback to derived uiRows if sections not available yet
+                    const active = uiRows.filter(u => {
+                      const s = supps.find(x => x.id === u.id) as any
+                      const isActive = (s as any)?.is_active !== false
+                      return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+                    })
+                    const testing = active.filter(u => u.lifecycle === 'Active').length
+                    const completed = active.filter(u => u.lifecycle !== 'Active').length
+                    return `${testing} testing • ${completed} complete`
+                  })()}
                 </div>
               </div>
               {(() => {
