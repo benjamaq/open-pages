@@ -711,21 +711,22 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           </div>
           {!isMember && (
             <>
+              {/* ON/OFF counts above the button for free users */}
+              {(!hasNoData && (daysOn + daysOff) > 0) && (
+                <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+                  ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
+                  OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
+                </div>
+              )}
               <div className="mt-3">
                 <button
                   onClick={openUpgrade}
-                  className="w-full text-sm font-medium px-4 py-2 rounded-md transition-colors cursor-pointer"
-                  style={{ backgroundColor: '#8B5E3C', color: '#FAF9F6' }}
+                  className="ml-auto block text-sm font-medium px-3 py-1.5 rounded-md border transition-colors cursor-pointer hover:bg-[#8B5E3C]/5"
+                  style={{ color: '#8B5E3C', borderColor: '#8B5E3C', backgroundColor: 'transparent' }}
                   onMouseDown={(e) => { /* prevent card handlers */ e.stopPropagation() }}
                   onClickCapture={(e) => { e.stopPropagation() }}
                 >
-                  <span className="inline-flex items-center gap-2">
-                    {/* lock icon */}
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path>
-                    </svg>
-                    Unlock verdict
-                  </span>
+                  🔒 Unlock verdict
                 </button>
               </div>
               <div className="mt-2 text-xs text-center" style={{ color: '#A89F91' }}>
@@ -767,7 +768,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
         </div>
       )}
-      {!hasNoData && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && (
+      {!hasNoData && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && !( !isMember && isCompleted ) && (
         <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
           ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
           OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>{!offComplete && daysOff === 0 ? ' (need skip days)' : ''}
