@@ -670,9 +670,15 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {
-            // Remove top badge entirely for free users with completed verdicts (gated)
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
-            if (gated) return null
+            // For free users with a completed verdict, show subtle top-right status text
+            if (gated) {
+              return (
+                <span className="text-sm font-medium" style={{ color: '#A0846B' }}>
+                  Verdict ready <span aria-hidden="true">✓</span>
+                </span>
+              )
+            }
             return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>
           })()}
           {testingActive ? (
@@ -728,9 +734,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                 >
                   🔒 Unlock verdict
                 </button>
-              </div>
-              <div className="mt-2 text-xs text-center" style={{ color: '#A89F91' }}>
-                Verdict ready
               </div>
             </>
           )}

@@ -787,7 +787,14 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <div className="mt-2">
-                        <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
+                          {(!paid && isCompleted) ? (
+                            <span className="text-sm font-medium" style={{ color: '#A0846B' }}>
+                              Verdict ready <span aria-hidden="true">✓</span>
+                            </span>
+                          ) : null}
+                        </div>
                         {(() => {
                           const nameLc = String(r.name || '').toLowerCase().trim()
                           const brandLc = String(brand || '').toLowerCase().trim()
@@ -880,6 +887,21 @@ export default function ResultsPage() {
                                     </div>
                                   )
                                 })()}
+                                {(() => {
+                                  const l = loopById[r.id]
+                                  const reqDays = Number(l?.requiredDays ?? 14)
+                                  const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
+                                  const daysOn = Number(l?.daysOnClean ?? l?.daysOn ?? 0)
+                                  const daysOff = Number(l?.daysOffClean ?? l?.daysOff ?? 0)
+                                  const onComplete = daysOn >= reqDays
+                                  const offComplete = daysOff >= reqOff
+                                  return (
+                                    <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+                                      ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
+                                      OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>
+                                    </div>
+                                  )
+                                })()}
                                 <div className="mt-3 flex justify-end">
                                   <button
                                     onClick={openUpgrade}
@@ -888,9 +910,6 @@ export default function ResultsPage() {
                                   >
                                     🔒 Unlock verdict
                                   </button>
-                                </div>
-                                <div className="mt-2 text-xs text-center" style={{ color: '#A89F91' }}>
-                                  Verdict ready
                                 </div>
                               </>
                             ) : (
