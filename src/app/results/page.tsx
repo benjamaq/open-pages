@@ -781,11 +781,9 @@ export default function ResultsPage() {
                           <span className="mr-1" style={{ color: (r.lifecycle==='Active' ? '#C65A2E' : r.lifecycle==='Working' ? '#22C55E' : r.lifecycle==='Not working' ? '#EF4444' : '#6B7280') }}>
                             {statusIcon}
                           </span>
-                          {(!paid && isCompleted) ? (
-                            <a href="#" onClick={(e) => { e.preventDefault(); try { window.dispatchEvent(new Event('open:upgrade')) } catch {}; setShowUpgradeModal(true) }} className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
-                          ) : (
-                            <span className="text-[#4B5563]">{statusLabel}</span>
-                          )}
+                          {(!paid && isCompleted)
+                            ? <span className="text-[#4B5563]">&nbsp;</span>
+                            : <span className="text-[#4B5563]">{statusLabel}</span>}
                         </div>
                       </div>
                       <div className="mt-2">
@@ -866,14 +864,25 @@ export default function ResultsPage() {
                         ) : (
                           <>
                             {(!paid && isCompleted) ? (
-                              <div className="mt-2 flex justify-end">
-                                <button
-                                  onClick={openUpgrade}
-                                  className="ml-auto block text-sm font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full hover:bg-green-100 transition-colors cursor-pointer"
-                                >
-                                  Unlock result
-                                </button>
-                              </div>
+                              <>
+                                <div className="mt-3">
+                                  <button
+                                    onClick={openUpgrade}
+                                    className="w-full text-sm font-medium px-4 py-2 rounded-md transition-colors cursor-pointer"
+                                    style={{ backgroundColor: '#8B5E3C', color: '#FAF9F6' }}
+                                  >
+                                    <span className="inline-flex items-center gap-2">
+                                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path>
+                                      </svg>
+                                      Unlock verdict
+                                    </span>
+                                  </button>
+                                </div>
+                                <div className="mt-2 text-xs text-center" style={{ color: '#A89F91' }}>
+                                  Verdict ready
+                                </div>
+                              </>
                             ) : (
                               <>
                                 <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>

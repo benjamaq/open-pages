@@ -660,13 +660,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   return (
     <div
       id={`supp-${row.id}`}
-      className={`rounded-lg border border-gray-200 bg-white p-3 sm:p-4 overflow-hidden ${gated ? 'cursor-pointer' : ''}`}
+      className={`rounded-lg border border-gray-200 bg-white p-3 sm:p-4 overflow-hidden`}
       style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}
-      onClick={() => { if (gated) openUpgrade() }}
-      role={gated ? 'button' : undefined}
-      aria-label={gated ? 'Upgrade to view verdict' : undefined}
-      tabIndex={gated ? 0 : -1}
-      onKeyDown={(e) => { if (gated && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openUpgrade() } }}
     >
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-start justify-between">
@@ -675,14 +670,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {
+            // Remove top badge entirely for free users with completed verdicts (gated)
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
-            if (gated) {
-              return (
-                <button onClick={openUpgrade} className={`${baseChipClass} ${displayBadge.cls || ''} cursor-pointer`} title="Upgrade to view verdict">
-                  {displayBadge.label}
-                </button>
-              )
-            }
+            if (gated) return null
             return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>
           })()}
           {testingActive ? (
@@ -720,14 +710,28 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
           </div>
           {!isMember && (
-            <div className="mt-3 flex justify-end">
-              <button
-                onClick={openUpgrade}
-                className="ml-auto block text-sm font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full hover:bg-green-100 transition-colors cursor-pointer"
-              >
-                Unlock result
-              </button>
-            </div>
+            <>
+              <div className="mt-3">
+                <button
+                  onClick={openUpgrade}
+                  className="w-full text-sm font-medium px-4 py-2 rounded-md transition-colors cursor-pointer"
+                  style={{ backgroundColor: '#8B5E3C', color: '#FAF9F6' }}
+                  onMouseDown={(e) => { /* prevent card handlers */ e.stopPropagation() }}
+                  onClickCapture={(e) => { e.stopPropagation() }}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {/* lock icon */}
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path>
+                    </svg>
+                    Unlock verdict
+                  </span>
+                </button>
+              </div>
+              <div className="mt-2 text-xs text-center" style={{ color: '#A89F91' }}>
+                Verdict ready
+              </div>
+            </>
           )}
         </>
       ) : isBuilding ? (
