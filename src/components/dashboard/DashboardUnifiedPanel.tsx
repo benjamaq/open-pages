@@ -903,40 +903,14 @@ export function DashboardUnifiedPanel() {
                 ...(sec.building || []),
               ]
               const sumYearAll = (rows: any[]) => rows.reduce((acc, s) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
-              const effY = sumYearAll((sec.clearSignal || []).filter((s: any) => (s as any).effectCategory === 'works'))
-              const wasteY = sumYearAll(sec.noSignal || [])
-              const testY = sumYearAll([...(sec.building || []), ...((sec.needsData || []))])
-              if (!isMember) {
-                // For free users, "awaiting clarity" = items not ready by ON/OFF thresholds
-                const awaitingRows = all.filter((r: any) => {
-                  const on = Number(r?.daysOnClean ?? r?.daysOn ?? 0)
-                  const off = Number(r?.daysOffClean ?? r?.daysOff ?? 0)
-                  const reqOn = Number(r?.requiredOnDays ?? r?.requiredDays ?? 14)
-                  const reqOff = Number(r?.requiredOffDays ?? Math.min(5, Math.max(3, Math.round((r?.requiredDays ?? 14) / 4))))
-                  return !(on >= reqOn && off >= reqOff)
-                })
-                const awaiting = Math.round(sumYearAll(awaitingRows))
-                if (awaiting <= 0) {
-                  return (
-                    <div className="text-sm text-gray-700 mb-2">
-                      <span className="font-medium" style={{ color: '#6A3F2B' }}>${(totalYearly || 0).toLocaleString()}/yr</span> — verdicts ready!
-                    </div>
-                  )
-                } else {
-                  return (
-                    <div className="text-sm text-gray-700 mb-2">
-                      <span className="font-medium" style={{ color: '#6A3F2B' }}>${awaiting.toLocaleString()}/yr</span> awaiting clarity
-                    </div>
-                  )
-                }
-              }
+              const effY = sumYearAll((sec.clearSignal || []).filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works'))
+              const awaitingY = sumYearAll([...(sec.building || []), ...((sec.needsData || []))])
+              // Always show "effective" and "awaiting clarity" — this speaks to the value prop
               return (
                 <div className="text-sm text-gray-700 mb-2">
-                  <span className="font-medium" style={{ color: '#6F7F5A' }}>${effY.toLocaleString()}</span> effective
+                  <span className="font-medium" style={{ color: '#16A34A' }}>${effY.toLocaleString()}/yr</span> effective
                   {' • '}
-                  <span className="text-gray-700 font-medium">${wasteY.toLocaleString()}</span> wasted
-                  {' • '}
-                  <span className="font-medium" style={{ color: '#B07A2A' }}>${testY.toLocaleString()}</span> still testing
+                  <span className="font-medium text-gray-700">${awaitingY.toLocaleString()}/yr</span> awaiting clarity
                 </div>
               )
             })()}
