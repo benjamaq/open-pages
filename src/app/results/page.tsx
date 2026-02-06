@@ -787,14 +787,16 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <div className="mt-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
-                          {(!paid && isCompleted) ? (
-                            <span className="text-sm font-medium" style={{ color: '#A0846B' }}>
+                        {/* Top verdict label row for free users (mirrors paid KEEP/DROP placement) */}
+                        {(!paid && isCompleted) ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium" style={{ color: '#A0846B' }}>
                               Verdict ready <span aria-hidden="true">✓</span>
                             </span>
-                          ) : null}
-                        </div>
+                            <span />
+                          </div>
+                        ) : null}
+                        <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
                         {(() => {
                           const nameLc = String(r.name || '').toLowerCase().trim()
                           const brandLc = String(brand || '').toLowerCase().trim()

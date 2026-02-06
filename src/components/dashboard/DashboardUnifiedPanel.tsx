@@ -920,10 +920,10 @@ export function DashboardUnifiedPanel() {
               const awaitingY = sumYearAll([...(sec.building || []), ...((sec.needsData || []))])
               // Always show "effective" and "awaiting clarity" — this speaks to the value prop
               return (
-                <div className="text-sm text-gray-700 mb-2">
-                  <span className="font-medium" style={{ color: '#16A34A' }}>${effY.toLocaleString()}/yr</span> effective
+                <div className="text-sm text-gray-800 mb-2">
+                  <span className="font-medium">${effY.toLocaleString()}/yr</span> effective
                   {' • '}
-                  <span className="font-medium text-gray-700">${awaitingY.toLocaleString()}/yr</span> awaiting clarity
+                  <span className="text-gray-600">${awaitingY.toLocaleString()}/yr</span> awaiting clarity
                 </div>
               )
             })()}

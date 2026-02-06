@@ -664,6 +664,15 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}
     >
       <div style={muted ? { opacity: 0.7 } : undefined}>
+      {/* Top verdict label row for free users (mirrors paid KEEP/DROP placement) */}
+      {gated && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium" style={{ color: '#A0846B' }}>
+            Verdict ready <span aria-hidden="true">✓</span>
+          </span>
+          <span />
+        </div>
+      )}
       <div className="flex items-start justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2 min-w-0 text-[15px] sm:text-base">
           <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{String(row.name || '')}</span>
@@ -671,14 +680,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="flex items-center gap-2 ml-3">
           {(() => {
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
-            // For free users with a completed verdict, show subtle top-right status text
-            if (gated) {
-              return (
-                <span className="text-sm font-medium" style={{ color: '#A0846B' }}>
-                  Verdict ready <span aria-hidden="true">✓</span>
-                </span>
-              )
-            }
+            // For free users with completed verdict, no badge on this row (label shown above)
+            if (gated) return null
             return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>
           })()}
           {testingActive ? (
