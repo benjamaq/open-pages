@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { createClient } from '../../lib/supabase/client'
 
 type BillingPeriod = 'monthly' | 'yearly'
@@ -57,10 +58,13 @@ export default function PaywallModal({
   }
 
   if (!open) return null
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[560px] rounded-xl bg-white p-6 sm:p-8 shadow-lg border border-gray-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50" />
+      <div
+        className="relative z-10 w-full max-w-[560px] rounded-xl bg-white p-6 sm:p-8 shadow-lg border border-gray-200"
+        onClick={(e) => { e.stopPropagation() }}
+      >
         <h3 className="text-xl sm:text-2xl font-semibold text-center">Unlock your results</h3>
         <p className="mt-2 text-sm text-gray-600 text-center">See which supplements are actually working for you.</p>
 
@@ -111,7 +115,7 @@ export default function PaywallModal({
         </div>
       </div>
     </div>
-  )
+  , typeof document !== 'undefined' ? document.body : (null as any))
 }
 
 

@@ -720,8 +720,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
           </div>
           {!isMember && (
-            <div className="mt-2 text-[11px]">
-              <button onClick={openUpgrade} className="text-emerald-600 underline cursor-pointer">Unlock result →</button>
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={openUpgrade}
+                className="ml-auto block text-sm font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full hover:bg-green-100 transition-colors cursor-pointer"
+              >
+                Unlock result
+              </button>
             </div>
           )}
         </>

@@ -866,7 +866,14 @@ export default function ResultsPage() {
                         ) : (
                           <>
                             {(!paid && isCompleted) ? (
-                              <a href="#" onClick={openUpgrade} className="text-emerald-600 underline cursor-pointer">Unlock result →</a>
+                              <div className="mt-2 flex justify-end">
+                                <button
+                                  onClick={openUpgrade}
+                                  className="ml-auto block text-sm font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full hover:bg-green-100 transition-colors cursor-pointer"
+                                >
+                                  Unlock result
+                                </button>
+                              </div>
                             ) : (
                               <>
                                 <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
