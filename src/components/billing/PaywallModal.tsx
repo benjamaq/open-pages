@@ -15,10 +15,46 @@ export default function PaywallModal({
   defaultPeriod?: BillingPeriod
 }) {
   const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // We no longer initiate Stripe from this modal; always forward to /checkout
-
-  const startCheckout = () => { window.location.href = '/checkout' }
+  const startCheckout = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      // Debug selection
+      try { console.log('[PAYWALL] selected period:', period) } catch {}
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = '/signup'
+        return
+      }
+      const body = {
+        plan: 'premium',
+        period,
+        userId: user.id,
+        userEmail: user.email
+      }
+      try { console.log('[PAYWALL] POST /api/billing/create-checkout-session body:', body) } catch {}
+      const res = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      const j = await res.json().catch(() => ({}))
+      if (res.ok && j?.url) {
+        try { console.log('[PAYWALL] redirecting to Stripe:', j.url) } catch {}
+        window.location.href = j.url
+      } else {
+        setError(String(j?.error || 'Unable to start checkout. Please try again.'))
+        setLoading(false)
+      }
+    } catch (e) {
+      setError('Unable to start checkout. Please try again.')
+      setLoading(false)
+    }
+  }
 
   if (!open) return null
   return (
@@ -64,10 +100,12 @@ export default function PaywallModal({
 
         <button
           onClick={startCheckout}
-          className="mt-6 w-full h-12 rounded-full bg-[#111111] text-white text-sm font-semibold hover:bg-black"
+          disabled={loading}
+          className="mt-6 w-full h-12 rounded-full bg-[#111111] text-white text-sm font-semibold hover:bg-black disabled:opacity-60"
         >
-          Continue to checkout
+          {loading ? 'Redirecting…' : 'Continue to checkout'}
         </button>
+        {error ? <div className="mt-3 text-xs text-rose-600 text-center">{error}</div> : null}
         <div className="mt-4 text-xs text-gray-600 text-center">
           Payments by Stripe. You can cancel anytime.
         </div>
