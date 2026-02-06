@@ -119,29 +119,64 @@ export function DailyProgressLoop() {
     }
   }, [])
 
-  // Detect milestones once data arrives
+  // Detect milestones once data arrives (per-supplement, no leaks on completed/gated)
   useEffect(() => {
     if (!data?.sections) return
     try {
-      const shown50 = typeof window !== 'undefined' ? localStorage.getItem('milestone_50_shown') === '1' : true
-      const shown85 = typeof window !== 'undefined' ? localStorage.getItem('milestone_85_shown') === '1' : true
       const all = [
         ...(data.sections.clearSignal || []),
         ...(data.sections.building || []),
         ...(data.sections.noSignal || []),
+        ...(((data.sections as any)?.needsData) || [])
       ]
-      // Prefer highest % that meets threshold
-      const hit85 = all.filter(r => r.progressPercent >= 85).sort((a,b) => b.progressPercent - a.progressPercent)[0]
-      const hit50 = all.filter(r => r.progressPercent >= 50).sort((a,b) => b.progressPercent - a.progressPercent)[0]
-      if (!shown85 && hit85) {
-        setMilestone85({ id: hit85.id, name: hit85.name, percent: hit85.progressPercent })
-      } else if (!shown50 && hit50) {
-        setMilestone50({ id: hit50.id, name: hit50.name, percent: hit50.progressPercent })
+      // Helper to check/mark a one-time key
+      const once = (key: string) => {
+        if (typeof window === 'undefined') return false
+        const k = `ms_${key}`
+        if (localStorage.getItem(k) === '1') return false
+        localStorage.setItem(k, '1')
+        return true
       }
-    } catch {
-      // ignore
-    }
-  }, [data])
+      // Prefer showing a single, most-relevant popup per load
+      // 1) Free user: verdict ready upsell (once per supplement id)
+      if (!isMember) {
+        const readyRows = (data.sections.clearSignal || []).concat((data.sections.noSignal || []))
+        const upsell = readyRows.find(r => r.progressPercent >= 100)
+        if (upsell) {
+          const key = `ready_${upsell.id}`
+          if (once(key)) {
+            setMilestone85(null)
+            setMilestone50(null)
+            setMilestone85({ id: upsell.id, name: upsell.name, percent: 100 }) // reuse Almost Ready modal shell
+          }
+          return
+        }
+      }
+      // 2) Almost ready (>=85 and <100, not final verdict)
+      const nearing = all
+        .filter(r => r.progressPercent >= 85 && r.progressPercent < 100 && !(r as any).effectCategory)
+        .sort((a,b) => b.progressPercent - a.progressPercent)[0]
+      if (nearing) {
+        const key = `85_${nearing.id}`
+        if (once(key)) {
+          setMilestone50(null)
+          setMilestone85({ id: nearing.id, name: nearing.name, percent: nearing.progressPercent })
+          return
+        }
+      }
+      // 3) Results forming (>=50 and <85, not final verdict)
+      const forming = all
+        .filter(r => r.progressPercent >= 50 && r.progressPercent < 85 && !(r as any).effectCategory)
+        .sort((a,b) => b.progressPercent - a.progressPercent)[0]
+      if (forming) {
+        const key = `50_${forming.id}`
+        if (once(key)) {
+          setMilestone50({ id: forming.id, name: forming.name, percent: forming.progressPercent })
+          return
+        }
+      }
+    } catch {}
+  }, [data, isMember])
 
   const dismiss50 = () => {
     try { localStorage.setItem('milestone_50_shown', '1') } catch {}
@@ -264,10 +299,12 @@ export function DailyProgressLoop() {
     <section className="space-y-8 px-3 sm:px-0">
       {/* Milestone popups */}
       {milestone85 && (
-        <Popup title="Almost ready" body={`${milestone85.name} is at ${milestone85.percent}% signal.\n\nJust a few more days until we can show you whether it's actually working.`} cta="Can’t wait" onClose={dismiss85} />
+        <Popup title={(!isMember && milestone85.percent >= 100) ? 'Your result is ready' : 'Almost ready'} body={(!isMember && milestone85.percent >= 100)
+          ? `${milestone85.name} has a result ready.\n\nUpgrade to unlock your verdict.`
+          : `${milestone85.name} is at ${milestone85.percent}% signal.\n\nJust a few more days until we can show you whether it's actually working.`} cta={(!isMember && milestone85.percent >= 100) ? 'Upgrade' : 'Can’t wait'} onClose={dismiss85} />
       )}
       {milestone50 && (
-        <Popup title="Your results are starting to form" body={`${milestone50.name} is now at ${milestone50.percent}% signal.\n\nEach check-in brings you closer to a clear answer. Keep going — you're halfway there.`} cta="Nice" onClose={dismiss50} />
+        <Popup title="Your results are starting to form" body={`${milestone50.name} is now at ${milestone50.percent}% signal.\n\nEach check-in brings you closer to a clear answer.`} cta="Nice" onClose={dismiss50} />
       )}
       {/* TODAY'S ACTION lives in the unified panel (top-left). No duplicate here. */}
       {/* Header removed; hero card now provided by <DashboardHero /> */}

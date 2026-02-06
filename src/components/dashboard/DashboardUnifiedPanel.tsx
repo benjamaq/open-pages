@@ -594,6 +594,14 @@ export function DashboardUnifiedPanel() {
             {/* Rotation instructions from /api/progress/loop */}
             {progress?.rotation && (
               <div className="mt-4 text-sm text-gray-800 space-y-2">
+                {(() => {
+                  const readyCt = Number(progress?.sections?.clearSignal?.length || 0) + Number(progress?.sections?.noSignal?.length || 0)
+                  const testingCt = Number(progress?.sections?.building?.length || 0) + Number(progress?.sections?.needsData?.length || 0)
+                  if (readyCt > 0 && testingCt === 0) {
+                    return <div>All supplements tested — take your full stack as normal.</div>
+                  }
+                  return null
+                })()}
                 {progress.rotation.phase === 'baseline' ? (
                   <>
                     <div>{progress.rotation.action?.primary || 'Take your supplements as normal.'}</div>
@@ -661,6 +669,8 @@ export function DashboardUnifiedPanel() {
             // Clear, state-driven copy for Next Result Likely
             const buildingLen = Number(progress?.sections?.building?.length || 0)
             const needsLen = Number(progress?.sections?.needsData?.length || 0)
+            const readyLen = Number(progress?.sections?.clearSignal?.length || 0) + Number(progress?.sections?.noSignal?.length || 0)
+            const totalLen = readyLen + buildingLen + needsLen + Number((progress as any)?.sections?.inconsistent?.length || 0)
             const hasCheckinCandidate = (() => {
               const pool = [
                 ...((progress?.sections?.building) || []),
@@ -683,6 +693,9 @@ export function DashboardUnifiedPanel() {
                 ...(((progress as any)?.sections?.needsData) || [])
               ]
               const allImplicit = all.length > 0 && all.every((r: any) => String((r as any)?.analysisSource || '').toLowerCase() === 'implicit')
+              if (readyLen > 0 && readyLen === totalLen) {
+                return <div className="text-sm text-gray-700">All results are in ✓</div>
+              }
               return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'All supplements analyzed'}</div>
             }
             if (!nextResult) {

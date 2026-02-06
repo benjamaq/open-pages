@@ -752,9 +752,12 @@ export default function ResultsPage() {
                 const startDate = startIso ? new Date(startIso) : null
                 const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? loopById[r.id]?.daysOn ?? 0) + (loopById[r.id]?.daysOffClean ?? loopById[r.id]?.daysOff ?? 0))
                 // Show status strictly from lifecycle (dumb renderer)
-                const statusLabel = (r.lifecycle === 'Active'
-                  ? 'Testing'
-                  : (r.lifecycle === 'Working' ? 'KEEP' : r.lifecycle === 'Not working' ? 'DROP' : 'No detectable effect'))
+                const isCompleted = r.lifecycle !== 'Active'
+                const statusLabel = (!paid && isCompleted)
+                  ? 'Verdict ready'
+                  : (r.lifecycle === 'Active'
+                      ? 'Testing'
+                      : (r.lifecycle === 'Working' ? 'KEEP' : r.lifecycle === 'Not working' ? 'DROP' : 'No detectable effect'))
                 const statusIcon = (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
                 const monthlyCost = typeof r.monthly === 'number' ? r.monthly : 0
                 return (
@@ -846,8 +849,14 @@ export default function ResultsPage() {
                           <span className="text-[#6B7280]">{String((loopById[r.id] as any)?.analysisSource || (loopById[r.id] as any)?.analysis_source || '').toLowerCase() === 'implicit' ? 'Signal from wearable data' : 'Testing in progress'}</span>
                         ) : (
                           <>
-                            <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
-                            {r.confidenceText && <div className="text-[#6B7280]">{r.confidenceText}</div>}
+                            {(!paid && isCompleted) ? (
+                              <div className="text-[#6B7280]">Result available — upgrade to view</div>
+                            ) : (
+                              <>
+                                <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
+                                {r.confidenceText && <div className="text-[#6B7280]">{r.confidenceText}</div>}
+                              </>
+                            )}
                           </>
                         )}
                       </div>
