@@ -2830,7 +2830,8 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
                   </p>
                   <div className="flex gap-3">
                     <a
-                      href="/upgrade/pro"
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); try { window.dispatchEvent(new Event('open:upgrade')) } catch {} }}
                       className="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
                     >
                       Get Started with Premium

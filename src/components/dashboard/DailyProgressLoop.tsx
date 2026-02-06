@@ -5,6 +5,7 @@ import { StackCostCard } from '@/components/insights/StackCostCard'
 import TruthReportModal from '@/components/TruthReportModal'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { createClient } from '@/lib/supabase/client'
+import PaywallModal from '@/components/billing/PaywallModal'
 
 type Row = {
   id: string
@@ -509,14 +510,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive && !hasFinalVerdict
   // Global upgrade trigger: allow other parts of the app (nav, My Stack) to open the same modal
   useEffect(() => {
-    const handler = () => setShowUpgradeModal(true)
+    const handler = () => setShowPaywall(true)
     if (typeof window !== 'undefined') window.addEventListener('open:upgrade', handler as any)
     return () => { if (typeof window !== 'undefined') window.removeEventListener('open:upgrade', handler as any) }
   }, [])
   const openUpgrade = (e?: any) => {
     try { if (e && typeof e.preventDefault === 'function') e.preventDefault() } catch {}
     try { window.dispatchEvent(new Event('open:upgrade')) } catch {}
-    setShowUpgradeModal(true)
+    setShowPaywall(true)
   }
   const gated = (!isMember && isCompleted)
 
@@ -570,7 +571,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const [err, setErr] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [showStopModal, setShowStopModal] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRetestModal, setShowRetestModal] = useState(false)
   const [showTruthReport, setShowTruthReport] = useState(false)
   const [reportId, setReportId] = useState<string | null>(null)
@@ -642,7 +642,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         const j = await r.json().catch(() => ({}))
         if (j?.error === 'limit_reached') {
           setShowUpgrade(true)
-          setShowUpgradeModal(true)
+          setShowPaywall(true)
           return
         }
       }
@@ -719,6 +719,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Days tracked: <span className="font-medium">{row.daysOfData}</span>
             {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
           </div>
+          {!isMember && (
+            <div className="mt-2 text-[11px]">
+              <button onClick={openUpgrade} className="text-emerald-600 underline cursor-pointer">Unlock result →</button>
+            </div>
+          )}
         </>
       ) : isBuilding ? (
         <>
@@ -952,32 +957,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           </div>
         </div>
       )}
-      {/* Styled modal: Upgrade needed */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowUpgradeModal(false)} />
-          <div className="relative z-10 w-full max-w-[460px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
-            <div className="text-base font-semibold text-gray-900">You have 5 verdicts on Starter plan.</div>
-            <div className="mt-2 text-sm text-gray-600">
-              Upgrade to Premium to unlock them and continue testing.
-            </div>
-            <div className="mt-4 flex gap-2 justify-end">
-              <button
-                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
-                onClick={() => setShowUpgradeModal(false)}
-              >
-                Got it
-              </button>
-              <a
-                href="/checkout"
-                className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90 flex items-center"
-              >
-                Upgrade to Premium
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Shared Paywall Modal */}
+      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} defaultPeriod="yearly" />
       {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
       {/* Truth Report modal (full analysis) */}
       <TruthReportModal
@@ -986,19 +967,6 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         userSupplementId={String(reportId || userSuppId)}
         supplementName={String(reportName || (row as any)?.name || '')}
       />
-      {showPaywall && (
-        <PaywallModal
-          onClose={() => {
-            setShowPaywall(false)
-            try {
-              if (window.location.hash === '#paywall') {
-                window.history.back()
-              }
-            } catch {}
-          }}
-          spendMonthly={spendMonthly}
-        />
-      )}
     </div>
   )
 }
@@ -1021,120 +989,7 @@ function Popup({ title, body, cta, onClose }: { title: string; body: string; cta
   )
 }
 
-function PaywallModal({ onClose, spendMonthly }: { onClose: () => void; spendMonthly?: number }) {
-  const spendDisplay = (typeof spendMonthly === 'number' && spendMonthly > 0)
-    ? `$${spendMonthly}/month`
-    : null
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [period, setPeriod] = useState<'monthly' | 'yearly'>('yearly')
-  const startCheckout = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      // If not signed in, push to signup; Stripe will be invoked from /checkout after sign-in
-      if (!user) {
-        window.location.href = '/signup'
-        return;
-      }
-      const res = await fetch('/api/billing/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'premium',
-          period,
-          userId: user.id,
-          userEmail: user.email
-        })
-      })
-      const j = await res.json().catch(() => ({}))
-      if (res.ok && j?.url) {
-        window.location.href = j.url
-      } else {
-        setError(String(j?.error || 'Unable to start checkout. Please try again.'))
-        setLoading(false)
-      }
-    } catch {
-      setError('Unable to start checkout. Please try again.')
-      setLoading(false)
-    }
-  }
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-10 w-[94%] sm:w-full max-w-[420px] sm:max-w-[480px] rounded-xl bg-white p-4 sm:p-6 shadow-lg border border-gray-200 max-h-[88vh] overflow-y-auto">
-        <h3 className="text-lg sm:text-2xl font-semibold text-center mb-2 text-gray-900">Stop guessing. Start knowing.</h3>
-        {spendDisplay ? (
-          <p className="text-sm text-gray-800 text-center">
-            You&apos;re spending <span className="font-semibold">{spendDisplay}</span> on supplements. How many are actually working?
-          </p>
-        ) : (
-          <p className="text-sm text-gray-800 text-center">
-            Track and evaluate your supplements with clear evidence.
-          </p>
-        )}
-        <ul className="mt-3 sm:mt-4 text-gray-800 text-sm space-y-1.5 list-disc list-inside">
-          <li>Verdicts for every supplement — Keep, Drop, or Test</li>
-          <li>Effect sizes — <span className="italic">“12% better sleep on Magnesium”</span></li>
-          <li>Confidence levels so you know what&apos;s real</li>
-          <li>Potential savings identified automatically</li>
-        </ul>
-        <div className="mt-2 sm:mt-3 text-sm text-gray-700">
-          Most users find 2–3 supplements to drop. That&apos;s $50–150/month back in your pocket.
-        </div>
-        <div className="mt-4 sm:mt-5 space-y-2.5">
-          <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
-            <div className="flex items-center gap-3">
-              <input
-                type="radio"
-                name="plan"
-                className="h-4 w-4"
-                checked={period === 'yearly'}
-                onChange={() => setPeriod('yearly')}
-              />
-              <div>
-                <div className="text-sm sm:text-base font-medium text-gray-900">$149/year</div>
-                <div className="text-xs text-gray-600">$12.42/mo • Billed annually</div>
-              </div>
-            </div>
-            <span className="text-[10px] sm:text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">Recommended</span>
-          </label>
-          <label className="flex items-center justify-between border rounded-lg p-2.5 cursor-pointer hover:bg-gray-50">
-            <div className="flex items-center gap-3">
-              <input
-                type="radio"
-                name="plan"
-                className="h-4 w-4"
-                checked={period === 'monthly'}
-                onChange={() => setPeriod('monthly')}
-              />
-              <div>
-                <div className="text-sm sm:text-base font-medium text-gray-900">$19/month</div>
-                <div className="text-xs text-gray-600">Cancel anytime</div>
-              </div>
-            </div>
-          </label>
-        </div>
-        <button
-          onClick={() => { try { console.log('CHECKOUT BUTTON CLICKED') } catch {} ; startCheckout() }}
-          disabled={loading}
-          className="w-full h-10 sm:h-12 mt-4 sm:mt-5 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:opacity-90 flex items-center justify-center"
-        >
-          {loading ? 'Redirecting…' : 'Continue to checkout'}
-        </button>
-        {error ? <div className="mt-2 text-xs sm:text-sm text-red-600">{error}</div> : null}
-        <button onClick={onClose} className="w-full h-9 sm:h-10 mt-2 rounded-lg border border-gray-300 text-sm text-gray-800 hover:bg-gray-50">
-          Maybe later
-        </button>
-        <div className="mt-3 text-[11px] text-center text-gray-600">
-          Payments handled by Stripe. You&apos;ll be redirected to a secure checkout page.
-        </div>
-      </div>
-    </div>
-  )
-}
+// (shared PaywallModal imported and rendered above)
 
 function VerdictModal({ row, onClose, onRetest }: { row: any; onClose: () => void; onRetest: () => void }) {
   const name = String(row?.name || 'Supplement')

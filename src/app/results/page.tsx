@@ -782,7 +782,7 @@ export default function ResultsPage() {
                             {statusIcon}
                           </span>
                           {(!paid && isCompleted) ? (
-                            <a href="/upgrade/pro" className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); try { window.dispatchEvent(new Event('open:upgrade')) } catch {}; setShowUpgradeModal(true) }} className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
                           ) : (
                             <span className="text-[#4B5563]">{statusLabel}</span>
                           )}
