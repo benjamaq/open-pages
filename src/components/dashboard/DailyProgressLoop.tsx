@@ -281,7 +281,8 @@ export function DailyProgressLoop() {
               const testing = Number(counts.testing || 0)
               const verdicts = Number(counts.verdicts || 0)
               if (isMember) {
-                return `• ${testing} testing`
+                const complete = Number((s.clearSignal || []).length + (s.noSignal || []).length)
+                return `• ${testing} testing • ${complete} complete`
               } else {
                 return `• ${testing} testing • ${verdicts} verdict${verdicts === 1 ? '' : 's'}`
               }
