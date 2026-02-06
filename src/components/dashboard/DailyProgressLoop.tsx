@@ -716,7 +716,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
             Signal strength: 100% <span className="mx-2">•</span>
             Days tracked: <span className="font-medium">{row.daysOfData}</span>
-            {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+            <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
           </div>
           {!isMember && (
             <>
@@ -756,13 +756,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       {hasNoData ? (
         <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
           Days tracked: <span className="font-medium">0</span>
-          {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+          <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
         </div>
       ) : (
       <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
         Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
           Days tracked: <span className="font-medium">{row.daysOfData}</span>
-          {row.monthlyCost && row.monthlyCost > 0 ? <><span className="mx-2">•</span>${Math.round(row.monthlyCost)}/mo</> : null}
+          <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
         </div>
       )}
       {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isBuilding && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
@@ -771,7 +771,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </>
       ) : (
         <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-          {row.monthlyCost && row.monthlyCost > 0 ? <>${Math.round(row.monthlyCost)}/mo</> : <>&nbsp;</>}
+          ${Math.round(Number(row.monthlyCost || 0))}/mo
         </div>
       )}
       {!hasNoData && (isBuilding || isVerdictReady || isInconclusive) && (daysOn + daysOff) > 0 && !( !isMember && isCompleted ) && (

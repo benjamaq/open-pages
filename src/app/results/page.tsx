@@ -695,14 +695,7 @@ export default function ResultsPage() {
                 <div className="section-header">Your Active Stack</div>
                 <div className="section-subtitle">
                   {(() => {
-                    // Prefer server sections for accurate counts (implicit verdicts included)
-                    const secs = loopSections as any
-                    if (secs && typeof secs === 'object') {
-                      const testing = (secs.needsData?.length || 0) + (secs.building?.length || 0)
-                      const completed = (secs.clearSignal?.length || 0) + (secs.noSignal?.length || 0)
-                      return `${testing} testing • ${completed} complete`
-                    }
-                    // Fallback to derived uiRows if sections not available yet
+                    // Count only active (non-archived) items to match visible tiles
                     const active = uiRows.filter(u => {
                       const s = supps.find(x => x.id === u.id) as any
                       const isActive = (s as any)?.is_active !== false

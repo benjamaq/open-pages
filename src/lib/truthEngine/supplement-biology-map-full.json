@@ -68,6 +68,11 @@
     "short_name": "Iodine",
     "positive": "Iodine is essential for thyroid hormone (T3/T4) synthesis, which drives metabolic rate, thermogenesis, and sleep–wake regulation. A positive response may reflect correction of suboptimal iodine status and improved thyroid hormone availability.",
     "negative": "Iodine fuels thyroid hormone production. Lack of benefit may indicate adequate baseline intake—or, rarely, sensitivity to increased iodine. If symptoms persist or worsen, consider checking thyroid function and discussing dose with your clinician."
+  },
+  "folate": {
+    "short_name": "Folate",
+    "sleep_quality": "Folate (vitamin B9) supports methylation cycles critical for neurotransmitter synthesis, including serotonin and melatonin. Adequate folate status supports healthy sleep architecture and duration.",
+    "default": "Folate is essential for DNA synthesis, methylation, and homocysteine metabolism. It plays a key role in neurotransmitter production and cellular repair."
   }
 }
 

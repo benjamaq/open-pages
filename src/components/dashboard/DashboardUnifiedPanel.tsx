@@ -611,10 +611,18 @@ export function DashboardUnifiedPanel() {
                   </>
                 ) : (
                   <>
-                    {/* Take count */}
-                    <div className="font-medium">
-                      Take as normal: {Array.isArray(progress.rotation.action?.take) ? progress.rotation.action.take.length : 0} {Array.isArray(progress.rotation.action?.take) && progress.rotation.action.take.length === 1 ? 'supplement' : 'supplements'}
-                    </div>
+                    {/* Take count: hide when all completed */}
+                    {(() => {
+                      const readyCt = Number(progress?.sections?.clearSignal?.length || 0) + Number(progress?.sections?.noSignal?.length || 0)
+                      const testingCt = Number(progress?.sections?.building?.length || 0) + Number(progress?.sections?.needsData?.length || 0)
+                      if (readyCt > 0 && testingCt === 0) return null
+                      const cnt = Array.isArray(progress.rotation.action?.take) ? progress.rotation.action.take.length : 0
+                      return (
+                        <div className="font-medium">
+                          Take as normal: {cnt} {cnt === 1 ? 'supplement' : 'supplements'}
+                        </div>
+                      )
+                    })()}
                     {/* Skip list */}
                     {(() => {
                       // Only show "Scheduled OFF" in active rotation phase, or when API reports actual OFF taken today.
@@ -802,9 +810,11 @@ export function DashboardUnifiedPanel() {
             <Progress value={isMember ? displayedProgressPercent : Math.min(displayedProgressPercent, 90)} className="h-2 w-full" />
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            {Number(wearableStatus?.wearable_days_imported || 0) > 0
-              ? 'Based on imported wearable data — check-ins will increase confidence.'
-              : (wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.')}
+            {displayedProgressPercent >= 100
+              ? 'Analysis complete.'
+              : (Number(wearableStatus?.wearable_days_imported || 0) > 0
+                  ? 'Based on imported wearable data — check-ins will increase confidence.'
+                  : (wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.'))}
           </div>
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
@@ -916,8 +926,12 @@ export function DashboardUnifiedPanel() {
                 ...(sec.building || []),
               ]
               const sumYearAll = (rows: any[]) => rows.reduce((acc, s) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
-              const effY = sumYearAll((sec.clearSignal || []).filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works'))
-              const awaitingY = sumYearAll([...(sec.building || []), ...((sec.needsData || []))])
+              const effRows = (sec.clearSignal || []).filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works')
+              try { console.log('[economics:effective rows]', effRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost }))) } catch {}
+              const effY = sumYearAll(effRows)
+              const awaitingRows = [...(sec.building || []), ...((sec.needsData || []))]
+              try { console.log('[economics:awaiting rows]', awaitingRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost }))) } catch {}
+              const awaitingY = sumYearAll(awaitingRows)
               // Always show "effective" and "awaiting clarity" — this speaks to the value prop
               return (
                 <div className="text-sm text-gray-800 mb-2">
