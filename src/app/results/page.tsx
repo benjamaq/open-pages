@@ -769,7 +769,11 @@ export default function ResultsPage() {
                           <span className="mr-1" style={{ color: (r.lifecycle==='Active' ? '#C65A2E' : r.lifecycle==='Working' ? '#22C55E' : r.lifecycle==='Not working' ? '#EF4444' : '#6B7280') }}>
                             {statusIcon}
                           </span>
-                          <span className="text-[#4B5563]">{statusLabel}</span>
+                          {(!paid && isCompleted) ? (
+                            <a href="/checkout" className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
+                          ) : (
+                            <span className="text-[#4B5563]">{statusLabel}</span>
+                          )}
                         </div>
                       </div>
                       <div className="mt-2">
@@ -850,7 +854,7 @@ export default function ResultsPage() {
                         ) : (
                           <>
                             {(!paid && isCompleted) ? (
-                              <div className="text-[#6B7280]">Result available — upgrade to view</div>
+                              <a href="/checkout" className="text-[#6B7280] underline cursor-pointer">Result available — upgrade to view</a>
                             ) : (
                               <>
                                 <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
