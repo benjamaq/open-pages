@@ -84,6 +84,18 @@ export default function ResultsPage() {
   const [editDraft, setEditDraft] = useState<{ id: string; dose: string; timing: string; brand: string; frequency: string; monthly?: string }>({ id: '', dose: '', timing: '', brand: '', frequency: '', monthly: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  // Listen for global upgrade trigger
+  useEffect(() => {
+    const handler = () => setShowUpgradeModal(true)
+    if (typeof window !== 'undefined') window.addEventListener('open:upgrade', handler as any)
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('open:upgrade', handler as any) }
+  }, [])
+  const openUpgrade = (e?: any) => {
+    try { if (e && typeof e.preventDefault === 'function') e.preventDefault() } catch {}
+    try { window.dispatchEvent(new Event('open:upgrade')) } catch {}
+    setShowUpgradeModal(true)
+  }
 
   // Mount diagnostic
   useEffect(() => {
@@ -854,7 +866,7 @@ export default function ResultsPage() {
                         ) : (
                           <>
                             {(!paid && isCompleted) ? (
-                              <a href="/upgrade/pro" className="text-emerald-600 underline cursor-pointer">Unlock result →</a>
+                              <a href="#" onClick={openUpgrade} className="text-emerald-600 underline cursor-pointer">Unlock result →</a>
                             ) : (
                               <>
                                 <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
@@ -1600,6 +1612,8 @@ export default function ResultsPage() {
           </div>
         </div>
       )}
+      {/* Upgrade modal (shared with Dashboard) */}
+      <PaywallModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} defaultPeriod="yearly" />
     </div>
   )
 }

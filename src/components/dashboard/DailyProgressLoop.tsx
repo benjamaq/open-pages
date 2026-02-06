@@ -507,7 +507,17 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   // Treat as building only if not completed and progress < 100
   const isBuilding = !isCompleted && (row.progressPercent < 100)
   const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive && !hasFinalVerdict
-  const upgradeHref = '/upgrade/pro'
+  // Global upgrade trigger: allow other parts of the app (nav, My Stack) to open the same modal
+  useEffect(() => {
+    const handler = () => setShowUpgradeModal(true)
+    if (typeof window !== 'undefined') window.addEventListener('open:upgrade', handler as any)
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('open:upgrade', handler as any) }
+  }, [])
+  const openUpgrade = (e?: any) => {
+    try { if (e && typeof e.preventDefault === 'function') e.preventDefault() } catch {}
+    try { window.dispatchEvent(new Event('open:upgrade')) } catch {}
+    setShowUpgradeModal(true)
+  }
   const gated = (!isMember && isCompleted)
 
   // Status badge: render strictly from API-provided effectCategory or verdict
@@ -652,11 +662,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       id={`supp-${row.id}`}
       className={`rounded-lg border border-gray-200 bg-white p-3 sm:p-4 overflow-hidden ${gated ? 'cursor-pointer' : ''}`}
       style={isVerdictReady ? ({ borderLeft: '2px solid rgba(217,119,6,0.5)' } as any) : undefined}
-      onClick={() => { if (gated) window.location.href = upgradeHref }}
+      onClick={() => { if (gated) openUpgrade() }}
       role={gated ? 'button' : undefined}
       aria-label={gated ? 'Upgrade to view verdict' : undefined}
       tabIndex={gated ? 0 : -1}
-      onKeyDown={(e) => { if (gated && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); window.location.href = upgradeHref } }}
+      onKeyDown={(e) => { if (gated && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openUpgrade() } }}
     >
       <div style={muted ? { opacity: 0.7 } : undefined}>
       <div className="flex items-start justify-between">
@@ -668,9 +678,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
             if (gated) {
               return (
-                <a href={upgradeHref} className={`${baseChipClass} ${displayBadge.cls || ''} cursor-pointer`} title="Upgrade to view verdict">
+                <button onClick={openUpgrade} className={`${baseChipClass} ${displayBadge.cls || ''} cursor-pointer`} title="Upgrade to view verdict">
                   {displayBadge.label}
-                </a>
+                </button>
               )
             }
             return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>

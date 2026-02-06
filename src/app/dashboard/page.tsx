@@ -81,7 +81,7 @@ export default async function DashboardPage() {
             <a href="/dashboard" className="hover:underline">Dashboard</a>
             <a href="/results" className="hover:underline">My Stack</a>
             <a href="/settings" className="hover:underline">Settings</a>
-            <a href="/checkout" className="hover:underline">Upgrade</a>
+            <UpgradeButton compact />
           </nav>
         </div>
       </header>
