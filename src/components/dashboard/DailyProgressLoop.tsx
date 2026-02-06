@@ -507,7 +507,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   // Treat as building only if not completed and progress < 100
   const isBuilding = !isCompleted && (row.progressPercent < 100)
   const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive && !hasFinalVerdict
-  const upgradeHref = '/checkout'
+  const upgradeHref = '/upgrade/pro'
   const gated = (!isMember && isCompleted)
 
   // Status badge: render strictly from API-provided effectCategory or verdict

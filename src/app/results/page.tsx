@@ -770,7 +770,7 @@ export default function ResultsPage() {
                             {statusIcon}
                           </span>
                           {(!paid && isCompleted) ? (
-                            <a href="/checkout" className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
+                            <a href="/upgrade/pro" className="text-[#4B5563] underline cursor-pointer">Verdict ready</a>
                           ) : (
                             <span className="text-[#4B5563]">{statusLabel}</span>
                           )}
@@ -854,7 +854,7 @@ export default function ResultsPage() {
                         ) : (
                           <>
                             {(!paid && isCompleted) ? (
-                              <a href="/checkout" className="text-[#6B7280] underline cursor-pointer">Result available — upgrade to view</a>
+                              <a href="/upgrade/pro" className="text-emerald-600 underline cursor-pointer">Unlock result →</a>
                             ) : (
                               <>
                                 <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
