@@ -12,6 +12,10 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const decision = decisionFor(report)
   const dynamic = generateReportCopy(report)
   const [downloading, setDownloading] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  function showToast(msg: string) {
+    try { setToast(msg); setTimeout(() => setToast(null), 2000) } catch {}
+  }
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const supName = String(
     (report as any)?.supplementName ||
@@ -57,7 +61,13 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
       // PDF-specific spacing adjustments
       try {
         const badge = clone.querySelector('[data-status-badge="1"]') as HTMLElement | null
-        if (badge) { badge.style.marginTop = '20px' }
+        if (badge) {
+          badge.style.marginTop = '20px'
+          badge.style.display = 'inline-flex'
+          badge.style.alignItems = 'center'
+          badge.style.lineHeight = '1.15'
+          badge.style.padding = '7px 10px'
+        }
         const banner = clone.querySelector('[data-implicit-banner="1"]') as HTMLElement | null
         if (banner) {
           banner.style.display = 'flex'
@@ -78,32 +88,43 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   async function handleShareSummary() {
     try { console.log('[REPORT-FOOTER] Share summary clicked') } catch {}
     const url = typeof window !== 'undefined' ? window.location.href : ''
-    const title = supName ? `${supName} — BioStackr Truth Report` : 'BioStackr Truth Report'
-    const text = [
-      `${title}`,
-      `Verdict: ${String(report.verdictLabel || '').toUpperCase()}`,
-      `Primary metric: ${String(report.primaryMetricLabel || '—')}`,
-      dynamic?.effectSummary ? `Summary: ${dynamic.effectSummary}` : '',
+    const subject = supName ? `${supName} — BioStackr Truth Report` : 'BioStackr Truth Report'
+    const verdictText = (() => {
+      const status = String((report as any)?.status || '').toLowerCase()
+      const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
+      if (isImplicitSrc) return 'OBSERVED SIGNAL'
+      if (status === 'proven_positive') return 'KEEP'
+      if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') return 'DROP'
+      return String((report as any)?.verdictLabel || 'Observed signal').toUpperCase()
+    })()
+    const body = [
+      `${supName || 'This supplement'} — Truth Report`,
+      '',
+      `Verdict: ${verdictText}`,
+      `Metric: ${String(report?.primaryMetricLabel || '—')}`,
+      dynamic?.effectSummary ? `Effect: ${dynamic.effectSummary}` : '',
+      '',
       dynamic?.nextSteps ? `Next: ${dynamic.nextSteps}` : '',
-      url ? `Link: ${url}` : ''
+      '',
+      url ? `View full report: ${url}` : ''
     ].filter(Boolean).join('\n')
     try {
       if (navigator.share) {
-        await navigator.share({ title, text, url })
+        await navigator.share({ title: subject, text: body, url })
         return
       }
     } catch {}
+    // Try email composer
     try {
-      await navigator.clipboard.writeText(text)
-      alert('Summary copied to clipboard.')
-    } catch {
-      // Final fallback: open a small window with the text to let the user copy
+      const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+      window.location.href = mailto
+      return
+    } catch {}
+    // Clipboard fallback with toast
+    try { await navigator.clipboard.writeText(`${subject}\n\n${body}`); showToast('Summary copied to clipboard') }
+    catch {
       const w = window.open('', '_blank', 'width=720,height=480')
-      if (w) {
-        w.document.write(`<pre style="white-space:pre-wrap;word-break:break-word;font:14px system-ui;padding:16px;margin:0">${text.replace(/</g,'&lt;')}</pre>`)
-      } else {
-        alert(text)
-      }
+      if (w) { w.document.write(`<pre style="white-space:pre-wrap;word-break:break-word;font:14px system-ui;padding:16px;margin:0">${(subject+'\n\n'+body).replace(/</g,'&lt;')}</pre>`)}
     }
   }
 
@@ -253,10 +274,21 @@ that kind of benefit.`}
           </div>
         </footer>
       </div>
+      {toast && <Toast message={toast} />}
     </div>
   )
 }
 
+// Lightweight toast
+function Toast({ message }: { message: string }) {
+  return (
+    <div className="fixed bottom-4 right-4 z-[9999]">
+      <div className="px-3 py-2 rounded-md bg-slate-800/95 text-slate-100 text-xs border border-slate-700 shadow">
+        {message}
+      </div>
+    </div>
+  )
+}
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-5 shadow-sm">
