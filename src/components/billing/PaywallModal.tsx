@@ -69,11 +69,16 @@ export default function PaywallModal({
         <p className="mt-2 text-sm text-gray-600 text-center">See which supplements are actually working for you.</p>
 
         <div className="mt-5 space-y-3">
-          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+          <label
+            htmlFor="plan-yearly"
+            onClick={() => setPeriod('yearly')}
+            className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50"
+          >
             <div className="flex items-center gap-3">
               <input
                 type="radio"
-                name="plan"
+                name="plan-group"
+                id="plan-yearly"
                 className="h-4 w-4"
                 checked={period === 'yearly'}
                 onChange={() => setPeriod('yearly')}
@@ -85,11 +90,16 @@ export default function PaywallModal({
             </div>
             <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded">Recommended</span>
           </label>
-          <label className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+          <label
+            htmlFor="plan-monthly"
+            onClick={() => setPeriod('monthly')}
+            className="flex items-center justify-between border rounded-lg p-3 cursor-pointer hover:bg-gray-50"
+          >
             <div className="flex items-center gap-3">
               <input
                 type="radio"
-                name="plan"
+                name="plan-group"
+                id="plan-monthly"
                 className="h-4 w-4"
                 checked={period === 'monthly'}
                 onChange={() => setPeriod('monthly')}
