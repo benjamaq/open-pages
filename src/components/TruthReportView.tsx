@@ -54,6 +54,17 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
       wrapper.style.boxSizing = 'border-box'
       wrapper.style.width = '100%'
       wrapper.style.color = '#E5E7EB'
+      // PDF-specific spacing adjustments
+      try {
+        const badge = clone.querySelector('[data-status-badge="1"]') as HTMLElement | null
+        if (badge) { badge.style.marginTop = '20px' }
+        const banner = clone.querySelector('[data-implicit-banner="1"]') as HTMLElement | null
+        if (banner) {
+          banner.style.display = 'flex'
+          banner.style.alignItems = 'center'
+          banner.style.minHeight = '96px'
+        }
+      } catch {}
       wrapper.appendChild(clone)
       await html2pdf().set(opt).from(wrapper).save()
     } catch (e) {
@@ -100,7 +111,11 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     <div className="min-h-screen bg-[#0B0D13] text-slate-100">
       <div ref={reportRef} className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {isImplicit && (
-          <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-200 leading-snug">
+          <div
+            data-implicit-banner="1"
+            className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-200 leading-snug flex flex-col justify-center"
+            style={{ minHeight: 88 }}
+          >
             <div className="space-y-1">
               <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
               <div className="text-indigo-200/90">Daily check-ins will sharpen this into a confirmed verdict.</div>
@@ -111,7 +126,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           {supName && (
             <h1 className="text-3xl md:text-[32px] font-semibold leading-tight mb-2">{supName}</h1>
           )}
-          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border mt-2 ${statusColor.badge}`}>
+          <div data-status-badge="1" className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border mt-2 ${statusColor.badge}`}>
             {report.verdictLabel}
           </div>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
