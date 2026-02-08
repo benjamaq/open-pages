@@ -159,7 +159,9 @@ export default function OnboardingPage() {
         const payload = { 
           name: details.name,
           monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
-          primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : []
+          primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
+          ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),
+          ...(details.isActive === false && details.stoppedAt ? { endDate: String(details.stoppedAt).slice(0, 10) } : {})
         }
         // eslint-disable-next-line no-console
         console.log('POSTING (onboarding):', payload)
@@ -177,8 +179,9 @@ export default function OnboardingPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  startDate: details.startedAt,
-                  endDate: details.isActive === false && details.stoppedAt ? details.stoppedAt : null
+                  // API expects snake_case keys
+                  start_date: String(details.startedAt).slice(0, 10),
+                  end_date: details.isActive === false && details.stoppedAt ? String(details.stoppedAt).slice(0, 10) : null
                 })
               })
             } catch {}
