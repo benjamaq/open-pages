@@ -340,6 +340,18 @@ export async function GET(request: Request) {
       }
     }
 
+    // Compute total wearable days across all time to gate implicit behavior/UI
+    let wearableCountAll = 0
+    try {
+      const { count: wc } = await supabase
+        .from('daily_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+      wearableCountAll = wc || 0
+    } catch {}
+    const meetsWearableThreshold = wearableCountAll >= 30
+
     // Use max of sources to avoid undercounting
     const totalDistinctDaysFromCheckins = distinctCheckinDays.size
     const totalDistinctDays = Math.max(totalDistinctDaysFromEntries, cleanDatesSet.size, totalDistinctDaysFromCheckins)
@@ -972,15 +984,16 @@ export async function GET(request: Request) {
         const truthImplicit = uidForTruth ? implicitTruthBySupp.get(String(uidForTruth)) : undefined
         const truthRec = (truthImplicit as any) || (uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined)
         let analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
-        // Implicit sanity: a supplement can only be implicit if it has an inferred_start_at.
-        // If there is no inferred_start_at on the user_supplement record, force explicit — regardless of sample counts.
+        // Implicit sanity: a supplement can only be implicit if it has an inferred_start_at
+        // AND the user has substantial wearable history (>=30 days).
+        // Otherwise, force explicit — regardless of sample counts.
         try {
           const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
           const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
-          if (analysisSrc === 'implicit' && !inferred) {
+          if (analysisSrc === 'implicit' && (!inferred || !meetsWearableThreshold)) {
             analysisSrc = 'explicit'
             ;(r as any).analysisSource = 'explicit'
-            try { console.log('[IMPLICIT-SANITY]', { name, inferred_start_at: inferred, forced: 'explicit (no inferred_start_at)' }) } catch {}
+            try { console.log('[IMPLICIT-SANITY]', { name, inferred_start_at: inferred, wearableDaysAll: wearableCountAll, forced: 'explicit (insufficient conditions)' }) } catch {}
           }
         } catch {}
         const isImplicit = analysisSrc === 'implicit'

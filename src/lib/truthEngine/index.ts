@@ -191,17 +191,29 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   } catch {}
 
   // Load daily_entries per path:
-  // - If inferred start exists, FORCE implicit path to classify historical days relative to inferredStart
+  // - Implicit path ONLY when inferred_start_at exists AND substantial wearable data exists (>=30 days)
   // - Else if explicit intake exists, use explicit path
   // - Else, load ALL history (paginated) for implicit ON/OFF by inferredStart
   const hasInferredStart = !!(typeof inferredStartGlobal === 'string' && inferredStartGlobal)
-  const pathImplicit = hasInferredStart ? true : !hasExplicitIntake
+  // Count total wearable days for this user to decide if implicit analysis is viable
+  let wearableCountAll = 0
+  try {
+    const { count: wc } = await supabase
+      .from('daily_entries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .not('wearables', 'is', null)
+    wearableCountAll = wc || 0
+  } catch {}
+  const meetsWearableThreshold = wearableCountAll >= 30
+  const pathImplicit = (hasInferredStart && meetsWearableThreshold) ? true : !hasExplicitIntake
   console.log('[truth-engine][path-decision]', {
     userSupplementId,
     inferredStartAt: (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null,
     hasExplicitIntake,
     pathChosen: pathImplicit ? 'implicit' : 'explicit',
-    forced: hasInferredStart ? 'implicit due to inferred_start_at' : undefined,
+    forced: (hasInferredStart && meetsWearableThreshold) ? 'implicit due to inferred_start_at + wearable>=30' : undefined,
+    wearableDaysAll: wearableCountAll,
     candidateKeys: Array.from(candidateIntakeKeys)
   })
   let dailyRows: any[] = []

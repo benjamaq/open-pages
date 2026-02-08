@@ -812,7 +812,7 @@ export function DashboardUnifiedPanel() {
           <div className="mt-2 text-xs text-gray-500">
             {displayedProgressPercent >= 100
               ? 'Analysis complete.'
-              : (Number(wearableStatus?.wearable_days_imported || 0) > 0
+              : (Number(wearableStatus?.wearable_days_imported || 0) >= 30
                   ? 'Based on imported wearable data — check-ins will increase confidence.'
                   : (wearableDays > 0 ? 'Enhanced signal • Wearables + check-ins' : 'Based on clean days collected across your supplements.'))}
           </div>
@@ -820,7 +820,7 @@ export function DashboardUnifiedPanel() {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Days tracked</span>
               <span className="font-medium">
-                {wearableStatus?.wearable_connected
+                {Number(wearableStatus?.wearable_days_imported || 0) >= 30
                   ? Math.max(
                       Number(wearableStatus?.wearable_days_imported || 0),
                       Number(
@@ -831,7 +831,7 @@ export function DashboardUnifiedPanel() {
                   : streak}
               </span>
             </div>
-            {wearableStatus?.wearable_connected && (
+            {Number(wearableStatus?.wearable_days_imported || 0) >= 30 && (
               <>
                 <div className="flex items-center justify-between text-sm pl-4">
                   <span className="text-gray-500">└─ from wearables</span>
@@ -1004,10 +1004,10 @@ export function DashboardUnifiedPanel() {
         <div className="flex items-center gap-2 mb-2">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500">YOUR BASELINE</div>
           <div className="text-[11px] text-gray-600 border border-gray-300 rounded-full px-2 py-0.5"> 
-            {wearableStatus?.wearable_connected ? 'Enhanced' : 'Basic'}
+            {Number(wearableStatus?.wearable_days_imported || 0) >= 30 ? 'Enhanced' : 'Basic'}
           </div>
         </div>
-        {wearableStatus?.wearable_connected ? (
+        {Number(wearableStatus?.wearable_days_imported || 0) >= 30 ? (
           <>
             <div className="text-sm text-gray-800">
               Head start: <span className="font-medium">{Number(wearableStatus?.wearable_days_imported || 0)}</span> {Number(wearableStatus?.wearable_days_imported || 0) === 1 ? 'usable day' : 'usable days'} imported
