@@ -66,7 +66,7 @@ export default function PaywallModal({
 
   if (!open) return null
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => { try { console.log('[PAYWALL] overlay close') } catch {} ; onClose() }}>
       <div className="absolute inset-0 bg-black/50" />
       <div
         className="relative z-10 w-full max-w-[560px] rounded-xl bg-white p-6 sm:p-8 shadow-lg border border-gray-200"
@@ -129,6 +129,14 @@ export default function PaywallModal({
         {error ? <div className="mt-3 text-xs text-rose-600 text-center">{error}</div> : null}
         <div className="mt-4 text-xs text-gray-600 text-center">
           Payments by Stripe. You can cancel anytime.
+        </div>
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => { try { console.log('[PAYWALL] cancel/back clicked') } catch {} ; onClose() }}
+            className="text-xs text-gray-700 underline"
+          >
+            Back
+          </button>
         </div>
       </div>
     </div>

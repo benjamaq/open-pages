@@ -735,7 +735,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               )}
               <div className="mt-3">
                 <button
-                  onClick={openUpgrade}
+                  onClick={(e) => { try { console.log('[UNLOCK] clicked (completed)', String((row as any)?.name || '')) } catch {} ; openUpgrade(e) }}
                   className="ml-auto block text-sm font-medium px-3 py-1.5 rounded-md border transition-colors cursor-pointer hover:bg-[#8B5E3C]/5"
                   style={{ color: '#8B5E3C', borderColor: '#8B5E3C', backgroundColor: 'transparent' }}
                   onMouseDown={(e) => { /* prevent card handlers */ e.stopPropagation() }}
@@ -822,7 +822,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         )}
         {(!isImplicit && isVerdictReady && !isMember) && (
           <button
-            onClick={openUpgrade}
+            onClick={(e) => { try { console.log('[UNLOCK] clicked (ready)', String((row as any)?.name || '')) } catch {} ; openUpgrade(e) }}
             className="text-[11px] px-3 py-1.5 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
           >
             Unlock Verdict →
