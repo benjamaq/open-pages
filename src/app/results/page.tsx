@@ -789,7 +789,17 @@ export default function ResultsPage() {
                             <span />
                           </div>
                         ) : null}
-                        <div className="text-[16px] font-semibold text-[#111] break-words" title={r.name}>{r.name}</div>
+                        {(() => {
+                          const s0 = supps.find(x => x.id === r.id) as any
+                          const fallbackName = String((s0?.name) || (loopById[r.id] as any)?.name || r.name || '')
+                          const { shortName } = parseBrandAndShortName({ ...s0, name: fallbackName })
+                          const display = shortName && shortName.length > 0 ? shortName : r.name
+                          return (
+                            <div className="text-[16px] font-semibold text-[#111] line-clamp-2" title={r.name}>
+                              {display}
+                            </div>
+                          )
+                        })()}
                         {(() => {
                           const nameLc = String(r.name || '').toLowerCase().trim()
                           const brandLc = String(brand || '').toLowerCase().trim()
@@ -853,9 +863,14 @@ export default function ResultsPage() {
                           if (daysOnStack === 0) {
                             return 'Started today'
                           }
-                          const since = startDate
-                            ? `Since ${startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                            : 'Since today'
+                          const since = (() => {
+                            if (!startDate) return 'Since today'
+                            const now = new Date()
+                            const msDiff = Math.abs(now.getTime() - startDate.getTime())
+                            const includeYear = msDiff > 365 * 24 * 60 * 60 * 1000 || now.getFullYear() !== startDate.getFullYear()
+                            const opts: Intl.DateTimeFormatOptions = includeYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' }
+                            return `Since ${startDate.toLocaleDateString(undefined, opts)}`
+                          })()
                           const daysText = `Taking for ${daysOnStack} day${daysOnStack===1?'':'s'}`
                           return `${since} • ${daysText}`
                         })()}

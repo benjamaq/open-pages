@@ -465,10 +465,9 @@ export function DashboardUnifiedPanel() {
       cost = Math.max(0, Math.min(10000, Number(cost || 0)))
       monthlyTotal += cost
       const tags: string[] = Array.isArray((s as any).primary_goal_tags) && (s as any).primary_goal_tags.length > 0 ? (s as any).primary_goal_tags as string[] : ['uncategorised']
-      const perTag = cost / Math.max(1, tags.length)
-      for (const key of tags.map((t: string) => normalizeKey(t))) {
-        acc[key] = (acc[key] || 0) + perTag
-      }
+      // Map each supplement to exactly ONE category: choose the first declared tag (normalized)
+      const primaryKey = normalizeKey(tags[0] || 'uncategorised')
+      acc[primaryKey] = (acc[primaryKey] || 0) + cost
     }
     const yearly = Math.round(monthlyTotal * 12)
     const labelMap: Record<string, string> = Object.fromEntries(
