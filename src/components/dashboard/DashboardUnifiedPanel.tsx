@@ -509,6 +509,16 @@ export function DashboardUnifiedPanel() {
         'segments:', segments.slice(0, 5))
     } catch {}
     // Effective/waste/testing (used for members only)
+    try {
+      console.log('[STACK-ECON-FIELDS]', (supps || []).map((i: any) => ({
+        name: String(i?.name || ''),
+        effectCategory: (i as any)?.effectCategory,
+        verdict: (i as any)?.verdict,
+        status: (i as any)?.status,
+        truthStatus: (i as any)?.truthStatus,
+        keys: Object.keys(i || {})
+      })))
+    } catch {}
     // Split the SAME header item list into effective vs awaiting using fields on the items themselves
     let effMonthlyFromHeader = 0
     let awaitingMonthlyFromHeader = 0
