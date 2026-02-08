@@ -147,7 +147,11 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           {supName && (
             <h1 className="text-3xl md:text-[32px] font-semibold leading-tight mb-2">{supName}</h1>
           )}
-          <div data-status-badge="1" className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border mt-2 ${statusColor.badge}`}>
+          <div
+            data-status-badge="1"
+            className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide border mt-2"
+            style={statusColor.style}
+          >
             {report.verdictLabel}
           </div>
           <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
@@ -359,10 +363,17 @@ function CurveChip({ effectSize, avgEffect, userPercentile }: { effectSize: numb
 }
 
 function colorForStatus(status: string) {
-  if (status === 'proven_positive') return { badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/40' }
-  if (status === 'negative') return { badge: 'bg-rose-500/10 text-rose-300 border-rose-500/40' }
-  if (status === 'confounded') return { badge: 'bg-amber-500/10 text-amber-300 border-amber-500/40' }
-  return { badge: 'bg-slate-600/10 text-slate-300 border-slate-600/40' }
+  // Return inline styles to ensure consistent brand palette
+  if (status === 'proven_positive') {
+    return { style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
+  }
+  if (status === 'negative' || status === 'no_effect') {
+    return { style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
+  }
+  if (status === 'no_detectable_effect' || status === 'confounded') {
+    return { style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
+  }
+  return { style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
 }
 
 function generateReportCopy(report: any): { effectSummary: string; biologyText: string; nextSteps: string } {

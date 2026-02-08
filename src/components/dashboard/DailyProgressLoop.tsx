@@ -531,17 +531,23 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       : '')
     // Mask final verdicts for free users until upgrade
     if (!isMember && ['works','no_effect','no_detectable_effect'].includes(mappedCat)) {
-      return { label: '🔒 Verdict ready', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+      return { label: '🔒 Verdict ready', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
     }
     if (mappedCat === 'works') {
-      return { label: '✓ KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
+      // Warm sand KEEP
+      return { label: '✓ KEEP', style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
     }
-    if (mappedCat === 'no_effect' || mappedCat === 'no_detectable_effect') {
-      return { label: '✗ DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
+    if (mappedCat === 'no_effect') {
+      // Warm rose DROP
+      return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
     }
-    if (mappedCat === 'inconsistent') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    if (mappedCat === 'no_detectable_effect') {
+      // Warm amber NO CLEAR SIGNAL
+      return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
+    }
+    if (mappedCat === 'inconsistent') return { label: '◐ TESTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
     // "too_early" maps to needs_more_data; in Testing section, prefer a neutral testing badge over a verdict-like badge
-    if (mappedCat === 'needs_more_data') return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+    if (mappedCat === 'needs_more_data') return { label: '◐ TESTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
     // If API didn’t provide a verdict/category, decide between building vs error
     const reqOn = Number((row as any).requiredOnDays ?? row.requiredDays ?? 14)
     const reqOff = Number((row as any).requiredOffDays ?? Math.min(5, Math.max(3, Math.round((row.requiredDays ?? 14) / 4))))
@@ -549,7 +555,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     const off = Number((row as any).daysOffClean ?? (row as any).daysOff ?? 0)
     const isReady = on >= reqOn && off >= reqOff
     if (!isReady) return { label: '◐ TESTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
-    return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
+    return { label: 'Error: missing verdict', style: { backgroundColor: '#FDE2E2', color: '#7F1D1D', border: '1px solid #FECACA' } as React.CSSProperties }
   })()
   const displayBadge = hasNoData ? { label: '◐ STARTING', cls: 'bg-gray-100 text-gray-800 border border-gray-200' } : badge
   const effectLine = (() => {
@@ -679,10 +685,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {
-            const baseChipClass = 'inline-flex items-center justify-center h-6 min-w-[64px] px-2 text-[10px] rounded whitespace-nowrap'
+            const baseChipClass = 'inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold uppercase tracking-wide rounded-full whitespace-nowrap'
             // For free users with completed verdict, no badge on this row (label shown above)
             if (gated) return null
-            return <span className={`${baseChipClass} ${displayBadge.cls || ''}`}>{displayBadge.label}</span>
+            return <span className={baseChipClass} style={(displayBadge as any).style || undefined}>{displayBadge.label}</span>
           })()}
           {testingActive ? (
             <div className="text-[11px] font-medium text-gray-700">{`${progressForDisplay}%`}</div>
