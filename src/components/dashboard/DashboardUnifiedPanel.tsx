@@ -918,12 +918,12 @@ export function DashboardUnifiedPanel() {
             {(() => {
               // Recompute economics based on verdicts and readiness
               const sec = progress?.sections || { clearSignal: [], noSignal: [], building: [], needsData: [], inconsistent: [] }
-              const suppList: any[] = Array.isArray((progress as any)?.supplements) ? (progress as any)?.supplements as any[] : []
+              const suppList: any[] = Array.isArray(supps) ? (supps as any[]) : []
               const activeIdSet = new Set<string>()
               try {
                 for (const s of suppList) {
                   const id = String((s as any)?.id ?? (s as any)?.userSuppId ?? (s as any)?.user_supplement_id ?? (s as any)?.name ?? '')
-                  const isInactive = (s as any)?.is_active === false || (s as any)?.archived === true || String((s as any)?.status || '').toLowerCase() === 'archived'
+                  const isInactive = (s as any)?.is_active === false
                   if (id && !isInactive) activeIdSet.add(id)
                 }
               } catch {}
