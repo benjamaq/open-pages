@@ -415,7 +415,7 @@ export function DashboardUnifiedPanel() {
   }
 
   // Economics donut + spend
-  const { chartData, totalYearly, effYear, wasteYear, testYear } = useMemo(() => {
+  const { chartData, totalYearly, econEffectiveYear, econAwaitingYear } = useMemo(() => {
     // Build spend segments; prefer progress/loop monthlyCost when supplement lacks monthly_cost_usd
     type Acc = Record<string, number>
     const acc: Acc = {}
@@ -510,29 +510,31 @@ export function DashboardUnifiedPanel() {
         'segments:', segments.slice(0, 5))
     } catch {}
     // Effective/waste/testing (used for members only)
-    let effMonthly = 0, wasteMonthly = 0, testMonthly = 0
+    // Split the SAME header item list into effective vs awaiting using fields on the items themselves
+    let effMonthlyFromHeader = 0
+    let awaitingMonthlyFromHeader = 0
     for (const s of supps) {
       const id = String((s as any)?.id || '')
-      const nameLc = String(s.name || '').toLowerCase()
+      const nameLc = String((s as any)?.name || '').toLowerCase()
       const supCost = Number((s as any)?.monthly_cost_usd ?? 0)
       let m = Number.isFinite(supCost) && supCost > 0 ? supCost
               : (costById.get(id) && costById.get(id)! > 0 ? costById.get(id)!
                  : (costByName.get(nameLc) && costByName.get(nameLc)! > 0 ? costByName.get(nameLc)! : 0))
       m = Math.max(0, Math.min(10000, Number(m || 0)))
-      const eff = (effects as any)[id]
-      const cat = eff?.effect_category as string | undefined
-      if (cat === 'works') effMonthly += m
-      else if (cat === 'no_effect') wasteMonthly += m
-      else testMonthly += m
+      const catLower = String((s as any)?.effectCategory || '').toLowerCase()
+      const verdictLower = String((s as any)?.verdict || '').toLowerCase()
+      const testingStatus = String((s as any)?.testing_status || (s as any)?.status || '').toLowerCase()
+      const isEffective = (catLower === 'works') || (verdictLower === 'keep') || (testingStatus === 'completed' && catLower === 'works')
+      if (isEffective) effMonthlyFromHeader += m
+      else awaitingMonthlyFromHeader += m
     }
     return {
       chartData: segments,
       totalYearly: yearly,
-      effYear: Math.round(effMonthly * 12),
-      wasteYear: Math.round(wasteMonthly * 12),
-      testYear: Math.round(testMonthly * 12),
+      econEffectiveYear: Math.round(effMonthlyFromHeader * 12),
+      econAwaitingYear: Math.round(awaitingMonthlyFromHeader * 12),
     }
-  }, [supps, effects, progress])
+  }, [supps, progress])
 
   // While loading, avoid flashing the empty-state card
   if (!suppsLoaded) {
@@ -916,9 +918,9 @@ export function DashboardUnifiedPanel() {
           {/* Summary */}
           <div className="pt-4 border-t border-gray-100">
             <div className="text-sm text-gray-800 mb-2">
-              <span className="font-medium">${(effYear || 0).toLocaleString()}/yr</span> effective
+              <span className="font-medium">${(econEffectiveYear || 0).toLocaleString()}/yr</span> effective
               {' • '}
-              <span className="text-gray-600">${(testYear || 0).toLocaleString()}/yr</span> awaiting clarity
+              <span className="text-gray-600">${(econAwaitingYear || 0).toLocaleString()}/yr</span> awaiting clarity
             </div>
             <a href="/results" className="text-sm hover:underline" style={{ color: '#6A3F2B' }}>
               View My Stack →
