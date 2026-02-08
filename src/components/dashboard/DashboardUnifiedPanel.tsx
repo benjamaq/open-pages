@@ -431,12 +431,24 @@ export function DashboardUnifiedPanel() {
     ]
     const costById = new Map<string, number>()
     const costByName = new Map<string, number>()
+    const loopById = new Map<string, any>()
+    const loopByName = new Map<string, any>()
     for (const r of loopRows) {
       const id = String((r as any)?.id || '')
       const nm = String((r as any)?.name || '')
       const mc = Number((r as any)?.monthlyCost ?? 0)
       if (id) costById.set(id, mc)
       if (nm) costByName.set(nm.toLowerCase(), mc)
+      if (id) {
+        loopById.set(id, r)
+      }
+      const usid = String((r as any)?.userSuppId || (r as any)?.user_supplement_id || '')
+      if (usid) {
+        loopById.set(usid, r)
+      }
+      if (nm) {
+        loopByName.set(nm.toLowerCase(), r)
+      }
     }
     const normalizeKey = (k: string): string => {
       const x = String(k || '').toLowerCase()
@@ -519,7 +531,8 @@ export function DashboardUnifiedPanel() {
         keys: Object.keys(i || {})
       })))
     } catch {}
-    // Split the SAME header item list into effective vs awaiting using fields on the items themselves
+    // Split the SAME header item list into effective vs awaiting
+    // by enriching each header item with verdict/effectCategory from loop rows (by id or name)
     let effMonthlyFromHeader = 0
     let awaitingMonthlyFromHeader = 0
     for (const s of supps) {
@@ -530,10 +543,10 @@ export function DashboardUnifiedPanel() {
               : (costById.get(id) && costById.get(id)! > 0 ? costById.get(id)!
                  : (costByName.get(nameLc) && costByName.get(nameLc)! > 0 ? costByName.get(nameLc)! : 0))
       m = Math.max(0, Math.min(10000, Number(m || 0)))
-      const catLower = String((s as any)?.effectCategory || '').toLowerCase()
-      const verdictLower = String((s as any)?.verdict || '').toLowerCase()
-      const testingStatus = String((s as any)?.testing_status || (s as any)?.status || '').toLowerCase()
-      const isEffective = (catLower === 'works') || (verdictLower === 'keep') || (testingStatus === 'completed' && catLower === 'works')
+      const loop = (loopById.get(id)) || (loopByName.get(nameLc))
+      const catLower = String((loop as any)?.effectCategory || '').toLowerCase()
+      const verdictLower = String((loop as any)?.verdict || '').toLowerCase()
+      const isEffective = (catLower === 'works') || (verdictLower === 'keep')
       if (isEffective) effMonthlyFromHeader += m
       else awaitingMonthlyFromHeader += m
     }
