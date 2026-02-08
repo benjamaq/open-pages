@@ -915,84 +915,11 @@ export function DashboardUnifiedPanel() {
           </div>
           {/* Summary */}
           <div className="pt-4 border-t border-gray-100">
-            {(() => {
-              // Recompute economics based on verdicts and readiness
-              const sec = progress?.sections || { clearSignal: [], noSignal: [], building: [], needsData: [], inconsistent: [] }
-              const suppList: any[] = Array.isArray(supps) ? (supps as any[]) : []
-              const activeIdSet = new Set<string>()
-              try {
-                for (const s of suppList) {
-                  const id = String((s as any)?.id ?? (s as any)?.userSuppId ?? (s as any)?.user_supplement_id ?? (s as any)?.name ?? '')
-                  const isInactive = (s as any)?.is_active === false
-                  if (id && !isInactive) activeIdSet.add(id)
-                }
-              } catch {}
-              const all: any[] = [
-                ...(sec.clearSignal || []),
-                ...(sec.noSignal || []),
-                ...(sec.inconsistent || []),
-                ...(sec.needsData || []),
-                ...(sec.building || []),
-              ]
-              const sumYearAll = (rows: any[]) => rows.reduce((acc, s) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
-              const excludeArchived = (s: any) => {
-                const life = String((s as any)?.lifecycle || (s as any)?.status || '').toLowerCase()
-                const inactive = (s as any)?.is_active === false || (s as any)?.isActive === false || (s as any)?.archived === true
-                return life !== 'archived' && !inactive
-              }
-              const entering = (sec.clearSignal || [])
-                .filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works')
-              try {
-                console.log('[STACK-ECON-DEBUG] All items entering effective calc:')
-                entering.forEach((item: any) => {
-                  const name = String(item?.name || '')
-                  const cost = Number(item?.monthlyCost ?? 0)
-                  const archived = Boolean(item?.archived)
-                  const benched = String(item?.status || '').toLowerCase() === 'archived'
-                  const paused = (item as any)?.is_active === false
-                  const status = String(item?.status || '')
-                  const effectCat = String(item?.effectCategory || '')
-                  const idStr = String((item as any)?.id ?? (item as any)?.userSuppId ?? (item as any)?.user_supplement_id ?? name)
-                  console.log(`  name=${name} cost=${cost} archived=${archived} benched=${benched} paused=${paused} status=${status} effectCat=${effectCat} id=${idStr}`)
-                })
-              } catch {}
-              // Filter to active ids when available, else fall back to local excludeArchived guard
-              let effRows = entering
-              if (activeIdSet.size > 0) {
-                effRows = effRows.filter((r: any) => {
-                  const idStr = String((r as any)?.id ?? (r as any)?.userSuppId ?? (r as any)?.user_supplement_id ?? (r as any)?.name ?? '')
-                  return idStr && activeIdSet.has(idStr)
-                })
-              } else {
-                effRows = effRows.filter(excludeArchived)
-              }
-              try {
-                console.log('[STACK-ECON] effective items:', effRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
-              } catch {}
-              const effY = sumYearAll(effRows)
-              let awaitingRows = [...(sec.building || []), ...((sec.needsData || []))]
-              if (activeIdSet.size > 0) {
-                awaitingRows = awaitingRows.filter((r: any) => {
-                  const idStr = String((r as any)?.id ?? (r as any)?.userSuppId ?? (r as any)?.user_supplement_id ?? (r as any)?.name ?? '')
-                  return idStr && activeIdSet.has(idStr)
-                })
-              } else {
-                awaitingRows = awaitingRows.filter(excludeArchived)
-              }
-              try {
-                console.log('[STACK-ECON] awaiting items:', awaitingRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
-                console.log('[STACK-ECON] effective sum:', effY)
-              } catch {}
-              const awaitingY = sumYearAll(awaitingRows)
-              // Always show "effective" and "awaiting clarity" — this speaks to the value prop
-              return (
-                <div className="text-sm text-gray-800 mb-2">
-                  <span className="font-medium">${effY.toLocaleString()}/yr</span> effective
-                  {' • '}
-                  <span className="text-gray-600">${awaitingY.toLocaleString()}/yr</span> awaiting clarity
-                </div>
-              )
-            })()}
+            <div className="text-sm text-gray-800 mb-2">
+              <span className="font-medium">${(effYear || 0).toLocaleString()}/yr</span> effective
+              {' • '}
+              <span className="text-gray-600">${(testYear || 0).toLocaleString()}/yr</span> awaiting clarity
+            </div>
             <a href="/results" className="text-sm hover:underline" style={{ color: '#6A3F2B' }}>
               View My Stack →
             </a>
