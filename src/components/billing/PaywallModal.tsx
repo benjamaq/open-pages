@@ -31,11 +31,18 @@ export default function PaywallModal({
         window.location.href = '/signup'
         return
       }
+      const returnPath = (() => {
+        try {
+          const { pathname, search } = window.location
+          return `${pathname}${search || ''}`
+        } catch { return '/dashboard' }
+      })()
       const body = {
         plan: 'premium',
         period,
         userId: user.id,
-        userEmail: user.email
+        userEmail: user.email,
+        returnPath
       }
       try { console.log('[PAYWALL] POST /api/billing/create-checkout-session body:', body) } catch {}
       const res = await fetch('/api/billing/create-checkout-session', {

@@ -822,11 +822,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         )}
         {(!isImplicit && isVerdictReady && !isMember) && (
           <button
-            onClick={() => {
-              // Open upgrade modal without manipulating browser history
-              try { console.log('setShowPaywall(true) called from LINE 703') } catch {}
-              setShowPaywall(true)
-            }}
+            onClick={openUpgrade}
             className="text-[11px] px-3 py-1.5 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
           >
             Unlock Verdict →

@@ -897,21 +897,6 @@ export default function ResultsPage() {
                                     </div>
                                   )
                                 })()}
-                                {(() => {
-                                  const l = loopById[r.id]
-                                  const reqDays = Number(l?.requiredDays ?? 14)
-                                  const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
-                                  const daysOn = Number(l?.daysOnClean ?? l?.daysOn ?? 0)
-                                  const daysOff = Number(l?.daysOffClean ?? l?.daysOff ?? 0)
-                                  const onComplete = daysOn >= reqDays
-                                  const offComplete = daysOff >= reqOff
-                                  return (
-                                    <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
-                                      ON: <span className="font-medium">{onComplete ? `${daysOn} ✓` : `${daysOn} of ${reqDays}`}</span> <span className="mx-2">•</span>
-                                      OFF: <span className="font-medium">{offComplete ? `${daysOff} ✓` : `${daysOff} of ${reqOff}`}</span>
-                                    </div>
-                                  )
-                                })()}
                                 <div className="mt-3 flex justify-end">
                                   <button
                                     onClick={openUpgrade}

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[checkout] Request received')
     const body = await request.json().catch(() => ({}))
-    let { plan, period, promoCode, userId, userEmail } = body || {}
+    let { plan, period, promoCode, userId, userEmail, returnPath } = body || {}
     console.log('[checkout] Body:', body)
     console.log('[checkout] STRIPE_SECRET_KEY exists:', Boolean(process.env.STRIPE_SECRET_KEY))
 
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
     }
     console.log('[checkout] Step 5: Creating Stripe session…')
     try {
+      const safeReturnPath = (typeof returnPath === 'string' && returnPath.startsWith('/')) ? returnPath : '/dashboard'
       const session = await stripe.checkout.sessions.create({
         customer_email: userEmail,
         line_items: [
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
         ],
         mode: 'subscription',
         success_url: `${origin}/onboarding`,
-        cancel_url: `${origin}/dashboard`,
+        cancel_url: `${origin}${safeReturnPath}`,
         metadata: {
           user_id: userId,
           plan: effectivePlan,
