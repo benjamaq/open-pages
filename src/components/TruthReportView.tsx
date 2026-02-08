@@ -366,6 +366,7 @@ function colorForStatus(status: string) {
 }
 
 function generateReportCopy(report: any): { effectSummary: string; biologyText: string; nextSteps: string } {
+  try {
   const fullName = String(report?.supplementName || '').trim() || 'this supplement'
   // Determine mapping key by best match (prefer longest key that appears in the full name or short name)
   const sn = shortSupplementName(fullName)
@@ -377,6 +378,7 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   const matchedKey = keys.find(k => lcShort.includes(k)) || keys.find(k => lcFull.includes(k)) || ''
   const mapped = (bioMap as any)[matchedKey] || null
   const name = (mapped?.short_name as string) || sn
+  const nameLc = String(name || '').toLowerCase()
   const metric = String(report?.primaryMetricLabel || 'your metric')
   const d = typeof report?.effect?.effectSize === 'number' ? Number(report.effect.effectSize) : null
   const absChange = typeof report?.effect?.absoluteChange === 'number' ? Number(report.effect.absoluteChange) : null
@@ -417,7 +419,7 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   let nextSteps = ''
   const isImplicitSrc = String(report?.analysisSource || '').toLowerCase() === 'implicit'
   if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') {
-    if (nm.includes('magnesium')) {
+    if (lcFull.includes('magnesium') || nameLc.includes('magnesium')) {
       nextSteps = `Consider stopping ${name}. You could re‑test at a different dose, time of day, or form (e.g., switch from oxide to glycinate).`
     } else {
       nextSteps = `Consider stopping ${name}. You could re‑test at a different dose or time of day if you still suspect benefit.`
@@ -434,6 +436,15 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
     nextSteps = 'Your historical data shows a promising signal. Start daily check-ins to confirm this result.'
   }
   return { effectSummary, biologyText, nextSteps }
+  } catch (e) {
+    try { console.error('[TruthReportView][generateReportCopy] fell back due to error:', e) } catch {}
+    const fallback = {
+      effectSummary: 'Your data shows a measurable difference between ON and OFF days.',
+      biologyText: 'This supplement targets pathways related to your primary goals. Your observed response will help refine the biology profile as more data accumulates.',
+      nextSteps: 'Keep tracking. Consider standardizing dose and timing for clearer comparisons.'
+    }
+    return fallback
+  }
 }
 
 function shortSupplementName(full: string): string {
