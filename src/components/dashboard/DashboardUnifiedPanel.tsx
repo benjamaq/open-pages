@@ -918,6 +918,15 @@ export function DashboardUnifiedPanel() {
             {(() => {
               // Recompute economics based on verdicts and readiness
               const sec = progress?.sections || { clearSignal: [], noSignal: [], building: [], needsData: [], inconsistent: [] }
+              const suppList: any[] = Array.isArray((progress as any)?.supplements) ? (progress as any)?.supplements as any[] : []
+              const activeIdSet = new Set<string>()
+              try {
+                for (const s of suppList) {
+                  const id = String((s as any)?.id ?? (s as any)?.userSuppId ?? (s as any)?.user_supplement_id ?? (s as any)?.name ?? '')
+                  const isInactive = (s as any)?.is_active === false || (s as any)?.archived === true || String((s as any)?.status || '').toLowerCase() === 'archived'
+                  if (id && !isInactive) activeIdSet.add(id)
+                }
+              } catch {}
               const all: any[] = [
                 ...(sec.clearSignal || []),
                 ...(sec.noSignal || []),
@@ -931,14 +940,45 @@ export function DashboardUnifiedPanel() {
                 const inactive = (s as any)?.is_active === false || (s as any)?.isActive === false || (s as any)?.archived === true
                 return life !== 'archived' && !inactive
               }
-              const effRows = (sec.clearSignal || [])
+              const entering = (sec.clearSignal || [])
                 .filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works')
-                .filter(excludeArchived)
+              try {
+                console.log('[STACK-ECON-DEBUG] All items entering effective calc:')
+                entering.forEach((item: any) => {
+                  const name = String(item?.name || '')
+                  const cost = Number(item?.monthlyCost ?? 0)
+                  const archived = Boolean(item?.archived)
+                  const benched = String(item?.status || '').toLowerCase() === 'archived'
+                  const paused = (item as any)?.is_active === false
+                  const status = String(item?.status || '')
+                  const effectCat = String(item?.effectCategory || '')
+                  const idStr = String((item as any)?.id ?? (item as any)?.userSuppId ?? (item as any)?.user_supplement_id ?? name)
+                  console.log(`  name=${name} cost=${cost} archived=${archived} benched=${benched} paused=${paused} status=${status} effectCat=${effectCat} id=${idStr}`)
+                })
+              } catch {}
+              // Filter to active ids when available, else fall back to local excludeArchived guard
+              let effRows = entering
+              if (activeIdSet.size > 0) {
+                effRows = effRows.filter((r: any) => {
+                  const idStr = String((r as any)?.id ?? (r as any)?.userSuppId ?? (r as any)?.user_supplement_id ?? (r as any)?.name ?? '')
+                  return idStr && activeIdSet.has(idStr)
+                })
+              } else {
+                effRows = effRows.filter(excludeArchived)
+              }
               try {
                 console.log('[STACK-ECON] effective items:', effRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
               } catch {}
               const effY = sumYearAll(effRows)
-              const awaitingRows = [...(sec.building || []), ...((sec.needsData || []))].filter(excludeArchived)
+              let awaitingRows = [...(sec.building || []), ...((sec.needsData || []))]
+              if (activeIdSet.size > 0) {
+                awaitingRows = awaitingRows.filter((r: any) => {
+                  const idStr = String((r as any)?.id ?? (r as any)?.userSuppId ?? (r as any)?.user_supplement_id ?? (r as any)?.name ?? '')
+                  return idStr && activeIdSet.has(idStr)
+                })
+              } else {
+                awaitingRows = awaitingRows.filter(excludeArchived)
+              }
               try {
                 console.log('[STACK-ECON] awaiting items:', awaitingRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
                 console.log('[STACK-ECON] effective sum:', effY)
