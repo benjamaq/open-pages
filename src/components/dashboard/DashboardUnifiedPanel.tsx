@@ -926,11 +926,23 @@ export function DashboardUnifiedPanel() {
                 ...(sec.building || []),
               ]
               const sumYearAll = (rows: any[]) => rows.reduce((acc, s) => acc + (Math.max(0, Number(s?.monthlyCost || 0)) * 12), 0)
-              const effRows = (sec.clearSignal || []).filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works')
-              try { console.log('[economics:effective rows]', effRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost }))) } catch {}
+              const excludeArchived = (s: any) => {
+                const life = String((s as any)?.lifecycle || (s as any)?.status || '').toLowerCase()
+                const inactive = (s as any)?.is_active === false || (s as any)?.isActive === false || (s as any)?.archived === true
+                return life !== 'archived' && !inactive
+              }
+              const effRows = (sec.clearSignal || [])
+                .filter((s: any) => String((s as any).effectCategory || '').toLowerCase() === 'works')
+                .filter(excludeArchived)
+              try {
+                console.log('[STACK-ECON] effective items:', effRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
+              } catch {}
               const effY = sumYearAll(effRows)
-              const awaitingRows = [...(sec.building || []), ...((sec.needsData || []))]
-              try { console.log('[economics:awaiting rows]', awaitingRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost }))) } catch {}
+              const awaitingRows = [...(sec.building || []), ...((sec.needsData || []))].filter(excludeArchived)
+              try {
+                console.log('[STACK-ECON] awaiting items:', awaitingRows.map((r: any) => ({ name: r?.name, monthlyCost: r?.monthlyCost })))
+                console.log('[STACK-ECON] effective sum:', effY)
+              } catch {}
               const awaitingY = sumYearAll(awaitingRows)
               // Always show "effective" and "awaiting clarity" — this speaks to the value prop
               return (

@@ -71,8 +71,8 @@
   },
   "folate": {
     "short_name": "Folate",
-    "sleep_quality": "Folate (vitamin B9) supports methylation cycles critical for neurotransmitter synthesis, including serotonin and melatonin. Adequate folate status supports healthy sleep architecture and duration.",
-    "default": "Folate is essential for DNA synthesis, methylation, and homocysteine metabolism. It plays a key role in neurotransmitter production and cellular repair."
+    "positive": "Folate (vitamin B9) supports methylation cycles critical for neurotransmitter synthesis, including serotonin and melatonin. Adequate folate status supports healthy sleep architecture and duration.",
+    "negative": "Folate is essential for DNA synthesis, methylation, and homocysteine metabolism. Lack of clear benefit may reflect sufficient baseline status or dosage/timing effects; folate still plays a key role in neurotransmitter production and cellular repair."
   }
 }
 
