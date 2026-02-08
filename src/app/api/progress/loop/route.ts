@@ -137,6 +137,30 @@ export async function GET(request: Request) {
       if (iErr) {
         lastQueryError = iErr.message
       }
+      // Union in active user_supplement rows that are not represented in stack_items to avoid missing cards
+      try {
+        const haveIds = new Set<string>((items || []).map((it: any) => String((it?.user_supplement_id || ''))).filter(Boolean))
+        const { data: usActive } = await supabase
+          .from('user_supplement')
+          .select('id,name,inferred_start_at,created_at,monthly_cost_usd,is_active')
+          .eq('user_id', user.id)
+          .or('is_active.eq.true,is_active.is.null')
+        const extras = (usActive || [])
+          .filter((u: any) => !haveIds.has(String(u.id)))
+          .map((u: any) => ({
+            id: String(u.id), // treat as a row id; we will map to user_supplement_id below
+            name: u.name,
+            inferred_start_at: u.inferred_start_at || u.created_at,
+            created_at: u.created_at,
+            monthly_cost: u.monthly_cost_usd,
+            user_supplement_id: String(u.id),
+            category: null,
+          }))
+        if (extras.length > 0) {
+          items = [...(items || []), ...extras]
+          if (VERBOSE) { try { console.log('[progress/loop] unioned user_supplement extras:', extras.map((e: any) => e.id)) } catch {} }
+        }
+      } catch {}
     }
     // Fallback: some accounts only have user_supplement rows
     if (!items || items.length === 0) {
@@ -732,7 +756,30 @@ export async function GET(request: Request) {
                 science_note: fresh.scienceNote,
                 raw_context: fresh
               }
-              await supabase.from('supplement_truth_reports').insert(payloadToStore)
+              // Guard: avoid duplicate writes within 60s for same user_supplement_id
+              try {
+                const sinceIso = new Date(Date.now() - 60_000).toISOString()
+                const { data: recent } = await supabase
+                  .from('supplement_truth_reports')
+                  .select('id,created_at')
+                  .eq('user_id', user.id)
+                  .eq('user_supplement_id', uid)
+                  .gte('created_at', sinceIso)
+                  .limit(1)
+                if (recent && recent.length > 0) {
+                  if (VERBOSE) { try { console.log('[overlay-refresh] skip duplicate truth insert (recent exists)', { uid, created_at: recent[0].created_at }) } catch {} }
+                } else {
+                  await supabase.from('supplement_truth_reports').insert(payloadToStore)
+                }
+              } catch {
+                // Fallback: attempt an upsert on user_supplement_id to dedupe
+                try {
+                  // Note: onConflict requires appropriate unique constraint on the table
+                  await (supabase as any)
+                    .from('supplement_truth_reports')
+                    .upsert(payloadToStore, { onConflict: 'user_supplement_id' })
+                } catch {}
+              }
               // Seed the truth map immediately to avoid a requery race
               truthBySupp.set(String(uid), {
                 status: String(fresh.status),
