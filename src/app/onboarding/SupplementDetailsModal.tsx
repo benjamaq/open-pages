@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { HEALTH_PRIORITIES } from '@/lib/types';
 
@@ -188,6 +188,19 @@ export function SupplementDetailsModal({
     return { months, bars }
   }
 
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const setDoseSafely = (next: number) => {
+    const sc = scrollRef.current ? scrollRef.current.scrollTop : undefined
+    setDailyDose(Math.max(0, Number.isFinite(next) ? next : 0))
+    if (sc !== undefined) {
+      try {
+        requestAnimationFrame(() => {
+          if (scrollRef.current) scrollRef.current.scrollTop = sc as number
+        })
+      } catch {}
+    }
+  }
+
   return (
    <>
    <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -202,7 +215,7 @@ export function SupplementDetailsModal({
          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600">✕</button>
        </div>
 
-      <div className="space-y-6 max-h-[78vh] overflow-y-auto pr-1" tabIndex={-1} style={{ overscrollBehavior: 'contain' }}>
+      <div ref={scrollRef} className="space-y-6 max-h-[78vh] overflow-y-auto pr-1" tabIndex={-1} style={{ overscrollBehavior: 'contain' }}>
         {/* Catalog Search */}
         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Find product</div>
@@ -244,7 +257,7 @@ export function SupplementDetailsModal({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setDailyDose(Math.max(0, Number(dailyDose || 0) - 1))}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(dailyDose || 0) - 1)) }}
                   className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
                   aria-label="Decrease dose"
                 >
@@ -257,14 +270,14 @@ export function SupplementDetailsModal({
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^\d]/g, '')
                     const n = parseInt(raw, 10)
-                    if (!Number.isNaN(n)) setDailyDose(Math.max(0, n))
-                    else if (raw === '') setDailyDose(0)
+                    if (!Number.isNaN(n)) setDoseSafely(Math.max(0, n))
+                    else if (raw === '') setDoseSafely(0)
                   }}
                   className="w-24 px-3 py-2 border border-slate-300 rounded-md text-center"
                 />
                 <button
                   type="button"
-                  onClick={() => setDailyDose(Math.max(0, Number(dailyDose || 0) + 1))}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(dailyDose || 0) + 1)) }}
                   className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
                   aria-label="Increase dose"
                 >
