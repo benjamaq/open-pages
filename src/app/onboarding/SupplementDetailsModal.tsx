@@ -189,6 +189,7 @@ export function SupplementDetailsModal({
   }
 
   return (
+   <>
    <div className="fixed inset-0 z-50 flex items-center justify-center">
      <div className="absolute inset-0 bg-slate-900/60" onClick={onCancel} />
      <div className="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl">
@@ -585,17 +586,18 @@ export function SupplementDetailsModal({
        </div>
      </div>
    </div>
+   {/* Remove native number input spinners to prevent page scroll/jump on arrow clicks */}
+   <style jsx>{`
+     input[type='number']::-webkit-outer-spin-button,
+     input[type='number']::-webkit-inner-spin-button {
+       -webkit-appearance: none;
+       margin: 0;
+     }
+     input[type='number'] {
+       -moz-appearance: textfield;
+     }
+   `}</style>
+   </>
   );
 }
 
-{/* Remove native number input spinners to prevent page scroll/jump on arrow clicks */}
-<style jsx>{`
-  input[type='number']::-webkit-outer-spin-button,
-  input[type='number']::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type='number'] {
-    -moz-appearance: textfield;
-  }
-`}</style>

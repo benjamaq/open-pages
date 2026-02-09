@@ -561,8 +561,21 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   }, [])
   const gated = (!isMember && isCompleted)
 
-  // Status badge: render strictly from API-provided effectCategory or verdict
+  // Status badge: prefer resolver output (badgeKey/badgeText). Fallback to legacy mapping.
   const badge = (() => {
+    // First, resolver-driven badges
+    const fromKey = (k?: string): { label: string; style: React.CSSProperties } | null => {
+      const key = String(k || '').toLowerCase()
+      if (!key) return null
+      if (key === 'keep') return { label: '✓ KEEP', style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
+      if (key === 'drop') return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
+      if (key === 'ncs' || key === 'no_clear_signal') return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
+      if (key === 'testing') return { label: '◐ TESTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
+      if (key === 'starting') return { label: '◐ STARTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
+      return null
+    }
+    const viaResolver = fromKey(displayBadgeKey)
+    if (viaResolver) return viaResolver
     const cat = (effectCat || '').toLowerCase()
     const verdict = String((row as any).verdict || '').toLowerCase()
     const mappedCat =
