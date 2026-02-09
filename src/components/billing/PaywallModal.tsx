@@ -19,6 +19,24 @@ export default function PaywallModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Close-on-back: when modal opens, push a history state and intercept one back to close the modal
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!open) return
+    try {
+      const onPop = (ev: PopStateEvent) => {
+        try { console.log('[PAYWALL] popstate → closing modal') } catch {}
+        onClose()
+      }
+      // Push a state at same URL so a single Back closes the modal but keeps the user on the page
+      window.history.pushState({ paywall: true }, '', window.location.href)
+      window.addEventListener('popstate', onPop)
+      return () => {
+        window.removeEventListener('popstate', onPop)
+      }
+    } catch {}
+  }, [open, onClose])
+
   const startCheckout = async () => {
     try {
       setLoading(true)
