@@ -24,9 +24,11 @@ export async function GET(request: Request) {
   try {
     // Optional deep intake debug for a specific user_supplement id
     let debugSuppId: string | null = null
+    let forceNoCache = false
     try {
       const url = new URL(request.url)
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
+      forceNoCache = url.searchParams.get('nocache') === '1' || url.searchParams.get('force') === '1'
     } catch {}
     // Attach rotation selection debug in response for easier inspection
     let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
@@ -120,6 +122,29 @@ export async function GET(request: Request) {
         }
       })
     }
+
+    // Cache: serve cached dashboard if available and not invalidated (unless force bypassed)
+    try {
+      if (!forceNoCache) {
+        const { data: cached } = await supabase
+          .from('dashboard_cache')
+          .select('payload, computed_at, invalidated_at')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (cached && ( !cached.invalidated_at || new Date(cached.computed_at).getTime() > new Date(cached.invalidated_at).getTime())) {
+          if (VERBOSE) { try { console.log('[dashboard_cache] hit; computed_at=', cached.computed_at) } catch {} }
+          return new NextResponse(JSON.stringify(cached.payload), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store'
+            }
+          })
+        } else {
+          if (VERBOSE) { try { console.log('[dashboard_cache] miss or invalidated') } catch {} }
+        }
+      }
+    } catch (e) { try { console.log('[dashboard_cache] read error (ignored):', (e as any)?.message || e) } catch {} }
 
     // Active stack items (supplements)
     let queryTable = 'stack_items'
@@ -1903,7 +1928,7 @@ export async function GET(request: Request) {
     try {
       console.log('[progress-loop] supplements payload sample:', supplements.slice(0, 10))
     } catch {}
-    return new NextResponse(JSON.stringify({
+    const responsePayload = {
       debug,
       userId: user.id,
       daysTracked: totalDistinctDays,
@@ -1934,7 +1959,17 @@ export async function GET(request: Request) {
       },
       _debug: rotationDebug,
       sections: { clearSignal, noSignal: noEffect, inconsistent, building, needsData }
-    }), {
+    }
+    try {
+      await supabaseAdmin
+        .from('dashboard_cache')
+        .upsert({
+          user_id: user.id,
+          payload: responsePayload,
+          computed_at: new Date().toISOString()
+        } as any, { onConflict: 'user_id' } as any)
+    } catch (e) { try { console.log('[dashboard_cache] write error (ignored):', (e as any)?.message || e) } catch {} }
+    return new NextResponse(JSON.stringify(responsePayload), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
