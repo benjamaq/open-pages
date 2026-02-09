@@ -132,7 +132,7 @@ export async function GET(request: Request) {
           .eq('user_id', user.id)
           .maybeSingle()
         if (cached && ( !cached.invalidated_at || new Date(cached.computed_at).getTime() > new Date(cached.invalidated_at).getTime())) {
-          if (VERBOSE) { try { console.log('[dashboard_cache] hit; computed_at=', cached.computed_at) } catch {} }
+          try { console.log('CACHE HIT', { computed_at: cached.computed_at }) } catch {}
           return new NextResponse(JSON.stringify(cached.payload), {
             status: 200,
             headers: {
@@ -141,8 +141,10 @@ export async function GET(request: Request) {
             }
           })
         } else {
-          if (VERBOSE) { try { console.log('[dashboard_cache] miss or invalidated') } catch {} }
+          try { console.log('CACHE MISS') } catch {}
         }
+      } else {
+        try { console.log('CACHE BYPASS (force)') } catch {}
       }
     } catch (e) { try { console.log('[dashboard_cache] read error (ignored):', (e as any)?.message || e) } catch {} }
 
@@ -1205,20 +1207,9 @@ export async function GET(request: Request) {
           if (finalImplicitVerdict) {
             const uidForStatus = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
             const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
-            // Per-supplement timing: require at least one user check-in AFTER this supplement was added,
-            // but only enforce this stricter rule for supplements created within the last 7 days.
-            const createdIso = String(((r as any)?.createdAtIso || '')).slice(0,10)
-            const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
-            const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000
-            const createdWithin7Days = Number.isFinite(createdMs) ? (createdMs >= sevenDaysAgoMs) : false
-            let hasCheckinAfterAdd = false
-            if (createdIso) {
-              for (const d of allEntryDatesSet) { if (String(d) > createdIso) { hasCheckinAfterAdd = true; break } }
-            }
-            const expPerSuppOK = Number((r as any).explicitCleanCheckins || 0) >= 3
+            // Simplified unlock: final verdict AND total user check-ins >= 3
             const userOK = totalUserCheckins >= 3
-            const postAddOK = !createdWithin7Days || hasCheckinAfterAdd
-            const confirmUnlocked = (expPerSuppOK || userOK) && postAddOK
+            const confirmUnlocked = finalImplicitVerdict && userOK
             if (confirmUnlocked) {
               uploadProgress = 100
               sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
@@ -1463,8 +1454,9 @@ export async function GET(request: Request) {
         const cat = String((r as any).effectCategory || '').toLowerCase()
         let verdict =
           cat === 'works' ? 'keep' :
-          cat === 'no_effect' ? 'drop' :
-          cat === 'no_detectable_effect' ? 'drop' :
+          cat === 'no_effect' ? 'no_clear_signal' :
+          cat === 'no_detectable_effect' ? 'no_clear_signal' :
+          cat === 'negative' ? 'drop' :
           cat === 'inconsistent' ? 'testing' :
           cat === 'needs_more_data' ? 'testing' :
           isReady ? 'unclear' : null
@@ -1527,22 +1519,13 @@ export async function GET(request: Request) {
       })
     } catch {}
 
-    // Hold implicit-only verdicts until user has 3+ explicit check-in days (any supplement).
+    // Gate rule (simplified): For implicit supplements, LOCK unless (final verdict exists AND total user check-ins >=3).
     try {
       for (const r of progressRows as any[]) {
         const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
-        // Per-supplement timing: for newly added supplements (created within 7 days),
-        // also require at least one user check-in AFTER the supplement was added.
-        const createdIso = String(((r as any)?.createdAtIso || '')).slice(0,10)
-        const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
-        const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000
-        const createdWithin7Days = Number.isFinite(createdMs) ? (createdMs >= sevenDaysAgoMs) : false
-        let hasCheckinAfterAdd = false
-        if (createdIso) {
-          for (const d of allEntryDatesSet) { if (String(d) > createdIso) { hasCheckinAfterAdd = true; break } }
-        }
-        const extraGate = createdWithin7Days && !hasCheckinAfterAdd
-        const gateApplies = isImp && ((totalUserCheckins < 3) || extraGate)
+        const cat = String((r as any).effectCategory || '').toLowerCase()
+        const hasFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || cat === 'negative' || cat === 'proven_positive')
+        const gateApplies = isImp && !(hasFinal && totalUserCheckins >= 3)
         if (gateApplies) {
           if ((r as any).effectCategory) {
             (r as any).heldEffectCategory = (r as any).effectCategory
