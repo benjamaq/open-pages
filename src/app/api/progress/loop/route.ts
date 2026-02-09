@@ -1313,12 +1313,8 @@ export async function GET(request: Request) {
         const createdIso = String((r as any)?.createdAtIso || '').slice(0,10)
         const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
         const supplement_age_days = Number.isFinite(createdMs) ? Math.floor((Date.now() - createdMs) / (24*60*60*1000)) : 9999
-        let has_checkin_after_add = false
-        if (createdIso) {
-          for (const d of allEntryDatesSet) { if (String(d) > createdIso) { has_checkin_after_add = true; break } }
-        }
-        const is_newly_added = supplement_age_days <= 7
-        const is_gate_locked = Boolean(is_implicit && ((totalUserCheckins < 3) || (is_newly_added && !has_checkin_after_add)))
+        // Simplified gate: lock implicit unless (final verdict AND totalUserCheckins >= 3)
+        const is_gate_locked = Boolean(is_implicit && !(has_final_verdict && totalUserCheckins >= 3))
         // Section and progress per rules
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
@@ -1382,8 +1378,6 @@ export async function GET(request: Request) {
               created_at: createdIso || null,
               supplement_age_days,
               totalUserCheckins,
-              has_checkin_after_add,
-              is_newly_added,
               is_gate_locked,
               resolved: { section, progress, badgeKey: badge.key, badgeText: badge.text, showVerdict }
             })
@@ -1944,13 +1938,15 @@ export async function GET(request: Request) {
       sections: { clearSignal, noSignal: noEffect, inconsistent, building, needsData }
     }
     try {
+      const ts = new Date().toISOString()
       await supabaseAdmin
         .from('dashboard_cache')
         .upsert({
           user_id: user.id,
           payload: responsePayload,
-          computed_at: new Date().toISOString()
+          computed_at: ts
         } as any, { onConflict: 'user_id' } as any)
+      try { console.log('CACHE WRITE', { computed_at: ts, size: JSON.stringify(responsePayload).length }) } catch {}
     } catch (e) { try { console.log('[dashboard_cache] write error (ignored):', (e as any)?.message || e) } catch {} }
     return new NextResponse(JSON.stringify(responsePayload), {
       status: 200,
