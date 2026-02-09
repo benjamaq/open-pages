@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
-export async function GET(_: Request, { params }: { params: { supplementId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ supplementId: string }> }) {
   // v1 stubbed community data
-  const { supplementId } = params
+  const { supplementId } = await params
   if (!supplementId) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }

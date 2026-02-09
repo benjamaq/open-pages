@@ -4,14 +4,15 @@ import { NextResponse } from 'next/server';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
-    console.log('PATCH /api/experiments/[id]:', params.id, body);
+    const { id } = await params
+    console.log('PATCH /api/experiments/[id]:', id, body);
     
     return NextResponse.json({
-      id: params.id,
+      id,
       status: body.action === 'end' ? 'completed' : 'paused'
     });
   } catch (error) {
