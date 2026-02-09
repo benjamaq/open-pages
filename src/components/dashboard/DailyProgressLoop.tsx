@@ -574,6 +574,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       if (key === 'starting') return { label: '◐ STARTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
       return null
     }
+    try {
+      // Debug line to confirm resolver values versus legacy mapping inputs
+      // eslint-disable-next-line no-console
+      console.log('BADGE INPUT:', (row as any)?.badgeKey, display?.badgeKey, (row as any)?.verdict, (row as any)?.effectCategory)
+    } catch {}
     const viaResolver = fromKey(displayBadgeKey)
     if (viaResolver) return viaResolver
     const cat = (effectCat || '').toLowerCase()
