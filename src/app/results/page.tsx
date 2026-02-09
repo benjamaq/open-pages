@@ -232,9 +232,11 @@ export default function ResultsPage() {
         if (inClear) { catLower = 'works'; loopVerdict = 'keep' }
         else if (inNo) { catLower = 'no_effect'; loopVerdict = 'drop' }
       }
-      const verdictKeep = loopVerdict === 'keep' || catLower === 'works'
-      const verdictDrop = loopVerdict === 'drop' || catLower === 'no_effect'
-      const verdictNoDetect = catLower === 'no_detectable_effect'
+      const display = (l as any)?.display as any | undefined
+      const badgeKey = String(display?.badgeKey || '').toLowerCase()
+      const verdictKeep = badgeKey ? (badgeKey === 'keep') : (loopVerdict === 'keep' || catLower === 'works')
+      const verdictDrop = badgeKey ? (badgeKey === 'drop') : (loopVerdict === 'drop' || catLower === 'negative')
+      const verdictNoDetect = badgeKey ? (badgeKey === 'ncs') : (catLower === 'no_effect' || catLower === 'no_detectable_effect')
       // Lifecycle derived from effectCategory with correct precedence:
       // no_detectable_effect must not be overridden by a 'drop' gating verdict.
       let lifecycle: UiRow['lifecycle'] =
@@ -508,7 +510,7 @@ export default function ResultsPage() {
         return 'Keep tracking →'
       })()
       const verdictUpper: 'KEEP' | 'DROP' | 'INCONCLUSIVE' =
-        verdictKeep ? 'KEEP' : verdictDrop ? 'DROP' : 'INCONCLUSIVE'
+        verdictKeep ? 'KEEP' : verdictDrop ? 'DROP' : verdictNoDetect ? 'INCONCLUSIVE' : 'INCONCLUSIVE'
       return { id: s.id, name: s.name, verdict: verdictUpper, badge, conf, mag: null, monthly, yearly, costText, onAvg, offAvg, daysOn, daysOff, onClean, offClean, reqOn, reqOff, distance, rotationHint, contextLines, actionText }
     })
   }, [supps, effects, loopById])

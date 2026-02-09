@@ -36,9 +36,9 @@ export async function GET(request: Request) {
     if (VERBOSE) { try { console.log('[progress/loop] user:', user.id) } catch {} }
 
     // Resolve profile (auto-create minimal if missing)
-    let { data: profile, error: pErr } = await supabase
+  let { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id,tier')
       .eq('user_id', user.id)
       .maybeSingle()
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
@@ -1272,6 +1272,95 @@ export async function GET(request: Request) {
         ;(r as any).uploadProgress = uploadProgress
       }
       catch {}
+    }
+
+    // Badge mapping util per truth_status
+    const badgeFromTruth = (truthStatus?: string | null): { key: string; text: string } => {
+      const st = String(truthStatus || '').toLowerCase()
+      if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
+      if (st === 'no_effect') return { key: 'ncs', text: '○ NO CLEAR SIGNAL' }
+      if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
+      if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
+      return { key: 'starting', text: '◐ STARTING' }
+    }
+    // Resolve display state per truth table
+    const userTier: 'free' | 'pro' = (profile as any)?.tier === 'pro' ? 'pro' : 'free'
+    for (const r of progressRows as any[]) {
+      try {
+        const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
+        const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
+        const truth_status = uid ? (truthBySupp.get(String(uid))?.status || null) : null
+        const has_final_verdict = ['proven_positive','no_effect','negative'].includes(String(truth_status || '').toLowerCase())
+        // Derive implicit from inferred_start_at + wearable_days
+        const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
+        const is_implicit = Boolean(inferred) && meetsWearableThreshold
+        const createdIso = String((r as any)?.createdAtIso || '').slice(0,10)
+        const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
+        const supplement_age_days = Number.isFinite(createdMs) ? Math.floor((Date.now() - createdMs) / (24*60*60*1000)) : 9999
+        let has_checkin_after_add = false
+        if (createdIso) {
+          for (const d of allEntryDatesSet) { if (String(d) > createdIso) { has_checkin_after_add = true; break } }
+        }
+        const is_newly_added = supplement_age_days <= 7
+        const is_gate_locked = Boolean(is_implicit && ((totalDistinctDaysFromEntries < 3) || (is_newly_added && !has_checkin_after_add)))
+        // Section and progress per rules
+        let section: 'testing' | 'completed' = 'testing'
+        let progress = Number(r.progressPercent || 0)
+        let showVerdict = false
+        let badge = badgeFromTruth(truth_status)
+        let label = ''
+        let subtext = ''
+        const usingUpload = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
+        if (!is_implicit) {
+          if (!has_final_verdict) {
+            section = 'testing'
+            label = 'Actively testing'
+            subtext = 'Waiting for more data...'
+          } else {
+            section = 'completed'
+            progress = 100
+            showVerdict = (userTier === 'pro')
+          }
+        } else {
+          if (is_gate_locked) {
+            section = 'testing'
+            // ensure cap (upload formula already applied upstream)
+            progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
+            badge = { key: 'testing', text: '◐ TESTING' }
+            label = 'Signal from historical data'
+            const x = Number((r as any)?.explicitCleanCheckins || 0)
+            subtext = `Check-ins completed: ${x} of 3`
+            showVerdict = false
+          } else {
+            if (has_final_verdict) {
+              section = 'completed'
+              progress = 100
+              showVerdict = (userTier === 'pro')
+            } else {
+              section = 'testing'
+              progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
+              badge = { key: 'testing', text: '◐ TESTING' }
+              label = 'Signal from historical data'
+              subtext = 'Building toward a verdict...'
+              showVerdict = false
+            }
+          }
+        }
+        // Free-tier completed rows should show locked verdict badge text
+        if (section === 'completed' && !showVerdict) {
+          badge = { key: 'locked', text: 'Verdict ready ✓' }
+        }
+        // Persist back on row for clients to consume
+        r.progressPercent = progress
+        ;(r as any).display = {
+          section,
+          badgeKey: badge.key,
+          badgeText: badge.text,
+          label,
+          subtext,
+          showVerdict
+        }
+      } catch {}
     }
 
     // Compute progress state labels and weighted stack progress

@@ -503,6 +503,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const explicitCleanCheckins = Number((row as any)?.explicitCleanCheckins || 0)
   const confirmCheckinsRequired = Number((row as any)?.confirmCheckinsRequired || 3)
   const needsConfirm = isImplicit && (explicitCleanCheckins < confirmCheckinsRequired) && (row.progressPercent < 100)
+  const display = (row as any)?.display as any | undefined
+  const displayBadgeKey = display?.badgeKey as string | undefined
+  const displayBadgeText = display?.badgeText as string | undefined
+  const displayLabel = display?.label as string | undefined
+  const displaySubtext = display?.subtext as string | undefined
   const [showPaywall, setShowPaywall] = useState(false)
   // Testing state derivation (used across badge, controls, etc.)
   const testingActive = Boolean((row as any).testingActive)
@@ -789,7 +794,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             })()}
       </div>
       <div className="mt-1 text-[11px] text-gray-500">
-        {hasNoData ? 'Just added — start checking in' : (isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || ''))}
+        {displayLabel
+          ? displayLabel
+          : hasNoData
+            ? 'Just added — start checking in'
+            : (isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || ''))}
       </div>
       {needsConfirm && (
         <>
