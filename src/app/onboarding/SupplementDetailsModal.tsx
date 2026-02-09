@@ -241,24 +241,36 @@ export function SupplementDetailsModal({
            <div>
              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Daily dose</div>
             <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="number"
-                min={0}
-                value={dailyDose}
-                onChange={(e) => setDailyDose(Number(e.target.value))}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setDailyDose((prev) => {
-                      const base = Number.isFinite(prev) ? prev : 0
-                      return e.key === 'ArrowUp' ? base + 1 : Math.max(0, base - 1)
-                    })
-                  }
-                }}
-                onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
-                className="w-24 px-3 py-2 border border-slate-300 rounded-md"
-              />
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setDailyDose(Math.max(0, Number(dailyDose || 0) - 1))}
+                  className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+                  aria-label="Decrease dose"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={String(dailyDose ?? 0)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d]/g, '')
+                    const n = parseInt(raw, 10)
+                    if (!Number.isNaN(n)) setDailyDose(Math.max(0, n))
+                    else if (raw === '') setDailyDose(0)
+                  }}
+                  className="w-24 px-3 py-2 border border-slate-300 rounded-md text-center"
+                />
+                <button
+                  type="button"
+                  onClick={() => setDailyDose(Math.max(0, Number(dailyDose || 0) + 1))}
+                  className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+                  aria-label="Increase dose"
+                >
+                  +
+                </button>
+              </div>
               <select value={doseUnit} onChange={(e) => setDoseUnit(e.target.value)} className="w-44 px-3 py-2 border border-slate-300 rounded-md">
                 <option value="mg">mg</option>
                 <option value="g">grams</option>

@@ -1278,7 +1278,7 @@ export async function GET(request: Request) {
     const badgeFromTruth = (truthStatus?: string | null): { key: string; text: string } => {
       const st = String(truthStatus || '').toLowerCase()
       if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
-      if (st === 'no_effect') return { key: 'ncs', text: '○ NO CLEAR SIGNAL' }
+      if (st === 'no_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
       if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
@@ -1302,7 +1302,7 @@ export async function GET(request: Request) {
           for (const d of allEntryDatesSet) { if (String(d) > createdIso) { has_checkin_after_add = true; break } }
         }
         const is_newly_added = supplement_age_days <= 7
-        const is_gate_locked = Boolean(is_implicit && ((totalDistinctDaysFromEntries < 3) || (is_newly_added && !has_checkin_after_add)))
+        const is_gate_locked = Boolean(is_implicit && ((totalUserCheckins < 3) || (is_newly_added && !has_checkin_after_add)))
         // Section and progress per rules
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
@@ -1336,6 +1336,8 @@ export async function GET(request: Request) {
               section = 'completed'
               progress = 100
               showVerdict = (userTier === 'pro')
+              // Ensure badge reflects actual verdict (not testing)
+              badge = badgeFromTruth(truth_status)
             } else {
               section = 'testing'
               progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
