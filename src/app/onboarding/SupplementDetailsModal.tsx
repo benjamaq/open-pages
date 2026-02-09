@@ -578,4 +578,14 @@ export function SupplementDetailsModal({
   );
 }
 
-
+{/* Remove native number input spinners to prevent page scroll/jump on arrow clicks */}
+<style jsx>{`
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+`}</style>
