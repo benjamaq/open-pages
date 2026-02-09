@@ -876,9 +876,12 @@ export async function GET(request: Request) {
         ;(r as any).userSuppId = suppId
         const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
+        const createdAtIso: string | null = createdAtRaw ? String(createdAtRaw) : null
+        const confirmStartIso: string | null = restartIso || createdAtIso
         // Always recompute to avoid stale effect table counts
         let on = 0, off = 0
         let onClean = 0, offClean = 0
+        let explicitCleanCheckins = 0
         for (const entry of (entries365 || [])) {
           const dKey = String((entry as any).local_date).slice(0,10)
           if (restartIso && dKey < restartIso.slice(0,10)) continue
@@ -886,6 +889,7 @@ export async function GET(request: Request) {
           let isOff = false
           let isTaken = false
           let hasRecord = false
+          let hasExplicitRecord = false
           if (intake && typeof intake === 'object') {
             // Try multiple candidate keys to handle historical data keyed by stack_items.id
             const candidates = [suppId, String((r as any).id || '')].filter(Boolean)
@@ -894,6 +898,7 @@ export async function GET(request: Request) {
               const val = (intake as any)[k]
               if (val === undefined) continue
               hasRecord = true
+              hasExplicitRecord = true
               const s = String(val).toLowerCase()
               if (s === 'skipped' || s === 'off' || s === 'not_taken' || s === 'false' || s === '0') {
                 isOff = true
@@ -925,6 +930,12 @@ export async function GET(request: Request) {
               console.log('[daysOn]', { suppId, date: dKey, intake: (intake ? (intake as any)[suppId] : undefined), tags: (entry as any).tags, isClean })
             } catch {}
           }
+          // Count explicit, clean check-ins since confirm start (if defined)
+          if (hasExplicitRecord && isClean) {
+            if (!confirmStartIso || dKey >= String(confirmStartIso).slice(0,10)) {
+              explicitCleanCheckins++
+            }
+          }
           if (isOff) {
             if (isClean) { off++; offClean++ }
           } else if (isTaken) {
@@ -936,6 +947,8 @@ export async function GET(request: Request) {
         ;(r as any).daysOff = off
         ;(r as any).daysOnClean = onClean
         ;(r as any).daysOffClean = offClean
+        ;(r as any).explicitCleanCheckins = explicitCleanCheckins
+        ;(r as any).confirmCheckinsRequired = 3
         // Days tracked for this supplement = ON + OFF (any quality)
         ;(r as any).daysOfData = on + off
         if (restartIso) {
@@ -1135,7 +1148,8 @@ export async function GET(request: Request) {
                 } catch {}
                 // Mark final implicit verdicts to force 100% and completion downstream
                 finalImplicitVerdict = ['works','no_effect','no_detectable_effect'].includes(String(mapped).toLowerCase())
-                if (finalImplicitVerdict) {
+                const confirmNeeded = Number((r as any).explicitCleanCheckins || 0) < 3
+                if (finalImplicitVerdict && !confirmNeeded) {
                   ;(r as any).isReady = true
                 }
               }
@@ -1145,7 +1159,7 @@ export async function GET(request: Request) {
             }
           }
           // Promote displayProgress to 100% for implicit final verdicts
-          if (finalImplicitVerdict) {
+          if (finalImplicitVerdict && Number((r as any).explicitCleanCheckins || 0) >= 3) {
             uploadProgress = 100
             sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
             sOff = Math.max(sOff, Number((r as any).daysOffClean ?? 0))
@@ -1255,6 +1269,14 @@ export async function GET(request: Request) {
         const reqOff = Number((r as any).requiredOffDays || Math.min(5, Math.max(3, Math.round((r.requiredDays || 14) / 4))))
         const isReady = onClean >= reqOn && offClean >= reqOff
         ;(r as any).isReady = isReady
+        // If implicit and confirmatory threshold not met, do not mark ready yet
+        try {
+          const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
+          const expClean = Number((r as any)?.explicitCleanCheckins || 0)
+          if (isImp && expClean < 3) {
+            ;(r as any).isReady = false
+          }
+        } catch {}
         // Verdict mapping (if effect category present)
         const cat = String((r as any).effectCategory || '').toLowerCase()
         let verdict =
@@ -1323,6 +1345,23 @@ export async function GET(request: Request) {
       })
     } catch {}
 
+    // Hold implicit-only verdicts until 3 clean explicit check-ins: clear displayed category and cap progress at 80
+    try {
+      for (const r of progressRows as any[]) {
+        const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
+        const expClean = Number((r as any)?.explicitCleanCheckins || 0)
+        if (isImp && expClean < 3) {
+          if ((r as any).effectCategory) {
+            (r as any).heldEffectCategory = (r as any).effectCategory
+            ;(r as any).effectCategory = undefined
+          }
+          ;(r as any).isReady = false
+          if (Number(r.progressPercent || 0) > 80) {
+            r.progressPercent = 80
+          }
+        }
+      }
+    } catch {}
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'

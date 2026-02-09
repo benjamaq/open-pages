@@ -490,6 +490,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const reqOff = Math.min(5, Math.max(3, Math.round(reqDays / 4)))
   const onComplete = daysOn >= reqDays
   const offComplete = daysOff >= reqOff
+  const explicitCleanCheckins = Number((row as any)?.explicitCleanCheckins || 0)
+  const confirmCheckinsRequired = Number((row as any)?.confirmCheckinsRequired || 3)
+  const needsConfirm = isImplicit && (explicitCleanCheckins < confirmCheckinsRequired) && (row.progressPercent < 100)
   const [showPaywall, setShowPaywall] = useState(false)
   // Testing state derivation (used across badge, controls, etc.)
   const testingActive = Boolean((row as any).testingActive)
@@ -782,6 +785,16 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       <div className="mt-1 text-[11px] text-gray-500">
         {hasNoData ? 'Just added — start checking in' : (isImplicit ? 'Signal from historical data' : (String((row as any)?.progressLabel || '') || ''))}
       </div>
+      {needsConfirm && (
+        <>
+          <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+            Check‑ins completed: <span className="font-medium">{explicitCleanCheckins} of {confirmCheckinsRequired}</span>
+          </div>
+          <div className="mt-1 text-[11px] text-gray-600">
+            Your upload found a promising signal — a few more check‑ins will confirm your result.
+          </div>
+        </>
+      )}
       {hasNoData ? (
         <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
           Days tracked: <span className="font-medium">0</span>
@@ -790,9 +803,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       ) : (
       <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
         Signal strength: {isImplicit ? Math.round(progressForDisplay) : Math.round(strengthDisplay)}% <span className="mx-2">•</span>
-          Days tracked: <span className="font-medium">{row.daysOfData}</span>
-          <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
-        </div>
+        Days tracked: <span className="font-medium">{row.daysOfData}</span>
+        <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
+      </div>
       )}
       {(((headerCounts as any)?.verdicts != null) && (Number((headerCounts as any)?.testing || 0) >= 8)) && isBuilding && Number((row as any)?.daysOfData || 0) >= 14 && Number((row as any)?.progressPercent || 0) < 50 && (
         <div className="mt-1 text-xs text-gray-500">Slower due to parallel testing</div>
