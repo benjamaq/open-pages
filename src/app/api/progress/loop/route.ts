@@ -1305,7 +1305,8 @@ export async function GET(request: Request) {
       try {
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
-        const truth_status = uid ? (truthBySupp.get(String(uid))?.status || null) : null
+        const implTruth = uid ? implicitTruthBySupp.get(String(uid)) : undefined
+        const truth_status = (implTruth?.status || (uid ? truthBySupp.get(String(uid))?.status : null)) || null
         const has_final_verdict = ['proven_positive','no_effect','negative'].includes(String(truth_status || '').toLowerCase())
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
