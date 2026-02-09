@@ -1415,6 +1415,8 @@ export async function GET(request: Request) {
           if (Number(r.progressPercent || 0) > 80) {
             r.progressPercent = 80
           }
+          // Ensure client-side grouping keeps this in Testing by neutralizing verdict
+          ;(r as any).verdict = 'testing'
         }
       }
     } catch {}

@@ -572,11 +572,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       // Warm sand KEEP
       return { label: '✓ KEEP', style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
     }
-    if (mappedCat === 'no_effect') {
-      // Warm rose DROP
-      return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
-    }
-    if (mappedCat === 'no_detectable_effect') {
+    if (mappedCat === 'no_effect' || mappedCat === 'no_detectable_effect') {
       // Warm amber NO CLEAR SIGNAL
       return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
     }

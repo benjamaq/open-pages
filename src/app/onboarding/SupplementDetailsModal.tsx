@@ -201,7 +201,7 @@ export function SupplementDetailsModal({
          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600">✕</button>
        </div>
 
-      <div className="space-y-6 max-h-[78vh] overflow-y-auto pr-1" tabIndex={-1}>
+      <div className="space-y-6 max-h-[78vh] overflow-y-auto pr-1" tabIndex={-1} style={{ overscrollBehavior: 'contain' }}>
         {/* Catalog Search */}
         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Find product</div>
@@ -245,6 +245,16 @@ export function SupplementDetailsModal({
                 min={0}
                 value={dailyDose}
                 onChange={(e) => setDailyDose(Number(e.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setDailyDose((prev) => {
+                      const base = Number.isFinite(prev) ? prev : 0
+                      return e.key === 'ArrowUp' ? base + 1 : Math.max(0, base - 1)
+                    })
+                  }
+                }}
                 onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
                 className="w-24 px-3 py-2 border border-slate-300 rounded-md"
               />
