@@ -300,12 +300,22 @@ export function DailyProgressLoop() {
     <section className="space-y-8 px-3 sm:px-0">
       {/* Milestone popups */}
       {milestone85 && (
-        <Popup title={(!isMember && milestone85.percent >= 100) ? 'Your result is ready' : 'Almost ready'} body={(!isMember && milestone85.percent >= 100)
-          ? `${milestone85.name} has a result ready.\n\nUpgrade to unlock your verdict.`
-          : `${milestone85.name} is at ${milestone85.percent}% signal.\n\nJust a few more days until we can show you whether it's actually working.`} cta={(!isMember && milestone85.percent >= 100) ? 'Upgrade' : 'Can’t wait'} onClose={dismiss85} />
+        <Popup
+          title={(!isMember && milestone85.percent >= 100) ? 'Your result is ready' : 'Almost ready'}
+          body={(!isMember && milestone85.percent >= 100)
+            ? `${abbreviateSupplementName(milestone85.name)} has a result ready.\n\nUpgrade to unlock your verdict.`
+            : `${abbreviateSupplementName(milestone85.name)} is at ${milestone85.percent}% signal.\n\nJust a few more days until we can show you whether it's actually working.`}
+          cta={(!isMember && milestone85.percent >= 100) ? 'Upgrade' : 'Can’t wait'}
+          onClose={dismiss85}
+        />
       )}
       {milestone50 && (
-        <Popup title="Your results are starting to form" body={`${milestone50.name} is now at ${milestone50.percent}% signal.\n\nEach check-in brings you closer to a clear answer.`} cta="Nice" onClose={dismiss50} />
+        <Popup
+          title="Your results are starting to form"
+          body={`${abbreviateSupplementName(milestone50.name)} is now at ${milestone50.percent}% signal.\n\nEach check-in brings you closer to a clear answer.`}
+          cta="Nice"
+          onClose={dismiss50}
+        />
       )}
       {/* TODAY'S ACTION lives in the unified panel (top-left). No duplicate here. */}
       {/* Header removed; hero card now provided by <DashboardHero /> */}

@@ -364,6 +364,20 @@ export async function GET(request: Request) {
       }
     }
 
+    // Compute total user explicit check-in days (any supplement_intake present; do not exclude confounds)
+    let totalUserCheckins = 0
+    try {
+      const days = new Set<string>()
+      for (const entry of (entries365 || [])) {
+        const intake = (entry as any)?.supplement_intake
+        if (intake && typeof intake === 'object' && Object.keys(intake).length > 0) {
+          const dKey = String((entry as any).local_date || '').slice(0, 10)
+          if (dKey) days.add(dKey)
+        }
+      }
+      totalUserCheckins = days.size
+    } catch {}
+
     // Compute total wearable days across all time to gate implicit behavior/UI
     let wearableCountAll = 0
     try {
@@ -1158,11 +1172,17 @@ export async function GET(request: Request) {
               ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
             }
           }
-          // Promote displayProgress to 100% for implicit final verdicts
-          if (finalImplicitVerdict && Number((r as any).explicitCleanCheckins || 0) >= 3) {
-            uploadProgress = 100
-            sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
-            sOff = Math.max(sOff, Number((r as any).daysOffClean ?? 0))
+          // Promote display progress to 100% for implicit final verdicts when unlocked by user-level or per-supp check-ins, or DB status complete
+          if (finalImplicitVerdict) {
+            const uidForStatus = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+            const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
+            const confirmUnlocked = (Number((r as any).explicitCleanCheckins || 0) >= 3) || (totalUserCheckins >= 3) || (dbTestingStatus === 'complete')
+            if (confirmUnlocked) {
+              uploadProgress = 100
+              sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
+              sOff = Math.max(sOff, Number((r as any).daysOffClean ?? 0))
+              ;(r as any).isReady = true
+            }
           }
           // Ensure daysOfData reflects implicit clean counts when available
           try {
@@ -1269,11 +1289,12 @@ export async function GET(request: Request) {
         const reqOff = Number((r as any).requiredOffDays || Math.min(5, Math.max(3, Math.round((r.requiredDays || 14) / 4))))
         const isReady = onClean >= reqOn && offClean >= reqOff
         ;(r as any).isReady = isReady
-        // If implicit and confirmatory threshold not met, do not mark ready yet
+        // If implicit and confirmatory threshold not met at USER level (and not already completed), do not mark ready yet
         try {
           const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
-          const expClean = Number((r as any)?.explicitCleanCheckins || 0)
-          if (isImp && expClean < 3) {
+          const uidForStatus = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
+          const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
+          if (isImp && (totalUserCheckins < 3) && dbTestingStatus !== 'complete') {
             ;(r as any).isReady = false
           }
         } catch {}
@@ -1345,12 +1366,14 @@ export async function GET(request: Request) {
       })
     } catch {}
 
-    // Hold implicit-only verdicts until 3 clean explicit check-ins: clear displayed category and cap progress at 80
+    // Hold implicit-only verdicts until user has 3+ explicit check-in days (any supplement), unless DB already marked complete.
     try {
       for (const r of progressRows as any[]) {
         const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
-        const expClean = Number((r as any)?.explicitCleanCheckins || 0)
-        if (isImp && expClean < 3) {
+        const uidForStatus = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
+        const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
+        const gateApplies = isImp && (totalUserCheckins < 3) && (dbTestingStatus !== 'complete')
+        if (gateApplies) {
           if ((r as any).effectCategory) {
             (r as any).heldEffectCategory = (r as any).effectCategory
             ;(r as any).effectCategory = undefined
@@ -1362,6 +1385,8 @@ export async function GET(request: Request) {
         }
       }
     } catch {}
+    // Compute total user check-in days (any supplement_intake present; do not exclude confounds)
+    // Note: declared earlier due to use in row calculations
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'
