@@ -1172,11 +1172,15 @@ export async function GET(request: Request) {
               ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
             }
           }
-          // Promote display progress to 100% for implicit final verdicts when unlocked by user-level or per-supp check-ins, or DB status complete
+          // Promote display progress to 100% for implicit final verdicts when unlocked by user-level or per-supp check-ins.
+          // IMPORTANT: Do NOT allow DB 'complete' to override the gate when total user check-ins < 3.
           if (finalImplicitVerdict) {
             const uidForStatus = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
             const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
-            const confirmUnlocked = (Number((r as any).explicitCleanCheckins || 0) >= 3) || (totalUserCheckins >= 3) || (dbTestingStatus === 'complete')
+            const confirmUnlocked =
+              (Number((r as any).explicitCleanCheckins || 0) >= 3) ||
+              (totalUserCheckins >= 3) ||
+              false // DB 'complete' alone does not unlock under <3 total user check-ins
             if (confirmUnlocked) {
               uploadProgress = 100
               sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
@@ -1289,12 +1293,10 @@ export async function GET(request: Request) {
         const reqOff = Number((r as any).requiredOffDays || Math.min(5, Math.max(3, Math.round((r.requiredDays || 14) / 4))))
         const isReady = onClean >= reqOn && offClean >= reqOff
         ;(r as any).isReady = isReady
-        // If implicit and confirmatory threshold not met at USER level (and not already completed), do not mark ready yet
+        // If implicit and confirmatory threshold not met at USER level, do not mark ready yet
         try {
           const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
-          const uidForStatus = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
-          const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
-          if (isImp && (totalUserCheckins < 3) && dbTestingStatus !== 'complete') {
+          if (isImp && (totalUserCheckins < 3)) {
             ;(r as any).isReady = false
           }
         } catch {}
@@ -1366,13 +1368,11 @@ export async function GET(request: Request) {
       })
     } catch {}
 
-    // Hold implicit-only verdicts until user has 3+ explicit check-in days (any supplement), unless DB already marked complete.
+    // Hold implicit-only verdicts until user has 3+ explicit check-in days (any supplement).
     try {
       for (const r of progressRows as any[]) {
         const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
-        const uidForStatus = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
-        const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
-        const gateApplies = isImp && (totalUserCheckins < 3) && (dbTestingStatus !== 'complete')
+        const gateApplies = isImp && (totalUserCheckins < 3)
         if (gateApplies) {
           if ((r as any).effectCategory) {
             (r as any).heldEffectCategory = (r as any).effectCategory
