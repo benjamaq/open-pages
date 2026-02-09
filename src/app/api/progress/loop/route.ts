@@ -1305,9 +1305,9 @@ export async function GET(request: Request) {
       try {
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
-        const implTruth = uid ? implicitTruthBySupp.get(String(uid)) : undefined
-        const truth_status = (implTruth?.status || (uid ? truthBySupp.get(String(uid))?.status : null)) || null
-        const has_final_verdict = ['proven_positive','no_effect','negative'].includes(String(truth_status || '').toLowerCase())
+        // Use effectCategory which already prefers implicit truth
+        const ec = String((r as any).effectCategory || '').toLowerCase()
+        const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
         const is_implicit = Boolean(inferred) && meetsWearableThreshold
@@ -1320,7 +1320,15 @@ export async function GET(request: Request) {
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
         let showVerdict = false
-        let badge = badgeFromTruth(truth_status)
+        // Map effectCategory directly to badge when a final verdict exists
+        const ecToBadge: Record<string, { key: string; text: string }> = {
+          'works': { key: 'keep', text: '✓ KEEP' },
+          'proven_positive': { key: 'keep', text: '✓ KEEP' },
+          'no_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
+          'no_detectable_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
+          'negative': { key: 'drop', text: '✗ DROP' }
+        }
+        let badge = has_final_verdict ? (ecToBadge[ec] || { key: 'testing', text: '◐ TESTING' }) : { key: 'testing', text: '◐ TESTING' }
         let label = ''
         let subtext = ''
         const usingUpload = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
@@ -1350,7 +1358,7 @@ export async function GET(request: Request) {
               progress = 100
               showVerdict = (userTier === 'pro')
               // Ensure badge reflects actual verdict (not testing)
-              badge = badgeFromTruth(truth_status)
+              badge = ecToBadge[ec] || badge
             } else {
               section = 'testing'
               progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
