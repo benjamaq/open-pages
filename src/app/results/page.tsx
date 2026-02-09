@@ -744,6 +744,16 @@ export default function ResultsPage() {
                 const isActive = (s as any)?.is_active !== false
                 return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
               })
+              .sort((a, b) => {
+                const aComplete = a.lifecycle !== 'Active' ? 1 : 0
+                const bComplete = b.lifecycle !== 'Active' ? 1 : 0
+                if (aComplete !== bComplete) return aComplete - bComplete
+                const aSup: any = supps.find(x => x.id === a.id) || {}
+                const bSup: any = supps.find(x => x.id === b.id) || {}
+                const aTs = Date.parse(aSup.started_at || aSup.created_at || 0)
+                const bTs = Date.parse(bSup.started_at || bSup.created_at || 0)
+                return (bTs || 0) - (aTs || 0)
+              })
               .filter(r => !categoryFilter || getCategoryFor(r.id) === categoryFilter)
               .map(r => {
                 const s = supps.find(x => x.id === r.id) as any
@@ -908,10 +918,27 @@ export default function ResultsPage() {
                                 </div>
                               </>
                             ) : (
-                              <>
-                                <div className={r.effectText?.includes('-') ? 'text-[#991B1B]' : (r.effectText ? 'text-[#166534]' : 'text-[#6B7280]')}>{r.effectText || 'No measurable change'}</div>
-                                {r.confidenceText && <div className="text-[#6B7280]">{r.confidenceText}</div>}
-                              </>
+                              (() => {
+                                const label =
+                                  r.lifecycle === 'Working' ? '✓ KEEP'
+                                  : (r.lifecycle === 'Not working' || r.lifecycle === 'No clear effect') ? 'NO CLEAR SIGNAL'
+                                  : null
+                                if (!label) return <div className="text-[#6B7280]">No measurable change</div>
+                                const cls =
+                                  label === '✓ KEEP'
+                                    ? 'inline-block text-[11px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wide'
+                                    : 'inline-block text-[11px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wide'
+                                const style =
+                                  label === '✓ KEEP'
+                                    ? { backgroundColor: '#E8DFD0', color: '#5C4A32', borderColor: '#D4C8B5' }
+                                    : { backgroundColor: '#EDE9E3', color: '#6B5A1E', borderColor: '#D9C88A' }
+                                return (
+                                  <div className="flex items-center gap-2">
+                                    <span className={cls} style={style as any}>{label}</span>
+                                    {r.confidenceText ? <span className="text-[#6B7280] text-[12px]">{r.confidenceText}</span> : null}
+                                  </div>
+                                )
+                              })()
                             )}
                           </>
                         )}

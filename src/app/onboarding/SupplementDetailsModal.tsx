@@ -240,7 +240,14 @@ export function SupplementDetailsModal({
            <div>
              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Daily dose</div>
             <div className="flex flex-wrap items-center gap-2">
-              <input type="number" min={0} value={dailyDose} onChange={(e) => setDailyDose(Number(e.target.value))} className="w-24 px-3 py-2 border border-slate-300 rounded-md" />
+              <input
+                type="number"
+                min={0}
+                value={dailyDose}
+                onChange={(e) => setDailyDose(Number(e.target.value))}
+                onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
+                className="w-24 px-3 py-2 border border-slate-300 rounded-md"
+              />
               <select value={doseUnit} onChange={(e) => setDoseUnit(e.target.value)} className="w-44 px-3 py-2 border border-slate-300 rounded-md">
                 <option value="mg">mg</option>
                 <option value="g">grams</option>
@@ -358,7 +365,14 @@ export function SupplementDetailsModal({
            <div className="grid grid-cols-2 gap-3">
              <label className="text-xs text-slate-700">
                When did you start?
-               <input type="date" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
+              <input
+                type="date"
+                value={startedAt}
+                onChange={(e) => setStartedAt(e.target.value)}
+                max={new Date().toISOString().slice(0,10)}
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md"
+              />
+              <div className="mt-1 text-[11px] text-slate-500">Tip: scroll to pick earlier years.</div>
              </label>
              <div className="text-xs text-slate-700">
                Are you still taking it?
@@ -385,17 +399,24 @@ export function SupplementDetailsModal({
                <>
                  <label className="text-xs text-slate-700">
                    Stopped on
-                   <input
-                     type="date"
-                     value={stoppedAt}
-                     onChange={(e) => setStoppedAt(e.target.value)}
-                     className={`mt-1 w-full px-3 py-2 border rounded-md ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
-                     required
-                   />
+                  <input
+                    type="date"
+                    value={stoppedAt}
+                    onChange={(e) => setStoppedAt(e.target.value)}
+                    max={new Date().toISOString().slice(0,10)}
+                    className={`mt-1 w-full px-3 py-2 border rounded-md ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
+                    required
+                  />
                  </label>
                  <label className="text-xs text-slate-700">
                    Restarted later? (optional)
-                   <input type="date" value={restartedAt} onChange={(e) => setRestartedAt(e.target.value)} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
+                  <input
+                    type="date"
+                    value={restartedAt}
+                    onChange={(e) => setRestartedAt(e.target.value)}
+                    max={new Date().toISOString().slice(0,10)}
+                    className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md"
+                  />
                  </label>
                </>
              )}
@@ -410,14 +431,14 @@ export function SupplementDetailsModal({
                  <div key={i} className="grid grid-cols-2 gap-2 items-end">
                    <label className="text-xs text-slate-700">
                      Started
-                     <input type="date" value={p.startedAt} onChange={(e) => {
+                     <input type="date" value={p.startedAt} max={new Date().toISOString().slice(0,10)} onChange={(e) => {
                        const next = [...intakePeriods]; next[i] = { ...next[i], startedAt: e.target.value }; setIntakePeriods(next)
                      }} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
                    </label>
                    <div className="flex items-end gap-2">
                      <label className="flex-1 text-xs text-slate-700">
                        Stopped
-                       <input type="date" value={p.stoppedAt} onChange={(e) => {
+                       <input type="date" value={p.stoppedAt} max={new Date().toISOString().slice(0,10)} onChange={(e) => {
                          const next = [...intakePeriods]; next[i] = { ...next[i], stoppedAt: e.target.value }; setIntakePeriods(next)
                        }} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
                      </label>
@@ -454,25 +475,27 @@ export function SupplementDetailsModal({
           <div className="grid grid-cols-2 gap-3">
              <div>
                <div className="text-xs text-slate-500 mb-1">Container price</div>
-                <input
+                 <input
                   type="number"
                   inputMode="decimal"
                   step="any"
                   min={0}
                   value={pricePerContainerInput}
                   onChange={(e) => setPricePerContainerInput(e.target.value)}
+                  onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md"
                 />
              </div>
              <div>
                <div className="text-xs text-slate-500 mb-1">Servings per container</div>
-                <input
+               <input
                   type="number"
                   inputMode="numeric"
                   step="1"
                   min={1}
                   value={servingsPerContainerInput}
                   onChange={(e) => setServingsPerContainerInput(e.target.value)}
+                  onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md"
                 />
              </div>
@@ -487,6 +510,7 @@ export function SupplementDetailsModal({
                 min={0}
                 value={servingsPerDayInput}
                 onChange={(e) => setServingsPerDayInput(e.target.value)}
+                onWheel={(e) => { try { (e.currentTarget as HTMLInputElement).blur() } catch {} }}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md"
               />
             </div>
