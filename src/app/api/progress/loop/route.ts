@@ -1294,7 +1294,7 @@ export async function GET(request: Request) {
     const badgeFromTruth = (truthStatus?: string | null): { key: string; text: string } => {
       const st = String(truthStatus || '').toLowerCase()
       if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
-      if (st === 'no_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
+      if (st === 'no_effect' || st === 'no_detectable_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
       if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
