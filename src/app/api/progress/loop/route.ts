@@ -1352,6 +1352,27 @@ export async function GET(request: Request) {
         if (section === 'completed' && !showVerdict) {
           badge = { key: 'locked', text: 'Verdict ready ✓' }
         }
+        // Debug logs for Danny cases
+        try {
+          if (String(r.name || '').toLowerCase().includes('doctor\'s best') ||
+              String(r.name || '').toLowerCase().includes('collagenup') ||
+              String(r.name || '').toLowerCase().includes('multivitamin')) {
+            console.log('[DISPLAY-STATE]', {
+              id: r.id,
+              name: r.name,
+              analysis_source,
+              truth_status,
+              is_implicit,
+              created_at: createdIso || null,
+              supplement_age_days,
+              totalUserCheckins,
+              has_checkin_after_add,
+              is_newly_added,
+              is_gate_locked,
+              resolved: { section, progress, badgeKey: badge.key, badgeText: badge.text, showVerdict }
+            })
+          }
+        } catch {}
         // Persist back on row for clients to consume
         r.progressPercent = progress
         ;(r as any).display = {
