@@ -519,6 +519,28 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     try { window.dispatchEvent(new Event('open:upgrade')) } catch {}
     setShowPaywall(true)
   }
+  // Fallback: capture clicks on any element marked data-upgrade to open modal even if wrappers intercept
+  useEffect(() => {
+    const handler = (ev: MouseEvent) => {
+      const target = ev.target as HTMLElement | null
+      const upgradeEl = target ? (target.closest('[data-upgrade="1"]') as HTMLElement | null) : null
+      if (upgradeEl) {
+        try { console.log('[UNLOCK] document-level handler fired') } catch {}
+        ev.preventDefault()
+        ev.stopPropagation()
+        openUpgrade(ev)
+      }
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', handler, true) // capture phase
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('click', handler, true)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const gated = (!isMember && isCompleted)
 
   // Status badge: render strictly from API-provided effectCategory or verdict
@@ -735,6 +757,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
               )}
               <div className="mt-3">
                 <button
+                  data-upgrade="1"
                   onClick={(e) => { try { console.log('[UNLOCK] clicked (completed)', String((row as any)?.name || '')) } catch {} ; openUpgrade(e) }}
                   className="ml-auto block text-sm font-medium px-3 py-1.5 rounded-md border transition-colors cursor-pointer hover:bg-[#8B5E3C]/5"
                   style={{ color: '#8B5E3C', borderColor: '#8B5E3C', backgroundColor: 'transparent' }}
@@ -822,6 +845,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         )}
         {(!isImplicit && isVerdictReady && !isMember) && (
           <button
+            data-upgrade="1"
             onClick={(e) => { try { console.log('[UNLOCK] clicked (ready)', String((row as any)?.name || '')) } catch {} ; openUpgrade(e) }}
             className="text-[11px] px-3 py-1.5 rounded border border-gray-300 text-gray-800 hover:bg-gray-50"
           >
