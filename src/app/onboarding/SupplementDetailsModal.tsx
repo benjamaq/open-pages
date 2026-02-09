@@ -189,9 +189,13 @@ export function SupplementDetailsModal({
   }
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const doseInputRef = useRef<HTMLInputElement>(null)
+  const doseValueRef = useRef<number>(dailyDose)
   const setDoseSafely = (next: number) => {
     const sc = scrollRef.current ? scrollRef.current.scrollTop : undefined
-    setDailyDose(Math.max(0, Number.isFinite(next) ? next : 0))
+    const v = Math.max(0, Number.isFinite(next) ? next : 0)
+    doseValueRef.current = v
+    try { if (doseInputRef.current) doseInputRef.current.value = String(v) } catch {}
     if (sc !== undefined) {
       try {
         requestAnimationFrame(() => {
@@ -199,6 +203,16 @@ export function SupplementDetailsModal({
         })
       } catch {}
     }
+  }
+  const handleDoseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^\d]/g, '')
+    const n = parseInt(raw || '0', 10)
+    doseValueRef.current = Number.isNaN(n) ? 0 : Math.max(0, n)
+    try { if (doseInputRef.current) doseInputRef.current.value = String(doseValueRef.current) } catch {}
+  }
+  const handleDoseBlur = () => {
+    // sync to state on blur only
+    setDailyDose(Math.max(0, Number(doseValueRef.current || 0)))
   }
 
   return (
@@ -257,27 +271,24 @@ export function SupplementDetailsModal({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(dailyDose || 0) - 1)) }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(doseValueRef.current || 0) - 1)) }}
                   className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
                   aria-label="Decrease dose"
                 >
                   &minus;
                 </button>
                 <input
+                  ref={doseInputRef}
                   type="text"
                   inputMode="numeric"
-                  value={String(dailyDose ?? 0)}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^\d]/g, '')
-                    const n = parseInt(raw, 10)
-                    if (!Number.isNaN(n)) setDoseSafely(Math.max(0, n))
-                    else if (raw === '') setDoseSafely(0)
-                  }}
+                  defaultValue={String(dailyDose ?? 0)}
+                  onChange={handleDoseChange}
+                  onBlur={handleDoseBlur}
                   className="w-24 px-3 py-2 border border-slate-300 rounded-md text-center"
                 />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(dailyDose || 0) + 1)) }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDoseSafely(Math.max(0, Number(doseValueRef.current || 0) + 1)) }}
                   className="h-9 w-9 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
                   aria-label="Increase dose"
                 >
