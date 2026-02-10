@@ -24,6 +24,7 @@
     "dom-to-image-more": "^3.7.1",
     "embla-carousel": "8.6.0",
     "embla-carousel-react": "8.6.0",
+    "framer-motion": "^12.34.0",
     "html2pdf.js": "^0.14.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.544.0",
