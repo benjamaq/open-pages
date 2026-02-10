@@ -25,7 +25,7 @@ export async function detectConfounds(
     return []
   }
   
-  const startDate = new Date(periods[0].start_date)
+  const startDate = new Date((periods[0] as any).start_date)
   const windowStart = new Date(startDate)
   windowStart.setDate(windowStart.getDate() - 7)
   const windowEnd = new Date(startDate)
@@ -47,14 +47,15 @@ export async function detectConfounds(
   const confounded: string[] = []
   
   for (const item of items || []) {
-    const periods = (item as any).intervention_periods || []
+    const itemAny = item as any
+    const periods = itemAny.intervention_periods || []
     
     for (const period of periods) {
-      const pDate = new Date(period.start_date)
+      const pDate = new Date((period as any).start_date)
       
       if (pDate >= windowStart && pDate <= windowEnd) {
-        console.log('  ⚠️  Confounded with:', item.name, 'started', period.start_date)
-        confounded.push(item.name)
+        console.log('  ⚠️  Confounded with:', itemAny.name, 'started', (period as any).start_date)
+        confounded.push(String(itemAny.name || ''))
         break
       }
     }
@@ -90,7 +91,7 @@ export async function isConfoundingResolved(
   
   if (!periods || periods.length === 0) return false
   
-  const startDate = new Date(periods[0].start_date)
+  const startDate = new Date((periods[0] as any).start_date)
   const daysSince = Math.floor((Date.now() - startDate.getTime()) / 86400000)
   
   return daysSince > 21

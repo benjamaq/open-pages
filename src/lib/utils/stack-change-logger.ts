@@ -19,8 +19,8 @@ export async function logStackChange(data: StackChangeData): Promise<void> {
   try {
     const supabase = await createClient()
     
-    const { error } = await supabase
-      .from('stack_change_log')
+    const { error } = await (supabase
+      .from('stack_change_log') as any)
       .insert({
         owner_user_id: data.ownerUserId,
         item_type: data.itemType,

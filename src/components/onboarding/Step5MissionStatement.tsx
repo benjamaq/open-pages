@@ -30,8 +30,8 @@ export default function Step5MissionStatement({ userId, displayName, onNext, onS
     if (!mission.trim()) return handleSkip()
     setIsSaving(true)
     try {
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase
+        .from('profiles') as any)
         .update({ mission_statement: mission.trim(), mission_added_at: new Date().toISOString() })
         .eq('user_id', userId)
       if (error) throw error

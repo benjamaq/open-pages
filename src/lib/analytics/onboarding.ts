@@ -11,7 +11,7 @@ export const trackOnboardingEvent = async (event: OnboardingEvent) => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('onboarding_events').insert({
+    await (supabase.from('onboarding_events') as any).insert({
       user_id: user.id,
       event_type: event.event_type,
       step_number: event.step_number,
@@ -37,7 +37,7 @@ export const saveCheckinQualityMetrics = async (metrics: {
 }) => {
   try {
     const supabase = createClient()
-    await supabase.from('checkin_quality_metrics').insert(metrics)
+    await (supabase.from('checkin_quality_metrics') as any).insert(metrics)
   } catch (e) {
     console.warn('[onboarding] saveCheckinQualityMetrics failed', e)
   }

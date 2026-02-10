@@ -18,7 +18,7 @@ export async function updateExchangeRates(): Promise<void> {
     rate: Number(json?.rates?.[code] ?? 1),
     updated_at: new Date().toISOString()
   }))
-  await supabase.from('exchange_rate').upsert(rows, { onConflict: 'from_currency,to_currency' })
+  await supabase.from('exchange_rate').upsert(rows as any, { onConflict: 'from_currency,to_currency' })
 }
 
 export async function convertAmount(amount: number, from: string, to: string): Promise<number> {
@@ -31,7 +31,7 @@ export async function convertAmount(amount: number, from: string, to: string): P
     .eq('from_currency', from)
     .eq('to_currency', to)
     .maybeSingle()
-  if (data?.rate) return Number(amount) * Number(data.rate)
+  if ((data as any)?.rate) return Number(amount) * Number((data as any).rate)
   // Try reverse
   const rev = await supabase
     .from('exchange_rate')
@@ -39,7 +39,7 @@ export async function convertAmount(amount: number, from: string, to: string): P
     .eq('from_currency', to)
     .eq('to_currency', from)
     .maybeSingle()
-  if (rev.data?.rate) return Number(amount) / Number(rev.data.rate)
+  if ((rev.data as any)?.rate) return Number(amount) / Number((rev.data as any).rate)
   // Fallback via USD
   if (from !== 'USD') {
     const toUsd = await convertAmount(amount, from, 'USD')

@@ -43,7 +43,7 @@ export async function updatePublicModules(modules: PublicModules) {
       throw new Error('Profile not found')
     }
     
-    profile = { ...basicProfile, public_modules: null }
+    profile = { ...(basicProfile as any), public_modules: null } as any
     profileError = null
   }
 
@@ -52,7 +52,7 @@ export async function updatePublicModules(modules: PublicModules) {
   }
 
   // Merge with existing modules
-  const currentModules = profile.public_modules || {
+  const currentModules = (profile as any).public_modules || {
     supplements: true,
     protocols: true,
     movement: true,
@@ -67,10 +67,10 @@ export async function updatePublicModules(modules: PublicModules) {
   const updatedModules = { ...currentModules, ...modules }
 
   // Try to update the profile with public_modules
-  let { error: updateError } = await supabase
-    .from('profiles')
+  let { error: updateError } = await (supabase
+    .from('profiles') as any)
     .update({ public_modules: updatedModules })
-    .eq('id', profile.id)
+    .eq('id', (profile as any).id)
 
   // If the column doesn't exist, create it first (this will fail gracefully)
   if (updateError && updateError.message?.includes('column')) {
@@ -88,11 +88,11 @@ export async function updatePublicModules(modules: PublicModules) {
   const { data: profileData } = await supabase
     .from('profiles')
     .select('slug')
-    .eq('id', profile.id)
+    .eq('id', (profile as any).id)
     .single()
 
-  if (profileData?.slug) {
-    revalidatePath(`/u/${profileData.slug}`)
+  if ((profileData as any)?.slug) {
+    revalidatePath(`/u/${(profileData as any).slug}`)
   }
   revalidatePath('/dash')
 
@@ -123,7 +123,7 @@ export async function getPublicModules(profileId: string): Promise<PublicModules
     }
   }
 
-  return profile.public_modules || {
+  return (profile as any).public_modules || {
     supplements: true,
     protocols: true,
     movement: true,

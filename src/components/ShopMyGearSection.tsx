@@ -48,7 +48,7 @@ export default function ShopMyGearSection({ profileId, userTier, isOwner, initia
         .insert({
           profile_id: profileId,
           ...itemData
-        })
+        } as any)
         .select()
         .single()
 
@@ -67,8 +67,8 @@ export default function ShopMyGearSection({ profileId, userTier, isOwner, initia
   const handleUpdateItem = async (id: string, updates: Partial<ShopGearItem>) => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('shop_gear_items')
+      const { data, error } = await (supabase
+        .from('shop_gear_items') as any)
         .update(updates)
         .eq('id', id)
         .select()

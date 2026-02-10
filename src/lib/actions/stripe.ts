@@ -47,7 +47,7 @@ export async function createCheckoutSession(
         user_id: user.id,
         plan: plan,
         period: period,
-        profile_slug: profile?.slug || '',
+        profile_slug: (profile as any)?.slug || '',
       },
       subscription_data: {
         metadata: {
@@ -98,13 +98,13 @@ export async function createCustomerPortalSession() {
     .eq('user_id', user.id)
     .single()
 
-  if (!userUsage?.stripe_customer_id) {
+  if (!(userUsage as any)?.stripe_customer_id) {
     throw new Error('No Stripe customer found')
   }
 
   try {
     const session = await stripe.billingPortal.sessions.create({
-      customer: userUsage.stripe_customer_id,
+      customer: (userUsage as any).stripe_customer_id,
       return_url: `${origin}/dash`,
     })
 

@@ -30,7 +30,7 @@ export async function saveElliMessage(
         message_type: messageType,
         message_text: messageText,
         context: context,
-      });
+      } as any);
     
     if (error) {
       // Graceful fallback: log but do not throw to avoid breaking UX
@@ -74,12 +74,12 @@ export async function saveOrUpdateInsightMessage(
       .limit(1)
       .maybeSingle();
 
-    if (existing?.id) {
+    if ((existing as any)?.id) {
       // Update in place (preserve created_at)
-      const { error: updErr } = await supabase
-        .from('elli_messages')
+      const { error: updErr } = await (supabase
+        .from('elli_messages') as any)
         .update({ message_text: messageText, context })
-        .eq('id', existing.id);
+        .eq('id', (existing as any).id);
       if (updErr) {
         console.warn('Insight update failed; inserting new instead:', updErr.message);
         await saveElliMessage(userId, 'insight', messageText, context);
@@ -145,8 +145,8 @@ export async function getAllElliMessages(userId: string, limit: number = 10): Pr
 export async function dismissElliMessage(messageId: string): Promise<void> {
   const supabase = await createClient();
   
-  const { error } = await supabase
-    .from('elli_messages')
+  const { error } = await (supabase
+    .from('elli_messages') as any)
     .update({ dismissed: true })
     .eq('id', messageId);
 

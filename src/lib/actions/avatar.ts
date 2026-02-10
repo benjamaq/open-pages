@@ -15,8 +15,8 @@ export async function updateProfileAvatar(avatarUrl: string) {
 
   // Update profile with new avatar URL
   console.log('Updating profile avatar_url for user:', user.id, 'with URL:', avatarUrl)
-  const { data, error } = await supabase
-    .from('profiles')
+  const { data, error } = await (supabase
+    .from('profiles') as any)
     .update({ avatar_url: avatarUrl })
     .eq('user_id', user.id)
     .select()

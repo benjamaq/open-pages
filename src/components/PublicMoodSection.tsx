@@ -254,7 +254,7 @@ export default function PublicMoodSection({
             {/* Chips Row - Mobile 2x2 grid, Desktop side-by-side */}
             {displayChips.length > 0 && (
               <div className="grid grid-cols-2 gap-1 mb-6 justify-center mt-4 sm:flex sm:flex-wrap sm:gap-3">
-                {displayChips.map((chip, index) => (
+                {displayChips.map((chip: any, index: number) => (
                   <span
                     key={index}
                     className="px-1.5 py-0.5 text-[10px] sm:px-4 sm:py-2 sm:text-sm bg-white border border-gray-200 text-gray-700 rounded-full shadow-sm text-center leading-tight truncate"

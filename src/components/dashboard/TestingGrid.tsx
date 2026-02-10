@@ -203,7 +203,7 @@ export function TestingGrid({
             extra === 'no_effect' ? 'bg-amber-50 text-amber-800 border-amber-300' :
             positive ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
             negative ? 'bg-rose-50 text-rose-700 border-rose-300' :
-            (isBad => isBad ? '' : 'bg-slate-50 text-slate-600 border-slate-200')
+            'bg-slate-50 text-slate-600 border-slate-200'
           const badgeLabel =
             isConfounded ? 'Too much noise' :
             extra === 'no_effect' ? 'No signal found' :

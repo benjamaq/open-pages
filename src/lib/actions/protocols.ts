@@ -32,10 +32,10 @@ export async function addProtocol(formData: {
   }
 
   // Create the protocol
-  const { error: protocolError } = await supabase
-    .from('protocols')
+  const { error: protocolError } = await (supabase
+    .from('protocols') as any)
     .insert({
-      profile_id: profile.id,
+      profile_id: (profile as any).id,
       name: formData.name,
       description: formData.description || null,
       frequency: formData.frequency || 'weekly',
@@ -86,8 +86,8 @@ export async function updateProtocol(protocolId: string, formData: {
   }
 
   // Update the protocol
-  const { error: updateError } = await supabase
-    .from('protocols')
+  const { error: updateError } = await (supabase
+    .from('protocols') as any)
     .update({
       name: formData.name,
       description: formData.description || null,

@@ -28,7 +28,7 @@ export default async function UploadsPage() {
   const { data: uploads } = await supabase
     .from('uploads')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .order('created_at', { ascending: false })
 
   return (

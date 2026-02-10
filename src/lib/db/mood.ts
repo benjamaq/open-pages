@@ -73,7 +73,7 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_wearables: input.wearables
     });
     
-    const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
+    const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot' as any, {
       p_user_id: user.id,
       p_local_date: input.localDate,
       p_mood: input.mood,
@@ -88,7 +88,7 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
       p_custom_symptoms: input.custom_symptoms || [],
       p_completed_items: input.completedItems,
       p_wearables: input.wearables
-    })
+    } as any)
 
     // Handle RPC failure by falling back to direct upsert as a safety net
     if (error) {
@@ -111,7 +111,7 @@ export async function saveDailyEntry(input: SaveDailyEntryInput): Promise<{ ok: 
             pain_types: input.pain_types || [],
             custom_symptoms: input.custom_symptoms || [],
             wearables: input.wearables
-          }, { onConflict: 'user_id,local_date' })
+          } as any, { onConflict: 'user_id,local_date' })
           .select()
           .single()
 
@@ -211,6 +211,11 @@ export type DayDatum = {
   markers?: Array<{ color: string; position: 'top' | 'bottom' }>;
   sleepBadge?: 'low' | undefined;
   readinessBadge?: 'low' | 'high' | undefined;
+  meds?: any;
+  protocols?: any;
+  activity?: any;
+  devices?: any;
+  wearables?: any;
 };
 
 export async function getMonthData(month: string): Promise<DayDatum[]> {
@@ -245,7 +250,7 @@ export async function getMonthData(month: string): Promise<DayDatum[]> {
 
     // Transform data
     const dayData: DayDatum[] = [];
-    const entriesMap = new Map(dailyEntries?.map(entry => [entry.local_date, entry]) || []);
+    const entriesMap = new Map(dailyEntries?.map((entry: any) => [entry.local_date, entry]) || []);
 
     // Generate all days in the month
     const currentDate = new Date(year, monthNum - 1, 1);
@@ -391,7 +396,7 @@ export async function getPublicMoodData(profileId: string, days: number = 30, mo
 
     // Transform data
     const dayData: DayDatum[] = [];
-    const entriesMap = new Map(dailyEntries?.map(entry => [entry.local_date, entry]) || []);
+    const entriesMap = new Map(dailyEntries?.map((entry: any) => [entry.local_date, entry]) || []);
 
     // Generate all days in the range
     const currentDate = new Date(startDate);
@@ -476,7 +481,7 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
     const { data: moodEntries, error: moodError } = await supabase
       .from('mood_entries')
       .select('*')
-      .eq('profile_id', profile.id)
+      .eq('profile_id', (profile as any).id)
       .gte('entry_date', startDate)
       .lte('entry_date', endDate)
       .order('entry_date');
@@ -487,7 +492,7 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
     }
 
     // Transform to series format
-    const series = (moodEntries || []).map(entry => ({
+    const series = (moodEntries || []).map((entry: any) => ({
       date: entry.entry_date,
       mood: entry.mood,
       pain: entry.pain,
@@ -498,9 +503,9 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
 
     // Calculate weekly averages
     const weekly: Array<{ weekStart: string; avgMood?: number; avgPain?: number; avgEnergy?: number }> = [];
-    const entriesByWeek = new Map<string, typeof moodEntries>();
+    const entriesByWeek = new Map<string, any[]>();
 
-    (moodEntries || []).forEach(entry => {
+    (moodEntries || []).forEach((entry: any) => {
       const date = new Date(entry.entry_date);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
@@ -512,10 +517,10 @@ export async function getTrends(days: 30 | 90): Promise<TrendsData> {
       entriesByWeek.get(weekKey)!.push(entry);
     });
 
-    entriesByWeek.forEach((weekEntries, weekStart) => {
-      const moodValues = weekEntries.filter(e => e.mood !== null).map(e => e.mood!);
-      const painValues = weekEntries.filter(e => e.pain !== null).map(e => e.pain!);
-      const energyValues = weekEntries.filter(e => e.energy !== null).map(e => e.energy!);
+    entriesByWeek.forEach((weekEntries: any[], weekStart) => {
+      const moodValues = weekEntries.filter((e: any) => e.mood !== null).map((e: any) => e.mood!);
+      const painValues = weekEntries.filter((e: any) => e.pain !== null).map((e: any) => e.pain!);
+      const energyValues = weekEntries.filter((e: any) => e.energy !== null).map((e: any) => e.energy!);
 
       weekly.push({
         weekStart,

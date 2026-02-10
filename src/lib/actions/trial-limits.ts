@@ -41,8 +41,8 @@ export async function checkItemLimit(itemType: 'supplements' | 'protocols' | 'li
     let insertedTrialDefault = false
     if (usageError) {
       // If no usage record exists, create one (user is likely new)
-      const { error: insertError } = await supabase
-        .from('user_usage')
+      const { error: insertError } = await (supabase
+        .from('user_usage') as any)
         .insert({
           user_id: user.id,
           tier: 'free',
@@ -58,7 +58,7 @@ export async function checkItemLimit(itemType: 'supplements' | 'protocols' | 'li
       }
     }
 
-    const isInTrial = (usage?.is_in_trial ?? (insertedTrialDefault ? true : false)) || false
+    const isInTrial = ((usage as any)?.is_in_trial ?? (insertedTrialDefault ? true : false)) || false
     // If 'tier' column missing, treat as trial to avoid blocking adds in dev
     const tier = (profileRow as any).tier || 'free'
 
@@ -89,14 +89,14 @@ export async function checkItemLimit(itemType: 'supplements' | 'protocols' | 'li
       const { count, error } = await supabase
         .from('stack_items')
         .select('*', { count: 'exact', head: true })
-        .eq('profile_id', profileRow.id)
+        .eq('profile_id', (profileRow as any).id)
         .eq('item_type', 'supplements')
       if (!error) currentCount = count || 0
     } else if (itemType === 'protocols') {
       const { count, error } = await supabase
         .from('stack_items')
         .select('*', { count: 'exact', head: true })
-        .eq('profile_id', profileRow.id)
+        .eq('profile_id', (profileRow as any).id)
         .eq('item_type', 'protocols')
       if (!error) currentCount = count || 0
     } else if (itemType === 'library') {
@@ -159,7 +159,7 @@ export async function enforceTrialLimits() {
 
     // For each user, check if they exceed limits and send notification
     for (const user of expiredTrials) {
-      const userId = user.user_id
+      const userId = (user as any).user_id
       
       // Check supplements
       const { count: supplementCount } = await supabase

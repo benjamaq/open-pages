@@ -59,12 +59,7 @@ export default function DashboardClient({ supplements }: { supplements: any[] })
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="space-y-12">
           <StatusUpdate 
-            daysTracked={context.daysTracked}
-            totalCheckins={context.totalCheckins}
-            currentStreak={context.currentStreak}
-            hasNewTruthReport={context.hasNewTruthReport}
-            microInsights={context.microInsights || []}
-            activeTestsLength={context.activeTests?.length || 0}
+            context={context}
           />
           
           <SupplementsInTesting 
@@ -77,7 +72,6 @@ export default function DashboardClient({ supplements }: { supplements: any[] })
             hasCheckinToday={context.hasCheckinToday}
             today={context.today}
             yesterday={context.yesterday}
-            onOpenCheckin={() => console.log('Open checkin modal')}
           />
         </div>
       </main>

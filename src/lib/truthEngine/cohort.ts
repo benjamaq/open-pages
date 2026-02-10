@@ -17,12 +17,13 @@ export async function getCohortStats(canonicalId: string | null, primaryMetric: 
       .eq('canonical_id', canonicalId)
       .maybeSingle()
     if (error || !data) return null
-    const dist = data.effect_distribution as any
+    const d = data as any
+    const dist = d.effect_distribution as any
     return {
-      sampleSize: Number(data.sample_size || 0),
-      avgEffect: typeof data.avg_effect === 'number' ? data.avg_effect : null,
+      sampleSize: Number(d.sample_size || 0),
+      avgEffect: typeof d.avg_effect === 'number' ? d.avg_effect : null,
       distribution: dist && Array.isArray(dist.bins) && Array.isArray(dist.counts) ? { bins: dist.bins, counts: dist.counts } : null,
-      responderCutoffs: (data.responder_cutoffs as any) || null
+      responderCutoffs: (d.responder_cutoffs as any) || null
     }
   } catch {
     return null

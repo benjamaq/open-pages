@@ -32,10 +32,10 @@ export async function addGear(data: GearData) {
   }
 
   // Insert gear item
-  const { data: gear, error } = await supabase
-    .from('gear')
+  const { data: gear, error } = await (supabase
+    .from('gear') as any)
     .insert([{
-      profile_id: profile.id,
+      profile_id: (profile as any).id,
       name: data.name.trim(),
       brand: data.brand?.trim() || null,
       model: data.model?.trim() || null,
@@ -88,11 +88,11 @@ export async function updateGear(id: string, data: Partial<GearData>) {
   
   updateData.updated_at = new Date().toISOString()
 
-  const { error } = await supabase
-    .from('gear')
+  const { error } = await (supabase
+    .from('gear') as any)
     .update(updateData)
     .eq('id', id)
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
 
   if (error) {
     console.error('Failed to update gear:', error)
@@ -124,7 +124,7 @@ export async function deleteGear(id: string) {
     .from('gear')
     .delete()
     .eq('id', id)
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
 
   if (error) {
     console.error('Failed to delete gear:', error)

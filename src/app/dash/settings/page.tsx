@@ -53,10 +53,10 @@ export default async function SettingsPage() {
     .single()
 
   const trialInfo = usageData ? {
-    isInTrial: usageData.is_in_trial || false,
-    trialStartedAt: usageData.trial_started_at,
-    trialEndedAt: usageData.trial_ended_at,
-    tier: usageData.tier || 'free'
+    isInTrial: (usageData as any).is_in_trial || false,
+    trialStartedAt: (usageData as any).trial_started_at,
+    trialEndedAt: (usageData as any).trial_ended_at,
+    tier: (usageData as any).tier || 'free'
   } : {
     isInTrial: false,
     trialStartedAt: null,

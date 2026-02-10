@@ -39,7 +39,7 @@ export default function AuthStateChecker({
         if (profileError || !profile) {
           setClientIsOwner(false)
         } else {
-          setClientIsOwner(profile.slug === profileSlug)
+          setClientIsOwner((profile as any).slug === profileSlug)
         }
       } catch (err) {
         console.log('Client auth check error:', err)

@@ -29,7 +29,7 @@ export default async function StackPage() {
   const { data: stackItems } = await supabase
     .from('stack_items')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .eq('item_type', 'supplements')
     .order('created_at', { ascending: false })
 

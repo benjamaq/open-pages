@@ -13,6 +13,8 @@ interface SupplementItem {
   brand: string | null
   public: boolean
   category?: string | null
+  frequency?: string | null
+  schedule_days?: number[] | null
 }
 
 interface SupplementsSectionProps {
@@ -113,7 +115,7 @@ export default function SupplementsSection({ supplements }: SupplementsSectionPr
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         {item.frequency && (
                           <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
-                            {formatFrequencyDisplay(item.frequency, item.schedule_days)}
+                            {formatFrequencyDisplay(item.frequency, item.schedule_days as any)}
                           </span>
                         )}
                         {item.timing && (

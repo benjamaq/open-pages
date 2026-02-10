@@ -32,14 +32,14 @@ export default async function TodayPage() {
   const { data: todayStackItems } = await supabase
     .from('stack_items')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .contains('schedule_days', [dayOfWeek])
 
   // Fetch protocols scheduled for today
   const { data: todayProtocols } = await supabase
     .from('protocols')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .contains('schedule_days', [dayOfWeek])
 
   return (

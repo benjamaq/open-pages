@@ -843,47 +843,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      user_usage: {
-        Row: {
-          id: string
-          user_id: string
-          tier: 'free' | 'pro'
-          stack_items_limit: number
-          protocols_limit: number
-          uploads_limit: number
-          is_in_trial: boolean
-          trial_started_at: string | null
-          trial_ended_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          tier?: 'free' | 'pro'
-          stack_items_limit?: number
-          protocols_limit?: number
-          uploads_limit?: number
-          is_in_trial?: boolean
-          trial_started_at?: string | null
-          trial_ended_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          tier?: 'free' | 'pro'
-          stack_items_limit?: number
-          protocols_limit?: number
-          uploads_limit?: number
-          is_in_trial?: boolean
-          trial_started_at?: string | null
-          trial_ended_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
     }
     Views: {
       [_ in never]: never

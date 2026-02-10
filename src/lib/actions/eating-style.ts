@@ -29,10 +29,10 @@ export async function updateEatingStyle(eatingStyle: string): Promise<void> {
       enabled: !!eatingStyle
     }
 
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase
+      .from('profiles') as any)
       .update({ nutrition_signature: nutritionData })
-      .eq('id', profile.id)
+      .eq('id', (profile as any).id)
 
     if (error) {
       console.error('Failed to update eating style:', error)
@@ -40,8 +40,8 @@ export async function updateEatingStyle(eatingStyle: string): Promise<void> {
     }
 
     // Revalidate public profile
-    if (profile.slug) {
-      revalidatePath(`/u/${profile.slug}`)
+    if ((profile as any).slug) {
+      revalidatePath(`/u/${(profile as any).slug}`)
     }
   } catch (error) {
     console.error('Error updating eating style:', error)
@@ -60,11 +60,11 @@ export async function getEatingStyle(profileId: string): Promise<string> {
       .eq('id', profileId)
       .single()
 
-    if (error || !profile || !profile.nutrition_signature) {
+    if (error || !profile || !(profile as any).nutrition_signature) {
       return ''
     }
 
-    const signature = profile.nutrition_signature as any
+    const signature = (profile as any).nutrition_signature as any
     return signature.eating_style || ''
   } catch (error) {
     console.error('Error getting eating style:', error)

@@ -49,7 +49,7 @@ export type SignalSnapshot = {
   effectPct: number                // Effect size as percentage (-100 to +100)
   confidence: number               // Statistical confidence (0-100)
   status: SignalStatus
-  window: '7d' | '14d' | '30d' | '60d' | '90d'
+  window: '7d' | '14d' | '30d' | '60d' | '90d' | '365d'
   warnings: string[]
   pattern?: PatternType             // Detected pattern shape
   explanation?: string              // Human-readable explanation

@@ -212,7 +212,7 @@ export default function PostCheckinModal({
 
   // Show validation message if we're in validation step
   if (currentStep === 'validation' && selectedCategory) {
-    const validationMessage = getValidationMessage(selectedCategory, selectedSpecific, userName, dayOneData);
+    const validationMessage = getValidationMessage(selectedCategory, selectedSpecific, userName, dayOneData as any);
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

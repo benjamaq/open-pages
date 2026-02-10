@@ -46,6 +46,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   let profileId: string | null = null
   // Lower bound for analysis window (prefer start date; else inferred; else created; else wide fallback)
   let sinceLowerBound: string | null = null
+  // Used later to decide whether implicit ON/OFF analysis is viable
+  let inferredStartGlobal: string | null = null
   try {
     const { data: profileRow } = await supabase
       .from('profiles')
@@ -65,7 +67,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       !!supp && String((supp as any).user_id) === String(userId)
     }, error=${(supp as any)?.message || (suppError as any)?.message || 'null'}`
   )
-  if (!suppError && supp && supp.user_id === userId) {
+  if (!suppError && supp && (supp as any).user_id === userId) {
     // Keep defaults for primaryMetric/secondaryKeys/canonicalId; set name from record
     supplementName = (supp as any)?.name || null
     // Determine analysis lower bound for this supplement
@@ -75,8 +77,7 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     // Only use restart bound; DO NOT clamp by inferred_start_at or we lose implicit OFF days
     sinceLowerBound = restart || null
     // Preserve inferred for implicit ON/OFF boundary later
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    var inferredStartGlobal: string | null = inferred || null
+    inferredStartGlobal = inferred || null
   } else {
     // Fallback: treat id as stack_items id for this user
     const { data: stackItem } = await supabase

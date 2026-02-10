@@ -72,7 +72,7 @@ function SignupInner() {
               allow_stack_follow: true,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id', ignoreDuplicates: false })
+            } as any, { onConflict: 'user_id', ignoreDuplicates: false })
         } catch (e) {
           // non-fatal
           console.warn('profiles upsert failed (anon client):', e)

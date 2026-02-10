@@ -61,6 +61,8 @@ export type TruthReport = {
     sampleOff: number
     daysExcluded: number
     onsetDays: number | null
+    missingOnMetrics?: number
+    missingOffMetrics?: number
     generatedAt: string
   }
 }

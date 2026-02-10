@@ -47,7 +47,7 @@ export function getSkipSuggestions(supps: SupplementWithSignal[]): SkipSuggestio
     else if ((s.daysOff ?? 0) < 4) { score = 1; reason = 'insufficient_off_days' }
     else { score = 0; }
     // if extremely noisy suggest skip to get cleaner window
-    if (s.isD
+    if (s.isDirty
       && score < 2) {
       score = 2;
       reason = 'high_uncertainty';

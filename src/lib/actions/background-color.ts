@@ -25,7 +25,7 @@ export async function updateBackgroundColor(color: string) {
   }
 
   // Check if user is a creator
-  if (profile.tier !== 'creator') {
+  if ((profile as any).tier !== 'creator') {
     throw new Error('Only creators can customize background colors')
   }
 
@@ -36,8 +36,8 @@ export async function updateBackgroundColor(color: string) {
   }
 
   // Update background color
-  const { error: updateError } = await supabase
-    .from('profiles')
+  const { error: updateError } = await (supabase
+    .from('profiles') as any)
     .update({ 
       custom_background_color: color,
       updated_at: new Date().toISOString()
@@ -51,8 +51,8 @@ export async function updateBackgroundColor(color: string) {
   // Revalidate pages that might show the updated color
   revalidatePath('/dash')
   revalidatePath('/dash/settings')
-  if (profile.slug) {
-    revalidatePath(`/u/${profile.slug}`)
+  if ((profile as any).slug) {
+    revalidatePath(`/u/${(profile as any).slug}`)
   }
 
   return { success: true }
@@ -75,5 +75,5 @@ export async function getBackgroundColor() {
     .eq('user_id', user.id)
     .single()
 
-  return profile?.custom_background_color || '#FFFFFF'
+  return (profile as any)?.custom_background_color || '#FFFFFF'
 }

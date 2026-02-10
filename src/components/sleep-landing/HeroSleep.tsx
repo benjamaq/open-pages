@@ -11,7 +11,7 @@ export default function HeroSleep() {
           THE NEXT GENERATION OF SLEEP TRACKING
         </p>
         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-          Can't sleep?<nobr></nobr><br />
+          Can&apos;t sleep?<br />
           Find out why.
         </h1>
         <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl mx-auto">

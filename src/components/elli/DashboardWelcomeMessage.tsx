@@ -43,7 +43,7 @@ export default function DashboardWelcomeMessage({
   }, []);
 
   // Get tone profile
-  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
+  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || (TONE_PROFILES as any).general_wellness;
 
   // Derive a friendly first name in case a full name is passed
   const safeName = (userName || '').trim().split(/\s+/)[0] || 'there';

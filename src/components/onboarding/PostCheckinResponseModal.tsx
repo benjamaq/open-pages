@@ -57,6 +57,7 @@ export default function PostCheckinResponseModal({
   // Short confirmation only – full Elli message appears on the dashboard
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
+  const [resolvedName, setResolvedName] = useState('friend');
   const handleContinue = () => { try { onComplete(); } catch {} }
 
   // Resolve a friendly first name if the passed userName is missing or placeholder
@@ -79,7 +80,7 @@ export default function PostCheckinResponseModal({
             .select('display_name')
             .eq('user_id', userId)
             .single();
-          first = (data?.display_name || '').trim().split(' ')[0] || '';
+          first = ((data as any)?.display_name || '').trim().split(' ')[0] || '';
         } catch {}
 
         // 2) Try auth metadata name, then email local-part
@@ -100,21 +101,13 @@ export default function PostCheckinResponseModal({
   if (!isOpen) return null;
 
   // Get tone profile
-  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
+  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || (TONE_PROFILES as any).general_wellness;
   
   // Removed verbose console logging to prevent main-thread blocking during typing
 
   // Message resolved via API (or fallback)
 
-  // Gentle note if caffeine-related chip/tag was selected
-  try {
-    const tags = Array.isArray(checkInData?.tags) ? checkInData.tags : [];
-    const hasCaffeine = tags.some((t: any) => typeof t === 'string' && t.toLowerCase().includes('caffeine'));
-    if (hasCaffeine) {
-      const suffix = `Noted caffeine today — it can make pain feel sharper and sleep harder. It might be worth easing up or moving it earlier; I’ll watch how it affects the next few days.`;
-      response = response.endsWith('\n') ? `${response}\n${suffix}` : `${response}\n\n${suffix}`;
-    }
-  } catch {}
+  // Gentle note if caffeine-related chip/tag was selected (placeholder for future use)
 
   // Note: Supplement form is now handled by PostSupplementModal in the orchestrator
 

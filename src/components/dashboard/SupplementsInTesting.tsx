@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 
 export function SupplementsInTesting({
   activeTests,

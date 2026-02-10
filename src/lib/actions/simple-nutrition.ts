@@ -29,7 +29,7 @@ async function getCurrentProfile() {
     throw new Error('Profile not found')
   }
 
-  return profile
+  return profile as any
 }
 
 // Get simple nutrition data from signature
@@ -47,14 +47,14 @@ export async function getSimpleNutritionData(profileId?: string): Promise<Simple
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('nutrition_signature')
-      .eq('id', targetProfileId)
+      .eq('id', targetProfileId as string)
       .single()
 
-    if (error || !profile || !profile.nutrition_signature) {
+    if (error || !profile || !(profile as any).nutrition_signature) {
       return { enabled: false }
     }
 
-    const signature = profile.nutrition_signature as any
+    const signature = (profile as any).nutrition_signature as any
     
     // Extract simple fields from complex signature
     return {
@@ -83,8 +83,8 @@ export async function updateSimpleNutritionData(data: SimpleNutritionData): Prom
       enabled: data.enabled
     }
 
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase
+      .from('profiles') as any)
       .update({ nutrition_signature: nutritionData })
       .eq('id', profile.id)
 

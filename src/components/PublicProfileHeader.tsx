@@ -29,7 +29,7 @@ export default function PublicProfileHeader({ profile, isOwnProfile, followerCou
     const { updateUnifiedHeader } = await import('../lib/actions/unified-header')
     try {
       await updateUnifiedHeader(data)
-      setCurrentProfile(prev => ({
+      setCurrentProfile((prev: any) => ({
         ...prev,
         display_name: data.displayName,
         bio: data.mission,

@@ -45,7 +45,7 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
         updates.avatar_url = avatarUrl
       }
       if (Object.keys(updates).length) {
-        await supabase.from('profiles').update(updates).eq('user_id', userId)
+        await (supabase.from('profiles') as any).update(updates).eq('user_id', userId)
       }
     } catch (e) {
       console.warn('[Step5] Save failed (non-blocking):', e)

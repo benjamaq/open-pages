@@ -16,8 +16,8 @@ export interface JournalEntry {
 export async function createJournalEntry(entry: Omit<JournalEntry, 'id' | 'created_at' | 'updated_at'>) {
   const supabase = await createClient()
   
-  const { data, error } = await supabase
-    .from('journal_entries')
+  const { data, error } = await (supabase
+    .from('journal_entries') as any)
     .insert([entry])
     .select()
     .single()
@@ -42,8 +42,8 @@ export async function createJournalEntry(entry: Omit<JournalEntry, 'id' | 'creat
 export async function updateJournalEntry(id: string, updates: Partial<Omit<JournalEntry, 'id' | 'profile_id' | 'created_at' | 'updated_at'>>) {
   const supabase = await createClient()
   
-  const { data, error } = await supabase
-    .from('journal_entries')
+  const { data, error } = await (supabase
+    .from('journal_entries') as any)
     .update(updates)
     .eq('id', id)
     .select()
@@ -103,8 +103,8 @@ export async function getJournalEntries(profileId: string) {
 export async function updateProfileJournalSettings(profileId: string, showJournalPublic: boolean) {
   const supabase = await createClient()
   
-  const { data, error } = await supabase
-    .from('profiles')
+  const { data, error } = await (supabase
+    .from('profiles') as any)
     .update({ show_journal_public: showJournalPublic })
     .eq('id', profileId)
     .select()

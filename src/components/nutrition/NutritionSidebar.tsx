@@ -35,7 +35,7 @@ export default function NutritionSidebar({
         accent: BADGE_ACCENTS[key]
       }
     })
-    .filter(Boolean)
+    .filter(Boolean) as NonNullable<{ key: string; label: string; icon: any; accent: any }>[]
 
   // Don't render if no badges enabled
   if (!signature.enabled || badges.length === 0) {

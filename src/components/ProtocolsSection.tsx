@@ -51,7 +51,7 @@ export default function ProtocolsSection({ protocols }: ProtocolsSectionProps) {
                     key={protocol.id}
                     name={protocol.name}
                     frequency={protocol.frequency || undefined}
-                    scheduleDays={protocol.schedule_days}
+                     scheduleDays={(protocol as any).schedule_days}
                     note={protocol.details || undefined}
                   />
                 ))

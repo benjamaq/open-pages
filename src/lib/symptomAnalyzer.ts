@@ -2,6 +2,15 @@ export type CheckInData = {
   pain: number
   mood: number
   sleep: number
+  sleep_quality?: number
+  energy?: number
+  tags?: string[]
+  journal?: string
+  symptoms?: string[]
+  painLocations?: string[]
+  customSymptoms?: string[]
+  notes?: string
+  [key: string]: any
 }
 
 export type SymptomAnalysis = {

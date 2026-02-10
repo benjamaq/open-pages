@@ -23,7 +23,7 @@ export default function CreatorWelcomePage() {
           .eq('user_id', user.id)
           .single()
         
-        if (usage?.is_in_creator_trial) {
+        if ((usage as any)?.is_in_creator_trial) {
           setHasCreatorTrial(true)
         }
       }

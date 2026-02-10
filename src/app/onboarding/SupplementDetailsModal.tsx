@@ -308,7 +308,7 @@ export function SupplementDetailsModal({
             <div className="mt-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">When do you usually take it? (optional)</div>
               <div className="flex flex-wrap gap-2">
-                {(['morning','afternoon','evening','night']).map((t: 'morning' | 'afternoon' | 'evening' | 'night') => {
+                {(['morning','afternoon','evening','night'] as const).map((t) => {
                   const selected = timeOfDay.includes(t)
                   return (
                     <button

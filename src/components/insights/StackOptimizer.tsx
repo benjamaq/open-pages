@@ -52,9 +52,9 @@ export function StackOptimizer() {
       .eq('id', user.id)
       .single();
 
-    if (data?.health_priorities && data.health_priorities.length > 0) {
-      setSelectedPriorities(data.health_priorities);
-      generateAnalysis(data.health_priorities);
+    if ((data as any)?.health_priorities && (data as any).health_priorities.length > 0) {
+      setSelectedPriorities((data as any).health_priorities);
+      generateAnalysis((data as any).health_priorities);
     }
   }
 
@@ -73,8 +73,8 @@ export function StackOptimizer() {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
-        .from('app_user')
+      await (supabase
+        .from('app_user') as any)
         .update({ health_priorities: selectedPriorities })
         .eq('id', user.id);
     }

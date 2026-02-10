@@ -35,7 +35,7 @@ export default function LibraryDebug() {
       if (profileError || !profile) {
         info += '❌ Profile: Not found\n'
       } else {
-        info += `✅ Profile: Found (${profile.id})\n`
+        info += `✅ Profile: Found (${(profile as any).id})\n`
       }
       
       // Check library_items table

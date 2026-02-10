@@ -36,14 +36,14 @@ export async function updateUnifiedHeader(data: UnifiedHeaderData): Promise<void
     }
 
     // Update profile with all header data
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase
+      .from('profiles') as any)
       .update({ 
         display_name: data.displayName,
         bio: data.mission,
         nutrition_signature: nutritionData
       })
-      .eq('id', profile.id)
+      .eq('id', (profile as any).id)
 
     if (error) {
       console.error('Failed to update header data:', error)
@@ -51,8 +51,8 @@ export async function updateUnifiedHeader(data: UnifiedHeaderData): Promise<void
     }
 
     // Revalidate public profile
-    if (profile.slug) {
-      revalidatePath(`/u/${profile.slug}`)
+    if ((profile as any).slug) {
+      revalidatePath(`/u/${(profile as any).slug}`)
     }
     
     // Also revalidate dashboard

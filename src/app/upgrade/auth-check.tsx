@@ -11,7 +11,7 @@ interface AuthCheckProps {
 
 export default function AuthCheck({ children, redirectTo = '/auth/signin' }: AuthCheckProps) {
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
   const supabase = createClient()
 

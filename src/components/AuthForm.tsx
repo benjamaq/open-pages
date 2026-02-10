@@ -137,7 +137,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 status: 'active',
                 current_period_start: new Date().toISOString(),
                 updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id', ignoreDuplicates: true })
+              } as any, { onConflict: 'user_id', ignoreDuplicates: true })
           } catch (e) {
             console.warn('Free tier init failed (non-blocking):', e)
           }
@@ -163,7 +163,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 allow_stack_follow: true,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
-              }, {
+              } as any, {
                 onConflict: 'user_id',
                 ignoreDuplicates: false
               })

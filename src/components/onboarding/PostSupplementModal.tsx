@@ -48,7 +48,7 @@ export default function PostSupplementModal({
   if (!isOpen) return null;
 
   // Get tone profile
-  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || TONE_PROFILES.general_wellness;
+  const profile = TONE_PROFILES[toneProfile as ToneProfileType] || (TONE_PROFILES as any).general_wellness;
 
   // Generate tone-aware post-supplement message
   const getPostSupplementMessage = () => {

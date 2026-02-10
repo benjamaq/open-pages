@@ -454,7 +454,7 @@ export default function ProtocolsPageClient({ protocols, profile }: ProtocolsPag
 
       {editingProtocol && (
         <EditProtocolForm 
-          protocol={editingProtocol} 
+          protocol={editingProtocol as any} 
           onClose={() => setEditingProtocol(null)} 
         />
       )}

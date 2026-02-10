@@ -25,7 +25,7 @@ export async function updateUserBaseline(userId: string): Promise<void> {
     console.log('  ⏳ Not enough data yet:', checks?.length || 0, '/ 14 needed')
     
     // Update with incomplete calibration
-    await supabase.from('user_baselines').upsert({
+    await (supabase.from('user_baselines') as any).upsert({
       user_id: userId,
       calibration_complete: false,
       calibration_days: checks?.length || 0,
@@ -93,7 +93,7 @@ export async function updateUserBaseline(userId: string): Promise<void> {
   
   const { error } = await supabase
     .from('user_baselines')
-    .upsert(baseline)
+    .upsert(baseline as any)
   
   if (error) {
     console.error('  ❌ Error saving baseline:', error)

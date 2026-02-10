@@ -571,7 +571,7 @@ export default function OnboardingModal({
           onClose={handleCheckinComplete}
           date={new Date().toISOString().split('T')[0]}
           userId={userProfile.id}
-          userName={userProfile.display_name || displayName || 'User'}
+          userName={userProfile.display_name || userProfile.first_name || 'User'}
           isFirstCheckIn={true}
           todayItems={{
             supplements: [],

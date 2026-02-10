@@ -29,7 +29,7 @@ export default function AddProtocolForm({ onClose }: AddProtocolFormProps) {
     const checkLimits = async () => {
       try {
         const result = await checkItemLimit('protocols')
-        setLimitCheck(result)
+        setLimitCheck(result as any)
       } catch (error) {
         console.error('Error checking protocol limits:', error)
         setLimitCheck({ allowed: true, reason: '', currentCount: 0, limit: 0, isInTrial: false })

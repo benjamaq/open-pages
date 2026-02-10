@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import SafeType from './SafeType';
 import { TypingIndicator } from './TypingIndicator';
 import { analyzeSymptomsAction } from '@/lib/actions/analyze-symptoms';
-import type { CheckInData, SymptomAnalysis } from '@/lib/elli/symptomAnalyzer';
+import type { CheckInData, SymptomAnalysis } from '@/lib/symptomAnalyzer';
 
 interface SymptomAnalysisCardProps {
   checkInData: CheckInData;

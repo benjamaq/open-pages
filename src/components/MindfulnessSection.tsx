@@ -10,6 +10,8 @@ interface MindfulnessItem {
   name: string
   dose: string | null
   timing: string | null
+  frequency: string | null
+  schedule_days: string[] | null
   notes: string | null
   public: boolean
 }
@@ -54,7 +56,7 @@ export default function MindfulnessSection({ mindfulnessItems }: MindfulnessSect
                     duration={item.dose || undefined}
                     timing={item.timing || undefined}
                     frequency={item.frequency || undefined}
-                    scheduleDays={item.schedule_days}
+                     scheduleDays={item.schedule_days as any}
                     notes={item.notes || undefined}
                   />
                 ))

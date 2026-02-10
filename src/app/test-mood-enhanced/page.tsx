@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import EnhancedDayDrawer from '@/app/components/mood/EnhancedDayDrawer';
 
 export default function TestMoodEnhancedPage() {
-  const [todayEntry, setTodayEntry] = useState(null);
+  const [todayEntry, setTodayEntry] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 

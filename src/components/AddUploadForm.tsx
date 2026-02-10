@@ -54,7 +54,7 @@ export default function AddUploadForm({ onClose }: AddUploadFormProps) {
         name: formData.name,
         description: formData.description || undefined,
         file_type: file.type,
-        file_url: url,
+        file_url: url!,
         file_size: file.size,
         public: formData.public
       })

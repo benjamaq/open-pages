@@ -45,7 +45,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     const result = await supabase
       .from('notification_preferences')
       .select('*')
-      .eq('profile_id', profile.id)
+      .eq('profile_id', (profile as any).id)
       .single()
     
     preferences = result.data
@@ -94,7 +94,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     try {
       const { data: created, error: createError } = await supabase
         .from('notification_preferences')
-        .insert({ profile_id: profile.id })
+        .insert({ profile_id: (profile as any).id } as any)
         .select('*')
         .single()
 
@@ -128,16 +128,16 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
   }
 
   return {
-    email_enabled: preferences.email_enabled,
-    daily_reminder_enabled: preferences.daily_reminder_enabled,
-    reminder_time: preferences.reminder_time.substring(0, 5), // Convert TIME to HH:MM
-    timezone: preferences.timezone,
-    supplements_reminder: preferences.supplements_reminder,
-    protocols_reminder: preferences.protocols_reminder,
-    movement_reminder: preferences.movement_reminder,
-    mindfulness_reminder: preferences.mindfulness_reminder,
-    missed_items_reminder: preferences.missed_items_reminder,
-    weekly_summary: preferences.weekly_summary
+    email_enabled: (preferences as any).email_enabled,
+    daily_reminder_enabled: (preferences as any).daily_reminder_enabled,
+    reminder_time: (preferences as any).reminder_time.substring(0, 5), // Convert TIME to HH:MM
+    timezone: (preferences as any).timezone,
+    supplements_reminder: (preferences as any).supplements_reminder,
+    protocols_reminder: (preferences as any).protocols_reminder,
+    movement_reminder: (preferences as any).movement_reminder,
+    mindfulness_reminder: (preferences as any).mindfulness_reminder,
+    missed_items_reminder: (preferences as any).missed_items_reminder,
+    weekly_summary: (preferences as any).weekly_summary
   }
 }
 
@@ -164,7 +164,7 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
     console.error('Profile error:', profileError)
     throw new Error(`Profile lookup failed: ${profileError?.message || 'Profile not found'}`)
   }
-  console.log('Profile found:', profile.id)
+  console.log('Profile found:', (profile as any).id)
 
   // Prepare update data
   const updateData: any = {}
@@ -180,14 +180,14 @@ export async function updateNotificationPreferences(preferences: Partial<Notific
   if (preferences.weekly_summary !== undefined) updateData.weekly_summary = preferences.weekly_summary
 
   // Try to update preferences, but handle missing table gracefully
-  console.log('Attempting to upsert preferences:', { profile_id: profile.id, ...updateData })
+  console.log('Attempting to upsert preferences:', { profile_id: (profile as any).id, ...updateData })
   try {
     const { error: updateError } = await supabase
       .from('notification_preferences')
       .upsert({
-        profile_id: profile.id,
+        profile_id: (profile as any).id,
         ...updateData
-      }, { onConflict: 'profile_id' })
+      } as any, { onConflict: 'profile_id' })
 
     if (updateError) {
       console.error('Update error:', updateError)
@@ -340,7 +340,7 @@ export async function queueDailyReminders() {
   for (const pref of preferences || []) {
     // Queue reminder for each user
     const reminderTime = new Date()
-    const [hours, minutes] = pref.reminder_time.split(':')
+    const [hours, minutes] = (pref as any).reminder_time.split(':')
     reminderTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
     // If time has passed today, schedule for tomorrow
@@ -348,10 +348,10 @@ export async function queueDailyReminders() {
       reminderTime.setDate(reminderTime.getDate() + 1)
     }
 
-    const { error: queueError } = await supabase
-      .from('notification_queue')
+    const { error: queueError } = await (supabase
+      .from('notification_queue') as any)
       .insert({
-        profile_id: pref.profile_id,
+        profile_id: (pref as any).profile_id,
         notification_type: 'daily_reminder',
         scheduled_for: reminderTime.toISOString(),
         email_data: {
@@ -388,41 +388,41 @@ export async function processNotificationQueue() {
   for (const notification of notifications || []) {
     try {
       // Mark as processing
-      await supabase
-        .from('notification_queue')
+      await (supabase
+        .from('notification_queue') as any)
         .update({ 
           status: 'processing',
-          attempts: notification.attempts + 1
+          attempts: (notification as any).attempts + 1
         })
-        .eq('id', notification.id)
+        .eq('id', (notification as any).id)
 
       // Process based on type
-      if (notification.notification_type === 'daily_reminder') {
+      if ((notification as any).notification_type === 'daily_reminder') {
         // Get user data and send reminder
         // Implementation would fetch user's current items and send email
       }
 
       // Mark as sent
-      await supabase
-        .from('notification_queue')
+      await (supabase
+        .from('notification_queue') as any)
         .update({ 
           status: 'sent',
           sent_at: new Date().toISOString()
         })
-        .eq('id', notification.id)
+        .eq('id', (notification as any).id)
 
     } catch (error) {
       console.error('Error processing notification:', error)
       
       // Mark as failed if too many attempts
-      const status = notification.attempts >= 3 ? 'failed' : 'pending'
-      await supabase
-        .from('notification_queue')
+      const status = (notification as any).attempts >= 3 ? 'failed' : 'pending'
+      await (supabase
+        .from('notification_queue') as any)
         .update({ 
           status,
           error_message: error instanceof Error ? error.message : 'Unknown error'
         })
-        .eq('id', notification.id)
+        .eq('id', (notification as any).id)
     }
   }
 }
@@ -509,15 +509,15 @@ export async function sendWeeklySummaryEmail() {
 
       // Categorize items
       const categories = {
-        supplements: stackItems?.filter(item => 
+        supplements: stackItems?.filter((item: any) => 
           !item.name?.toLowerCase().includes('movement') && 
           !item.name?.toLowerCase().includes('mindfulness')
         ) || [],
-        movement: stackItems?.filter(item => 
+        movement: stackItems?.filter((item: any) => 
           item.name?.toLowerCase().includes('movement') || 
           item.name?.toLowerCase().includes('exercise')
         ) || [],
-        mindfulness: stackItems?.filter(item => 
+        mindfulness: stackItems?.filter((item: any) => 
           item.name?.toLowerCase().includes('mindfulness') || 
           item.name?.toLowerCase().includes('meditation')
         ) || [],

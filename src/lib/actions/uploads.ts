@@ -32,10 +32,10 @@ export async function addUpload(formData: {
   }
 
   // Create the upload record
-  const { error: uploadError } = await supabase
-    .from('uploads')
+  const { error: uploadError } = await (supabase
+    .from('uploads') as any)
     .insert({
-      profile_id: profile.id,
+      profile_id: (profile as any).id,
       name: formData.name,
       description: formData.description || null,
       file_type: formData.file_type,
@@ -83,8 +83,8 @@ export async function updateUpload(uploadId: string, formData: {
   }
 
   // Update the upload
-  const { error: updateError } = await supabase
-    .from('uploads')
+  const { error: updateError } = await (supabase
+    .from('uploads') as any)
     .update({
       name: formData.name,
       description: formData.description || null,
@@ -128,9 +128,9 @@ export async function deleteUpload(uploadId: string) {
   }
 
   // Delete the file from storage if it exists
-  if (upload.file_url) {
+  if ((upload as any).file_url) {
     try {
-      const filePath = upload.file_url.split('/').pop()
+      const filePath = (upload as any).file_url.split('/').pop()
       if (filePath) {
         await supabase.storage.from('uploads').remove([filePath])
       }

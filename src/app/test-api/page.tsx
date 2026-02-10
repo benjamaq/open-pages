@@ -19,7 +19,7 @@ export default function TestAPIPage() {
       
       const data = await response.json()
       
-      setResults(prev => ({
+      setResults((prev: any) => ({
         ...prev,
         [endpoint]: {
           status: response.status,
@@ -28,8 +28,8 @@ export default function TestAPIPage() {
           timestamp: new Date().toISOString()
         }
       }))
-    } catch (error) {
-      setResults(prev => ({
+    } catch (error: any) {
+      setResults((prev: any) => ({
         ...prev,
         [endpoint]: {
           error: error.message,
@@ -68,7 +68,7 @@ export default function TestAPIPage() {
         </div>
 
         <div className="space-y-6">
-          {Object.entries(results).map(([endpoint, result]) => (
+          {Object.entries(results).map(([endpoint, result]: [string, any]) => (
             <div key={endpoint} className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{endpoint}</h3>
               <div className="space-y-2">

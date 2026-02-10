@@ -208,7 +208,7 @@ export default function SupplementsGrid({
                     <SupplementCard
                       key={supplement.id}
                       data={card}
-                      onClick={() => setSelected(supplement as any) || setOpen(true)}
+                      onClick={() => { setSelected(supplement as any); setOpen(true); }}
                     />
                   )
                 })}

@@ -107,7 +107,7 @@ export function ROIRankingSection() {
             <div key={supp.id} className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="font-medium mb-1">{abbreviateSupplementName(String(supp?.name || ''))}</div>
               <div className="text-sm text-gray-600 mb-3">
-                {supp.daysTracked} days tracked • ${supp.totalSpent.toFixed(2)} spent • No detectable benefit
+                {supp.daysOfData} days tracked • ${supp.totalSpent.toFixed(2)} spent • No detectable benefit
               </div>
               <div className="flex gap-3">
                 <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white transition">Keep Testing</button>

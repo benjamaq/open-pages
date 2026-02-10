@@ -221,6 +221,8 @@ export default function DailyCheckinModal({
   const [selectedLifestyleFactors, setSelectedLifestyleFactors] = useState<string[]>([])
   const [focus, setFocus] = useState<number>(5)
   const [moodScore, setMoodScore] = useState<number>(5)
+  const [customSymptomInput, setCustomSymptomInput] = useState('')
+  const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
 
   // Allowed confounders
   const CONFOUNDERS = [

@@ -46,7 +46,7 @@ export async function upsertPatternInsight(args: PersistArgs) {
       console.error('❌ upsertPatternInsight error:', error)
       return { ok: false, error }
     }
-    console.log('📝 pattern_insights upserted for', args.interventionId, 'metric', args.metric, '→', data?.id)
+    console.log('📝 pattern_insights upserted for', args.interventionId, 'metric', args.metric, '→', (data as any)?.id)
     return { ok: true, id: (data as any)?.id ?? null }
   } catch (e) {
     console.error('💥 upsertPatternInsight fatal:', e)

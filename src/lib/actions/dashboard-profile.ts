@@ -46,10 +46,10 @@ export async function updateDashboardProfile(updates: {
     }
 
     // Update profile
-    const { error: updateError } = await supabase
-      .from('profiles')
+    const { error: updateError } = await (supabase
+      .from('profiles') as any)
       .update(profileUpdates)
-      .eq('id', profile.id)
+      .eq('id', (profile as any).id)
 
     if (updateError) {
       throw new Error(`Failed to update profile: ${updateError.message}`)

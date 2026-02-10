@@ -37,6 +37,7 @@ type OnboardingStep =
   | 'checkin'         // EnhancedDayDrawerV2 - mood/sleep/pain sliders
   | 'response'        // PostCheckinResponseModal - tone-aware response
   | 'add_supplement'  // AddStackItemForm - add supplement/medication
+  | 'post_supplement' // PostSupplementModal - after adding supplement
   | 'mission_profile' // New combined mission + profile
   | 'complete';       // Done - go to dashboard
 
@@ -95,7 +96,7 @@ export default function OnboardingOrchestrator({
     console.log('✅ Intro complete with category:', category);
     // Set category and tone profile immediately (no separate category step)
     setSelectedCategory(category);
-    const tone = getToneProfileType(category, null);
+    const tone = (getToneProfileType as any)(category, null);
     setToneProfile(tone);
     // Map selection to primary condition for personalization
     const mapToPrimary = (label: string): 'sleep' | 'pain' | 'migraines' | 'energy' | 'other' => {
@@ -108,8 +109,8 @@ export default function OnboardingOrchestrator({
     }
     try {
       const supabase = createClient();
-      await supabase
-        .from('profiles')
+      await (supabase
+        .from('profiles') as any)
         .update({ condition_primary: mapToPrimary(category), condition_details: category })
         .eq('user_id', userId);
       try { trackEvent('onboarding_condition_set', { primary: mapToPrimary(category), details: category }) } catch {}

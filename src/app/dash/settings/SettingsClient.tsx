@@ -302,7 +302,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
 
       setSaveMessage('✅ Test email sent! Check your inbox.')
       setTimeout(() => setSaveMessage(''), 5000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error sending test email:', error)
       console.error('❌ Error details:', {
         message: error.message,
@@ -814,7 +814,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
                     <span className="text-white font-bold text-base sm:text-lg">
-                      {profile.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                      {profile.display_name ? profile.display_name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U'}
                     </span>
                   </div>
                 )}

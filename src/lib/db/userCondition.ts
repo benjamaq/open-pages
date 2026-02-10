@@ -20,13 +20,13 @@ export interface ExpandedUserCondition {
 export async function saveUserCondition(userId: string, condition: UserCondition) {
   const supabase = await createClient();
   
-  const { error } = await supabase
-    .from('profiles')
+  const { error } = await (supabase
+    .from('profiles') as any)
     .update({
       condition_primary: condition.primary,
       condition_details: condition.details || null,
       condition_provided_at: new Date().toISOString(),
-    })
+    } as any)
     .eq('user_id', userId);
 
   if (error) {
@@ -44,17 +44,17 @@ export async function saveExpandedUserCondition(userId: string, condition: Expan
   const supabase = await createClient();
   
   // Determine tone profile based on category and specific
-  const toneProfile = getToneProfileType(condition.category, condition.specific);
+  const toneProfile = getToneProfileType(condition.category as any);
   
-  const { error } = await supabase
-    .from('profiles')
+  const { error } = await (supabase
+    .from('profiles') as any)
     .update({
       condition_category: condition.category,
       condition_specific: condition.specific,
       condition_details: condition.details || null,
       condition_provided_at: new Date().toISOString(),
       tone_profile: toneProfile, // NEW: Set tone profile
-    })
+    } as any)
     .eq('user_id', userId);
 
   if (error) {
@@ -82,8 +82,8 @@ export async function getUserCondition(userId: string): Promise<UserCondition | 
   }
 
   return {
-    primary: data.condition_primary,
-    details: data.condition_details,
+    primary: (data as any).condition_primary,
+    details: (data as any).condition_details,
   };
 }
 
@@ -104,9 +104,9 @@ export async function getExpandedUserCondition(userId: string): Promise<Expanded
   }
 
   return {
-    category: data.condition_category,
-    specific: data.condition_specific,
-    details: data.condition_details,
+    category: (data as any).condition_category,
+    specific: (data as any).condition_specific,
+    details: (data as any).condition_details,
   };
 }
 

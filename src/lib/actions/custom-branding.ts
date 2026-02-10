@@ -26,21 +26,21 @@ export async function updateCustomBranding(data: {
   }
 
   // Check if user has Creator tier
-  if (profile.tier !== 'creator') {
+  if ((profile as any).tier !== 'creator') {
     throw new Error('Creator tier required for custom branding')
   }
 
-  const { error } = await supabase
-    .from('profiles')
+  const { error } = await (supabase
+    .from('profiles') as any)
     .update(data)
-    .eq('id', profile.id)
+    .eq('id', (profile as any).id)
 
   if (error) {
     console.error('Error updating custom branding:', error)
     throw new Error('Failed to update custom branding')
   }
 
-  revalidatePath(`/u/${profile.slug}`)
+  revalidatePath(`/u/${(profile as any).slug}`)
   revalidatePath('/dash')
 }
 
@@ -64,7 +64,7 @@ export async function uploadCustomLogo(file: File): Promise<string> {
   }
 
   // Check if user has Creator tier
-  if (profile.tier !== 'creator') {
+  if ((profile as any).tier !== 'creator') {
     throw new Error('Creator tier required for custom branding')
   }
 
@@ -100,20 +100,20 @@ export async function uploadCustomLogo(file: File): Promise<string> {
     .getPublicUrl(uploadData.path)
 
   // Update profile with new logo URL
-  const { error: updateError } = await supabase
-    .from('profiles')
+  const { error: updateError } = await (supabase
+    .from('profiles') as any)
     .update({ 
       custom_logo_url: urlData.publicUrl,
       custom_branding_enabled: true 
     })
-    .eq('id', profile.id)
+    .eq('id', (profile as any).id)
 
   if (updateError) {
     console.error('Error updating profile with logo URL:', updateError)
     throw new Error('Failed to update profile')
   }
 
-  revalidatePath(`/u/${profile.slug}`)
+  revalidatePath(`/u/${(profile as any).slug}`)
   revalidatePath('/dash')
 
   return urlData.publicUrl
@@ -142,9 +142,9 @@ export async function getCustomBranding(): Promise<{
   }
 
   return {
-    custom_logo_url: profile.custom_logo_url,
-    custom_branding_enabled: profile.custom_branding_enabled || false,
-    tier: profile.tier as 'free' | 'pro' | 'creator'
+    custom_logo_url: (profile as any).custom_logo_url,
+    custom_branding_enabled: (profile as any).custom_branding_enabled || false,
+    tier: (profile as any).tier as 'free' | 'pro' | 'creator'
   }
 }
 
@@ -167,9 +167,9 @@ export async function deleteCustomLogo(): Promise<void> {
   }
 
   // Delete the file from storage if it exists
-  if (profile.custom_logo_url) {
+  if ((profile as any).custom_logo_url) {
     // Extract the file path from the URL
-    const urlParts = profile.custom_logo_url.split('/')
+    const urlParts = (profile as any).custom_logo_url.split('/')
     const fileName = urlParts[urlParts.length - 1]
     const filePath = `${user.id}/custom-logo-${fileName.split('-').slice(2).join('-')}`
 
@@ -179,19 +179,19 @@ export async function deleteCustomLogo(): Promise<void> {
   }
 
   // Update profile to remove logo URL
-  const { error: updateError } = await supabase
-    .from('profiles')
+  const { error: updateError } = await (supabase
+    .from('profiles') as any)
     .update({ 
       custom_logo_url: null,
       custom_branding_enabled: false 
     })
-    .eq('id', profile.id)
+    .eq('id', (profile as any).id)
 
   if (updateError) {
     console.error('Error removing custom logo:', updateError)
     throw new Error('Failed to remove custom logo')
   }
 
-  revalidatePath(`/u/${profile.slug}`)
+  revalidatePath(`/u/${(profile as any).slug}`)
   revalidatePath('/dash')
 }

@@ -46,11 +46,11 @@ export async function addStackItem(formData: {
     throw new Error('Profile not found')
   }
   
-  console.log('Profile found:', profile.id)
+  console.log('Profile found:', (profile as any).id)
 
   // Create the stack item
   const insertData = {
-    profile_id: profile.id,
+    profile_id: (profile as any).id,
     item_type: formData.itemType || 'supplements',
     name: formData.name,
     dose: formData.dose || null,
@@ -65,8 +65,8 @@ export async function addStackItem(formData: {
   
   console.log('Inserting stack item:', insertData)
   
-  const { error: stackItemError } = await supabase
-    .from('stack_items')
+  const { error: stackItemError } = await (supabase
+    .from('stack_items') as any)
     .insert(insertData)
 
   if (stackItemError) {
@@ -119,8 +119,8 @@ export async function updateStackItem(itemId: string, formData: {
   }
 
   // Update the stack item
-  const { error: updateError } = await supabase
-    .from('stack_items')
+  const { error: updateError } = await (supabase
+    .from('stack_items') as any)
     .update({
       name: formData.name,
       dose: formData.dose || null,

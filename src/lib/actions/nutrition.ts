@@ -23,7 +23,7 @@ async function getCurrentProfile() {
     throw new Error('Profile not found')
   }
 
-  return profile
+  return profile as any
 }
 
 // Get nutrition signature for a profile
@@ -41,14 +41,14 @@ export async function getNutritionSignature(profileId?: string): Promise<Nutriti
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('nutrition_signature')
-    .eq('id', targetProfileId)
+    .eq('id', targetProfileId as any)
     .single()
 
   if (error || !profile) {
     return { enabled: false, header_badges: [] }
   }
 
-  return profile.nutrition_signature as NutritionSignature || { enabled: false, header_badges: [] }
+  return (profile as any).nutrition_signature as NutritionSignature || { enabled: false, header_badges: [] }
 }
 
 // Update nutrition signature
@@ -61,8 +61,8 @@ export async function updateNutritionSignature(signature: Partial<NutritionSigna
     const validatedSignature = validateNutritionSignature(signature)
 
     // Update the profile
-    const { data: updatedProfile, error } = await supabase
-      .from('profiles')
+    const { data: updatedProfile, error } = await (supabase
+      .from('profiles') as any)
       .update({ nutrition_signature: validatedSignature })
       .eq('id', profile.id)
       .select('nutrition_signature')
@@ -79,7 +79,7 @@ export async function updateNutritionSignature(signature: Partial<NutritionSigna
       revalidatePath(`/u/${profile.slug}`)
     }
 
-    return updatedProfile.nutrition_signature as NutritionSignature
+    return (updatedProfile as any).nutrition_signature as NutritionSignature
   } catch (error) {
     console.error('Error in updateNutritionSignature:', error)
     if (error instanceof Error) {
@@ -104,7 +104,7 @@ export async function getPublicNutritionSignature(profileId: string): Promise<Nu
       return { enabled: false, header_badges: [] }
     }
 
-    const signature = profile.nutrition_signature as NutritionSignature
+    const signature = (profile as any).nutrition_signature as NutritionSignature
     
     // Only return if enabled
     if (!signature?.enabled && (!signature?.header_badges || signature.header_badges.length === 0)) {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import PaywallModal from '../../components/billing/PaywallModal'
 import StackPillGrid from '../../components/stack/StackPillGrid'
+import type { StackConstellationItem } from '../../components/stack/StackConstellation'
 
 type EffectRow = {
   user_supplement_id: string
@@ -38,8 +39,11 @@ type LoopRow = {
   monthlyCost?: number | null
   daysOnClean?: number
   daysOffClean?: number
+  daysOn?: number
+  daysOff?: number
   requiredOnDays?: number
   requiredOffDays?: number
+  verdict?: string
 }
 
 type UiRow = {
@@ -446,7 +450,7 @@ export default function ResultsPage() {
       // Use loop verdict/state to align with dashboard truth overlay
       const isReady = Boolean(loopData && (loopData as any).isReady)
       const catLower = String((loopData as any)?.effectCategory || '').toLowerCase()
-      const loopVerdictRaw = String(loopData?.verdict || '').toLowerCase()
+      const loopVerdictRaw = String((loopData as any)?.verdict || '').toLowerCase()
       const verdictKeep = loopVerdictRaw === 'keep' || catLower === 'works'
       const verdictDrop = loopVerdictRaw === 'drop' || catLower === 'no_effect'
       const verdictNoDetect = catLower === 'no_detectable_effect'
@@ -1592,7 +1596,7 @@ export default function ResultsPage() {
                     timing: getTiming(s0) || '',
                     brand: s0?.brand || parseBrandAndShortName(s0).brand || '',
                     frequency: getFrequency(s0) || '',
-                    monthly: String((r as any)?.monthly ?? (s0?.monthly_cost_usd ?? ''))
+                    monthly: String(s0?.monthly_cost_usd ?? '')
                   }
                   const meaningful = (
                     before.dose !== (editDraft.dose || '') ||

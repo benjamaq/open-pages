@@ -1,7 +1,7 @@
 import type { CorrelationResult } from './types'
 import { categorizeCorrelation, InsightCategory, shouldShowCorrelation } from './correlation-filters'
 
-export interface ScoredInsight extends CorrelationResult {
+export type ScoredInsight = CorrelationResult & {
   priorityScore: number
   category: InsightCategory
   showReason: string

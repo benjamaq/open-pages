@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import SupplementCard from './SupplementCard'
+import { SupplementCard } from './SupplementCard'
 
 export default function GatheringEvidencePanel({
   supplements
@@ -13,7 +13,7 @@ export default function GatheringEvidencePanel({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {supplements.map((s) => (
           <div key={s.id} className="animate-breathe">
-            <SupplementCard supplement={s} />
+            <SupplementCard data={s} />
           </div>
         ))}
       </div>

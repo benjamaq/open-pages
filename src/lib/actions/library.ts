@@ -61,7 +61,7 @@ async function getCurrentProfile() {
     throw new Error('Profile not found')
   }
 
-  return profile
+  return profile as any
 }
 
 // Create a new library item
@@ -73,8 +73,8 @@ export async function createLibraryItem(data: LibraryItemFormData): Promise<Libr
     // If this is a featured training plan, unfeatured any existing ones
     if (data.category === 'training_plan' && data.is_featured) {
       try {
-        await supabase
-          .from('library_items')
+        await (supabase
+          .from('library_items') as any)
           .update({ is_featured: false })
           .eq('profile_id', profile.id)
           .eq('category', 'training_plan')
@@ -84,8 +84,8 @@ export async function createLibraryItem(data: LibraryItemFormData): Promise<Libr
       }
     }
 
-    const { data: item, error } = await supabase
-      .from('library_items')
+    const { data: item, error } = await (supabase
+      .from('library_items') as any)
       .insert([{
         profile_id: profile.id,
         title: data.title.trim(),
@@ -207,7 +207,7 @@ export async function getLibraryItem(id: string): Promise<LibraryItem | null> {
   // Check if user owns this item or if it's public
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (item.is_public) {
+  if ((item as any).is_public) {
     return item as LibraryItem
   }
 
@@ -218,7 +218,7 @@ export async function getLibraryItem(id: string): Promise<LibraryItem | null> {
       .eq('user_id', user.id)
       .single()
 
-    if (profile && profile.id === item.profile_id) {
+    if (profile && (profile as any).id === (item as any).profile_id) {
       return item as LibraryItem
     }
   }
@@ -233,8 +233,8 @@ export async function updateLibraryItem(id: string, data: Partial<LibraryItemFor
 
   // If this is being set as featured training plan, unfeatured any existing ones
   if (data.category === 'training_plan' && data.is_featured) {
-    await supabase
-      .from('library_items')
+    await (supabase
+      .from('library_items') as any)
       .update({ is_featured: false })
       .eq('profile_id', profile.id)
       .eq('category', 'training_plan')
@@ -256,8 +256,8 @@ export async function updateLibraryItem(id: string, data: Partial<LibraryItemFor
   if (data.allow_download !== undefined) updateData.allow_download = data.allow_download
   if (data.is_featured !== undefined) updateData.is_featured = data.is_featured
 
-  const { data: item, error } = await supabase
-    .from('library_items')
+  const { data: item, error } = await (supabase
+    .from('library_items') as any)
     .update(updateData)
     .eq('id', id)
     .eq('profile_id', profile.id) // Ensure user owns this item
@@ -294,11 +294,11 @@ export async function deleteLibraryItem(id: string): Promise<void> {
 
   if (item) {
     // Delete files from storage
-    if (item.file_url) {
-      await supabase.storage.from('library').remove([item.file_url])
+    if ((item as any).file_url) {
+      await supabase.storage.from('library').remove([(item as any).file_url])
     }
-    if (item.thumbnail_url) {
-      await supabase.storage.from('library').remove([item.thumbnail_url])
+    if ((item as any).thumbnail_url) {
+      await supabase.storage.from('library').remove([(item as any).thumbnail_url])
     }
   }
 
@@ -336,7 +336,7 @@ export async function getLibraryCategoryCounts(profileId: string): Promise<Recor
   }
 
   const categoryCounts: Record<string, number> = {}
-  counts.forEach(item => {
+  counts.forEach((item: any) => {
     categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1
   })
 

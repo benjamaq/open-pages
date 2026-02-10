@@ -20,8 +20,8 @@ export async function createProfile(formData: {
   }
 
   // Upsert the profile - handles race conditions atomically
-  const { error: profileError } = await supabase
-    .from('profiles')
+  const { error: profileError } = await (supabase
+    .from('profiles') as any)
     .upsert({
       user_id: user.id,
       slug: formData.slug,
@@ -49,8 +49,8 @@ export async function createProfile(formData: {
 export async function updateJournalVisibility(profileId: string, showJournalPublic: boolean) {
   const supabase = await createClient()
   
-  const { data, error } = await supabase
-    .from('profiles')
+  const { data, error } = await (supabase
+    .from('profiles') as any)
     .update({ show_journal_public: showJournalPublic })
     .eq('id', profileId)
     .select()

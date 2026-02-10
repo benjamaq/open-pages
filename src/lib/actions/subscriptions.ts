@@ -73,7 +73,7 @@ export async function getUserTier(): Promise<'free' | 'pro' | 'creator'> {
       return 'free'
     }
 
-    return profile.tier as 'free' | 'pro' | 'creator' || 'free'
+    return (profile as any).tier as 'free' | 'pro' | 'creator' || 'free'
   } catch (error) {
     console.error('Error in getUserTier:', error)
     return 'free'
@@ -121,7 +121,7 @@ export async function getUserUsage(): Promise<UsageInfo[]> {
     }
 
     // Combine limits and usage
-    const usageMap = new Map(usage?.map(u => [u.feature_name, u.current_count]) || [])
+    const usageMap = new Map(usage?.map((u: any) => [u.feature_name, u.current_count]) || [])
     
     return limits?.map(limit => ({
       feature_name: limit.feature_name,
@@ -144,7 +144,7 @@ export async function checkCanAddItem(itemType: string): Promise<{ canAdd: boole
 
 export async function getPricingConfig() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data, error } = await supabase
       .from('pricing_config')
@@ -172,8 +172,8 @@ export async function upgradeToProPlan() {
 
     // For now, just update the plan type
     // In production, this would integrate with Stripe
-    const { error } = await supabase
-      .from('user_subscriptions')
+    const { error } = await (supabase
+      .from('user_subscriptions') as any)
       .upsert({
         user_id: user.id,
         plan_type: 'pro',

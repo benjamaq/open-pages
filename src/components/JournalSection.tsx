@@ -55,7 +55,7 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
     try {
       if (editingEntry) {
         await updateJournalEntry(editingEntry.id, {
-          heading: formData.heading.trim() || null,
+          heading: formData.heading.trim() || undefined,
           body: formData.body.trim(),
           public: formData.public
         })
@@ -65,7 +65,7 @@ export default function JournalSection({ journalEntries, showJournalPublic, onTo
         }
         await createJournalEntry({
           profile_id: profileId,
-          heading: formData.heading.trim() || null,
+          heading: formData.heading.trim() || undefined,
           body: formData.body.trim(),
           public: formData.public
         })

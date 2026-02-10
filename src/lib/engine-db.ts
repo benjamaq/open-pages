@@ -7,7 +7,7 @@ export async function getWindowDays(
   supplementId: string,
   window: '30d'|'90d'|'365d',
   userId?: string,
-  metric: 'mood' | 'sleep_quality' = 'mood'
+  metric: 'mood' | 'sleep_quality' | 'energy' | 'focus' = 'mood'
 ): Promise<{ rows: DayPoint[]; debug: { dailyEntriesCount?: number; supplementLogsCount?: number; matchedCount?: number; treatedCount: number; controlCount: number; periodsCount: number; takenDatesSize?: number; checkinsCount?: number } }> {
   console.log('🚨🚨🚨 getWindowDays CALLED', { supplementId, window, userId, metric })
   console.error('🚨 getWindowDays params', { supplementId, window, userId, metric })

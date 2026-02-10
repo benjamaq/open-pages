@@ -59,7 +59,7 @@ export async function getUserShopGearItems(userId: string): Promise<ShopGearItem
   const { data, error } = await supabase
     .from('shop_gear_items')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .order('featured', { ascending: false })
     .order('sort_order', { ascending: true })
 
@@ -103,17 +103,17 @@ export async function createShopGearItem(data: {
     throw new Error('Profile not found')
   }
 
-  if (profile.user_id !== user.id) {
+  if ((profile as any).user_id !== user.id) {
     throw new Error('Unauthorized')
   }
 
   // Check if user has Creator tier
-  if (profile.tier !== 'creator') {
+  if ((profile as any).tier !== 'creator') {
     throw new Error('Creator tier required')
   }
 
-  const { data: newItem, error } = await supabase
-    .from('shop_gear_items')
+  const { data: newItem, error } = await (supabase
+    .from('shop_gear_items') as any)
     .insert({
       ...data,
       featured: data.featured || false,
@@ -128,7 +128,7 @@ export async function createShopGearItem(data: {
     throw new Error('Failed to create shop gear item')
   }
 
-  revalidatePath(`/u/${profile.slug}`)
+  revalidatePath(`/u/${(profile as any).slug}`)
   revalidatePath('/dash')
   
   return newItem
@@ -159,12 +159,12 @@ export async function updateShopGearItem(
     throw new Error('Shop gear item not found')
   }
 
-  if (item.profiles.user_id !== user.id) {
+  if ((item as any).profiles.user_id !== user.id) {
     throw new Error('Unauthorized')
   }
 
-  const { data: updatedItem, error } = await supabase
-    .from('shop_gear_items')
+  const { data: updatedItem, error } = await (supabase
+    .from('shop_gear_items') as any)
     .update(updates)
     .eq('id', id)
     .select()
@@ -175,7 +175,7 @@ export async function updateShopGearItem(
     throw new Error('Failed to update shop gear item')
   }
 
-  revalidatePath(`/u/${item.profiles.slug}`)
+  revalidatePath(`/u/${(item as any).profiles.slug}`)
   revalidatePath('/dash')
   
   return updatedItem
@@ -203,7 +203,7 @@ export async function deleteShopGearItem(id: string): Promise<void> {
     throw new Error('Shop gear item not found')
   }
 
-  if (item.profiles.user_id !== user.id) {
+  if ((item as any).profiles.user_id !== user.id) {
     throw new Error('Unauthorized')
   }
 
@@ -217,7 +217,7 @@ export async function deleteShopGearItem(id: string): Promise<void> {
     throw new Error('Failed to delete shop gear item')
   }
 
-  revalidatePath(`/u/${item.profiles.slug}`)
+  revalidatePath(`/u/${(item as any).profiles.slug}`)
   revalidatePath('/dash')
 }
 
@@ -235,7 +235,7 @@ export async function getUserTier(userId: string): Promise<'free' | 'pro' | 'cre
     return 'free'
   }
 
-  return profile.tier as 'free' | 'pro' | 'creator'
+  return (profile as any).tier as 'free' | 'pro' | 'creator'
 }
 
 export async function updateUserTier(
@@ -253,8 +253,8 @@ export async function updateUserTier(
     throw new Error('Unauthorized')
   }
 
-  const { error } = await supabase
-    .from('profiles')
+  const { error } = await (supabase
+    .from('profiles') as any)
     .update({ tier })
     .eq('user_id', userId)
 
@@ -264,8 +264,8 @@ export async function updateUserTier(
   }
 
   // Also update user_usage table
-  const { error: usageError } = await supabase
-    .from('user_usage')
+  const { error: usageError } = await (supabase
+    .from('user_usage') as any)
     .update({ 
       tier,
       current_tier: tier,

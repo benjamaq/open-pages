@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import SupplementCard from './SupplementCard'
+import { SupplementCard } from './SupplementCard'
 
 export default function RulesPanel({
   supplements
@@ -15,7 +15,7 @@ export default function RulesPanel({
   }
   return (
     <section className="max-w-7xl mx-auto px-4 mt-6">
-      <div className className="rounded-xl border border-green-300 bg-green-50 p-4">
+      <div className="rounded-xl border border-green-300 bg-green-50 p-4">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold text-green-800">Rules (Proven)</div>
           <button
@@ -31,7 +31,7 @@ export default function RulesPanel({
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {visible.map(s => (
                 <div key={s.id}>
-                  <SupplementCard supplement={s} />
+                  <SupplementCard data={s} />
                 </div>
               ))}
             </div>

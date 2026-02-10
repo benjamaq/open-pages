@@ -41,7 +41,7 @@ export default function CheckInTransitionModal({
 
   // Get tone-appropriate transition message
   const getTransitionMessage = () => {
-    const toneProfile = getToneProfile(category);
+    const toneProfile = getToneProfile(category as any) as any;
     
     // Tone-specific transitions
     if (toneProfile.empathyLevel >= 9) {

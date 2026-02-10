@@ -20,7 +20,7 @@ export default function StatusBadge({
   children?: React.ReactNode
 }) {
   // base token mapping
-  let token = CockpitTokens.gather
+  let token: any = CockpitTokens.gather
   if (status === 'TRIAL') token = CockpitTokens.trial
   if (status === 'RULE') token = CockpitTokens.rule
   if (status === 'CONFOUNDED') token = CockpitTokens.confound
