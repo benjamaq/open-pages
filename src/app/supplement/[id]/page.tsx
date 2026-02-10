@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 
-export default function SupplementAlias({ params }: { params: { id: string } }) {
-  return redirect(`/supplements/${encodeURIComponent(params.id)}`)
+export default async function SupplementAlias({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  return redirect(`/supplements/${encodeURIComponent(id)}`)
 }
 
 

@@ -21,7 +21,7 @@ type EnhancedDayDrawerProps = {
 };
 
 export default function EnhancedDayDrawer({ isOpen, onClose, date, initialData }: EnhancedDayDrawerProps) {
-  const [formData, setFormData] = useState<SaveDailyEntryInput>({
+  const [formData, setFormData] = useState<any>({
     localDate: date,
     mood: null,
     energy: null,
@@ -117,8 +117,8 @@ export default function EnhancedDayDrawer({ isOpen, onClose, date, initialData }
     }
   };
 
-  const updateField = (field: keyof SaveDailyEntryInput, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const updateField = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const toggleTag = (tag: string) => {

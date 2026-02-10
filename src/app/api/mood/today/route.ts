@@ -79,19 +79,22 @@ export async function POST(request: Request) {
     const today = new Date().toISOString().split('T')[0];
 
     // Use the upsert function to save mood data
-    const { data, error } = await supabase.rpc('upsert_daily_entry_and_snapshot', {
-      p_user_id: user.id,
-      p_local_date: today,
-      p_mood: mood || null,
-      p_sleep_quality: sleep_quality || null,
-      p_pain: pain || null,
-      p_tags: tags || [],
-      p_journal: journal || null,
-      p_symptoms: symptoms || [],
-      p_pain_locations: pain_locations || [],
-      p_pain_types: pain_types || [],
-      p_custom_symptoms: custom_symptoms || []
-    });
+    const { data, error } = await supabase.rpc(
+      'upsert_daily_entry_and_snapshot',
+      {
+        p_user_id: user.id,
+        p_local_date: today,
+        p_mood: mood || null,
+        p_sleep_quality: sleep_quality || null,
+        p_pain: pain || null,
+        p_tags: tags || [],
+        p_journal: journal || null,
+        p_symptoms: symptoms || [],
+        p_pain_locations: pain_locations || [],
+        p_pain_types: pain_types || [],
+        p_custom_symptoms: custom_symptoms || []
+      } as any
+    );
 
     if (error) {
       console.error('Error saving mood data:', error);
@@ -104,7 +107,8 @@ export async function POST(request: Request) {
     // Fallback: if RPC doesn't handle new columns yet, ensure they're set via direct update
     if ((Array.isArray(lifestyle_factors) && lifestyle_factors.length >= 0) || exercise_type !== undefined || exercise_intensity !== undefined || Array.isArray(protocols)) {
       try {
-        await supabase
+        const supaAny = supabase as any
+        await supaAny
           .from('daily_entries')
           .update({ 
             lifestyle_factors: Array.isArray(lifestyle_factors) ? lifestyle_factors : undefined,

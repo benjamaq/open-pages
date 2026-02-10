@@ -13,14 +13,16 @@ export async function POST(req: NextRequest) {
   const dayToUse = typeof day === 'string' && day.length >= 10 ? day.slice(0,10) : today
 
   // Write into canonical check-ins table
-  const { data: saved, error } = await supabase.from('checkins').upsert(
-    { user_id: user.id, date: dayToUse, mood },
-    { onConflict: 'user_id,date' }
-  )
+  const { data: saved, error } = await (supabase as any)
+    .from('checkins')
+    .upsert(
+      { user_id: user.id, date: dayToUse, mood } as any,
+      { onConflict: 'user_id,date' }
+    )
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Mirror to daily_entries (energy/focus optional)
-  const { error: deErr } = await supabase
+  const { error: deErr } = await (supabase as any)
     .from('daily_entries')
     .upsert(
       {
@@ -29,7 +31,7 @@ export async function POST(req: NextRequest) {
         mood: mood ?? null,
         energy: typeof energy === 'number' ? energy : null,
         focus: typeof focus === 'number' ? focus : null
-      },
+      } as any,
       { onConflict: 'user_id,local_date' }
     )
   if (deErr) console.error('Failed to upsert daily_entries:', deErr)

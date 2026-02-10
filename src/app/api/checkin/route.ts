@@ -166,13 +166,13 @@ export async function POST(request: NextRequest) {
           currentStreak = 1
           microWins.push('🎉 First check-in of this streak! Your testing has begun.')
         }
-        await supabase
+        await (supabase as any)
           .from('profiles')
           .update({
             current_streak: currentStreak,
             last_checkin_date: todayStr,
             first_activity_date: (prof as any).first_activity_date || todayStr
-          })
+          } as any)
           .eq('id', (prof as any).id)
       }
     } catch (e) {}
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       .select('id')
       .maybeSingle()
     // eslint-disable-next-line no-console
-    console.log('[checkin] upsert result:', { ok: !error, id: upserted?.id, error })
+    console.log('[checkin] upsert result:', { ok: !error, id: (upserted as any)?.id, error })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     // Invalidate dashboard cache so next dashboard load recomputes
     try {
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
         .update({ invalidated_at: new Date().toISOString() } as any)
         .eq('user_id', user.id)
     } catch (e) { try { console.log('[dashboard_cache] invalidate error (ignored):', (e as any)?.message || e) } catch {} }
-    return NextResponse.json({ success: true, id: upserted?.id, upserted: true, micro_wins: microWins })
+    return NextResponse.json({ success: true, id: (upserted as any)?.id, upserted: true, micro_wins: microWins })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }

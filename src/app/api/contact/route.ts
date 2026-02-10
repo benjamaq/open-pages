@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Try to store contact form submission in database (optional for now)
     let contactSubmission = null
     try {
-      const { data, error: dbError } = await supabase
+      const { data, error: dbError } = await (supabase as any)
         .from('contact_submissions')
         .insert({
           name: name.trim(),
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           user_id: user?.id || null,
           status: 'new',
           created_at: new Date().toISOString()
-        })
+        } as any)
         .select()
         .single()
 

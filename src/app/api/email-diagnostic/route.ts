@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
         },
         client: {
           created: !!resendClient,
-          error: clientError?.message || null
+          error: (clientError as any)?.message || null
         },
         testEmail: {
           sent: !!testResult,
           result: testResult,
-          error: testError?.message || null
+          error: (testError as any)?.message || null
         }
       }
     })

@@ -27,7 +27,7 @@ export default async function FoodPage() {
   const { data: foodItems } = await supabase
     .from('stack_items')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .order('created_at', { ascending: false })
 
   return (

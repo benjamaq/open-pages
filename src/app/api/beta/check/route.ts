@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       message: 'Beta code is valid!',
-      code: betaCode.code,
-      expiresAt: betaCode.expires_at
+      code: (betaCode as any).code,
+      expiresAt: (betaCode as any).expires_at
     })
 
   } catch (error) {

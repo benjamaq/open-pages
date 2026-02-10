@@ -202,8 +202,8 @@ export async function POST(request: Request) {
         .select('generic_name')
         .ilike('generic_name', normalizedName)
         .maybeSingle()
-      if (canRow?.generic_name) {
-        canonicalName = String(canRow.generic_name).toLowerCase()
+      if ((canRow as any)?.generic_name) {
+        canonicalName = String((canRow as any).generic_name).toLowerCase()
       }
     } catch {
       // Table might not exist in some deployments; ignore
@@ -216,8 +216,8 @@ export async function POST(request: Request) {
           .select('generic_name')
           .ilike('generic_name', normalizedName)
           .maybeSingle()
-        if (canLegacy?.generic_name) {
-          canonicalName = String(canLegacy.generic_name).toLowerCase()
+        if ((canLegacy as any)?.generic_name) {
+          canonicalName = String((canLegacy as any).generic_name).toLowerCase()
         }
       } catch {}
     }
@@ -233,7 +233,7 @@ export async function POST(request: Request) {
         .select('id, canonical_name')
         .ilike('canonical_name', desiredCanonical)
         .maybeSingle()
-      if (s1?.id) supplementRow = { id: s1.id }
+      if ((s1 as any)?.id) supplementRow = { id: (s1 as any).id }
     }
     // Try match in synonyms array
     if (!supplementRow) {
@@ -243,7 +243,7 @@ export async function POST(request: Request) {
           .select('id, synonyms')
           .contains('synonyms', [normalizedName])
           .maybeSingle()
-        if (s2?.id) supplementRow = { id: s2.id }
+        if ((s2 as any)?.id) supplementRow = { id: (s2 as any).id }
       } catch {}
     }
     // Create supplement if still missing
@@ -256,10 +256,10 @@ export async function POST(request: Request) {
         } as any)
         .select('id')
         .single()
-      if (suppErr || !createdSupp?.id) {
+      if (suppErr || !(createdSupp as any)?.id) {
         return NextResponse.json({ error: suppErr?.message || 'Failed to ensure supplement' }, { status: 500 })
       }
-      supplementRow = { id: createdSupp.id }
+      supplementRow = { id: (createdSupp as any).id }
     }
 
     // 3) Insert user_supplement referencing the REAL supplement.id (FK-safe)
@@ -312,9 +312,9 @@ export async function POST(request: Request) {
     const STARTER_TESTING_LIMIT = 5
     const desiredTestingStatus = (!isPremium && verdictCount >= STARTER_TESTING_LIMIT) ? 'inactive' : 'testing'
 
-    const { data: userSupp, error: usErr } = await supabase
+    const { data: userSupp, error: usErr } = await (supabase as any)
       .from('user_supplement')
-      .insert({ ...insertPayload, testing_status: desiredTestingStatus })
+      .insert({ ...insertPayload, testing_status: desiredTestingStatus } as any)
       .select('id')
       .maybeSingle()
 
@@ -355,9 +355,9 @@ export async function POST(request: Request) {
       // Hardening: if inferred_start_at did not persist on insert, set it explicitly now
       if (inferredStartISO) {
         try {
-          const { error: fixErr } = await supabase
+          const { error: fixErr } = await (supabase as any)
             .from('user_supplement')
-            .update({ inferred_start_at: inferredStartISO })
+            .update({ inferred_start_at: inferredStartISO } as any)
             .eq('id', String(userSupp.id))
             .eq('user_id', user.id)
           if (fixErr) { try { console.warn('[supplements] post-insert inferred_start_at update failed:', fixErr.message) } catch {} }
@@ -398,7 +398,7 @@ export async function POST(request: Request) {
                 science_note: fresh.scienceNote,
                 raw_context: fresh
               }
-              await supabase.from('supplement_truth_reports').insert(payloadToStore)
+              await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
             } catch (saveErr: any) {
               try { console.warn('[supplements] truth save failed:', saveErr?.message || saveErr) } catch {}
             }
@@ -418,8 +418,8 @@ export async function POST(request: Request) {
       .eq('user_id', user.id)
       .eq('supplement_id', supplementRow.id)
       .maybeSingle()
-    if (existing?.id) {
-      return NextResponse.json({ id: existing.id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
+    if ((existing as any)?.id) {
+      return NextResponse.json({ id: (existing as any).id, testing_status: desiredTestingStatus, limitReached: desiredTestingStatus === 'inactive' })
     }
 
     // 4) Fallback path removed: we must always create a FK-valid user_supplement

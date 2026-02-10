@@ -17,10 +17,10 @@ export async function GET() {
   const { data: prefs } = await supabase
     .from('notification_preferences')
     .select('timezone')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .maybeSingle()
 
-  return NextResponse.json({ ok: true, timezone: prefs?.timezone || null })
+  return NextResponse.json({ ok: true, timezone: (prefs as any)?.timezone || null })
 }
 
 export async function POST(req: NextRequest) {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const { error: updErr } = await supabase
     .from('notification_preferences')
-    .upsert({ profile_id: profile.id, timezone: tz }, { onConflict: 'profile_id' })
+    .upsert({ profile_id: (profile as any).id, timezone: tz } as any, { onConflict: 'profile_id' })
 
   if (updErr) return NextResponse.json({ ok: false, error: updErr.message }, { status: 500 })
   return NextResponse.json({ ok: true })

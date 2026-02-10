@@ -20,8 +20,8 @@ export async function GET() {
       .not('used_at', 'is', null)
       .single()
 
-    const isBetaUser = !!betaCode && new Date(betaCode.expires_at) > new Date()
-    const expiresAt = betaCode?.expires_at || null
+    const isBetaUser = !!betaCode && new Date((betaCode as any).expires_at) > new Date()
+    const expiresAt = (betaCode as any)?.expires_at || null
     
     // Calculate days until expiration
     let daysUntilExpiration = null
@@ -36,7 +36,7 @@ export async function GET() {
       isBetaUser,
       expiresAt,
       daysUntilExpiration,
-      isExpired: betaCode ? new Date(betaCode.expires_at) <= new Date() : false
+      isExpired: betaCode ? new Date((betaCode as any).expires_at) <= new Date() : false
     })
 
   } catch (error) {

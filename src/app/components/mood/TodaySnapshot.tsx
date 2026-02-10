@@ -289,16 +289,16 @@ export default function TodaySnapshot({
 
     if (recoveryValues.length > 0) {
       avgRecovery = (recoveryValues.reduce((a, b) => a + b, 0) / recoveryValues.length).toFixed(0);
-    } else if (todayEntry?.wearables?.recovery_score !== null && todayEntry?.wearables?.recovery_score !== undefined) {
-      avgRecovery = todayEntry.wearables.recovery_score.toString();
+    } else if ((todayEntry as any)?.wearables?.recovery_score !== null && (todayEntry as any)?.wearables?.recovery_score !== undefined) {
+      avgRecovery = ((todayEntry as any).wearables.recovery_score).toString();
     } else {
       avgRecovery = '—';
     }
 
     if (wearableSleepValues.length > 0) {
       avgWearableSleep = (wearableSleepValues.reduce((a, b) => a + b, 0) / wearableSleepValues.length).toFixed(0);
-    } else if (todayEntry?.wearables?.sleep_score !== null && todayEntry?.wearables?.sleep_score !== undefined) {
-      avgWearableSleep = todayEntry.wearables.sleep_score.toString();
+    } else if ((todayEntry as any)?.wearables?.sleep_score !== null && (todayEntry as any)?.wearables?.sleep_score !== undefined) {
+      avgWearableSleep = ((todayEntry as any).wearables.sleep_score).toString();
     } else {
       avgWearableSleep = '—';
     }

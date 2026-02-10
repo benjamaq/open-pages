@@ -67,14 +67,14 @@ export default function JournalPageClient({ profile, journalEntries }: JournalPa
           heading: formData.heading.trim() || null,
           body: formData.body.trim(),
           public: formData.public
-        })
+        } as any)
       } else {
         await createJournalEntry({
           profile_id: profile.id,
           heading: formData.heading.trim() || null,
           body: formData.body.trim(),
           public: formData.public
-        })
+        } as any)
       }
       
       setFormData({ heading: '', body: '', public: true })

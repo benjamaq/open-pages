@@ -7,9 +7,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('STRIPE_SECRET_KEY not found - billing features will be disabled')
 }
 
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20'
-}) : null
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY as string) : null
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -72,13 +70,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, supabase: ReturnType<typeof createClient>) {
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  if (!stripe) return
   const userId = session.metadata?.user_id
   if (!userId) return
 
   if (session.mode === 'subscription' && session.subscription) {
     // Get subscription details
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+    const subscription = (await stripe.subscriptions.retrieve(session.subscription as string)) as any
     
     await supabase
       .from('user_subscriptions')
@@ -96,7 +95,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, 
   }
 }
 
-async function handleSubscriptionChange(subscription: Stripe.Subscription, supabase: ReturnType<typeof createClient>) {
+async function handleSubscriptionChange(subscription: Stripe.Subscription, supabase: any) {
+  if (!stripe) return
   const customer = await stripe.customers.retrieve(subscription.customer as string)
   
   if (customer.deleted || !customer.metadata?.user_id) {
@@ -106,22 +106,24 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
 
   const userId = customer.metadata.user_id
 
+  const s = subscription as any
   await supabase
     .from('user_subscriptions')
     .upsert({
       user_id: userId,
-      stripe_customer_id: subscription.customer as string,
-      stripe_subscription_id: subscription.id,
-      plan_type: subscription.status === 'active' ? 'pro' : 'free',
-      status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      stripe_customer_id: s.customer as string,
+      stripe_subscription_id: s.id,
+      plan_type: s.status === 'active' ? 'pro' : 'free',
+      status: s.status,
+      current_period_start: new Date((s.current_period_start || 0) * 1000).toISOString(),
+      current_period_end: new Date((s.current_period_end || 0) * 1000).toISOString(),
+      cancel_at_period_end: s.cancel_at_period_end,
       updated_at: new Date().toISOString()
     })
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supabase: ReturnType<typeof createClient>) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supabase: any) {
+  if (!stripe) return
   const customer = await stripe.customers.retrieve(subscription.customer as string)
   
   if (customer.deleted || !customer.metadata?.user_id) {
@@ -143,12 +145,13 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
     .eq('user_id', userId)
 }
 
-async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: ReturnType<typeof createClient>) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   // Log successful payment, update subscription status if needed
   console.log(`Payment succeeded for invoice: ${invoice.id}`)
 }
 
-async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: ReturnType<typeof createClient>) {
+async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
+  if (!stripe) return
   const customer = await stripe.customers.retrieve(invoice.customer as string)
   
   if (customer.deleted || !customer.metadata?.user_id) {

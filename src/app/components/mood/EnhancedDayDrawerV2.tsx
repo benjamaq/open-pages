@@ -667,7 +667,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       
       // For now, skip the scheduled items API and just save mood data
       // This will fix the save error immediately
-      let allScheduledItems = [];
+      let allScheduledItems: any[] = [];
 
       // Clear pain-related data if pain = 0
       const currentPain = formData.pain || 0;
@@ -809,16 +809,16 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         if (isOnboarding && isActuallyFirstCheckIn && !firstCheckInLoading) {
           try {
             const insightData = await generateFirstInsight({
-              mood: formData.mood,
-              sleep_quality: formData.sleep_quality,
-              pain: formData.pain
+              mood: formData.mood ?? null,
+              sleep_quality: formData.sleep_quality ?? null,
+              pain: formData.pain ?? null
             });
             
             setPostCheckinData({
               dayOneData: {
-                mood: formData.mood,
-                sleep_quality: formData.sleep_quality,
-                pain: formData.pain,
+                mood: formData.mood ?? null,
+                sleep_quality: formData.sleep_quality ?? null,
+                pain: formData.pain ?? null,
                 symptoms: selectedSymptoms || [],
                 pain_locations: selectedPainLocations || [],
                 pain_types: selectedPainTypes || [],
@@ -2140,7 +2140,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
               </button>
               <button
                 onClick={handleSave}
-                disabled={isSaving || (isOnboarding && isActuallyFirstCheckIn && !hasMovedSliders)}
+                disabled={!!(isSaving || (isOnboarding && isActuallyFirstCheckIn && !Boolean(hasMovedSliders)))}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
                 {isSaving ? (isActuallyFirstCheckIn ? 'Processing...' : 'Saving...') : (isActuallyFirstCheckIn ? 'Next' : 'Save')}

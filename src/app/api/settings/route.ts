@@ -53,7 +53,8 @@ export async function PUT(request: Request) {
   }
   try {
     // First attempt: write to concrete columns (if they exist)
-    const { error: upErr } = await supabase
+    const sbAny = supabase as any
+    const { error: upErr } = await sbAny
       .from('profiles')
       .update({
         reminder_enabled: nextPrefs.reminder_enabled as any,
@@ -69,7 +70,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ ok: true, saved: nextPrefs })
     }
     // Fallback: persist into public_modules.settings
-    const { data: prof } = await supabase
+    const { data: prof } = await sbAny
       .from('profiles')
       .select('public_modules')
       .eq('user_id', user.id)
@@ -79,7 +80,7 @@ export async function PUT(request: Request) {
     if (nextPrefs.reminder_popup_dismissed != null) (updatedSettings as any).reminder_popup_dismissed = nextPrefs.reminder_popup_dismissed
     if (nextPrefs.commitment_message_shown != null) (updatedSettings as any).commitment_message_shown = nextPrefs.commitment_message_shown
     const updated = { ...(pm || {}), settings: updatedSettings }
-    const { error: jsonErr } = await supabase
+    const { error: jsonErr } = await sbAny
       .from('profiles')
       .update({ public_modules: updated as any })
       .eq('user_id', user.id)

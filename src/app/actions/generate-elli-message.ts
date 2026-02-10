@@ -33,12 +33,12 @@ export async function generateAndSaveElliMessage(
     
     // Always prefer first name for a warmer tone
     const { getFirstName } = await import('@/lib/name');
-    const userName = getFirstName(profile?.display_name, 'there');
+    const userName = getFirstName((profile as any)?.display_name, 'there');
     
     // Get user's condition
-    const condition = profile?.condition_primary ? {
-      primary: profile.condition_primary,
-      details: profile.condition_details || undefined
+    const condition = (profile as any)?.condition_primary ? {
+      primary: (profile as any).condition_primary,
+      details: (profile as any).condition_details || undefined
     } : undefined;
     
     // Get check-in count for milestone detection / Day 1 guard
@@ -132,7 +132,7 @@ export async function generateAndSaveElliMessage(
       pain: safePain,
       mood: safeMood,
       sleep_quality: safeSleep,
-      tags: (todayEntry?.lifestyle_factors as string[] | null) || undefined,
+      tags: ((todayEntry as any)?.lifestyle_factors as string[] | null) || undefined,
     }
 
     // Generate the message via new service (optional humanizer retained by default)

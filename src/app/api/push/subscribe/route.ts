@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     // Attempt to upsert into push_subscriptions; tolerate missing table in early environments
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('push_subscriptions')
         .upsert({
           user_id: userId,

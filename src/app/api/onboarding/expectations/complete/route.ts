@@ -21,7 +21,8 @@ export async function POST() {
       return res
     }
 
-    const { error: uErr } = await supabase
+    const sbAny = supabase as any
+    const { error: uErr } = await sbAny
       .from('profiles')
       .update({ expectations_onboarding_completed: true })
       .eq('id', (profile as any).id)

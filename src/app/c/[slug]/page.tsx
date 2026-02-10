@@ -4,8 +4,9 @@ import { notFound } from "next/navigation"
 
 export const dynamic = "force-static"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const compound = getCompound(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const compound = getCompound(slug)
   if (!compound) return {}
   
   return {
@@ -14,8 +15,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default function CompoundPage({ params }: { params: { slug: string } }) {
-  const compound = getCompound(params.slug)
+export default async function CompoundPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const compound = getCompound(slug)
   if (!compound) return notFound()
 
   return (

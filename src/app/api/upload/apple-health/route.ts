@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     // Stream-parse export.xml from ZIP then persist
     step = 'parse-xml'
     try { console.log('[apple-health] Step 7: Parsing XML...') } catch {}
-    const daily = await parseXMLDailyFromStream(exportFile.nodeStream())
+    const daily = await parseXMLDailyFromStream((exportFile as any).nodeStream())
     const entries: Entry[] = buildEntriesFromDaily(user.id, daily)
 
     if (!entries.length) {
@@ -137,9 +137,9 @@ export async function POST(req: NextRequest) {
 
     step = 'upsert'
     try { console.log('[apple-health] Step 9: Upserting to daily_entries...', { days: entries.length }) } catch {}
-    const { error: insErr } = await supabase
+    const { error: insErr } = await (supabase as any)
       .from('daily_entries')
-      .upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
+      .upsert(entries as any, { onConflict: 'user_id,local_date', ignoreDuplicates: false } as any)
     if (insErr) {
       console.error('Apple Health upsert error:', insErr)
       return NextResponse.json({ error: 'Failed to save data', details: insErr.message }, { status: 500 })
@@ -180,9 +180,9 @@ async function parseAndPersistAppleHealthXMLStream(userId: string, stream: NodeJ
     return NextResponse.json({ error: 'No valid data found', details: 'export.xml contained no usable records' }, { status: 400 })
   }
   const supabase = await createClient()
-  const { error: insErr } = await supabase
+  const { error: insErr } = await (supabase as any)
     .from('daily_entries')
-    .upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
+    .upsert(entries as any, { onConflict: 'user_id,local_date', ignoreDuplicates: false } as any)
   if (insErr) {
     console.error('Apple Health upsert error:', insErr)
     return NextResponse.json({ error: 'Failed to save data', details: insErr.message }, { status: 500 })
@@ -228,7 +228,7 @@ async function parseXMLDailyFromStream(stream: NodeJS.ReadableStream): Promise<R
   })
   await new Promise<void>((resolve, reject) => {
     saxStream.on('end', () => resolve())
-    saxStream.on('error', (err) => reject(err))
+    saxStream.on('error', (err: any) => reject(err))
     stream.on('error', (err: any) => reject(err))
     stream.pipe(saxStream)
   })

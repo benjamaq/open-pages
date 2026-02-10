@@ -28,7 +28,7 @@ export default async function MindfulnessPage() {
   const { data: mindfulnessItems } = await supabase
     .from('stack_items')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .eq('item_type', 'mindfulness')
     .order('created_at', { ascending: false })
 

@@ -22,10 +22,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    const distinctDays = new Set((checkinDays || []).map(c => new Date(c.created_at).toISOString().slice(0, 10)))
+    const distinctDays = new Set(((checkinDays as any[] | null) || []).map((c: any) => new Date(c.created_at).toISOString().slice(0, 10)))
     const daysTracked = distinctDays.size
     const currentStreak = calculateStreak(checkinDays || [])
-    const longestStreak = Math.max(profile?.longest_streak || 0, currentStreak)
+    const longestStreak = Math.max(((profile as any)?.longest_streak || 0), currentStreak)
 
     // Today / yesterday
     const todayStr = new Date().toISOString().slice(0, 10)
@@ -73,14 +73,14 @@ export async function GET() {
         .select('created_at')
         .eq('user_id', user.id)
         .gte('created_at', since.toISOString())
-      const recentSet = new Set((recent || []).map(r => new Date(r.created_at).toISOString().slice(0, 10)))
+      const recentSet = new Set(((recent as any[] | null) || []).map((r: any) => new Date(r.created_at).toISOString().slice(0, 10)))
       const daysCompleted = recentSet.size
       for (const s of supplements) {
         const stage = (s as any).stage || 'hypothesis'
         if (['hypothesis', 'early_signal', 'validating'].includes(stage) && daysCompleted < 7) {
           activeTests.push({
-            supplementId: s.id,
-            name: s.name || 'Supplement',
+            supplementId: (s as any).id,
+            name: (s as any).name || 'Supplement',
             primaryGoal: ((s as any).primary_goal_tags || [])[0] || 'wellness',
             daysCompleted,
             targetDays: 7
@@ -95,19 +95,20 @@ export async function GET() {
       const { data: truthReports } = await supabase
         .from('supplement_truth_reports')
         .select('user_supplement_id, created_at')
-        .in('user_supplement_id', (supplements || []).map(s => s.id) || [])
+        .in('user_supplement_id', ((supplements as any[] | null) || []).map((s: any) => s.id) || [])
         .is('viewed_at', null)
-      newTruthReports = (truthReports || []).map(tr => {
-        const supp = (supplements || []).find(s => s.id === tr.user_supplement_id)
-        return { supplementId: tr.user_supplement_id, name: supp?.name || 'Supplement' }
+      newTruthReports = ((truthReports as any[] | null) || []).map((tr: any) => {
+        const supp = ((supplements as any[] | null) || []).find((s: any) => s.id === tr.user_supplement_id)
+        return { supplementId: tr.user_supplement_id, name: (supp as any)?.name || 'Supplement' }
       })
     } catch {}
 
     // Micro-insights disabled in clinical version (compute elsewhere if needed)
     const microInsights: UserContext['microInsights'] = []
 
+    const todayOverride: any = today ? { today: { ...(today as any), stress: (today as any).stress_level } } : {}
     const context: UserContext & { hasWearableData?: boolean } = {
-      firstName: profile?.first_name || undefined,
+      firstName: (profile as any)?.first_name || undefined,
       daysTracked,
       totalCheckins: (checkinDays || []).length,
       currentStreak,
@@ -117,7 +118,7 @@ export async function GET() {
       activeTests,
       today: today || undefined,
       // map stress_level -> today.stress
-      ...(today ? { today: { ...today, stress: (today as any).stress_level } } : {}),
+      ...todayOverride,
       yesterday: yesterday || undefined,
       hasNewTruthReport: newTruthReports.length > 0,
       newTruthReports,

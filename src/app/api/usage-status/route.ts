@@ -26,19 +26,19 @@ export async function GET() {
       .maybeSingle()
     if (!usage) return NextResponse.json(defaults)
     return NextResponse.json({
-      stackItems: usage.stack_items || 0,
-      stackItemsLimit: usage.stack_items_limit || 10,
-      currentTier: usage.tier || 'free',
-      isInTrial: usage.is_in_trial || false,
-      trialEndedAt: usage.trial_ended_at || null,
-      isBetaUser: usage.is_beta_user || false,
-      betaExpiresAt: usage.beta_expires_at || null,
+      stackItems: (usage as any).stack_items || 0,
+      stackItemsLimit: (usage as any).stack_items_limit || 10,
+      currentTier: (usage as any).tier || 'free',
+      isInTrial: (usage as any).is_in_trial || false,
+      trialEndedAt: (usage as any).trial_ended_at || null,
+      isBetaUser: (usage as any).is_beta_user || false,
+      betaExpiresAt: (usage as any).beta_expires_at || null,
       breakdown: {
-        supplements: usage.supplements_count || 0,
-        protocols: usage.protocols_count || 0,
-        uploads: usage.uploads_count || 0,
-        library: usage.library_count || 0,
-        gear: usage.gear_count || 0,
+        supplements: (usage as any).supplements_count || 0,
+        protocols: (usage as any).protocols_count || 0,
+        uploads: (usage as any).uploads_count || 0,
+        library: (usage as any).library_count || 0,
+        gear: (usage as any).gear_count || 0,
       }
     })
   } catch (e) {

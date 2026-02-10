@@ -8,9 +8,9 @@ const CANON: Record<string, { id: string; name: string; defaultGoalTags: string[
 
 export async function GET(
   _req: NextRequest,
-  ctx: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = ctx.params.id
+  const { id } = await params
   const row = CANON[id]
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(row)

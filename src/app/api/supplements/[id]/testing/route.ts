@@ -74,9 +74,9 @@ export async function POST(request: NextRequest, ctx: any) {
     }
 
     // Update testing_status
-    const { data: updated, error } = await supabase
+    const { data: updated, error } = await (supabase as any)
       .from('user_supplement')
-      .update({ testing_status: status })
+      .update({ testing_status: status } as any)
       .eq('id', id)
       .eq('user_id', user.id)
       .select('id,testing_status')

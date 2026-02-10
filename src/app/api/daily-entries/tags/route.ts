@@ -36,28 +36,28 @@ export async function POST(req: NextRequest) {
       .eq('local_date', localDate)
       .maybeSingle()
 
-    let entryId = existing?.id as string | undefined
-    let tags: string[] = Array.isArray(existing?.tags) ? existing!.tags as string[] : []
+    let entryId = (existing as any)?.id as string | undefined
+    let tags: string[] = Array.isArray((existing as any)?.tags) ? ((existing as any).tags as string[]) : []
 
     if (!entryId) {
       // Create the entry if it doesn't exist
-      const { data: inserted, error: insErr } = await supabase
+      const { data: inserted, error: insErr } = await (supabase as any)
         .from('daily_entries')
-        .insert({ user_id: user.id, local_date: localDate, tags: [] })
+        .insert({ user_id: user.id, local_date: localDate, tags: [] } as any)
         .select('id, tags')
         .single()
       if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
-      entryId = inserted!.id
-      tags = inserted!.tags || []
+      entryId = (inserted as any)!.id
+      tags = (inserted as any)!.tags || []
     }
 
     // Add or remove the tag
     const has = tags.includes(tag)
     const nextTags = body.taken ? (has ? tags : [...tags, tag]) : (has ? tags.filter(t => t !== tag) : tags)
 
-    const { error: updErr } = await supabase
+    const { error: updErr } = await (supabase as any)
       .from('daily_entries')
-      .update({ tags: nextTags })
+      .update({ tags: nextTags } as any)
       .eq('id', entryId!)
 
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })

@@ -363,7 +363,7 @@ export default async function ProfilePage({ params, searchParams }: {
 
   // Prepare profile data with additional fields
   const profileWithData = {
-    ...profile,
+    ...(profile as any),
     tier: (profile as any).tier || 'free',
     isInTrial: (profile as any).is_in_trial || false,
     trialEndedAt: (profile as any).trial_ended_at

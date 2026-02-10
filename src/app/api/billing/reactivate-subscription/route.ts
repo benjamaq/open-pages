@@ -3,9 +3,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 // Initialize Stripe (with error handling for missing env vars)
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20'
-}) : null
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY as string) : null
 
 export async function POST() {
   try {
@@ -22,7 +20,7 @@ export async function POST() {
     }
 
     // Get user's subscription
-    const { data: subscription } = await supabase
+    const { data: subscription }: { data: { stripe_subscription_id: string | null } | null } = await supabase
       .from('user_usage')
       .select('stripe_subscription_id')
       .eq('user_id', user.id)
@@ -41,7 +39,7 @@ export async function POST() {
     )
 
     // Update database
-    await supabase
+    await (supabase as any)
       .from('user_usage')
       .update({
         cancel_at_period_end: false,

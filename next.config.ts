@@ -8,11 +8,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Disable ESLint during build for deployment
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  
   // Add headers for better Chrome compatibility and PWA support
   async headers() {
     return [

@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
     // Auto-create a minimal profile if missing (to unblock add flow)
     if (profileError || !profile) {
       const guessName = (user.email || '').split('@')[0] || 'You'
-      const { data: created, error: createErr } = await supabase
+      const { data: created, error: createErr } = await (supabase as any)
         .from('profiles')
-        .insert({ user_id: user.id, name: guessName })
+        .insert({ user_id: user.id, name: guessName } as any)
         .select('id')
         .maybeSingle()
       if (createErr || !created) {
@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Add the stack item
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('stack_items')
       .insert({
-        profile_id: profile.id,
+        profile_id: (profile as any).id,
         name,
         dose: dose || null,
         item_type,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         schedule_days: [0, 1, 2, 3, 4, 5, 6],
         notes: null,
         created_at: new Date().toISOString()
-      })
+      } as any)
       .select()
       .single()
 

@@ -27,7 +27,7 @@ export default async function GearPage() {
   const { data: gear, error: gearError } = await supabase
     .from('gear')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .order('created_at', { ascending: false })
 
   if (gearError) {

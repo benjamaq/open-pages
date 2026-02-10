@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest) {
     if (showPublicFollowers !== undefined) updateData.show_public_followers = showPublicFollowers
 
     // Update the profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('profiles')
       .update(updateData)
       .eq('user_id', user.id)
@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (profiles && profiles.length > 0) {
-      revalidatePath(`/u/${profiles[0].slug}`)
+      revalidatePath(`/u/${(profiles as any[])[0].slug}`)
     }
     revalidatePath('/dash/settings')
 

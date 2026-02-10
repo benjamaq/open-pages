@@ -23,7 +23,8 @@ export async function POST() {
     // Try to update DB flag if column exists; if not, fall back to cookie
     let updated = false
     try {
-      const { error: uErr } = await supabase
+      const sbAny = supabase as any
+      const { error: uErr } = await sbAny
         .from('profiles')
         .update({ context_education_completed: true })
         .eq('id', (profile as any).id)

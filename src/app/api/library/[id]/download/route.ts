@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
-    const { id } = params
 
     // Get the library item
     const { data: item, error: itemError } = await supabase
@@ -33,13 +33,13 @@ export async function GET(
         .eq('user_id', user.id)
         .single()
 
-      if (profile && profile.id === item.profile_id) {
+      if ((profile as any) && (profile as any).id === (item as any).profile_id) {
         hasDownloadAccess = true
       }
     }
 
     // Public items with download permission
-    if (item.is_public && item.allow_download) {
+    if ((item as any).is_public && (item as any).allow_download) {
       hasDownloadAccess = true
     }
 
@@ -50,7 +50,7 @@ export async function GET(
     // Get signed URL for download
     const { data: signedUrlData, error: urlError } = await supabase.storage
       .from('library')
-      .createSignedUrl(item.file_url, 3600, {
+      .createSignedUrl((item as any).file_url, 3600, {
         download: true // This forces download instead of preview
       })
 

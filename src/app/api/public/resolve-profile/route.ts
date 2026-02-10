@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     if (error || !data) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    return NextResponse.json({ user_id: data.user_id })
+    return NextResponse.json({ user_id: (data as any).user_id })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }

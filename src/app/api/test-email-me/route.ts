@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     console.log('🧪 Manual email test triggered for me.com')
     
     // Test data
-    const testData = {
+    const testData: any = {
       userName: 'Test User',
       userEmail: 'ben09@me.com', // Your me.com email
       supplements: [
@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
       mindfulness: [
         { name: 'Meditation', duration: '10 min' },
         { name: 'Breathing exercises', duration: '5 min' }
-      ]
+      ],
+      profileUrl: `https://biostackr.io/dash`,
+      unsubscribeUrl: `https://biostackr.io/dash/settings`
     }
     
     console.log('📧 Sending test email to:', testData.userEmail)

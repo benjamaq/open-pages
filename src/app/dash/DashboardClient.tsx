@@ -57,7 +57,7 @@ import BiohackerOnboarding from '../../components/onboarding/BiohackerOnboarding
 import { PatternsCard } from './components/PatternsCard'
 import { createClient } from '@/lib/supabase/client'
 import { getGreeting as getGreetingUtil } from '@/lib/utils/greetings'
-import SupplementCard from '@/components/dashboard/SupplementCard'
+import { SupplementCard } from '@/components/dashboard/SupplementCard'
 import SupplementDetailsModal from '../../components/modals/SupplementDetailsModal'
 
 // Vanilla modal helper - bypasses React

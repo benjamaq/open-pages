@@ -13,10 +13,12 @@ interface MovementItem {
   name: string
   dose: string | null
   timing: string | null
+  brand?: string | null
   notes: string | null
   public: boolean
   created_at: string
   updated_at: string
+  time_preference?: string | null
 }
 
 interface MovementPageClientProps {
@@ -480,7 +482,7 @@ export default function MovementPageClient({ movementItems, profile }: MovementP
 
         {editingItem && (
           <EditStackItemForm 
-            item={editingItem} 
+            item={editingItem as any} 
             onClose={() => setEditingItem(null)} 
           />
         )}

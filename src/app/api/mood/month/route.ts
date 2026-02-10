@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data
-    const dayData = [];
-    const entriesMap = new Map(dailyEntries?.map(entry => [entry.local_date, entry]) || []);
+    const dayData: any[] = [];
+    const entriesMap = new Map(((dailyEntries as any[] | undefined) || []).map((entry: any) => [entry.local_date, entry]));
 
     // Generate all days in the month
     const currentDate = new Date(year, monthNum - 1, 1);

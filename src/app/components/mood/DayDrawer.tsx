@@ -30,8 +30,8 @@ const FEELING_OPTIONS = [
 ] as const;
 
 export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDrawerProps) {
-  const [formData, setFormData] = useState<SaveDailyEntryInput>({
-    entryDate: date,
+  const [formData, setFormData] = useState<any>({
+    localDate: date,
     mood: null,
     energy: null,
     pain: null,
@@ -49,7 +49,7 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
   useEffect(() => {
     if (initialData) {
       setFormData({
-        entryDate: date,
+        localDate: date,
         mood: initialData.mood,
         energy: initialData.energy,
         pain: initialData.pain,
@@ -61,7 +61,7 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
       setShowPain(initialData.pain !== null);
     } else {
       setFormData({
-        entryDate: date,
+        localDate: date,
         mood: null,
         energy: null,
         pain: null,
@@ -117,8 +117,8 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
     }
   };
 
-  const updateField = (field: keyof SaveMoodEntryInput, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const updateField = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const formatDate = (dateStr: string) => {

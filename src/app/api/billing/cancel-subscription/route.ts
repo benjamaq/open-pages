@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 // Initialize Stripe (with error handling for missing env vars)
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20'
-}) : null
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2024-06-20' } as any)
+  : null
 
 export async function POST() {
   try {
@@ -22,7 +22,7 @@ export async function POST() {
     }
 
     // Get user's subscription
-    const { data: subscription } = await supabase
+    const { data: subscription }: { data: { stripe_subscription_id: string | null } | null } = await supabase
       .from('user_usage')
       .select('stripe_subscription_id')
       .eq('user_id', user.id)
@@ -39,20 +39,22 @@ export async function POST() {
         cancel_at_period_end: true
       }
     )
+    const cancelAtPeriodEnd = (updatedSubscription as any).cancel_at_period_end as boolean
+    const currentPeriodEndSec = (updatedSubscription as any).current_period_end as number | undefined
 
     // Update database
-    await supabase
+    await (supabase as any)
       .from('user_usage')
       .update({
         cancel_at_period_end: true,
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('user_id', user.id)
 
     return NextResponse.json({ 
       success: true,
-      cancel_at_period_end: updatedSubscription.cancel_at_period_end,
-      current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString()
+      cancel_at_period_end: cancelAtPeriodEnd,
+      current_period_end: currentPeriodEndSec ? new Date(currentPeriodEndSec * 1000).toISOString() : null
     })
 
   } catch (error) {

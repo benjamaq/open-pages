@@ -16,11 +16,11 @@ export async function GET() {
     .single()
 
   let supplements: any[] = []
-  if (profile?.id) {
+  if ((profile as any)?.id) {
     const { data: items } = await supabase
       .from('stack_items')
       .select('id, name, schedule_days')
-      .eq('profile_id', profile.id)
+      .eq('profile_id', (profile as any).id)
       .eq('item_type', 'supplements')
     supplements = items || []
   }

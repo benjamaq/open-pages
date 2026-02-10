@@ -70,7 +70,7 @@ export async function POST() {
           name,
           n: signal.n,
           effectPct: signal.effectPct,
-          confidence: signal.designatedConfidence ?? signal.confidence,
+          confidence: signal.confidence,
           status: (signal as any).status || 'testing'
         })
 

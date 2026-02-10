@@ -126,7 +126,7 @@ export async function GET(request: Request) {
     // Cache: serve cached dashboard if available and not invalidated (unless force bypassed)
     try {
       if (!forceNoCache) {
-        const { data: cached } = await supabase
+        const { data: cached } = await (supabase as any)
           .from('dashboard_cache')
           .select('payload, computed_at, invalidated_at')
           .eq('user_id', user.id)
@@ -495,6 +495,9 @@ export async function GET(request: Request) {
       } catch {}
     }
 
+    // Map supplement names to user_supplement ids (pre-initialize for earlier references)
+    const nameToUserSuppId = new Map<string, string>()
+
     for (const it of items || []) {
       const id = (it as any).id as string
       const name = (it as any).name || 'Supplement'
@@ -706,7 +709,7 @@ export async function GET(request: Request) {
       .from('user_supplement')
       .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status')
       .eq('user_id', user.id)
-    const nameToUserSuppId = new Map<string, string>()
+    /* nameToUserSuppId initialized earlier */
     const userSuppIdToName = new Map<string, string>()
     const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
     const testingActiveIds = new Set<string>()
@@ -743,7 +746,7 @@ export async function GET(request: Request) {
           uid = idKey
         }
         // Do NOT use name-based fallback here to avoid cross-supplement leakage
-        ;(r as any).testingActive = testingActiveIds.has(uid)
+        ;(r as any).testingActive = testingActiveIds.has(String(uid) as any)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
         ;(r as any).userSuppId = uid
         if (VERBOSE) {
@@ -807,13 +810,13 @@ export async function GET(request: Request) {
                   .from('supplement_truth_reports')
                   .select('id,created_at')
                   .eq('user_id', user.id)
-                  .eq('user_supplement_id', uid)
+                  .eq('user_supplement_id', uid as any)
                   .gte('created_at', sinceIso)
                   .limit(1)
                 if (recent && recent.length > 0) {
-                  if (VERBOSE) { try { console.log('[overlay-refresh] skip duplicate truth insert (recent exists)', { uid, created_at: recent[0].created_at }) } catch {} }
+                  if (VERBOSE) { try { console.log('[overlay-refresh] skip duplicate truth insert (recent exists)', { uid, created_at: (recent as any)[0].created_at }) } catch {} }
                 } else {
-                  await supabase.from('supplement_truth_reports').insert(payloadToStore)
+                  await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
                 }
               } catch {
                 // Fallback: attempt an upsert on user_supplement_id to dedupe
@@ -844,7 +847,7 @@ export async function GET(request: Request) {
                 .from('supplement_truth_reports')
                 .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
                 .eq('user_id', user.id)
-                .eq('user_supplement_id', uid)
+                .eq('user_supplement_id', uid as any)
                 .order('created_at', { ascending: false })
                 .limit(1)
               if ((latest || []).length > 0) {
@@ -918,9 +921,9 @@ export async function GET(request: Request) {
         // If still unresolved (e.g., legacy stack row without linkage), skip truth overlay for this row
         suppId = suppId || null
         ;(r as any).userSuppId = suppId
-        const meta = (suppMetaById ? suppMetaById.get(suppId) : undefined)
+        const meta = (suppMetaById ? suppMetaById.get(suppId as any) : undefined)
         const restartIso: string | null = meta && (meta as any).restart ? String((meta as any).restart) : null
-        const createdAtIso: string | null = createdAtRaw ? String(createdAtRaw) : null
+        const createdAtIso: string | null = ((r as any).createdAtIso ?? null) as any
         const confirmStartIso: string | null = restartIso || createdAtIso
         // Always recompute to avoid stale effect table counts
         let on = 0, off = 0
@@ -936,10 +939,10 @@ export async function GET(request: Request) {
           let hasExplicitRecord = false
           if (intake && typeof intake === 'object') {
             // Try multiple candidate keys to handle historical data keyed by stack_items.id
-            const candidates = [suppId, String((r as any).id || '')].filter(Boolean)
+            const candidates = [suppId, String((r as any).id || '')].filter(Boolean) as any
             for (const k of candidates) {
               if (hasRecord) break
-              const val = (intake as any)[k]
+              const val = (intake as any)[(k as any)]
               if (val === undefined) continue
               hasRecord = true
               hasExplicitRecord = true
@@ -997,7 +1000,7 @@ export async function GET(request: Request) {
         ;(r as any).daysOfData = on + off
         if (restartIso) {
           ;(r as any).retestStartedAt = restartIso
-          ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId) ? (suppMetaById.get(suppId) as any).trial : null) ?? null
+          ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId as any) ? (suppMetaById.get(suppId as any) as any).trial : null) ?? null
           ;(r as any).effectCategory = undefined
           r.effectPct = null
           r.confidence = null
@@ -1239,6 +1242,7 @@ export async function GET(request: Request) {
           }
         } catch {}
         try {
+          const hasCheckinData: any = (r as any).explicitCleanCheckins
           console.log('[upload-debug]', {
             id: r.id,
             name,
@@ -1375,6 +1379,7 @@ export async function GET(request: Request) {
         }
         // Debug logs for Danny cases
         try {
+          const truth_status: any = (r as any).effectCategory || ((r as any).display?.badgeKey ?? null)
           if (String(r.name || '').toLowerCase().includes('doctor\'s best') ||
               String(r.name || '').toLowerCase().includes('collagenup') ||
               String(r.name || '').toLowerCase().includes('multivitamin')) {
@@ -1499,7 +1504,7 @@ export async function GET(request: Request) {
           await (supabase as any)
             .from('user_supplement')
             .update({ testing_status: target } as any)
-            .eq('id', uid)
+            .eq('id', uid as any)
             .eq('user_id', user.id)
         }
       }

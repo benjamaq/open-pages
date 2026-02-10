@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         
         // Check for new followers in last 24 hours (for toast notification)
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        newFollowersSinceLastCheck = followers?.filter(f => 
+        newFollowersSinceLastCheck = followers?.filter((f: any) => 
           new Date(f.created_at) > yesterday
         ).length || 0
         console.log('📈 New followers since yesterday:', newFollowersSinceLastCheck)
@@ -66,9 +66,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       profile: {
-        id: profile.id,
-        name: profile.display_name,
-        slug: profile.slug,
+        id: (profile as any).id,
+        name: (profile as any).display_name,
+        slug: (profile as any).slug,
         allow_stack_follow: false, // Default value since column might not exist
         show_public_followers: false // Default value since column might not exist
       },

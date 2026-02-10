@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark beta code as used
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('beta_codes')
       .update({ 
         used_by: user.id, 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's profile to mark beta code used
-    const { error: profileError } = await supabase
+    const { error: profileError } = await (supabase as any)
       .from('profiles')
       .update({ beta_code_used_at: new Date().toISOString() })
       .eq('user_id', user.id)
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       message: 'Beta code activated! You now have Pro access for 6 months.',
-      expiresAt: betaCode.expires_at
+      expiresAt: (betaCode as any).expires_at
     })
 
   } catch (error) {

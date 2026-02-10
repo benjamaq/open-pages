@@ -29,10 +29,10 @@ export async function GET() {
     }
 
     const response = NextResponse.json({
-      tier: usageData.tier || 'free',
-      isInTrial: usageData.is_in_trial || false,
-      trialStartedAt: usageData.trial_started_at,
-      trialEndedAt: usageData.trial_ended_at,
+      tier: (usageData as any).tier || 'free',
+      isInTrial: (usageData as any).is_in_trial || false,
+      trialStartedAt: (usageData as any).trial_started_at,
+      trialEndedAt: (usageData as any).trial_ended_at,
       timestamp: Date.now()
     })
 

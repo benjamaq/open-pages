@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
-    const { id } = params
 
     // Get the library item with service role to bypass RLS for public items
     const { data: item, error: itemError } = await supabase
@@ -26,7 +26,7 @@ export async function GET(
     let hasAccess = false
 
     // Public items are accessible to everyone (including anonymous users)
-    if (item.is_public) {
+    if ((item as any).is_public) {
       hasAccess = true
     }
     
@@ -38,7 +38,7 @@ export async function GET(
         .eq('user_id', user.id)
         .single()
 
-      if (profile && profile.id === item.profile_id) {
+      if ((profile as any) && (profile as any).id === (item as any).profile_id) {
         hasAccess = true
       }
     }
@@ -48,23 +48,23 @@ export async function GET(
     }
 
     // For public items, try to download directly first
-    console.log('Attempting to download file:', item.file_url)
-    console.log('File type:', item.file_type)
-    console.log('Is public:', item.is_public)
+    console.log('Attempting to download file:', (item as any).file_url)
+    console.log('File type:', (item as any).file_type)
+    console.log('Is public:', (item as any).is_public)
     
     const { data: fileData, error: fileError } = await supabase.storage
       .from('library')
-      .download(item.file_url)
+      .download((item as any).file_url)
 
     if (fileError || !fileData) {
       console.error('Direct download failed:', fileError)
       
       // If direct download fails and it's public, try signed URL
-      if (item.is_public) {
+      if ((item as any).is_public) {
         console.log('Trying signed URL approach for public file')
         const { data: signedUrlData, error: urlError } = await supabase.storage
           .from('library')
-          .createSignedUrl(item.file_url, 3600)
+          .createSignedUrl((item as any).file_url, 3600)
 
         if (urlError || !signedUrlData?.signedUrl) {
           console.error('Failed to create signed URL:', urlError)
@@ -87,10 +87,10 @@ export async function GET(
     // Set appropriate headers based on file type
     const headers = new Headers()
     
-    if (item.file_type.startsWith('image/')) {
-      headers.set('Content-Type', item.file_type)
+    if ((item as any).file_type.startsWith('image/')) {
+      headers.set('Content-Type', (item as any).file_type)
       headers.set('Cache-Control', 'public, max-age=3600')
-    } else if (item.file_type === 'application/pdf') {
+    } else if ((item as any).file_type === 'application/pdf') {
       headers.set('Content-Type', 'application/pdf')
       headers.set('Cache-Control', 'public, max-age=3600')
       // Add headers to allow iframe embedding

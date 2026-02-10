@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
       .select('id,user_id,trial_number')
       .eq('id', userSupplementId)
       .maybeSingle()
-    if (!row || row.user_id !== user.id) {
+    if (!row || (row as any).user_id !== user.id) {
       return nerror('Not found or not owned', 404)
     }
 
-    const nextTrial = (row.trial_number || 1) + 1
+    const nextTrial = (((row as any).trial_number || 1) + 1) as number
     const { error } = await supabaseAdmin
       .from('user_supplement')
       .update({

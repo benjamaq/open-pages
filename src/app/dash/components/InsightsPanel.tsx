@@ -23,7 +23,7 @@ export default async function InsightsPanel({ userId }: { userId: string }) {
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-gray-900">Pattern Insights</h3>
-      {insights.map((insight) => (
+      {(insights as any[]).map((insight) => (
         <div key={insight.id} className="bg-purple-50 border border-purple-200 rounded-lg p-4">
           <p className="text-gray-700">{insight.message_text}</p>
         </div>

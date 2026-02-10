@@ -48,21 +48,21 @@ export async function GET(request: NextRequest) {
       supabase
         .from('stack_items')
         .select('id')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', (profile as any).id)
         .contains('schedule_days', [dayOfWeek]),
       
       // Get protocols scheduled for this day
       supabase
         .from('protocols')
         .select('id')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', (profile as any).id)
         .contains('schedule_days', [dayOfWeek])
     ]);
 
     // Combine all scheduled item IDs
     const allScheduledItems = [
-      ...(stackItemsResult.data || []).map(item => item.id),
-      ...(protocolsResult.data || []).map(item => item.id)
+      ...((stackItemsResult.data as any[] | null) || []).map((item: any) => item.id),
+      ...((protocolsResult.data as any[] | null) || []).map((item: any) => item.id)
     ];
 
     console.log('Scheduled items for date:', date, 'dayOfWeek:', dayOfWeek, 'items:', allScheduledItems);

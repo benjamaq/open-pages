@@ -62,7 +62,8 @@ async function handleUpdate(request: NextRequest) {
     } catch {}
 
     // Update the profile
-    const { data: profiles, error } = await supabase
+    const sbAny = supabase as any
+    const { data: profiles, error } = await sbAny
       .from('profiles')
       .update(filteredUpdates)
       .eq('user_id', user.id)

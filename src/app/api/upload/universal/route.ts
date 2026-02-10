@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
           if (/whoop|physiological|journal|sleeps/i.test(p) && p.toLowerCase().endsWith('.csv')) whoopCSV.push({ path: p, obj })
         })
         if (exportXML) {
-          const stream = exportXML.nodeStream()
+          const stream = (exportXML as any).nodeStream()
           const daily = await parseAppleHealthXMLStream(stream)
           const entries = buildAppleHealthEntries(user.id, daily)
           const up = await upsertDailyEntries(entries)
@@ -199,7 +199,7 @@ async function handleStorageFiles(userId: string, bucket: string, storagePaths: 
       let exportXML: JSZip.JSZipObject | null = null
       zip.forEach((pp, obj) => { if (!exportXML && /(^|\/)export\.xml$/i.test(pp)) exportXML = obj })
       if (exportXML) {
-        const daily = await parseAppleHealthXMLStream(exportXML.nodeStream())
+        const daily = await parseAppleHealthXMLStream((exportXML as any).nodeStream())
         const entries = buildAppleHealthEntries(userId, daily)
         const up = await upsertDailyEntries(entries)
         total += up
@@ -282,7 +282,7 @@ async function parseAppleHealthXMLStream(stream: NodeJS.ReadableStream): Promise
   })
   await new Promise<void>((resolve, reject) => {
     saxStream.on('end', () => resolve())
-    saxStream.on('error', (err) => reject(err))
+    saxStream.on('error', (err: any) => reject(err))
     stream.on('error', (err: any) => reject(err))
     stream.pipe(saxStream)
   })
@@ -317,7 +317,7 @@ function buildAppleHealthEntries(userId: string, daily: Record<string, any>): En
 async function upsertDailyEntries(entries: Entry[]): Promise<number> {
   if (!entries.length) return 0
   const supabase = await createClient()
-  const { error } = await supabase.from('daily_entries').upsert(entries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
+  const { error } = await (supabase as any).from('daily_entries').upsert(entries as any, { onConflict: 'user_id,local_date', ignoreDuplicates: false } as any)
   if (error) throw new Error(error.message)
   return entries.length
 }

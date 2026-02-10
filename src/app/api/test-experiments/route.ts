@@ -5,9 +5,9 @@ export async function GET() {
 	const supabase = await createClient()
 	
 	// Try to get table structure
-	const { data, error } = await supabase.rpc('get_table_columns', {
+	const { data, error } = await (supabase as any).rpc('get_table_columns', {
 		table_name: 'experiments'
-	})
+	} as any)
 	
 	// If that doesn't work, try inserting minimal data to see what's required
 	const { data: authData } = await supabase.auth.getUser()
@@ -15,9 +15,9 @@ export async function GET() {
 	
 	if (user) {
 		// Try inserting with ONLY id to see what columns are required
-		const { data: testInsert, error: insertError } = await supabase
+		const { data: testInsert, error: insertError } = await (supabase as any)
 			.from('experiments')
-			.insert({})
+			.insert({} as any)
 			.select()
 		
 		return NextResponse.json({

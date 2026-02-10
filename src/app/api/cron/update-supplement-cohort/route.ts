@@ -13,7 +13,8 @@ export async function GET() {
       .not('canonical_id', 'is', null)
     const byKey = new Map<string, number[]>()
     const byCanonicalMetric = new Map<string, { canonical_id: string; primary_metric: string }>()
-    for (const r of (reports || [])) {
+    const reportList = (reports as any[] | null) || []
+    for (const r of reportList) {
       if (!r.canonical_id || !r.primary_metric) continue
       if (!r.status || !['proven_positive', 'no_effect', 'negative'].includes(String(r.status))) continue
       if (typeof r.confidence_score === 'number' && r.confidence_score < 0.4) continue
@@ -53,7 +54,7 @@ export async function GET() {
         updated_at: new Date().toISOString()
       }
       // Upsert per canonical_id
-      await supabase.from('supplement_cohort_stats').upsert(payload, { onConflict: 'canonical_id' })
+      await (supabase as any).from('supplement_cohort_stats').upsert(payload as any, { onConflict: 'canonical_id' })
     }
     return NextResponse.json({ ok: true, updated: byKey.size })
   } catch (e: any) {

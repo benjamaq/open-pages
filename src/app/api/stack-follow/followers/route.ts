@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
         const oneDayAgo = new Date()
         oneDayAgo.setDate(oneDayAgo.getDate() - 1)
         
-        newFollowersSinceLastCheck = followers.filter(follower => 
-          new Date(follower.created_at) > oneDayAgo
+        newFollowersSinceLastCheck = (followers as Array<{ created_at: string }>).filter(follower => 
+          new Date((follower as any).created_at) > oneDayAgo
         ).length
       }
     } catch (error) {
@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
       followerCount,
       newFollowersSinceLastCheck,
       profile: {
-        id: profile.id,
-        slug: profile.slug,
-        display_name: profile.display_name
+        id: (profile as any).id,
+        slug: (profile as any).slug,
+        display_name: (profile as any).display_name
       }
     })
 

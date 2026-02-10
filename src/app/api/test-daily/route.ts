@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
         const userName = profile.name || 'User'
         
         console.log(`👤 Testing user: ${userName} (${userEmail})`)
-        console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
+        console.log(`⏰ Reminder time: ${(pref as any).reminder_time} ${(pref as any).timezone}`)
         
         // Parse reminder time
-        const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
+        const [reminderHour, reminderMinute] = String((pref as any).reminder_time).split(':').map(Number)
         
         // Convert to UTC (simplified for testing)
-        const userTimezone = pref.timezone || 'UTC'
+        const userTimezone = (pref as any).timezone || 'UTC'
         let reminderUTCHour = reminderHour
         let reminderUTCMinute = reminderMinute
         
@@ -77,13 +77,15 @@ export async function GET(request: NextRequest) {
           // Send test email
           console.log(`📧 Sending test email to ${userEmail}`)
           
-          const emailData = {
+          const emailData: any = {
             userName,
             userEmail,
             supplements: [],
             protocols: [],
             movement: [],
-            mindfulness: []
+            mindfulness: [],
+            profileUrl: `https://biostackr.io/dash`,
+            unsubscribeUrl: `https://biostackr.io/dash/settings`
           }
           
           await sendDailyReminder(emailData)
@@ -91,8 +93,8 @@ export async function GET(request: NextRequest) {
           results.push({
             user: userName,
             email: userEmail,
-            reminderTime: pref.reminder_time,
-            timezone: pref.timezone,
+            reminderTime: (pref as any).reminder_time,
+            timezone: (pref as any).timezone,
             utcTime: `${reminderUTCHour}:${reminderUTCMinute}`,
             timeDiff,
             sent: true
@@ -101,8 +103,8 @@ export async function GET(request: NextRequest) {
           results.push({
             user: userName,
             email: userEmail,
-            reminderTime: pref.reminder_time,
-            timezone: pref.timezone,
+            reminderTime: (pref as any).reminder_time,
+            timezone: (pref as any).timezone,
             utcTime: `${reminderUTCHour}:${reminderUTCMinute}`,
             timeDiff,
             sent: false

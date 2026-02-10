@@ -197,14 +197,14 @@ export async function GET(request: NextRequest, context: any) {
       analysis_source: (report as any)?.analysisSource || null
     }
     try {
-      await supabase.from('supplement_truth_reports').insert(payloadToStore)
+      await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
     } catch (e: any) {
       try { console.log('[truth-report] insert failed (non-fatal):', e?.message || e) } catch {}
     }
 
     // Mark supplement record flag if present
     try {
-      await supabase.from('user_supplement').update({ has_truth_report: true }).eq('id', effectiveUserSuppId).eq('user_id', user.id)
+      await (supabase as any).from('user_supplement').update({ has_truth_report: true } as any).eq('id', effectiveUserSuppId).eq('user_id', user.id)
     } catch {}
 
     return NextResponse.json(debugMode ? { ...report, _debug: debugInfo } : report)

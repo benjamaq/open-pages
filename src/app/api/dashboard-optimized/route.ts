@@ -76,14 +76,14 @@ export async function GET(request: NextRequest) {
           if (error && error.code !== 'PGRST116') return { data: null, error };
           if (!data) return { data: null, error: null };
           
-          const expiresAt = new Date(data.expires_at);
+          const expiresAt = new Date((data as any).expires_at);
           const now = new Date();
           const daysUntilExpiration = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           
           return {
             data: {
               isBetaUser: true,
-              expiresAt: data.expires_at,
+              expiresAt: (data as any).expires_at,
               daysUntilExpiration,
               isExpired: daysUntilExpiration <= 0
             },
@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Calculate 7-day averages
-    const last7Days = monthlyMoodData.data?.slice(-7) || [];
-    const moodValues = last7Days.map(day => day.mood).filter(val => val !== null && val !== undefined);
-    const sleepValues = last7Days.map(day => day.sleep_quality).filter(val => val !== null && val !== undefined);
-    const painValues = last7Days.map(day => day.pain).filter(val => val !== null && val !== undefined);
+    const last7Days: any[] = ((monthlyMoodData.data as any[] | undefined)?.slice(-7)) || [];
+    const moodValues = last7Days.map((day: any) => day.mood).filter((val: any) => val !== null && val !== undefined);
+    const sleepValues = last7Days.map((day: any) => day.sleep_quality).filter((val: any) => val !== null && val !== undefined);
+    const painValues = last7Days.map((day: any) => day.pain).filter((val: any) => val !== null && val !== undefined);
 
     const averages = {
       mood: moodValues.length > 0 

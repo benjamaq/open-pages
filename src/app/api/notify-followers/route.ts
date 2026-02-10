@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Profile found:', profile)
+    const profileAny = profile as { display_name: string; slug: string }
 
     const { message } = await request.json()
 
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch followers', details: followersError.message }, { status: 500 })
     }
 
-    const followers = followersData || []
+    const followers = (followersData || []) as Array<{ follower_email: string }>
     let followersNotified = 0
 
     console.log(`📧 Sending notifications to ${followers.length} follower(s)...`)
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
     for (const follower of followers) {
       try {
         const emailData = createFollowerNotificationEmail(
-          profile.display_name,
-          profile.slug,
+          profileAny.display_name,
+          profileAny.slug,
           message,
           follower.follower_email
         )
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Send confirmation email to creator
     try {
       const confirmationEmail = createCreatorConfirmationEmail(
-        profile.display_name,
+        profileAny.display_name,
         followersNotified,
         user.email || 'creator@example.com'
       )
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send confirmation email:', error)
     }
 
-    console.log(`📧 Notify Followers: ${profile.display_name} sent update to ${followersNotified} follower(s): "${message}"`)
+    console.log(`📧 Notify Followers: ${profileAny.display_name} sent update to ${followersNotified} follower(s): "${message}"`)
     
     return NextResponse.json({ 
       success: true, 

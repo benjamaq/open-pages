@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Attempt to persist (optional)
     try {
       const supabase = await createClient()
-      await supabase
+      await (supabase as any)
         .from('signup_diagnostics')
         .insert({
           phase: entry.phase,
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
           viewport: entry.viewport,
           error_message: entry.error,
           created_at: entry.ts,
-        })
+        } as any)
     } catch (e: any) {
       // Table might not exist; ignore
       if (!String(e?.message || '').includes('relation')) console.warn('[SignupDiag] persist failed', e?.message)

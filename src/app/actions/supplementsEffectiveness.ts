@@ -50,7 +50,7 @@ export async function computeAndPersistSupplementInsights(userId: string) {
     .select('id')
     .eq('user_id', userId)
     .single()
-  const profileId = profile?.id
+  const profileId = (profile as any)?.id
 
   let idToName: Record<string, string> = {}
   let idToScheduleDays: Record<string, number[]> = {}

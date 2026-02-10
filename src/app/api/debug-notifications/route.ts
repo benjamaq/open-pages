@@ -23,22 +23,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to insert a test record
-    const { data: insertData, error: insertError } = await supabase
+    const { data: insertData, error: insertError } = await (supabase as any)
       .from('notification_preferences')
       .upsert({
-        profile_id: profile.id,
+        profile_id: (profile as any).id,
         email_enabled: true,
         daily_reminder_enabled: true,
         reminder_time: '09:00:00',
         timezone: 'UTC'
-      })
+      } as any)
       .select()
 
     if (insertError) {
       return NextResponse.json({ 
         error: 'Insert failed', 
         details: insertError,
-        profile_id: profile.id,
+        profile_id: (profile as any).id,
         user_id: user.id
       }, { status: 500 })
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       data: insertData,
-      profile_id: profile.id,
+      profile_id: (profile as any).id,
       user_id: user.id
     })
 

@@ -30,13 +30,13 @@ export async function GET() {
 
     // Calculate trial status
     const now = new Date()
-    const trialStartedAt = usageData.trial_started_at ? new Date(usageData.trial_started_at) : null
-    const trialEndedAt = usageData.trial_ended_at ? new Date(usageData.trial_ended_at) : null
+    const trialStartedAt = (usageData as any).trial_started_at ? new Date((usageData as any).trial_started_at) : null
+    const trialEndedAt = (usageData as any).trial_ended_at ? new Date((usageData as any).trial_ended_at) : null
     
     let isInTrial = false
     let daysRemaining = 0
 
-    if (trialStartedAt && usageData.is_in_trial) {
+    if (trialStartedAt && (usageData as any).is_in_trial) {
       // Check if trial is still active (14 days from start)
       const trialEndDate = new Date(trialStartedAt.getTime() + (14 * 24 * 60 * 60 * 1000))
       const timeDiff = trialEndDate.getTime() - now.getTime()

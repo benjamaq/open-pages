@@ -16,7 +16,7 @@ async function resolveId(paramsLike: any): Promise<string> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -27,7 +27,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = await resolveId(params)
+    const { id } = await params
     if (!id) {
       return NextResponse.json({ error: 'Invalid supplement id' }, { status: 400 });
     }
@@ -173,10 +173,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = await resolveId(params)
+    const { id } = await params
     // Debug incoming params
     try {
       // eslint-disable-next-line no-console
@@ -237,9 +237,9 @@ export async function PATCH(
         payload.monthly_cost_usd = monthlyCost
       }
       if (Object.keys(payload).length > 0) {
-        const { data, error: usErr } = await supabase
+        const { data, error: usErr } = await (supabase as any)
           .from('user_supplement')
-          .update(payload)
+          .update(payload as any)
           .eq('id', id)
           .eq('user_id', user.id)
           .select('id,dose,timing,brand,monthly_cost_usd')
@@ -269,15 +269,15 @@ export async function PATCH(
         stackUpdate.monthly_cost = monthlyCost
       }
       if (Object.keys(stackUpdate).length > 0) {
-        await supabase
+        await (supabase as any)
           .from('stack_items')
-          .update(stackUpdate)
+          .update(stackUpdate as any)
           .eq('id', id)
           .eq('profile_id', (profile as any).id)
         // Also try by foreign key if present (when id is user_supplement.id)
-        await supabase
+        await (supabase as any)
           .from('stack_items')
-          .update(stackUpdate)
+          .update(stackUpdate as any)
           .eq('user_supplement_id', id)
           .eq('profile_id', (profile as any).id)
       }
@@ -290,15 +290,15 @@ export async function PATCH(
     if (hasCategory) {
       const category = String(body.category).trim()
       // Attempt user_supplement update by matching user_supplement.id = params.id first
-      await supabase
+      await (supabase as any)
         .from('user_supplement')
-        .update({ category })
+        .update({ category } as any)
         .eq('id', id)
         .eq('user_id', user.id)
       // Also update stack_items.tags for charts
-      await supabase
+      await (supabase as any)
         .from('stack_items')
-        .update({ tags: [category] })
+        .update({ tags: [category] } as any)
         .eq('profile_id', (profile as any).id)
         .or(`id.eq.${id},user_supplement_id.eq.${id}`)
     }

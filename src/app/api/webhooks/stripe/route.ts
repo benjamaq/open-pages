@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
 
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
-  supabase: ReturnType<typeof createClient>
+  supabase: any
 ): Promise<{ ok: boolean; message?: string }> {
   const userId = session.metadata?.user_id
   const plan = session.metadata?.plan as 'pro' | 'premium' | 'creator'
@@ -160,7 +160,7 @@ async function handleCheckoutCompleted(
 
 async function handleSubscriptionChange(
   subscription: Stripe.Subscription,
-  supabase: ReturnType<typeof createClient>
+  supabase: any
 ): Promise<{ ok: boolean; message?: string }> {
   const userId = subscription.metadata?.user_id
   const plan = subscription.metadata?.plan as 'pro' | 'premium' | 'creator'
@@ -171,7 +171,7 @@ async function handleSubscriptionChange(
   }
 
   const isActive = subscription.status === 'active'
-  const currentPeriodEnd = new Date(subscription.current_period_end * 1000)
+  const currentPeriodEnd = new Date(((subscription as any).current_period_end as number) * 1000)
 
   // Update user_usage
   const { error: updateError } = await supabase
@@ -210,7 +210,7 @@ async function handleSubscriptionChange(
 
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
-  supabase: ReturnType<typeof createClient>
+  supabase: any
 ): Promise<{ ok: boolean; message?: string }> {
   const userId = subscription.metadata?.user_id
 
@@ -254,7 +254,7 @@ async function handleSubscriptionDeleted(
 
 async function handlePaymentSucceeded(
   invoice: Stripe.Invoice,
-  _supabase: ReturnType<typeof createClient>
+  _supabase: any
 ): Promise<{ ok: boolean }> {
   // Handle successful payment - could send confirmation email, etc.
   console.log(`Payment succeeded for invoice ${invoice.id}`)
@@ -263,7 +263,7 @@ async function handlePaymentSucceeded(
 
 async function handlePaymentFailed(
   invoice: Stripe.Invoice,
-  _supabase: ReturnType<typeof createClient>
+  _supabase: any
 ): Promise<{ ok: boolean }> {
   // Handle failed payment - could send notification email, etc.
   console.log(`Payment failed for invoice ${invoice.id}`)

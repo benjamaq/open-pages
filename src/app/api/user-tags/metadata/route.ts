@@ -28,14 +28,14 @@ export async function POST(req: Request) {
     if (!tag_slug) return NextResponse.json({ error: 'Missing tag' }, { status: 400 })
 
     // Upsert metadata row (requires table user_tag_metadata)
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('user_tag_metadata')
       .upsert({
         user_id: user.id,
         tag_slug,
         section,
         created_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,tag_slug' })
+      } as any, { onConflict: 'user_id,tag_slug' } as any)
 
     if (error) {
       // If table does not exist or other error, return a soft failure so UX can continue

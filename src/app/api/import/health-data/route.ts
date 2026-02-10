@@ -419,7 +419,7 @@ export async function POST(req: NextRequest) {
     const finalEntries = Array.from(byDate.values())
     if (!finalEntries.length) return NextResponse.json({ error: 'No valid data found', details: `File from ${detectedSource} contains no usable data` }, { status: 400 })
 
-    const { error: insErr } = await supabase.from('daily_entries').upsert(finalEntries, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
+    const { error: insErr } = await (supabase as any).from('daily_entries').upsert(finalEntries as any, { onConflict: 'user_id,local_date', ignoreDuplicates: false })
     if (insErr) {
       console.error('Insert error:', insErr)
       return NextResponse.json({ error: 'Failed to save data', details: insErr.message }, { status: 500 })

@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get today's items for pre-filling
-    const todayItems = []
+    const todayItems: any[] = []
     
     // Add supplements
     const supplements = (profile as any).stack_items?.filter((item: any) => 
@@ -210,9 +210,9 @@ export async function POST(request: NextRequest) {
     // Upsert daily update
     let savedUpdate: any = null
     try {
-      const { data: upsertData, error: upsertError } = await supabase
+      const { data: upsertData, error: upsertError } = await (supabase as any)
         .from('daily_updates')
-        .upsert(updateData, { onConflict: 'user_id,date' })
+        .upsert(updateData as any, { onConflict: 'user_id,date' })
         .select()
         .single()
 
@@ -235,9 +235,9 @@ export async function POST(request: NextRequest) {
     // Update the current battery level in the user's session/profile
     // This ensures the dashboard battery reflects the new energy score
     try {
-      await supabase
+      await (supabase as any)
         .from('profiles')
-        .update({ today_energy_score: data.energy_score })
+        .update({ today_energy_score: data.energy_score } as any)
         .eq('user_id', user.id)
     } catch (error) {
       console.warn('Could not update profile energy score:', error)
@@ -246,12 +246,12 @@ export async function POST(request: NextRequest) {
     // Log share analytics if sharing
     if (data.share && savedUpdate) {
       try {
-        await supabase.from('daily_update_shares').insert({
+        await (supabase as any).from('daily_update_shares').insert({
           daily_update_id: savedUpdate.id,
           share_target: 'modal_share',
           user_agent: request.headers.get('user-agent'),
           ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip')
-        })
+        } as any)
       } catch (error) {
         console.warn('Could not log share analytics:', error)
       }
@@ -259,13 +259,13 @@ export async function POST(request: NextRequest) {
 
     // Revalidate relevant pages
     revalidatePath('/dash')
-    if (profile.slug) {
-      revalidatePath(`/u/${profile.slug}`)
+    if ((profile as any).slug) {
+      revalidatePath(`/u/${(profile as any).slug}`)
     }
 
     const publicUrl = shareSlug 
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/u/${profile.slug}?d=${shareSlug}`
-      : `${process.env.NEXT_PUBLIC_APP_URL}/u/${profile.slug}`
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/u/${(profile as any).slug}?d=${shareSlug}`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/u/${(profile as any).slug}`
 
     return NextResponse.json({
       success: true,

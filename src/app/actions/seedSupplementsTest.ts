@@ -29,31 +29,31 @@ export async function seedMagnesiumTestData(): Promise<{ ok: true; created: numb
     const { data: existing } = await supabase
       .from('stack_items')
       .select('id, name')
-      .eq('profile_id', profile.id)
+      .eq('profile_id', (profile as any).id)
       .eq('item_type', 'supplements')
       .ilike('name', 'magnesium')
       .limit(1)
-    let magnesiumId: string | null = existing?.[0]?.id || null
+    let magnesiumId: string | null = (existing as any)?.[0]?.id || null
 
     if (!magnesiumId) {
       const { data: inserted, error: insertErr } = await supabase
         .from('stack_items')
         .insert({
-          profile_id: profile.id,
+          profile_id: (profile as any).id,
           item_type: 'supplements',
           name: 'Magnesium',
           public: false,
           frequency: 'daily',
           time_preference: 'anytime',
           schedule_days: scheduleDays,
-        })
+        } as any)
         .select('id')
         .single()
       if (insertErr || !inserted) return { ok: false, error: 'Failed to create supplement' }
-      magnesiumId = inserted.id
+      magnesiumId = (inserted as any).id
     } else {
       // Make sure it is daily scheduled
-      await supabase
+      await (supabase as any)
         .from('stack_items')
         .update({ schedule_days: scheduleDays, frequency: 'daily', time_preference: 'anytime' })
         .eq('id', magnesiumId)
@@ -70,7 +70,7 @@ export async function seedMagnesiumTestData(): Promise<{ ok: true; created: numb
       const pain = isSkip ? 8 : 5
 
       // Upsert pain for the day
-      await supabase
+      await (supabase as any)
         .from('daily_entries')
         .upsert({
           user_id: user.id,
@@ -85,7 +85,7 @@ export async function seedMagnesiumTestData(): Promise<{ ok: true; created: numb
       if (magnesiumId) {
         // Never mark TODAY as taken automatically
         const isToday = i === 0
-        await supabase
+        await (supabase as any)
           .from('supplement_logs')
           .upsert({
             user_id: user.id,

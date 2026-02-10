@@ -44,9 +44,9 @@ async function buildEmailHTML({
   const y = yesterday
     ? `<div style="margin-top:12px;line-height:1.5;color:#222">
          Yesterday's record:<br/>
-         Mood: ${y.mood ?? '—'}/5<br/>
-         Energy: ${y.energy ?? '—'}/5<br/>
-         Focus: ${y.focus ?? '—'}/5
+         Mood: ${(yesterday as any)?.mood ?? '—'}/5<br/>
+         Energy: ${(yesterday as any)?.energy ?? '—'}/5<br/>
+         Focus: ${(yesterday as any)?.focus ?? '—'}/5
        </div>`
     : `<div style="margin-top:12px;line-height:1.5;color:#222">Yesterday: No check-in recorded</div>`
   const frame = `<div style="margin-top:16px;color:#222">Let's record today.</div>`
@@ -128,7 +128,6 @@ export async function POST(req: NextRequest) {
         firstName: (p as any).first_name || (p as any).display_name || '',
         yesterday: y || null,
         checkinUrl,
-        quickSaveUrl: quickUrl,
         stack,
       })
       if (!dry) {

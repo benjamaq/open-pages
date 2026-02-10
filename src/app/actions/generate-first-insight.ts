@@ -105,7 +105,7 @@ async function getCommunityStats(
       };
     }
     
-    const totalUsers = new Set(totalUsersData?.map(entry => entry.user_id)).size;
+    const totalUsers = new Set((totalUsersData || []).map((entry: any) => entry.user_id)).size;
     
     // Determine condition and get similar users
     let condition = 'health tracking';
@@ -141,7 +141,7 @@ async function getCommunityStats(
       };
     }
     
-    let actualCount = new Set(similarUsersData?.map(entry => entry.user_id)).size;
+    let actualCount = new Set((similarUsersData || []).map((entry: any) => entry.user_id)).size;
     
     // If count is too low (< 50), generate realistic numbers for better UX
     if (actualCount < 50) {

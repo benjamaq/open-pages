@@ -12,7 +12,7 @@ export async function GET() {
     let userGoals: GoalCategory[] = []
     try {
       const { data } = await supabase.from('user_goals').select('selected_goals').eq('user_id', user.id).maybeSingle()
-      if (data?.selected_goals && Array.isArray(data.selected_goals)) userGoals = data.selected_goals as GoalCategory[]
+      if ((data as any)?.selected_goals && Array.isArray((data as any).selected_goals)) userGoals = (data as any).selected_goals as GoalCategory[]
     } catch {}
 
     // Compute stack goals from active supplements primary_goal_tags
@@ -24,7 +24,8 @@ export async function GET() {
 
     const totals: Record<string, number> = {}
     let total = 0
-    for (const s of (supps || [])) {
+    for (const sAny of ((supps as any[] | null) || [])) {
+      const s = sAny as any
       const category = ((Array.isArray(s.primary_goal_tags) && s.primary_goal_tags[0]) || 'other') as GoalCategory
       const cost = Number(s.monthly_cost_usd) || 0
       totals[category] = (totals[category] || 0) + cost

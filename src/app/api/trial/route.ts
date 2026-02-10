@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      tier: usageData?.tier || 'free',
-      isInTrial: usageData?.is_in_trial || false,
-      trialStartedAt: usageData?.trial_started_at,
-      trialEndedAt: usageData?.trial_ended_at
+      tier: (usageData as any)?.tier || 'free',
+      isInTrial: (usageData as any)?.is_in_trial || false,
+      trialStartedAt: (usageData as any)?.trial_started_at,
+      trialEndedAt: (usageData as any)?.trial_ended_at
     })
 
   } catch (error) {
@@ -52,14 +52,14 @@ export async function POST(request: NextRequest) {
       const trialStart = new Date()
       const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('user_usage')
         .update({
           is_in_trial: true,
           trial_started_at: trialStart.toISOString(),
           trial_ended_at: trialEnd.toISOString(),
           tier: 'pro' // During trial, they get pro features
-        })
+        } as any)
         .eq('user_id', user.id)
 
       if (updateError) {
@@ -76,12 +76,12 @@ export async function POST(request: NextRequest) {
 
     if (action === 'end_trial') {
       // End the trial and revert to free
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('user_usage')
         .update({
           is_in_trial: false,
           tier: 'free'
-        })
+        } as any)
         .eq('user_id', user.id)
 
       if (updateError) {

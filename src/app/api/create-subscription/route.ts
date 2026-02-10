@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       })
 
       // Update user_usage with Stripe info
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('user_usage')
         .update({
           stripe_customer_id: customer.id,
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
           subscription_status: subscription.status,
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('user_id', user.id)
 
       if (updateError) {
@@ -99,12 +99,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Update profile tier
-      const { error: profileError } = await supabase
+      const { error: profileError } = await (supabase as any)
         .from('profiles')
         .update({
           tier: plan_type,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('user_id', user.id)
 
       if (profileError) {

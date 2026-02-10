@@ -58,22 +58,22 @@ export async function POST(request: NextRequest) {
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-      if (!test?.id) return NextResponse.json({ ok: false, error: 'no_active_test' }, { status: 400 })
-      const { error } = await supabase
+      if (!(test as any)?.id) return NextResponse.json({ ok: false, error: 'no_active_test' }, { status: 400 })
+      const { error } = await (supabase as any)
         .from('validation_test')
-        .update({ state: 'completed' })
-        .eq('id', test.id)
+        .update({ state: 'completed' } as any)
+        .eq('id', (test as any).id)
       if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
-      return NextResponse.json({ ok: true, status: 'completed', testId: test.id })
+      return NextResponse.json({ ok: true, status: 'completed', testId: (test as any).id })
     } else {
       return NextResponse.json({ error: 'unsupported_action' }, { status: 400 })
     }
 
     if (!insert) return NextResponse.json({ error: 'invalid_payload' }, { status: 400 })
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('validation_test')
-      .insert(insert)
+      .insert(insert as any)
       .select('id')
       .maybeSingle()
 

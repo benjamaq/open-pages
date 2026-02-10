@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
     try {
       await sendWelcomeEmail({
         email: user.email!,
-        name: profile?.display_name || user.email!.split('@')[0],
-        slug: profile?.slug || 'your-profile'
+        name: (profile as any)?.display_name || user.email!.split('@')[0],
+        slug: (profile as any)?.slug || 'your-profile'
       })
 
       return NextResponse.json({ 
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
         message: 'Welcome email sent successfully',
         details: {
           to: user.email,
-          name: profile?.display_name || user.email!.split('@')[0],
-          slug: profile?.slug,
+          name: (profile as any)?.display_name || user.email!.split('@')[0],
+          slug: (profile as any)?.slug,
           resendConfigured: !!process.env.RESEND_API_KEY
         }
       })

@@ -25,8 +25,8 @@ export async function GET() {
       return NextResponse.json({ previous_tags: [], previous_entry_date: null })
     }
 
-    const previous_tags: string[] = Array.isArray(data?.tags) ? (data!.tags as string[]) : []
-    const previous_entry_date: string | null = data?.local_date || null
+    const previous_tags: string[] = Array.isArray((data as any)?.tags) ? (((data as any).tags as string[])) : []
+    const previous_entry_date: string | null = (data as any)?.local_date || null
 
     return NextResponse.json({ previous_tags, previous_entry_date })
   } catch (e) {

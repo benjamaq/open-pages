@@ -7,9 +7,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('STRIPE_SECRET_KEY not found - billing features will be disabled')
 }
 
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20'
-}) : null
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY as string) : null
 
 export async function GET() {
   try {
@@ -52,7 +50,7 @@ export async function GET() {
     }
 
     // Get user's subscription from database
-    const { data: subscription } = await supabase
+    const { data: subscription }: { data: { stripe_customer_id?: string | null; stripe_subscription_id?: string | null } | null } = await supabase
       .from('user_usage')
       .select('*')
       .eq('user_id', user.id)
@@ -102,17 +100,18 @@ export async function GET() {
     ])
 
     // Format subscription info
+    const subAny = stripeSubscription as any
     const subscriptionInfo = stripeSubscription ? {
-      id: stripeSubscription.id,
-      status: stripeSubscription.status,
-      plan_name: stripeSubscription.items.data[0]?.price.nickname || 'Pro',
-      plan_amount: stripeSubscription.items.data[0]?.price.unit_amount || 0,
-      currency: stripeSubscription.items.data[0]?.price.currency || 'usd',
-      current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-      trial_end: stripeSubscription.trial_end 
-        ? new Date(stripeSubscription.trial_end * 1000).toISOString() 
+      id: subAny.id,
+      status: subAny.status,
+      plan_name: subAny.items?.data?.[0]?.price?.nickname || 'Pro',
+      plan_amount: subAny.items?.data?.[0]?.price?.unit_amount || 0,
+      currency: subAny.items?.data?.[0]?.price?.currency || 'usd',
+      current_period_start: new Date((subAny.current_period_start || 0) * 1000).toISOString(),
+      current_period_end: new Date((subAny.current_period_end || 0) * 1000).toISOString(),
+      cancel_at_period_end: subAny.cancel_at_period_end,
+      trial_end: subAny.trial_end 
+        ? new Date(subAny.trial_end * 1000).toISOString() 
         : null
     } : null
 
@@ -171,7 +170,7 @@ export async function GET() {
   }
 }
 
-async function getUserUsage(supabase: ReturnType<typeof createClient>, userId: string) {
+async function getUserUsage(supabase: any, userId: string) {
   // Get current usage counts
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -201,7 +200,7 @@ async function getUserUsage(supabase: ReturnType<typeof createClient>, userId: s
       {
         name: 'supplements',
         limit: isPro ? null : 12,
-        used: stackItems.data?.filter(item => item.item_type === 'supplements').length || 0,
+        used: (stackItems.data as any[] | undefined)?.filter((item: any) => item.item_type === 'supplements').length || 0,
         is_unlimited: isPro
       },
       {

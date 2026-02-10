@@ -19,14 +19,14 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Insert email into waitlist
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('waitlist_signups')
       .insert([
         {
           email: email.toLowerCase().trim(),
           source: 'website'
         }
-      ])
+      ] as any)
       .select()
 
     if (error) {

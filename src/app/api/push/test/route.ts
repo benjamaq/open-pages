@@ -22,8 +22,8 @@ export async function POST(_req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    try { console.log('[TEST] Found subscription:', data?.subscription) } catch {}
-    if (!data?.subscription) {
+    try { console.log('[TEST] Found subscription:', (data as any)?.subscription) } catch {}
+    if (!(data as any)?.subscription) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }
 
@@ -34,7 +34,7 @@ export async function POST(_req: NextRequest) {
     }
 
     webpush.setVapidDetails('mailto:support@biostackr.io', pub, priv)
-    await webpush.sendNotification(data.subscription, JSON.stringify({
+    await webpush.sendNotification((data as any).subscription, JSON.stringify({
       title: 'BioStackr',
       body: 'Time to check in – it only takes 20 seconds.',
       url: '/dash/today'

@@ -50,13 +50,13 @@ export async function POST(request: NextRequest, ctx: any) {
     // No additional limit check here.
 
     const newTrial = (Number((row as any).trial_number || 1) || 1) + 1
-    const { data: updated, error } = await supabase
+    const { data: updated, error } = await (supabase as any)
       .from('user_supplement')
       .update({
         testing_status: 'testing',
         trial_number: newTrial,
         retest_started_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', id)
       .eq('user_id', user.id)
       .select('id,testing_status,trial_number,retest_started_at')

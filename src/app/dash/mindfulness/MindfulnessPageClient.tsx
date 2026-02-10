@@ -104,7 +104,7 @@ const MindfulnessCard = ({
       {/* Footer Row */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <span className="text-xs text-gray-400">
-          Last edited: {getRelativeTime(item.created_at)}
+          Last edited: {getRelativeTime((item as any).created_at)}
         </span>
         <div className="flex items-center space-x-2">
           <button

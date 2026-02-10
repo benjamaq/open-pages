@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       insightKey,
-      created_at: found.created_at,
-      context: found.context,
+      created_at: (found as any).created_at,
+      context: (found as any).context,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Internal error' }, { status: 500 })

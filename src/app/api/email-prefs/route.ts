@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Follow relationship not found' }, { status: 404 })
     }
 
-    if (!follow.verified_at) {
+    if (!(follow as any).verified_at) {
       return NextResponse.json({ error: 'Follow relationship not verified' }, { status: 400 })
     }
 
     // Check permission
     let hasPermission = false
     
-    if (user && follow.follower_user_id === user.id) {
+    if (user && (follow as any).follower_user_id === user.id) {
       hasPermission = true
     } else if (token && !user) {
       // For email-only followers, validate token (simple approach - in production use JWT)
@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Update email preferences
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('email_prefs')
       .upsert({
         follower_id: followerId,
         cadence: cadence
-      })
+      } as any)
 
     if (updateError) {
       return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 })

@@ -5,12 +5,7 @@ if (!STRIPE_KEY) {
   console.warn('[stripe] STRIPE_SECRET_KEY not set — Stripe features will be disabled at runtime')
 }
 
-export const stripe: any = STRIPE_KEY
-  ? new Stripe(STRIPE_KEY, {
-      // Use a stable, supported API version
-      apiVersion: '2023-10-16',
-    })
-  : null
+export const stripe: any = STRIPE_KEY ? new Stripe(STRIPE_KEY) : null
 
 // Debug environment variables
 if (process.env.NEXT_PUBLIC_STRIPE_ENV_LOG === '1') {

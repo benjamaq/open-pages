@@ -20,10 +20,13 @@ export async function GET(_req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const today = new Date().toISOString().split('T')[0]
-    const { data, error } = await supabase.rpc('get_next_best_step', {
-      p_user_id: user.id,
-      p_today: today as any
-    })
+    const { data, error } = await supabase.rpc(
+      'get_next_best_step',
+      {
+        p_user_id: user.id,
+        p_today: today as any
+      } as any
+    )
 
     if (error || !data || (data as any[]).length === 0) {
       return NextResponse.json({

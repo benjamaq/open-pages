@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Keep the most recent profile (first in the ordered list)
-    const keepProfile = profiles[0]
-    const duplicateProfiles = profiles.slice(1)
+    const keepProfile = (profiles as any[])[0] as any
+    const duplicateProfiles = (profiles as any[]).slice(1) as any[]
 
     console.log(`🧹 Found ${duplicateProfiles.length} duplicate profiles for user ${user.id}`)
     console.log(`✅ Keeping profile: ${keepProfile.id} (${keepProfile.display_name})`)
 
     // Delete duplicate profiles
-    const duplicateIds = duplicateProfiles.map(p => p.id)
+    const duplicateIds = duplicateProfiles.map((p: any) => p.id)
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Cleaned up ${duplicateIds.length} duplicate profiles`,
       keptProfile: {
-        id: keepProfile.id,
-        display_name: keepProfile.display_name,
-        slug: keepProfile.slug
+        id: (keepProfile as any).id,
+        display_name: (keepProfile as any).display_name,
+        slug: (keepProfile as any).slug
       },
       deletedProfiles: duplicateIds.length
     })

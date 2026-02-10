@@ -132,7 +132,7 @@ export default function ProSignUpPage() {
       } else if (data.user) {
         // Upsert profile with name and referral code - handles race conditions atomically
         try {
-          const { error: profileError } = await supabase
+          const { error: profileError } = await (supabase as any)
             .from('profiles')
             .upsert({
               user_id: data.user.id,
@@ -144,10 +144,10 @@ export default function ProSignUpPage() {
               bio: null,
               avatar_url: null,
               public: true
-            }, {
+            } as any, {
               onConflict: 'user_id',
               ignoreDuplicates: false
-            })
+            } as any)
 
           if (profileError) {
             console.error('Profile upsert error:', profileError)
@@ -332,13 +332,18 @@ export default function ProSignUpPage() {
                 Beta Code <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <div className="mt-1">
+                {/*
+                  TS-safe: cast optional placeholder prop for BetaCodeInput
+                */}
                 <BetaCodeInput
-                  onSuccess={(code) => {
-                    setIsBetaUser(true)
-                    setBetaCode(code)
-                  }}
-                  onError={(error) => setError(error)}
-                  placeholder="Enter your beta code for 6 months free Pro access"
+                  {...({
+                    onSuccess: (code: string) => {
+                      setIsBetaUser(true)
+                      setBetaCode(code)
+                    },
+                    onError: (error: string) => setError(error),
+                    placeholder: 'Enter your beta code for 6 months free Pro access',
+                  } as any)}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">

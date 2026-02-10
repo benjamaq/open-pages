@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
           canonical_supplement:canonical_supplement_id ( generic_name )
         `)
         .in('id', productIds)
-      for (const p of (prods || [])) productById[p.id] = p
+      for (const p of ((prods || []) as Array<{ id: string }>)) productById[p.id] = p
     }
 
     // Ensure supplement rows exist (by canonical name or fallback to provided name)
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
     let canonicalNameToId: Record<string, string> = {}
     if (canonicalNames.size > 0) {
       const rows = Array.from(canonicalNames).map((n) => ({ canonical_name: n }))
-      const { data: supRows, error: supErr } = await supabase
+      const sbAny = supabase as any
+      const { data: supRows, error: supErr } = await sbAny
         .from('supplement')
         .upsert(rows, { onConflict: 'canonical_name' })
         .select('id, canonical_name')
@@ -60,7 +61,9 @@ export async function POST(request: NextRequest) {
           .from('supplement')
           .select('id, canonical_name')
           .in('canonical_name', Array.from(canonicalNames))
-        for (const r of (fetched || [])) canonicalNameToId[r.canonical_name] = r.id
+        for (const r of ((fetched || []) as Array<{ id: string; canonical_name: string }>)) {
+          canonicalNameToId[r.canonical_name] = r.id
+        }
       }
     }
 
@@ -122,7 +125,8 @@ export async function POST(request: NextRequest) {
     const supplementsToInsert = Array.from(dedupMap.values())
 
     if (supplementsToInsert.length > 0) {
-      const { error: insertError } = await supabase
+      const sbAny2 = supabase as any
+      const { error: insertError } = await sbAny2
         .from('user_supplement')
         .upsert(supplementsToInsert.map(({ __idx, ...rest }) => rest), { onConflict: 'user_id,supplement_id' })
       if (insertError) {

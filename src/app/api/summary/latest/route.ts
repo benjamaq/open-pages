@@ -45,10 +45,10 @@ export async function GET(_req: NextRequest) {
       .limit(1)
       .maybeSingle()
 
-    let nextBestStep = nextRec?.reason || 'Keep tracking daily check-ins for better insights'
+    let nextBestStep = (nextRec as any)?.reason || 'Keep tracking daily check-ins for better insights'
     if (!nextRec) {
       const todayDate = new Date().toISOString().split('T')[0]
-      const { data: rpc } = await supabase.rpc('get_next_best_step', { p_user_id: user.id, p_today: todayDate as any })
+      const { data: rpc } = await (supabase as any).rpc('get_next_best_step', { p_user_id: user.id, p_today: todayDate as any } as any)
       if (rpc && (rpc as any[]).length > 0) {
         nextBestStep = (rpc as any[])[0].reason || nextBestStep
       }

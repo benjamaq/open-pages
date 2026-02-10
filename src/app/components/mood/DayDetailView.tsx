@@ -507,11 +507,11 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                       {/* Supplements & Medications - Show scheduled items for today, historical for other days */}
-                      {isToday() && scheduledItems?.supplements?.length > 0 ? (
+                      {isToday() && ((scheduledItems?.supplements?.length ?? 0) > 0) ? (
                         <div>
                           <h4 className="text-xs font-medium text-gray-600 mb-1">Supplements & Medications (Scheduled)</h4>
                           <div className="text-sm text-gray-700">
-                            {scheduledItems.supplements.map((item: any, index: number) => (
+                            {(scheduledItems?.supplements || []).map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
                                 <span>{item.name}</span>
                                 <span className="text-gray-500">{item.dose} {item.timing}</span>
@@ -536,11 +536,11 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                       )}
 
                       {/* Protocols - Show scheduled items for today, historical for other days */}
-                      {isToday() && scheduledItems?.protocols?.length > 0 ? (
+                      {isToday() && ((scheduledItems?.protocols?.length ?? 0) > 0) ? (
                         <div>
                           <h4 className="text-xs font-medium text-gray-600 mb-1">Protocols & Recovery (Scheduled)</h4>
                           <div className="text-sm text-gray-700">
-                            {scheduledItems.protocols.map((item: any, index: number) => (
+                            {(scheduledItems?.protocols || []).map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
                                 <span>{item.name}</span>
                                 <span className="text-gray-500">{item.duration}</span>
@@ -565,11 +565,11 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                       )}
 
                       {/* Activity - Show scheduled items for today, historical for other days */}
-                      {isToday() && scheduledItems?.activity?.length > 0 ? (
+                      {isToday() && ((scheduledItems?.activity?.length ?? 0) > 0) ? (
                         <div>
                           <h4 className="text-xs font-medium text-gray-600 mb-1">Training & Rehab (Scheduled)</h4>
                           <div className="text-sm text-gray-700">
-                            {scheduledItems.activity.map((item: any, index: number) => (
+                            {(scheduledItems?.activity || []).map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
                                 <span>{item.name}</span>
                                 <span className="text-gray-500">{item.duration}min</span>
@@ -594,11 +594,11 @@ export default function DayDetailView({ date, isOpen, onClose, todayItems, moodD
                       )}
 
                       {/* Devices - Show scheduled items for today, historical for other days */}
-                      {isToday() && scheduledItems?.devices?.length > 0 ? (
+                      {isToday() && ((scheduledItems?.devices?.length ?? 0) > 0) ? (
                         <div>
                           <h4 className="text-xs font-medium text-gray-600 mb-1">Devices & Tools (Scheduled)</h4>
                           <div className="text-sm text-gray-700">
-                            {scheduledItems.devices.map((item: any, index: number) => (
+                            {(scheduledItems?.devices || []).map((item: any, index: number) => (
                               <div key={index} className="flex justify-between">
                                 <span>{item.name}</span>
                                 <span className="text-gray-500">{item.duration}</span>

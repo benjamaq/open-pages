@@ -215,6 +215,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Simple follow API error:', error)
-    return NextResponse.json({ error: 'Follow failed', details: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Follow failed', details: (error as any)?.message }, { status: 500 })
   }
 }

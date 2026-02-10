@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
         const userName = profile.name || 'User'
         
         console.log(`👤 Processing user: ${userName} (${userEmail})`)
-        console.log(`⏰ Reminder time: ${pref.reminder_time} ${pref.timezone}`)
+        console.log(`⏰ Reminder time: ${(pref as any).reminder_time} ${(pref as any).timezone}`)
         
         // Parse reminder time
-        const [reminderHour, reminderMinute] = pref.reminder_time.split(':').map(Number)
+        const [reminderHour, reminderMinute] = String((pref as any).reminder_time).split(':').map(Number)
         
         // Convert to UTC (simplified for testing)
-        const userTimezone = pref.timezone || 'UTC'
+        const userTimezone = (pref as any).timezone || 'UTC'
         let reminderUTCHour = reminderHour
         let reminderUTCMinute = reminderMinute
         
@@ -128,8 +128,8 @@ export async function GET(request: NextRequest) {
           results.push({
             user: userName,
             email: userEmail,
-            reminderTime: pref.reminder_time,
-            timezone: pref.timezone,
+            reminderTime: (pref as any).reminder_time,
+            timezone: (pref as any).timezone,
             utcTime: `${reminderUTCHour}:${reminderUTCMinute}`,
             timeDiff,
             sent: true,
@@ -144,8 +144,8 @@ export async function GET(request: NextRequest) {
           results.push({
             user: userName,
             email: userEmail,
-            reminderTime: pref.reminder_time,
-            timezone: pref.timezone,
+            reminderTime: (pref as any).reminder_time,
+            timezone: (pref as any).timezone,
             utcTime: `${reminderUTCHour}:${reminderUTCMinute}`,
             timeDiff,
             sent: false

@@ -33,7 +33,8 @@ function hasOverlap(existing: { start_date: string; end_date: string | null }[],
   return false
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -41,15 +42,16 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const { data, error } = await supabase
     .from('intervention_periods')
     .select('*')
-    .eq('intervention_id', params.id)
+    .eq('intervention_id', id)
     .order('start_date', { ascending: false })
 
   if (error) return NextResponse.json({ error: 'Failed to load periods' }, { status: 500 })
   return NextResponse.json({ periods: data ?? [] })
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -64,12 +66,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     // Debug logging: payload and target column names
-    console.log('[POST periods] intervention_id:', params.id, 'payload:', body)
+    console.log('[POST periods] intervention_id:', id, 'payload:', body)
 
     const { data: existing, error: existingError } = await supabase
       .from('intervention_periods')
       .select('start_date, end_date')
-      .eq('intervention_id', params.id)
+      .eq('intervention_id', id)
     if (existingError) {
       console.error('[POST periods] existing fetch error:', existingError)
       return NextResponse.json({ error: 'Failed to validate existing periods' }, { status: 500 })
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const insertPayload = {
-      intervention_id: params.id, // FK column per migration
+      intervention_id: id, // FK column per migration
       start_date: body.start_date,
       end_date: body.end_date ?? null,
       dose: body.dose ?? null,
@@ -104,27 +106,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const { data: earliestRow } = await supabase
         .from('intervention_periods')
         .select('start_date')
-        .eq('intervention_id', params.id)
+        .eq('intervention_id', id)
         .order('start_date', { ascending: true })
         .limit(1)
         .maybeSingle()
       const earliest = (earliestRow as any)?.start_date ? String((earliestRow as any).start_date).slice(0,10) : String(body.start_date).slice(0,10)
       // Update stack_items.start_date
-      await supabase
+      await (supabase as any)
         .from('stack_items')
-        .update({ start_date: earliest })
-        .eq('id', params.id)
+        .update({ start_date: earliest } as any)
+        .eq('id', id)
       // Look up a linked user_supplement_id on this stack item
       const { data: si } = await supabase
         .from('stack_items')
         .select('user_supplement_id')
-        .eq('id', params.id)
+        .eq('id', id)
         .maybeSingle()
       const userSuppId = (si as any)?.user_supplement_id ? String((si as any).user_supplement_id) : null
       if (userSuppId) {
-        const { error: usErr } = await supabase
+        const { error: usErr } = await (supabase as any)
           .from('user_supplement')
-          .update({ inferred_start_at: earliest })
+          .update({ inferred_start_at: earliest } as any)
           .eq('id', userSuppId)
           .eq('user_id', user.id)
         if (usErr) {
@@ -142,7 +144,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -159,15 +162,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { data: existing } = await supabase
     .from('intervention_periods')
     .select('id, start_date, end_date')
-    .eq('intervention_id', params.id)
+    .eq('intervention_id', id)
 
   if (existing) {
-    const current = existing.find(p => p.id === body.periodId)
+    const current = (existing as Array<{ id: string }>).find(p => p.id === body.periodId)
     const merged = {
       start_date: body.start_date ?? (current as any)?.start_date,
-      end_date: (body.still_taking ? null : body.end_date) ?? (current as any)?.end_date ?? null
+      end_date: ((body as any).still_taking ? null : body.end_date) ?? (current as any)?.end_date ?? null
     }
-    const others = existing.filter(p => p.id !== body.periodId).map(p => ({ start_date: p.start_date, end_date: p.end_date }))
+    const others = (existing as Array<{ id: string; start_date: string; end_date: string | null }>).filter(p => p.id !== body.periodId).map(p => ({ start_date: p.start_date, end_date: p.end_date }))
     if (hasOverlap(others, merged)) {
       return NextResponse.json({ error: 'This period overlaps with an existing period' }, { status: 400 })
     }
@@ -179,11 +182,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (body.dose !== undefined) updates.dose = body.dose
   if (body.notes !== undefined) updates.notes = body.notes
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('intervention_periods')
-    .update(updates)
+    .update(updates as any)
     .eq('id', body.periodId)
-    .eq('intervention_id', params.id)
+    .eq('intervention_id', id)
     .select()
     .single()
 
@@ -191,7 +194,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ period: data })
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -203,7 +207,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     .from('intervention_periods')
     .delete()
     .eq('id', periodId)
-    .eq('intervention_id', params.id)
+    .eq('intervention_id', id)
 
   if (error) return NextResponse.json({ error: 'Failed to delete period' }, { status: 500 })
   return NextResponse.json({ success: true })

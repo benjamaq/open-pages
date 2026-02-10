@@ -27,7 +27,7 @@ export default async function JournalPage() {
   const { data: journalEntries } = await supabase
     .from('journal_entries')
     .select('*')
-    .eq('profile_id', profile.id)
+    .eq('profile_id', (profile as any).id)
     .order('created_at', { ascending: false })
 
   return (

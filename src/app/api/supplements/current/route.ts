@@ -12,8 +12,8 @@ export async function GET(req: Request) {
   const supabase = await createClient()
   try {
     const url = new URL(req.url)
-    const debug = url.search.params?.get
-      ? (url.search.params.get('debug') === '1')
+    const debug = (url as any).search?.params?.get
+      ? ((url as any).search.params.get('debug') === '1')
       : (new URLSearchParams(url.search).get('debug') === '1')
     if (debug) {
       // eslint-disable-next-line no-console

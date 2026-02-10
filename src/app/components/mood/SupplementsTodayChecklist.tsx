@@ -33,9 +33,9 @@ export default function SupplementsTodayChecklist({ userId, items }: { userId?: 
     setTakenMap((m) => ({ ...m, [supplementId]: next }))
     const supabase = createClient()
     // Upsert log for today
-    await supabase
+    await (supabase as any)
       .from('supplement_logs')
-      .upsert({ user_id: userId, supplement_id: supplementId, local_date: today, taken: next }, { onConflict: 'user_id,supplement_id,local_date' })
+      .upsert({ user_id: userId, supplement_id: supplementId, local_date: today, taken: next } as any, { onConflict: 'user_id,supplement_id,local_date' } as any)
     // Also mirror into daily_entries.tags for correlation engine
     try {
       // Fetch supplement name to tagify
@@ -44,7 +44,7 @@ export default function SupplementsTodayChecklist({ userId, items }: { userId?: 
         .select('name')
         .eq('id', supplementId)
         .maybeSingle()
-      const name = (item?.name || '').toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+      const name = ((item as any)?.name || '').toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
       if (name) {
         await fetch('/api/daily-entries/tags', {
           method: 'POST',

@@ -25,7 +25,7 @@ export default async function LibraryPage() {
   }
 
   // Get library items
-  let libraryItems = []
+  let libraryItems: any[] = []
   try {
     libraryItems = await getUserLibraryItems()
   } catch (error) {

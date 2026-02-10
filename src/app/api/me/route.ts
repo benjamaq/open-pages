@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     } else {
       // Fallback: try to read auth token from Supabase client cookie
       try {
-        const all = cookies().getAll()
+        const all = (await cookies()).getAll()
         const tokenCookie = all.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
         if (tokenCookie?.value) {
           const parsed = JSON.parse(tokenCookie.value)

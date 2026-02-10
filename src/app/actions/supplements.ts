@@ -9,7 +9,7 @@ export async function logSupplementTaken(supplementId: string, localDate: string
     throw new Error('Unauthorized')
   }
 
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = await (supabase as any)
     .from('supplement_logs')
     .upsert({
       user_id: user.id,
