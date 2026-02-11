@@ -259,6 +259,10 @@ export async function PATCH(
       if (updateSupplementFields.dose != null) stackUpdate.dose = updateSupplementFields.dose
       if (updateSupplementFields.timing != null) stackUpdate.timing = updateSupplementFields.timing
       if (updateSupplementFields.brand != null) stackUpdate.brand = updateSupplementFields.brand
+      if (typeof body?.time_of_day === 'string') {
+        const tod = String(body.time_of_day).trim()
+        if (tod) stackUpdate.time_of_day = tod
+      }
       if (typeof body?.notes === 'string') stackUpdate.notes = String(body.notes).trim()
       if (hasFrequency) stackUpdate.frequency = String(body.frequency).trim()
       if (restartTesting) {
@@ -269,17 +273,37 @@ export async function PATCH(
         stackUpdate.monthly_cost = monthlyCost
       }
       if (Object.keys(stackUpdate).length > 0) {
-        await (supabase as any)
+        // Primary: update by foreign key (id is typically user_supplement.id in UI flows)
+        const { data: fkUpdated, error: fkErr } = await (supabase as any)
           .from('stack_items')
-          .update(stackUpdate as any)
-          .eq('id', id)
-          .eq('profile_id', (profile as any).id)
-        // Also try by foreign key if present (when id is user_supplement.id)
-        await (supabase as any)
-          .from('stack_items')
-          .update(stackUpdate as any)
+          .update({ ...stackUpdate, user_supplement_id: id } as any)
           .eq('user_supplement_id', id)
           .eq('profile_id', (profile as any).id)
+          .select('id')
+        if (fkErr) {
+          // eslint-disable-next-line no-console
+          console.error('stack_items update by user_supplement_id error:', fkErr)
+        }
+
+        // Fallback: some older rows were created without user_supplement_id; match by name and backfill user_supplement_id.
+        if (!fkUpdated || (Array.isArray(fkUpdated) && fkUpdated.length === 0)) {
+          try {
+            const { data: usRow } = await supabase
+              .from('user_supplement')
+              .select('name')
+              .eq('id', id)
+              .eq('user_id', user.id)
+              .maybeSingle()
+            const usName = String((usRow as any)?.name || '').trim()
+            if (usName) {
+              await (supabase as any)
+                .from('stack_items')
+                .update({ ...stackUpdate, user_supplement_id: id } as any)
+                .eq('profile_id', (profile as any).id)
+                .eq('name', usName)
+            }
+          } catch {}
+        }
       }
     } catch (e) {
       // eslint-disable-next-line no-console

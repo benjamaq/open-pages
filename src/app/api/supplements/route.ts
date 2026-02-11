@@ -347,6 +347,19 @@ export async function POST(request: Request) {
             name: rawName,
             user_supplement_id: String(userSupp.id),
           }
+          // Persist dose/timing/brand/frequency/time_of_day into stack_items (these are the fields My Stack displays)
+          try {
+            const dose = typeof body?.dose === 'string' ? String(body.dose).trim() : ''
+            const timing = typeof body?.timing === 'string' ? String(body.timing).trim() : ''
+            const brand = typeof body?.brand === 'string' ? String(body.brand).trim() : ''
+            const frequency = typeof body?.frequency === 'string' ? String(body.frequency).trim() : ''
+            const timeOfDay = typeof body?.time_of_day === 'string' ? String(body.time_of_day).trim() : ''
+            if (dose) stackPayload.dose = dose
+            if (timing) stackPayload.timing = timing
+            if (brand) stackPayload.brand = brand
+            if (frequency) stackPayload.frequency = frequency
+            if (timeOfDay) stackPayload.time_of_day = timeOfDay
+          } catch {}
           if (typeof monthlyFromBody === 'number') stackPayload.monthly_cost = monthlyFromBody
           if (inferredStartISO) stackPayload.start_date = inferredStartISO
           await supabase.from('stack_items').insert(stackPayload)
