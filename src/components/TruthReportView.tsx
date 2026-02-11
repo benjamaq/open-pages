@@ -18,6 +18,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   }
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
+  const statusLc = String((report as any)?.status || '').toLowerCase()
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -202,14 +203,14 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           {report.status === 'no_detectable_effect' && (
             <Card>
               <div className="text-sm text-slate-400 mb-2">Interpretation</div>
-              <div className="text-sm text-slate-200 whitespace-pre-line">
-{`This supplement did not produce a meaningful change in your tracked 
-symptoms or outcomes at your current dose and timing.
-
-If you're taking it to improve how you feel or perform, consider 
-pausing or dropping it. If you're taking it for general health, 
-you may still choose to keep it—this test simply can't detect 
-that kind of benefit.`}
+              <div className="text-sm text-slate-200 leading-relaxed whitespace-normal space-y-3">
+                <p>
+                  This supplement did not produce a meaningful change in your tracked symptoms or outcomes at your current dose and timing.
+                </p>
+                <p>
+                  If you're taking it to improve how you feel or perform, consider pausing or dropping it. If you're taking it for general
+                  health, you may still choose to keep it—this test simply can't detect that kind of benefit.
+                </p>
               </div>
             </Card>
           )}
@@ -431,16 +432,31 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   }
   // Biology text from mapping, chosen by direction when available
   let biologyText: string | null = null
-  const dirKey = status === 'proven_positive' || dir === 'positive'
-    ? 'positive'
-    : (status === 'negative' || dir === 'negative') ? 'negative' : ''
-  if (mapped && dirKey) {
-    biologyText = (mapped as any)[dirKey] || null
+  const baseBioSentence = (() => {
+    try {
+      const src = String((mapped as any)?.positive || (mapped as any)?.negative || '')
+      const idx = src.indexOf('.')
+      if (idx > 0) return src.slice(0, idx + 1).trim()
+      return src.trim()
+    } catch {
+      return ''
+    }
+  })()
+  if (mapped && status === 'proven_positive') {
+    biologyText = (mapped as any).positive || null
+  } else if (mapped && status === 'negative') {
+    biologyText = (mapped as any).negative || null
+  } else {
+    // Neutralize biology blurbs when there is no clear effect (prevents "positive response" contradictions)
+    const lead = baseBioSentence || 'This supplement targets pathways related to your primary goals.'
+    const isMag = lcFull.includes('magnesium') || nameLc.includes('magnesium')
+    if (status === 'no_effect' || status === 'no_detectable_effect') {
+      biologyText = `${lead} Your data did not show a detectable effect at this dose and timing. This may mean you're already sufficient, or that a different form, dose, or timing would work better${isMag ? ' (e.g., glycinate vs citrate, or taking it before bed)' : ''}.`
+    } else {
+      biologyText = `${lead} Individual responses vary, and this effect may be subtle or context‑dependent. Continue tracking to refine the biology signal.`
+    }
   }
-  if (!biologyText) {
-    const dirText = dir === 'positive' ? 'your body may benefit from continued use' : dir === 'negative' ? 'this may not align with your biology at this dose' : 'the effect may be subtle or context‑dependent'
-    biologyText = `This supplement targets pathways related to your primary goals. Your ${dir || 'observed'} response suggests ${dirText}.`
-  }
+  if (!biologyText) biologyText = 'This supplement targets pathways related to your primary goals. Continue tracking to refine your biology profile.'
   // Next steps by verdict
   let nextSteps = ''
   const isImplicitSrc = String(report?.analysisSource || '').toLowerCase() === 'implicit'
@@ -459,7 +475,8 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
     nextSteps = `Keep tracking and consider standardizing dose/timing for clearer comparisons.`
   }
   // Override for upload-only implicit analyses: encourage confirmation via check-ins
-  if (isImplicitSrc && !implicitConfirmed) {
+  // Only do this for positive/uncertain signals; never override completed no_effect/negative guidance.
+  if (isImplicitSrc && !implicitConfirmed && status === 'proven_positive') {
     nextSteps = 'Your historical data shows a promising signal. Start daily check-ins to confirm this result.'
   }
   return { effectSummary, biologyText, nextSteps }
@@ -513,9 +530,10 @@ function fmt(n: number | null | undefined) {
 function decisionFor(report: any): { verdict: string; recommendation: string } {
   const metric = String(report?.primaryMetricLabel || 'your metric')
   const isImplicit = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
+  const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   switch (String(report?.status)) {
     case 'proven_positive':
-      return isImplicit
+      return isImplicit && !implicitConfirmed
         ? {
             verdict: `Signal suggests a positive effect on ${metric}.`,
             recommendation: 'Confirm with daily check-ins.'
@@ -525,37 +543,20 @@ function decisionFor(report: any): { verdict: string; recommendation: string } {
             recommendation: 'Keep it in your stack.'
           }
     case 'no_detectable_effect':
-      return isImplicit
-        ? {
-            verdict: 'No clear signal.',
-            recommendation: 'Signal suggests little effect — confirm with daily check-ins.'
-          }
-        : {
-            verdict: 'No detectable effect.',
-            recommendation: `This supplement did not produce a meaningful change in your tracked symptoms or outcomes at your current dose and timing.
-
-If you're taking it to improve how you feel or perform, consider pausing or dropping it. If you're taking it for general health, you may still choose to keep it—this test simply can't detect that kind of benefit.`
-          }
+      return {
+        verdict: 'No detectable effect.',
+        recommendation: `We didn’t detect a meaningful change at your current dose and timing. Consider dropping it, or retesting with a different form, dose, or timing if you still suspect benefit.`
+      }
     case 'no_effect':
-      return isImplicit
-        ? {
-            verdict: `No clear signal on ${metric}.`,
-            recommendation: 'Signal suggests little effect — confirm with daily check-ins.'
-          }
-        : {
-            verdict: `This supplement did not show a clear effect on your ${metric}.`,
-            recommendation: 'Consider stopping.'
-          }
+      return {
+        verdict: `No clear signal on ${metric}.`,
+        recommendation: `We didn’t detect a clear effect. Consider dropping it, or retesting at a different dose or timing.`
+      }
     case 'negative':
-      return isImplicit
-        ? {
-            verdict: `Signal suggests little or negative effect on ${metric}.`,
-            recommendation: 'Confirm with daily check-ins before making changes.'
-          }
-        : {
-            verdict: `This supplement likely worsened your ${metric}.`,
-            recommendation: 'Consider stopping.'
-          }
+      return {
+        verdict: `This supplement likely worsened your ${metric}.`,
+        recommendation: 'Consider removing it from your stack.'
+      }
     case 'confounded':
       return {
         verdict: 'Data are too noisy to make a confident call.',
