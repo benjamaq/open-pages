@@ -475,14 +475,6 @@ export async function POST(request: NextRequest) {
           .in('local_date', allDates)
         console.log('[Whoop Upload] Post-verify count for attempted dates:', verifyCount, verifyErr?.message || 'ok')
       } catch {}
-
-      // Trigger truth engine re-analysis for existing implicit too_early supplements now that wearables exist
-      try {
-        const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(user!.id)
-        try { console.log('[Whoop Upload] Reanalysis result:', re) } catch {}
-      } catch (e: any) {
-        try { console.log('[Whoop Upload] Reanalysis failed (ignored):', e?.message || e) } catch {}
-      }
     }
     
     const totalParsed = results.sleeps + results.physiological + results.journal
@@ -515,6 +507,16 @@ export async function POST(request: NextRequest) {
     // Report sources breakdown so UI can show correct provider
     const sources: Record<string, number> = {}
     if (byDate.size > 0) sources['WHOOP'] = byDate.size
+
+    // Trigger truth engine re-analysis for existing implicit too_early supplements whenever a WHOOP upload succeeds,
+    // even if the upsert didn't meaningfully change rows (re-uploads).
+    try {
+      console.log('[Whoop Upload] About to call reanalyzeAfterUpload for user:', user!.id)
+      const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(user!.id)
+      console.log('[Whoop Upload] reanalyzeAfterUpload completed:', re)
+    } catch (e: any) {
+      console.error('[Whoop Upload] reanalyzeAfterUpload failed (ignored):', e?.message || e)
+    }
 
     return NextResponse.json({
       message: `Successfully imported ${totalParsed} entries`,
