@@ -5,6 +5,7 @@ import JSZip from 'jszip'
 import sax from 'sax'
 import { Readable } from 'stream'
 import { parseWhoopFile, parsePhysiologicalCSV, parseSleepsCSV } from '@/lib/parsers/whoop-parser'
+import { reanalyzeImplicitTooEarlyAfterWearableUpload } from '@/lib/wearables/reanalyzeAfterUpload'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -167,6 +168,14 @@ export async function POST(req: NextRequest) {
         details: summary.messages.join(' • '),
         debug: summary
       }, { status: 400 })
+    }
+
+    // Re-analyze implicit supplements that were previously too_early now that wearables have been imported
+    try {
+      const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(user.id)
+      try { console.log('[universal-upload] reanalysis:', re) } catch {}
+    } catch (e: any) {
+      try { console.log('[universal-upload] reanalysis failed (ignored):', e?.message || e) } catch {}
     }
 
     return NextResponse.json({

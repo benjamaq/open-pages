@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import JSZip from 'jszip'
 import sax from 'sax'
 import { Readable } from 'stream'
+import { reanalyzeImplicitTooEarlyAfterWearableUpload } from '@/lib/wearables/reanalyzeAfterUpload'
 
 type Entry = {
   user_id: string
@@ -148,6 +149,15 @@ export async function POST(req: NextRequest) {
     entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
     try { console.log('[apple-health] Step 10: Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
     try { console.log('[apple-health] === UPLOAD COMPLETE ===') } catch {}
+
+    // Re-analyze implicit supplements that were previously too_early now that wearables have been imported
+    try {
+      const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(user.id)
+      try { console.log('[apple-health] reanalysis:', re) } catch {}
+    } catch (e: any) {
+      try { console.log('[apple-health] reanalysis failed (ignored):', e?.message || e) } catch {}
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Successfully imported Apple Health ZIP',
@@ -189,6 +199,15 @@ async function parseAndPersistAppleHealthXMLStream(userId: string, stream: NodeJ
   }
   entries.sort((a, b) => a.local_date.localeCompare(b.local_date))
   try { console.log('[apple-health] Step 10 (xml): Complete', { from: entries[0].local_date, to: entries[entries.length - 1].local_date, days: entries.length }) } catch {}
+
+  // Re-analyze implicit supplements that were previously too_early now that wearables have been imported
+  try {
+    const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(userId)
+    try { console.log('[apple-health] reanalysis (xml):', re) } catch {}
+  } catch (e: any) {
+    try { console.log('[apple-health] reanalysis (xml) failed (ignored):', e?.message || e) } catch {}
+  }
+
   return NextResponse.json({
     success: true,
     message: 'Successfully imported Apple Health XML',
