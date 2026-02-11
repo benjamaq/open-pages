@@ -119,6 +119,34 @@ export async function GET(request: NextRequest, context: any) {
       return NextResponse.json({ error: 'Supplement lookup failed', details: lookupErr?.message || 'lookup_failed' }, { status: 500 })
     }
 
+    const applyImplicitConfirmOverlay = async (rawReport: any): Promise<any> => {
+      try {
+        const analysisSrc = String(rawReport?.analysisSource || rawReport?.analysis_source || '').toLowerCase()
+        if (analysisSrc !== 'implicit') return rawReport
+        // Confirmatory gate: once user has logged a few subjective check-ins, show the final verdict label on the report page
+        const { count } = await supabase
+          .from('checkins')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+        const checkinsCount = count || 0
+        const confirmed = checkinsCount >= 3
+        if (!confirmed) return { ...rawReport, implicitConfirmed: false, checkinsCount }
+
+        const status = String(rawReport?.status || '').toLowerCase()
+        const next = { ...rawReport, implicitConfirmed: true, checkinsCount }
+        if (status === 'proven_positive') {
+          next.verdictLabel = 'KEEP'
+          // Also prevent stale “confirm with check-ins” copy from showing once confirmed
+          next.nextSteps = next.nextSteps && String(next.nextSteps).toLowerCase().includes('check-in')
+            ? 'Your result is confirmed. Keep taking this supplement and continue tracking.'
+            : next.nextSteps
+        }
+        return next
+      } catch {
+        return rawReport
+      }
+    }
+
     if (!force) {
       // Return cached report if exists
       const { data: existing } = await supabase
@@ -130,7 +158,8 @@ export async function GET(request: NextRequest, context: any) {
         .limit(1)
         .maybeSingle()
       if (existing) {
-        return NextResponse.json(toResponse(existing))
+        const base = toResponse(existing)
+        return NextResponse.json(await applyImplicitConfirmOverlay(base))
       }
     }
 
@@ -207,7 +236,8 @@ export async function GET(request: NextRequest, context: any) {
       await (supabase as any).from('user_supplement').update({ has_truth_report: true } as any).eq('id', effectiveUserSuppId).eq('user_id', user.id)
     } catch {}
 
-    return NextResponse.json(debugMode ? { ...report, _debug: debugInfo } : report)
+    const finalReport = await applyImplicitConfirmOverlay(report)
+    return NextResponse.json(debugMode ? { ...(finalReport as any), _debug: debugInfo } : finalReport)
   } catch (e: any) {
     try {
       console.error('=== TRUTH REPORT ERROR ===')

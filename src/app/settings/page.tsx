@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings/SettingsForm'
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -22,6 +22,7 @@ export default async function SettingsPage() {
   const settings = settingsRes.ok ? await settingsRes.json() : { reminder_enabled: false, reminder_time: '06:00', reminder_timezone: null, email: user.email }
   const plan = planRes && planRes.ok ? await planRes.json() : { is_member: false }
   const billing = billingRes && billingRes.ok ? await billingRes.json() : { isPaid: false, subscription: null }
+  const billingError = String(searchParams?.billing_error || '').trim()
 
   return (
     <div
@@ -43,20 +44,41 @@ export default async function SettingsPage() {
         <div className="mb-6">
           <div className="rounded-xl border border-[#E4E1DC] bg-white p-5">
             <div className="text-xs font-semibold text-[#6B7280] tracking-wide">ACCOUNT</div>
+            {billingError && (
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                We couldn’t open Stripe billing for this account. If you don’t have an active subscription, you can upgrade again below.
+              </div>
+            )}
             {billing?.isPaid ? (
               <div className="mt-3">
                 <div className="text-sm text-[#111111]">Plan: <span className="font-medium">Pro ✓</span></div>
                 <div className="mt-1 text-sm text-[#4B5563]">
                   Member since: {billing?.subscription?.current_period_start ? new Date(billing.subscription.current_period_start).toLocaleDateString(undefined, { year: 'numeric', month: 'long' }) : '—'}
                 </div>
-                <form action="/api/billing/portal" method="POST">
-                  <button
-                    type="submit"
-                    className="mt-4 inline-flex items-center justify-center px-4 h-10 rounded-lg border border-[#E4E1DC] text-sm font-medium text-[#111111] hover:bg-[#F6F5F3]"
-                  >
-                    Manage Subscription
-                  </button>
-                </form>
+                {billing?.subscription ? (
+                  <form action="/api/billing/portal" method="POST">
+                    <button
+                      type="submit"
+                      className="mt-4 inline-flex items-center justify-center px-4 h-10 rounded-lg border border-[#E4E1DC] text-sm font-medium text-[#111111] hover:bg-[#F6F5F3]"
+                    >
+                      Manage Subscription
+                    </button>
+                  </form>
+                ) : (
+                  <div className="mt-4 rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-3 text-sm text-[#111111]">
+                    <div className="font-medium">Subscription not found</div>
+                    <div className="text-[#4B5563] mt-1">
+                      We couldn’t find a Stripe subscription record for this account. If you recently upgraded, try again in a minute.
+                      Otherwise, you can re‑subscribe below.
+                    </div>
+                    <a
+                      href="/checkout"
+                      className="mt-3 inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"
+                    >
+                      Subscribe / Re‑subscribe
+                    </a>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="mt-3">

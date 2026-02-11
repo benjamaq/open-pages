@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
+import { headers } from 'next/headers'
 
 export async function POST() {
   try {
@@ -29,8 +30,14 @@ export async function POST() {
       customerId = c?.id || null
     }
 
+    const hdrs = await headers()
+    const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3000'
+    const proto = hdrs.get('x-forwarded-proto') ?? 'http'
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`
+
     if (!customerId) {
-      return NextResponse.json({ error: 'Stripe customer not found' }, { status: 400 })
+      // Never render raw JSON errors to the user (form POST would show it as a page)
+      return NextResponse.redirect(`${origin}/settings?billing_error=stripe_customer_not_found`, { status: 303 })
     }
 
     const portal = await stripe.billingPortal.sessions.create({
@@ -40,7 +47,14 @@ export async function POST() {
     return NextResponse.redirect(portal.url, { status: 303 })
   } catch (e: any) {
     console.error('[billing/portal] ERROR:', e?.message || e)
-    return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
+    try {
+      const hdrs = await headers()
+      const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3000'
+      const proto = hdrs.get('x-forwarded-proto') ?? 'http'
+      const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`
+      return NextResponse.redirect(`${origin}/settings?billing_error=portal_failed`, { status: 303 })
+    } catch {}
+    return NextResponse.redirect(`/settings?billing_error=portal_failed`, { status: 303 })
   }
 }
 

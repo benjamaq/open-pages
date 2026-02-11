@@ -17,6 +17,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     try { setToast(msg); setTimeout(() => setToast(null), 2000) } catch {}
   }
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
+  const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -139,7 +140,9 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           >
             <div className="space-y-1">
               <div className="font-semibold">This result is based on patterns in your Apple Health and WHOOP data.</div>
-              <div className="text-indigo-200/90">Daily check-ins will sharpen this into a confirmed verdict.</div>
+              <div className="text-indigo-200/90">
+                {implicitConfirmed ? 'Confirmed with your check-ins.' : 'Daily check-ins will sharpen this into a confirmed verdict.'}
+              </div>
             </div>
           </div>
         )}
@@ -154,9 +157,21 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           >
             {report.verdictLabel}
           </div>
-          <div className="text-sm text-slate-400">{report.confoundsSummary}</div>
+          <div className="text-sm text-slate-400">
+            {(() => {
+              const s = String((report as any)?.confoundsSummary || '')
+              if (!isImplicit) return s
+              // Clarify implicit reports: this is wearable-day coverage, not “intake days logged”
+              return s.replace(/days analysed/gi, 'days of wearable data scanned')
+            })()}
+          </div>
           <div className="mt-2 text-sm text-slate-200 space-y-0.5">
-            <div><span className="text-slate-400">Recommendation:</span> {decision.recommendation}</div>
+            <div>
+              <span className="text-slate-400">Recommendation:</span>{' '}
+              {isImplicit && implicitConfirmed && String((report as any)?.status || '').toLowerCase() === 'proven_positive'
+                ? 'Keep it in your stack.'
+                : decision.recommendation}
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {phenotype && (
@@ -429,6 +444,7 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
   // Next steps by verdict
   let nextSteps = ''
   const isImplicitSrc = String(report?.analysisSource || '').toLowerCase() === 'implicit'
+  const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') {
     if (lcFull.includes('magnesium') || nameLc.includes('magnesium')) {
       nextSteps = `Consider stopping ${name}. You could re‑test at a different dose, time of day, or form (e.g., switch from oxide to glycinate).`
@@ -443,7 +459,7 @@ function generateReportCopy(report: any): { effectSummary: string; biologyText: 
     nextSteps = `Keep tracking and consider standardizing dose/timing for clearer comparisons.`
   }
   // Override for upload-only implicit analyses: encourage confirmation via check-ins
-  if (isImplicitSrc) {
+  if (isImplicitSrc && !implicitConfirmed) {
     nextSteps = 'Your historical data shows a promising signal. Start daily check-ins to confirm this result.'
   }
   return { effectSummary, biologyText, nextSteps }
