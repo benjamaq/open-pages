@@ -13,6 +13,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import JSZip from 'jszip'
+import { reanalyzeImplicitTooEarlyAfterWearableUpload } from '@/lib/wearables/reanalyzeAfterUpload'
+
+export const runtime = 'nodejs'
+export const maxDuration = 60
 
 // ============================================
 // PARSING HELPERS - TESTED AND WORKING
@@ -471,6 +475,14 @@ export async function POST(request: NextRequest) {
           .in('local_date', allDates)
         console.log('[Whoop Upload] Post-verify count for attempted dates:', verifyCount, verifyErr?.message || 'ok')
       } catch {}
+
+      // Trigger truth engine re-analysis for existing implicit too_early supplements now that wearables exist
+      try {
+        const re = await reanalyzeImplicitTooEarlyAfterWearableUpload(user!.id)
+        try { console.log('[Whoop Upload] Reanalysis result:', re) } catch {}
+      } catch (e: any) {
+        try { console.log('[Whoop Upload] Reanalysis failed (ignored):', e?.message || e) } catch {}
+      }
     }
     
     const totalParsed = results.sleeps + results.physiological + results.journal

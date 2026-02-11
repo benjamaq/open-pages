@@ -227,7 +227,23 @@ export async function GET(request: NextRequest, context: any) {
       analysis_source: (report as any)?.analysisSource || null
     }
     try {
-      await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
+      // Avoid creating duplicate truth report rows for the same supplement: update latest if it exists, else insert.
+      const { data: existingRow } = await supabase
+        .from('supplement_truth_reports')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('user_supplement_id', effectiveUserSuppId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if ((existingRow as any)?.id) {
+        await (supabase as any)
+          .from('supplement_truth_reports')
+          .update(payloadToStore as any)
+          .eq('id', (existingRow as any).id)
+      } else {
+        await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
+      }
     } catch (e: any) {
       try { console.log('[truth-report] insert failed (non-fatal):', e?.message || e) } catch {}
     }
