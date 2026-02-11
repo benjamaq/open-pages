@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal'
 import { HEALTH_PRIORITIES } from '@/lib/types'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Suggestion = { id: string; name: string }
 type Row = { id: string; name: string; daysOfData: number; requiredDays: number }
@@ -32,73 +33,73 @@ export function DashboardUnifiedPanel() {
     let mounted = true
     ;(async () => {
       try {
-        const res = await fetch('/api/suggestions/dailySkip', { cache: 'no-store' })
+        const [
+          sug,
+          prog,
+          sups,
+          eff,
+          has,
+          ws,
+          pay,
+          settingsRes,
+        ] = await Promise.all([
+          dedupedJson<any>('/api/suggestions/dailySkip', { cache: 'no-store' }),
+          dedupedJson<any>('/api/progress/loop', { cache: 'no-store' }),
+          dedupedJson<any>('/api/supplements', { cache: 'no-store' }),
+          dedupedJson<any>('/api/effect/summary', { cache: 'no-store' }),
+          dedupedJson<any>('/api/data/has-daily', { cache: 'no-store' }),
+          dedupedJson<any>('/api/user/wearable-status?since=all', { cache: 'no-store' }),
+          dedupedJson<any>('/api/payments/status', { cache: 'no-store' }),
+          dedupedJson<any>('/api/settings', { cache: 'no-store' }),
+        ])
         if (!mounted) return
-        if (res.ok) {
-          const j = await res.json()
+
+        if (sug.ok) {
+          const j = sug.data
           setSuggestions(Array.isArray(j?.suggestions) ? j.suggestions : [])
         } else setSuggestions([])
-      } catch { setSuggestions([]) }
-      try {
-        const p = await fetch('/api/progress/loop', { cache: 'no-store' })
-        if (!mounted) return
-        if (p.ok) setProgress(await p.json())
-      } catch { setProgress(null) }
-      try {
-        const r = await fetch('/api/supplements', { cache: 'no-store' })
-        if (!mounted) return
-        if (r.ok) setSupps(await r.json())
-      } catch { setSupps([]) }
-      finally {
-        if (mounted) setSuppsLoaded(true)
-      }
-      try {
-        const e = await fetch('/api/effect/summary', { cache: 'no-store' })
-        if (!mounted) return
-        if (e.ok) {
-          const j = await e.json()
+
+        if (prog.ok) setProgress(prog.data)
+        else setProgress(null)
+
+        if (sups.ok) setSupps(Array.isArray(sups.data) ? sups.data : [])
+        else setSupps([])
+        setSuppsLoaded(true)
+
+        if (eff.ok) {
+          const j = eff.data
           setEffects(j?.effects || {})
         }
-      } catch {}
-      try {
-        const d = await fetch('/api/data/has-daily', { cache: 'no-store' })
-        if (!mounted) return
-        if (d.ok) {
-          const j = await d.json()
+
+        if (has.ok) {
+          const j = has.data
           setHasDaily(Boolean(j?.hasData))
           setWearableDays(Number(j?.wearableDays || 0))
-        } else {
-          setHasDaily(false)
-        }
-      } catch { setHasDaily(false) }
-      // Detailed wearable status for enhanced UI
-      try {
-        const ws = await fetch('/api/user/wearable-status?since=all', { cache: 'no-store' })
-        if (!mounted) return
-        if (ws.ok) {
-          const wj = await ws.json()
-          setWearableStatus(wj)
-        }
-      } catch {}
-      try {
-        const pr = await fetch('/api/payments/status', { cache: 'no-store' })
-        if (!mounted) return
-        if (pr.ok) {
-          const j = await pr.json()
+        } else setHasDaily(false)
+
+        if (ws.ok) setWearableStatus(ws.data)
+
+        if (pay.ok) {
+          const j = pay.data
           setIsMember(!!(j as any)?.is_member)
           try { console.log('isMember:', !!(j as any)?.is_member) } catch {}
         }
-      } catch {}
-      try {
-        const s = await fetch('/api/settings', { cache: 'no-store' })
-        if (!mounted) return
-        if (s.ok) {
-          const j = await s.json()
+
+        if (settingsRes.ok) {
+          const j = settingsRes.data
           setSettings(j)
           try { console.log('GET /api/settings result:', j) } catch {}
         }
         setSettingsLoaded(true)
-      } catch {}
+      } catch {
+        if (!mounted) return
+        setSuggestions([])
+        setProgress(null)
+        setSupps([])
+        setSuppsLoaded(true)
+        setHasDaily(false)
+        setSettingsLoaded(true)
+      }
       // Load skip-name override captured at modal open (same-day)
       try {
         const raw = typeof window !== 'undefined' ? localStorage.getItem('biostackr_skip_names_today') : null
@@ -804,8 +805,8 @@ export function DashboardUnifiedPanel() {
                     <button
                       onClick={async () => {
                         try {
-                          const r = await fetch('/api/billing/info', { cache: 'no-store' })
-                          const j = r.ok ? await r.json() : {}
+                          const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
+                          const j = r.ok ? r.data : {}
                           const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
                           if (isPaid) {
                             window.location.href = '/results'

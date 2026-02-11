@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DailyCheckinModal from '@/components/DailyCheckinModal'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export function CheckinLauncher() {
   const router = useRouter()
@@ -46,9 +47,9 @@ export function CheckinLauncher() {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include' })
+        const res = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
         if (!res.ok) return
-        const data = await res.json().catch(() => ({}))
+        const data = res.data || {}
         if (cancelled) return
         if (data?.userId) setUserId(String(data.userId))
         if (data?.firstName) setUserName(String(data.firstName))
@@ -62,8 +63,8 @@ export function CheckinLauncher() {
     let cancelled = false
     ;(async () => {
       try {
-        const r = await fetch('/api/supplements', { cache: 'no-store' })
-        const j = r.ok ? await r.json() : []
+        const r = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
+        const j = r.ok ? r.data : []
         if (cancelled) return
         const rows = Array.isArray(j) ? j : []
         const supplements = rows
@@ -84,9 +85,9 @@ export function CheckinLauncher() {
     let cancelled = false
     ;(async () => {
       try {
-        const r = await fetch('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
         if (!r.ok) return
-        const j = await r.json().catch(() => ({}))
+        const j = r.data || {}
         if (cancelled) return
         const skip = Array.isArray(j?.rotation?.action?.skip) ? j.rotation.action.skip : []
         const names = Array.from(

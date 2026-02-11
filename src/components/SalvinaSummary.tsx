@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import EnhancedDayDrawerV2 from '@/app/components/mood/EnhancedDayDrawerV2'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export interface InsightItem {
   id: string
@@ -55,9 +56,9 @@ export default function SalvinaSummary({
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include' })
+        const res = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
         if (!res.ok) return
-        const data = await res.json().catch(() => ({}))
+        const data = res.data || {}
         if (cancelled) return
         if (data?.userId) setUserId(String(data.userId))
         if (data?.firstName) setUserName(String(data.firstName))

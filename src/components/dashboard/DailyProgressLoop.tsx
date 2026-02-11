@@ -6,6 +6,7 @@ import TruthReportModal from '@/components/TruthReportModal'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal from '@/components/billing/PaywallModal'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Row = {
   id: string
@@ -57,9 +58,9 @@ export function DailyProgressLoop() {
     let mounted = true
     const refresh = async () => {
       try {
-        const r = await fetch('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
         if (!mounted) return
-        if (r.ok) setData(await r.json())
+        if (r.ok) setData(r.data)
         else setData(null)
       } catch {
         setData(null)
@@ -73,18 +74,18 @@ export function DailyProgressLoop() {
         let paid = false
         // Prefer unified billing info
         try {
-          const r = await fetch('/api/billing/info', { cache: 'no-store' })
+          const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
           if (r.ok) {
-            const j = await r.json()
+            const j = r.data
             paid = Boolean(j?.isPaid)
           }
         } catch {}
         // Fallback to payments/status
         if (!paid) {
           try {
-        const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+        const pr = await dedupedJson<any>('/api/payments/status', { cache: 'no-store' })
         if (pr.ok) {
-          const j = await pr.json()
+          const j = pr.data
               paid = !!(j as any)?.is_member
             }
           } catch {}
@@ -93,16 +94,16 @@ export function DailyProgressLoop() {
         setIsMember(paid)
         // Debug: log userId and paid status
         try {
-          const me = await fetch('/api/me', { cache: 'no-store' }).then(r => r.ok ? r.json() : {})
+          const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(r => r.ok ? r.data : {})
           console.log('isPaid:', paid, 'userId:', (me as any)?.id || '(unknown)')
         } catch {}
       } catch {}
       // Load wearables presence for subtle UI enhancements
       try {
-        const d = await fetch('/api/data/has-daily', { cache: 'no-store' })
+        const d = await dedupedJson<any>('/api/data/has-daily', { cache: 'no-store' })
         if (!mounted) return
         if (d.ok) {
-          const j = await d.json()
+          const j = d.data
           setHasWearables(Boolean(j?.hasWearables))
         }
       } catch {}
