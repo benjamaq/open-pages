@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Row = {
   id: string
@@ -21,10 +22,10 @@ export function NextResultCard() {
     let mounted = true
     ;(async () => {
       try {
-        const r = await fetch('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
         if (!mounted) return
         if (r.ok) {
-          const j = await r.json()
+          const j = r.data
           const b = (j?.sections?.building || [])
             .map((r: any) => ({
               id: r.id,

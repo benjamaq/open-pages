@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Row = {
   id: string
@@ -23,20 +24,21 @@ export function DashboardHero() {
     let mounted = true
     ;(async () => {
       try {
-        const r = await fetch('/api/progress/loop', { cache: 'no-store' })
+        const [prog, sups] = await Promise.all([
+          dedupedJson<any>('/api/progress/loop', { cache: 'no-store' }),
+          dedupedJson<any>('/api/supplements', { cache: 'no-store' }),
+        ])
         if (!mounted) return
-        if (r.ok) {
-          const j = await r.json()
+        if (prog.ok) {
+          const j = prog.data
           setSections(j?.sections || null)
           setStreak(j?.checkins?.totalDistinctDays || j?.todaysProgress?.streakDays || 0)
           setCheckins(j?.checkins || null)
           if (typeof j?.stackProgress === 'number') setStackProgress(Math.max(0, Math.min(100, Math.round(j.stackProgress))))
         }
-      } catch {}
-      try {
-        const s = await fetch('/api/supplements', { cache: 'no-store' })
-        if (!mounted) return
-        if (s.ok) setSupps(await s.json())
+        if (sups.ok) {
+          setSupps(Array.isArray(sups.data) ? sups.data : [])
+        }
       } catch {}
     })()
     return () => { mounted = false }

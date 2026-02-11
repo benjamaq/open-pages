@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export function PersonalHeader() {
   const [firstName, setFirstName] = useState<string | null>(null)
@@ -23,9 +24,9 @@ export function PersonalHeader() {
     let mounted = true
     ;(async () => {
       try {
-        const me = await fetch('/api/me', { cache: 'no-store' })
+        const me = await dedupedJson<any>('/api/me', { cache: 'no-store' })
         if (me.ok) {
-          const j = await me.json()
+          const j = me.data
           if (mounted) setFirstName((j?.firstName && String(j.firstName)) || null)
         }
       } catch {}
@@ -35,9 +36,9 @@ export function PersonalHeader() {
         let rdy = 0
         let testing = 0
         try {
-          const p = await fetch('/api/progress/loop', { cache: 'no-store' })
+          const p = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
           if (p.ok) {
-            const j = await p.json()
+            const j = p.data
             const sec = j?.sections || {}
             const all: any[] = [
               ...(sec.clearSignal || []),
@@ -60,9 +61,9 @@ export function PersonalHeader() {
         // If no items found via progress API, fall back to /api/supplements count
         if (total === 0) {
           try {
-            const s = await fetch('/api/supplements', { cache: 'no-store' })
+            const s = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
             if (s.ok) {
-              const arr = await s.json()
+              const arr = s.data
               total = Array.isArray(arr) ? arr.length : 0
             }
           } catch {}
@@ -79,17 +80,17 @@ export function PersonalHeader() {
       try {
         let paid = false
         try {
-          const r = await fetch('/api/billing/info', { cache: 'no-store' })
+          const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
           if (r.ok) {
-            const j = await r.json()
+            const j = r.data
             paid = Boolean(j?.isPaid)
           }
         } catch {}
         if (!paid) {
           try {
-            const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+            const pr = await dedupedJson<any>('/api/payments/status', { cache: 'no-store' })
             if (pr.ok) {
-              const j = await pr.json()
+              const j = pr.data
               paid = !!(j as any)?.is_member
             }
           } catch {}
