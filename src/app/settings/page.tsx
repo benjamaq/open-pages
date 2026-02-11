@@ -2,11 +2,21 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings/SettingsForm'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 
 export default async function SettingsPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  // Profile tier is the source of truth for "Pro" access in some accounts (manual grants, migrations, etc.)
+  const { data: profileRow } = await supabase
+    .from('profiles')
+    .select('tier,created_at')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  const tierLc = String((profileRow as any)?.tier || '').toLowerCase()
+  const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
 
   const hdrs = await headers()
   const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3010'
@@ -23,6 +33,12 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
   const plan = planRes && planRes.ok ? await planRes.json() : { is_member: false }
   const billing = billingRes && billingRes.ok ? await billingRes.json() : { isPaid: false, subscription: null }
   const billingError = String(searchParams?.billing_error || '').trim()
+  const isPaid = Boolean(billing?.isPaid) || Boolean(isPaidByTier)
+  const hasStripeSubscription = Boolean(billing?.subscription)
+  const memberSinceISO =
+    (billing as any)?.subscription?.current_period_start
+      ? String((billing as any).subscription.current_period_start)
+      : ((profileRow as any)?.created_at ? String((profileRow as any).created_at) : '')
 
   return (
     <div
@@ -49,13 +65,21 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                 We couldn’t open Stripe billing for this account. If you don’t have an active subscription, you can upgrade again below.
               </div>
             )}
-            {billing?.isPaid ? (
+            {isPaid ? (
               <div className="mt-3">
-                <div className="text-sm text-[#111111]">Plan: <span className="font-medium">Pro ✓</span></div>
-                <div className="mt-1 text-sm text-[#4B5563]">
-                  Member since: {billing?.subscription?.current_period_start ? new Date(billing.subscription.current_period_start).toLocaleDateString(undefined, { year: 'numeric', month: 'long' }) : '—'}
+                <div className="text-sm text-[#111111]">
+                  Plan:{' '}
+                  <span className="font-medium">
+                    {tierLc === 'creator' ? 'Creator ✓' : 'Pro ✓'}
+                  </span>
                 </div>
-                {billing?.subscription ? (
+                <div className="mt-1 text-sm text-[#4B5563]">
+                  Member since:{' '}
+                  {memberSinceISO
+                    ? new Date(memberSinceISO).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+                    : '—'}
+                </div>
+                {hasStripeSubscription ? (
                   <form action="/api/billing/portal" method="POST">
                     <button
                       type="submit"
@@ -66,17 +90,11 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                   </form>
                 ) : (
                   <div className="mt-4 rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-3 text-sm text-[#111111]">
-                    <div className="font-medium">Subscription not found</div>
+                    <div className="font-medium">Billing managed outside Stripe</div>
                     <div className="text-[#4B5563] mt-1">
-                      We couldn’t find a Stripe subscription record for this account. If you recently upgraded, try again in a minute.
-                      Otherwise, you can re‑subscribe below.
+                      Your account has Pro access, but we couldn’t find a Stripe subscription to manage here.
+                      If you need to change billing, contact support.
                     </div>
-                    <a
-                      href="/checkout"
-                      className="mt-3 inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"
-                    >
-                      Subscribe / Re‑subscribe
-                    </a>
                   </div>
                 )}
               </div>
@@ -90,12 +108,12 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                   <li>Full access to Results page</li>
                 </ul>
                 <div className="mt-3 text-sm text-[#111111]">$19/month or $149/year • $12.42/mo • Billed annually</div>
-                <a
-                  href="/checkout"
-                  className="mt-4 inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"
-                >
-                  Upgrade Now
-                </a>
+                <div className="mt-4">
+                  <UpgradeButton
+                    label="Upgrade Now"
+                    className="inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"
+                  />
+                </div>
               </div>
             )}
           </div>

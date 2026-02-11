@@ -124,8 +124,9 @@ export async function GET(request: NextRequest, context: any) {
         const analysisSrc = String(rawReport?.analysisSource || rawReport?.analysis_source || '').toLowerCase()
         if (analysisSrc !== 'implicit') return rawReport
         // Confirmatory gate: once user has logged a few subjective check-ins, show the final verdict label on the report page
+        // IMPORTANT: the product's “check-ins” are stored in daily_entries (not the legacy checkins table).
         const { count } = await supabase
-          .from('checkins')
+          .from('daily_entries')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
         const checkinsCount = count || 0
