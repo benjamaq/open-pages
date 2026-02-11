@@ -87,6 +87,84 @@ export async function GET(req: Request) {
         const usid = String((item as any)?.user_supplement_id || '').trim()
         if (usid && !siByUserSupplementId.has(usid)) siByUserSupplementId.set(usid, item)
       }
+
+      // Backfill orphaned user_supplement rows (created during older flows) that have no stack_items row.
+      // This ensures My Stack can later persist dose/timing/brand into stack_items.
+      try {
+        const orphans = (rows || []).filter((r: any) => {
+          const usid = String(r?.id || '').trim()
+          if (!usid) return false
+          return !siByUserSupplementId.has(usid)
+        })
+        if (orphans.length > 0) {
+          if (debug) {
+            // eslint-disable-next-line no-console
+            console.log('[current] orphan user_supplement rows missing stack_items:', orphans.map((r: any) => ({ id: r.id, name: r.name || r.label })))
+          }
+          const toInsert: any[] = []
+          for (const r of orphans) {
+            const usid = String(r?.id || '').trim()
+            const rawName = String(r?.name || r?.label || '').trim()
+            if (!usid || !rawName) continue
+            const key = normalize(rawName)
+            const existing = key ? siByKey.get(key) : undefined
+            const startDate = (r as any)?.inferred_start_at || (r as any)?.created_at || null
+
+            // If we already have a stack_item for this name but it wasn't linked, link it instead of inserting a duplicate.
+            if (existing && !String((existing as any)?.user_supplement_id || '').trim()) {
+              try {
+                const payload: any = {
+                  user_supplement_id: usid,
+                  // ensure defaults exist for display
+                  frequency: (existing as any)?.frequency || 'daily',
+                  start_date: (existing as any)?.start_date || startDate,
+                }
+                const { error: linkErr } = await supabaseAdmin
+                  .from('stack_items')
+                  .update(payload as any)
+                  .eq('id', String((existing as any).id))
+                  .eq('profile_id', profileId)
+                if (!linkErr) {
+                  ;(existing as any).user_supplement_id = usid
+                  if (!siByUserSupplementId.has(usid)) siByUserSupplementId.set(usid, existing)
+                }
+              } catch {}
+              continue
+            }
+
+            toInsert.push({
+              profile_id: profileId,
+              name: rawName,
+              user_supplement_id: usid,
+              frequency: 'daily',
+              start_date: startDate,
+              created_at: new Date().toISOString(),
+            })
+          }
+
+          if (toInsert.length > 0) {
+            const { data: inserted, error: insErr } = await (supabaseAdmin as any)
+              .from('stack_items')
+              .insert(toInsert as any)
+              .select('id,name,monthly_cost,dose,timing,brand,notes,frequency,start_date,user_supplement_id')
+            if (insErr) {
+              if (debug) {
+                // eslint-disable-next-line no-console
+                console.warn('[current] stack_items orphan backfill insert failed:', insErr.message)
+              }
+            } else if (Array.isArray(inserted)) {
+              for (const it of inserted) {
+                stackItems.push(it)
+                const k = normalize(it?.name)
+                if (k && !siByKey.has(k)) siByKey.set(k, it)
+                const id = String((it as any)?.user_supplement_id || '').trim()
+                if (id && !siByUserSupplementId.has(id)) siByUserSupplementId.set(id, it)
+              }
+            }
+          }
+        }
+      } catch {}
+
       rows = rows.map((r: any) => {
         const key = normalize(r?.name || r?.label)
         const match = siByUserSupplementId.get(String(r?.id || '').trim()) || (key ? siByKey.get(key) : undefined)

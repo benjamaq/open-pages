@@ -699,6 +699,7 @@ export function DashboardUnifiedPanel() {
           <div className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: '#55514A' }}>Next result likely</div>
           {(() => {
             // Clear, state-driven copy for Next Result Likely
+            const totalDaysTracked = Number((progress as any)?.checkins?.totalDistinctDays || 0)
             const buildingLen = Number(progress?.sections?.building?.length || 0)
             const needsLen = Number(progress?.sections?.needsData?.length || 0)
             const readyLen = Number(progress?.sections?.clearSignal?.length || 0) + Number(progress?.sections?.noSignal?.length || 0)
@@ -725,10 +726,14 @@ export function DashboardUnifiedPanel() {
                 ...(((progress as any)?.sections?.needsData) || [])
               ]
               const allImplicit = all.length > 0 && all.every((r: any) => String((r as any)?.analysisSource || '').toLowerCase() === 'implicit')
+              if (totalDaysTracked === 0) {
+                return <div className="text-sm text-gray-700">Complete your first check-in to start tracking</div>
+              }
               if (readyLen > 0 && readyLen === totalLen) {
                 return <div className="text-sm text-gray-700">All results are in ✓</div>
               }
-              return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'All supplements analyzed'}</div>
+              // If this is an upload-only account, suggest confirming; otherwise encourage continued tracking.
+              return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'Keep checking in — your first result is building'}</div>
             }
             if (!nextResult) {
               return <div className="text-sm text-gray-700">—</div>
