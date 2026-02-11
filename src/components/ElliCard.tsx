@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export default function ElliCard() {
   const [loading, setLoading] = useState(true)
@@ -31,16 +32,10 @@ export default function ElliCard() {
     let mounted = true
     ;(async () => {
       try {
-        const token = (() => {
-          try {
-            const key = Object.keys(window.localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
-            return key ? window.localStorage.getItem(key) : null
-          } catch { return null }
-        })()
-        const headers: Record<string, string> = token ? { 'x-supabase-auth': token } : {}
-        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include', headers })
+        // Use the same /api/me request as the rest of the dashboard so it dedupes cleanly.
+        const res = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
         if (!res.ok) return
-        const data = await res.json()
+        const data = res.data
         const fn = data?.firstName
         if (fn && typeof window !== 'undefined') {
           window.localStorage.setItem('biostackr_first_name', String(fn))

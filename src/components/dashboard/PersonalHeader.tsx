@@ -24,7 +24,7 @@ export function PersonalHeader() {
     let mounted = true
     ;(async () => {
       try {
-        const me = await dedupedJson<any>('/api/me', { cache: 'no-store' })
+        const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
         if (me.ok) {
           const j = me.data
           if (mounted) setFirstName((j?.firstName && String(j.firstName)) || null)

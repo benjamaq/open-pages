@@ -6,7 +6,26 @@ const cache = new Map<string, CacheEntry<any>>()
 function makeKey(url: string, init?: RequestInit) {
   const method = String(init?.method || 'GET').toUpperCase()
   const creds = init?.credentials ? String(init.credentials) : 'default'
-  return `${method} ${url} :: credentials=${creds}`
+  const cacheMode = init?.cache ? String(init.cache) : 'default'
+  const headersKey = (() => {
+    try {
+      const h = init?.headers as any
+      if (!h) return 'none'
+      if (typeof Headers !== 'undefined' && h instanceof Headers) {
+        return Array.from(h.entries()).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}:${v}`).join('|')
+      }
+      if (Array.isArray(h)) {
+        return h.slice().sort(([a],[b]) => String(a).localeCompare(String(b))).map(([k,v]) => `${k}:${v}`).join('|')
+      }
+      if (typeof h === 'object') {
+        return Object.entries(h).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}:${String(v)}`).join('|')
+      }
+      return String(h)
+    } catch {
+      return 'unknown'
+    }
+  })()
+  return `${method} ${url} :: credentials=${creds} :: cache=${cacheMode} :: headers=${headersKey}`
 }
 
 /**

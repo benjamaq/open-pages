@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Segment = { label: string; colorHex?: string; amount: number; percent: number }
 
@@ -28,18 +29,18 @@ export function StackEconomicsCard({
     let mounted = true
     ;(async () => {
       try {
-        const r = await fetch('/api/supplements', { cache: 'no-store' })
+        const r = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
         if (!mounted) return
         if (r.ok) {
-          const j = await r.json()
+          const j = r.data
           setSupps(Array.isArray(j) ? j : [])
         }
       } catch {}
       try {
-        const e = await fetch('/api/effect/summary', { cache: 'no-store' })
+        const e = await dedupedJson<any>('/api/effect/summary', { cache: 'no-store' })
         if (!mounted) return
         if (e.ok) {
-          const j = await e.json()
+          const j = e.data
           setEffects(j?.effects || {})
         }
       } catch {}

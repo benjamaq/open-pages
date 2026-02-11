@@ -74,18 +74,18 @@ export function DailyProgressLoop() {
         let paid = false
         // Prefer unified billing info
         try {
-          const r = await fetch('/api/billing/info', { cache: 'no-store' })
+          const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
           if (r.ok) {
-            const j = await r.json()
+            const j = r.data
             paid = Boolean(j?.isPaid)
           }
         } catch {}
         // Fallback to payments/status
         if (!paid) {
           try {
-        const pr = await fetch('/api/payments/status', { cache: 'no-store' })
+        const pr = await dedupedJson<any>('/api/payments/status', { cache: 'no-store' })
         if (pr.ok) {
-          const j = await pr.json()
+          const j = pr.data
               paid = !!(j as any)?.is_member
             }
           } catch {}
@@ -94,7 +94,7 @@ export function DailyProgressLoop() {
         setIsMember(paid)
         // Debug: log userId and paid status
         try {
-          const me = await dedupedJson<any>('/api/me', { cache: 'no-store' }).then(r => r.ok ? r.data : {})
+          const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(r => r.ok ? r.data : {})
           console.log('isPaid:', paid, 'userId:', (me as any)?.id || '(unknown)')
         } catch {}
       } catch {}

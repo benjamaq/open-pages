@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { TestingGrid } from '@/components/dashboard/TestingGrid'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export function TestingGridClient({ dayCount, initialSupplements = [] as any[] }: { dayCount: number; initialSupplements?: any[] }) {
   const [supplements, setSupplements] = useState<any[]>(Array.isArray(initialSupplements) ? initialSupplements : [])
@@ -13,10 +14,10 @@ export function TestingGridClient({ dayCount, initialSupplements = [] as any[] }
         // debug logs per emergency checklist
         // eslint-disable-next-line no-console
         console.log('=== DASHBOARD FETCHING SUPPLEMENTS ===')
-        const res = await fetch('/api/supplements', { cache: 'no-store' })
+        const res = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
         // eslint-disable-next-line no-console
         console.log('Response status:', res.status)
-        const data = await res.json().catch(() => [])
+        const data = res.ok ? res.data : []
         // eslint-disable-next-line no-console
         console.log('Received data:', data)
         // eslint-disable-next-line no-console

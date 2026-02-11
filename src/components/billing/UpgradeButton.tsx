@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import PaywallModal from './PaywallModal'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export default function UpgradeButton({
   compact = false,
@@ -20,13 +21,13 @@ export default function UpgradeButton({
     ;(async () => {
       try {
         // Prefer billing endpoint; fallback to profile tier if exposed
-        const r = await fetch('/api/billing/info', { cache: 'no-store' })
-        const j = r.ok ? await r.json() : {}
+        const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
+        const j = r.ok ? r.data : {}
         const paid = Boolean(j?.isPaid) || Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
         if (mounted && paid) { setIsPro(true); return }
         // Optional: probe profile tier if available
         try {
-          const me = await fetch('/api/me', { cache: 'no-store' }).then(res => res.ok ? res.json() : {})
+          const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(res => res.ok ? res.data : {})
           if (mounted) setIsPro(String((me as any)?.tier || '').toLowerCase() === 'pro')
         } catch { if (mounted) setIsPro(false) }
       } catch { if (mounted) setIsPro(false) }

@@ -805,8 +805,8 @@ export function DashboardUnifiedPanel() {
                     <button
                       onClick={async () => {
                         try {
-                          const r = await fetch('/api/billing/info', { cache: 'no-store' })
-                          const j = r.ok ? await r.json() : {}
+                          const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
+                          const j = r.ok ? r.data : {}
                           const isPaid = Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
                           if (isPaid) {
                             window.location.href = '/results'

@@ -63,8 +63,8 @@ export function CheckinLauncher() {
     let cancelled = false
     ;(async () => {
       try {
-        const r = await fetch('/api/supplements', { cache: 'no-store' })
-        const j = r.ok ? await r.json() : []
+        const r = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
+        const j = r.ok ? r.data : []
         if (cancelled) return
         const rows = Array.isArray(j) ? j : []
         const supplements = rows

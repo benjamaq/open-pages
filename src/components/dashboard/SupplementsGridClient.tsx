@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import SupplementsGrid from './SupplementsGrid'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 export default function SupplementsGridClient({ initial }: { initial?: any[] }) {
 	const [supplements, setSupplements] = useState<any[]>(Array.isArray(initial) ? initial : [])
@@ -11,11 +12,9 @@ export default function SupplementsGridClient({ initial }: { initial?: any[] }) 
 		let cancelled = false
 		;(async () => {
 			try {
-				const res = await fetch('/api/supplements', { cache: 'no-store' })
-				const data = await res.json().catch(() => [])
-				if (!cancelled && Array.isArray(data)) {
-					setSupplements(data)
-				}
+				const res = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
+				const data = res.ok ? res.data : []
+				if (!cancelled && Array.isArray(data)) setSupplements(data)
 			} catch {
 				// ignore and keep whatever we have
 			} finally {
