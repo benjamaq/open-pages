@@ -132,14 +132,36 @@ export async function GET(request: Request) {
           .eq('user_id', user.id)
           .maybeSingle()
         if (cached && ( !cached.invalidated_at || new Date(cached.computed_at).getTime() > new Date(cached.invalidated_at).getTime())) {
-          try { console.log('CACHE HIT', { computed_at: cached.computed_at }) } catch {}
-          return new NextResponse(JSON.stringify(cached.payload), {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-store'
+          // Safety: if new supplements were added after the cache was computed, don't serve stale cache.
+          // This prevents newly created user_supplement rows from being invisible on Dashboard until a manual invalidate.
+          let cacheStaleDueToNewSupp = false
+          try {
+            const computedAtMs = new Date(cached.computed_at).getTime()
+            if (Number.isFinite(computedAtMs) && computedAtMs > 0) {
+              const { data: latestSupp } = await supabase
+                .from('user_supplement')
+                .select('created_at')
+                .eq('user_id', user.id)
+                .or('is_active.eq.true,is_active.is.null')
+                .order('created_at', { ascending: false })
+                .limit(1)
+              const latestCreated = (latestSupp && latestSupp[0] && (latestSupp[0] as any).created_at) ? new Date((latestSupp[0] as any).created_at).getTime() : 0
+              if (latestCreated && latestCreated > computedAtMs) {
+                cacheStaleDueToNewSupp = true
+              }
             }
-          })
+          } catch {}
+          if (!cacheStaleDueToNewSupp) {
+            try { console.log('CACHE HIT', { computed_at: cached.computed_at }) } catch {}
+            return new NextResponse(JSON.stringify(cached.payload), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-store'
+              }
+            })
+          }
+          try { console.log('CACHE MISS (new supplement added)') } catch {}
         } else {
           try { console.log('CACHE MISS') } catch {}
         }

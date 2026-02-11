@@ -365,6 +365,13 @@ export async function POST(request: Request) {
           await supabase.from('stack_items').insert(stackPayload)
         }
       } catch {}
+      // Invalidate cached dashboard payload so newly added supplements appear immediately.
+      try {
+        const ts = new Date().toISOString()
+        await (supabaseAdmin as any)
+          .from('dashboard_cache')
+          .upsert({ user_id: user.id, invalidated_at: ts } as any, { onConflict: 'user_id' } as any)
+      } catch {}
       // Hardening: if inferred_start_at did not persist on insert, set it explicitly now
       if (inferredStartISO) {
         try {
