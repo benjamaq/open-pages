@@ -61,7 +61,7 @@ export async function GET(req: Request) {
     if (profileId) {
       const { data: si } = await supabaseAdmin
         .from('stack_items')
-        .select('id,name,monthly_cost,dose,timing,brand,notes,frequency,start_date')
+        .select('id,name,monthly_cost,dose,timing,brand,notes,frequency,start_date,user_supplement_id')
         .eq('profile_id', profileId)
       const stackItems = si || []
       if (debug) {
@@ -80,13 +80,16 @@ export async function GET(req: Request) {
           .trim()
       }
       const siByKey = new Map<string, any>()
+      const siByUserSupplementId = new Map<string, any>()
       for (const item of stackItems) {
         const key = normalize(item?.name)
         if (key && !siByKey.has(key)) siByKey.set(key, item)
+        const usid = String((item as any)?.user_supplement_id || '').trim()
+        if (usid && !siByUserSupplementId.has(usid)) siByUserSupplementId.set(usid, item)
       }
       rows = rows.map((r: any) => {
         const key = normalize(r?.name || r?.label)
-        const match = key ? siByKey.get(key) : undefined
+        const match = siByUserSupplementId.get(String(r?.id || '').trim()) || (key ? siByKey.get(key) : undefined)
         const monthlyRaw = Number(r?.monthly_cost_usd)
         const monthly_cost_usd = Number.isFinite(monthlyRaw) && monthlyRaw > 0
           ? monthlyRaw

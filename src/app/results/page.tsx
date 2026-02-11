@@ -1019,7 +1019,13 @@ export default function ResultsPage() {
           <div className="mb-3">
             <div className="section-header">On the Bench</div>
             <div className="section-subtitle">
-              {uiRows.filter(r => r.lifecycle === 'Archived').length + Object.keys(paused).length} supplements paused or stopped
+              {uiRows
+                .filter(r => {
+                  const s = supps.find(x => x.id === r.id) as any
+                  const isInactive = (s as any)?.is_active === false
+                  return r.lifecycle === 'Archived' || paused[r.id] || isInactive
+                })
+                .length} supplements paused or stopped
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -1033,6 +1039,7 @@ export default function ResultsPage() {
                 const s = supps.find(x => x.id === r.id) as any
                 const cat = getCategoryFor(r.id) || 'General'
                 const brand = s?.brand ? String(s.brand) : parseBrandAndShortName(s).brand
+                const isInactive = (s as any)?.is_active === false
                 const dose = getDose(s)
                 const freq = getFrequency(s)
                 const timing = getTiming(s)
@@ -1042,7 +1049,7 @@ export default function ResultsPage() {
                     <div className="tile-body flex-1 flex flex-col">
                       <div className="flex items-start justify-between">
                         <div className="text-[11px] uppercase tracking-wide text-[#6B7280]">{cat}</div>
-                        <div className="text-[12px] text-[#6B7280]">{paused[r.id] ? 'Paused' : 'Archived'}</div>
+                        <div className="text-[12px] text-[#6B7280]">{(paused[r.id] || isInactive) ? 'Paused' : 'Archived'}</div>
                       </div>
                       <div className="mt-2">
                         <div className="text-[16px] font-semibold text-[#111] line-clamp-2">{r.name}</div>
