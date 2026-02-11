@@ -156,10 +156,25 @@ export default function OnboardingPage() {
       setSupplements([...supplements, details]);
       // Persist to backend so dashboard sees it immediately
       try {
+        const doseStr = (() => {
+          const n = Number((details as any)?.dailyDose)
+          const unit = String((details as any)?.doseUnit || '').trim()
+          if (!Number.isFinite(n) || n <= 0) return undefined
+          const base = unit ? `${n} ${unit}` : String(n)
+          return base.trim() || undefined
+        })()
+        const timingStr = (() => {
+          const tod = (details as any)?.timeOfDay
+          if (Array.isArray(tod) && tod.length > 0) return String(tod[0] || '').trim() || undefined
+          return undefined
+        })()
         const payload = { 
           name: details.name,
           monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
           primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
+          ...(doseStr ? { dose: doseStr } : {}),
+          ...(timingStr ? { timing: timingStr } : {}),
+          ...(details.brandName ? { brand: String(details.brandName).trim() } : {}),
           ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),
           ...(details.isActive === false && details.stoppedAt ? { endDate: String(details.stoppedAt).slice(0, 10) } : {})
         }

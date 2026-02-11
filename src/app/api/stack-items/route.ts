@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, dose, item_type, frequency } = await request.json()
+    const { name, dose, timing, brand, item_type, frequency } = await request.json()
     
     if (!name || !item_type) {
       return NextResponse.json({ error: 'Name and item_type are required' }, { status: 400 })
@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
         profile_id: (profile as any).id,
         name,
         dose: dose || null,
+        timing: timing || null,
+        brand: brand || null,
         item_type,
         frequency: frequency || 'daily',
         // Default to all days (0=Sun..6=Sat) to match dashboard filtering

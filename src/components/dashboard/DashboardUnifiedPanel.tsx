@@ -703,6 +703,7 @@ export function DashboardUnifiedPanel() {
             const needsLen = Number(progress?.sections?.needsData?.length || 0)
             const readyLen = Number(progress?.sections?.clearSignal?.length || 0) + Number(progress?.sections?.noSignal?.length || 0)
             const totalLen = readyLen + buildingLen + needsLen + Number((progress as any)?.sections?.inconsistent?.length || 0)
+            const daysTracked = Number((progress as any)?.checkins?.totalDistinctDays || 0)
             const hasCheckinCandidate = (() => {
               const pool = [
                 ...((progress?.sections?.building) || []),
@@ -725,6 +726,13 @@ export function DashboardUnifiedPanel() {
                 ...(((progress as any)?.sections?.needsData) || [])
               ]
               const allImplicit = all.length > 0 && all.every((r: any) => String((r as any)?.analysisSource || '').toLowerCase() === 'implicit')
+              // Fresh account messaging: avoid telling brand new users "All supplements analyzed"
+              if (readyLen === 0 && totalLen > 0) {
+                if (daysTracked === 0) {
+                  return <div className="text-sm text-gray-700">Complete your first check-in to start tracking</div>
+                }
+                return <div className="text-sm text-gray-700">Keep checking in — your first result is building</div>
+              }
               if (readyLen > 0 && readyLen === totalLen) {
                 return <div className="text-sm text-gray-700">All results are in ✓</div>
               }

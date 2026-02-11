@@ -135,6 +135,7 @@ export default function OnboardingModal({
         body: JSON.stringify({
           name: supplementName,
           dose: supplementDose,
+          timing: supplementTiming,
           item_type: 'supplements',
           frequency: 'daily'
         })
