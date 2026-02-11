@@ -407,6 +407,30 @@ export function DailyProgressLoop() {
           // Completed only when final verdict is present; "too early"/inconclusive remain in Testing
           return hasFinalVerdict
         })
+        // Sort completed cards: KEEP first, then NO CLEAR SIGNAL, then DROP; within each, strongest effect first.
+        const completedSorted = completedRows
+          .slice()
+          .sort((a: any, b: any) => {
+            const verdictRank = (row: any) => {
+              const v = String((row as any)?.verdict || '').toLowerCase()
+              const cat = String((row as any)?.effectCategory || '').toLowerCase()
+              if (v === 'keep' || cat === 'works') return 0
+              if (cat === 'no_effect' || cat === 'no_detectable_effect') return 1
+              if (v === 'drop' || cat === 'negative') return 2
+              return 99
+            }
+            const ra = verdictRank(a)
+            const rb = verdictRank(b)
+            if (ra !== rb) return ra - rb
+            const mag = (row: any) => {
+              const n = Number((row as any)?.effectSize ?? (row as any)?.effect_size ?? (row as any)?.effectPct ?? 0)
+              return Number.isFinite(n) ? Math.abs(n) : 0
+            }
+            const ma = mag(a)
+            const mb = mag(b)
+            if (ma !== mb) return mb - ma
+            return String((a as any)?.name || '').localeCompare(String((b as any)?.name || ''))
+          })
         try {
           console.log('[dashboard] partition result:', {
             testing: testingRows.length,
@@ -436,7 +460,7 @@ export function DailyProgressLoop() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {completedRows.length === 0 ? (
                   <div className="text-xs text-gray-600">No completed results yet.</div>
-                ) : completedRows.map((r: any) => (
+                ) : completedSorted.map((r: any) => (
                   <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
                 ))}
               </div>

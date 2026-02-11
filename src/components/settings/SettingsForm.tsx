@@ -100,7 +100,11 @@ export function SettingsForm({
           </div>
         )}
         <div className="mt-4 flex items-center gap-3">
-          <button onClick={onSave} disabled={saving} className="px-4 py-2 rounded-full text-white text-sm font-semibold" style={{ backgroundColor: '#3A2F2A', opacity: saving ? 0.7 : 1 }}>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black disabled:opacity-70"
+          >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           {saved && <span className="text-sm text-gray-600">Saved</span>}

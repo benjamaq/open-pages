@@ -1019,13 +1019,16 @@ export default function ResultsPage() {
           <div className="mb-3">
             <div className="section-header">On the Bench</div>
             <div className="section-subtitle">
-              {uiRows
-                .filter(r => {
-                  const s = supps.find(x => x.id === r.id) as any
-                  const isInactive = (s as any)?.is_active === false
-                  return r.lifecycle === 'Archived' || paused[r.id] || isInactive
-                })
-                .length} supplements paused or stopped
+              {(() => {
+                const benchCount = uiRows
+                  .filter(r => {
+                    const s = supps.find(x => x.id === r.id) as any
+                    const isInactive = (s as any)?.is_active === false
+                    return r.lifecycle === 'Archived' || paused[r.id] || isInactive
+                  })
+                  .length
+                return `${benchCount} supplement${benchCount === 1 ? '' : 's'} paused or stopped`
+              })()}
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">

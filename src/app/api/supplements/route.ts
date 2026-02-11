@@ -162,6 +162,24 @@ export async function POST(request: Request) {
     try { console.log('[supplements][POST] RECEIVED:', body) } catch {}
     const rawName = String(body?.name || '').trim()
     if (!rawName) return NextResponse.json({ error: 'Name required' }, { status: 400 })
+    // Dedupe guard: avoid creating duplicate user_supplement rows with identical names for the same user.
+    // This is intentionally conservative (exact-name match only) to avoid blocking legitimately different products.
+    try {
+      const target = rawName.toLowerCase().replace(/\s+/g, ' ').trim()
+      const { data: existing } = await supabase
+        .from('user_supplement')
+        .select('id,name')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const hit = (existing || []).find((r: any) => {
+        const nm = String((r as any)?.name || '').toLowerCase().replace(/\s+/g, ' ').trim()
+        return nm === target
+      })
+      if (hit && (hit as any)?.id) {
+        return NextResponse.json({ id: String((hit as any).id), deduped: true })
+      }
+    } catch {}
     // Dose/timing/brand from client (new fields)
     const doseFromBody = typeof body?.dose === 'string' ? String(body.dose).trim() : undefined
     const timingFromBody = typeof body?.timing === 'string' ? String(body.timing).trim() : undefined
