@@ -8,15 +8,22 @@ export default function UpgradeButton({
   compact = false,
   label = 'Upgrade',
   className,
+  isPro: isProOverride,
 }: {
   compact?: boolean
   label?: string
   className?: string
+  isPro?: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const [isPro, setIsPro] = useState<boolean | null>(null)
+  const [isPro, setIsPro] = useState<boolean | null>(typeof isProOverride === 'boolean' ? isProOverride : null)
 
   useEffect(() => {
+    // If parent provided a definitive membership flag (dashboard combined load), don't fetch.
+    if (typeof isProOverride === 'boolean') {
+      setIsPro(isProOverride)
+      return
+    }
     let mounted = true
     ;(async () => {
       try {
@@ -33,7 +40,7 @@ export default function UpgradeButton({
       } catch { if (mounted) setIsPro(false) }
     })()
     return () => { mounted = false }
-  }, [])
+  }, [isProOverride])
 
   return (
     <>

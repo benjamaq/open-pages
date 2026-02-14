@@ -11,7 +11,25 @@ import { dedupedJson } from '@/lib/utils/dedupedJson'
 type Suggestion = { id: string; name: string }
 type Row = { id: string; name: string; daysOfData: number; requiredDays: number }
 
-export function DashboardUnifiedPanel() {
+export function DashboardUnifiedPanel({
+  suggestionsPayload,
+  progressPayload,
+  supplementsPayload,
+  effectsPayload,
+  hasDailyPayload,
+  wearableStatusPayload,
+  settingsPayload,
+  isMember: isMemberProp,
+}: {
+  suggestionsPayload?: any
+  progressPayload?: any
+  supplementsPayload?: any
+  effectsPayload?: any
+  hasDailyPayload?: any
+  wearableStatusPayload?: any
+  settingsPayload?: any
+  isMember?: boolean
+}) {
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null)
   const [progress, setProgress] = useState<any | null>(null)
   const [supps, setSupps] = useState<any[]>([])
@@ -31,6 +49,63 @@ export function DashboardUnifiedPanel() {
 
   useEffect(() => {
     let mounted = true
+    const hasAnyProp =
+      suggestionsPayload !== undefined ||
+      progressPayload !== undefined ||
+      supplementsPayload !== undefined ||
+      effectsPayload !== undefined ||
+      hasDailyPayload !== undefined ||
+      wearableStatusPayload !== undefined ||
+      settingsPayload !== undefined ||
+      typeof isMemberProp === 'boolean'
+
+    if (hasAnyProp) {
+      try {
+        if (suggestionsPayload !== undefined) {
+          const j = suggestionsPayload
+          setSuggestions(Array.isArray(j?.suggestions) ? j.suggestions : [])
+        } else {
+          setSuggestions([])
+        }
+
+        if (progressPayload !== undefined) setProgress(progressPayload)
+
+        if (supplementsPayload !== undefined) setSupps(Array.isArray(supplementsPayload) ? supplementsPayload : [])
+        else setSupps([])
+        setSuppsLoaded(true)
+
+        if (effectsPayload !== undefined) {
+          const j = effectsPayload
+          setEffects(j?.effects || {})
+        }
+
+        if (hasDailyPayload !== undefined) {
+          const j = hasDailyPayload
+          setHasDaily(Boolean(j?.hasData))
+          setWearableDays(Number(j?.wearableDays || 0))
+        }
+
+        if (wearableStatusPayload !== undefined) setWearableStatus(wearableStatusPayload)
+        if (typeof isMemberProp === 'boolean') setIsMember(isMemberProp)
+
+        if (settingsPayload !== undefined) setSettings(settingsPayload)
+        setSettingsLoaded(true)
+      } catch {}
+
+      // Load skip-name override captured at modal open (same-day)
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('biostackr_skip_names_today') : null
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          const todayStr = new Date().toISOString().split('T')[0]
+          if (parsed?.date === todayStr && Array.isArray(parsed?.names) && parsed.names.length > 0) {
+            setOverrideSkipNames(parsed.names as string[])
+          }
+        }
+      } catch {}
+
+      return () => { mounted = false }
+    }
     ;(async () => {
       try {
         const [
@@ -113,7 +188,7 @@ export function DashboardUnifiedPanel() {
       } catch {}
     })()
     return () => { mounted = false }
-  }, [])
+  }, [suggestionsPayload, progressPayload, supplementsPayload, effectsPayload, hasDailyPayload, wearableStatusPayload, settingsPayload, isMemberProp])
 
   // Show post-upload success modal only when explicitly signaled by URL
   useEffect(() => {

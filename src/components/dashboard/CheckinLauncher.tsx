@@ -5,7 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import DailyCheckinModal from '@/components/DailyCheckinModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 
-export function CheckinLauncher() {
+export function CheckinLauncher({
+  mePayload,
+  supplementsPayload,
+  progressPayload,
+}: {
+  mePayload?: any
+  supplementsPayload?: any
+  progressPayload?: any
+}) {
   const router = useRouter()
   const search = useSearchParams()
   const [open, setOpen] = useState(false)
@@ -45,6 +53,15 @@ export function CheckinLauncher() {
 
   useEffect(() => {
     let cancelled = false
+    if (mePayload !== undefined) {
+      try {
+        const data = mePayload || {}
+        if (data?.userId) setUserId(String(data.userId))
+        else if (data?.id) setUserId(String(data.id))
+        if (data?.firstName) setUserName(String(data.firstName))
+      } catch {}
+      return () => { cancelled = true }
+    }
     ;(async () => {
       try {
         const res = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
@@ -56,11 +73,25 @@ export function CheckinLauncher() {
       } catch {}
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [mePayload])
 
   // Load active supplements for today’s checklist
   useEffect(() => {
     let cancelled = false
+    if (supplementsPayload !== undefined) {
+      try {
+        const rows = Array.isArray(supplementsPayload) ? supplementsPayload : []
+        const supplements = rows
+          .filter((row: any) => row?.is_active !== false)
+          .map((row: any) => ({
+            id: String(row?.intake_id ?? row?.user_supplement_id ?? row?.id ?? row?.supplement_id ?? ''),
+            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement')
+          }))
+          .filter((s: any) => s.id)
+        setTodayItems((ti: any) => ({ ...ti, supplements }))
+      } catch {}
+      return () => { cancelled = true }
+    }
     ;(async () => {
       try {
         const r = await dedupedJson<any>('/api/supplements', { cache: 'no-store' })
@@ -78,11 +109,33 @@ export function CheckinLauncher() {
       } catch {}
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [supplementsPayload])
 
   // Load skip list from progress endpoint to surface "Skipping today" reminder
   useEffect(() => {
     let cancelled = false
+    if (progressPayload !== undefined) {
+      try {
+        const j = progressPayload || {}
+        const skip = Array.isArray(j?.rotation?.action?.skip) ? j.rotation.action.skip : []
+        const names = Array.from(
+          new Map(
+            skip
+              .map((s: any) => String(s?.name || '').trim())
+              .filter(Boolean)
+              .map((n: string) => [n.toLowerCase(), n])
+          ).values()
+        )
+        if (names.length > 0) {
+          setTodayItems((ti: any) => ({ ...ti, skipNames: names }))
+          try {
+            const todayStr = new Date().toISOString().split('T')[0]
+            localStorage.setItem('biostackr_skip_names_today', JSON.stringify({ date: todayStr, names }))
+          } catch {}
+        }
+      } catch {}
+      return () => { cancelled = true }
+    }
     ;(async () => {
       try {
         const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
@@ -108,7 +161,7 @@ export function CheckinLauncher() {
       } catch {}
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [progressPayload])
 
   const today = new Date().toISOString().split('T')[0]
 
