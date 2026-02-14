@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Suggestion = { id: string; name: string }
 
@@ -11,10 +12,10 @@ export function TodaysActionCard() {
     let mounted = true
     ;(async () => {
       try {
-        const res = await fetch('/api/suggestions/dailySkip', { cache: 'no-store' })
+        const res = await dedupedJson<any>('/api/suggestions/dailySkip', { cache: 'no-store' })
         if (!mounted) return
         if (res.ok) {
-          const j = await res.json()
+          const j = res.data
           setSuggestions(Array.isArray(j?.suggestions) ? j.suggestions : [])
         } else {
           setSuggestions([])

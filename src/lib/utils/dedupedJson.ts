@@ -69,4 +69,21 @@ export async function dedupedJson<T = any>(
   return p as any
 }
 
+/**
+ * Prime the dedupedJson cache with a known response payload (useful for prefetching).
+ * This intentionally does NOT throw; it is best-effort.
+ */
+export function primeDedupedJson<T = any>(
+  url: string,
+  init: RequestInit | undefined,
+  value: { ok: boolean; status: number; data: T | null },
+  ts: number = Date.now()
+) {
+  try {
+    const key = makeKey(url, init)
+    cache.set(key, { ts, value })
+    inFlight.delete(key)
+  } catch {}
+}
+
 

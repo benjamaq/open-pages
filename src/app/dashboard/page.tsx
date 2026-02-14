@@ -8,6 +8,7 @@ import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader';
 import { StackEconomicsCard } from '@/components/dashboard/YourStackCostCard';
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel';
+import { DashboardLoadPrefetch } from '@/components/dashboard/DashboardLoadPrefetch';
 import DashboardAddSupplementGate from '@/components/dashboard/DashboardAddSupplementGate';
 import UpgradeButton from '@/components/billing/UpgradeButton';
 
@@ -88,6 +89,8 @@ export default async function DashboardPage() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="space-y-6">
+          {/* Client-side prefetch that primes dedupedJson cache so dashboard components don't each hit the network. */}
+          <DashboardLoadPrefetch />
           {/* Opens Add Supplement when ?add=1 is present */}
           <DashboardAddSupplementGate />
           <>
