@@ -871,12 +871,10 @@ export function DashboardUnifiedPanel() {
                       : Number(wearableStatus?.wearable_unique_days ?? wearableStatus?.wearable_days_imported ?? 0)}
                   </span>
                 </div>
-                {Number(wearableStatus?.checkin_days || 0) > 0 && (
-                  <div className="flex items-center justify-between text-sm pl-4">
-                    <span className="text-gray-500">└─ from check-ins</span>
-                    <span className="font-medium">{Number(wearableStatus?.checkin_days || 0)}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between text-sm pl-4">
+                  <span className="text-gray-500">└─ from check-ins</span>
+                  <span className="font-medium">{Number(wearableStatus?.checkin_days || 0)}</span>
+                </div>
               </>
             )}
             {(Number(wearableStatus?.checkin_days || 0) >= 7) && (

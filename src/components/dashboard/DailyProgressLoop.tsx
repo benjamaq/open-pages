@@ -48,6 +48,7 @@ export function DailyProgressLoop() {
   const [milestone85, setMilestone85] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [isMember, setIsMember] = useState<boolean>(false)
   const [hasWearables, setHasWearables] = useState<boolean>(false)
+  const [suppressMilestonePopups, setSuppressMilestonePopups] = useState<boolean>(false)
 
   // Debug: confirm membership gating value on each change
   useEffect(() => {
@@ -121,6 +122,22 @@ export function DailyProgressLoop() {
     }
   }, [])
 
+  // If user just came from a wearable upload, don't stack generic milestone popups on top of the upload success modal.
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href)
+      const fromUpload = url.searchParams.get('upload') === 'success' || url.searchParams.get('baseline') === 'success'
+      const uploadedFlag = (() => {
+        try {
+          return localStorage.getItem('bs_uploaded_wearables') === '1' || localStorage.getItem('wearable_postupload_seen') === '1'
+        } catch {
+          return false
+        }
+      })()
+      setSuppressMilestonePopups(Boolean(fromUpload || uploadedFlag))
+    } catch {}
+  }, [])
+
   // Detect milestones once data arrives (per-supplement, no leaks on completed/gated)
   useEffect(() => {
     if (!data?.sections) return
@@ -167,18 +184,20 @@ export function DailyProgressLoop() {
         }
       }
       // 3) Results forming (>=50 and <85, not final verdict)
-      const forming = all
-        .filter(r => r.progressPercent >= 50 && r.progressPercent < 85 && !(r as any).effectCategory)
-        .sort((a,b) => b.progressPercent - a.progressPercent)[0]
-      if (forming) {
-        const key = `50_${forming.id}`
-        if (once(key)) {
-          setMilestone50({ id: forming.id, name: forming.name, percent: forming.progressPercent })
-          return
+      if (!suppressMilestonePopups) {
+        const forming = all
+          .filter(r => r.progressPercent >= 50 && r.progressPercent < 85 && !(r as any).effectCategory)
+          .sort((a,b) => b.progressPercent - a.progressPercent)[0]
+        if (forming) {
+          const key = `50_${forming.id}`
+          if (once(key)) {
+            setMilestone50({ id: forming.id, name: forming.name, percent: forming.progressPercent })
+            return
+          }
         }
       }
     } catch {}
-  }, [data, isMember])
+  }, [data, isMember, suppressMilestonePopups])
 
   const dismiss50 = () => {
     try { localStorage.setItem('milestone_50_shown', '1') } catch {}

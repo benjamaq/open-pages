@@ -1,14 +1,35 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { UploadResult } from '@/types/UploadResult'
 
 export default function UploadSuccess({ summary }: { summary?: UploadResult }) {
+  const [hasSupplements, setHasSupplements] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        // Prefer active supplements count; lightweight and already available
+        const res = await fetch('/api/supplements', { cache: 'no-store', credentials: 'include' })
+        const data = res.ok ? await res.json().catch(() => []) : []
+        if (cancelled) return
+        setHasSupplements(Array.isArray(data) && data.length > 0)
+      } catch {
+        if (!cancelled) setHasSupplements(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
       <div className="text-lg font-semibold text-emerald-900">Data uploaded</div>
       <div className="text-sm text-emerald-900 mt-1 max-w-prose">
         <span className="mr-1">⚡</span>
-        Now add your supplements — include when you started each one so we can compare before vs after.
+        {hasSupplements
+          ? "We're now analyzing your supplements against this data. Add start dates to any supplements for faster results."
+          : 'Now add your supplements — include when you started each one so we can compare before vs after.'}
       </div>
       {summary?.detectedMetrics && summary.detectedMetrics.length > 0 && (
         <div className="mt-3 text-sm text-emerald-900">
