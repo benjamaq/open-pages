@@ -9,7 +9,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY as string) : null
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     
@@ -18,6 +18,15 @@ export async function GET() {
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const debug = (() => {
+      try {
+        const u = new URL(request.url)
+        return u.searchParams.get('debug') === '1'
+      } catch {
+        return false
+      }
+    })()
 
     // If Stripe is not configured, still return isPaid using profile tier
     if (!stripe) {
@@ -45,7 +54,8 @@ export async function GET() {
           current_period_end: new Date().toISOString(),
           features: []
         },
-        isPaid: Boolean(isPaidByTier)
+        isPaid: Boolean(isPaidByTier),
+        ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, stripeConfigured: false } } : {})
       })
     }
 
@@ -78,7 +88,8 @@ export async function GET() {
         payment_method: null,
         invoices: [],
         usage: await getUserUsage(supabase, user.id),
-        isPaid: Boolean(isPaidByTier)
+        isPaid: Boolean(isPaidByTier),
+        ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, hasStripeCustomerId: false } } : {})
       })
     }
 
@@ -158,7 +169,8 @@ export async function GET() {
       payment_method: paymentMethodInfo,
       invoices: invoiceInfo,
       usage: await getUserUsage(supabase, user.id),
-      isPaid: finalIsPaid
+      isPaid: finalIsPaid,
+      ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, hasActiveSubscription, finalIsPaid } } : {})
     })
 
   } catch (error) {
