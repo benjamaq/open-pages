@@ -846,14 +846,20 @@ export async function GET(request: Request) {
                 } else {
                   await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
                 }
-              } catch {
+              } catch (insertErr: any) {
+                try { console.log('[truth-persist] INSERT failed:', insertErr?.message || insertErr) } catch {}
                 // Fallback: attempt an upsert on user_supplement_id to dedupe
                 try {
                   // Note: onConflict requires appropriate unique constraint on the table
-                  await (supabase as any)
+                  const { error: upsertErr } = await (supabase as any)
                     .from('supplement_truth_reports')
                     .upsert(payloadToStore, { onConflict: 'user_supplement_id' })
-                } catch {}
+                  if (upsertErr) {
+                    try { console.log('[truth-persist] UPSERT fallback also failed:', upsertErr?.message || upsertErr) } catch {}
+                  }
+                } catch (fallbackErr: any) {
+                  try { console.log('[truth-persist] UPSERT fallback threw:', fallbackErr?.message || fallbackErr) } catch {}
+                }
               }
               // Seed the truth map immediately to avoid a requery race
               truthBySupp.set(String(uid), {

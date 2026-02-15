@@ -156,8 +156,59 @@ export default function OnboardingPage() {
       setSupplements([...supplements, details]);
       // Persist to backend so dashboard sees it immediately
       try {
+        const normalizeTimeOfDay = (t: string | null | undefined) => {
+          const lc = String(t || '').trim().toLowerCase()
+          if (!lc) return ''
+          if (lc === 'am') return 'morning'
+          if (lc === 'pm') return 'evening'
+          if (lc === 'night' || lc === 'bedtime') return 'evening'
+          if (lc === 'morning' || lc === 'afternoon' || lc === 'evening') return lc
+          // If UI stores "Morning" / "Evening"
+          if (lc === 'morning') return 'morning'
+          if (lc === 'afternoon') return 'afternoon'
+          if (lc === 'evening') return 'evening'
+          return lc
+        }
+        const pickTimeOfDay = (arr: any): string => {
+          if (!Array.isArray(arr) || arr.length === 0) return ''
+          // prefer common order
+          const order = ['morning', 'afternoon', 'evening', 'night']
+          for (const k of order) {
+            if (arr.includes(k)) return k
+          }
+          return String(arr[0] || '')
+        }
+        const timeOfDayPicked = normalizeTimeOfDay(pickTimeOfDay((details as any).timeOfDay))
+        const timingLabel =
+          timeOfDayPicked === 'morning' ? 'Morning' :
+          timeOfDayPicked === 'afternoon' ? 'Afternoon' :
+          timeOfDayPicked === 'evening' ? 'Evening' :
+          timeOfDayPicked === 'night' ? 'Evening' :
+          ''
+        const doseStr = (() => {
+          const n = Number((details as any)?.dailyDose)
+          if (!Number.isFinite(n) || n <= 0) return ''
+          // Keep as a simple numeric string so My Stack renders "1x" nicely
+          return String(n)
+        })()
+        const frequencyStr = (() => {
+          const scheduleType = String((details as any)?.scheduleType || '').toLowerCase()
+          const daysPerWeek = Number((details as any)?.daysPerWeek)
+          if (scheduleType === 'every_day' || daysPerWeek === 7) return 'daily'
+          if (scheduleType === 'weekdays') return 'weekdays'
+          if (scheduleType === 'weekends') return 'weekends'
+          if (scheduleType === 'as_needed') return 'as_needed'
+          if (Number.isFinite(daysPerWeek) && daysPerWeek > 0 && daysPerWeek < 7) return `${Math.round(daysPerWeek)}x/week`
+          return ''
+        })()
         const payload = { 
           name: details.name,
+          // Dose/timing/frequency/time_of_day/brand from onboarding modal
+          ...(doseStr ? { dose: doseStr } : {}),
+          ...(frequencyStr ? { frequency: frequencyStr } : {}),
+          ...(timingLabel ? { timing: timingLabel } : {}),
+          ...(timeOfDayPicked ? { time_of_day: timeOfDayPicked } : {}),
+          ...(details.brandName ? { brand: String(details.brandName) } : {}),
           monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
           primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
           ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),

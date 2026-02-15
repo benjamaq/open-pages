@@ -259,8 +259,25 @@ export async function PATCH(
       if (updateSupplementFields.dose != null) stackUpdate.dose = updateSupplementFields.dose
       if (updateSupplementFields.timing != null) stackUpdate.timing = updateSupplementFields.timing
       if (updateSupplementFields.brand != null) stackUpdate.brand = updateSupplementFields.brand
+      const normalizeTimeOfDay = (v: string) => {
+        const lc = String(v || '').trim().toLowerCase()
+        if (!lc) return ''
+        if (lc === 'am') return 'morning'
+        if (lc === 'pm') return 'evening'
+        if (lc === 'night' || lc === 'bedtime') return 'evening'
+        if (lc === 'morning' || lc === 'afternoon' || lc === 'evening') return lc
+        // Handle UI labels
+        if (lc === 'morning') return 'morning'
+        if (lc === 'afternoon') return 'afternoon'
+        if (lc === 'evening') return 'evening'
+        return lc
+      }
       if (typeof body?.time_of_day === 'string') {
-        const tod = String(body.time_of_day).trim()
+        const tod = normalizeTimeOfDay(String(body.time_of_day))
+        if (tod) stackUpdate.time_of_day = tod
+      } else if (typeof body?.timing === 'string') {
+        // Backfill: if client only sends `timing` (Morning/Afternoon/Evening), keep DB `time_of_day` in sync.
+        const tod = normalizeTimeOfDay(String(body.timing))
         if (tod) stackUpdate.time_of_day = tod
       }
       if (typeof body?.notes === 'string') stackUpdate.notes = String(body.notes).trim()
