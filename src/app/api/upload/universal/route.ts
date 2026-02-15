@@ -5,6 +5,7 @@ import JSZip from 'jszip'
 import sax from 'sax'
 import { Readable } from 'stream'
 import { parseWhoopFile, parsePhysiologicalCSV, parseSleepsCSV } from '@/lib/parsers/whoop-parser'
+import { detectOuraCSV, detectOuraJSON, parseOuraCSV, parseOuraJSON } from '@/lib/parsers/oura-parser'
 import { reanalyzeImplicitTooEarlyAfterWearableUpload } from '@/lib/wearables/reanalyzeAfterUpload'
 
 export const runtime = 'nodejs'
@@ -18,6 +19,62 @@ type Entry = {
   tags: string[] | null
   journal?: string | null
   wearables?: Record<string, any>
+}
+
+function toMinutesMaybe(secondsOrMinutes: number | null | undefined): number | null {
+  if (typeof secondsOrMinutes !== 'number' || !Number.isFinite(secondsOrMinutes)) return null
+  const v = secondsOrMinutes
+  // If it's bigger than a day in minutes, it must be seconds.
+  if (v > 24 * 60) return Math.round(v / 60)
+  return Math.round(v)
+}
+
+function buildOuraEntries(userId: string, daily: any[]): Entry[] {
+  const entries: Entry[] = []
+  for (const it of daily || []) {
+    const d = String(it?.date || '').slice(0, 10)
+    if (!d) continue
+
+    const sleepScore = typeof it?.sleep_score === 'number' ? it.sleep_score : null
+    const readinessScore = typeof it?.readiness_score === 'number' ? it.readiness_score : null
+    const activityScore = typeof it?.activity_score === 'number' ? it.activity_score : null
+    const steps = typeof it?.steps === 'number' ? it.steps : null
+
+    const totalSleepMin = toMinutesMaybe(it?.total_sleep_seconds)
+    const deepMin = toMinutesMaybe(it?.deep_sleep_seconds)
+    const remMin = toMinutesMaybe(it?.rem_sleep_seconds)
+    const lightMin = toMinutesMaybe(it?.light_sleep_seconds)
+
+    const sleepQuality = typeof sleepScore === 'number' && Number.isFinite(sleepScore)
+      ? Math.max(1, Math.min(10, Math.round(sleepScore / 10)))
+      : null
+
+    entries.push({
+      user_id: userId,
+      local_date: d,
+      sleep_quality: sleepQuality,
+      tags: [],
+      journal: null,
+      wearables: {
+        source: 'Oura',
+        sleep_score: typeof sleepScore === 'number' ? Math.round(sleepScore) : null,
+        recovery_score: typeof readinessScore === 'number' ? Math.round(readinessScore) : null,
+        activity_score: typeof activityScore === 'number' ? Math.round(activityScore) : null,
+        steps: typeof steps === 'number' ? Math.round(steps) : null,
+        sleep_min: totalSleepMin,
+        deep_sleep_min: deepMin,
+        rem_sleep_min: remMin,
+        light_sleep_min: lightMin,
+        resting_hr_bpm: typeof it?.resting_hr_bpm === 'number' ? Math.round(it.resting_hr_bpm) : null,
+        respiratory_rate: typeof it?.respiratory_rate === 'number' ? it.respiratory_rate : null,
+        skin_temp_deviation: typeof it?.skin_temp_deviation === 'number' ? it.skin_temp_deviation : null,
+        sleep_efficiency: typeof it?.sleep_efficiency === 'number' ? it.sleep_efficiency : null,
+        // Optional: if parser stuffed hrv_ms onto the object (CSV trends)
+        hrv_ms: typeof it?.hrv_ms === 'number' ? it.hrv_ms : null,
+      }
+    })
+  }
+  return entries
 }
 
 export async function POST(req: NextRequest) {
@@ -140,6 +197,14 @@ export async function POST(req: NextRequest) {
           summary.daysUpserted += up
           summary.sources['Whoop'] = (summary.sources['Whoop'] || 0) + up
           summary.messages.push(`WHOOP: ${up} day(s) imported`)
+        } else if (detectOuraCSV(normalizedHead.split(',').map(s => s.trim()))) {
+          // Oura trends CSV
+          const daily = parseOuraCSV(text)
+          const entries = buildOuraEntries(user.id, daily)
+          const up = await upsertDailyEntries(entries)
+          summary.daysUpserted += up
+          summary.sources['Oura'] = (summary.sources['Oura'] || 0) + up
+          summary.messages.push(`Oura: ${up} day(s) imported`)
         } else {
           const up = await upsertGenericCSV(user.id, text)
           summary.daysUpserted += up
@@ -152,10 +217,21 @@ export async function POST(req: NextRequest) {
       // JSON → try Oura-like or generic
       if (name.endsWith('.json')) {
         const text = await f.text()
-        const up = await upsertGenericJSON(user.id, text)
-        summary.daysUpserted += up
-        summary.sources['JSON'] = (summary.sources['JSON'] || 0) + up
-        summary.messages.push(`JSON: ${up} day(s) imported`)
+        let parsed: any = null
+        try { parsed = JSON.parse(text) } catch { parsed = null }
+        if (parsed && detectOuraJSON(parsed)) {
+          const daily = parseOuraJSON(parsed)
+          const entries = buildOuraEntries(user.id, daily)
+          const up = await upsertDailyEntries(entries)
+          summary.daysUpserted += up
+          summary.sources['Oura'] = (summary.sources['Oura'] || 0) + up
+          summary.messages.push(`Oura: ${up} day(s) imported`)
+        } else {
+          const up = await upsertGenericJSON(user.id, text)
+          summary.daysUpserted += up
+          summary.sources['JSON'] = (summary.sources['JSON'] || 0) + up
+          summary.messages.push(`JSON: ${up} day(s) imported`)
+        }
         continue
       }
 

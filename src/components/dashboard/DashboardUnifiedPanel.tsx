@@ -941,9 +941,7 @@ export function DashboardUnifiedPanel({
                 <div className="flex items-center justify-between text-sm pl-4">
                   <span className="text-gray-500">└─ from wearables</span>
                   <span className="font-medium">
-                    {Number(wearableStatus?.checkin_days || 0) === 0
-                      ? Number(wearableStatus?.wearable_days_imported ?? wearableStatus?.wearable_unique_days ?? 0)
-                      : Number(wearableStatus?.wearable_unique_days ?? wearableStatus?.wearable_days_imported ?? 0)}
+                    {Number(wearableStatus?.wearable_days_imported ?? wearableStatus?.wearable_unique_days ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm pl-4">

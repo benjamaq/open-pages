@@ -115,26 +115,9 @@ export async function GET(request: Request) {
         .order('local_date', { ascending: false })
         .limit(1)
         .maybeSingle()
-      // Compute distinct day count to avoid over-reporting due to multiple sources per day
-      let uniqueDayCount = exactCount || 0
-      try {
-        const { data: dayRows, error: dayErr } = await supabase
-          .from('daily_entries')
-          .select('local_date')
-          .eq('user_id', user.id)
-          .not('wearables', 'is', null)
-          .order('local_date', { ascending: true })
-          .limit(50000)
-        if (!dayErr && Array.isArray(dayRows)) {
-          const uniq = new Set<string>()
-          for (const r of dayRows) {
-            const d = String((r as any)?.local_date || '').slice(0,10)
-            if (d) uniq.add(d)
-          }
-          uniqueDayCount = uniq.size
-        }
-        try { console.log('[wearable-status] Unique day count:', uniqueDayCount) } catch {}
-      } catch {}
+      // daily_entries is expected to be unique by (user_id, local_date). Prefer exactCount to avoid
+      // any accidental API row caps/truncation when scanning very large histories.
+      const uniqueDayCount = exactCount || 0
       // Get all distinct sources from user's wearable data (avoid sampling so we don't miss older sources)
       const { data: sourceRows } = await supabase
         .from('daily_entries')
@@ -157,6 +140,14 @@ export async function GET(request: Request) {
       try {
         console.log('[wearable-status] Check-in count:', checkinCount, (checkinErr as any)?.message || 'none')
       } catch {}
+
+      // 4b. Overlap days: wearable present AND at least one check-in field present.
+      const { count: overlapCount } = await supabase
+        .from('daily_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .not('wearables', 'is', null)
+        .or('energy.not.is.null,mood.not.is.null,focus.not.is.null')
 
       // 5. days_by_source counts using JSON contains by detected sources
       const daysBySource: Record<string, number> = {}
@@ -195,8 +186,11 @@ export async function GET(request: Request) {
         wearable_date_range_end: maxDate,
         days_by_source: daysBySource,
         checkin_days: checkinCount || 0,
-        total_unique_days: uniqueDayCount || (exactCount || 0),
-        overlap_days: 0
+        overlap_days: overlapCount || 0,
+        total_unique_days: Math.max(
+          0,
+          (uniqueDayCount || 0) + Number(checkinCount || 0) - Number(overlapCount || 0)
+        )
       })
     } else {
       try { console.log('[wearable-status] ENTER 2yr window branch for user', (user as any)?.id) } catch {}
