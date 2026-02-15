@@ -59,6 +59,7 @@ export function DashboardPageClient() {
             <a href="/dashboard" className="hover:underline">Dashboard</a>
             <a href="/results" className="hover:underline">My Stack</a>
             <a href="/settings" className="hover:underline">Settings</a>
+            <a href="/auth/signout" className="hover:underline">Log out</a>
             <UpgradeButton compact isPro={isMember} />
           </nav>
         </div>
