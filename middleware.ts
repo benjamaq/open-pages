@@ -2,6 +2,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './src/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // Canonical host redirect (fixes auth cookie mismatches between apex and www).
+  // If a user logs in on one host but then hits API endpoints on the other, Supabase cookies won't be present → 401.
+  try {
+    const host = request.headers.get('host') || ''
+    // Only enforce in production and only for the primary domain.
+    if (process.env.NODE_ENV === 'production' && host === 'biostackr.io') {
+      const url = request.nextUrl.clone()
+      url.host = 'www.biostackr.io'
+      return NextResponse.redirect(url)
+    }
+  } catch {}
+
   const { pathname } = request.nextUrl
   // Temporary redirect: old dashboard route → new dashboard route
   if (pathname === '/dash') {
