@@ -1022,7 +1022,20 @@ export async function GET(request: Request) {
         ;(r as any).daysOnClean = onClean
         ;(r as any).daysOffClean = offClean
         ;(r as any).explicitCleanCheckins = explicitCleanCheckins
-        ;(r as any).confirmCheckinsRequired = 3
+        // Bug 28: dynamic confirmation gate (implicit strong evidence can require only 1 check-in)
+        try {
+          const uid0 = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+          const truth0 = uid0 ? (truthBySupp.get(String(uid0)) as any) : null
+          const required = computeConfirmCheckinsRequired({
+            analysisSource: (truth0 as any)?.analysis_source ?? (truth0 as any)?.analysisSource ?? (r as any)?.analysisSource ?? null,
+            confidenceScore: (truth0 as any)?.confidence_score ?? (r as any)?.confidence ?? null,
+            sampleDaysOn: (truth0 as any)?.sample_days_on ?? (r as any)?.daysOn ?? null,
+            sampleDaysOff: (truth0 as any)?.sample_days_off ?? (r as any)?.daysOff ?? null,
+          })
+          ;(r as any).confirmCheckinsRequired = required
+        } catch {
+          ;(r as any).confirmCheckinsRequired = 3
+        }
         // Days tracked for this supplement = ON + OFF (any quality)
         ;(r as any).daysOfData = on + off
         if (restartIso) {
@@ -1510,7 +1523,8 @@ export async function GET(request: Request) {
             for (const d of allEntryDatesSet) { if (String(d) > createdIso) { hasCheckinAfterAdd = true; break } }
           }
           const extraGate = createdWithin7Days && !hasCheckinAfterAdd
-          if (isImp && ((totalUserCheckins < 3) || extraGate)) {
+          const req = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
+          if (isImp && ((totalUserCheckins < req) || extraGate)) {
             ;(r as any).isReady = false
           }
         } catch {}
@@ -1589,7 +1603,8 @@ export async function GET(request: Request) {
         const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
         const cat = String((r as any).effectCategory || '').toLowerCase()
         const hasFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || cat === 'negative' || cat === 'proven_positive')
-        const gateApplies = isImp && !(hasFinal && totalUserCheckins >= 3)
+        const req = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
+        const gateApplies = isImp && !(hasFinal && totalUserCheckins >= req)
         if (gateApplies) {
           if ((r as any).effectCategory) {
             (r as any).heldEffectCategory = (r as any).effectCategory
@@ -2129,6 +2144,22 @@ function computeImplicitSignalStrength(args: {
 
   const raw = dataCompleteness + balanceScore + checkinScore + volumeBonus
   return Math.round(Math.max(5, Math.min(95, raw)))
+}
+
+function computeConfirmCheckinsRequired(args: {
+  analysisSource: string | null | undefined
+  confidenceScore: number | null | undefined
+  sampleDaysOn: number | null | undefined
+  sampleDaysOff: number | null | undefined
+}): number {
+  const src = String(args.analysisSource || '').toLowerCase()
+  if (src !== 'implicit') return 3
+  const conf = typeof args.confidenceScore === 'number' ? args.confidenceScore : Number(args.confidenceScore || 0)
+  const on = typeof args.sampleDaysOn === 'number' ? args.sampleDaysOn : Number(args.sampleDaysOn || 0)
+  const off = typeof args.sampleDaysOff === 'number' ? args.sampleDaysOff : Number(args.sampleDaysOff || 0)
+  // Bug 28: for strong implicit (wearables) analyses, require only 1 check-in to confirm engagement.
+  if (Number.isFinite(conf) && conf >= 0.5 && on >= 30 && off >= 30) return 1
+  return 3
 }
 
 function getPhaseLabel(day: number): string {

@@ -130,9 +130,16 @@ export async function GET(request: NextRequest, context: any) {
           .from('daily_entries')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
+          .or('energy.not.is.null,mood.not.is.null,focus.not.is.null')
         const checkinsCount = count || 0
-        const confirmed = checkinsCount >= 3
-        if (!confirmed) return { ...rawReport, implicitConfirmed: false, checkinsCount }
+
+        const conf = Number((rawReport as any)?.confidence?.score ?? (rawReport as any)?.confidence_score ?? 0)
+        const sampleOn = Number((rawReport as any)?.meta?.sampleOn ?? (rawReport as any)?.effect?.sampleOn ?? (rawReport as any)?.sample_days_on ?? 0)
+        const sampleOff = Number((rawReport as any)?.meta?.sampleOff ?? (rawReport as any)?.effect?.sampleOff ?? (rawReport as any)?.sample_days_off ?? 0)
+        const req = (Number.isFinite(conf) && conf >= 0.5 && sampleOn >= 30 && sampleOff >= 30) ? 1 : 3
+
+        const confirmed = checkinsCount >= req
+        if (!confirmed) return { ...rawReport, implicitConfirmed: false, checkinsCount, confirmCheckinsRequired: req }
 
         const status = String(rawReport?.status || '').toLowerCase()
         const next = { ...rawReport, implicitConfirmed: true, checkinsCount }
@@ -143,6 +150,7 @@ export async function GET(request: NextRequest, context: any) {
             ? 'Your result is confirmed. Keep taking this supplement and continue tracking.'
             : next.nextSteps
         }
+        ;(next as any).confirmCheckinsRequired = req
         return next
       } catch {
         return rawReport
