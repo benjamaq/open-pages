@@ -7,6 +7,7 @@ import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal from '@/components/billing/PaywallModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { toast } from 'sonner'
 
 type Row = {
   id: string
@@ -195,6 +196,21 @@ export function DailyProgressLoop({
             setMilestone50(null)
             setMilestone85({ id: upsell.id, name: upsell.name, percent: 100 }) // reuse Almost Ready modal shell
           }
+          return
+        }
+      }
+
+      // 1b) Paid user: if a NEW verdict is ready (instant verdicts from historical wearables), show a lightweight toast.
+      if (isMember) {
+        const readyRows = (data.sections.clearSignal || []).concat((data.sections.noSignal || []))
+        const newlyReady = readyRows.find(r => r.progressPercent >= 100 && once(`verdict_toast_${r.id}`))
+        if (newlyReady) {
+          try {
+            toast.success('New verdict ready', {
+              description: `${newlyReady.name} — scroll down to see your result.`
+            })
+          } catch {}
+          // Don't also show other milestone popups on the same load.
           return
         }
       }
