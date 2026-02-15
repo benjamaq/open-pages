@@ -184,14 +184,19 @@ async function getUserUsage(supabase: any, userId: string) {
     supabase.from('stack_items').select('id').eq('user_id', userId).eq('item_type', 'mindfulness')
   ])
 
-  // Get user's subscription to determine limits
-  const { data: userSub } = await supabase
-    .from('user_usage')
-    .select('tier')
-    .eq('user_id', userId)
-    .single()
-
-  const isPro = userSub?.tier === 'pro'
+  // Determine limits from profile tier.
+  // NOTE: some DBs do not have `user_usage.tier` (even though `user_usage` exists for Stripe ids),
+  // so using profiles.tier avoids false "free" limits for friend/special Pro accounts.
+  let isPro = false
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('user_id', userId)
+      .maybeSingle()
+    const tierLc = String((profile as any)?.tier || '').toLowerCase()
+    isPro = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+  } catch {}
 
   return {
     current_period_start: startOfMonth.toISOString(),
