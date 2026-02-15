@@ -1,0 +1,61 @@
+---
+alwaysApply: false
+description: Bluey account brief: Bugs 27-29 + investigation questions for dashboard completion/truth reports
+---
+
+## BioStackr Cursor Brief — Bugs 27-29 + Open Questions (Bluey)
+
+**Date**: 2026-02-15  
+**Account**: Bluey (`bluey@mac.com`)  
+**User ID**: `42860921-4a9d-4bfd-9b02-43436dfbfc3d`
+
+### Supplements (Bluey)
+- **MuscleTech Creatine**: `f8de9219-9cc3-4b73-95ea-f932866eefce`
+- **Antarctic Krill Oil**: `4cd27cfc-3fb5-4800-b187-282fa71f36b0`
+- **Ashwagandha**: `3143de57-7a6a-4be1-8683-98dbd7b75da9` (testing)
+
+### Where to look (do not refactor unrelated code)
+- **Server categorization**: `src/app/api/progress/loop/route.ts`
+- **Dashboard rendering**: `src/components/dashboard/DailyProgressLoop.tsx`
+- **Truth report endpoint**: `src/app/api/truth-report/[userSupplementId]/route.ts`
+
+### Investigation Questions (for future debugging)
+1. How does the dashboard determine **COMPLETED vs TESTING**?
+   - Is it based on existence of a row in `supplement_truth_reports` (truth overlay), `user_supplement.testing_status`, or both?
+2. Are truth reports for Bluey present in DB?
+   - Run SQL:
+
+```sql
+SELECT 
+  str.user_supplement_id,
+  us.name,
+  str.status,
+  str.effect_size,
+  str.confidence_score,
+  str.created_at
+FROM supplement_truth_reports str
+JOIN user_supplement us ON us.id = str.user_supplement_id
+WHERE us.user_id = '42860921-4a9d-4bfd-9b02-43436dfbfc3d'
+ORDER BY str.created_at DESC;
+```
+
+### Bug 27 — `force=true` should persist
+- `/api/truth-report/[id]?force=true` should not be “computed-only” without making that explicit.
+- Persist truth reports and update relevant supplement state (e.g., `has_truth_report`, invalidate dashboard cache).
+
+### Bug 28 — confirmation gate should respect analysis source
+- Explicit analyses can keep `confirmCheckinsRequired = 3`.
+- Strong implicit analyses (wearables) should reduce gate to `1` check-in when:
+  - `analysisSource === 'implicit'`
+  - `confidence >= 0.5`
+  - `sampleOn >= 30` and `sampleOff >= 30`
+
+### Bug 29 — verdict unlock popup UX
+- Free-tier “result ready” / upgrade prompts must be dismissible.
+- Provide a way back to dashboard and tighten spacing; keep upgrade CTA.
+
+### Cursor rules
+- Branch for changes: `fix/bugs-27-28-29`
+- Run `npm run build` before pushing
+- Don’t touch combined dashboard endpoint (`/api/dashboard/load`) unless directly related
+
