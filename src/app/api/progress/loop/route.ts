@@ -1155,9 +1155,12 @@ export async function GET(request: Request) {
           // If Truth Report already computed a confidence score, use it directly for implicit signal strength.
           // This avoids any fixed/floored progress values and ensures the displayed percent matches real analysis.
           try {
-            const confRaw = (r as any)?.confidence
-            if (typeof confRaw === 'number' && Number.isFinite(confRaw) && confRaw > 0) {
-              const pct = confRaw <= 1.2 ? Math.round(confRaw * 100) : Math.round(confRaw)
+            const rawAny =
+              (truthRec as any)?.confidence_score ??
+              (r as any)?.confidence
+            const confNum = typeof rawAny === 'string' ? Number(rawAny) : (rawAny as any)
+            if (typeof confNum === 'number' && Number.isFinite(confNum) && confNum > 0) {
+              const pct = confNum <= 1.2 ? Math.round(confNum * 100) : Math.round(confNum)
               // Keep within a sane UI range for "building" states.
               uploadProgress = Math.min(95, Math.max(5, pct))
             }
