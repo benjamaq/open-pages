@@ -1152,6 +1152,17 @@ export async function GET(request: Request) {
         let sOn = 0
         let sOff = 0
         if (isImplicit) {
+          // If Truth Report already computed a confidence score, use it directly for implicit signal strength.
+          // This avoids any fixed/floored progress values and ensures the displayed percent matches real analysis.
+          try {
+            const confRaw = (r as any)?.confidence
+            if (typeof confRaw === 'number' && Number.isFinite(confRaw) && confRaw > 0) {
+              const pct = confRaw <= 1.2 ? Math.round(confRaw * 100) : Math.round(confRaw)
+              // Keep within a sane UI range for "building" states.
+              uploadProgress = Math.min(95, Math.max(5, pct))
+            }
+          } catch {}
+
           // Diagnostic to inspect available row fields for day counts
           try {
             console.log('[ROW-FIELDS]', {
@@ -1193,7 +1204,8 @@ export async function GET(request: Request) {
           } catch {}
           sOn = storedDaysOn
           sOff = storedDaysOff
-          if ((sOn + sOff) > 0) {
+          // If we didn't get a usable confidence score, fall back to a computed strength from sample day counts.
+          if (uploadProgress <= 0 && (sOn + sOff) > 0) {
             const checkInsCompleted = Number((r as any)?.explicitCleanCheckins || 0)
             const checkInsRequired = Number((r as any)?.confirmCheckinsRequired || 3)
             uploadProgress = computeImplicitSignalStrength({
@@ -1261,8 +1273,9 @@ export async function GET(request: Request) {
             }
           } catch {}
         } catch {}
-        // Only use upload-based progress when implicit AND upload samples are present; otherwise use check‑in progress
-        const useUploadProgress = isImplicit && (sOn + sOff) > 0
+        // Only use upload-based progress when implicit AND we have an implicit strength value.
+        // (Confidence-based uploadProgress may exist even if sample counts are not in the row.)
+        const useUploadProgress = isImplicit && (uploadProgress > 0 || (sOn + sOff) > 0)
         let displayProgress = useUploadProgress ? uploadProgress : activeProgress
         // If absolutely no data exists (no ON, no OFF, no samples), force 0% and a starter label
         try {
