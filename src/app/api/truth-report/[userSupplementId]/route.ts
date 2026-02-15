@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
 export const dynamic = 'force-dynamic'
@@ -226,35 +227,88 @@ export async function GET(request: NextRequest, context: any) {
       raw_context: report,
       analysis_source: (report as any)?.analysisSource || null
     }
+    let persistedOk = false
+    let persistError: string | null = null
     try {
-      // Avoid creating duplicate truth report rows for the same supplement: update latest if it exists, else insert.
-      const { data: existingRow } = await supabase
+      // Use admin client for persistence so force=true is not misleading due to RLS write failures.
+      // Ownership is enforced earlier by querying `user_supplement` with the authenticated client.
+      const { data: existingRow } = await supabaseAdmin
         .from('supplement_truth_reports')
-        .select('id')
+        .select('id,created_at')
         .eq('user_id', user.id)
         .eq('user_supplement_id', effectiveUserSuppId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
       if ((existingRow as any)?.id) {
-        await (supabase as any)
+        const { error: uErr } = await (supabaseAdmin as any)
           .from('supplement_truth_reports')
           .update(payloadToStore as any)
           .eq('id', (existingRow as any).id)
+        if (uErr) throw uErr
       } else {
-        await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
+        const { error: iErr } = await (supabaseAdmin as any)
+          .from('supplement_truth_reports')
+          .insert(payloadToStore as any)
+        if (iErr) throw iErr
       }
+      persistedOk = true
     } catch (e: any) {
-      try { console.log('[truth-report] insert failed (non-fatal):', e?.message || e) } catch {}
+      persistError = e?.message || String(e)
+      try { console.log('[truth-report] persist failed:', persistError) } catch {}
     }
 
     // Mark supplement record flag if present
     try {
-      await (supabase as any).from('user_supplement').update({ has_truth_report: true } as any).eq('id', effectiveUserSuppId).eq('user_id', user.id)
+      await (supabaseAdmin as any)
+        .from('user_supplement')
+        .update({ has_truth_report: true } as any)
+        .eq('id', effectiveUserSuppId)
+        .eq('user_id', user.id)
     } catch {}
 
     const finalReport = await applyImplicitConfirmOverlay(report)
-    return NextResponse.json(debugMode ? { ...(finalReport as any), _debug: debugInfo } : finalReport)
+    // If this report yields a final verdict, advance testing_status so dashboards reflect completion.
+    try {
+      const statusLc = String(report?.status || '').toLowerCase()
+      const finalComplete = ['proven_positive', 'negative', 'no_effect', 'no_detectable_effect']
+      const finalInconclusive = ['confounded']
+      let target: 'complete' | 'inconclusive' | null = null
+      if (finalComplete.includes(statusLc)) target = 'complete'
+      if (finalInconclusive.includes(statusLc)) target = 'inconclusive'
+      if (target) {
+        const { data: us } = await supabaseAdmin
+          .from('user_supplement')
+          .select('id,testing_status')
+          .eq('id', effectiveUserSuppId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        const current = String((us as any)?.testing_status || 'inactive').toLowerCase()
+        if (current === 'testing') {
+          await (supabaseAdmin as any)
+            .from('user_supplement')
+            .update({ testing_status: target } as any)
+            .eq('id', effectiveUserSuppId)
+            .eq('user_id', user.id)
+        }
+      }
+    } catch {}
+
+    // Invalidate dashboard cache so new verdict shows up immediately.
+    try {
+      await (supabaseAdmin as any)
+        .from('dashboard_cache')
+        .update({ invalidated_at: new Date().toISOString() } as any)
+        .eq('user_id', user.id)
+    } catch {}
+
+    const meta = {
+      _persisted: persistedOk,
+      ...(persistError ? { _persist_error: persistError } : {})
+    }
+    return NextResponse.json(
+      debugMode ? { ...(finalReport as any), _debug: debugInfo, ...meta } : { ...(finalReport as any), ...meta }
+    )
   } catch (e: any) {
     try {
       console.error('=== TRUTH REPORT ERROR ===')
