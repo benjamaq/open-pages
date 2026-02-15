@@ -36,6 +36,8 @@ export async function GET(request: Request) {
   // Ensure any query-param dependent routes get the right URL (and keep the rest identical).
   const progressReq = new Request(`${origin}/api/progress/loop`, { headers: request.headers, cache: 'no-store' })
   const wearableReq = new Request(`${origin}/api/user/wearable-status?since=all`, { headers: request.headers, cache: 'no-store' })
+  const billingReq = new Request(`${origin}/api/billing/info`, { headers: request.headers, cache: 'no-store' })
+  const paymentsReq = new Request(`${origin}/api/payments/status`, { headers: request.headers, cache: 'no-store' })
 
   const t0 = Date.now()
   const [
@@ -52,8 +54,9 @@ export async function GET(request: Request) {
     elliContext,
   ] = await Promise.all([
     callJson('me', () => meGET(request)),
-    callJson('billingInfo', () => billingInfoGET() as any),
-    callJson('paymentsStatus', () => paymentsStatusGET() as any),
+    // Call via fetch with forwarded headers to ensure auth cookies are present in Next request context.
+    callJson('billingInfo', () => fetch(billingReq) as any),
+    callJson('paymentsStatus', () => fetch(paymentsReq) as any),
     callJson('supplements', () => supplementsGET() as any),
     callJson('progressLoop', () => progressLoopGET(progressReq) as any),
     callJson('hasDaily', () => hasDailyGET() as any),
