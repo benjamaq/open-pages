@@ -10,10 +10,16 @@ export default function PaywallModal({
   open,
   onClose,
   defaultPeriod = 'yearly',
+  title,
+  subtitle,
+  backLabel,
 }: {
   open: boolean
   onClose: () => void
   defaultPeriod?: BillingPeriod
+  title?: string
+  subtitle?: string
+  backLabel?: string
 }) {
   const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod)
   const [loading, setLoading] = useState(false)
@@ -90,8 +96,10 @@ export default function PaywallModal({
         className="relative z-10 w-full max-w-[560px] rounded-xl bg-white p-6 sm:p-8 shadow-lg border border-gray-200"
         onClick={(e) => { e.stopPropagation() }}
       >
-        <h3 className="text-xl sm:text-2xl font-semibold text-center">Unlock your results</h3>
-        <p className="mt-2 text-sm text-gray-600 text-center">See which supplements are actually working for you.</p>
+        <h3 className="text-xl sm:text-2xl font-semibold text-center">{title || 'Unlock your results'}</h3>
+        <p className="mt-2 text-sm text-gray-600 text-center whitespace-pre-line">
+          {subtitle || 'See which supplements are actually working for you.'}
+        </p>
 
         <div className="mt-5 space-y-3">
           <label
@@ -153,7 +161,7 @@ export default function PaywallModal({
             onClick={() => { try { console.log('[PAYWALL] cancel/back clicked') } catch {} ; onClose() }}
             className="text-xs text-gray-700 underline"
           >
-            Back
+            {backLabel || 'Back'}
           </button>
         </div>
       </div>

@@ -664,10 +664,10 @@ export async function GET(request: Request) {
     // Load latest truth reports (ordered newest first); first seen per id wins
     const { data: truths } = await supabase
       .from('supplement_truth_reports')
-      .select('user_supplement_id,status,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
+      .select('user_supplement_id,status,primary_metric,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    const truthBySupp = new Map<string, { status: string; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    const truthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
     const implicitTruthBySupp = new Map<string, { status: string; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
     // Also capture the latest implicit-source sample counts per supplement for upload progress
     const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
@@ -677,6 +677,7 @@ export async function GET(request: Request) {
       if (!truthBySupp.has(uid)) {
         truthBySupp.set(uid, {
           status: String((t as any).status || ''),
+          primary_metric: (t as any).primary_metric ?? null,
           effect_direction: (t as any).effect_direction ?? null,
           effect_size: (t as any).effect_size ?? null,
           percent_change: (t as any).percent_change ?? null,
@@ -1055,6 +1056,7 @@ export async function GET(request: Request) {
           const mapped = truth ? mapTruthToCategory(truth.status) : undefined
           if (mapped) {
             ;(r as any).effectCategory = mapped
+          ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
             if (truth && typeof truth.percent_change === 'number') {
               r.effectPct = Number(truth.percent_change)
             } else if (truth && typeof truth.effect_size === 'number') {

@@ -639,6 +639,25 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   }, [])
   const gated = (!isMember && isCompleted)
 
+  const verdictTeaser = (() => {
+    if (!isCompleted) return null
+    const v = String((row as any)?.verdict || '').toLowerCase()
+    const cat = String((row as any)?.effectCategory || '').toLowerCase()
+    if (v === 'keep' || cat === 'works') return 'KEEP'
+    if (v === 'drop' || cat === 'negative') return 'DROP'
+    if (cat === 'no_effect' || cat === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
+    return null
+  })()
+  const metricLabel = String((row as any)?.primaryMetricLabel || '').trim()
+  const teaserLine = (() => {
+    if (!verdictTeaser) return null
+    const base =
+      verdictTeaser === 'KEEP' ? 'Positive signal detected' :
+      verdictTeaser === 'DROP' ? 'Negative signal detected' :
+      'No clear effect detected'
+    return metricLabel ? `${base} on ${metricLabel}` : base
+  })()
+
   // Status badge: prefer resolver output (badgeKey/badgeText). Fallback to legacy mapping.
   const badge = (() => {
     // First, resolver-driven badges
@@ -818,7 +837,17 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="flex items-center gap-2 ml-3">
           {(() => {
             const baseChipClass = 'inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold uppercase tracking-wide rounded-full whitespace-nowrap'
-            // For free users with completed verdict, no badge on this row (label shown above)
+            // Bug 29: show a free teaser verdict badge for completed cards (headline only).
+            if (gated && verdictTeaser) {
+              const cls =
+                verdictTeaser === 'KEEP'
+                  ? { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' }
+                  : verdictTeaser === 'DROP'
+                    ? { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' }
+                    : { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' }
+              return <span className={baseChipClass} style={cls as any}>{verdictTeaser}</span>
+            }
+            // For free users with completed verdict, otherwise no badge on this row.
             if (gated) return null
             return <span className={baseChipClass} style={(displayBadge as any).style || undefined}>{displayBadge.label}</span>
           })()}
@@ -858,6 +887,11 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           </div>
           {!isMember && (
             <>
+              {teaserLine ? (
+                <div className="mt-2 text-[11px] text-gray-700">
+                  {teaserLine}
+                </div>
+              ) : null}
               {/* ON/OFF counts above the button for free users */}
               {(!hasNoData && (daysOn + daysOff) > 0) && (
                 <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
@@ -874,7 +908,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
                   onMouseDown={(e) => { /* prevent card handlers */ e.stopPropagation() }}
                   onClickCapture={(e) => { e.stopPropagation() }}
                 >
-                  🔒 Unlock verdict
+                  🔒 Unlock full report
                 </button>
               </div>
             </>
@@ -1124,7 +1158,18 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         </div>
       )}
       {/* Shared Paywall Modal */}
-      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} defaultPeriod="yearly" />
+      <PaywallModal
+        open={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        defaultPeriod="yearly"
+        title={verdictTeaser ? `Your result: ${String((row as any)?.name || 'Supplement')} → ${verdictTeaser}` : 'Unlock your results'}
+        subtitle={
+          verdictTeaser
+            ? `${teaserLine || 'A result is ready.'}\nUnlock the full report for details (effect size, confidence, and the full breakdown).`
+            : 'See which supplements are actually working for you.'
+        }
+        backLabel="Maybe later"
+      />
       {err && <div className="mt-2 text-[11px] text-rose-700">{err}</div>}
       {/* Truth Report modal (full analysis) */}
       <TruthReportModal
