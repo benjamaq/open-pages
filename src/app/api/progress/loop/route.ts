@@ -1194,7 +1194,18 @@ export async function GET(request: Request) {
           sOn = storedDaysOn
           sOff = storedDaysOff
           if ((sOn + sOff) > 0) {
-            uploadProgress = computeUploadProgress(sOn, sOff)
+            const checkInsCompleted = Number((r as any)?.explicitCleanCheckins || 0)
+            const checkInsRequired = Number((r as any)?.confirmCheckinsRequired || 3)
+            uploadProgress = computeImplicitSignalStrength({
+              sampleDaysOn: sOn,
+              sampleDaysOff: sOff,
+              checkInsCompleted,
+              checkInsRequired,
+              // For historical/wearable (implicit) supplements, use higher thresholds so large backfilled datasets
+              // don't instantly saturate at a single value.
+              onThreshold: Math.max(1000, Number(requiredOnDays || requiredDays || 14), 14),
+              offThreshold: Math.max(1000, Number(requiredOffDays || 5), 5),
+            })
           }
         }
         // If implicit, prefer implicit truth verdict for effectCategory (ensures card reflects upload verdict)
@@ -1372,7 +1383,8 @@ export async function GET(request: Request) {
           if (is_gate_locked) {
             section = 'testing'
             // ensure cap (upload formula already applied upstream)
-            progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
+            const raw = Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0)
+            progress = raw <= 0 ? 0 : Math.min(95, Math.max(5, raw))
             badge = { key: 'testing', text: '◐ TESTING' }
             label = 'Signal from historical data'
             const x = Number((r as any)?.explicitCleanCheckins || 0)
@@ -1387,7 +1399,8 @@ export async function GET(request: Request) {
               badge = ecToBadge[ec] || badge
             } else {
               section = 'testing'
-              progress = Math.min(80, Math.max(50, Number((r as any)?.uploadProgress || r.progressPercent || 0)))
+              const raw = Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0)
+              progress = raw <= 0 ? 0 : Math.min(95, Math.max(5, raw))
               badge = { key: 'testing', text: '◐ TESTING' }
               label = 'Signal from historical data'
               subtext = 'Building toward a verdict...'
@@ -2059,18 +2072,41 @@ async function getStreakDays(supabase: any, userId: string): Promise<number> {
   return streak
 }
 
-// Upload-aware progress: give a head start for historical (implicit) data without exceeding 60%
-function computeUploadProgress(onDays: number, offDays: number): number {
-  const P_MIN = 50
-  const P_MAX = 80
-  const N_TARGET = 90
-  const nEff = Math.min(onDays, offDays)
-  const ratio = nEff / Math.max(onDays, offDays, 1)
-  const balance = Math.pow(ratio, 0.3)
-  const exposure = Math.min(nEff / N_TARGET, 1)
-  const quality = balance * exposure
-  const progress = Math.round(P_MIN + (P_MAX - P_MIN) * quality)
-  return Math.min(P_MAX, Math.max(P_MIN, progress))
+// Implicit signal strength should be derived from real ON/OFF sample days + check-in confirmation progress.
+// Key: avoid fixed floors (e.g. 50%) and ensure varied values across different supplements.
+function computeImplicitSignalStrength(args: {
+  sampleDaysOn: number
+  sampleDaysOff: number
+  checkInsCompleted: number
+  checkInsRequired: number
+  onThreshold: number
+  offThreshold: number
+}): number {
+  const sampleDaysOn = Math.max(0, Number(args.sampleDaysOn || 0))
+  const sampleDaysOff = Math.max(0, Number(args.sampleDaysOff || 0))
+  const checkInsCompleted = Math.max(0, Number(args.checkInsCompleted || 0))
+  const checkInsRequired = Math.max(1, Number(args.checkInsRequired || 3))
+  const onThreshold = Math.max(1, Number(args.onThreshold || 1000))
+  const offThreshold = Math.max(1, Number(args.offThreshold || 1000))
+
+  // Component 1: Data completeness (0–40%)
+  const onRatio = Math.min(sampleDaysOn / Math.max(onThreshold, 14), 1)
+  const offRatio = Math.min(sampleDaysOff / Math.max(offThreshold, 5), 1)
+  const dataCompleteness = (onRatio * 0.5 + offRatio * 0.5) * 40
+
+  // Component 2: Balance (0–20%)
+  const total = sampleDaysOn + sampleDaysOff
+  const balance = total > 0 ? (1 - Math.abs(sampleDaysOn - sampleDaysOff) / total) : 0
+  const balanceScore = balance * 20
+
+  // Component 3: Check-in progress (0–30%)
+  const checkinScore = (Math.min(checkInsCompleted, checkInsRequired) / checkInsRequired) * 30
+
+  // Component 4: Volume bonus (0–10%)
+  const volumeBonus = Math.min(total / 1000, 1) * 10
+
+  const raw = dataCompleteness + balanceScore + checkinScore + volumeBonus
+  return Math.round(Math.max(5, Math.min(95, raw)))
 }
 
 function getPhaseLabel(day: number): string {
