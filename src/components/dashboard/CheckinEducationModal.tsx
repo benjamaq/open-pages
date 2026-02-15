@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 
-export function CheckinEducationModal() {
+export function CheckinEducationModal({ wearableStatusPayload }: { wearableStatusPayload?: any }) {
   const [show, setShow] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -22,16 +22,27 @@ export function CheckinEducationModal() {
         } catch {}
         // If server reports wearables connected/imported, skip education
         try {
-          const ws = await dedupedJson<any>('/api/user/wearable-status?since=all', { cache: 'no-store' })
-          if (ws.ok) {
-            const wj = ws.data
-            if (wj?.wearable_connected || Number(wj?.wearable_days_imported || 0) > 0) {
-              setShow(false)
-              setLoaded(true)
-              return
-            }
+          const wj = wearableStatusPayload
+          if (wj?.wearable_connected || Number(wj?.wearable_days_imported || 0) > 0) {
+            setShow(false)
+            setLoaded(true)
+            return
           }
         } catch {}
+        // Fallback: fetch wearable status only if parent didn't provide it
+        if (wearableStatusPayload === undefined) {
+          try {
+            const ws = await dedupedJson<any>('/api/user/wearable-status?since=all', { cache: 'no-store' })
+            if (ws.ok) {
+              const wj = ws.data
+              if (wj?.wearable_connected || Number(wj?.wearable_days_imported || 0) > 0) {
+                setShow(false)
+                setLoaded(true)
+                return
+              }
+            }
+          } catch {}
+        }
         // Check server-side flag first to persist across devices
         const res = await fetch('/api/onboarding/context/status', { cache: 'no-store' })
         if (!mounted) return
@@ -55,7 +66,7 @@ export function CheckinEducationModal() {
       }
     })()
     return () => { mounted = false }
-  }, [])
+  }, [wearableStatusPayload])
 
   const handleDismiss = () => {
     try {

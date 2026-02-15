@@ -3,7 +3,15 @@
 import { useEffect, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 
-export function PersonalHeader() {
+export function PersonalHeader({
+  me,
+  progress,
+  isMember: isMemberProp,
+}: {
+  me?: any
+  progress?: any
+  isMember?: boolean
+}) {
   const [firstName, setFirstName] = useState<string | null>(null)
 	const [suppCount, setSuppCount] = useState<number>(0)
   const [readyCount, setReadyCount] = useState<number>(0)
@@ -22,6 +30,44 @@ export function PersonalHeader() {
 
   useEffect(() => {
     let mounted = true
+
+    // If the dashboard page passed preloaded data, use it and skip fetches.
+    if (me !== undefined || progress !== undefined || typeof isMemberProp === 'boolean') {
+      try {
+        if (me) {
+          const fn = (me?.firstName && String(me.firstName)) || null
+          setFirstName(fn)
+        }
+        if (typeof isMemberProp === 'boolean') setIsMember(isMemberProp)
+
+        if (progress) {
+          const sec = progress?.sections || {}
+          const all: any[] = [
+            ...(sec.clearSignal || []),
+            ...(sec.building || []),
+            ...(sec.noSignal || []),
+            ...((sec.inconsistent || [])),
+            ...((sec.needsData || [])),
+          ]
+          let total = all.length
+          let rdy = 0
+          let testing = 0
+          for (const r of all) {
+            const verdictValue = String((r as any)?.verdict || '').toLowerCase()
+            const effectCatLower = String((r as any)?.effectCategory || '').toLowerCase()
+            const hasFinalVerdict = (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
+            if (hasFinalVerdict) rdy++
+            else testing++
+          }
+          setSuppCount(total)
+          setReadyCount(rdy)
+          setTestingCount(testing)
+        }
+      } catch {}
+
+      return () => { mounted = false }
+    }
+
     ;(async () => {
       try {
         const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
@@ -99,7 +145,7 @@ export function PersonalHeader() {
       } catch {}
     })()
     return () => { mounted = false }
-  }, [])
+  }, [me, progress, isMemberProp])
 
   return (
     <section>

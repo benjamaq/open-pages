@@ -22,7 +22,17 @@ type Row = {
   progressState?: string
 }
 
-export function DailyProgressLoop() {
+export function DailyProgressLoop({
+  progressPayload,
+  isMember: isMemberProp,
+  hasDailyPayload,
+  mePayload,
+}: {
+  progressPayload?: any
+  isMember?: boolean
+  hasDailyPayload?: any
+  mePayload?: any
+}) {
   const [data, setData] = useState<{
     todaysProgress?: {
       streakDays: number
@@ -57,6 +67,23 @@ export function DailyProgressLoop() {
 
   useEffect(() => {
     let mounted = true
+
+    // If the dashboard page passed preloaded data, use it and skip internal fetches on mount.
+    const hasAnyProp =
+      progressPayload !== undefined ||
+      typeof isMemberProp === 'boolean' ||
+      hasDailyPayload !== undefined ||
+      mePayload !== undefined
+
+    if (hasAnyProp) {
+      try {
+        if (progressPayload !== undefined) setData(progressPayload)
+        if (typeof isMemberProp === 'boolean') setIsMember(isMemberProp)
+        if (hasDailyPayload !== undefined) setHasWearables(Boolean(hasDailyPayload?.hasWearables))
+      } catch {}
+      return () => { mounted = false }
+    }
+
     const refresh = async () => {
       try {
         const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
@@ -120,7 +147,7 @@ export function DailyProgressLoop() {
         window.removeEventListener('progress:refresh', handler as any)
       }
     }
-  }, [])
+  }, [progressPayload, isMemberProp, hasDailyPayload, mePayload])
 
   // If user just came from a wearable upload, don't stack generic milestone popups on top of the upload success modal.
   useEffect(() => {

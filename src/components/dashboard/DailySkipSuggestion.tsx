@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { dedupedJson } from '@/lib/utils/dedupedJson'
 
 type Suggestion = { id: string; name: string; reason: 'no_off_days' | 'insufficient_off_days' | 'high_uncertainty' }
 
@@ -11,11 +12,11 @@ export function DailySkipSuggestion() {
     let mounted = true
     ;(async () => {
       try {
-        const res = await fetch('/api/suggestions/dailySkip', { cache: 'no-store' })
+        const res = await dedupedJson<any>('/api/suggestions/dailySkip', { cache: 'no-store' })
         if (!mounted) return
         if (res.ok) {
-          const j = await res.json()
-          setSuggestions(j?.suggestions || [])
+          const j = res.data
+          setSuggestions((j as any)?.suggestions || [])
           try { console.log('[DailySkipSuggestion] suggestions:', j?.suggestions) } catch {}
         } else {
           setSuggestions([])
