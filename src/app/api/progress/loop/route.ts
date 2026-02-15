@@ -4,6 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { statusToCategory } from '@/lib/verdictMapping'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
+// Bump this when dashboard_cache payload shape/semantics change, to force recompute.
+const DASHBOARD_CACHE_VERSION = 1
+
   type SupplementProgress = {
   id: string
   name: string
@@ -131,7 +134,9 @@ export async function GET(request: Request) {
           .select('payload, computed_at, invalidated_at')
           .eq('user_id', user.id)
           .maybeSingle()
-        if (cached && ( !cached.invalidated_at || new Date(cached.computed_at).getTime() > new Date(cached.invalidated_at).getTime())) {
+        const cachedV = (() => { try { return Number((cached as any)?.payload?._v ?? 0) } catch { return 0 } })()
+        const versionOk = cachedV === DASHBOARD_CACHE_VERSION
+        if (cached && versionOk && ( !cached.invalidated_at || new Date(cached.computed_at).getTime() > new Date(cached.invalidated_at).getTime())) {
           // Safety: if new supplements were added after the cache was computed, don't serve stale cache.
           // This prevents newly created user_supplement rows from being invisible on Dashboard until a manual invalidate.
           let cacheStaleDueToNewSupp = false
@@ -163,7 +168,7 @@ export async function GET(request: Request) {
           }
           try { console.log('CACHE MISS (new supplement added)') } catch {}
         } else {
-          try { console.log('CACHE MISS') } catch {}
+          try { console.log('CACHE MISS', { versionOk, cachedV, expectedV: DASHBOARD_CACHE_VERSION }) } catch {}
         }
       } else {
         try { console.log('CACHE BYPASS (force)') } catch {}
@@ -1971,6 +1976,7 @@ export async function GET(request: Request) {
       console.log('[progress-loop] supplements payload sample:', supplements.slice(0, 10))
     } catch {}
     const responsePayload = {
+      _v: DASHBOARD_CACHE_VERSION,
       debug,
       userId: user.id,
       daysTracked: totalDistinctDays,
