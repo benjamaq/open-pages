@@ -45,8 +45,16 @@ export default function UpgradeButton({
   return (
     <>
       {isPro ? (
-        <span className={compact ? 'px-2 h-8 inline-flex items-center text-sm text-gray-500' : 'px-2 inline-flex items-center text-gray-600'}>
-          Pro ✓
+        <span
+          className={
+            compact
+              ? 'h-8 inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 text-xs font-medium tracking-wide text-emerald-800'
+              : 'inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-800'
+          }
+          aria-label="Pro plan active"
+          title="Pro plan active"
+        >
+          PRO
         </span>
       ) : (
         <button
