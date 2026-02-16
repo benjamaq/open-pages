@@ -8,6 +8,7 @@ import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
 import AuthSessionHydrator from "./components/AuthSessionHydrator";
+import { Toaster } from 'sonner'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -106,6 +107,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed overflow-x-hidden" style={{ backgroundColor: '#FFFFFF' }}>
         <AuthSessionHydrator />
+        <Toaster position="top-center" richColors />
         <noscript>
           <img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=704287959370274&ev=PageView&noscript=1" />
         </noscript>
