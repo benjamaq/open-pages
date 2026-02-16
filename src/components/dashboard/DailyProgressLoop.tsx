@@ -7,7 +7,6 @@ import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal from '@/components/billing/PaywallModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
-import { toast } from 'sonner'
 
 type Row = {
   id: string
@@ -57,6 +56,7 @@ export function DailyProgressLoop({
   } | null>(null)
   const [milestone50, setMilestone50] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [milestone85, setMilestone85] = useState<{ id: string; name: string; percent: number } | null>(null)
+  const [verdictReadyModal, setVerdictReadyModal] = useState<{ id: string; name: string } | null>(null)
   const [isMember, setIsMember] = useState<boolean>(false)
   const [hasWearables, setHasWearables] = useState<boolean>(false)
   const [suppressMilestonePopups, setSuppressMilestonePopups] = useState<boolean>(false)
@@ -185,31 +185,14 @@ export function DailyProgressLoop({
         return true
       }
       // Prefer showing a single, most-relevant popup per load
-      // 1) Free user: verdict ready upsell (once per supplement id)
-      if (!isMember) {
-        const readyRows = (data.sections.clearSignal || []).concat((data.sections.noSignal || []))
-        const upsell = readyRows.find(r => r.progressPercent >= 100)
-        if (upsell) {
-          const key = `ready_${upsell.id}`
-          if (once(key)) {
-            setMilestone85(null)
-            setMilestone50(null)
-            setMilestone85({ id: upsell.id, name: upsell.name, percent: 100 }) // reuse Almost Ready modal shell
-          }
-          return
-        }
-      }
-
-      // 1b) Paid user: if a NEW verdict is ready (instant verdicts from historical wearables), show a lightweight toast.
-      if (isMember) {
+      // 1) Verdict ready modal (persistent, once per supplement id)
+      {
         const readyRows = (data.sections.clearSignal || []).concat((data.sections.noSignal || []))
         const newlyReady = readyRows.find(r => r.progressPercent >= 100 && once(`verdict_toast_${r.id}`))
         if (newlyReady) {
-          try {
-            toast.success('New verdict ready', {
-              description: `${newlyReady.name} — scroll down to see your result.`
-            })
-          } catch {}
+          setMilestone85(null)
+          setMilestone50(null)
+          setVerdictReadyModal({ id: newlyReady.id, name: newlyReady.name })
           // Don't also show other milestone popups on the same load.
           return
         }
@@ -249,6 +232,20 @@ export function DailyProgressLoop({
   const dismiss85 = () => {
     try { localStorage.setItem('milestone_85_shown', '1') } catch {}
     setMilestone85(null)
+  }
+
+  const goToCompleted = () => {
+    try {
+      // Ensure the modal is closed before scrolling
+      setVerdictReadyModal(null)
+      setTimeout(() => {
+        try {
+          document.getElementById('dashboard-completed')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } catch {}
+      }, 50)
+    } catch {
+      setVerdictReadyModal(null)
+    }
   }
 
   const tp = data?.todaysProgress
@@ -361,6 +358,19 @@ export function DailyProgressLoop({
 
   return (
     <section className="space-y-8 px-3 sm:px-0">
+      {/* Verdict ready modal (persistent) */}
+      {verdictReadyModal && (
+        <Popup
+          title="New verdict ready 🎉"
+          body={`${abbreviateSupplementName(verdictReadyModal.name)} — your result is in.`}
+          cta={isMember ? "Let's see it!" : 'Nice!'}
+          onPrimary={goToCompleted}
+          onClose={goToCompleted}
+          variant="warm"
+          disableBackdropClose
+          hideCloseButton
+        />
+      )}
       {/* Milestone popups */}
       {milestone85 && (
         <Popup
@@ -522,7 +532,7 @@ export function DailyProgressLoop({
                 ))}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div id="dashboard-completed" className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-xs uppercase tracking-wide text-gray-600 font-medium">Completed</div>
                 {/* Removed extraneous link; individual cards provide report access */}
@@ -1177,7 +1187,10 @@ function Popup({
   onPrimary,
   secondaryCta,
   onSecondary,
-  onClose
+  onClose,
+  variant = 'default',
+  disableBackdropClose = false,
+  hideCloseButton = false,
 }: {
   title: string
   body: string
@@ -1186,24 +1199,35 @@ function Popup({
   secondaryCta?: string
   onSecondary?: () => void
   onClose: () => void
+  variant?: 'default' | 'warm'
+  disableBackdropClose?: boolean
+  hideCloseButton?: boolean
 }) {
+  const isWarm = variant === 'warm'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[480px] rounded-xl bg-white p-8 shadow-lg border border-gray-200">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-          aria-label="Close"
-        >
-          ✕
-        </button>
+      <div className="absolute inset-0 bg-black/50" onClick={disableBackdropClose ? undefined : onClose} />
+      <div
+        className="relative z-10 w-full max-w-[480px] rounded-xl p-8 shadow-lg border"
+        style={isWarm ? { backgroundColor: '#FDF8F3', borderColor: '#E4E1DC' } : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+      >
+        {!hideCloseButton ? (
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        ) : null}
         <h3 className="text-2xl font-semibold text-center mb-2">{title}</h3>
-        <p className="text-base text-gray-600 text-center whitespace-pre-line leading-relaxed">{body}</p>
+        <p className={`text-base text-center whitespace-pre-line leading-relaxed ${isWarm ? 'text-[#6B4E2E]' : 'text-gray-600'}`}>{body}</p>
         <div className="mt-6 flex flex-col gap-2">
           <button
             onClick={onPrimary || onClose}
-            className="w-full h-12 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-95"
+            className={isWarm
+              ? 'w-full h-12 rounded-lg bg-[#8B5E3C] text-white text-sm font-semibold hover:opacity-95'
+              : 'w-full h-12 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-95'}
           >
             {cta}
           </button>
