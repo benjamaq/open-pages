@@ -361,12 +361,12 @@ export function DailyProgressLoop({
       {/* Verdict ready modal (persistent) */}
       {verdictReadyModal && (
         <Popup
-          title="New verdict ready 🎉"
+          title="New verdict ready"
           body={`${abbreviateSupplementName(verdictReadyModal.name)} — your result is in.`}
-          cta={isMember ? "Let's see it!" : 'Nice!'}
+          cta="Nice!"
           onPrimary={goToCompleted}
           onClose={goToCompleted}
-          variant="warm"
+          variant="neutral"
           disableBackdropClose
           hideCloseButton
         />
@@ -1199,17 +1199,32 @@ function Popup({
   secondaryCta?: string
   onSecondary?: () => void
   onClose: () => void
-  variant?: 'default' | 'warm'
+  variant?: 'default' | 'warm' | 'neutral'
   disableBackdropClose?: boolean
   hideCloseButton?: boolean
 }) {
   const isWarm = variant === 'warm'
+  const isNeutral = variant === 'neutral'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={disableBackdropClose ? undefined : onClose} />
       <div
-        className="relative z-10 w-full max-w-[480px] rounded-xl p-8 shadow-lg border"
-        style={isWarm ? { backgroundColor: '#FDF8F3', borderColor: '#E4E1DC' } : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+        className={`absolute inset-0 ${isNeutral ? '' : 'bg-black/50'}`}
+        style={isNeutral ? { backgroundColor: 'rgba(85, 81, 74, 0.45)' } : undefined}
+        onClick={disableBackdropClose ? undefined : onClose}
+      />
+      <div
+        className={
+          isNeutral
+            ? 'relative z-10 bg-white/95 border border-gray-200 rounded-2xl max-w-[520px] w-full p-8 sm:p-10 shadow-lg ring-1 ring-black/5'
+            : 'relative z-10 w-full max-w-[480px] rounded-xl p-8 shadow-lg border'
+        }
+        style={
+          isNeutral
+            ? undefined
+            : isWarm
+              ? { backgroundColor: '#FDF8F3', borderColor: '#E4E1DC' }
+              : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }
+        }
       >
         {!hideCloseButton ? (
           <button
@@ -1220,14 +1235,19 @@ function Popup({
             ✕
           </button>
         ) : null}
-        <h3 className="text-2xl font-semibold text-center mb-2">{title}</h3>
+        <h3 className={`text-2xl font-semibold text-center ${isNeutral ? 'mb-3' : 'mb-2'}`}>{title}</h3>
         <p className={`text-base text-center whitespace-pre-line leading-relaxed ${isWarm ? 'text-[#6B4E2E]' : 'text-gray-600'}`}>{body}</p>
+
         <div className="mt-6 flex flex-col gap-2">
           <button
             onClick={onPrimary || onClose}
-            className={isWarm
-              ? 'w-full h-12 rounded-lg bg-[#8B5E3C] text-white text-sm font-semibold hover:opacity-95'
-              : 'w-full h-12 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-95'}
+            className={
+              isWarm
+                ? 'w-full h-12 rounded-lg bg-[#8B5E3C] text-white text-sm font-semibold hover:opacity-95'
+                : isNeutral
+                  ? 'w-full h-12 rounded-full bg-slate-900 text-white font-semibold hover:bg-slate-800'
+                  : 'w-full h-12 rounded-lg bg-[#111111] text-white text-sm font-medium hover:opacity-95'
+            }
           >
             {cta}
           </button>
