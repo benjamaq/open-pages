@@ -398,10 +398,56 @@ export default function ResultsPage() {
     const raw = String(s?.name || '').trim()
     const explicitBrand = (s?.brand ? String(s.brand) : '').trim()
     const parts = raw.split(',').map((p: string) => p.trim()).filter(Boolean)
-    // Prefer short name from part[1] if available
-    let shortName = parts.length >= 2 ? parts[1] : raw
     // Brand: explicit field, else part[0]
     const brand = explicitBrand || (parts.length >= 2 ? parts[0] : '')
+    const norm = (v: string) => String(v || '').trim()
+    const candidates = (parts.length >= 2 ? parts.slice(1) : [raw]).map(norm).filter(Boolean)
+
+    // Heuristic: choose the most meaningful candidate segment (avoid product-line fluff like "Essential Series")
+    const KEYWORDS: Array<[RegExp, string]> = [
+      [/\bcreatine\b/i, 'Creatine'],
+      [/\bashwagandha\b/i, 'Ashwagandha'],
+      [/\bkrill\b/i, 'Krill oil'],
+      [/\bmagnesium\b/i, 'Magnesium'],
+      [/\bzinc\b/i, 'Zinc'],
+      [/\bvitamin\s*[aek]\b/i, 'Vitamin'],
+      [/\bvitamin\s*d\b/i, 'Vitamin D'],
+      [/\bomega[-\s]?3\b/i, 'Omega-3'],
+      [/\bfish\s*oil\b/i, 'Fish oil'],
+      [/\bcollagen\b/i, 'Collagen'],
+      [/\bprotein\b/i, 'Protein'],
+      [/\bmelatonin\b/i, 'Melatonin'],
+      [/\bgaba\b/i, 'GABA'],
+      [/\bl[-\s]?theanine\b/i, 'L-theanine'],
+      [/\bselenium\b/i, 'Selenium'],
+      [/\bcoq10\b/i, 'CoQ10'],
+    ]
+    const STOP_RE = /\b(series|essential\s*series|signature\s*series|collection|line|product\s*line)\b/i
+    const META_RE = /\b(unflavored|flavor|vanilla|chocolate|strawberry|capsules?|tablets?|softgels?|gummies|count|ct)\b/i
+
+    const scoreCandidate = (t: string) => {
+      const lc = t.toLowerCase()
+      let score = 0
+      if (STOP_RE.test(t)) score -= 8
+      if (META_RE.test(t)) score -= 2
+      for (const [re] of KEYWORDS) {
+        if (re.test(t)) { score += 10; break }
+      }
+      // Prefer medium-length descriptive names
+      const len = lc.length
+      if (len >= 8 && len <= 42) score += 2
+      if (len > 60) score -= 2
+      return score
+    }
+
+    let picked = candidates[0] || raw
+    let bestScore = -999
+    for (const c of candidates) {
+      const sc = scoreCandidate(c)
+      if (sc > bestScore) { bestScore = sc; picked = c }
+    }
+
+    let shortName = picked
     // Remove brand prefix from shortName if it leaked in
     if (brand && shortName.toLowerCase().startsWith(brand.toLowerCase() + ' ')) {
       shortName = shortName.slice(brand.length).trim()
@@ -1182,7 +1228,8 @@ export default function ResultsPage() {
           .protocol-row:last-child { border-bottom: 0; }
           .supplement-name { font-weight: 500; color: #1F2937; }
           .brand-name { color: #9CA3AF; }
-          .dosewhen { color: #1F2937; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          /* Allow wrapping so protocols like "300mg • Daily • Before bed" never truncate */
+          .dosewhen { color: #1F2937; text-align: right; white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word; }
           /* Mobile responsiveness for Today's Protocol */
           @media (max-width: 640px) {
             .section-todays-protocol { padding: 12px; }
