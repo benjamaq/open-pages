@@ -565,6 +565,55 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
 }
 
 function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts, hasWearables }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number }, hasWearables?: boolean }) {
+  // Display-name helper: match My Stack's "smart" name selection so brand-heavy names don't bloat cards.
+  const shortDisplayName = (raw: any) => {
+    const s = String(raw || '').trim()
+    if (!s) return ''
+    const parts = s.split(',').map((p: string) => p.trim()).filter(Boolean)
+    const candidates = (parts.length >= 2 ? parts.slice(1) : [s]).filter(Boolean)
+    const KEYWORDS: RegExp[] = [
+      /\bcreatine\b/i,
+      /\bashwagandha\b/i,
+      /\bkrill\b/i,
+      /\bmagnesium\b/i,
+      /\bzinc\b/i,
+      /\bvitamin\s*[aek]\b/i,
+      /\bvitamin\s*d\b/i,
+      /\bomega[-\s]?3\b/i,
+      /\bfish\s*oil\b/i,
+      /\bcollagen\b/i,
+      /\bprotein\b/i,
+      /\bmelatonin\b/i,
+      /\bgaba\b/i,
+      /\bl[-\s]?theanine\b/i,
+      /\bselenium\b/i,
+      /\bcoq10\b/i,
+    ]
+    const STOP_RE = /\b(series|essential\s*series|signature\s*series|collection|line|product\s*line)\b/i
+    const META_RE = /\b(unflavored|flavor|vanilla|chocolate|strawberry|capsules?|tablets?|softgels?|gummies|count|ct)\b/i
+    const score = (t: string) => {
+      let sc = 0
+      if (STOP_RE.test(t)) sc -= 8
+      if (META_RE.test(t)) sc -= 2
+      if (KEYWORDS.some((re) => re.test(t))) sc += 10
+      const len = t.length
+      if (len >= 8 && len <= 42) sc += 2
+      if (len > 60) sc -= 2
+      return sc
+    }
+    let picked = candidates[0] || s
+    let best = -999
+    for (const c of candidates) {
+      const sc = score(c)
+      if (sc > best) { best = sc; picked = c }
+    }
+    return picked
+      .replace(/\b\d+\s?(mcg|mg|g|iu|ml|tbsp|caps?|capsules?|tabs?|tablets?|gummies|softgels?|pack(et)?|packet|count)\b/gi, '')
+      .replace(/\b\d+\s?(servings?|ct)\b/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim() || s.slice(0, 28)
+  }
+
   // Progress bar colors per dashboard palette
   const trackColor = '#E4DDD6'
   const fillColor = '#C65A2E'
@@ -830,6 +879,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     }
   }
   const muted = !isBuilding && !isVerdictReady && !isInconclusive
+  const displayName = shortDisplayName((row as any)?.name)
   return (
     <div
       id={`supp-${row.id}`}
@@ -848,7 +898,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       )}
       <div className="flex items-start justify-between">
         <div className="font-semibold text-gray-900 flex items-center gap-2 min-w-0 text-[15px] sm:text-base">
-          <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{String(row.name || '')}</span>
+          <span className="whitespace-normal break-words sm:truncate max-w-full leading-tight">{displayName}</span>
         </div>
         <div className="flex items-center gap-2 ml-3">
           {(() => {

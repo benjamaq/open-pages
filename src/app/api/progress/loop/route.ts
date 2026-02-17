@@ -807,6 +807,19 @@ export async function GET(request: Request) {
             // Otherwise, the overlay-refresh will immediately "self-heal" and put the card back into COMPLETED.
             const meta = suppMetaById.get(String(uid))
             const isRetestActive = Boolean(meta?.restart) && String(meta?.status || '') === 'testing'
+            // Diagnostics: we need to see in Vercel logs whether this guard is being evaluated and what values it sees.
+            try {
+              if (meta?.restart || String(meta?.status || '') === 'testing') {
+                console.log('[overlay-refresh][retest-guard]', {
+                  uid,
+                  name: (r as any).name,
+                  stale,
+                  hasTruthRec: !!truthRec,
+                  retest_started_at: meta?.restart || null,
+                  testing_status: meta?.status || null,
+                })
+              }
+            } catch {}
             if (isRetestActive) {
               if (VERBOSE) {
                 try { console.log('[overlay-refresh] skip (active retest)', { uid, restart: meta?.restart, status: meta?.status, name: (r as any).name }) } catch {}
