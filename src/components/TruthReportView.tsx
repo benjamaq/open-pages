@@ -19,6 +19,14 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   const statusLc = String((report as any)?.status || '').toLowerCase()
+  const badgeLabel = (() => {
+    const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
+    if (isImplicitSrc) return 'OBSERVED SIGNAL'
+    if (statusLc === 'proven_positive') return 'KEEP'
+    if (statusLc === 'negative') return 'DROP'
+    if (statusLc === 'no_effect' || statusLc === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
+    return String((report as any)?.verdictLabel || 'Observed signal').toUpperCase()
+  })()
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -96,7 +104,8 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
       const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
       if (isImplicitSrc) return 'OBSERVED SIGNAL'
       if (status === 'proven_positive') return 'KEEP'
-      if (status === 'negative' || status === 'no_effect' || status === 'no_detectable_effect') return 'DROP'
+      if (status === 'negative') return 'DROP'
+      if (status === 'no_effect' || status === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
       return String((report as any)?.verdictLabel || 'Observed signal').toUpperCase()
     })()
     const body = [
@@ -156,7 +165,7 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
             className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide border mt-2"
             style={statusColor.style}
           >
-            {report.verdictLabel}
+            {badgeLabel}
           </div>
           <div className="text-sm text-slate-400">
             {(() => {
