@@ -20,12 +20,12 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   const statusLc = String((report as any)?.status || '').toLowerCase()
   const badgeLabel = (() => {
+    if (statusLc === 'proven_positive') return 'KEEP'
+    if (statusLc === 'negative') return 'NEGATIVE'
+    if (statusLc === 'no_effect' || statusLc === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
     const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
     if (isImplicitSrc) return 'OBSERVED SIGNAL'
-    if (statusLc === 'proven_positive') return 'KEEP'
-    if (statusLc === 'negative') return 'DROP'
-    if (statusLc === 'no_effect' || statusLc === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
-    return String((report as any)?.verdictLabel || 'Observed signal').toUpperCase()
+    return String((report as any)?.verdictLabel || 'TESTING').toUpperCase()
   })()
   const supName = String(
     (report as any)?.supplementName ||
@@ -101,12 +101,12 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     const subject = supName ? `${supName} — BioStackr Truth Report` : 'BioStackr Truth Report'
     const verdictText = (() => {
       const status = String((report as any)?.status || '').toLowerCase()
+      if (status === 'proven_positive') return 'KEEP'
+      if (status === 'negative') return 'NEGATIVE'
+      if (status === 'no_effect' || status === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
       const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
       if (isImplicitSrc) return 'OBSERVED SIGNAL'
-      if (status === 'proven_positive') return 'KEEP'
-      if (status === 'negative') return 'DROP'
-      if (status === 'no_effect' || status === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
-      return String((report as any)?.verdictLabel || 'Observed signal').toUpperCase()
+      return String((report as any)?.verdictLabel || 'TESTING').toUpperCase()
     })()
     const body = [
       `${supName || 'This supplement'} — Truth Report`,
