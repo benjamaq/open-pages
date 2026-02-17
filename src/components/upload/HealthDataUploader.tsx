@@ -60,14 +60,13 @@ export default function HealthDataUploader({
         onDragOver={onDrag}
         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setDrag(false); handleSelected(Array.from(e.dataTransfer.files || [])) }}
       >
-        {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
+        {/* NOTE: use display:none + <label htmlFor> trigger (most reliable across browsers) */}
         <input
           id="health-uploader"
           type="file"
           multiple
           accept={accept}
-          className="sr-only"
-          tabIndex={-1}
+          style={{ display: 'none' }}
           onChange={(e) => handleSelected(Array.from(e.target.files || []))}
         />
         {isUploading ? (

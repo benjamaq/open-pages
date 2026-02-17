@@ -255,8 +255,8 @@ export default function UploadCenter() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
-              <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} className="sr-only" tabIndex={-1} />
+              {/* NOTE: use display:none + <label htmlFor> trigger (most reliable across browsers) */}
+              <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} style={{ display: 'none' }} />
               {isUploading ? (
                 <div className="space-y-3">
                   <div className="h-2 w-full bg-gray-200 rounded">
@@ -313,8 +313,8 @@ export default function UploadCenter() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
-              <input id="supplement-upload" type="file" accept=".csv,.xlsx" onChange={handleFileInput} disabled={isUploading} className="sr-only" tabIndex={-1} />
+              {/* NOTE: use display:none + <label htmlFor> trigger (most reliable across browsers) */}
+              <input id="supplement-upload" type="file" accept=".csv,.xlsx" onChange={handleFileInput} disabled={isUploading} style={{ display: 'none' }} />
               {isUploading ? (
                 <div className="space-y-4">
                   <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto" />

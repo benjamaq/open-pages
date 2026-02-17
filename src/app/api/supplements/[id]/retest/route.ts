@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest, ctx: any) {
   // Resolve params (Next 14+)
@@ -33,19 +34,43 @@ export async function POST(request: NextRequest, ctx: any) {
     // Always clear any existing truth report so the dashboard no longer treats this supplement as completed.
     // This needs to be idempotent: if the supplement is already testing (previous retest attempt),
     // we still want to remove the truth row + invalidate cache so the UI moves out of COMPLETED.
+    let truthDelete: { ok: boolean; count: number; error?: string } = { ok: true, count: 0 }
     try {
-      const { error: delErr } = await (supabase as any)
+      const { data: deleted, error: delErr } = await (supabase as any)
         .from('supplement_truth_reports')
         .delete()
         .eq('user_id', user.id)
         .eq('user_supplement_id', id as any)
+        .select('id,created_at,user_supplement_id')
       if (delErr) {
-        console.log('[retest API] truth delete failed:', delErr?.message || delErr)
+        truthDelete = { ok: false, count: 0, error: delErr?.message || String(delErr) }
+        console.log('[retest API] truth delete failed (user client):', delErr?.message || delErr)
       } else {
-        console.log('[retest API] truth deleted:', { user_supplement_id: id })
+        truthDelete = { ok: true, count: Array.isArray(deleted) ? deleted.length : 0 }
+        console.log('[retest API] truth delete ok (user client):', { user_supplement_id: id, deletedCount: truthDelete.count })
       }
     } catch (e: any) {
-      console.log('[retest API] truth delete threw:', e?.message || e)
+      truthDelete = { ok: false, count: 0, error: e?.message || String(e) }
+      console.log('[retest API] truth delete threw (user client):', e?.message || e)
+    }
+    // Fallback: if RLS blocks delete, use service role.
+    if (!truthDelete.ok) {
+      try {
+        const { data: deleted2, error: delErr2 } = await (supabaseAdmin as any)
+          .from('supplement_truth_reports')
+          .delete()
+          .eq('user_supplement_id', id as any)
+          .select('id,created_at,user_supplement_id')
+        if (delErr2) {
+          console.log('[retest API] truth delete failed (admin):', delErr2?.message || delErr2)
+        } else {
+          const c2 = Array.isArray(deleted2) ? deleted2.length : 0
+          truthDelete = { ok: true, count: c2 }
+          console.log('[retest API] truth delete ok (admin):', { user_supplement_id: id, deletedCount: c2 })
+        }
+      } catch (e2: any) {
+        console.log('[retest API] truth delete threw (admin):', e2?.message || e2)
+      }
     }
 
     // Invalidate dashboard cache so the UI reflects the retest immediately.
@@ -63,7 +88,7 @@ export async function POST(request: NextRequest, ctx: any) {
 
     // If we're already testing, stop here (idempotent) — do NOT bump trial_number again.
     if (currentStatus === 'testing') {
-      return NextResponse.json({ ok: true, id, testing_status: 'testing', alreadyTesting: true })
+      return NextResponse.json({ ok: true, id, testing_status: 'testing', alreadyTesting: true, truthDelete })
     }
 
     // Starter limit check when re-entering testing
@@ -96,7 +121,7 @@ export async function POST(request: NextRequest, ctx: any) {
     if (error || !updated) {
       return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
     }
-    return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status, trial_number: (updated as any).trial_number })
+    return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status, trial_number: (updated as any).trial_number, truthDelete })
   } catch (e: any) {
     console.error('[retest API] ERROR:', e?.message || e)
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
