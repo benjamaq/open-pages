@@ -173,13 +173,20 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => (document.getElementById('apple-health-zip') as HTMLInputElement)?.click()}
-                className="h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+              <label
+                htmlFor="apple-health-zip"
+                role="button"
+                tabIndex={0}
+                className="inline-flex items-center justify-center h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 cursor-pointer select-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    ;(document.getElementById('apple-health-zip') as HTMLInputElement | null)?.click()
+                  }
+                }}
               >
                 Upload export.zip (or choose export.xml)
-              </button>
+              </label>
               {fileName && <div className="text-xs text-slate-600">Selected: {fileName}</div>}
               <div className="text-xs text-slate-500">
                 We’ll find <span className="font-mono">export.xml</span> inside your ZIP automatically. Extra folders/files are expected.

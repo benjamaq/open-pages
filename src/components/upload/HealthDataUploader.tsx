@@ -80,13 +80,20 @@ export default function HealthDataUploader({
             <div className="text-base font-semibold">{title}</div>
             <div className="text-sm text-slate-600">{helper}</div>
             <div className="mt-3">
-              <button
-                className="h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
-                type="button"
-                onClick={() => (document.getElementById('health-uploader') as HTMLInputElement)?.click()}
+              <label
+                htmlFor="health-uploader"
+                role="button"
+                tabIndex={0}
+                className="inline-flex items-center justify-center h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 cursor-pointer select-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    ;(document.getElementById('health-uploader') as HTMLInputElement | null)?.click()
+                  }
+                }}
               >
                 Choose file
-              </button>
+              </label>
             </div>
           </div>
         )}

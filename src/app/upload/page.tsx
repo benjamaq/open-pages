@@ -274,7 +274,20 @@ export default function UploadCenter() {
                 <div className="space-y-4">
                   <p className="text-lg font-medium">Drop any health export here</p>
                   <p className="text-sm text-gray-600">Apple Health (ZIP or export.xml), WHOOP, Oura, Garmin, Fitbit — CSV or JSON</p>
-                  <Button onClick={() => (document.getElementById('health-upload') as HTMLInputElement)?.click()}>Choose Files</Button>
+                  <label
+                    htmlFor="health-upload"
+                    role="button"
+                    tabIndex={0}
+                    className="inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90 cursor-pointer select-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        ;(document.getElementById('health-upload') as HTMLInputElement | null)?.click()
+                      }
+                    }}
+                  >
+                    Choose Files
+                  </label>
                 </div>
               )}
             </div>
@@ -311,7 +324,20 @@ export default function UploadCenter() {
                 <div className="space-y-4">
                   <p className="text-lg font-medium">Upload your supplement spreadsheet</p>
                   <p className="text-sm text-gray-600">Excel or CSV with supplement names and dates</p>
-                  <Button onClick={() => (document.getElementById('supplement-upload') as HTMLInputElement)?.click()}>Choose File</Button>
+                  <label
+                    htmlFor="supplement-upload"
+                    role="button"
+                    tabIndex={0}
+                    className="inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90 cursor-pointer select-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        ;(document.getElementById('supplement-upload') as HTMLInputElement | null)?.click()
+                      }
+                    }}
+                  >
+                    Choose File
+                  </label>
                 </div>
               )}
             </div>

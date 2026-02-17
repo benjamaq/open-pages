@@ -56,12 +56,20 @@ export default function SupplementLogUploader({ onUploadComplete }: { onUploadCo
           <div className="space-y-1">
             <div className="text-sm font-medium">Upload your supplement spreadsheet</div>
             <div className="text-xs text-slate-600">CSV or Excel with supplement names and dates</div>
-            <button
-                    type="button"
-                    className="mt-2 h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
-                    onClick={() => (document.getElementById('supp-log-up') as HTMLInputElement)?.click()}>
+            <label
+              htmlFor="supp-log-up"
+              role="button"
+              tabIndex={0}
+              className="inline-flex items-center justify-center mt-2 h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 cursor-pointer select-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  ;(document.getElementById('supp-log-up') as HTMLInputElement | null)?.click()
+                }
+              }}
+            >
               Choose file
-            </button>
+            </label>
           </div>
         )}
       </div>
