@@ -10,7 +10,15 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
   return <div className={`rounded-xl border border-gray-200 bg-white ${className}`}>{children}</div>
 }
 function Button({ children, className = '', ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button className={`inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 ${className}`} {...rest}>{children}</button>
+  return (
+    <button
+      type={rest.type || 'button'}
+      className={`inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  )
 }
 
 type UploadType = 'health' | 'supplements'
@@ -247,7 +255,8 @@ export default function UploadCenter() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} className="hidden" />
+              {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
+              <input id="health-upload" type="file" multiple accept=".zip,.xml,.csv,.json,.xlsx" onChange={handleFileInput} disabled={isUploading} className="sr-only" tabIndex={-1} />
               {isUploading ? (
                 <div className="space-y-3">
                   <div className="h-2 w-full bg-gray-200 rounded">
@@ -291,7 +300,8 @@ export default function UploadCenter() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <input id="supplement-upload" type="file" accept=".csv,.xlsx" onChange={handleFileInput} disabled={isUploading} className="hidden" />
+              {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
+              <input id="supplement-upload" type="file" accept=".csv,.xlsx" onChange={handleFileInput} disabled={isUploading} className="sr-only" tabIndex={-1} />
               {isUploading ? (
                 <div className="space-y-4">
                   <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto" />

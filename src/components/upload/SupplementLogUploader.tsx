@@ -37,8 +37,16 @@ export default function SupplementLogUploader({ onUploadComplete }: { onUploadCo
         onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false); handleSelected(Array.from(e.dataTransfer.files || [])) }}
       >
-        <input id="supp-log-up" type="file" accept=".csv,.xlsx" multiple className="hidden"
-               onChange={(e) => handleSelected(Array.from(e.target.files || []))} />
+        {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
+        <input
+          id="supp-log-up"
+          type="file"
+          accept=".csv,.xlsx"
+          multiple
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(e) => handleSelected(Array.from(e.target.files || []))}
+        />
         {isUploading ? (
           <div className="space-y-2">
             <div className="h-8 w-8 rounded-full border-4 border-slate-200 border-t-slate-900 animate-spin mx-auto" />
@@ -48,7 +56,9 @@ export default function SupplementLogUploader({ onUploadComplete }: { onUploadCo
           <div className="space-y-1">
             <div className="text-sm font-medium">Upload your supplement spreadsheet</div>
             <div className="text-xs text-slate-600">CSV or Excel with supplement names and dates</div>
-            <button className="mt-2 h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+            <button
+                    type="button"
+                    className="mt-2 h-9 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
                     onClick={() => (document.getElementById('supp-log-up') as HTMLInputElement)?.click()}>
               Choose file
             </button>

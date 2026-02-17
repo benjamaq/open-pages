@@ -159,7 +159,8 @@ export default function AppleHealthUploader({ onSuccess, onSkip }: Props) {
             id="apple-health-zip"
             type="file"
             accept=".zip,.xml"
-            className="hidden"
+            className="sr-only"
+            tabIndex={-1}
             onChange={(e) => {
               const f = e.target.files?.[0]
               if (f) handleFile(f)

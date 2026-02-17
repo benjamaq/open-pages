@@ -60,8 +60,16 @@ export default function HealthDataUploader({
         onDragOver={onDrag}
         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setDrag(false); handleSelected(Array.from(e.dataTransfer.files || [])) }}
       >
-        <input id="health-uploader" type="file" multiple accept={accept} className="hidden"
-               onChange={(e) => handleSelected(Array.from(e.target.files || []))} />
+        {/* NOTE: avoid `display:none` here; some browsers block programmatic file-picker open when input is hidden */}
+        <input
+          id="health-uploader"
+          type="file"
+          multiple
+          accept={accept}
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(e) => handleSelected(Array.from(e.target.files || []))}
+        />
         {isUploading ? (
           <div className="space-y-3">
             <div className="h-10 w-10 rounded-full border-4 border-slate-200 border-t-slate-900 animate-spin mx-auto" />
@@ -74,6 +82,7 @@ export default function HealthDataUploader({
             <div className="mt-3">
               <button
                 className="h-10 px-4 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+                type="button"
                 onClick={() => (document.getElementById('health-uploader') as HTMLInputElement)?.click()}
               >
                 Choose file

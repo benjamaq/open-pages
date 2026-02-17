@@ -34,6 +34,23 @@ export async function POST(request: NextRequest, ctx: any) {
       return NextResponse.json({ error: 'Already testing' }, { status: 400 })
     }
 
+    // Clear any existing truth report so the dashboard no longer treats this supplement as completed.
+    // The progress loop may regenerate a new (likely "too_early") truth report based on the new retest window.
+    try {
+      const { error: delErr } = await (supabase as any)
+        .from('supplement_truth_reports')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('user_supplement_id', id as any)
+      if (delErr) {
+        console.log('[retest API] truth delete failed:', delErr?.message || delErr)
+      } else {
+        console.log('[retest API] truth deleted:', { user_supplement_id: id })
+      }
+    } catch (e: any) {
+      console.log('[retest API] truth delete threw:', e?.message || e)
+    }
+
     // Starter limit check when re-entering testing
     let isPremium = false
     try {
@@ -63,6 +80,19 @@ export async function POST(request: NextRequest, ctx: any) {
       .maybeSingle()
     if (error || !updated) {
       return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
+    }
+
+    // Invalidate dashboard cache so the UI reflects the retest immediately.
+    try {
+      const ts = new Date().toISOString()
+      const { error: cacheErr } = await (supabase as any)
+        .from('dashboard_cache')
+        .upsert({ user_id: user.id, invalidated_at: ts } as any, { onConflict: 'user_id' } as any)
+      if (cacheErr) {
+        console.log('[retest API] dashboard_cache invalidate failed:', cacheErr?.message || cacheErr)
+      }
+    } catch (e: any) {
+      console.log('[retest API] dashboard_cache invalidate threw:', e?.message || e)
     }
     return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status, trial_number: (updated as any).trial_number })
   } catch (e: any) {

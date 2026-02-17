@@ -777,11 +777,20 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   }
   const handleRetest = async () => {
     try {
-      await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
+      try { console.log('[retest] userSuppId:', userSuppId, 'name:', (row as any)?.name) } catch {}
+      const res = await fetch(`/api/supplements/${encodeURIComponent(userSuppId)}/retest`, { method: 'POST' })
+      try { console.log('[retest] response:', res.status, res.statusText) } catch {}
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('[retest] failed:', body)
+        setErr(body?.error || `Retest failed (${res.status})`)
+        return
+      }
       setShowRetestModal(false)
       try { window.dispatchEvent(new Event('progress:refresh')) } catch {}
     } catch (e) {
-      console.error(e)
+      console.error('[retest] error:', e)
+      setErr(e instanceof Error ? e.message : 'Retest failed')
     }
   }
   const toggleTesting = async (next: 'testing' | 'inactive') => {
