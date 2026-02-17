@@ -1414,8 +1414,10 @@ export async function GET(request: Request) {
         const createdIso = String((r as any)?.createdAtIso || '').slice(0,10)
         const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
         const supplement_age_days = Number.isFinite(createdMs) ? Math.floor((Date.now() - createdMs) / (24*60*60*1000)) : 9999
-        // Simplified gate: lock implicit unless (final verdict AND totalUserCheckins >= 3)
-        const is_gate_locked = Boolean(is_implicit && !(has_final_verdict && totalUserCheckins >= 3))
+        // Gate: lock implicit unless (final verdict AND total user check-ins >= required confirmations).
+        // Use the per-row confirmCheckinsRequired computed earlier (Bug 28), not a hard-coded 3.
+        const confirmReq = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
+        const is_gate_locked = Boolean(is_implicit && !(has_final_verdict && totalUserCheckins >= confirmReq))
         // Section and progress per rules
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
@@ -1451,7 +1453,7 @@ export async function GET(request: Request) {
             badge = { key: 'testing', text: '◐ TESTING' }
             label = 'Signal from historical data'
             const x = Number((r as any)?.explicitCleanCheckins || 0)
-            subtext = `Check-ins completed: ${x} of 3`
+            subtext = `Check-ins completed: ${x} of ${confirmReq}`
             showVerdict = false
           } else {
             if (has_final_verdict) {
