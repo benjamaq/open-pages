@@ -32,45 +32,43 @@ export async function POST(request: NextRequest, ctx: any) {
     const currentStatus = String((row as any).testing_status || 'inactive')
 
     // Always clear any existing truth report so the dashboard no longer treats this supplement as completed.
-    // This needs to be idempotent: if the supplement is already testing (previous retest attempt),
-    // we still want to remove the truth row + invalidate cache so the UI moves out of COMPLETED.
-    let truthDelete: { ok: boolean; count: number; error?: string } = { ok: true, count: 0 }
+    // Use service role (admin) so RLS cannot block the delete.
+    let truthDeleteCount = 0
     try {
-      const { data: deleted, error: delErr } = await (supabase as any)
+      const where = { user_id: user.id, user_supplement_id: id }
+      console.log('[retest API] delete supplement_truth_reports where=', where)
+      const { data: deleted, error: delErr } = await (supabaseAdmin as any)
         .from('supplement_truth_reports')
         .delete()
         .eq('user_id', user.id)
         .eq('user_supplement_id', id as any)
-        .select('id,created_at,user_supplement_id')
+        .select('id')
       if (delErr) {
-        truthDelete = { ok: false, count: 0, error: delErr?.message || String(delErr) }
-        console.log('[retest API] truth delete failed (user client):', delErr?.message || delErr)
+        console.log('[retest API] truth delete failed (admin):', delErr?.message || delErr)
       } else {
-        truthDelete = { ok: true, count: Array.isArray(deleted) ? deleted.length : 0 }
-        console.log('[retest API] truth delete ok (user client):', { user_supplement_id: id, deletedCount: truthDelete.count })
+        truthDeleteCount = Array.isArray(deleted) ? deleted.length : 0
+        console.log('[retest API] truth delete ok (admin):', { deletedCount: truthDeleteCount, ids: (deleted || []).slice(0, 5) })
       }
     } catch (e: any) {
-      truthDelete = { ok: false, count: 0, error: e?.message || String(e) }
-      console.log('[retest API] truth delete threw (user client):', e?.message || e)
+      console.log('[retest API] truth delete threw (admin):', e?.message || e)
     }
-    // Fallback: if RLS blocks delete, use service role.
-    if (!truthDelete.ok) {
-      try {
-        const { data: deleted2, error: delErr2 } = await (supabaseAdmin as any)
-          .from('supplement_truth_reports')
-          .delete()
-          .eq('user_supplement_id', id as any)
-          .select('id,created_at,user_supplement_id')
-        if (delErr2) {
-          console.log('[retest API] truth delete failed (admin):', delErr2?.message || delErr2)
-        } else {
-          const c2 = Array.isArray(deleted2) ? deleted2.length : 0
-          truthDelete = { ok: true, count: c2 }
-          console.log('[retest API] truth delete ok (admin):', { user_supplement_id: id, deletedCount: c2 })
-        }
-      } catch (e2: any) {
-        console.log('[retest API] truth delete threw (admin):', e2?.message || e2)
+
+    // Hard proof: immediately query remaining rows for this supplement + user and log count.
+    let remainingReports = 0
+    try {
+      const { count: remainingCount, error: remErr } = await (supabaseAdmin as any)
+        .from('supplement_truth_reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('user_supplement_id', id as any)
+      if (remErr) {
+        console.log('[retest API] remainingReports count failed (admin):', remErr?.message || remErr)
+      } else {
+        remainingReports = Number(remainingCount || 0)
       }
+      console.log('[retest API] remainingReports (admin):', { user_supplement_id: id, remainingReports })
+    } catch (e: any) {
+      console.log('[retest API] remainingReports count threw (admin):', e?.message || e)
     }
 
     // Invalidate dashboard cache so the UI reflects the retest immediately.
@@ -88,7 +86,22 @@ export async function POST(request: NextRequest, ctx: any) {
 
     // If we're already testing, stop here (idempotent) — do NOT bump trial_number again.
     if (currentStatus === 'testing') {
-      return NextResponse.json({ ok: true, id, testing_status: 'testing', alreadyTesting: true, truthDelete })
+      // Still ensure the record is in a clean testing state (best-effort).
+      try {
+        await (supabaseAdmin as any)
+          .from('user_supplement')
+          .update({ testing_status: 'testing', retest_started_at: new Date().toISOString(), has_truth_report: false } as any)
+          .eq('id', id)
+          .eq('user_id', user.id)
+      } catch {}
+      try {
+        await (supabaseAdmin as any)
+          .from('user_supplement_effect')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('user_supplement_id', id as any)
+      } catch {}
+      return NextResponse.json({ ok: true, truthDeleteCount, remainingReports, testingStatus: 'testing' })
     }
 
     // Starter limit check when re-entering testing
@@ -107,12 +120,15 @@ export async function POST(request: NextRequest, ctx: any) {
     // No additional limit check here.
 
     const newTrial = (Number((row as any).trial_number || 1) || 1) + 1
-    const { data: updated, error } = await (supabase as any)
+    // Reset supplement state for retest (admin client so it always writes)
+    const { data: updated, error } = await (supabaseAdmin as any)
       .from('user_supplement')
       .update({
         testing_status: 'testing',
         trial_number: newTrial,
-        retest_started_at: new Date().toISOString()
+        retest_started_at: new Date().toISOString(),
+        // Clear any cached flags that might make the dashboard treat this as completed
+        has_truth_report: false
       } as any)
       .eq('id', id)
       .eq('user_id', user.id)
@@ -121,7 +137,17 @@ export async function POST(request: NextRequest, ctx: any) {
     if (error || !updated) {
       return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
     }
-    return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status, trial_number: (updated as any).trial_number, truthDelete })
+
+    // Also clear cached effect rows so any secondary cached verdict/effect data is reset (best-effort).
+    try {
+      await (supabaseAdmin as any)
+        .from('user_supplement_effect')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('user_supplement_id', id as any)
+    } catch {}
+
+    return NextResponse.json({ ok: true, truthDeleteCount, remainingReports, testingStatus: String((updated as any).testing_status || 'testing') })
   } catch (e: any) {
     console.error('[retest API] ERROR:', e?.message || e)
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
