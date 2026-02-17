@@ -803,6 +803,15 @@ export async function GET(request: Request) {
           const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
           // Do not refresh/overwrite if we already have an implicit truth for this supplement
           if (stale && uid && !implicitTruthBySupp.has(String(uid))) {
+            // BUG 36 (Retest): if a retest is active, do NOT regenerate a truth report on dashboard load.
+            // Otherwise, the overlay-refresh will immediately "self-heal" and put the card back into COMPLETED.
+            const meta = suppMetaById.get(String(uid))
+            const isRetestActive = Boolean(meta?.restart) && String(meta?.status || '') === 'testing'
+            if (isRetestActive) {
+              if (VERBOSE) {
+                try { console.log('[overlay-refresh] skip (active retest)', { uid, restart: meta?.restart, status: meta?.status, name: (r as any).name }) } catch {}
+              }
+            } else {
             try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', { uid, cardId: (r as any).id, name: (r as any).name }) } catch {}
             const fresh = await generateTruthReportForSupplement(user.id, uid)
             // Persist the freshly generated report so downstream reads are consistent
@@ -892,6 +901,7 @@ export async function GET(request: Request) {
                 if (VERBOSE) { try { console.log('[overlay-refresh] updated truth map for', uid, 'status=', String((latest![0] as any).status || '')) } catch {} }
               }
             } catch {}
+            }
           }
         } catch {}
         const truth = uid ? truthBySupp.get(String(uid)) : undefined
@@ -1047,48 +1057,52 @@ export async function GET(request: Request) {
           r.confidence = null
           r.trend = undefined
         }
-        // Re-apply truth overlay AFTER any reset due to retest so category is not wiped
-        try {
-          const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-          // Prefer implicit truth verdicts for implicit-analysis supplements
-          const tImplicit = uid ? implicitTruthBySupp.get(String(uid)) : undefined
-          const truth = (tImplicit as any) || (uid ? truthBySupp.get(String(uid)) : undefined)
-          const mapped = truth ? mapTruthToCategory(truth.status) : undefined
-          if (mapped) {
-            ;(r as any).effectCategory = mapped
-          ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
-            if (truth && typeof truth.percent_change === 'number') {
-              r.effectPct = Number(truth.percent_change)
-            } else if (truth && typeof truth.effect_size === 'number') {
-              r.effectPct = Number(truth.effect_size)
-            }
-            if (truth && typeof truth.confidence_score === 'number') {
-              r.confidence = Number(truth.confidence_score)
-            }
-            // If Truth Engine provided sample day counts and they are non-zero, override derived days
-            const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
-            const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
-            const sum = (tOn ?? 0) + (tOff ?? 0)
-            if (sum > 0) {
-              ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
-              ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
-              ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
-            }
-            // Persist analysis source preferred for display
-            const chosenSrc = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
-            ;(r as any).analysisSource = chosenSrc
-            // Log when implicit truth overrides explicit path
-            try {
-              if (tImplicit && chosenSrc === 'implicit') {
-                console.log('[IMPLICIT-OVERRIDE]', {
-                  name: (r as any).name,
-                  verdict: String(mapped),
-                  note: 'Using implicit truth verdict; skipping/overriding explicit re-run'
-                })
+        // BUG 36 (Retest): while a retest is active, do NOT re-apply any truth overlay (old verdict).
+        // Otherwise the card "snaps back" to COMPLETED on refresh even after we cleared the truth row.
+        const isRetestActive = Boolean(restartIso) && String((meta as any)?.status || '') === 'testing'
+        if (!isRetestActive) {
+          try {
+            const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+            // Prefer implicit truth verdicts for implicit-analysis supplements
+            const tImplicit = uid ? implicitTruthBySupp.get(String(uid)) : undefined
+            const truth = (tImplicit as any) || (uid ? truthBySupp.get(String(uid)) : undefined)
+            const mapped = truth ? mapTruthToCategory(truth.status) : undefined
+            if (mapped) {
+              ;(r as any).effectCategory = mapped
+            ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
+              if (truth && typeof truth.percent_change === 'number') {
+                r.effectPct = Number(truth.percent_change)
+              } else if (truth && typeof truth.effect_size === 'number') {
+                r.effectPct = Number(truth.effect_size)
               }
-            } catch {}
-          }
-        } catch {}
+              if (truth && typeof truth.confidence_score === 'number') {
+                r.confidence = Number(truth.confidence_score)
+              }
+              // If Truth Engine provided sample day counts and they are non-zero, override derived days
+              const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
+              const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
+              const sum = (tOn ?? 0) + (tOff ?? 0)
+              if (sum > 0) {
+                ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
+                ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
+                ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
+              }
+              // Persist analysis source preferred for display
+              const chosenSrc = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
+              ;(r as any).analysisSource = chosenSrc
+              // Log when implicit truth overrides explicit path
+              try {
+                if (tImplicit && chosenSrc === 'implicit') {
+                  console.log('[IMPLICIT-OVERRIDE]', {
+                    name: (r as any).name,
+                    verdict: String(mapped),
+                    note: 'Using implicit truth verdict; skipping/overriding explicit re-run'
+                  })
+                }
+              } catch {}
+            }
+          } catch {}
+        }
         if (VERBOSE && debugSuppId && debugSuppId === suppId) {
           try {
             console.log('[daysOn] totals:', { suppId, on, off, onClean, offClean, restartIso })
