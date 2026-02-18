@@ -14,7 +14,12 @@ export function computeEffectStats(samples: DaySample[], metricKey: string): Eff
 
   const sampleOn = onVals.length
   const sampleOff = offVals.length
-  const pooled = pooledStd(sdOn, sdOff, sampleOn, sampleOff)
+  const rawPooledSD = pooledStd(sdOn, sdOff, sampleOn, sampleOff)
+  // Floor pooled SD to prevent division-by-near-zero effect size inflation on 1–10 scales.
+  const pooled = Math.max(0.5, rawPooledSD)
+  if (rawPooledSD < 0.5) {
+    try { console.log('[truth-engine] SD floor applied:', { raw: rawPooledSD, floored: pooled }) } catch {}
+  }
 
   let absoluteChange = meanOn - meanOff
   // Normalize so "positive" means improved outcome
@@ -25,8 +30,14 @@ export function computeEffectStats(samples: DaySample[], metricKey: string): Eff
     Math.abs(effectSize) < 0.1 ? 'neutral' : (effectSize > 0 ? 'positive' : 'negative')
 
   let percentChange: number | null = null
-  if (PERCENT_METRICS.has(metricKey) && isFiniteNumber(meanOff) && Math.abs(meanOff) > 1e-9) {
-    percentChange = (absoluteChange / meanOff) * 100
+  // Truth report percentChange should be actual % change, not Cohen's d scaled.
+  // ((meanOn - meanOff) / max(meanOff, 0.01)) * 100
+  if (isFiniteNumber(meanOff) && Math.abs(meanOff) > 1e-9) {
+    const denom = Math.max(Number(meanOff), 0.01)
+    percentChange = ((meanOn - meanOff) / denom) * 100
+  } else if (PERCENT_METRICS.has(metricKey) && isFiniteNumber(meanOff)) {
+    // For percent metrics near 0 baseline, use a tiny denominator to avoid blowups while still providing a signal.
+    percentChange = ((meanOn - meanOff) / 0.01) * 100
   }
 
   return {

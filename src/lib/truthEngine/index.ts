@@ -621,6 +621,28 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     })
   }
 
+  // Minimum ON sample threshold (Wayne): avoid issuing final verdicts on tiny ON windows.
+  if (threshOn < 20) {
+    try {
+      console.log('[truth-engine] forced too_early: sampleOn below minimum 20', { sampleOn: threshOn, sampleOff: threshOff })
+    } catch {}
+    return buildReport({
+      supplementName: supplementName || undefined,
+      status: 'too_early',
+      effect,
+      primaryMetric,
+      canonical,
+      confoundedDays: samples.length - cleanSamples.length,
+      cohort: null,
+      sampleOnOverride: sampleOnCount,
+      sampleOffOverride: sampleOffCount,
+      metricLabelOverride: metricLabelOverride || undefined,
+      missingOnMetrics,
+      missingOffMetrics,
+      analysisSource: pathImplicit ? 'implicit' : 'explicit'
+    })
+  }
+
   const confidence = estimateConfidence(effect.effectSize, effect.sampleOn, effect.sampleOff)
   // Decision tree when thresholds are met:
   // If small effect (|d| < 0.3) OR low confidence → completed test with no detectable effect

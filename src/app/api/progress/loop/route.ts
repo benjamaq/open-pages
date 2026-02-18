@@ -756,6 +756,18 @@ export async function GET(request: Request) {
       .from('user_supplement')
       .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at,is_active')
       .eq('user_id', user.id)
+    // Verification log (Wayne debugging): confirm we loaded testing_status/is_active from the canonical table.
+    try {
+      console.log('[user-supp-load]', {
+        count: (userSuppRows || []).length,
+        rows: (userSuppRows || []).map((u: any) => ({
+          id: (u as any).id,
+          name: (u as any).name,
+          testing_status: (u as any).testing_status,
+          is_active: (u as any).is_active,
+        })),
+      })
+    } catch {}
     /* nameToUserSuppId initialized earlier */
     const userSuppIdToName = new Map<string, string>()
     const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; updated?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
@@ -832,7 +844,14 @@ export async function GET(request: Request) {
           const st = uid ? String((testingStatusById.get(String(uid)) || '')).toLowerCase() : ''
           const activeFlag = uid ? isActiveById.get(String(uid)) : null
           if (st === 'inactive' || activeFlag === false) {
-            ;(r as any)._excluded = true
+            // NEW: Do not exclude supplements that already have a final truth verdict.
+            const truthStatus = uid
+              ? String((truthBySupp.get(String(uid)) as any)?.status || (implicitTruthBySupp.get(String(uid)) as any)?.status || '').toLowerCase()
+              : ''
+            const isFinalVerdict = ['proven_positive', 'negative', 'no_effect', 'no_detectable_effect'].includes(truthStatus)
+            if (!isFinalVerdict) {
+              ;(r as any)._excluded = true
+            }
           }
         } catch {}
         if (VERBOSE) {
