@@ -24,10 +24,11 @@ export function useDashboardLoad() {
   const hasFetched = useRef(false)
   const inFlight = useRef(false)
 
-  const fetchDashboard = async (opts?: { silent?: boolean }) => {
+  const fetchDashboard = async (opts?: { silent?: boolean; bypassCache?: boolean }) => {
     if (inFlight.current) return
     inFlight.current = true
     const silent = Boolean(opts?.silent)
+    const bypassCache = Boolean(opts?.bypassCache)
     try {
       if (!silent) setLoading(true)
       setError(null)
@@ -42,6 +43,8 @@ export function useDashboardLoad() {
             const v = sp.get(k)
             if (v) pass.set(k, v)
           }
+          // After actions like retest/stop-testing we must bypass the client TTL cache (Issue 3).
+          if (bypassCache) pass.set('__bust', String(Date.now()))
           const qs = pass.toString()
           return qs ? `/api/dashboard/load?${qs}` : '/api/dashboard/load'
         } catch {
@@ -51,7 +54,7 @@ export function useDashboardLoad() {
       const r = await dedupedJson<DashboardLoadData>(
         url,
         { credentials: 'include', cache: 'no-store' },
-        30000
+        bypassCache ? 0 : 30000
       )
       if (!r.ok) throw new Error('Dashboard load failed')
       const j = (r.data || null) as DashboardLoadData | null
@@ -83,7 +86,7 @@ export function useDashboardLoad() {
     const handler = () => {
       try {
         // Background refresh; keep UI stable.
-        fetchDashboard({ silent: true })
+        fetchDashboard({ silent: true, bypassCache: true })
       } catch {}
     }
     try {

@@ -750,20 +750,28 @@ export async function GET(request: Request) {
       const intake = (e as any).supplement_intake || null
       if (intake) intakeByDate.set(key, intake as any)
     }
-    // Map names -> user_supplement ids for when items are from stack_items
-    const { data: userSuppRows } = await supabase
+    // Map names -> user_supplement ids for when items are from stack_items.
+    // Use admin client so we reliably read testing_status/is_active in production (Issue 2/3 debugging).
+    const { data: userSuppRows } = await supabaseAdmin
       .from('user_supplement')
-      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at')
+      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at,is_active')
       .eq('user_id', user.id)
     /* nameToUserSuppId initialized earlier */
     const userSuppIdToName = new Map<string, string>()
     const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; updated?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
     const testingActiveIds = new Set<string>()
     const testingStatusById = new Map<string, string>()
+    const isActiveById = new Map<string, boolean | null>()
+    const nameToUserSuppIds = new Map<string, Set<string>>()
     for (const u of userSuppRows || []) {
       const nm = String((u as any).name || '').trim().toLowerCase()
       const uid = String((u as any).id)
-      if (nm) nameToUserSuppId.set(nm, uid)
+      if (nm) {
+        nameToUserSuppId.set(nm, uid)
+        const set = nameToUserSuppIds.get(nm) || new Set<string>()
+        set.add(uid)
+        nameToUserSuppIds.set(nm, set)
+      }
       userSuppIdToName.set(uid, String((u as any).name || ''))
       const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
       const status = String((u as any).testing_status || 'inactive')
@@ -777,6 +785,7 @@ export async function GET(request: Request) {
       })
       if (isTesting) testingActiveIds.add(uid)
       testingStatusById.set(uid, status)
+      isActiveById.set(uid, ((u as any).is_active === null || (u as any).is_active === undefined) ? null : Boolean((u as any).is_active))
     }
     // Fast map from stack_items.id -> user_supplement_id when present to avoid name fuzziness
     const stackIdToUserSuppId = new Map<string, string>()
@@ -798,7 +807,14 @@ export async function GET(request: Request) {
         if (!uid && queryTable === 'user_supplement') {
           uid = idKey
         }
-        // Do NOT use name-based fallback here to avoid cross-supplement leakage
+        // Safe fallback for legacy stack_items rows missing linkage:
+        // only use name-based mapping when it resolves uniquely for this user.
+        if (!uid && nm) {
+          const set = nameToUserSuppIds.get(nm)
+          if (set && set.size === 1) {
+            uid = Array.from(set)[0] || null
+          }
+        }
         ;(r as any).testingActive = testingActiveIds.has(String(uid) as any)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
         ;(r as any).userSuppId = uid
@@ -808,6 +824,15 @@ export async function GET(request: Request) {
           const full = uid ? userSuppIdToName.get(String(uid)) : null
           if (full && String(full).trim().length > 0) {
             ;(r as any).name = String(full)
+          }
+        } catch {}
+        // Issue 2: filter out inactive supplements from the dashboard payload.
+        // If testing_status is inactive OR is_active is false, exclude from all sections.
+        try {
+          const st = uid ? String((testingStatusById.get(String(uid)) || '')).toLowerCase() : ''
+          const activeFlag = uid ? isActiveById.get(String(uid)) : null
+          if (st === 'inactive' || activeFlag === false) {
+            ;(r as any)._excluded = true
           }
         } catch {}
         if (VERBOSE) {
@@ -1684,20 +1709,23 @@ export async function GET(request: Request) {
     } catch {}
     // Compute total user check-in days (any supplement_intake present; do not exclude confounds)
     // Note: declared earlier due to use in row calculations
+    // Apply exclusion filter (inactive/archived supplements should not appear on dashboard)
+    const visibleRows = progressRows.filter(r => !(r as any)._excluded)
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'
+    // - Negative: effectCategory='negative' (final verdict; include in noSignal)
     // - Inconsistent: effectCategory='inconsistent'
     // - Needs Data: effectCategory='needs_more_data'
     // - Building: no effectCategory (includes <100% and 100% "Ready for verdict")
-    const clearSignal = progressRows.filter(r => (r as any).effectCategory === 'works')
-    const noEffect = progressRows.filter(r => {
+    const clearSignal = visibleRows.filter(r => (r as any).effectCategory === 'works')
+    const noEffect = visibleRows.filter(r => {
       const cat = String((r as any).effectCategory || '').toLowerCase()
-      return cat === 'no_effect' || cat === 'no_detectable_effect'
+      return cat === 'negative' || cat === 'no_effect' || cat === 'no_detectable_effect'
     })
-    const inconsistent = progressRows.filter(r => (r as any).effectCategory === 'inconsistent')
-    const needsData = progressRows.filter(r => (r as any).effectCategory === 'needs_more_data')
-    const building = progressRows.filter(r => !(r as any).effectCategory)
+    const inconsistent = visibleRows.filter(r => (r as any).effectCategory === 'inconsistent')
+    const needsData = visibleRows.filter(r => (r as any).effectCategory === 'needs_more_data')
+    const building = visibleRows.filter(r => !(r as any).effectCategory)
 
     // Debug: log every supplement row and where it landed (Issue 1).
     if (TRACE_BUCKETS) {
@@ -1711,7 +1739,7 @@ export async function GET(request: Request) {
           if (cat === 'needs_more_data') return 'needsData'
           return 'building'
         }
-        const rows = (progressRows || []).map((r: any) => {
+        const rows = (visibleRows || []).map((r: any) => {
           const uid = String((r as any)?.userSuppId || '')
           const truth = uid ? truthBySupp.get(uid) : undefined
           const impTruth = uid ? implicitTruthBySupp.get(uid) : undefined
@@ -1757,12 +1785,16 @@ export async function GET(request: Request) {
     // Today’s progress + next likely
     const todaysProgress = {
       streakDays: await getStreakDays(supabase, user.id),
-      improved: clearSignal.slice(0, 2).map(r => ({ name: r.name, delta: Math.round((r.effectPct || 0) * 100) })),
+      // Only "works" belongs in "improved" messaging; keep negative/no-signal out even if present in completed buckets.
+      improved: clearSignal
+        .filter(r => String((r as any)?.effectCategory || '').toLowerCase() === 'works')
+        .slice(0, 2)
+        .map(r => ({ name: r.name, delta: Math.round((r.effectPct || 0) * 100) })),
       almostReady: building
         .filter(r => r.progressPercent >= 90)
         .slice(0, 2)
         .map(r => ({ name: r.name, percent: r.progressPercent, etaDays: Math.max(0, r.requiredDays - r.daysOfData) })),
-      phase: getPhaseLabel(Math.max(...progressRows.map(r => r.daysOfData), 0)) // rough phase by max days of data
+      phase: getPhaseLabel(Math.max(...visibleRows.map(r => r.daysOfData), 0)) // rough phase by max days of data
     }
     // Next result likely
     try {
@@ -2074,14 +2106,14 @@ export async function GET(request: Request) {
       }
     } catch {}
     // Supplements flat array with state fields for client UI
-    const supplements = progressRows.map(r => {
+    const supplements = visibleRows.map(r => {
       const uid = (r as any).userSuppId || nameToUserSuppId.get(String((r as any).name || '').trim().toLowerCase())
-      const testingStatus = uid ? (testingStatusById.get(String(uid)) || 'inactive') : 'inactive'
+      const testingStatus = uid ? (testingStatusById.get(String(uid)) || null) : null
       const insight = insightsById.get(String((r as any).id))
       const significant = !!(insight && String((insight as any).status || '').toLowerCase() === 'significant')
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
-      const isFinal = cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect'
-      const effectiveStatus = isFinal ? 'complete' : testingStatus
+      const isFinal = cat === 'works' || cat === 'negative' || cat === 'no_effect' || cat === 'no_detectable_effect'
+      const effectiveStatus = isFinal ? 'complete' : (testingStatus || 'inactive')
       const progressOut = isFinal ? 100 : r.progressPercent
       return {
         id: r.id,
