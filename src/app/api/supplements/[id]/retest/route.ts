@@ -104,7 +104,8 @@ export async function POST(request: NextRequest, ctx: any) {
       try {
         const res = await (supabaseAdmin as any)
           .from('user_supplement')
-          .update({ testing_status: 'testing', retest_started_at: ts, has_truth_report: false } as any)
+          // IMPORTANT: only update columns confirmed to exist.
+          .update({ testing_status: 'testing', retest_started_at: ts } as any)
           .eq('id', id)
           .eq('user_id', user.id)
           .select('id,testing_status,trial_number,retest_started_at')
@@ -167,8 +168,6 @@ export async function POST(request: NextRequest, ctx: any) {
           testing_status: 'testing',
           trial_number: newTrial,
           retest_started_at: new Date().toISOString(),
-          // Clear any cached flags that might make the dashboard treat this as completed
-          has_truth_report: false
         } as any)
         .eq('id', id)
         .eq('user_id', user.id)

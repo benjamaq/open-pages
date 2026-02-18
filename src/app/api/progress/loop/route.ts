@@ -763,7 +763,8 @@ export async function GET(request: Request) {
     // Use admin client so we reliably read testing_status/is_active in production (Issue 2/3 debugging).
     const { data: userSuppRows, error: userSuppError } = await supabaseAdmin
       .from('user_supplement')
-      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at,is_active')
+      // IMPORTANT: only select columns that are confirmed to exist in production schema.
+      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,is_active')
       .eq('user_id', user.id)
     // Verification log (Wayne debugging): confirm we loaded testing_status/is_active from the canonical table.
     try {
