@@ -754,6 +754,9 @@ export default function ResultsPage() {
           if (close.length === 1) {
             const r = close[0]; const l = loopById[r.id]
             const needOff = Math.max(0, (l?.requiredOffDays ?? 0) - (l?.daysOffClean ?? 0))
+            if (needOff <= 0) {
+              return <div className="mt-3 text-sm text-[#C65A2E]">Next up: {r.name} — Ready for next rotation</div>
+            }
             return <div className="mt-3 text-sm text-[#C65A2E]">Next up: {r.name} needs {needOff} more OFF day{needOff === 1 ? '' : 's'}</div>
           }
           return <div className="mt-3 text-sm text-[#C65A2E]">Next up: {close.length} supplements close to verdict</div>

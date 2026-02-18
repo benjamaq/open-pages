@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, ctx: any) {
     if (!row || String((row as any).user_id) !== user.id) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
-    const currentStatus = String((row as any).testing_status || 'inactive')
+    const currentStatus = String((row as any).testing_status || 'inactive').toLowerCase()
 
     // Always clear any existing truth report so the dashboard no longer treats this supplement as completed.
     // Use service role (admin) so RLS cannot block the delete.
@@ -153,10 +153,11 @@ export async function POST(request: NextRequest, ctx: any) {
     // so we allow retest even if they have reached the 5-tested limit.
     // No additional limit check here.
 
-    // Bump trial_number: COALESCE(trial_number,1) + 1 semantics
+    // Bump trial_number: COALESCE(trial_number,0) + 1 semantics
+    // NULL -> 1, 1 -> 2, 2 -> 3
     const baseTrial = (() => {
       const n = Number((row as any).trial_number)
-      return Number.isFinite(n) && n > 0 ? n : 1
+      return Number.isFinite(n) && n >= 0 ? n : 0
     })()
     const newTrial = baseTrial + 1
     // Reset supplement state for retest (admin client so it always writes)
