@@ -34,6 +34,17 @@ export default function UploadCenter() {
   const [wearableStatus, setWearableStatus] = useState<any | null>(null)
   const [firstTimeUpload, setFirstTimeUpload] = useState<boolean>(false)
 
+  const showNeutralUploadToast = (title: string, description?: string) => {
+    try {
+      toast(title, {
+        description,
+        duration: 5000,
+        className: 'bg-white text-slate-900 border border-slate-200 shadow-lg rounded-xl',
+        descriptionClassName: 'text-slate-700',
+      } as any)
+    } catch {}
+  }
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -119,7 +130,7 @@ export default function UploadCenter() {
           const data = await res.json().catch(() => ({}))
           console.log('[UploadCenter] /api/upload/universal (storage) status:', res.status, 'payload:', data)
           if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
-          toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
+          showNeutralUploadToast(String(data.message || 'Imported'), String(data.details || 'Upload complete'))
           setLastResult(data)
           setUploadProgress(null)
           // Fetch wearable status then navigate (no modal here)
@@ -151,7 +162,7 @@ export default function UploadCenter() {
           const data = await res.json().catch(() => ({}))
           console.log('[UploadCenter] /api/upload/universal status:', res.status, 'payload:', data)
           if (!res.ok) throw new Error(data?.error || data?.details || 'Import failed')
-          toast.success(data.message || 'Imported', { description: data.details || 'Upload complete' })
+          showNeutralUploadToast(String(data.message || 'Imported'), String(data.details || 'Upload complete'))
           setLastResult(data)
           // Fetch wearable status then navigate (no modal here)
           try {
