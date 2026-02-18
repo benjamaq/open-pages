@@ -1658,6 +1658,15 @@ export async function GET(request: Request) {
     // Gate rule (simplified): For implicit supplements, LOCK unless (final verdict exists AND total user check-ins >=3).
     try {
       for (const r of progressRows as any[]) {
+        // BUG 44: If a truth report exists, it is authoritative. Do not apply any additional "check-in gate"
+        // that would hide/hold the verdict and keep the card stuck in TESTING.
+        try {
+          const uid = (r as any)?.userSuppId ? String((r as any).userSuppId) : ''
+          const hasTruth = Boolean(uid && (truthBySupp.has(uid) || implicitTruthBySupp.has(uid)))
+          if (hasTruth) {
+            continue
+          }
+        } catch {}
         const isImp = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
         const cat = String((r as any).effectCategory || '').toLowerCase()
         const hasFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || cat === 'negative' || cat === 'proven_positive')
