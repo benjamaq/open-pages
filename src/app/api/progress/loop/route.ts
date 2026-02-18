@@ -34,6 +34,7 @@ export async function GET(request: Request) {
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
       forceNoCache = url.searchParams.get('nocache') === '1' || url.searchParams.get('force') === '1'
     } catch {}
+    const TRACE_BUCKETS = Boolean(debugSuppId)
     // Attach rotation selection debug in response for easier inspection
     let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
     const supabase = await createClient()
@@ -233,6 +234,22 @@ export async function GET(request: Request) {
         created_at: r.created_at,
         monthly_cost: r.monthly_cost_usd
       }))
+    }
+
+    // Debug: show exactly what items the dashboard is building cards from.
+    // This is the fastest way to catch "missing supplement" issues (Issue 1).
+    if (TRACE_BUCKETS) {
+      try {
+        console.log('[progress/loop][TRACE] items source:', {
+          queryTable,
+          count: (items || []).length,
+          sample: (items || []).slice(0, 40).map((it: any) => ({
+            id: String(it?.id || ''),
+            user_supplement_id: String(it?.user_supplement_id || ''),
+            name: String(it?.name || ''),
+          }))
+        })
+      } catch {}
     }
 
     // Distinct check-in days (read directly from checkin table)
@@ -1681,6 +1698,47 @@ export async function GET(request: Request) {
     const inconsistent = progressRows.filter(r => (r as any).effectCategory === 'inconsistent')
     const needsData = progressRows.filter(r => (r as any).effectCategory === 'needs_more_data')
     const building = progressRows.filter(r => !(r as any).effectCategory)
+
+    // Debug: log every supplement row and where it landed (Issue 1).
+    if (TRACE_BUCKETS) {
+      try {
+        const bucketOf = (r: any) => {
+          const cat = String((r as any)?.effectCategory || '').toLowerCase()
+          if (cat === 'works') return 'clearSignal'
+          if (cat === 'negative') return 'negative'
+          if (cat === 'no_effect' || cat === 'no_detectable_effect') return 'noSignal'
+          if (cat === 'inconsistent') return 'inconsistent'
+          if (cat === 'needs_more_data') return 'needsData'
+          return 'building'
+        }
+        const rows = (progressRows || []).map((r: any) => {
+          const uid = String((r as any)?.userSuppId || '')
+          const truth = uid ? truthBySupp.get(uid) : undefined
+          const impTruth = uid ? implicitTruthBySupp.get(uid) : undefined
+          const meta = uid ? suppMetaById.get(uid) : undefined
+          return {
+            bucket: bucketOf(r),
+            rowId: String((r as any)?.id || ''),
+            userSuppId: uid || null,
+            name: String((r as any)?.name || ''),
+            testing_status: uid ? (testingStatusById.get(uid) || null) : null,
+            is_active: undefined, // not loaded here; see items source log above
+            effectCategory: String((r as any)?.effectCategory || '').toLowerCase() || null,
+            verdict: String((r as any)?.verdict || '').toLowerCase() || null,
+            hasTruth: Boolean(truth || impTruth),
+            truthStatus: (truth as any)?.status || (impTruth as any)?.status || null,
+            analysisSource: String((r as any)?.analysisSource || '') || null,
+            retest_started_at: (meta as any)?.restart || null,
+          }
+        })
+        console.log('[progress/loop][TRACE] bucket placement:', {
+          userId: user.id,
+          rowsCount: rows.length,
+          rows,
+          counts: rows.reduce((acc: any, x: any) => { acc[x.bucket] = (acc[x.bucket] || 0) + 1; return acc }, {})
+        })
+      } catch {}
+    }
 
     // Debug: cards after section filtering
     try {

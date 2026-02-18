@@ -32,9 +32,11 @@ async function callJson(name: string, fn: () => Promise<Response>): Promise<Call
 
 export async function GET(request: Request) {
   const origin = new URL(request.url).origin
+  const incomingUrl = new URL(request.url)
+  const qs = incomingUrl.search || ''
 
   // Ensure any query-param dependent routes get the right URL (and keep the rest identical).
-  const progressReq = new Request(`${origin}/api/progress/loop`, { headers: request.headers, cache: 'no-store' })
+  const progressReq = new Request(`${origin}/api/progress/loop${qs}`, { headers: request.headers, cache: 'no-store' })
   const wearableReq = new Request(`${origin}/api/user/wearable-status?since=all`, { headers: request.headers, cache: 'no-store' })
   const billingReq = new Request(`${origin}/api/billing/info`, { headers: request.headers, cache: 'no-store' })
   const paymentsReq = new Request(`${origin}/api/payments/status`, { headers: request.headers, cache: 'no-store' })

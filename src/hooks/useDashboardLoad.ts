@@ -31,8 +31,25 @@ export function useDashboardLoad() {
     try {
       if (!silent) setLoading(true)
       setError(null)
+      // Allow production-safe debug by forwarding ONLY known debug params from the current dashboard URL.
+      // This keeps logs off by default and avoids accidentally changing semantics via unrelated query params.
+      const url = (() => {
+        try {
+          if (typeof window === 'undefined') return '/api/dashboard/load'
+          const sp = new URLSearchParams(window.location.search || '')
+          const pass = new URLSearchParams()
+          for (const k of ['debugSuppId', 'dbg', 'supp', 'nocache', 'force']) {
+            const v = sp.get(k)
+            if (v) pass.set(k, v)
+          }
+          const qs = pass.toString()
+          return qs ? `/api/dashboard/load?${qs}` : '/api/dashboard/load'
+        } catch {
+          return '/api/dashboard/load'
+        }
+      })()
       const r = await dedupedJson<DashboardLoadData>(
-        '/api/dashboard/load',
+        url,
         { credentials: 'include', cache: 'no-store' },
         30000
       )
