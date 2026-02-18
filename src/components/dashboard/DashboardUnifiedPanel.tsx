@@ -199,6 +199,11 @@ export function DashboardUnifiedPanel({
         const days = Number(url.searchParams.get('days') || '')
         const source = url.searchParams.get('source') || undefined
         setShowUploadSuccess({ days: isFinite(days) && days > 0 ? days : undefined, source })
+        // Signal to other dashboard components (e.g. DailyProgressLoop) that a blocking modal is open
+        try {
+          localStorage.setItem('bs_modal_block', 'upload_success')
+          window.dispatchEvent(new CustomEvent('bs:modal-block', { detail: { blocked: true, reason: 'upload_success' } }))
+        } catch {}
         // Snooze reminder prompts to avoid stacking modals after upload success
         try {
           const SNOOZE_MS = 10 * 60 * 1000 // 10 minutes
@@ -214,6 +219,18 @@ export function DashboardUnifiedPanel({
       }
     } catch {}
   }, [])
+
+  // Keep the modal-block signal in sync as the Baseline enhanced modal opens/closes
+  useEffect(() => {
+    try {
+      const blocked = Boolean(showUploadSuccess)
+      if (blocked) localStorage.setItem('bs_modal_block', 'upload_success')
+      else localStorage.removeItem('bs_modal_block')
+      try {
+        window.dispatchEvent(new CustomEvent('bs:modal-block', { detail: { blocked, reason: blocked ? 'upload_success' : null } }))
+      } catch {}
+    } catch {}
+  }, [showUploadSuccess])
 
   // Debug: show today's summary coming from API for Sleep verification
   useEffect(() => {

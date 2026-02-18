@@ -57,6 +57,10 @@ export function DailyProgressLoop({
   const [milestone50, setMilestone50] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [milestone85, setMilestone85] = useState<{ id: string; name: string; percent: number } | null>(null)
   const [verdictReadyModal, setVerdictReadyModal] = useState<{ id: string; name: string } | null>(null)
+  const [pendingVerdictModal, setPendingVerdictModal] = useState<{ id: string; name: string } | null>(null)
+  const [modalBlocked, setModalBlocked] = useState<boolean>(() => {
+    try { return Boolean(localStorage.getItem('bs_modal_block')) } catch { return false }
+  })
   const [isMember, setIsMember] = useState<boolean>(false)
   const [hasWearables, setHasWearables] = useState<boolean>(false)
   const [suppressMilestonePopups, setSuppressMilestonePopups] = useState<boolean>(false)
@@ -150,6 +154,25 @@ export function DailyProgressLoop({
     }
   }, [progressPayload, isMemberProp, hasDailyPayload, mePayload])
 
+  // Listen for "blocking modal open" signals from other dashboard components.
+  // This prevents Baseline enhanced and New verdict ready from stacking.
+  useEffect(() => {
+    const handler = (ev: any) => {
+      try {
+        const blocked = Boolean(ev?.detail?.blocked)
+        setModalBlocked(blocked)
+      } catch {}
+    }
+    try {
+      window.addEventListener('bs:modal-block', handler as any)
+      // Sync once on mount
+      try { setModalBlocked(Boolean(localStorage.getItem('bs_modal_block'))) } catch {}
+    } catch {}
+    return () => {
+      try { window.removeEventListener('bs:modal-block', handler as any) } catch {}
+    }
+  }, [])
+
   // If user just came from a wearable upload, don't stack generic milestone popups on top of the upload success modal.
   useEffect(() => {
     try {
@@ -176,23 +199,33 @@ export function DailyProgressLoop({
         ...(data.sections.noSignal || []),
         ...(((data.sections as any)?.needsData) || [])
       ]
-      // Helper to check/mark a one-time key
-      const once = (key: string) => {
-        if (typeof window === 'undefined') return false
+      // Helper to check/mark a one-time key (do not mark until we actually show)
+      const hasShown = (key: string) => {
+        if (typeof window === 'undefined') return true
         const k = `ms_${key}`
-        if (localStorage.getItem(k) === '1') return false
+        return localStorage.getItem(k) === '1'
+      }
+      const markShown = (key: string) => {
+        if (typeof window === 'undefined') return
+        const k = `ms_${key}`
         localStorage.setItem(k, '1')
-        return true
       }
       // Prefer showing a single, most-relevant popup per load
       // 1) Verdict ready modal (persistent, once per supplement id)
       {
         const readyRows = (data.sections.clearSignal || []).concat((data.sections.noSignal || []))
-        const newlyReady = readyRows.find(r => r.progressPercent >= 100 && once(`verdict_toast_${r.id}`))
-        if (newlyReady) {
+        const candidate = readyRows.find(r => r.progressPercent >= 100 && !hasShown(`verdict_toast_${r.id}`))
+        if (candidate) {
+          // If another blocking modal is open (e.g. Baseline enhanced), queue this verdict modal instead of stacking.
+          if (modalBlocked) {
+            setPendingVerdictModal({ id: candidate.id, name: candidate.name })
+            return
+          }
+          markShown(`verdict_toast_${candidate.id}`)
+          setPendingVerdictModal(null)
           setMilestone85(null)
           setMilestone50(null)
-          setVerdictReadyModal({ id: newlyReady.id, name: newlyReady.name })
+          setVerdictReadyModal({ id: candidate.id, name: candidate.name })
           // Don't also show other milestone popups on the same load.
           return
         }
@@ -203,7 +236,8 @@ export function DailyProgressLoop({
         .sort((a,b) => b.progressPercent - a.progressPercent)[0]
       if (nearing) {
         const key = `85_${nearing.id}`
-        if (once(key)) {
+        if (!hasShown(key)) {
+          markShown(key)
           setMilestone50(null)
           setMilestone85({ id: nearing.id, name: nearing.name, percent: nearing.progressPercent })
           return
@@ -216,14 +250,31 @@ export function DailyProgressLoop({
           .sort((a,b) => b.progressPercent - a.progressPercent)[0]
         if (forming) {
           const key = `50_${forming.id}`
-          if (once(key)) {
+          if (!hasShown(key)) {
+            markShown(key)
             setMilestone50({ id: forming.id, name: forming.name, percent: forming.progressPercent })
             return
           }
         }
       }
     } catch {}
-  }, [data, isMember, suppressMilestonePopups])
+  }, [data, isMember, suppressMilestonePopups, modalBlocked])
+
+  // If a verdict modal was queued behind another modal (e.g. Baseline enhanced), show it as soon as we're unblocked.
+  useEffect(() => {
+    if (modalBlocked) return
+    if (!pendingVerdictModal) return
+    if (verdictReadyModal) return
+    try {
+      // Double-check we haven't shown this already (in case another effect run marked it)
+      const k = `ms_verdict_toast_${pendingVerdictModal.id}`
+      if (typeof window !== 'undefined' && localStorage.getItem(k) !== '1') {
+        localStorage.setItem(k, '1')
+      }
+    } catch {}
+    setVerdictReadyModal(pendingVerdictModal)
+    setPendingVerdictModal(null)
+  }, [modalBlocked, pendingVerdictModal, verdictReadyModal])
 
   const dismiss50 = () => {
     try { localStorage.setItem('milestone_50_shown', '1') } catch {}
