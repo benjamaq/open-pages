@@ -32,7 +32,16 @@ export async function GET(request: Request) {
     try {
       const url = new URL(request.url)
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
-      forceNoCache = url.searchParams.get('nocache') === '1' || url.searchParams.get('force') === '1'
+      // Server-side cache bypass:
+      // - nocache=1 (explicit)
+      // - force=1 (legacy)
+      // - __bust=<ts> (client refresh path)
+      // Note: __bust is intentionally not persisted; it's only a "do not serve cached payload" signal.
+      forceNoCache =
+        url.searchParams.get('nocache') === '1' ||
+        url.searchParams.get('force') === '1' ||
+        url.searchParams.has('__bust') ||
+        url.searchParams.has('_bust')
     } catch {}
     const TRACE_BUCKETS = Boolean(debugSuppId)
     // Attach rotation selection debug in response for easier inspection
@@ -173,7 +182,7 @@ export async function GET(request: Request) {
           try { console.log('CACHE MISS', { versionOk, cachedV, expectedV: DASHBOARD_CACHE_VERSION }) } catch {}
         }
       } else {
-        try { console.log('CACHE BYPASS (force)') } catch {}
+        try { console.log('CACHE BYPASS', { reason: 'query', nocache: true }) } catch {}
       }
     } catch (e) { try { console.log('[dashboard_cache] read error (ignored):', (e as any)?.message || e) } catch {} }
 
@@ -1129,6 +1138,7 @@ export async function GET(request: Request) {
         }
         // Days tracked for this supplement = ON + OFF (any quality)
         ;(r as any).daysOfData = on + off
+        const isRetestActive = Boolean(restartIso) && String((meta as any)?.status || '') === 'testing'
         if (restartIso) {
           ;(r as any).retestStartedAt = restartIso
           ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId as any) ? (suppMetaById.get(suppId as any) as any).trial : null) ?? null
@@ -1136,10 +1146,14 @@ export async function GET(request: Request) {
           r.effectPct = null
           r.confidence = null
           r.trend = undefined
+          // IMPORTANT: after a retest starts, we must not treat historical implicit data as "current testing".
+          // Force explicit semantics so downstream implicit progress logic doesn't pull in large historical samples.
+          if (isRetestActive) {
+            ;(r as any).analysisSource = 'explicit'
+          }
         }
         // BUG 36 (Retest): while a retest is active, do NOT re-apply any truth overlay (old verdict).
         // Otherwise the card "snaps back" to COMPLETED on refresh even after we cleared the truth row.
-        const isRetestActive = Boolean(restartIso) && String((meta as any)?.status || '') === 'testing'
         if (!isRetestActive) {
           try {
             const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
@@ -1227,6 +1241,18 @@ export async function GET(request: Request) {
         const truthImplicit = uidForTruth ? implicitTruthBySupp.get(String(uidForTruth)) : undefined
         const truthRec = (truthImplicit as any) || (uidForTruth ? truthBySupp.get(String(uidForTruth)) : undefined)
         let analysisSrc = String(((r as any).analysisSource) || (truthRec as any)?.analysis_source || '').toLowerCase()
+        // Retest handling: if retest_started_at is present and the supplement is currently testing,
+        // treat it as explicit and avoid using historical implicit samples/verdicts.
+        try {
+          const uidForMeta = String(uidForTruth || '')
+          const meta = uidForMeta ? (suppMetaById.get(uidForMeta) as any) : null
+          const restartIso = meta?.restart ? String(meta.restart) : null
+          const isRetestActive = Boolean(restartIso) && String(meta?.status || '') === 'testing'
+          if (isRetestActive) {
+            analysisSrc = 'explicit'
+            ;(r as any).analysisSource = 'explicit'
+          }
+        } catch {}
         // Implicit sanity: a supplement can only be implicit if it has an inferred_start_at
         // AND the user has substantial wearable history (>=30 days).
         // Otherwise, force explicit — regardless of sample counts.
@@ -1342,29 +1368,36 @@ export async function GET(request: Request) {
           let finalImplicitVerdict = false
           if (isImplicit) {
             const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
-            const impl = uid ? implicitTruthBySupp.get(String(uid)) : undefined
-            if (impl && impl.status) {
-              const mapped = mapTruthToCategory(impl.status)
-              if (mapped) {
-                ;(r as any).effectCategory = mapped
-                // Log explicit implicit-verdict usage
-                try {
-                  console.log('[IMPLICIT-VERDICT]', {
-                    name,
-                    implicitEffectCategory: String(mapped),
-                    using: 'implicit'
-                  })
-                } catch {}
-                // Mark final implicit verdicts to force 100% and completion downstream
-                finalImplicitVerdict = ['works','no_effect','no_detectable_effect'].includes(String(mapped).toLowerCase())
-                const confirmNeeded = Number((r as any).explicitCleanCheckins || 0) < 3
-                if (finalImplicitVerdict && !confirmNeeded) {
-                  ;(r as any).isReady = true
+            // Do not apply implicit verdict/sample overrides during an active retest.
+            // This prevents enormous historical sample counts from showing (e.g. 1020 days tracked) after retest.
+            const meta = uid ? (suppMetaById.get(String(uid)) as any) : null
+            const restartIso = meta?.restart ? String(meta.restart) : null
+            const isRetestActive = Boolean(restartIso) && String(meta?.status || '') === 'testing'
+            if (!isRetestActive) {
+              const impl = uid ? implicitTruthBySupp.get(String(uid)) : undefined
+              if (impl && impl.status) {
+                const mapped = mapTruthToCategory(impl.status)
+                if (mapped) {
+                  ;(r as any).effectCategory = mapped
+                  // Log explicit implicit-verdict usage
+                  try {
+                    console.log('[IMPLICIT-VERDICT]', {
+                      name,
+                      implicitEffectCategory: String(mapped),
+                      using: 'implicit'
+                    })
+                  } catch {}
+                  // Mark final implicit verdicts to force 100% and completion downstream
+                  finalImplicitVerdict = ['works','no_effect','no_detectable_effect'].includes(String(mapped).toLowerCase())
+                  const confirmNeeded = Number((r as any).explicitCleanCheckins || 0) < 3
+                  if (finalImplicitVerdict && !confirmNeeded) {
+                    ;(r as any).isReady = true
+                  }
                 }
+                // Also expose implicit clean counts for downstream logic (rotation)
+                ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
+                ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
               }
-              // Also expose implicit clean counts for downstream logic (rotation)
-              ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
-              ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
             }
           }
           // Promote display progress to 100% for implicit final verdicts when unlocked by user-level or per-supp check-ins.
