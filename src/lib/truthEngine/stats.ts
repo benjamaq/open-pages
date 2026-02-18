@@ -63,9 +63,11 @@ export function estimateConfidence(effectSize: number, sampleOn: number, sampleO
 export function classifyStatus(effect: EffectStats, confidence: number): 'proven_positive' | 'no_detectable_effect' | 'negative' | 'confounded' | 'too_early' {
   // Treat very low confidence as confounded (needs more/cleaner data upstream)
   if (confidence < 0.4) return 'confounded'
-  // New rule: when thresholds are met (handled upstream) but the effect is small OR confidence is still low-ish,
-  // call it a completed test with no detectable effect.
-  if (Math.abs(effect.effectSize) < 0.5 || confidence < 0.6) return 'no_detectable_effect'
+  // Thresholds (aligned with truthEngine decision tree):
+  // - effectSize is Cohen’s d (NOT a percent)
+  // - |d| >= 0.3 is treated as a meaningful signal (small-but-real)
+  // - confidence >= 0.6 required for a directional verdict
+  if (Math.abs(effect.effectSize) < 0.3 || confidence < 0.6) return 'no_detectable_effect'
   if (effect.direction === 'positive') return 'proven_positive'
   if (effect.direction === 'negative') return 'negative'
   return 'no_detectable_effect'

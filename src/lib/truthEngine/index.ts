@@ -389,7 +389,8 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
       if (taken === false) explicitOff++
       return { date: r.local_date, taken, raw: value }
     }
-    // Path B: implicit path → use implicit classification by inferredStart
+    // Path B: implicit path → infer ON/OFF from wearables + inferred_start_at.
+    // IMPORTANT: ON = dates >= inferred_start_at; OFF = dates < inferred_start_at.
     let taken = normalizeTaken(value)
     if (taken === null) {
       const hasWearable = r?.wearables != null
@@ -660,8 +661,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
 
   const confidence = estimateConfidence(effect.effectSize, effect.sampleOn, effect.sampleOff)
   // Decision tree when thresholds are met:
-  // If small effect (|d| < 0.3) OR low confidence → completed test with no detectable effect
-  // Else classify positive/negative as usual
+  // - Effect size is Cohen’s d (NOT a percent): d = (meanOn - meanOff) / pooledSD
+  // - We treat |d| >= 0.3 as a meaningful signal (small-but-real).
+  // - We require confidence >= 0.6 for a directional verdict (positive/negative).
+  // - Otherwise, classify as a completed test with no detectable effect.
   let status: TruthStatus
   if (Math.abs(effect.effectSize) < 0.3 || confidence < 0.6) {
     status = 'no_detectable_effect'

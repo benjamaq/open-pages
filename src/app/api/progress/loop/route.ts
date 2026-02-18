@@ -1856,7 +1856,9 @@ export async function GET(request: Request) {
       improved: clearSignal
         .filter(r => String((r as any)?.effectCategory || '').toLowerCase() === 'works')
         .slice(0, 2)
-        .map(r => ({ name: r.name, delta: Math.round((r.effectPct || 0) * 100) })),
+        // IMPORTANT: effectPct is already a human-scale magnitude (usually truth.percent_change, i.e. a real % value).
+        // Never multiply by 100 here — that would accidentally scale Cohen's d (effect_size) and/or double-scale % change.
+        .map(r => ({ name: r.name, delta: Math.round(Number(r.effectPct || 0)) })),
       almostReady: building
         .filter(r => r.progressPercent >= 90)
         .slice(0, 2)
