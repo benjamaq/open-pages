@@ -777,6 +777,14 @@ export async function GET(request: Request) {
         ;(r as any).testingActive = testingActiveIds.has(String(uid) as any)
         ;(r as any).testingStatus = testingStatusById.get(String(uid)) || 'inactive'
         ;(r as any).userSuppId = uid
+        // BUG 39: Dashboard cards should show the full user_supplement.name (includes brand/product),
+        // not the ingredient-only stack_items.name. If we can resolve a user_supplement_id, prefer that name.
+        try {
+          const full = uid ? userSuppIdToName.get(String(uid)) : null
+          if (full && String(full).trim().length > 0) {
+            ;(r as any).name = String(full)
+          }
+        } catch {}
         if (VERBOSE) {
           try { console.log('[id-resolve:init]', { rowId: idKey, name: nm, resolvedUserSuppId: uid, byStack: stackIdToUserSuppId.get(idKey) || null }) } catch {}
         }

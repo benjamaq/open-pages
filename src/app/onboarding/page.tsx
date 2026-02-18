@@ -156,10 +156,44 @@ export default function OnboardingPage() {
       setSupplements([...supplements, details]);
       // Persist to backend so dashboard sees it immediately
       try {
+        // Build dose/timing strings for persistence into user_supplement + stack_items (My Stack display)
+        const unitRaw = String((details as any)?.doseUnit || '').trim()
+        const unitNorm = (() => {
+          const lc = unitRaw.toLowerCase()
+          if (!lc) return ''
+          if (lc === 'capsule' || lc === 'capsules') return 'caps'
+          if (lc === 'iu') return 'IU'
+          return lc
+        })()
+        const doseText = `${Number((details as any)?.dailyDose || 0) || ''}${unitNorm ? (unitNorm === 'IU' ? ' IU' : ` ${unitNorm}`) : ''}`.trim()
+        const timingLabel = (() => {
+          const t = Array.isArray((details as any)?.timeOfDay) ? (details as any).timeOfDay : []
+          if (!t || t.length === 0) return ''
+          if (t.includes('morning')) return 'Morning'
+          if (t.includes('afternoon')) return 'Afternoon'
+          if (t.includes('evening')) return 'Evening'
+          if (t.includes('night')) return 'Before bed'
+          return ''
+        })()
+
+        const explicitBrand = String((details as any)?.brandName || '').trim()
+        const parsedFromName = (() => {
+          const nm = String((details as any)?.name || '').trim()
+          const idx = nm.indexOf(',')
+          if (idx > 0) return nm.slice(0, idx).trim()
+          return ''
+        })()
+        const brand = explicitBrand || parsedFromName
+
         const payload = { 
           name: details.name,
           monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
           primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
+          ...(doseText ? { dose: doseText } : {}),
+          ...(timingLabel ? { timing: timingLabel, time_of_day: timingLabel } : {}),
+          // Default to daily for My Stack display; user can edit later
+          frequency: 'daily',
+          ...(brand ? { brand } : {}),
           ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),
           ...(details.isActive === false && details.stoppedAt ? { endDate: String(details.stoppedAt).slice(0, 10) } : {})
         }
