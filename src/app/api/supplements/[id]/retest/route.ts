@@ -100,15 +100,24 @@ export async function POST(request: NextRequest, ctx: any) {
     // IMPORTANT: do not silently succeed if this write fails (otherwise progress loop will include historical data).
     if (currentStatus === 'testing') {
       const ts = new Date().toISOString()
-      const { data: updated, error } = await (supabaseAdmin as any)
-        .from('user_supplement')
-        .update({ testing_status: 'testing', retest_started_at: ts, has_truth_report: false } as any)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select('id,testing_status,trial_number,retest_started_at')
-        .maybeSingle()
-      if (error || !updated) {
-        return NextResponse.json({ error: error?.message || 'Retest update failed' }, { status: 500 })
+      let updated: any = null
+      try {
+        const res = await (supabaseAdmin as any)
+          .from('user_supplement')
+          .update({ testing_status: 'testing', retest_started_at: ts, has_truth_report: false } as any)
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select('id,testing_status,trial_number,retest_started_at')
+          .maybeSingle()
+        updated = res?.data || null
+        const err = res?.error || null
+        if (err || !updated) {
+          try { console.log('[retest API] user_supplement update failed (already testing):', err?.message || err) } catch {}
+          return NextResponse.json({ error: err?.message || 'Retest update failed' }, { status: 500 })
+        }
+      } catch (e: any) {
+        try { console.log('[retest API] user_supplement update threw (already testing):', e?.message || e) } catch {}
+        return NextResponse.json({ error: e?.message || 'Retest update failed' }, { status: 500 })
       }
       try {
         await (supabaseAdmin as any)
@@ -150,21 +159,30 @@ export async function POST(request: NextRequest, ctx: any) {
     })()
     const newTrial = baseTrial + 1
     // Reset supplement state for retest (admin client so it always writes)
-    const { data: updated, error } = await (supabaseAdmin as any)
-      .from('user_supplement')
-      .update({
-        testing_status: 'testing',
-        trial_number: newTrial,
-        retest_started_at: new Date().toISOString(),
-        // Clear any cached flags that might make the dashboard treat this as completed
-        has_truth_report: false
-      } as any)
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select('id,testing_status,trial_number,retest_started_at')
-      .maybeSingle()
-    if (error || !updated) {
-      return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
+    let updated: any = null
+    try {
+      const res = await (supabaseAdmin as any)
+        .from('user_supplement')
+        .update({
+          testing_status: 'testing',
+          trial_number: newTrial,
+          retest_started_at: new Date().toISOString(),
+          // Clear any cached flags that might make the dashboard treat this as completed
+          has_truth_report: false
+        } as any)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select('id,testing_status,trial_number,retest_started_at')
+        .maybeSingle()
+      updated = res?.data || null
+      const err = res?.error || null
+      if (err || !updated) {
+        try { console.log('[retest API] user_supplement update failed:', err?.message || err) } catch {}
+        return NextResponse.json({ error: err?.message || 'Update failed' }, { status: 500 })
+      }
+    } catch (e: any) {
+      try { console.log('[retest API] user_supplement update threw:', e?.message || e) } catch {}
+      return NextResponse.json({ error: e?.message || 'Update failed' }, { status: 500 })
     }
 
     // Also clear cached effect rows so any secondary cached verdict/effect data is reset (best-effort).

@@ -761,14 +761,16 @@ export async function GET(request: Request) {
     }
     // Map names -> user_supplement ids for when items are from stack_items.
     // Use admin client so we reliably read testing_status/is_active in production (Issue 2/3 debugging).
-    const { data: userSuppRows } = await supabaseAdmin
+    const { data: userSuppRows, error: userSuppError } = await supabaseAdmin
       .from('user_supplement')
       .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at,is_active')
       .eq('user_id', user.id)
     // Verification log (Wayne debugging): confirm we loaded testing_status/is_active from the canonical table.
     try {
       console.log('[user-supp-load]', {
+        userId: user.id,
         count: (userSuppRows || []).length,
+        error: userSuppError?.message || null,
         rows: (userSuppRows || []).map((u: any) => ({
           id: (u as any).id,
           name: (u as any).name,
