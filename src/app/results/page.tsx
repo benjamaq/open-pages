@@ -832,7 +832,9 @@ export default function ResultsPage() {
                 const freq = getFrequency(s)
                 const timing = getTiming(s)
                 // Start date: prefer started_at, else created_at, else fallback to 0 days
-                const startIso = (s?.started_at as string) || (s?.created_at as string) || ''
+                const retestIso = (s as any)?.retest_started_at ? String((s as any).retest_started_at) : ''
+                const isRetest = Boolean(retestIso)
+                const startIso = (retestIso || (s?.started_at as string) || (s?.created_at as string) || '') as string
                 const startDate = startIso ? new Date(startIso) : null
                 const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? loopById[r.id]?.daysOn ?? 0) + (loopById[r.id]?.daysOffClean ?? loopById[r.id]?.daysOff ?? 0))
                 // Show status strictly from lifecycle (dumb renderer)
@@ -948,7 +950,8 @@ export default function ResultsPage() {
                             const msDiff = Math.abs(now.getTime() - startDate.getTime())
                             const includeYear = msDiff > 365 * 24 * 60 * 60 * 1000 || now.getFullYear() !== startDate.getFullYear()
                             const opts: Intl.DateTimeFormatOptions = includeYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' }
-                            return `Since ${startDate.toLocaleDateString(undefined, opts)}`
+                            const base = `Since ${startDate.toLocaleDateString(undefined, opts)}`
+                            return isRetest ? `${base} (retest)` : base
                           })()
                           const daysText = `Taking for ${daysOnStack} day${daysOnStack===1?'':'s'}`
                           return `${since} • ${daysText}`

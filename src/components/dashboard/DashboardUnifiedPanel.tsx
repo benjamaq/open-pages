@@ -508,7 +508,7 @@ export function DashboardUnifiedPanel({
   }
 
   // Economics donut + spend
-  const { chartData, totalYearly, econEffectiveYear, econAwaitingYear } = useMemo(() => {
+  const { chartData, totalYearly, econEffectiveYear, econAwaitingYear, econActiveSuppCount } = useMemo(() => {
     // Build spend segments; prefer progress/loop monthlyCost when supplement lacks monthly_cost_usd
     type Acc = Record<string, number>
     const acc: Acc = {}
@@ -558,7 +558,12 @@ export function DashboardUnifiedPanel({
       if (!x) return 'uncategorised'
       return x
     }
-    for (const s of supps) {
+    const activeSuppsForEcon = (supps || []).filter((s: any) => {
+      const st = String(s?.testing_status || '').toLowerCase()
+      const activeFlag = s?.is_active !== false
+      return activeFlag && (st === 'testing' || st === 'complete')
+    })
+    for (const s of activeSuppsForEcon) {
       const id = String((s as any)?.id || '')
       const nameLc = String(s.name || '').toLowerCase()
       const supCost = Number((s as any)?.monthly_cost_usd ?? 0)
@@ -628,7 +633,7 @@ export function DashboardUnifiedPanel({
     // by enriching each header item with verdict/effectCategory from loop rows (by id or name)
     let effMonthlyFromHeader = 0
     let awaitingMonthlyFromHeader = 0
-    for (const s of supps) {
+    for (const s of activeSuppsForEcon) {
       const id = String((s as any)?.id || '')
       const nameLc = String((s as any)?.name || '').toLowerCase()
       const supCost = Number((s as any)?.monthly_cost_usd ?? 0)
@@ -648,6 +653,7 @@ export function DashboardUnifiedPanel({
       totalYearly: yearly,
       econEffectiveYear: Math.round(effMonthlyFromHeader * 12),
       econAwaitingYear: Math.round(awaitingMonthlyFromHeader * 12),
+      econActiveSuppCount: activeSuppsForEcon.length,
     }
   }, [supps, progress])
 
@@ -1002,7 +1008,7 @@ export function DashboardUnifiedPanel({
         <div className="p-6">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1">Stack economics</div>
           <div className="text-sm text-gray-800 mb-4">
-            <span className="font-medium">${(totalYearly || 0).toLocaleString()}/yr</span> • {supps.length} supplements
+            <span className="font-medium">${(totalYearly || 0).toLocaleString()}/yr</span> • {Number(econActiveSuppCount || 0)} supplements
           </div>
           {/* Chart + Legend Row */}
           <div className="flex items-start gap-4 sm:gap-8 mb-5">

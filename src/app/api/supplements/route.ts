@@ -77,6 +77,8 @@ export async function GET() {
       const costByName = new Map<string, number>()
       const tagsByName = new Map<string, string[]>()
       const idByName = new Map<string, string>()
+      const metaById = new Map<string, any>()
+      const metaByName = new Map<string, any>()
       for (const r of rows) {
         const nm = String((r as any)?.name || '').trim().toLowerCase()
         const cost = Number((r as any)?.monthly_cost_usd)
@@ -89,6 +91,8 @@ export async function GET() {
         }
         const uid = String((r as any)?.id || '')
         if (nm && uid) idByName.set(nm, uid)
+        if (uid) metaById.set(uid, r)
+        if (nm && !metaByName.has(nm)) metaByName.set(nm, r)
       }
       const converted = stackItems.map((r: any) => {
         const nm = String(r?.name || '').trim().toLowerCase()
@@ -99,15 +103,26 @@ export async function GET() {
             ? r.primary_goal_tags
             : (tagsByName.get(nm) || (Array.isArray(r.tags) ? r.tags : []))
         // Intake linkage: prefer explicit FK if present; else fuzzy by normalized name
-        const intake_id = r.user_supplement_id || idByName.get(nm) || r.id
+        const linkedUserSuppId = r.user_supplement_id || idByName.get(nm) || null
+        const intake_id = linkedUserSuppId || r.id
+        const meta = (linkedUserSuppId ? metaById.get(String(linkedUserSuppId)) : null) || metaByName.get(nm) || null
+        const is_active = meta?.is_active === false ? false : true
+        const testing_status = String(meta?.testing_status || 'testing').toLowerCase()
+        // Prefer retest/inferred start dates from user_supplement when present
+        const retest_started_at = meta?.retest_started_at ?? null
+        const inferred_start_at = meta?.inferred_start_at ?? null
+        const started_at = retest_started_at || inferred_start_at || r.created_at
         return {
           id: r.id,
           user_id: user.id,
           name: r.name,
-          is_active: true,
+          is_active,
+          testing_status,
           // Expose both created_at and started_at for clients that expect either
           created_at: r.created_at,
-          started_at: r.created_at,
+          started_at,
+          retest_started_at,
+          inferred_start_at,
           // Map stack_items.monthly_cost → monthly_cost_usd for unified downstream consumption
           monthly_cost_usd,
           // Prefer explicit stack_items.primary_goal_tags, else user_supplement tags, else stack_items.tags, else empty

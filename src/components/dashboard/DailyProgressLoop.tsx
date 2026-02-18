@@ -579,7 +579,7 @@ export function DailyProgressLoop({
                 {testingRows.length === 0 ? (
                   <div className="text-xs text-gray-600">No active tests right now.</div>
                 ) : testingRows.map((r: any) => (
-                  <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} />
+                  <RowItem key={r.id} row={r} isMember={isMember} spendMonthly={spendMonthly} headerCounts={headerCounts as any} hasWearables={hasWearables} inTestingSection />
                 ))}
               </div>
             </div>
@@ -615,7 +615,7 @@ function Section({ title, subtitle, color, children }: { title: string; subtitle
   )
 }
 
-function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts, hasWearables }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number }, hasWearables?: boolean }) {
+function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerCounts, hasWearables, inTestingSection }: { row: Row; ready?: boolean; noSignal?: boolean; isMember?: boolean; spendMonthly?: number; headerCounts?: { testing?: number; verdicts?: number; inconclusive?: number }, hasWearables?: boolean; inTestingSection?: boolean }) {
   // Display-name helper: match My Stack's "smart" name selection so brand-heavy names don't bloat cards.
   const shortDisplayName = (raw: any) => {
     const s = String(raw || '').trim()
@@ -1108,7 +1108,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
         <div className="mt-1 text-[11px] text-gray-600">Signal powered by check-ins and wearable data</div>
       )}
       {!hasNoData && (<div className="mt-3 flex justify-end">
-        {isBuilding && !isImplicit && (
+        {/* Stop Testing should be available on ALL cards in the "Testing in progress" section (implicit or explicit). */}
+        {Boolean(inTestingSection && userSuppId) && (
           <button
             disabled={busy}
             onClick={() => setShowStopModal(true)}
