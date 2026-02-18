@@ -102,6 +102,11 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     sinceLowerBound = startDate || null
   }
 
+  // Retest semantics:
+  // If retest_started_at exists, the truth engine must ONLY analyze days on/after that date.
+  // This prevents historical wearable datasets from instantly recreating the prior verdict after a retest.
+  const retestLowerBound = (sinceLowerBound && typeof sinceLowerBound === 'string') ? String(sinceLowerBound).slice(0,10) : null
+
   // Build candidate intake keys: prefer user_supplement id, but also include any linked stack_items ids
   const candidateIntakeKeys = new Set<string>([String(userSupplementId)])
   try {
@@ -169,12 +174,14 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     let off = 0
     const size = 1000
     while (!hasExplicitIntake) {
-      const { data } = await supabase
+      let q: any = supabase
         .from('daily_entries')
         .select('supplement_intake')
         .eq('user_id', userId)
         .order('local_date', { ascending: false })
         .range(off, off + size - 1)
+      if (retestLowerBound) q = q.gte('local_date', retestLowerBound as any)
+      const { data } = await q
       const batch = (data || []) as any[]
       if (!batch || batch.length === 0) break
       for (const r of batch) {
@@ -199,11 +206,13 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Count total wearable days for this user to decide if implicit analysis is viable
   let wearableCountAll = 0
   try {
-    const { count: wc } = await supabase
+    let wq: any = supabase
       .from('daily_entries')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .not('wearables', 'is', null)
+    if (retestLowerBound) wq = wq.gte('local_date', retestLowerBound as any)
+    const { count: wc } = await wq
     wearableCountAll = wc || 0
   } catch {}
   const meetsWearableThreshold = wearableCountAll >= 30
@@ -224,6 +233,10 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     if (!since) {
       // fallback to restart bound or last 365 days if neither present
       since = querySince
+    }
+    // Retest: always clamp to retest_started_at (if present), regardless of inferred_start_at.
+    if (retestLowerBound) {
+      since = retestLowerBound
     }
     let off = 0
     const size = 1000
@@ -249,12 +262,14 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
     let off = 0
     const size = 1000
     while (true) {
-      const { data, error } = await supabase
+      let q: any = supabase
         .from('daily_entries')
         .select('local_date, energy, focus, mood, sleep_quality, supplement_intake, tags, wearables')
         .eq('user_id', userId)
         .order('local_date', { ascending: false })
         .range(off, off + size - 1)
+      if (retestLowerBound) q = q.gte('local_date', retestLowerBound as any)
+      const { data, error } = await q
       if (error) { dailyError = error; break }
       if (!data || data.length === 0) break
       dailyRows.push(...data)

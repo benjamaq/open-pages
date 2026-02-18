@@ -101,6 +101,15 @@ export async function POST(request: NextRequest, ctx: any) {
             .eq('user_id', user.id)
           if (adminErr) {
             try { console.log('[testing API] dashboard_cache delete failed (admin):', adminErr?.message || adminErr) } catch {}
+            try {
+              const { error: updErr } = await (supabaseAdmin as any)
+                .from('dashboard_cache')
+                .update({ invalidated_at: new Date().toISOString() } as any)
+                .eq('user_id', user.id)
+              if (updErr) {
+                try { console.log('[testing API] dashboard_cache update invalidated_at failed (admin):', updErr?.message || updErr) } catch {}
+              }
+            } catch {}
           }
         } catch {}
       }

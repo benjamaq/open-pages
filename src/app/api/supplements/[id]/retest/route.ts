@@ -80,21 +80,36 @@ export async function POST(request: NextRequest, ctx: any) {
         .from('dashboard_cache')
         .delete()
         .eq('user_id', user.id)
-      if (cacheErr) console.log('[retest API] dashboard_cache delete failed:', cacheErr?.message || cacheErr)
+      if (cacheErr) {
+        console.log('[retest API] dashboard_cache delete failed:', cacheErr?.message || cacheErr)
+        try {
+          const { error: updErr } = await (supabaseAdmin as any)
+            .from('dashboard_cache')
+            .update({ invalidated_at: new Date().toISOString() } as any)
+            .eq('user_id', user.id)
+          if (updErr) console.log('[retest API] dashboard_cache update invalidated_at failed:', updErr?.message || updErr)
+        } catch (e: any) {
+          console.log('[retest API] dashboard_cache update invalidated_at threw:', e?.message || e)
+        }
+      }
     } catch (e: any) {
       console.log('[retest API] dashboard_cache invalidate threw:', e?.message || e)
     }
 
-    // If we're already testing, stop here (idempotent) — do NOT bump trial_number again.
+    // If we're already testing, don't bump trial_number again, but DO ensure retest_started_at is set.
+    // IMPORTANT: do not silently succeed if this write fails (otherwise progress loop will include historical data).
     if (currentStatus === 'testing') {
-      // Still ensure the record is in a clean testing state (best-effort).
-      try {
-        await (supabaseAdmin as any)
-          .from('user_supplement')
-          .update({ testing_status: 'testing', retest_started_at: new Date().toISOString(), has_truth_report: false } as any)
-          .eq('id', id)
-          .eq('user_id', user.id)
-      } catch {}
+      const ts = new Date().toISOString()
+      const { data: updated, error } = await (supabaseAdmin as any)
+        .from('user_supplement')
+        .update({ testing_status: 'testing', retest_started_at: ts, has_truth_report: false } as any)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select('id,testing_status,trial_number,retest_started_at')
+        .maybeSingle()
+      if (error || !updated) {
+        return NextResponse.json({ error: error?.message || 'Retest update failed' }, { status: 500 })
+      }
       try {
         await (supabaseAdmin as any)
           .from('user_supplement_effect')
@@ -102,7 +117,15 @@ export async function POST(request: NextRequest, ctx: any) {
           .eq('user_id', user.id)
           .eq('user_supplement_id', id as any)
       } catch {}
-      return NextResponse.json({ ok: true, truthDeleteCount, remainingReports, testingStatus: 'testing' })
+      return NextResponse.json({
+        ok: true,
+        truthDeleteCount,
+        remainingReports,
+        id: (updated as any).id,
+        testing_status: (updated as any).testing_status,
+        trial_number: (updated as any).trial_number ?? null,
+        retest_started_at: (updated as any).retest_started_at ?? null,
+      })
     }
 
     // Starter limit check when re-entering testing
@@ -120,7 +143,12 @@ export async function POST(request: NextRequest, ctx: any) {
     // so we allow retest even if they have reached the 5-tested limit.
     // No additional limit check here.
 
-    const newTrial = (Number((row as any).trial_number || 1) || 1) + 1
+    // Bump trial_number: COALESCE(trial_number,1) + 1 semantics
+    const baseTrial = (() => {
+      const n = Number((row as any).trial_number)
+      return Number.isFinite(n) && n > 0 ? n : 1
+    })()
+    const newTrial = baseTrial + 1
     // Reset supplement state for retest (admin client so it always writes)
     const { data: updated, error } = await (supabaseAdmin as any)
       .from('user_supplement')
@@ -148,7 +176,15 @@ export async function POST(request: NextRequest, ctx: any) {
         .eq('user_supplement_id', id as any)
     } catch {}
 
-    return NextResponse.json({ ok: true, truthDeleteCount, remainingReports, testingStatus: String((updated as any).testing_status || 'testing') })
+    return NextResponse.json({
+      ok: true,
+      truthDeleteCount,
+      remainingReports,
+      id: (updated as any).id,
+      testing_status: String((updated as any).testing_status || 'testing'),
+      trial_number: (updated as any).trial_number ?? null,
+      retest_started_at: (updated as any).retest_started_at ?? null,
+    })
   } catch (e: any) {
     console.error('[retest API] ERROR:', e?.message || e)
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })

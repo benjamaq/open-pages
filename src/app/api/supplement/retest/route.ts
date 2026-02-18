@@ -22,11 +22,38 @@ export async function POST(req: NextRequest) {
       return nerror('Not found or not owned', 404)
     }
 
-    const nextTrial = (((row as any).trial_number || 1) + 1) as number
+    const baseTrial = (() => {
+      const n = Number((row as any).trial_number)
+      return Number.isFinite(n) && n > 0 ? n : 1
+    })()
+    const nextTrial = (baseTrial + 1) as number
+
+    // Match the canonical retest behavior used by the dashboard:
+    // - set testing_status='testing'
+    // - set retest_started_at=NOW
+    // - increment trial_number
+    // - invalidate dashboard_cache
+    // - clear any existing truth report so the card doesn't snap back to completed
+    const ts = new Date().toISOString()
+    try {
+      await (supabaseAdmin as any)
+        .from('supplement_truth_reports')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('user_supplement_id', userSupplementId as any)
+    } catch {}
+    try {
+      await (supabaseAdmin as any)
+        .from('dashboard_cache')
+        .delete()
+        .eq('user_id', user.id)
+    } catch {}
+
     const { error } = await supabaseAdmin
       .from('user_supplement')
       .update({
-        retest_started_at: new Date().toISOString(),
+        testing_status: 'testing',
+        retest_started_at: ts,
         trial_number: nextTrial,
       })
       .eq('id', userSupplementId)
