@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { statusToCategory } from '@/lib/verdictMapping'
+import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
@@ -880,30 +881,8 @@ export async function GET(request: Request) {
                 science_note: fresh.scienceNote,
                 raw_context: fresh
               }
-              // Guard: avoid duplicate writes within 60s for same user_supplement_id
-              try {
-                const sinceIso = new Date(Date.now() - 60_000).toISOString()
-                const { data: recent } = await supabase
-                  .from('supplement_truth_reports')
-                  .select('id,created_at')
-                  .eq('user_id', user.id)
-                  .eq('user_supplement_id', uid as any)
-                  .gte('created_at', sinceIso)
-                  .limit(1)
-                if (recent && recent.length > 0) {
-                  if (VERBOSE) { try { console.log('[overlay-refresh] skip duplicate truth insert (recent exists)', { uid, created_at: (recent as any)[0].created_at }) } catch {} }
-                } else {
-                  await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
-                }
-              } catch {
-                // Fallback: attempt an upsert on user_supplement_id to dedupe
-                try {
-                  // Note: onConflict requires appropriate unique constraint on the table
-                  await (supabase as any)
-                    .from('supplement_truth_reports')
-                    .upsert(payloadToStore, { onConflict: 'user_supplement_id' })
-                } catch {}
-              }
+              // Ensure 1 row per (user_id, user_supplement_id) to avoid race-condition duplicates.
+              await persistTruthReportSingle(payloadToStore)
               // Seed the truth map immediately to avoid a requery race
               truthBySupp.set(String(uid), {
                 status: String(fresh.status),

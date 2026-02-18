@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
+import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 
 export async function GET() {
   const supabase = await createClient()
@@ -436,7 +437,7 @@ export async function POST(request: Request) {
                 science_note: fresh.scienceNote,
                 raw_context: fresh
               }
-              await (supabase as any).from('supplement_truth_reports').insert(payloadToStore as any)
+              await persistTruthReportSingle(payloadToStore)
             } catch (saveErr: any) {
               try { console.warn('[supplements] truth save failed:', saveErr?.message || saveErr) } catch {}
             }

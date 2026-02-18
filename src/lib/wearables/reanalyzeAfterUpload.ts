@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
+import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 
 type ReanalysisResult = {
   attemptedSupplements: number
@@ -104,7 +105,7 @@ export async function reanalyzeImplicitTooEarlyAfterWearableUpload(
   let updatedTruthReportRows = 0
   const supplementsReanalyzed: string[] = []
 
-  // 3) Re-run truth engine and UPDATE existing too_early rows (no inserts)
+  // 3) Re-run truth engine and persist exactly ONE truth-report row per supplement (delete + insert)
   for (const userSupplementId of tooEarlyIds) {
     try {
       const sRow = (supps as any[]).find(s => String((s as any)?.id) === String(userSupplementId))
@@ -127,28 +128,16 @@ export async function reanalyzeImplicitTooEarlyAfterWearableUpload(
         })
       } catch {}
       const payload = buildTruthReportUpdatePayload(userId, userSupplementId, report)
-
-      const idsToUpdate = rowIdsBySupplement.get(userSupplementId) || []
-      if (idsToUpdate.length === 0) {
-        try { console.log('[reanalyze] No existing truth_report rows found to update for', userSupplementId) } catch {}
-        continue
-      }
-
-      const { data: updated, error: updErr } = await (supabaseAdmin as any)
-        .from('supplement_truth_reports')
-        .update(payload as any)
-        .in('id', idsToUpdate as any)
-        .select('id,status,analysis_source')
+      await persistTruthReportSingle(payload)
 
       try {
-        console.log('[reanalyze] Updated truth_report rows:', {
+        console.log('[reanalyze] Persisted truth_report row (deduped):', {
           userSupplementId,
-          updatedCount: Array.isArray(updated) ? updated.length : (updated ? 1 : 0),
-          error: updErr?.message || null
+          previousRowIds: rowIdsBySupplement.get(userSupplementId) || []
         })
       } catch {}
 
-      updatedTruthReportRows += Array.isArray(updated) ? updated.length : (updated ? 1 : 0)
+      updatedTruthReportRows += 1
       supplementsReanalyzed.push(userSupplementId)
 
       // Best-effort: mark supplement as having a truth report

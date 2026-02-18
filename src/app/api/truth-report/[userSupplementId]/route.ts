@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
+import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 
 export const dynamic = 'force-dynamic'
 
@@ -238,28 +239,8 @@ export async function GET(request: NextRequest, context: any) {
     let persistedOk = false
     let persistError: string | null = null
     try {
-      // Use admin client for persistence so force=true is not misleading due to RLS write failures.
-      // Ownership is enforced earlier by querying `user_supplement` with the authenticated client.
-      const { data: existingRow } = await supabaseAdmin
-        .from('supplement_truth_reports')
-        .select('id,created_at')
-        .eq('user_id', user.id)
-        .eq('user_supplement_id', effectiveUserSuppId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if ((existingRow as any)?.id) {
-        const { error: uErr } = await (supabaseAdmin as any)
-          .from('supplement_truth_reports')
-          .update(payloadToStore as any)
-          .eq('id', (existingRow as any).id)
-        if (uErr) throw uErr
-      } else {
-        const { error: iErr } = await (supabaseAdmin as any)
-          .from('supplement_truth_reports')
-          .insert(payloadToStore as any)
-        if (iErr) throw iErr
-      }
+      // Ensure 1 row per (user_id, user_supplement_id) to avoid duplicates/races.
+      await persistTruthReportSingle(payloadToStore)
       persistedOk = true
     } catch (e: any) {
       persistError = e?.message || String(e)
