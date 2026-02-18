@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest, ctx: any) {
   // Resolve Next 14+ params (can be a promise)
@@ -84,6 +85,26 @@ export async function POST(request: NextRequest, ctx: any) {
     if (error || !updated) {
       return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 })
     }
+
+    // Invalidate dashboard cache so the UI moves the card immediately (no stale cached payload).
+    try {
+      const { error: cacheErr } = await (supabase as any)
+        .from('dashboard_cache')
+        .delete()
+        .eq('user_id', user.id)
+      if (cacheErr) {
+        try { console.log('[testing API] dashboard_cache delete failed (user client):', cacheErr?.message || cacheErr) } catch {}
+        try {
+          const { error: adminErr } = await (supabaseAdmin as any)
+            .from('dashboard_cache')
+            .delete()
+            .eq('user_id', user.id)
+          if (adminErr) {
+            try { console.log('[testing API] dashboard_cache delete failed (admin):', adminErr?.message || adminErr) } catch {}
+          }
+        } catch {}
+      }
+    } catch {}
 
     return NextResponse.json({ ok: true, id: (updated as any).id, testing_status: (updated as any).testing_status })
   } catch (e: any) {

@@ -735,11 +735,11 @@ export async function GET(request: Request) {
     // Map names -> user_supplement ids for when items are from stack_items
     const { data: userSuppRows } = await supabase
       .from('user_supplement')
-      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status')
+      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,updated_at')
       .eq('user_id', user.id)
     /* nameToUserSuppId initialized earlier */
     const userSuppIdToName = new Map<string, string>()
-    const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
+    const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; updated?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
     const testingActiveIds = new Set<string>()
     const testingStatusById = new Map<string, string>()
     for (const u of userSuppRows || []) {
@@ -749,7 +749,14 @@ export async function GET(request: Request) {
       userSuppIdToName.set(uid, String((u as any).name || ''))
       const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
       const status = String((u as any).testing_status || 'inactive')
-      suppMetaById.set(uid, { restart: (u as any).retest_started_at ?? null, inferred: (u as any).inferred_start_at ?? null, trial: (u as any).trial_number ?? null, testing: isTesting, status })
+      suppMetaById.set(uid, {
+        restart: (u as any).retest_started_at ?? null,
+        inferred: (u as any).inferred_start_at ?? null,
+        updated: (u as any).updated_at ?? null,
+        trial: (u as any).trial_number ?? null,
+        testing: isTesting,
+        status
+      })
       if (isTesting) testingActiveIds.add(uid)
       testingStatusById.set(uid, status)
     }
@@ -815,6 +822,16 @@ export async function GET(request: Request) {
             // Otherwise, the overlay-refresh will immediately "self-heal" and put the card back into COMPLETED.
             const meta = suppMetaById.get(String(uid))
             const isRetestActive = Boolean(meta?.restart) && String(meta?.status || '') === 'testing'
+            const isJustResetToTesting = (() => {
+              if (String(meta?.status || '') !== 'testing') return false
+              const GRACE_MS = 5 * 60 * 1000
+              const updatedAtMs = meta?.updated ? new Date(String(meta.updated)).getTime() : 0
+              const restartMs = meta?.restart ? new Date(String(meta.restart)).getTime() : 0
+              const now = Date.now()
+              const byUpdated = updatedAtMs > 0 && (now - updatedAtMs) < GRACE_MS
+              const byRestart = restartMs > 0 && (now - restartMs) < GRACE_MS
+              return Boolean(byUpdated || byRestart)
+            })()
             // Diagnostics: we need to see in Vercel logs whether this guard is being evaluated and what values it sees.
             try {
               if (meta?.restart || String(meta?.status || '') === 'testing') {
@@ -824,13 +841,15 @@ export async function GET(request: Request) {
                   stale,
                   hasTruthRec: !!truthRec,
                   retest_started_at: meta?.restart || null,
+                  updated_at: (meta as any)?.updated || null,
                   testing_status: meta?.status || null,
+                  isJustResetToTesting
                 })
               }
             } catch {}
-            if (isRetestActive) {
+            if (isRetestActive || isJustResetToTesting) {
               if (VERBOSE) {
-                try { console.log('[overlay-refresh] skip (active retest)', { uid, restart: meta?.restart, status: meta?.status, name: (r as any).name }) } catch {}
+                try { console.log('[overlay-refresh] skip (retest or just-reset)', { uid, restart: meta?.restart, updated: (meta as any)?.updated || null, status: meta?.status, name: (r as any).name }) } catch {}
               }
             } else {
             try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', { uid, cardId: (r as any).id, name: (r as any).name }) } catch {}

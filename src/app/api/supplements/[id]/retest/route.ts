@@ -73,13 +73,14 @@ export async function POST(request: NextRequest, ctx: any) {
 
     // Invalidate dashboard cache so the UI reflects the retest immediately.
     try {
-      const ts = new Date().toISOString()
-      const { error: cacheErr } = await (supabase as any)
+      // IMPORTANT: dashboard_cache.payload is NOT NULL in some deployments; INSERT ... ON CONFLICT can fail
+      // because the insert path tries to write payload=NULL before the conflict handler runs.
+      // Use DELETE (or UPDATE) instead of UPSERT to avoid NOT NULL violations.
+      const { error: cacheErr } = await (supabaseAdmin as any)
         .from('dashboard_cache')
-        .upsert({ user_id: user.id, invalidated_at: ts } as any, { onConflict: 'user_id' } as any)
-      if (cacheErr) {
-        console.log('[retest API] dashboard_cache invalidate failed:', cacheErr?.message || cacheErr)
-      }
+        .delete()
+        .eq('user_id', user.id)
+      if (cacheErr) console.log('[retest API] dashboard_cache delete failed:', cacheErr?.message || cacheErr)
     } catch (e: any) {
       console.log('[retest API] dashboard_cache invalidate threw:', e?.message || e)
     }
