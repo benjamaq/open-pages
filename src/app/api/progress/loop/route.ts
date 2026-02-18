@@ -1387,7 +1387,7 @@ export async function GET(request: Request) {
           const noAnyData = (onAny === 0 && offAny === 0 && noAnySamples)
           if (noAnyData) return 'Just added — start checking in'
           if (isImplicit) return 'Signal from historical data'
-          if ((displayProgress >= 100) && ((r as any).effectCategory && ['works','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase()))) return 'Test complete'
+          if ((displayProgress >= 100) && ((r as any).effectCategory && ['works','negative','no_effect','no_detectable_effect'].includes(String((r as any).effectCategory).toLowerCase()))) return 'Test complete'
           return (activeProgress > 0) ? 'Actively testing' : 'Gathering data'
         })()
         ;(r as any).activeProgress = activeProgress
@@ -1401,7 +1401,7 @@ export async function GET(request: Request) {
       const st = String(truthStatus || '').toLowerCase()
       if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
       if (st === 'no_effect' || st === 'no_detectable_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
-      if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
+      if (st === 'negative') return { key: 'negative', text: 'NEGATIVE' }
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
     }
@@ -1434,7 +1434,7 @@ export async function GET(request: Request) {
           'proven_positive': { key: 'keep', text: '✓ KEEP' },
           'no_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
           'no_detectable_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
-          'negative': { key: 'drop', text: '✗ DROP' }
+          'negative': { key: 'negative', text: 'NEGATIVE' }
         }
         let badge = has_final_verdict ? (ecToBadge[ec] || { key: 'testing', text: '◐ TESTING' }) : { key: 'testing', text: '◐ TESTING' }
         let label = ''
