@@ -797,12 +797,13 @@ export async function GET(request: Request) {
         nameToUserSuppIds.set(nm, set)
       }
       userSuppIdToName.set(uid, String((u as any).name || ''))
-      const isTesting = String((u as any).testing_status || 'inactive') === 'testing'
-      const status = String((u as any).testing_status || 'inactive')
+      const status = String((u as any).testing_status || 'inactive').toLowerCase()
+      const isTesting = status === 'testing'
       suppMetaById.set(uid, {
         restart: (u as any).retest_started_at ?? null,
         inferred: (u as any).inferred_start_at ?? null,
-        updated: (u as any).updated_at ?? null,
+        // Do not assume updated_at exists; schema varies across deployments.
+        updated: null,
         trial: (u as any).trial_number ?? null,
         testing: isTesting,
         status
@@ -1141,7 +1142,7 @@ export async function GET(request: Request) {
         }
         // Days tracked for this supplement = ON + OFF (any quality)
         ;(r as any).daysOfData = on + off
-        const isRetestActive = Boolean(restartIso) && String((meta as any)?.status || '') === 'testing'
+        const isRetestActive = Boolean(restartIso) && String((meta as any)?.status || '').toLowerCase() === 'testing'
         if (restartIso) {
           ;(r as any).retestStartedAt = restartIso
           ;(r as any).trialNumber = (suppMetaById && suppMetaById.get(suppId as any) ? (suppMetaById.get(suppId as any) as any).trial : null) ?? null
@@ -1179,7 +1180,9 @@ export async function GET(request: Request) {
               const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
               const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
               const sum = (tOn ?? 0) + (tOff ?? 0)
-              if (sum > 0) {
+              // IMPORTANT: if retest_started_at exists, displayed ON/OFF/days tracked must reflect only days since retest.
+              // Never override with truth-engine sample counts (which may reflect historical data).
+              if (!restartIso && sum > 0) {
                 ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
                 ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
                 ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
@@ -1250,7 +1253,7 @@ export async function GET(request: Request) {
           const uidForMeta = String(uidForTruth || '')
           const meta = uidForMeta ? (suppMetaById.get(uidForMeta) as any) : null
           const restartIso = meta?.restart ? String(meta.restart) : null
-          const isRetestActive = Boolean(restartIso) && String(meta?.status || '') === 'testing'
+          const isRetestActive = Boolean(restartIso) && String(meta?.status || '').toLowerCase() === 'testing'
           if (isRetestActive) {
             analysisSrc = 'explicit'
             ;(r as any).analysisSource = 'explicit'
@@ -1375,7 +1378,7 @@ export async function GET(request: Request) {
             // This prevents enormous historical sample counts from showing (e.g. 1020 days tracked) after retest.
             const meta = uid ? (suppMetaById.get(String(uid)) as any) : null
             const restartIso = meta?.restart ? String(meta.restart) : null
-            const isRetestActive = Boolean(restartIso) && String(meta?.status || '') === 'testing'
+            const isRetestActive = Boolean(restartIso) && String(meta?.status || '').toLowerCase() === 'testing'
             if (!isRetestActive) {
               const impl = uid ? implicitTruthBySupp.get(String(uid)) : undefined
               if (impl && impl.status) {
@@ -1398,8 +1401,11 @@ export async function GET(request: Request) {
                   }
                 }
                 // Also expose implicit clean counts for downstream logic (rotation)
-                ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
-                ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
+                // Do not apply historical sample-day overrides when a retest window exists.
+                if (!restartIso) {
+                  ;(r as any).daysOnClean = typeof (r as any).daysOnClean === 'number' && (r as any).daysOnClean > 0 ? (r as any).daysOnClean : Number(impl.sample_days_on || 0)
+                  ;(r as any).daysOffClean = typeof (r as any).daysOffClean === 'number' && (r as any).daysOffClean > 0 ? (r as any).daysOffClean : Number(impl.sample_days_off || 0)
+                }
               }
             }
           }
@@ -1422,7 +1428,13 @@ export async function GET(request: Request) {
           try {
             const implicitTracked = Number((r as any).daysOnClean || 0) + Number((r as any).daysOffClean || 0)
             if (isImplicit && implicitTracked > Number((r as any).daysOfData || 0)) {
-              ;(r as any).daysOfData = implicitTracked
+              // If a retest exists, never inflate daysOfData using implicit historical sample counts.
+              const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+              const meta = uid ? (suppMetaById.get(String(uid)) as any) : null
+              const hasRestart = Boolean(meta?.restart)
+              if (!hasRestart) {
+                ;(r as any).daysOfData = implicitTracked
+              }
             }
           } catch {}
         } catch {}

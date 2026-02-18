@@ -27,7 +27,8 @@ export async function GET(req: Request) {
     // Fetch current stack rows
     const { data: us, error: usErr } = await supabase
       .from('user_supplement')
-      .select('id,user_id,is_active,created_at,name,label,monthly_cost_usd,dose,timing,brand,inferred_start_at,retest_started_at')
+      // Include testing_status so clients can correctly partition Active vs On-the-Bench.
+      .select('id,user_id,is_active,testing_status,created_at,name,label,monthly_cost_usd,dose,timing,brand,inferred_start_at,retest_started_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (usErr) return NextResponse.json({ error: usErr.message }, { status: 500 })

@@ -24,6 +24,10 @@ type Supplement = {
   name: string
   monthly_cost_usd?: number | null
   primary_goal_tags?: string[] | null
+  // Stack state flags (used to partition Active vs On-the-Bench)
+  testing_status?: string | null
+  is_active?: boolean | null
+  started_at?: string | null
 }
 
 type LoopRow = {
@@ -89,6 +93,28 @@ export default function ResultsPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
+  // Stack partition helpers (Active vs On-the-Bench)
+  const getSupp = useCallback((id: string) => (supps || []).find(x => String((x as any)?.id || '') === String(id)) as any, [supps])
+  const getTestingStatus = useCallback((id: string) => {
+    const s = getSupp(id)
+    // Default to 'testing' if missing to avoid incorrectly benching legacy rows.
+    return String((s as any)?.testing_status || 'testing').toLowerCase()
+  }, [getSupp])
+  const isBenchSupp = useCallback((id: string) => {
+    const s = getSupp(id)
+    const st = getTestingStatus(id)
+    const inactiveByStatus = st === 'inactive'
+    const inactiveByFlag = (s as any)?.is_active === false
+    return inactiveByStatus || inactiveByFlag
+  }, [getSupp, getTestingStatus])
+  const isActiveStackSupp = useCallback((id: string) => {
+    const s = getSupp(id)
+    const st = getTestingStatus(id)
+    const activeFlag = (s as any)?.is_active !== false
+    // Active stack should include currently testing and completed supplements (but not inactive/paused)
+    return activeFlag && (st === 'testing' || st === 'complete')
+  }, [getSupp, getTestingStatus])
   // Listen for global upgrade trigger
   useEffect(() => {
     const handler = () => setShowUpgradeModal(true)
@@ -639,9 +665,7 @@ export default function ResultsPage() {
         <div className="mt-6 section-todays-protocol">
           {(() => {
             const active = uiRows.filter(r => {
-              const s = supps.find(x => x.id === r.id) as any
-              const isActive = (s as any)?.is_active !== false
-              return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+              return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id]
             })
             // Debug monthly inputs
             try {
@@ -654,9 +678,7 @@ export default function ResultsPage() {
               console.log('[results] Totals: daily=', daily, 'monthly=', monthly, 'included=', includedIds)
             } catch {}
             const potentialSavingsYear = Math.round(uiRows.filter(r => {
-              const s = supps.find(x => x.id === r.id) as any
-              const isActive = (s as any)?.is_active !== false
-              return r.lifecycle === 'Not working' && isActive && !paused[r.id]
+              return r.lifecycle === 'Not working' && isActiveStackSupp(r.id) && !paused[r.id]
             }).reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0) * 12)
             return (
               <div className="mb-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -692,9 +714,7 @@ export default function ResultsPage() {
               <div className="dosewhen uppercase tracking-wide text-right">Dose • When</div>
             </div>
             {uiRows.filter(u => {
-              const s = supps.find(x => x.id === u.id) as any
-              const isActive = (s as any)?.is_active !== false
-              return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+              return u.lifecycle !== 'Archived' && isActiveStackSupp(u.id) && !paused[u.id]
             }).map(r => {
               const s = supps.find(x => x.id === r.id) as any
               const fallbackName = String(s?.name || (loopById[r.id] as any)?.name || r.name || '')
@@ -749,9 +769,7 @@ export default function ResultsPage() {
                   {(() => {
                     // Count only active (non-archived) items to match visible tiles
                     const active = uiRows.filter(u => {
-                      const s = supps.find(x => x.id === u.id) as any
-                      const isActive = (s as any)?.is_active !== false
-                      return u.lifecycle !== 'Archived' && isActive && !paused[u.id]
+                      return u.lifecycle !== 'Archived' && isActiveStackSupp(u.id) && !paused[u.id]
                     })
                     const testing = active.filter(u => u.lifecycle === 'Active').length
                     const completed = active.filter(u => u.lifecycle !== 'Active').length
@@ -761,9 +779,7 @@ export default function ResultsPage() {
               </div>
               {(() => {
                 const active = uiRows.filter(r => {
-                  const s = supps.find(x => x.id === r.id) as any
-                  const isActive = (s as any)?.is_active !== false
-                  return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+                  return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id]
                 })
                 const monthly = active.reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0)
                 const yearly = Math.round(monthly * 12)
@@ -792,9 +808,7 @@ export default function ResultsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {uiRows
               .filter(r => {
-                const s = supps.find(x => x.id === r.id) as any
-                const isActive = (s as any)?.is_active !== false
-                return r.lifecycle !== 'Archived' && isActive && !paused[r.id]
+                return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id]
               })
               .sort((a, b) => {
                 const aComplete = a.lifecycle !== 'Active' ? 1 : 0
@@ -1068,9 +1082,7 @@ export default function ResultsPage() {
               {(() => {
                 const benchCount = uiRows
                   .filter(r => {
-                    const s = supps.find(x => x.id === r.id) as any
-                    const isInactive = (s as any)?.is_active === false
-                    return r.lifecycle === 'Archived' || paused[r.id] || isInactive
+                    return r.lifecycle === 'Archived' || paused[r.id] || isBenchSupp(r.id)
                   })
                   .length
                 return `${benchCount} supplement${benchCount === 1 ? '' : 's'} paused or stopped`
@@ -1080,15 +1092,13 @@ export default function ResultsPage() {
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {uiRows
               .filter(r => {
-                const s = supps.find(x => x.id === r.id) as any
-                const isInactive = (s as any)?.is_active === false
-                return r.lifecycle === 'Archived' || paused[r.id] || isInactive
+                return r.lifecycle === 'Archived' || paused[r.id] || isBenchSupp(r.id)
               })
               .map(r => {
                 const s = supps.find(x => x.id === r.id) as any
                 const cat = getCategoryFor(r.id) || 'General'
                 const brand = s?.brand ? String(s.brand) : parseBrandAndShortName(s).brand
-                const isInactive = (s as any)?.is_active === false
+                const isInactive = isBenchSupp(r.id)
                 const dose = getDose(s)
                 const freq = getFrequency(s)
                 const timing = getTiming(s)
@@ -1098,7 +1108,7 @@ export default function ResultsPage() {
                     <div className="tile-body flex-1 flex flex-col">
                       <div className="flex items-start justify-between">
                         <div className="text-[11px] uppercase tracking-wide text-[#6B7280]">{cat}</div>
-                        <div className="text-[12px] text-[#6B7280]">{(paused[r.id] || isInactive) ? 'Paused' : 'Archived'}</div>
+                      <div className="text-[12px] text-[#6B7280]">{(paused[r.id] || isInactive) ? 'Paused' : 'Archived'}</div>
                       </div>
                       <div className="mt-2">
                         <div className="text-[16px] font-semibold text-[#111] line-clamp-2">{r.name}</div>
