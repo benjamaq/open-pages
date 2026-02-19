@@ -409,15 +409,15 @@ export function SupplementDetailsModal({
             <span className="mr-1">⚡</span>
             <span className="font-semibold">Accurate dates = accurate verdicts.</span> We compare your health before vs after you started.
           </div>
-           <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
              <label className="text-xs text-slate-700">
-               When did you start?
+              When did you start that?
               <input
                 type="date"
                 value={startedAt}
                 onChange={(e) => setStartedAt(e.target.value)}
                 max={new Date().toISOString().slice(0,10)}
-                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md"
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
               />
               <div className="mt-1 text-[11px] text-slate-500">Tip: scroll to pick earlier years.</div>
              </label>
