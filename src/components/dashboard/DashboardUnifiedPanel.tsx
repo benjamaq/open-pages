@@ -1008,7 +1008,14 @@ export function DashboardUnifiedPanel({
         <div className="p-6">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1">Stack economics</div>
           <div className="text-sm text-gray-800 mb-4">
-            <span className="font-medium">${(totalYearly || 0).toLocaleString()}/yr</span> • {Number(econActiveSuppCount || 0)} supplements
+            {(() => {
+              const cnt = Number(econActiveSuppCount || 0)
+              return (
+                <>
+                  <span className="font-medium">${(totalYearly || 0).toLocaleString()}/yr</span> • {cnt} supplement{cnt === 1 ? '' : 's'}
+                </>
+              )
+            })()}
           </div>
           {/* Chart + Legend Row */}
           <div className="flex items-start gap-4 sm:gap-8 mb-5">

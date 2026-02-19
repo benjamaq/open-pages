@@ -870,14 +870,9 @@ export async function GET(request: Request) {
           const st = uid ? String((testingStatusById.get(String(uid)) || '')).toLowerCase() : ''
           const activeFlag = uid ? isActiveById.get(String(uid)) : null
           if (st === 'inactive' || activeFlag === false) {
-            // NEW: Do not exclude supplements that already have a final truth verdict.
-            const truthStatus = uid
-              ? String((truthBySupp.get(String(uid)) as any)?.status || (implicitTruthBySupp.get(String(uid)) as any)?.status || '').toLowerCase()
-              : ''
-            const isFinalVerdict = ['proven_positive', 'negative', 'no_effect', 'no_detectable_effect'].includes(truthStatus)
-            if (!isFinalVerdict) {
-              ;(r as any)._excluded = true
-            }
+            // User intent wins: if they explicitly stopped testing (inactive) or set inactive/archived, hide it,
+            // even if there is an implicit or stored truth report.
+            ;(r as any)._excluded = true
           }
         } catch {}
         if (VERBOSE) {
