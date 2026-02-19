@@ -804,6 +804,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       if (key === 'ncs' || key === 'no_clear_signal') return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
       if (key === 'testing') return { label: '◐ TESTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
       if (key === 'starting') return { label: '◐ STARTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
+      if (key === 'locked') return { label: displayBadgeText || '🔒 VERDICT READY', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
       return null
     }
     try {

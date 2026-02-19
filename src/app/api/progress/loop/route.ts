@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { statusToCategory } from '@/lib/verdictMapping'
 import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
+import { normalizeTruthStatus } from '@/lib/verdictLabels'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
 const DASHBOARD_CACHE_VERSION = 1
@@ -459,6 +460,23 @@ export async function GET(request: Request) {
       totalUserCheckins = days.size
     } catch {}
 
+    // Explicit *clean* check-ins (used for auto-unlock gating):
+    // count days where the user explicitly logged supplement intake AND no noise tags were present.
+    let explicitCleanCheckins = 0
+    try {
+      const days = new Set<string>()
+      for (const entry of (entries365 || [])) {
+        const intake = (entry as any)?.supplement_intake
+        if (!(intake && typeof intake === 'object' && Object.keys(intake).length > 0)) continue
+        const tags: string[] = Array.isArray((entry as any).tags) ? (entry as any).tags : []
+        const noisy = tags.some(t => NOISE_TAGS.has(String(t).toLowerCase()))
+        if (noisy) continue
+        const dKey = String((entry as any).local_date || '').slice(0, 10)
+        if (dKey) days.add(dKey)
+      }
+      explicitCleanCheckins = days.size
+    } catch {}
+
     // Compute total wearable days across all time to gate implicit behavior/UI
     let wearableCountAll = 0
     try {
@@ -691,13 +709,13 @@ export async function GET(request: Request) {
     // Load latest truth reports (ordered newest first); first seen per id wins
     const { data: truths } = await supabase
       .from('supplement_truth_reports')
-      .select('user_supplement_id,status,primary_metric,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at')
+      .select('user_supplement_id,status,primary_metric,effect_direction,effect_size,percent_change,confidence_score,sample_days_on,sample_days_off,analysis_source,created_at,auto_unlocked')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    const truthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    const truthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null; auto_unlocked?: boolean | null }>()
     // Keep a full implicit-source snapshot as well (NOT just status/counts), so the dashboard can render completed details
     // (effect size, direction, primary metric, confidence) even when analysis_source='implicit'.
-    const implicitTruthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    const implicitTruthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null; auto_unlocked?: boolean | null }>()
     // Also capture the latest implicit-source sample counts per supplement for upload progress
     const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
     for (const t of truths || []) {
@@ -713,7 +731,8 @@ export async function GET(request: Request) {
           confidence_score: (t as any).confidence_score ?? null,
           sample_days_on: (t as any).sample_days_on ?? null,
           sample_days_off: (t as any).sample_days_off ?? null,
-          analysis_source: (t as any).analysis_source ?? null
+          analysis_source: (t as any).analysis_source ?? null,
+          auto_unlocked: (t as any).auto_unlocked ?? false,
         })
       }
       // Capture latest implicit truth separately (first seen due to descending order)
@@ -727,7 +746,8 @@ export async function GET(request: Request) {
           confidence_score: (t as any).confidence_score ?? null,
           sample_days_on: (t as any).sample_days_on ?? null,
           sample_days_off: (t as any).sample_days_off ?? null,
-          analysis_source: 'implicit'
+          analysis_source: 'implicit',
+          auto_unlocked: (t as any).auto_unlocked ?? false,
         })
       }
       // First seen per uid wins due to descending created_at; record implicit counts when available
@@ -747,10 +767,75 @@ export async function GET(request: Request) {
             confidence_score: (t as any).confidence_score ?? null,
             sample_days_on: Number((t as any).sample_days_on ?? 0),
             sample_days_off: Number((t as any).sample_days_off ?? 0),
-            analysis_source: 'implicit'
+            analysis_source: 'implicit',
+            auto_unlocked: (t as any).auto_unlocked ?? false,
           })
         }
       }
+    }
+
+    // One free instant verdict per account:
+    // - exactly one truth report row gets auto_unlocked=true (wow moment)
+    // - all other final verdicts require explicitCleanCheckins >= 3 to be revealed on dashboard
+    const AUTO_UNLOCK_REQ = 3
+    let hasAutoUnlocked = false
+    try {
+      const { count } = await (supabaseAdmin as any)
+        .from('supplement_truth_reports')
+        .select('user_supplement_id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('auto_unlocked', true as any)
+      hasAutoUnlocked = Number(count || 0) > 0
+    } catch {}
+    let autoUnlockedSuppId: string | null = null
+    try {
+      for (const t of (truths || []) as any[]) {
+        if ((t as any)?.auto_unlocked) {
+          autoUnlockedSuppId = String((t as any).user_supplement_id || '') || null
+          break
+        }
+      }
+    } catch {}
+
+    // If none has been auto-unlocked yet, auto-unlock the highest-confidence final verdict once.
+    if (!hasAutoUnlocked) {
+      try {
+        let best: any | null = null
+        for (const t of (truths || []) as any[]) {
+          const uid = String((t as any).user_supplement_id || '')
+          if (!uid) continue
+          const st = normalizeTruthStatus((t as any).status)
+          // Only auto-unlock final verdicts (wow moment) — exclude too_early/confounded.
+          const eligible = st === 'proven_positive' || st === 'negative' || st === 'no_effect' || st === 'no_detectable_effect'
+          if (!eligible) continue
+          const conf = Number((t as any).confidence_score ?? 0) || 0
+          const created = String((t as any).created_at || '')
+          const createdMs = created ? Date.parse(created) : 0
+          const bestConf = best ? (Number(best.confidence_score ?? 0) || 0) : -1
+          const bestMs = best ? (Date.parse(String(best.created_at || '')) || 0) : 0
+          if (!best || conf > bestConf || (conf === bestConf && createdMs > bestMs)) {
+            best = t
+          }
+        }
+        if (best) {
+          const bestUid = String((best as any).user_supplement_id || '')
+          const { error: updErr } = await (supabaseAdmin as any)
+            .from('supplement_truth_reports')
+            .update({ auto_unlocked: true } as any)
+            .eq('user_id', user.id)
+            .eq('user_supplement_id', bestUid as any)
+            .eq('auto_unlocked', false as any)
+          if (!updErr) {
+            hasAutoUnlocked = true
+            autoUnlockedSuppId = bestUid
+            // Update in-memory maps so this request immediately treats it as unlocked.
+            const cur = truthBySupp.get(bestUid)
+            if (cur) truthBySupp.set(bestUid, { ...cur, auto_unlocked: true })
+            const curImp = implicitTruthBySupp.get(bestUid)
+            if (curImp) implicitTruthBySupp.set(bestUid, { ...curImp, auto_unlocked: true })
+          }
+        }
+      } catch {}
     }
     // Diagnostics: inspect truths map keys as well
     try {
@@ -1539,14 +1624,21 @@ export async function GET(request: Request) {
     const userTier: 'free' | 'pro' = (profile as any)?.tier === 'pro' ? 'pro' : 'free'
     for (const r of progressRows as any[]) {
       try {
+        // Attach explicit clean check-in count for UI teases and gating.
+        ;(r as any).explicitCleanCheckins = explicitCleanCheckins
+        ;(r as any).confirmCheckinsRequired = AUTO_UNLOCK_REQ
+
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
         // Prefer effectCategory; if missing, derive from stored truth status so Completed cards don't show "TESTING 100%".
-        const truthStatusRaw = uid ? String((truthBySupp.get(String(uid)) as any)?.status || (implicitTruthBySupp.get(String(uid)) as any)?.status || '') : ''
+        const truthRec = uid ? ((truthBySupp.get(String(uid)) as any) || (implicitTruthBySupp.get(String(uid)) as any) || null) : null
+        const truthStatusRaw = truthRec ? String(truthRec?.status || '') : ''
+        const truthAutoUnlocked = Boolean(truthRec?.auto_unlocked) || (autoUnlockedSuppId ? String(autoUnlockedSuppId) === String(uid) : false)
         const derivedCat = truthStatusRaw ? String(statusToCategory(truthStatusRaw) || '') : ''
         const ec = String((r as any).effectCategory || derivedCat || '').toLowerCase()
         const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
         const isFinalTruthStatus = ['proven_positive','negative','no_effect','no_detectable_effect','confounded'].includes(String(truthStatusRaw || '').toLowerCase())
+        const isFinalForAutoGate = ['proven_positive','negative','no_effect','no_detectable_effect'].includes(String(truthStatusRaw || '').toLowerCase())
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
         const is_implicit = Boolean(inferred) && meetsWearableThreshold
@@ -1579,6 +1671,29 @@ export async function GET(request: Request) {
         let subtext = ''
         const usingUpload = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
 
+        // One free instant verdict per account:
+        // If user already received an auto-unlocked verdict, all other final verdicts require 3 explicit clean check-ins.
+        const shouldLockVerdictReady =
+          Boolean(hasAutoUnlocked && isFinalForAutoGate && !truthAutoUnlocked && explicitCleanCheckins < AUTO_UNLOCK_REQ)
+
+        // If verdict is calculated but not unlocked yet, keep it in Testing with a lock badge and tease progress.
+        if (shouldLockVerdictReady) {
+          section = 'testing'
+          progress = Math.min(95, Math.max(5, Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0) || 95))
+          badge = { key: 'locked', text: '🔒 VERDICT READY' }
+          label = '🔒 Verdict ready'
+          subtext = `Check-ins completed: ${explicitCleanCheckins} of ${AUTO_UNLOCK_REQ}`
+          showVerdict = false
+          // IMPORTANT: Do not leak verdict details for locked rows.
+          ;(r as any).truthStatus = ''
+          ;(r as any).truthEffectSize = null
+          ;(r as any).truthEffectDirection = null
+          ;(r as any).truthSampleDaysOn = null
+          ;(r as any).truthSampleDaysOff = null
+          ;(r as any).primaryMetricLabel = null
+          ;(r as any).confidence = null
+          ;(r as any).effectCategory = null
+        } else
         // HARD OVERRIDE (Wayne): if the stored truthStatus is a final verdict, force completed display.
         if (isFinalTruthStatus) {
           section = 'completed'
