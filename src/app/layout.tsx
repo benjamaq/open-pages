@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   keywords: ["supplements", "wearables", "Apple Health", "WHOOP", "stack testing", "supplement effectiveness", "BioStackr"],
   authors: [{ name: "Open Pages" }],
   manifest: "/manifest-v2.json",
+  verification: {
+    google: 'WYM87PsDwJMrs-y2wHLtKg2Zu21Go8cR1T0AwFxDZzw',
+  },
   openGraph: {
     title: "BioStackr — Find Out What Actually Works",
     description: "Find out which supplements actually work for you. BioStackr analyzes your wearable data to test your stack and tell you what to keep, drop, or keep testing.",
