@@ -219,7 +219,7 @@ export function SupplementDetailsModal({
    <>
    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
      <div className="absolute inset-0 bg-slate-900/60" onClick={onCancel} />
-     <div className="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-4 sm:p-6 shadow-2xl overflow-x-hidden">
+     <div className="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-4 sm:p-6 shadow-2xl overflow-x-hidden max-h-[calc(100vh-2rem)] flex flex-col">
        <div className="flex items-center justify-between mb-4">
          <div>
           <div className="text-lg font-semibold text-slate-900">{overrideName || product.productName}</div>
@@ -229,7 +229,7 @@ export function SupplementDetailsModal({
          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600">✕</button>
        </div>
 
-      <div ref={scrollRef} className="space-y-6 max-h-[78vh] overflow-y-auto overflow-x-hidden pr-1 min-w-0" tabIndex={-1} style={{ overscrollBehavior: 'contain' }}>
+      <div ref={scrollRef} className="space-y-6 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-1 min-w-0" tabIndex={-1} style={{ overscrollBehavior: 'contain' }}>
         {/* Catalog Search */}
         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Find product</div>
@@ -424,7 +424,7 @@ export function SupplementDetailsModal({
                   value={startedAt}
                   onChange={(e) => setStartedAt(e.target.value)}
                   max={new Date().toISOString().slice(0,10)}
-                  className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
+                  className="w-full max-w-full min-w-0 h-11 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                 />
               </div>
               <div className="mt-1 text-[11px] text-slate-500">Tip: scroll to pick earlier years.</div>
@@ -459,7 +459,7 @@ export function SupplementDetailsModal({
                     value={stoppedAt}
                     onChange={(e) => setStoppedAt(e.target.value)}
                     max={new Date().toISOString().slice(0,10)}
-                    className={`mt-1 w-full max-w-full min-w-0 appearance-none px-3 py-2 border rounded-md bg-white text-slate-900 text-sm ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
+                    className={`mt-1 w-full max-w-full min-w-0 h-11 appearance-none px-3 py-2 border rounded-md bg-white text-slate-900 text-sm ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
                     required
                   />
                  </label>
@@ -470,7 +470,7 @@ export function SupplementDetailsModal({
                     value={restartedAt}
                     onChange={(e) => setRestartedAt(e.target.value)}
                     max={new Date().toISOString().slice(0,10)}
-                    className="mt-1 w-full max-w-full min-w-0 appearance-none px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
+                    className="mt-1 w-full max-w-full min-w-0 h-11 appearance-none px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                   />
                  </label>
                </>
@@ -501,7 +501,7 @@ export function SupplementDetailsModal({
                           onChange={(e) => {
                             const next = [...intakePeriods]; next[i] = { ...next[i], startedAt: e.target.value }; setIntakePeriods(next)
                           }}
-                          className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
+                          className="w-full max-w-full min-w-0 h-11 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                         />
                       </div>
                     </label>
@@ -521,7 +521,7 @@ export function SupplementDetailsModal({
                           onChange={(e) => {
                             const next = [...intakePeriods]; next[i] = { ...next[i], stoppedAt: e.target.value }; setIntakePeriods(next)
                           }}
-                          className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
+                          className="w-full max-w-full min-w-0 h-11 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                         />
                       </div>
                     </label>
@@ -616,7 +616,7 @@ export function SupplementDetailsModal({
          </section>
        </div>
 
-       <div className="mt-6 flex items-center justify-end gap-2 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+       <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-end gap-2 bg-white shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <button onClick={onCancel} className="px-4 py-2 text-sm text-slate-700">Cancel</button>
          <button
            onClick={() =>
