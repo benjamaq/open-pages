@@ -2,6 +2,7 @@
 
 import { createClient } from '../supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export interface UserSubscription {
   id: string
@@ -64,7 +65,7 @@ export async function getUserTier(): Promise<'free' | 'pro' | 'creator'> {
 
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('tier')
+      .select('tier,pro_expires_at')
       .eq('user_id', user.id)
       .single()
 
@@ -73,7 +74,10 @@ export async function getUserTier(): Promise<'free' | 'pro' | 'creator'> {
       return 'free'
     }
 
-    return (profile as any).tier as 'free' | 'pro' | 'creator' || 'free'
+    const tierRaw = (profile as any).tier as string | null
+    const tierLc = String(tierRaw || '').toLowerCase()
+    if (tierLc === 'creator') return 'creator'
+    return isProActive({ tier: tierRaw, pro_expires_at: (profile as any).pro_expires_at }) ? 'pro' : 'free'
   } catch (error) {
     console.error('Error in getUserTier:', error)
     return 'free'

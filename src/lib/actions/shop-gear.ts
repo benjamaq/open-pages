@@ -2,6 +2,7 @@
 
 import { createClient } from '../supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export interface ShopGearItem {
   id: string
@@ -226,7 +227,7 @@ export async function getUserTier(userId: string): Promise<'free' | 'pro' | 'cre
   
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('tier')
+    .select('tier,pro_expires_at')
     .eq('user_id', userId)
     .single()
 
@@ -235,7 +236,10 @@ export async function getUserTier(userId: string): Promise<'free' | 'pro' | 'cre
     return 'free'
   }
 
-  return (profile as any).tier as 'free' | 'pro' | 'creator'
+  const tierRaw = (profile as any).tier as string | null
+  const tierLc = String(tierRaw || '').toLowerCase()
+  if (tierLc === 'creator') return 'creator'
+  return isProActive({ tier: tierRaw, pro_expires_at: (profile as any).pro_expires_at }) ? 'pro' : 'free'
 }
 
 export async function updateUserTier(

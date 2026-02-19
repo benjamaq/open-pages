@@ -53,9 +53,9 @@ export async function GET(request: Request) {
     if (VERBOSE) { try { console.log('[progress/loop] user:', user.id) } catch {} }
 
     // Resolve profile (auto-create minimal if missing)
-  let { data: profile, error: pErr } = await supabase
+    let { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id,tier')
+      .select('id,tier,pro_expires_at')
       .eq('user_id', user.id)
       .maybeSingle()
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
@@ -1611,7 +1611,16 @@ export async function GET(request: Request) {
       return { key: 'starting', text: '◐ STARTING' }
     }
     // Resolve display state per truth table
-    const userTier: 'free' | 'pro' = (profile as any)?.tier === 'pro' ? 'pro' : 'free'
+    const userTier: 'free' | 'pro' = (() => {
+      const tierLc = String((profile as any)?.tier || '').toLowerCase()
+      const exp = (profile as any)?.pro_expires_at ? String((profile as any).pro_expires_at) : ''
+      const isProTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+      if (!isProTier) return 'free'
+      if (!exp) return 'pro'
+      const ms = Date.parse(exp)
+      if (!Number.isFinite(ms)) return 'pro'
+      return ms > Date.now() ? 'pro' : 'free'
+    })()
     for (const r of progressRows as any[]) {
       try {
         // Attach explicit clean check-in count for UI teases and gating.

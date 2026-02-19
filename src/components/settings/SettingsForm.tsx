@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { detectTimezone, roundTimeTo30Min, saveReminderSettings } from '@/lib/reminders/saveReminderSettings'
+import { PromoRedeemer } from '@/components/billing/PromoRedeemer'
 
 export function SettingsForm({
   initial,
@@ -131,6 +132,13 @@ export function SettingsForm({
           {saved && <span className="text-sm text-gray-700">Settings saved ✓</span>}
           {!saved && saveError && <span className="text-sm text-red-700">Failed to save — please try again.</span>}
         </div>
+      </section>
+
+      {/* Promo Code */}
+      <section className="rounded-xl border border-[#E4E1DC] bg-white p-5">
+        <div className="text-base font-semibold text-gray-900 mb-2">Promo Code</div>
+        <div className="text-sm text-gray-700">Redeem a promo code to unlock Pro access.</div>
+        <PromoRedeemer defaultOpen showToggle={false} />
       </section>
 
       {/* Account */}

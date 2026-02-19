@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings/SettingsForm'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export default async function SettingsPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const supabase = await createClient()
@@ -12,11 +13,11 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
   // Profile tier is the source of truth for "Pro" access in some accounts (manual grants, migrations, etc.)
   const { data: profileRow } = await supabase
     .from('profiles')
-    .select('tier,created_at')
+    .select('tier,created_at,pro_expires_at')
     .eq('user_id', user.id)
     .maybeSingle()
   const tierLc = String((profileRow as any)?.tier || '').toLowerCase()
-  const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+  const isPaidByTier = isProActive({ tier: (profileRow as any)?.tier, pro_expires_at: (profileRow as any)?.pro_expires_at })
 
   const hdrs = await headers()
   const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3010'

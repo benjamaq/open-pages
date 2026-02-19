@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '../supabase/server'
+import { isProActive } from '@/lib/entitlements/pro'
 
 interface LimitCheckResult {
   allowed: boolean
@@ -59,11 +60,10 @@ export async function checkItemLimit(itemType: 'supplements' | 'protocols' | 'li
     }
 
     const isInTrial = ((usage as any)?.is_in_trial ?? (insertedTrialDefault ? true : false)) || false
-    // If 'tier' column missing, treat as trial to avoid blocking adds in dev
-    const tier = (profileRow as any).tier || 'free'
-
-    // If user is Pro/Creator or in trial, allow unlimited
-    if (tier === 'pro' || tier === 'creator' || isInTrial) {
+    // If user is Pro/Creator/Premium (and not expired) or in trial, allow unlimited
+    const tierVal = (profileRow as any).tier || 'free'
+    const isPro = isProActive({ tier: tierVal, pro_expires_at: (profileRow as any).pro_expires_at })
+    if (isPro || String(tierVal).toLowerCase() === 'creator' || isInTrial) {
       return {
         allowed: true,
         currentCount: 0,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export async function POST(request: NextRequest, ctx: any) {
   // Resolve params (Next 14+)
@@ -143,11 +144,10 @@ export async function POST(request: NextRequest, ctx: any) {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('tier,pro_expires_at')
         .eq('user_id', user.id)
         .maybeSingle()
-      const tier = String((profile as any)?.tier || '').toLowerCase()
-      isPremium = ['pro','premium','creator'].includes(tier)
+      isPremium = isProActive({ tier: (profile as any)?.tier, pro_expires_at: (profile as any)?.pro_expires_at })
     } catch {}
     // For Starter, retesting an already tested supplement does not increase lifetime count,
     // so we allow retest even if they have reached the 5-tested limit.

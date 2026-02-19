@@ -5,6 +5,7 @@ import Link from 'next/link'
 import PromoCodeInput from '../../../components/PromoCodeInput'
 import AuthCheck from '../auth-check'
 import { createClient } from '../../../lib/supabase/client'
+import { PromoRedeemer } from '@/components/billing/PromoRedeemer'
 
 export default function UpgradeProPage() {
   const [loading, setLoading] = useState(false)
@@ -164,6 +165,9 @@ export default function UpgradeProPage() {
                 onPromoApplied={handlePromoApplied}
                 onPromoRemoved={handlePromoRemoved}
               />
+              <div className="mt-3">
+                <PromoRedeemer compact />
+              </div>
             </div>
 
             <button

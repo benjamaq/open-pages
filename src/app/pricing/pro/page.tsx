@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
+import { PromoRedeemer } from '@/components/billing/PromoRedeemer'
 
 export default function ProPricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
@@ -172,6 +173,9 @@ export default function ProPricingPage() {
               >
                 {getCtaText()}
               </Link>
+              <div className="mt-3">
+                <PromoRedeemer compact />
+              </div>
             </div>
           </div>
         </div>

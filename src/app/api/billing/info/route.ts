@@ -1,6 +1,7 @@
 import { createClient } from '../../../../lib/supabase/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { isProActive } from '@/lib/entitlements/pro'
 
 // Initialize Stripe (with error handling for missing env vars)
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -32,11 +33,11 @@ export async function GET(request: Request) {
     if (!stripe) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('tier,pro_expires_at')
         .eq('user_id', user.id)
         .single()
       const tierLc = String((profile as any)?.tier || '').toLowerCase()
-      const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+      const isPaidByTier = isProActive({ tier: (profile as any)?.tier, pro_expires_at: (profile as any)?.pro_expires_at })
       // eslint-disable-next-line no-console
       console.log('[billing/info] user.id:', user.id)
       // eslint-disable-next-line no-console
@@ -70,11 +71,11 @@ export async function GET(request: Request) {
     if (!subscription || !subscription.stripe_customer_id) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('tier,pro_expires_at')
         .eq('user_id', user.id)
         .single()
       const tierLc = String((profile as any)?.tier || '').toLowerCase()
-      const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+      const isPaidByTier = isProActive({ tier: (profile as any)?.tier, pro_expires_at: (profile as any)?.pro_expires_at })
       // eslint-disable-next-line no-console
       console.log('[billing/info] user.id:', user.id)
       // eslint-disable-next-line no-console
@@ -147,12 +148,12 @@ export async function GET(request: Request) {
     // Also check database profile tier as a paid signal
     const { data: profileTierRow } = await supabase
       .from('profiles')
-      .select('tier')
+      .select('tier,pro_expires_at')
       .eq('user_id', user.id)
       .single()
     const tierVal = (profileTierRow as any)?.tier
     const tierLc = String(tierVal || '').toLowerCase()
-    const isPaidByTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+    const isPaidByTier = isProActive({ tier: (profileTierRow as any)?.tier, pro_expires_at: (profileTierRow as any)?.pro_expires_at })
     const hasActiveSubscription = subscriptionInfo?.status === 'active' || subscriptionInfo?.status === 'trialing'
     const finalIsPaid = Boolean(isPaidByTier || hasActiveSubscription)
     // eslint-disable-next-line no-console
@@ -203,11 +204,10 @@ async function getUserUsage(supabase: any, userId: string) {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tier')
+      .select('tier,pro_expires_at')
       .eq('user_id', userId)
       .maybeSingle()
-    const tierLc = String((profile as any)?.tier || '').toLowerCase()
-    isPro = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
+    isPro = isProActive({ tier: (profile as any)?.tier, pro_expires_at: (profile as any)?.pro_expires_at })
   } catch {}
 
   return {

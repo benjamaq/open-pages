@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export async function POST(request: NextRequest, ctx: any) {
   // Resolve Next 14+ params (can be a promise)
@@ -51,11 +52,10 @@ export async function POST(request: NextRequest, ctx: any) {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('tier')
+          .select('tier,pro_expires_at')
           .eq('user_id', user.id)
           .maybeSingle()
-        const tierLc = String((profile as any)?.tier || '').toLowerCase()
-        isPremium = ['pro', 'premium', 'creator'].includes(tierLc)
+        isPremium = isProActive({ tier: (profile as any)?.tier, pro_expires_at: (profile as any)?.pro_expires_at })
       } catch {}
 
       if (!isPremium) {

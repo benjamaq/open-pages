@@ -1,5 +1,6 @@
 import { createClient } from '../../../lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,23 +11,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Get user's trial information
+    // Get user's trial information (user_usage)
     const { data: usageData, error: usageError } = await supabase
       .from('user_usage')
-      .select('tier, is_in_trial, trial_started_at, trial_ended_at')
+      .select('is_in_trial, trial_started_at, trial_ended_at')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (usageError) {
       console.error('Error fetching trial data:', usageError)
       return NextResponse.json({ error: 'Failed to fetch trial data' }, { status: 500 })
     }
 
+    // Tier is sourced from profiles so promo-Pro works without Stripe/user_usage changes.
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('tier,pro_expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const isInTrial = Boolean((usageData as any)?.is_in_trial)
+    const tierRaw = String((prof as any)?.tier || '').toLowerCase()
+    const tier =
+      tierRaw === 'creator'
+        ? 'creator'
+        : (isInTrial || isProActive({ tier: (prof as any)?.tier, pro_expires_at: (prof as any)?.pro_expires_at }))
+          ? 'pro'
+          : 'free'
+
     return NextResponse.json({
-      tier: (usageData as any)?.tier || 'free',
-      isInTrial: (usageData as any)?.is_in_trial || false,
-      trialStartedAt: (usageData as any)?.trial_started_at,
-      trialEndedAt: (usageData as any)?.trial_ended_at
+      tier,
+      isInTrial,
+      trialStartedAt: (usageData as any)?.trial_started_at || null,
+      trialEndedAt: (usageData as any)?.trial_ended_at || null
     })
 
   } catch (error) {

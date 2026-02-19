@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export async function GET() {
   const supabase = await createClient()
@@ -328,11 +329,10 @@ export async function POST(request: Request) {
     try {
       const { data: prof } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('tier,pro_expires_at')
         .eq('user_id', user.id)
         .maybeSingle()
-      const tierLc = String((prof as any)?.tier || '').toLowerCase()
-      isPremium = ['pro','premium','creator'].includes(tierLc)
+      isPremium = isProActive({ tier: (prof as any)?.tier, pro_expires_at: (prof as any)?.pro_expires_at })
     } catch {}
     let verdictCount = 0
     try {
