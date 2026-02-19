@@ -155,6 +155,9 @@ export default function OnboardingPage() {
         return;
       }
       setSupplements([...supplements, details]);
+      try {
+        toast.success('Added', { description: `${details.brandName ? details.brandName + ' ' : ''}${details.name}`.trim() })
+      } catch {}
       // Persist to backend so dashboard sees it immediately
       try {
         // Build dose/timing strings for persistence into user_supplement + stack_items (My Stack display)
@@ -290,6 +293,8 @@ export default function OnboardingPage() {
 
           {/* Input Area */}
           <div className="mb-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Add supplements</div>
           <div className="text-sm text-slate-700 mb-2 font-medium">What are you currently taking?</div>
           <input
             type="text"
@@ -359,10 +364,11 @@ export default function OnboardingPage() {
                 + Add a different supplement manually
               </button>
             </div>
+          </div>
 
             {/* Selected supplements (kept near the top on mobile so users can see multiple items as they add them) */}
             {supplements.length > 0 && (
-              <div ref={mySuppsRef} className="mt-5 bg-white rounded-xl border border-slate-300 ring-1 ring-black/5 shadow-sm p-4">
+              <div ref={mySuppsRef} className="mt-5 bg-slate-50 rounded-xl border border-slate-300 ring-1 ring-black/5 shadow-sm p-4">
                 <h3 className="font-semibold mb-3">
                   My Supplements ({supplements.length})
                 </h3>

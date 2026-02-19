@@ -412,7 +412,7 @@ export function SupplementDetailsModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
              <label className="text-xs text-slate-700 min-w-0">
               When did you start that?
-              <div className="relative mt-1">
+              <div className="relative mt-1 max-w-full overflow-hidden rounded-md">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M8 2v3M16 2v3M3 9h18" />
@@ -424,7 +424,7 @@ export function SupplementDetailsModal({
                   value={startedAt}
                   onChange={(e) => setStartedAt(e.target.value)}
                   max={new Date().toISOString().slice(0,10)}
-                  className="w-full max-w-full min-w-0 pl-9 pr-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                  className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                 />
               </div>
               <div className="mt-1 text-[11px] text-slate-500">Tip: scroll to pick earlier years.</div>
@@ -459,7 +459,7 @@ export function SupplementDetailsModal({
                     value={stoppedAt}
                     onChange={(e) => setStoppedAt(e.target.value)}
                     max={new Date().toISOString().slice(0,10)}
-                    className={`mt-1 w-full max-w-full min-w-0 px-3 py-2 border rounded-md bg-white text-slate-900 ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
+                    className={`mt-1 w-full max-w-full min-w-0 appearance-none px-3 py-2 border rounded-md bg-white text-slate-900 text-sm ${(!stoppedAt ? 'border-red-400' : 'border-slate-300')}`}
                     required
                   />
                  </label>
@@ -470,7 +470,7 @@ export function SupplementDetailsModal({
                     value={restartedAt}
                     onChange={(e) => setRestartedAt(e.target.value)}
                     max={new Date().toISOString().slice(0,10)}
-                    className="mt-1 w-full max-w-full min-w-0 px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                    className="mt-1 w-full max-w-full min-w-0 appearance-none px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                   />
                  </label>
                </>
@@ -487,7 +487,7 @@ export function SupplementDetailsModal({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
                     <label className="text-xs text-slate-700 min-w-0">
                       Started
-                      <div className="relative mt-1">
+                      <div className="relative mt-1 max-w-full overflow-hidden rounded-md">
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M8 2v3M16 2v3M3 9h18" />
@@ -501,13 +501,13 @@ export function SupplementDetailsModal({
                           onChange={(e) => {
                             const next = [...intakePeriods]; next[i] = { ...next[i], startedAt: e.target.value }; setIntakePeriods(next)
                           }}
-                          className="w-full max-w-full min-w-0 pl-9 pr-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                          className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                         />
                       </div>
                     </label>
                     <label className="text-xs text-slate-700 min-w-0">
                       Stopped
-                      <div className="relative mt-1">
+                      <div className="relative mt-1 max-w-full overflow-hidden rounded-md">
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M8 2v3M16 2v3M3 9h18" />
@@ -521,7 +521,7 @@ export function SupplementDetailsModal({
                           onChange={(e) => {
                             const next = [...intakePeriods]; next[i] = { ...next[i], stoppedAt: e.target.value }; setIntakePeriods(next)
                           }}
-                          className="w-full max-w-full min-w-0 pl-9 pr-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                          className="w-full max-w-full min-w-0 appearance-none pl-8 pr-2 py-2 border border-slate-300 rounded-md bg-white text-slate-900 text-sm"
                         />
                       </div>
                     </label>
