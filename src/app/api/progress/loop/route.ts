@@ -1682,12 +1682,13 @@ export async function GET(request: Request) {
         const shouldLockVerdictReady =
           Boolean(hasAutoUnlocked && isGatableFinalVerdict && !truthAutoUnlocked && explicitCleanCheckins < AUTO_UNLOCK_REQ)
 
-        // If verdict is calculated but not unlocked yet, keep it in Testing with a lock badge and tease progress.
+        // If verdict is calculated but not unlocked yet, keep it in Testing.
+        // IMPORTANT UX: do NOT show any "verdict ready" / lock messaging. It should look like normal testing.
         if (shouldLockVerdictReady) {
           section = 'testing'
           progress = Math.min(95, Math.max(5, Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0) || 95))
-          badge = { key: 'locked', text: '🔒 VERDICT READY' }
-          label = '🔒 Verdict ready'
+          badge = { key: 'testing', text: '◐ TESTING' }
+          label = usingUpload ? 'Signal from historical data' : 'Actively testing'
           subtext = `Check-ins completed: ${explicitCleanCheckins} of ${AUTO_UNLOCK_REQ}`
           showVerdict = false
           // IMPORTANT: Do not leak verdict details for locked rows.
