@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SupplementDetailsModal, type ProductLike, type SupplementDetails } from './SupplementDetailsModal';
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate';
@@ -28,6 +28,7 @@ export default function OnboardingPage() {
   const [pendingProduct, setPendingProduct] = useState<ProductLike | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const mySuppsRef = useRef<HTMLDivElement | null>(null)
 
   // Open full details modal with a minimal product stub (for manual/quick add)
   function openManualAdd(name?: string) {
@@ -243,6 +244,15 @@ export default function OnboardingPage() {
 
   const totalMonthlyCost = supplements.reduce((sum, s) => sum + s.monthlyCost, 0);
 
+  // Mobile UX: after saving a supplement (and closing the details modal), scroll the "My Supplements" section into view.
+  useEffect(() => {
+    if (pendingProduct) return
+    if (supplements.length <= 0) return
+    try {
+      mySuppsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } catch {}
+  }, [supplements.length, pendingProduct])
+
   return (
     <div
       className="min-h-screen relative"
@@ -252,8 +262,9 @@ export default function OnboardingPage() {
         backgroundPosition: 'center'
       }}
     >
-      <div className="relative z-10 max-w-[760px] mx-auto px-6 py-16">
-        <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-6 sm:p-10">
+      <div className="relative z-10 max-w-[760px] mx-auto px-4 py-8 sm:px-6 sm:py-16">
+        <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-4 sm:p-10 flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-none overflow-hidden sm:overflow-visible">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden sm:overflow-visible pr-0 sm:pr-1">
           {/* Header Zone */}
           <div className="mb-6 sm:mb-8">
             <p className="text-base font-medium text-slate-600 mb-2">
@@ -348,6 +359,63 @@ export default function OnboardingPage() {
                 + Add a different supplement manually
               </button>
             </div>
+
+            {/* Selected supplements (kept near the top on mobile so users can see multiple items as they add them) */}
+            {supplements.length > 0 && (
+              <div ref={mySuppsRef} className="mt-5 bg-white rounded-xl border border-slate-300 ring-1 ring-black/5 shadow-sm p-4">
+                <h3 className="font-semibold mb-3">
+                  My Supplements ({supplements.length})
+                </h3>
+
+                <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+                  {supplements.map((supp, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-medium text-slate-900 truncate">{abbreviateSupplementName(String(supp?.name || ''))}</div>
+                        <div className="text-sm text-slate-500 truncate">{supp.brandName}</div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <div className="text-sm font-semibold text-slate-900 whitespace-nowrap">
+                          ${supp.monthlyCost.toFixed(2)}/mo
+                        </div>
+                        <button
+                          onClick={() => { setEditIndex(idx); setPendingProduct({
+                            id: supp.productId,
+                            productName: supp.name,
+                            brandName: supp.brandName,
+                            canonicalSupplementId: supp.canonicalSupplementId,
+                            pricePerContainerDefault: supp.pricePerContainer ?? 0,
+                            servingsPerContainerDefault: supp.servingsPerContainer ?? 0,
+                            dosePerServingAmountDefault: supp.dailyDose ?? 1,
+                            dosePerServingUnitDefault: supp.doseUnit ?? ''
+                          })}}
+                          className="text-sm text-slate-600 hover:text-slate-800 transition-colors whitespace-nowrap"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => removeSupplement(idx)}
+                          className="text-sm text-slate-600 hover:text-red-600 transition-colors whitespace-nowrap"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Total monthly cost:</span>
+                  <span className="text-lg font-bold text-slate-900">
+                    ${totalMonthlyCost.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Reassurance line */}
@@ -390,65 +458,10 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Selected supplements */}
-          {supplements.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-300 ring-1 ring-black/5 shadow-sm p-6 mb-8">
-              <h3 className="font-semibold mb-4">
-                My Supplements ({supplements.length})
-              </h3>
-              
-              <div className="space-y-3">
-                {supplements.map((supp, idx) => (
-                  <div 
-                    key={idx} 
-                    className="flex items-center justify-between p-4 bg-slate-50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                    <div className="font-medium text-slate-900">{abbreviateSupplementName(String(supp?.name || ''))}</div>
-                      <div className="text-sm text-slate-500">{supp.brandName}</div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm font-semibold text-slate-900">
-                        ${supp.monthlyCost.toFixed(2)}/mo
-                      </div>
-                      <button
-                        onClick={() => { setEditIndex(idx); setPendingProduct({
-                          id: supp.productId,
-                          productName: supp.name,
-                          brandName: supp.brandName,
-                          canonicalSupplementId: supp.canonicalSupplementId,
-                          pricePerContainerDefault: supp.pricePerContainer ?? 0,
-                          servingsPerContainerDefault: supp.servingsPerContainer ?? 0,
-                          dosePerServingAmountDefault: supp.dailyDose ?? 1,
-                          dosePerServingUnitDefault: supp.doseUnit ?? ''
-                        })}}
-                        className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
-                      >
-                        Edit Details
-                      </button>
-                      <button
-                        onClick={() => removeSupplement(idx)}
-                        className="text-sm text-slate-500 hover:text-red-600 transition-colors"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-    
-              <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
-                <span className="text-sm text-slate-600">Total monthly cost:</span>
-                <span className="text-xl font-bold text-slate-900">
-                  ${totalMonthlyCost.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
+          </div>
 
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          {/* CTA (footer stays visible on mobile) */}
+          <div className="pt-4 mt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white/95">
             <div className="flex flex-col">
               <a href="/onboarding/wearables" className="text-slate-600 text-sm">I’ll add these later</a>
               <span className="mt-1 text-xs text-slate-400">You can always update this from your dashboard.</span>
