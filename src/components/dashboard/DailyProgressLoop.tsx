@@ -674,8 +674,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const effectCat = (row as any).effectCategory as string | undefined
   const effectCatLower = String(effectCat || '').toLowerCase()
   const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
-  // Final verdicts (works/no_effect/no_detectable_effect) should render as 100% signal/complete (except for upload-only implicit)
-  const hasFinalVerdictGlobal = ['works','no_effect','no_detectable_effect'].includes(effectCatLower)
+  // Final verdict categories come from supplement_truth_reports.status → effectCategory mapping.
+  // IMPORTANT: completion is determined by the existence of a truth report row (NOT by user_supplement.testing_status;
+  // the DB constraint only allows 'inactive' | 'testing' | 'paused').
+  const hasFinalVerdictGlobal = ['works', 'negative', 'no_effect', 'no_detectable_effect'].includes(effectCatLower)
   // Prevent 100% display for "needs_more_data" (Truth Engine too_early) even if raw progress hit 100 on labeled days
   let progressForDisplay = row.progressPercent
   if (effectCatLower === 'needs_more_data') {
@@ -720,7 +722,10 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const verdictValue = String((row as any).verdict || '').toLowerCase()
   // reuse effectCatLower above
   const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
-  const isSignificant = Boolean((row as any).isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
+  const isSignificant =
+    Boolean((row as any).isStatisticallySignificant) ||
+    // If a truth report has classified a final verdict category, treat it as significant for UI state.
+    ['works', 'negative', 'no_effect', 'no_detectable_effect'].includes(effectCatLower)
   // Free users: any 100% is shown as Verdict Ready (paywall). Paid users require verdict/significance.
   const isVerdictReady = (row.progressPercent >= 100) && (!isMember || hasVerdict || isSignificant)
   // Inconclusive only applies to paid users at 100% without a verdict/significance
@@ -777,7 +782,8 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       if (!key) return null
       if (key === 'keep') return { label: '✓ KEEP', style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
       if (key === 'drop') return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
-      if (key === 'negative') return { label: 'NEGATIVE', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
+      // Some paths emit 'negative' instead of 'drop'—render it as actionable DROP for consistency.
+      if (key === 'negative') return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
       if (key === 'ncs' || key === 'no_clear_signal') return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
       if (key === 'testing') return { label: '◐ TESTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
       if (key === 'starting') return { label: '◐ STARTING', style: { backgroundColor: '#F1EFEA', color: '#5C4A32', border: '1px solid #E4E0D6' } as React.CSSProperties }
@@ -792,9 +798,18 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
     if (viaResolver) return viaResolver
     const cat = (effectCat || '').toLowerCase()
     const verdict = String((row as any).verdict || '').toLowerCase()
+    // If effectCategory is missing but we have a stored truth status, map it directly.
+    const truthStatus = String((row as any)?.truthStatus || '').toLowerCase()
+    const mappedFromTruthStatus =
+      truthStatus === 'proven_positive' ? 'works' :
+      truthStatus === 'negative' ? 'negative' :
+      truthStatus === 'no_effect' ? 'no_effect' :
+      truthStatus === 'no_detectable_effect' ? 'no_detectable_effect' :
+      (truthStatus === 'too_early' || truthStatus === 'confounded') ? 'needs_more_data' :
+      ''
     const mappedCat =
-      cat || (verdict === 'keep' ? 'works'
-      : verdict === 'drop' ? 'no_effect'
+      cat || mappedFromTruthStatus || (verdict === 'keep' ? 'works'
+      : verdict === 'drop' ? 'negative'
       : '')
     // Mask final verdicts for free users until upgrade
     if (!isMember && ['works','negative','no_effect','no_detectable_effect'].includes(mappedCat)) {
@@ -804,9 +819,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
       // Warm sand KEEP
       return { label: '✓ KEEP', style: { backgroundColor: '#E8DFD0', color: '#5C4A32', border: '1px solid #D4C8B5' } as React.CSSProperties }
     }
-    if (mappedCat === 'negative') {
-      return { label: 'NEGATIVE', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
-    }
+    if (mappedCat === 'negative') return { label: '✗ DROP', style: { backgroundColor: '#F0D4CC', color: '#8B3A2F', border: '1px solid #E0B8AD' } as React.CSSProperties }
     if (mappedCat === 'no_effect' || mappedCat === 'no_detectable_effect') {
       // Warm amber NO CLEAR SIGNAL
       return { label: '○ NO CLEAR SIGNAL', style: { backgroundColor: '#EDD9A3', color: '#6B5A1E', border: '1px solid #D9C88A' } as React.CSSProperties }
