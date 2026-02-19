@@ -29,6 +29,7 @@ export default function OnboardingPage() {
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const mySuppsRef = useRef<HTMLDivElement | null>(null)
+  const searchResultsRef = useRef<HTMLDivElement | null>(null)
 
   // Open full details modal with a minimal product stub (for manual/quick add)
   function openManualAdd(name?: string) {
@@ -256,6 +257,15 @@ export default function OnboardingPage() {
     } catch {}
   }, [supplements.length, pendingProduct])
 
+  // Mobile UX: when quick-add/search populates results, scroll them into view so users don't miss them.
+  useEffect(() => {
+    if (pendingProduct) return
+    if (!isSearching && searchResults.length === 0) return
+    try {
+      searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } catch {}
+  }, [isSearching, searchResults.length, pendingProduct])
+
   return (
     <div
       className="min-h-screen relative"
@@ -361,7 +371,7 @@ export default function OnboardingPage() {
                 onClick={() => openManualAdd(searchQuery.trim() || undefined)}
                 className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#2C2C2C] text-white hover:bg-black text-sm"
               >
-                + Add a different supplement manually
+                Add a supplement manually
               </button>
             </div>
           </div>
@@ -424,12 +434,8 @@ export default function OnboardingPage() {
             )}
           </div>
 
-          {/* Reassurance line */}
-          <div className="mt-6 mb-8 text-[13px] text-slate-400">
-            You can change this anytime.
-          </div>
-
           {/* Search results */}
+          <div ref={searchResultsRef} />
           {isSearching && (
             <div className="text-center py-8 text-slate-500">Searching...</div>
           )}
@@ -475,7 +481,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleContinue}
               disabled={supplements.length === 0}
-              className="w-full sm:w-auto px-5 py-3 bg-black text-white rounded-full text-sm font-semibold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-900 transition-colors"
+              className="w-full sm:w-auto px-5 py-3 bg-black text-white rounded-full text-sm font-semibold whitespace-nowrap disabled:bg-black disabled:text-white disabled:opacity-80 disabled:cursor-not-allowed hover:bg-zinc-900 transition-colors"
             >
               Save & Continue
             </button>

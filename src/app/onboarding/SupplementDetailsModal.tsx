@@ -263,7 +263,7 @@ export function SupplementDetailsModal({
         </section>
 
          {/* Section A — How you take it */}
-         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
+         <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4 overflow-hidden">
            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-3">How you take it</div>
            <div>
              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Daily dose</div>
@@ -616,7 +616,7 @@ export function SupplementDetailsModal({
          </section>
        </div>
 
-       <div className="mt-6 flex items-center justify-end gap-2">
+       <div className="mt-6 flex items-center justify-end gap-2 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <button onClick={onCancel} className="px-4 py-2 text-sm text-slate-700">Cancel</button>
          <button
            onClick={() =>
