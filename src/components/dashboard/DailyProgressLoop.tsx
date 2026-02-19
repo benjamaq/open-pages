@@ -1130,7 +1130,7 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             Check‑ins completed: <span className="font-medium">{explicitCleanCheckins} of {confirmCheckinsRequired}</span>
           </div>
           <div className="mt-1 text-[11px] text-gray-600">
-            Your upload found a promising signal — a few more check‑ins will confirm your result.
+            Signal from historical data — check‑ins will increase confidence.
           </div>
         </>
       )}
