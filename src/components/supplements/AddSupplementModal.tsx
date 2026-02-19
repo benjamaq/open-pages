@@ -74,14 +74,6 @@ export default function AddSupplementModal({
       setError('Enter supplement name')
       return
     }
-    if (!dose.trim()) {
-      setError('Enter the dose you take (e.g., 400mg, 2 caps)')
-      return
-    }
-    if (!timing.trim()) {
-      setError('Select when you take it')
-      return
-    }
     // Validate overlaps and single active
     const synthetic = periods.map<{
       id: string; supplementId: string; startDate: string; endDate: string | null; dose?: string | null; notes?: string | null
@@ -121,8 +113,8 @@ export default function AddSupplementModal({
           name: name.trim(),
           startDate: first.startDate,
           endDate: first.endDate,
-          dose: dose || undefined,
-          timing: timing || undefined,
+          dose: dose ? dose : undefined,
+          timing: timing ? timing : undefined,
           // Auto-parse brand from name before first comma
           brand: (() => {
             const idx = name.indexOf(',')
@@ -171,8 +163,8 @@ export default function AddSupplementModal({
             name: name.trim(),
             startDate: first.startDate,
             endDate: first.endDate,
-            dose: dose || undefined,
-            timing: timing || undefined,
+            ...(dose ? { dose } : {}),
+            ...(timing ? { timing } : {}),
             brand: (() => {
               const idx = name.indexOf(',')
               return idx > 0 ? name.slice(0, idx).trim() : undefined

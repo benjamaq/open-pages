@@ -21,6 +21,17 @@ export default function SupplementSearchInput({ onSelect }: { onSelect?: (item: 
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const QUICK_PICKS = [
+    'Magnesium',
+    'Creatine',
+    'Omega-3',
+    'Vitamin D',
+    'Ashwagandha',
+    'Melatonin',
+    'Probiotic'
+  ]
 
   useEffect(() => {
     if (query.length < 2) {
@@ -104,7 +115,25 @@ export default function SupplementSearchInput({ onSelect }: { onSelect?: (item: 
 
   return (
     <div className="relative w-full" ref={containerRef}>
+      {/* Quick picks (helps dashboard + onboarding feel consistent) */}
+      <div className="mb-2 flex flex-wrap gap-2">
+        {QUICK_PICKS.map((label) => (
+          <button
+            key={label}
+            type="button"
+            className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 hover:bg-slate-50"
+            onClick={() => {
+              setQuery(label)
+              setShowDropdown(true)
+              try { inputRef.current?.focus() } catch {}
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <input
+        ref={inputRef}
         type="text"
         placeholder="Search supplement (e.g. magnesium)"
         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none"
@@ -119,29 +148,43 @@ export default function SupplementSearchInput({ onSelect }: { onSelect?: (item: 
           {!loading && results.map((item, i) => (
             <div
               key={item.id}
-              className={`flex cursor-pointer flex-col gap-0.5 px-3 py-2 text-sm ${highlightedIndex === i ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+              className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${highlightedIndex === i ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
               onMouseEnter={() => setHighlightedIndex(i)}
               onClick={() => handleSelect(item)}
             >
-              <span className="font-medium text-slate-900">{item.name}</span>
-              <div className="flex items-center justify-between text-xs text-slate-600">
-                <span>{item.brand}</span>
-                {(() => {
-                  const servings = typeof item.servings_per_container === 'number' ? item.servings_per_container : null
-                  const container = typeof item.typical_price === 'number' ? item.typical_price : null
-                  const pps = (servings && container) ? (container / servings) : null
-                  if (container && servings) {
-                    return <span className="text-slate-700">${container.toFixed(2)} ({servings} servings) • ${pps!.toFixed(2)}/serving</span>
-                  }
-                  if (pps) {
-                    return <span className="text-slate-700">${pps.toFixed(2)}/serving</span>
-                  }
-                  return null
-                })()}
+              <div className="min-w-0 flex-1">
+                <span className="block font-medium text-slate-900 truncate">{item.name}</span>
+                <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-slate-600">
+                  <span className="truncate">{item.brand}</span>
+                  {(() => {
+                    const servings = typeof item.servings_per_container === 'number' ? item.servings_per_container : null
+                    const container = typeof item.typical_price === 'number' ? item.typical_price : null
+                    const pps = (servings && container) ? (container / servings) : null
+                    if (container && servings) {
+                      return <span className="shrink-0 text-slate-700">${container.toFixed(2)} ({servings} servings) • ${pps!.toFixed(2)}/serving</span>
+                    }
+                    if (pps) {
+                      return <span className="shrink-0 text-slate-700">${pps.toFixed(2)}/serving</span>
+                    }
+                    return null
+                  })()}
+                </div>
+                <div className="mt-0.5 flex items-center justify-between text-xs text-slate-500">
+                  {item.category && <span className="italic">{item.category}</span>}
+                </div>
               </div>
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                {item.category && <span className="italic">{item.category}</span>}
-              </div>
+              {/* Explicit action button (requested) */}
+              <button
+                type="button"
+                className="mt-0.5 inline-flex h-8 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleSelect(item)
+                }}
+              >
+                Add
+              </button>
             </div>
           ))}
           {!loading && results.length === 0 && (

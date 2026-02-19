@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import UploadInstructions from '@/components/upload/UploadInstructions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -33,6 +33,16 @@ export default function UploadCenter() {
   const [postUploadOpen, setPostUploadOpen] = useState(false)
   const [wearableStatus, setWearableStatus] = useState<any | null>(null)
   const [firstTimeUpload, setFirstTimeUpload] = useState<boolean>(false)
+  const [showMobileWarn, setShowMobileWarn] = useState(false)
+
+  useEffect(() => {
+    // Match onboarding wearable upload behavior: warn once on mobile, but allow continuing
+    try {
+      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      const dismissed = typeof window !== 'undefined' && localStorage.getItem('wearablesMobileWarnDismissed') === '1'
+      if (isMobile && !dismissed) setShowMobileWarn(true)
+    } catch {}
+  }, [])
 
   const showNeutralUploadToast = (title: string, description?: string) => {
     try {
@@ -234,6 +244,44 @@ export default function UploadCenter() {
         backgroundPosition: 'center'
       }}
     >
+      {/* Mobile warning modal (dashboard upload entrypoint) */}
+      {showMobileWarn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowMobileWarn(false)} />
+          <div className="relative z-10 w-full max-w-[440px] rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Better on desktop</div>
+            <div className="mt-2 text-sm text-gray-700">
+              Uploading health data works best on desktop. The export process on mobile can be complicated.
+              Would you like to continue on mobile or switch to desktop?
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
+                onClick={() => {
+                  try { localStorage.setItem('wearablesMobileWarnDismissed', '1') } catch {}
+                  setShowMobileWarn(false)
+                }}
+              >
+                Continue on mobile
+              </button>
+              <button
+                className="px-3 h-9 rounded bg-[#111111] text-white text-sm hover:opacity-90"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '/upload')
+                    toast('Link copied', { description: 'Open this page on desktop to upload.' } as any)
+                  } catch {
+                    toast('Open on desktop', { description: 'Uploading works best from a computer.' } as any)
+                  }
+                  setShowMobileWarn(false)
+                }}
+              >
+                I’ll use desktop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-[760px] mx-auto px-6 py-16">
         <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-6 sm:p-10 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">

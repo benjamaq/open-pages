@@ -49,7 +49,7 @@ export default function DashboardAddSupplementGate() {
   async function handleSave(details: SupplementDetails) {
     // Create supplement by name
     const safeName = (details.name || '').trim() || 'Custom supplement'
-    // Build dose string from structured fields (required)
+    // Build dose string from structured fields (optional)
     const unitRaw = (details.doseUnit || '').trim()
     const unitNorm = (() => {
       const lc = unitRaw.toLowerCase()
@@ -58,8 +58,11 @@ export default function DashboardAddSupplementGate() {
       if (lc === 'iu') return 'IU'
       return lc
     })()
-    const doseText = `${Number(details.dailyDose || 0) || ''}${unitNorm ? (unitNorm === 'IU' ? ' IU' : ` ${unitNorm}`) : ''}`.trim()
-    // Require at least one time of day; map to single timing label
+    const doseAmount = Number(details.dailyDose || 0) || 0
+    const doseText = (doseAmount > 0 && unitNorm)
+      ? `${doseAmount}${unitNorm === 'IU' ? ' IU' : ` ${unitNorm}`}`.trim()
+      : ''
+    // Time of day is optional; map to a single timing label when present
     const timingLabel = (() => {
       const t = Array.isArray(details.timeOfDay) ? details.timeOfDay : []
       if (!t || t.length === 0) return ''
@@ -69,14 +72,6 @@ export default function DashboardAddSupplementGate() {
       if (t.includes('night')) return 'Before bed'
       return ''
     })()
-    if (!doseText) {
-      alert('Please enter your daily dose (e.g., 400mg, 2 caps).')
-      return
-    }
-    if (!timingLabel) {
-      alert('Please choose when you usually take it (Morning / Afternoon / Evening / Before bed).')
-      return
-    }
     // Brand: prefer explicit brand, else parse from name before comma
     const explicitBrand = (details.brandName || '').trim()
     const parsedFromName = (() => {
@@ -89,9 +84,9 @@ export default function DashboardAddSupplementGate() {
       name: safeName,
       monthly_cost_usd: Math.min(80, Math.max(0, Number(details.monthlyCost || 0))),
       primary_goal_tags: Array.isArray(details.primaryGoals) ? details.primaryGoals : [],
-      // New required fields
-      dose: doseText,
-      timing: timingLabel,
+      // Optional fields
+      ...(doseText ? { dose: doseText } : {}),
+      ...(timingLabel ? { timing: timingLabel } : {}),
       // Include backdated start to seed inferred_start_at on create
       ...(details.startedAt ? { startDate: String(details.startedAt).slice(0, 10) } : {}),
       ...(details.isActive === false && details.stoppedAt ? { endDate: String(details.stoppedAt).slice(0, 10) } : {}),
