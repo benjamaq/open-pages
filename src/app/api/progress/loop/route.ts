@@ -800,14 +800,16 @@ export async function GET(request: Request) {
     // If none has been auto-unlocked yet, auto-unlock the highest-confidence final verdict once.
     if (!hasAutoUnlocked) {
       try {
+        const isGatableFinalVerdict = (st: unknown) => {
+          const n = normalizeTruthStatus(st)
+          return n === 'proven_positive' || n === 'negative' || n === 'no_effect' || n === 'no_detectable_effect'
+        }
         let best: any | null = null
         for (const t of (truths || []) as any[]) {
           const uid = String((t as any).user_supplement_id || '')
           if (!uid) continue
-          const st = normalizeTruthStatus((t as any).status)
-          // Only auto-unlock final verdicts (wow moment) — exclude too_early/confounded.
-          const eligible = st === 'proven_positive' || st === 'negative' || st === 'no_effect' || st === 'no_detectable_effect'
-          if (!eligible) continue
+          // Only auto-unlock gatable final verdicts (wow moment) — exclude too_early/confounded.
+          if (!isGatableFinalVerdict((t as any).status)) continue
           const conf = Number((t as any).confidence_score ?? 0) || 0
           const created = String((t as any).created_at || '')
           const createdMs = created ? Date.parse(created) : 0
@@ -1638,7 +1640,11 @@ export async function GET(request: Request) {
         const ec = String((r as any).effectCategory || derivedCat || '').toLowerCase()
         const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
         const isFinalTruthStatus = ['proven_positive','negative','no_effect','no_detectable_effect','confounded'].includes(String(truthStatusRaw || '').toLowerCase())
-        const isFinalForAutoGate = ['proven_positive','negative','no_effect','no_detectable_effect'].includes(String(truthStatusRaw || '').toLowerCase())
+        // "VERDICT READY" only makes sense when a gatable final verdict exists (not too_early/confounded).
+        const isGatableFinalVerdict = (() => {
+          const st = normalizeTruthStatus(truthStatusRaw)
+          return st === 'proven_positive' || st === 'negative' || st === 'no_effect' || st === 'no_detectable_effect'
+        })()
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
         const is_implicit = Boolean(inferred) && meetsWearableThreshold
@@ -1674,7 +1680,7 @@ export async function GET(request: Request) {
         // One free instant verdict per account:
         // If user already received an auto-unlocked verdict, all other final verdicts require 3 explicit clean check-ins.
         const shouldLockVerdictReady =
-          Boolean(hasAutoUnlocked && isFinalForAutoGate && !truthAutoUnlocked && explicitCleanCheckins < AUTO_UNLOCK_REQ)
+          Boolean(hasAutoUnlocked && isGatableFinalVerdict && !truthAutoUnlocked && explicitCleanCheckins < AUTO_UNLOCK_REQ)
 
         // If verdict is calculated but not unlocked yet, keep it in Testing with a lock badge and tease progress.
         if (shouldLockVerdictReady) {
