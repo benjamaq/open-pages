@@ -1164,36 +1164,42 @@ export async function GET(request: Request) {
             // Prefer implicit truth verdicts for implicit-analysis supplements
             const tImplicit = uid ? implicitTruthBySupp.get(String(uid)) : undefined
             const truth = (tImplicit as any) || (uid ? truthBySupp.get(String(uid)) : undefined)
-            const mapped = truth ? mapTruthToCategory(truth.status) : undefined
-            if (mapped) {
-              ;(r as any).effectCategory = mapped
-            ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
-              // Expose raw truth fields so the dashboard card can render completed details consistently.
+
+            // Always expose raw truth fields (even if status→category mapping fails) so the client can render Completed cards reliably.
+            if (truth) {
               ;(r as any).truthStatus = (truth as any)?.status ?? null
               ;(r as any).truthEffectSize = (truth as any)?.effect_size ?? null
               ;(r as any).truthEffectDirection = (truth as any)?.effect_direction ?? null
               ;(r as any).truthSampleDaysOn = (truth as any)?.sample_days_on ?? null
               ;(r as any).truthSampleDaysOff = (truth as any)?.sample_days_off ?? null
-              if (truth && typeof truth.percent_change === 'number') {
-                r.effectPct = Number(truth.percent_change)
-              } else if (truth && typeof truth.effect_size === 'number') {
-                r.effectPct = Number(truth.effect_size)
-              }
-              if (truth && typeof truth.confidence_score === 'number') {
-                r.confidence = Number(truth.confidence_score)
-              }
-              // If Truth Engine provided sample day counts and they are non-zero, override derived days
-              const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
-              const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
-              const sum = (tOn ?? 0) + (tOff ?? 0)
-              // IMPORTANT: if retest_started_at exists, displayed ON/OFF/days tracked must reflect only days since retest.
-              // Never override with truth-engine sample counts (which may reflect historical data).
-              if (!restartIso && sum > 0) {
-                ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
-                ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
-                ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
-              }
-              // Persist analysis source preferred for display
+              ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
+
+              // Align magnitude + confidence with stored Truth Report for UI consistency
+              if (typeof (truth as any).percent_change === 'number') r.effectPct = Number((truth as any).percent_change)
+              else if (typeof (truth as any).effect_size === 'number') r.effectPct = Number((truth as any).effect_size)
+              if (typeof (truth as any).confidence_score === 'number') r.confidence = Number((truth as any).confidence_score)
+            }
+
+            const mapped = truth ? mapTruthToCategory(String((truth as any)?.status || '')) : undefined
+            if (mapped) {
+              ;(r as any).effectCategory = mapped
+            }
+
+            // If Truth Engine provided sample day counts and they are non-zero, override derived days
+            const tOn = (truth && typeof (truth as any).sample_days_on === 'number') ? Number((truth as any).sample_days_on) : null
+            const tOff = (truth && typeof (truth as any).sample_days_off === 'number') ? Number((truth as any).sample_days_off) : null
+            const sum = (tOn ?? 0) + (tOff ?? 0)
+            // IMPORTANT: if retest_started_at exists, displayed ON/OFF/days tracked must reflect only days since retest.
+            // Never override with truth-engine sample counts (which may reflect historical data).
+            if (!restartIso && sum > 0) {
+              ;(r as any).daysOn = tOn ?? Number((r as any).daysOn || 0)
+              ;(r as any).daysOff = tOff ?? Number((r as any).daysOff || 0)
+              ;(r as any).daysOfData = Number((r as any).daysOn || 0) + Number((r as any).daysOff || 0)
+              ;(r as any).daysTracked = Number((r as any).daysOfData || 0)
+            }
+
+            // Persist analysis source preferred for display
+            if (truth) {
               const chosenSrc = (truth as any)?.analysis_source || (tImplicit ? 'implicit' : (r as any).analysisSource || null)
               ;(r as any).analysisSource = chosenSrc
               // Log when implicit truth overrides explicit path
@@ -1201,7 +1207,7 @@ export async function GET(request: Request) {
                 if (tImplicit && chosenSrc === 'implicit') {
                   console.log('[IMPLICIT-OVERRIDE]', {
                     name: (r as any).name,
-                    verdict: String(mapped),
+                    verdict: String(mapped || (truth as any)?.status || ''),
                     note: 'Using implicit truth verdict; skipping/overriding explicit re-run'
                   })
                 }
@@ -1526,8 +1532,10 @@ export async function GET(request: Request) {
       try {
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
-        // Use effectCategory which already prefers implicit truth
-        const ec = String((r as any).effectCategory || '').toLowerCase()
+        // Prefer effectCategory; if missing, derive from stored truth status so Completed cards don't show "TESTING 100%".
+        const truthStatusRaw = uid ? String((truthBySupp.get(String(uid)) as any)?.status || (implicitTruthBySupp.get(String(uid)) as any)?.status || '') : ''
+        const derivedCat = truthStatusRaw ? String(statusToCategory(truthStatusRaw) || '') : ''
+        const ec = String((r as any).effectCategory || derivedCat || '').toLowerCase()
         const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null

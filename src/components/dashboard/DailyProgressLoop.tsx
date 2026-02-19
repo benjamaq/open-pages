@@ -515,7 +515,12 @@ export function DailyProgressLoop({
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const hasVerdictFlag = (['keep','drop'].includes(verdictValue) || ['works','no_effect','no_detectable_effect'].includes(effectCatLower))
+          const truthStatusLower = String((row as any)?.truthStatus || '').toLowerCase()
+          const hasVerdictFlag = (
+            ['keep','drop'].includes(verdictValue) ||
+            ['works','negative','no_effect','no_detectable_effect'].includes(effectCatLower) ||
+            ['proven_positive','negative','no_effect','no_detectable_effect'].includes(truthStatusLower)
+          )
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -530,7 +535,12 @@ export function DailyProgressLoop({
           const progressPct = Number(row?.progressPercent || 0)
           const verdictValue = String((row as any)?.verdict || '').toLowerCase()
           const effectCatLower = String((row as any)?.effectCategory || '').toLowerCase()
-          const hasFinalVerdict = (['keep','drop'].includes(verdictValue) || ['works','negative','no_effect','no_detectable_effect'].includes(effectCatLower))
+          const truthStatusLower = String((row as any)?.truthStatus || '').toLowerCase()
+          const hasFinalVerdict = (
+            ['keep','drop'].includes(verdictValue) ||
+            ['works','negative','no_effect','no_detectable_effect'].includes(effectCatLower) ||
+            ['proven_positive','negative','no_effect','no_detectable_effect'].includes(truthStatusLower)
+          )
           const hasVerdict = ['keep', 'drop', 'test', 'test_more'].includes(verdictValue)
           const isSignificant = Boolean((row as any)?.isStatisticallySignificant) || ['works', 'no_effect'].includes(effectCatLower)
           const verdictReady = (progressPct >= 100) && (!isMember || hasVerdict || isSignificant) && effectCatLower !== 'needs_more_data'
@@ -545,9 +555,13 @@ export function DailyProgressLoop({
             const verdictRank = (row: any) => {
               const v = String((row as any)?.verdict || '').toLowerCase()
               const cat = String((row as any)?.effectCategory || '').toLowerCase()
+              const ts = String((row as any)?.truthStatus || '').toLowerCase()
               if (v === 'keep' || cat === 'works') return 0
               if (cat === 'no_effect' || cat === 'no_detectable_effect') return 1
               if (v === 'drop' || cat === 'negative') return 2
+              if (ts === 'proven_positive') return 0
+              if (ts === 'no_effect' || ts === 'no_detectable_effect') return 1
+              if (ts === 'negative') return 2
               return 99
             }
             const ra = verdictRank(a)
@@ -674,10 +688,13 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const effectCat = (row as any).effectCategory as string | undefined
   const effectCatLower = String(effectCat || '').toLowerCase()
   const isImplicit = String((row as any)?.analysisSource || '').toLowerCase() === 'implicit'
+  const truthStatusLower = String((row as any)?.truthStatus || '').toLowerCase()
   // Final verdict categories come from supplement_truth_reports.status → effectCategory mapping.
   // IMPORTANT: completion is determined by the existence of a truth report row (NOT by user_supplement.testing_status;
   // the DB constraint only allows 'inactive' | 'testing' | 'paused').
-  const hasFinalVerdictGlobal = ['works', 'negative', 'no_effect', 'no_detectable_effect'].includes(effectCatLower)
+  const hasFinalVerdictGlobal =
+    ['works', 'negative', 'no_effect', 'no_detectable_effect'].includes(effectCatLower) ||
+    ['proven_positive', 'negative', 'no_effect', 'no_detectable_effect'].includes(truthStatusLower)
   // Prevent 100% display for "needs_more_data" (Truth Engine too_early) even if raw progress hit 100 on labeled days
   let progressForDisplay = row.progressPercent
   if (effectCatLower === 'needs_more_data') {
