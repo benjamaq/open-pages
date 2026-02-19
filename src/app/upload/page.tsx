@@ -34,13 +34,16 @@ export default function UploadCenter() {
   const [wearableStatus, setWearableStatus] = useState<any | null>(null)
   const [firstTimeUpload, setFirstTimeUpload] = useState<boolean>(false)
   const [showMobileWarn, setShowMobileWarn] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    // Match onboarding wearable upload behavior: warn once on mobile, but allow continuing
+    // Dashboard upload entrypoint: warn on mobile (but never block continuing).
+    // Use a separate dismiss key from onboarding so dismissing one doesn't hide the other.
     try {
-      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      const dismissed = typeof window !== 'undefined' && localStorage.getItem('wearablesMobileWarnDismissed') === '1'
-      if (isMobile && !dismissed) setShowMobileWarn(true)
+      const mobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      setIsMobile(Boolean(mobile))
+      const dismissed = typeof window !== 'undefined' && localStorage.getItem('uploadMobileWarnDismissed') === '1'
+      if (mobile && !dismissed) setShowMobileWarn(true)
     } catch {}
   }, [])
 
@@ -258,7 +261,7 @@ export default function UploadCenter() {
               <button
                 className="px-3 h-9 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-50"
                 onClick={() => {
-                  try { localStorage.setItem('wearablesMobileWarnDismissed', '1') } catch {}
+                  try { localStorage.setItem('uploadMobileWarnDismissed', '1') } catch {}
                   setShowMobileWarn(false)
                 }}
               >
@@ -297,6 +300,12 @@ export default function UploadCenter() {
       </div>
 
       <Card className="overflow-hidden p-0">
+        {/* Failsafe inline note (in case modal was dismissed earlier) */}
+        {isMobile && (
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <span className="font-semibold">Tip:</span> Uploading health exports is much easier on a computer. If you can, open this page on desktop to upload.
+          </div>
+        )}
         <Tabs value={uploadType} onValueChange={v => setUploadType(v as UploadType)}>
           <div className="border-b border-gray-200">
             <TabsList className="grid grid-cols-2">
