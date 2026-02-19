@@ -446,36 +446,24 @@ export async function GET(request: Request) {
       }
     }
 
-    // Compute total user explicit check-in days (any supplement_intake present; do not exclude confounds)
-    let totalUserCheckins = 0
-    try {
-      const days = new Set<string>()
-      for (const entry of (entries365 || [])) {
-        const intake = (entry as any)?.supplement_intake
-        if (intake && typeof intake === 'object' && Object.keys(intake).length > 0) {
-          const dKey = String((entry as any).local_date || '').slice(0, 10)
-          if (dKey) days.add(dKey)
+    // IMPORTANT: "check-ins completed" must only count explicit user check-ins,
+    // not wearable-imported / inferred historical days.
+    // Source of truth for explicit check-ins: checkin table (distinctCheckinDays).
+    const totalUserCheckins = distinctCheckinDays.size
+    const explicitCleanCheckins = (() => {
+      try {
+        // A "clean" check-in day is one without noise tags.
+        // cleanDatesSet is derived from daily_entries by excluding NOISE_TAGS.
+        // We intersect with distinctCheckinDays so uploads can't inflate this number.
+        let n = 0
+        for (const d of distinctCheckinDays) {
+          if (cleanDatesSet.has(d)) n++
         }
+        return n
+      } catch {
+        return distinctCheckinDays.size
       }
-      totalUserCheckins = days.size
-    } catch {}
-
-    // Explicit *clean* check-ins (used for auto-unlock gating):
-    // count days where the user explicitly logged supplement intake AND no noise tags were present.
-    let explicitCleanCheckins = 0
-    try {
-      const days = new Set<string>()
-      for (const entry of (entries365 || [])) {
-        const intake = (entry as any)?.supplement_intake
-        if (!(intake && typeof intake === 'object' && Object.keys(intake).length > 0)) continue
-        const tags: string[] = Array.isArray((entry as any).tags) ? (entry as any).tags : []
-        const noisy = tags.some(t => NOISE_TAGS.has(String(t).toLowerCase()))
-        if (noisy) continue
-        const dKey = String((entry as any).local_date || '').slice(0, 10)
-        if (dKey) days.add(dKey)
-      }
-      explicitCleanCheckins = days.size
-    } catch {}
+    })()
 
     // Compute total wearable days across all time to gate implicit behavior/UI
     let wearableCountAll = 0
