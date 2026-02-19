@@ -16,15 +16,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BioStackr: Pattern Discovery for Sleep | Find Why You Can't Sleep",
-  description: "Sleep trackers give you a score. BioStackr finds why you can't sleep. Track in 20 seconds/day and get AI insights in 7–14 days.",
-  keywords: ["sleep", "insomnia", "sleep tracking", "sleep patterns", "mood", "pattern discovery", "biofeedback"],
+  title: "BioStackr — Find Out What Actually Works",
+  description: "Find out which supplements actually work for you. BioStackr analyzes your wearable data to test your stack and tell you what to keep, drop, or keep testing.",
+  keywords: ["supplements", "wearables", "Apple Health", "WHOOP", "stack testing", "supplement effectiveness", "BioStackr"],
   authors: [{ name: "Open Pages" }],
   manifest: "/manifest-v2.json",
   openGraph: {
-    title: "BioStackr: Pattern Discovery for Sleep",
-    description: "Find the patterns keeping you awake. Actionable insights in 7–14 days.",
+    title: "BioStackr — Find Out What Actually Works",
+    description: "Find out which supplements actually work for you. BioStackr analyzes your wearable data to test your stack and tell you what to keep, drop, or keep testing.",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BioStackr — Find Out What Actually Works",
+    description: "Find out which supplements actually work for you. BioStackr analyzes your wearable data to test your stack and tell you what to keep, drop, or keep testing.",
   },
 };
 
