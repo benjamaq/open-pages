@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { detectTimezone, roundTimeTo30Min, saveReminderSettings } from '@/lib/reminders/saveReminderSettings'
 
 type EnableRemindersModalProps = {
   isOpen: boolean
@@ -23,11 +24,7 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
   }, [isOpen])
 
   const timezone = useMemo(() => {
-    try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-    } catch {
-      return 'UTC'
-    }
+    return detectTimezone()
   }, [])
 
   if (!isOpen) return null
@@ -60,20 +57,15 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
         }
       } catch {}
 
-      // Save preference regardless of push support; we'll use email or client notifications as fallback
-      const resp = await fetch('/api/settings/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          daily_reminder_enabled: true,
-          reminder_time: time,
-          timezone
-        })
+      // Save preference regardless of push support; we'll use email or client notifications as fallback.
+      // This writes BOTH profiles.reminder_* and notification_preferences.* to keep the system consistent.
+      const save = await saveReminderSettings({
+        enabled: true,
+        time,
+        timezone,
+        timezoneAutodetected: true,
       })
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}))
-        throw new Error(data?.details || data?.error || 'Failed to save reminder settings')
-      }
+      if (!save.ok) throw new Error(save.error)
 
       // Fire a local test notification if allowed
       try {
@@ -140,8 +132,9 @@ export default function EnableRemindersModal({ isOpen, onClose }: EnableReminder
               <label className="block text-sm font-medium text-gray-700 mb-1">Reminder time</label>
               <input
                 type="time"
+                step={1800}
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
+                onChange={(e) => setTime(roundTimeTo30Min(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
               <p className="text-xs text-gray-500 mt-1">Timezone: {timezone}</p>

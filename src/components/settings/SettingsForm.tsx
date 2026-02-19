@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { detectTimezone, roundTimeTo30Min, saveReminderSettings } from '@/lib/reminders/saveReminderSettings'
 
 export function SettingsForm({
   initial,
@@ -12,36 +13,52 @@ export function SettingsForm({
   isMember: boolean
 }) {
   const detectedTz = useMemo(() => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null } catch { return null }
+    try { return detectTimezone() || null } catch { return null }
   }, [])
   const [enabled, setEnabled] = useState<boolean>(Boolean(initial?.reminder_enabled))
   const [time, setTime] = useState<string>(initial?.reminder_time || '06:00')
   const [tz, setTz] = useState<string>(initial?.reminder_timezone || detectedTz || 'UTC')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string>('')
+  const [tzTouched, setTzTouched] = useState(false)
 
-  const times = ['06:00', '07:00', '08:00', '09:00']
-  const displayTimes: Array<{ v: string; l: string }> = [
-    { v: '06:00', l: '6:00 AM' },
-    { v: '07:00', l: '7:00 AM' },
-    { v: '08:00', l: '8:00 AM' },
-    { v: '09:00', l: '9:00 AM' },
-  ]
+  const displayTimes: Array<{ v: string; l: string }> = useMemo(() => {
+    // 30-minute increments from 06:00 through 23:30
+    const out: Array<{ v: string; l: string }> = []
+    const pad2 = (n: number) => String(n).padStart(2, '0')
+    for (let h = 6; h <= 23; h++) {
+      for (const m of [0, 30]) {
+        const v = `${pad2(h)}:${pad2(m)}`
+        const hour12 = ((h + 11) % 12) + 1
+        const ampm = h >= 12 ? 'PM' : 'AM'
+        const l = `${hour12}:${pad2(m)} ${ampm}`
+        out.push({ v, l })
+      }
+    }
+    return out
+  }, [])
   const tzOptions = Array.from(new Set([tz, detectedTz, 'America/Los_Angeles', 'America/New_York', 'Europe/London', 'Europe/Berlin', 'Asia/Singapore', 'Australia/Sydney', 'UTC'].filter(Boolean))) as string[]
 
   async function onSave() {
     setSaving(true)
     setSaved(false)
+    setSaveError('')
     try {
-      const r = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reminder_enabled: enabled, reminder_time: time, reminder_timezone: tz })
+      const res = await saveReminderSettings({
+        enabled,
+        time,
+        timezone: tz || detectTimezone(),
+        timezoneAutodetected: !tzTouched,
       })
-      if (r.ok) setSaved(true)
+      if (!res.ok) {
+        setSaveError(res.error || 'Failed to save — please try again.')
+        return
+      }
+      setSaved(true)
     } finally {
       setSaving(false)
-      setTimeout(() => setSaved(false), 2000)
+      setTimeout(() => setSaved(false), 3000)
     }
   }
 
@@ -84,13 +101,17 @@ export function SettingsForm({
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="text-xs text-gray-700">
               Reminder time
-              <select value={time} onChange={e => setTime(e.target.value)} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
+              <select value={roundTimeTo30Min(time)} onChange={e => setTime(roundTimeTo30Min(e.target.value))} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
                 {displayTimes.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
               </select>
             </label>
             <label className="text-xs text-gray-700">
               Timezone
-              <select value={tz} onChange={e => setTz(e.target.value)} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
+              <select
+                value={tz}
+                onChange={e => { setTzTouched(true); setTz(e.target.value) }}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
                 {tzOptions.map(z => <option key={z} value={z}>{z}</option>)}
               </select>
             </label>
@@ -107,7 +128,8 @@ export function SettingsForm({
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
-          {saved && <span className="text-sm text-gray-600">Saved</span>}
+          {saved && <span className="text-sm text-gray-700">Settings saved ✓</span>}
+          {!saved && saveError && <span className="text-sm text-red-700">Failed to save — please try again.</span>}
         </div>
       </section>
 
