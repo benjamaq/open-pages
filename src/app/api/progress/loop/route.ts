@@ -695,7 +695,9 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     const truthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
-    const implicitTruthBySupp = new Map<string, { status: string; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
+    // Keep a full implicit-source snapshot as well (NOT just status/counts), so the dashboard can render completed details
+    // (effect size, direction, primary metric, confidence) even when analysis_source='implicit'.
+    const implicitTruthBySupp = new Map<string, { status: string; primary_metric?: string | null; effect_direction?: string | null; effect_size?: number | null; percent_change?: number | null; confidence_score?: number | null; sample_days_on?: number | null; sample_days_off?: number | null; analysis_source?: string | null }>()
     // Also capture the latest implicit-source sample counts per supplement for upload progress
     const implicitSampleBySupp = new Map<string, { on: number; off: number }>()
     for (const t of truths || []) {
@@ -718,6 +720,11 @@ export async function GET(request: Request) {
       if (!implicitTruthBySupp.has(uid) && String((t as any).analysis_source || '').toLowerCase() === 'implicit') {
         implicitTruthBySupp.set(uid, {
           status: String((t as any).status || ''),
+          primary_metric: (t as any).primary_metric ?? null,
+          effect_direction: (t as any).effect_direction ?? null,
+          effect_size: (t as any).effect_size ?? null,
+          percent_change: (t as any).percent_change ?? null,
+          confidence_score: (t as any).confidence_score ?? null,
           sample_days_on: (t as any).sample_days_on ?? null,
           sample_days_off: (t as any).sample_days_off ?? null,
           analysis_source: 'implicit'
@@ -733,8 +740,14 @@ export async function GET(request: Request) {
         if (!implicitTruthBySupp.has(uid)) {
           implicitTruthBySupp.set(uid, {
             status: String((t as any).status || ''),
+            primary_metric: (t as any).primary_metric ?? null,
+            effect_direction: (t as any).effect_direction ?? null,
+            effect_size: (t as any).effect_size ?? null,
+            percent_change: (t as any).percent_change ?? null,
+            confidence_score: (t as any).confidence_score ?? null,
             sample_days_on: Number((t as any).sample_days_on ?? 0),
             sample_days_off: Number((t as any).sample_days_off ?? 0),
+            analysis_source: 'implicit'
           })
         }
       }
@@ -1522,7 +1535,7 @@ export async function GET(request: Request) {
       const st = String(truthStatus || '').toLowerCase()
       if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
       if (st === 'no_effect' || st === 'no_detectable_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
-      if (st === 'negative') return { key: 'negative', text: 'NEGATIVE' }
+      if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
     }
@@ -1537,6 +1550,7 @@ export async function GET(request: Request) {
         const derivedCat = truthStatusRaw ? String(statusToCategory(truthStatusRaw) || '') : ''
         const ec = String((r as any).effectCategory || derivedCat || '').toLowerCase()
         const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
+        const isFinalTruthStatus = ['proven_positive','negative','no_effect','no_detectable_effect'].includes(String(truthStatusRaw || '').toLowerCase())
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
         const is_implicit = Boolean(inferred) && meetsWearableThreshold
@@ -1546,7 +1560,9 @@ export async function GET(request: Request) {
         // Gate: lock implicit unless (final verdict AND total user check-ins >= required confirmations).
         // Use the per-row confirmCheckinsRequired computed earlier (Bug 28), not a hard-coded 3.
         const confirmReq = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
-        const is_gate_locked = Boolean(is_implicit && !(has_final_verdict && totalUserCheckins >= confirmReq))
+        // IMPORTANT: if a final truth report exists (truthStatusRaw is final), do NOT gate-lock it into TESTING.
+        // The Completed section is driven by the existence of supplement_truth_reports, not by check-in confirmation UI gates.
+        const is_gate_locked = Boolean(is_implicit && !isFinalTruthStatus && !(has_final_verdict && totalUserCheckins >= confirmReq))
         // Section and progress per rules
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
@@ -1566,6 +1582,15 @@ export async function GET(request: Request) {
         let label = ''
         let subtext = ''
         const usingUpload = String((r as any)?.analysisSource || '').toLowerCase() === 'implicit'
+
+        // HARD OVERRIDE (Wayne): if the stored truthStatus is a final verdict, force completed display.
+        if (isFinalTruthStatus) {
+          section = 'completed'
+          progress = 100
+          // Show verdict badge/details on completed cards (Wayne is Pro; also avoids "TESTING 100%" confusion).
+          showVerdict = true
+          badge = badgeFromTruth(truthStatusRaw)
+        } else
         if (!is_implicit) {
           if (!has_final_verdict) {
             section = 'testing'
