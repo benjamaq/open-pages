@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import PaywallModal from '../../components/billing/PaywallModal'
 import StackPillGrid from '../../components/stack/StackPillGrid'
 import type { StackConstellationItem } from '../../components/stack/StackConstellation'
+import { verdictLabelsForStatus } from '@/lib/verdictLabels'
 
 type EffectRow = {
   user_supplement_id: string
@@ -494,7 +495,8 @@ export default function ResultsPage() {
       // Base verdict from effect summary (legacy), will be overridden by loop verdict when available
       let verdict: 'KEEP' | 'DROP' | 'INCONCLUSIVE' = 'INCONCLUSIVE'
       if (cat === 'works') verdict = 'KEEP'
-      else if (cat === 'no_effect') verdict = 'DROP'
+      // no_effect is not a DROP; treat it as "no clear signal" (shown via a single badge below).
+      else if (cat === 'no_effect') verdict = 'INCONCLUSIVE'
       else if (cat === 'inconsistent') verdict = 'INCONCLUSIVE'
       const conf = typeof e?.effect_confidence === 'number' ? Math.round(e!.effect_confidence!) : null
       const magVal = typeof e?.effect_magnitude === 'number' ? Math.round(e!.effect_magnitude!) : null
@@ -512,7 +514,6 @@ export default function ResultsPage() {
       // Cost impact phrasing
       const costText = (() => {
         if (verdict === 'KEEP') return monthly > 0 ? `Worth keeping: $${monthly}/month` : 'Worth keeping'
-        if (verdict === 'DROP') return monthly > 0 ? `Consider dropping: Save $${monthly}/month` : 'Consider dropping'
         // If inconclusive, nudge only when effect suggests negative and confidence moderate
         if (typeof signedMag === 'number' && signedMag < 0 && (conf ?? 0) >= 60) {
           return monthly > 0 ? `Consider dropping: Save $${monthly}/month` : 'Consider dropping'
@@ -522,16 +523,33 @@ export default function ResultsPage() {
       // Use loop verdict/state to align with dashboard truth overlay
       const isReady = Boolean(loopData && (loopData as any).isReady)
       const catLower = String((loopData as any)?.effectCategory || '').toLowerCase()
+      const truthStatusLower = String((loopData as any)?.truthStatus || '').toLowerCase()
       const loopVerdictRaw = String((loopData as any)?.verdict || '').toLowerCase()
-      const verdictKeep = loopVerdictRaw === 'keep' || catLower === 'works'
-      const verdictDrop = loopVerdictRaw === 'drop' || catLower === 'no_effect'
-      const verdictNoDetect = catLower === 'no_detectable_effect'
+      // Prefer stored truth-report status when available; fall back to effectCategory/verdict.
+      const statusForUi =
+        truthStatusLower ||
+        (loopVerdictRaw === 'keep' ? 'proven_positive'
+          : loopVerdictRaw === 'drop' ? 'negative'
+          : catLower === 'works' ? 'proven_positive'
+          : catLower === 'negative' ? 'negative'
+          : (catLower === 'no_effect' || catLower === 'no_detectable_effect') ? 'no_effect'
+          : catLower === 'inconsistent' ? 'confounded'
+          : catLower === 'needs_more_data' ? 'too_early'
+          : '')
+      const mapped = verdictLabelsForStatus({
+        status: statusForUi,
+        surface: 'stack',
+        primaryMetricLabel: (loopData as any)?.primaryMetricLabel || null,
+      })
+      const verdictKeep = mapped.badgeKey === 'keep'
+      const verdictDrop = mapped.badgeKey === 'drop'
+      const verdictNoDetect = mapped.badgeKey === 'no_clear_signal' || mapped.badgeKey === 'inconclusive'
       // Dumb badge purely from API verdict/category
       const badge = (() => {
         if (isReady) {
           if (verdictKeep) return { label: 'KEEP', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200' }
           if (verdictDrop) return { label: 'DROP', cls: 'bg-rose-100 text-rose-800 border border-rose-200' }
-          if (verdictNoDetect) return { label: 'No detectable effect', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
+          if (verdictNoDetect) return { label: 'NO CLEAR SIGNAL', cls: 'bg-gray-100 text-gray-800 border border-gray-200' }
           return { label: 'Error: missing verdict', cls: 'bg-red-50 text-red-700 border border-red-200' }
         }
         return { label: 'Testing', cls: 'bg-amber-50 text-amber-800 border border-amber-200' }
@@ -558,8 +576,8 @@ export default function ResultsPage() {
       if (isReady) {
         const effPct = typeof (loopData as any)?.effectPercent === 'number' ? Math.round((loopData as any).effectPercent) : null
         const metric = (loopData as any)?.effectMetric || 'energy'
-        if (verdict === 'KEEP' && effPct != null) contextLines.push(`Clear positive effect: +${effPct}% ${metric}`)
-        else if (verdict === 'DROP' && effPct != null) contextLines.push(`Clear negative effect: ${effPct}% ${metric}`)
+        if (verdictKeep && effPct != null) contextLines.push(`Clear positive effect: +${effPct}% ${metric}`)
+        else if (verdictDrop && effPct != null) contextLines.push(`Clear negative effect: ${effPct}% ${metric}`)
         else {
           const inconc = (loopData as any)?.inconclusiveText || 'Data ready, effect not statistically clear'
           contextLines.push(`No clear effect — ${inconc}`)
@@ -586,7 +604,7 @@ export default function ResultsPage() {
         return 'Keep tracking →'
       })()
       const verdictUpper: 'KEEP' | 'DROP' | 'INCONCLUSIVE' =
-        verdictKeep ? 'KEEP' : verdictDrop ? 'DROP' : verdictNoDetect ? 'INCONCLUSIVE' : 'INCONCLUSIVE'
+        verdictKeep ? 'KEEP' : verdictDrop ? 'DROP' : 'INCONCLUSIVE'
       return { id: s.id, name: s.name, verdict: verdictUpper, badge, conf, mag: null, monthly, yearly, costText, onAvg, offAvg, daysOn, daysOff, onClean, offClean, reqOn, reqOff, distance, rotationHint, contextLines, actionText }
     })
   }, [supps, effects, loopById])
@@ -839,11 +857,9 @@ export default function ResultsPage() {
                 const daysOnStack = startDate ? Math.max(0, Math.round((Date.now()- +startDate)/86400000)) : ((loopById[r.id]?.daysOnClean ?? loopById[r.id]?.daysOn ?? 0) + (loopById[r.id]?.daysOffClean ?? loopById[r.id]?.daysOff ?? 0))
                 // Show status strictly from lifecycle (dumb renderer)
                 const isCompleted = r.lifecycle !== 'Active'
-                const statusLabel = (!paid && isCompleted)
-                  ? 'Verdict ready'
-                  : (r.lifecycle === 'Active'
-                      ? 'Testing'
-                      : (r.lifecycle === 'Working' ? 'KEEP' : r.lifecycle === 'Not working' ? 'DROP' : 'No detectable effect'))
+                // Avoid duplicate/conflicting verdict labels (e.g., "DROP" + "NO CLEAR SIGNAL" on the same card).
+                // Active cards can show a small "Testing" indicator here; completed verdict badges are shown once below.
+                const statusLabel = r.lifecycle === 'Active' ? 'Testing' : ''
                 const statusIcon = (r.lifecycle === 'Active' ? '●' : r.lifecycle === 'Working' ? '✓' : r.lifecycle === 'Not working' ? '✗' : '○')
                 const monthlyCost = typeof r.monthly === 'number' ? r.monthly : 0
                 return (
@@ -857,7 +873,7 @@ export default function ResultsPage() {
                           </span>
                           {(!paid && isCompleted)
                             ? <span className="text-[#4B5563]">&nbsp;</span>
-                            : <span className="text-[#4B5563]">{statusLabel}</span>}
+                            : (statusLabel ? <span className="text-[#4B5563]">{statusLabel}</span> : <span className="text-[#4B5563]">&nbsp;</span>)}
                         </div>
                       </div>
                       <div className="mt-2">
@@ -991,19 +1007,33 @@ export default function ResultsPage() {
                               </>
                             ) : (
                               (() => {
-                                const label =
-                                  r.lifecycle === 'Working' ? '✓ KEEP'
-                                  : (r.lifecycle === 'Not working' || r.lifecycle === 'No clear effect') ? 'NO CLEAR SIGNAL'
-                                  : null
+                                const l = loopById[r.id] as any
+                                const st = String(l?.truthStatus || '').toLowerCase()
+                                const cat = String(l?.effectCategory || '').toLowerCase()
+                                const statusForUi =
+                                  st ||
+                                  (cat === 'works' ? 'proven_positive'
+                                    : cat === 'negative' ? 'negative'
+                                    : (cat === 'no_effect' || cat === 'no_detectable_effect') ? 'no_effect'
+                                    : cat === 'inconsistent' ? 'confounded'
+                                    : '')
+                                const mapped = verdictLabelsForStatus({
+                                  status: statusForUi,
+                                  surface: 'stack',
+                                  primaryMetricLabel: l?.primaryMetricLabel || null,
+                                })
+                                // Render ONE badge only (unified with dashboard semantics)
+                                const label = mapped.badgeKey === 'testing' ? null : mapped.badge
                                 if (!label) return <div className="text-[#6B7280]">No measurable change</div>
-                                const cls =
-                                  label === '✓ KEEP'
-                                    ? 'inline-block text-[11px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wide'
-                                    : 'inline-block text-[11px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wide'
+                                const cls = 'inline-block text-[11px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wide'
                                 const style =
-                                  label === '✓ KEEP'
+                                  mapped.badgeKey === 'keep'
                                     ? { backgroundColor: '#E8DFD0', color: '#5C4A32', borderColor: '#D4C8B5' }
-                                    : { backgroundColor: '#EDE9E3', color: '#6B5A1E', borderColor: '#D9C88A' }
+                                    : mapped.badgeKey === 'drop'
+                                      ? { backgroundColor: '#F0D4CC', color: '#8B3A2F', borderColor: '#E0B8AD' }
+                                      : mapped.badgeKey === 'inconclusive'
+                                        ? { backgroundColor: '#F1EFEA', color: '#5C4A32', borderColor: '#E4E0D6' }
+                                        : { backgroundColor: '#EDE9E3', color: '#6B5A1E', borderColor: '#D9C88A' }
                                 return (
                                   <div className="flex items-center gap-2">
                                     <span className={cls} style={style as any}>{label}</span>

@@ -1536,6 +1536,7 @@ export async function GET(request: Request) {
       if (st === 'proven_positive') return { key: 'keep', text: '✓ KEEP' }
       if (st === 'no_effect' || st === 'no_detectable_effect') return { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' }
       if (st === 'negative') return { key: 'drop', text: '✗ DROP' }
+      if (st === 'confounded') return { key: 'inconclusive', text: '⚠ INCONCLUSIVE' }
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
     }
@@ -1550,7 +1551,7 @@ export async function GET(request: Request) {
         const derivedCat = truthStatusRaw ? String(statusToCategory(truthStatusRaw) || '') : ''
         const ec = String((r as any).effectCategory || derivedCat || '').toLowerCase()
         const has_final_verdict = ['works','no_effect','no_detectable_effect','negative','proven_positive'].includes(ec)
-        const isFinalTruthStatus = ['proven_positive','negative','no_effect','no_detectable_effect'].includes(String(truthStatusRaw || '').toLowerCase())
+        const isFinalTruthStatus = ['proven_positive','negative','no_effect','no_detectable_effect','confounded'].includes(String(truthStatusRaw || '').toLowerCase())
         // Derive implicit from inferred_start_at + wearable_days
         const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
         const is_implicit = Boolean(inferred) && meetsWearableThreshold

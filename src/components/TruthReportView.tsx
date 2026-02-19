@@ -3,6 +3,7 @@
 import type { TruthReport } from '@/lib/truthEngine/types'
 import bioMap from '@/lib/truthEngine/supplement-biology-map-full.json'
 import { useRef, useState } from 'react'
+import { verdictLabelsForStatus } from '@/lib/verdictLabels'
 
 export default function TruthReportView({ report }: { report: TruthReport }) {
   const reportRef = useRef<HTMLDivElement>(null)
@@ -19,14 +20,11 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
   const isImplicit = String((report as any)?.analysisSource || 'implicit') === 'implicit'
   const implicitConfirmed = Boolean((report as any)?.implicitConfirmed)
   const statusLc = String((report as any)?.status || '').toLowerCase()
-  const badgeLabel = (() => {
-    if (statusLc === 'proven_positive') return 'KEEP'
-    if (statusLc === 'negative') return 'NEGATIVE'
-    if (statusLc === 'no_effect' || statusLc === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
-    const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
-    if (isImplicitSrc) return 'OBSERVED SIGNAL'
-    return String((report as any)?.verdictLabel || 'TESTING').toUpperCase()
-  })()
+  const badgeLabel = verdictLabelsForStatus({
+    status: (report as any)?.status,
+    surface: 'truth_report',
+    primaryMetricLabel: (report as any)?.primaryMetricLabel || null,
+  }).badge
   const supName = String(
     (report as any)?.supplementName ||
     (report as any)?.name ||
@@ -99,15 +97,11 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
     try { console.log('[REPORT-FOOTER] Share summary clicked') } catch {}
     const url = typeof window !== 'undefined' ? window.location.href : ''
     const subject = supName ? `${supName} — BioStackr Truth Report` : 'BioStackr Truth Report'
-    const verdictText = (() => {
-      const status = String((report as any)?.status || '').toLowerCase()
-      if (status === 'proven_positive') return 'KEEP'
-      if (status === 'negative') return 'NEGATIVE'
-      if (status === 'no_effect' || status === 'no_detectable_effect') return 'NO CLEAR SIGNAL'
-      const isImplicitSrc = String((report as any)?.analysisSource || '').toLowerCase() === 'implicit'
-      if (isImplicitSrc) return 'OBSERVED SIGNAL'
-      return String((report as any)?.verdictLabel || 'TESTING').toUpperCase()
-    })()
+    const verdictText = verdictLabelsForStatus({
+      status: (report as any)?.status,
+      surface: 'truth_report',
+      primaryMetricLabel: (report as any)?.primaryMetricLabel || null,
+    }).badge
     const body = [
       `${supName || 'This supplement'} — Truth Report`,
       '',
@@ -187,9 +181,15 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           <div className="mt-2 text-sm text-slate-200 space-y-0.5">
             <div>
               <span className="text-slate-400">Recommendation:</span>{' '}
-              {isImplicit && implicitConfirmed && String((report as any)?.status || '').toLowerCase() === 'proven_positive'
-                ? 'Keep it in your stack.'
-                : decision.recommendation}
+              {(() => {
+                const mapped = verdictLabelsForStatus({
+                  status: (report as any)?.status,
+                  surface: 'truth_report',
+                  primaryMetricLabel: (report as any)?.primaryMetricLabel || null,
+                })
+                // Prefer the unified mapping for final statuses; fall back to existing decision tree for testing/too_early.
+                return mapped.recommendation || decision.recommendation
+              })()}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
