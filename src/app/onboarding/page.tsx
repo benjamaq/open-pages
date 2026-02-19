@@ -259,7 +259,7 @@ export default function OnboardingPage() {
             <p className="text-base font-medium text-slate-600 mb-2">
               {firstName ? `Welcome to BioStackr, ${firstName}` : 'Welcome to BioStackr'}
             </p>
-            <h1 className="text-[40px] font-bold text-slate-900 leading-tight mb-3">
+            <h1 className="text-[32px] sm:text-[40px] font-bold text-slate-900 leading-tight mb-3">
               Let&apos;s look at your stack.
             </h1>
             <p className="text-lg text-slate-600">
@@ -448,7 +448,7 @@ export default function OnboardingPage() {
           )}
 
           {/* CTA */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex flex-col">
               <a href="/onboarding/wearables" className="text-slate-600 text-sm">I’ll add these later</a>
               <span className="mt-1 text-xs text-slate-400">You can always update this from your dashboard.</span>
@@ -456,7 +456,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleContinue}
               disabled={supplements.length === 0}
-              className="px-8 py-[14px] bg-slate-900 text-white rounded-full text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+              className="w-full sm:w-auto px-5 py-3 bg-black text-white rounded-full text-sm font-semibold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-900 transition-colors"
             >
               Save & Continue
             </button>
