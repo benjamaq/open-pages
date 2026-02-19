@@ -473,28 +473,52 @@ export function SupplementDetailsModal({
              {intakePeriods.length === 0 && (
                <div className="text-xs text-slate-500 mb-2">Add past start/stop windows to capture breaks.</div>
              )}
-             <div className="space-y-2">
-               {intakePeriods.map((p, i) => (
-                 <div key={i} className="grid grid-cols-2 gap-2 items-end">
-                   <label className="text-xs text-slate-700">
-                     Started
-                     <input type="date" value={p.startedAt} max={new Date().toISOString().slice(0,10)} onChange={(e) => {
-                       const next = [...intakePeriods]; next[i] = { ...next[i], startedAt: e.target.value }; setIntakePeriods(next)
-                     }} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
-                   </label>
-                   <div className="flex items-end gap-2">
-                     <label className="flex-1 text-xs text-slate-700">
-                       Stopped
-                       <input type="date" value={p.stoppedAt} max={new Date().toISOString().slice(0,10)} onChange={(e) => {
-                         const next = [...intakePeriods]; next[i] = { ...next[i], stoppedAt: e.target.value }; setIntakePeriods(next)
-                       }} className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md" />
-                     </label>
-                     <button onClick={() => setIntakePeriods(intakePeriods.filter((_, idx) => idx !== i))} className="px-3 py-2 text-sm border border-slate-300 rounded-md">Remove</button>
-                   </div>
-                 </div>
-               ))}
-             </div>
-             <button onClick={() => setIntakePeriods([...intakePeriods, { startedAt: '', stoppedAt: '' }])} className="mt-2 px-3 py-2 text-sm border border-slate-300 rounded-md">+ Add period</button>
+            <div className="space-y-2">
+              {intakePeriods.map((p, i) => (
+                <div key={i} className="rounded-lg border border-[#E4E1DC] bg-white p-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <label className="text-xs text-slate-700">
+                      Started
+                      <input
+                        type="date"
+                        value={p.startedAt}
+                        max={new Date().toISOString().slice(0,10)}
+                        onChange={(e) => {
+                          const next = [...intakePeriods]; next[i] = { ...next[i], startedAt: e.target.value }; setIntakePeriods(next)
+                        }}
+                        className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                      />
+                    </label>
+                    <label className="text-xs text-slate-700">
+                      Stopped
+                      <input
+                        type="date"
+                        value={p.stoppedAt}
+                        max={new Date().toISOString().slice(0,10)}
+                        onChange={(e) => {
+                          const next = [...intakePeriods]; next[i] = { ...next[i], stoppedAt: e.target.value }; setIntakePeriods(next)
+                        }}
+                        className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-900"
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={() => setIntakePeriods(intakePeriods.filter((_, idx) => idx !== i))}
+                      className="px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-700 hover:bg-slate-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setIntakePeriods([...intakePeriods, { startedAt: '', stoppedAt: '' }])}
+              className="mt-2 w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-800 hover:bg-slate-50"
+            >
+              + Add period
+            </button>
            </div>
            {/* Visual usage timeline */}
            {(() => {
