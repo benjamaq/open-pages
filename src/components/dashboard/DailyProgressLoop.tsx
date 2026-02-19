@@ -708,13 +708,14 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const confirmCheckinsRequired = Number((row as any)?.confirmCheckinsRequired || 3)
   const needsConfirm = isImplicit && (explicitCleanCheckins < confirmCheckinsRequired) && (row.progressPercent < 100)
   const display = (row as any)?.display as any | undefined
-  const displayBadgeKey = (row as any)?.badgeKey || display?.badgeKey
+  // Prefer server resolver output to avoid stale/legacy row.badgeKey values.
+  const displayBadgeKey = display?.badgeKey ?? (row as any)?.badgeKey
   const displayBadgeText = display?.badgeText as string | undefined
   const displayLabel = display?.label as string | undefined
   const displaySubtext = display?.subtext as string | undefined
   const [showPaywall, setShowPaywall] = useState(false)
   // Testing state derivation (used across badge, controls, etc.)
-  const testingActive = Boolean((row as any).testingActive)
+  const rawTestingActive = Boolean((row as any).testingActive)
   // Derive UI state from progress + verdict/significance + effect categories
   const verdictValue = String((row as any).verdict || '').toLowerCase()
   // reuse effectCatLower above
@@ -729,6 +730,9 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
   const isCompleted = hasFinalVerdict || (isVerdictReady && isMember) || (isInconclusive && isMember)
   // Treat as building only if not completed and progress < 100
   const isBuilding = !isCompleted && (row.progressPercent < 100)
+  // IMPORTANT: completed supplements may still have user_supplement.testing_status='testing' (no 'complete' enum);
+  // treat them as not "testingActive" in the UI to avoid "TESTING 100%" confusion.
+  const testingActive = rawTestingActive && !isCompleted
   const isInactive = !isBuilding && !isVerdictReady && !isInconclusive && !testingActive && !hasFinalVerdict
   // Global upgrade trigger: allow other parts of the app (nav, My Stack) to open the same modal
   useEffect(() => {
@@ -1001,11 +1005,54 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
           <div className="mt-2 h-[6px] w-full rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
             <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
           </div>
-          <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
-            Signal strength: 100% <span className="mx-2">•</span>
-            Days tracked: <span className="font-medium">{row.daysOfData}</span>
-            <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
-          </div>
+          {(() => {
+            const conf = (row as any)?.confidence
+            const confNum = typeof conf === 'number' ? Math.max(0, Math.min(1, Number(conf))) : null
+            const confPct = confNum == null ? null : Math.round(confNum * 100)
+            const confLabel = confNum == null ? null : (confNum >= 0.75 ? 'HIGH' : confNum >= 0.5 ? 'MEDIUM' : 'LOW')
+
+            const effSize = (row as any)?.truthEffectSize
+            const effDir = (row as any)?.truthEffectDirection || (row as any)?.trend || null
+            const metric = (row as any)?.primaryMetricLabel || null
+            const tOn = (row as any)?.truthSampleDaysOn
+            const tOff = (row as any)?.truthSampleDaysOff
+            const on = (typeof tOn === 'number') ? tOn : daysOn
+            const off = (typeof tOff === 'number') ? tOff : daysOff
+            const tracked = (Number.isFinite(on) && Number.isFinite(off)) ? (Number(on) + Number(off)) : row.daysOfData
+
+            return (
+              <>
+                <div className="mt-2 text-[11px]" style={{ color: '#8A7F78' }}>
+                  {confPct != null ? (
+                    <>Confidence: <span className="font-medium">{confPct}%</span>{confLabel ? ` (${confLabel})` : ''}</>
+                  ) : (
+                    <>Confidence: <span className="font-medium">—</span></>
+                  )}
+                  {Number.isFinite(Number(effSize)) ? (
+                    <>
+                      <span className="mx-2">•</span>
+                      Effect size (d): <span className="font-medium">{Number(effSize).toFixed(2)}</span>
+                    </>
+                  ) : null}
+                  {effDir ? (
+                    <>
+                      <span className="mx-2">•</span>
+                      Direction: <span className="font-medium">{String(effDir).toUpperCase()}</span>
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-1 text-[11px]" style={{ color: '#8A7F78' }}>
+                  {metric ? (
+                    <>Primary metric: <span className="font-medium">{String(metric)}</span> <span className="mx-2">•</span></>
+                  ) : null}
+                  ON: <span className="font-medium">{Number(on) || 0}</span> <span className="mx-2">•</span>
+                  OFF: <span className="font-medium">{Number(off) || 0}</span> <span className="mx-2">•</span>
+                  Days tracked: <span className="font-medium">{Number(tracked) || 0}</span>
+                  <><span className="mx-2">•</span>${Math.round(Number(row.monthlyCost || 0))}/mo</>
+                </div>
+              </>
+            )
+          })()}
           {!isMember && (
             <>
               {/* ON/OFF counts above the button for free users */}

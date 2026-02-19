@@ -247,41 +247,9 @@ export async function GET(request: NextRequest, context: any) {
       try { console.log('[truth-report] persist failed:', persistError) } catch {}
     }
 
-    // Mark supplement record flag if present
-    try {
-      await (supabaseAdmin as any)
-        .from('user_supplement')
-        .update({ has_truth_report: true } as any)
-        .eq('id', effectiveUserSuppId)
-        .eq('user_id', user.id)
-    } catch {}
-
     const finalReport = await applyImplicitConfirmOverlay(report)
-    // If this report yields a final verdict, advance testing_status so dashboards reflect completion.
-    try {
-      const statusLc = String(report?.status || '').toLowerCase()
-      const finalComplete = ['proven_positive', 'negative', 'no_effect', 'no_detectable_effect']
-      const finalInconclusive = ['confounded']
-      let target: 'complete' | 'inconclusive' | null = null
-      if (finalComplete.includes(statusLc)) target = 'complete'
-      if (finalInconclusive.includes(statusLc)) target = 'inconclusive'
-      if (target) {
-        const { data: us } = await supabaseAdmin
-          .from('user_supplement')
-          .select('id,testing_status')
-          .eq('id', effectiveUserSuppId)
-          .eq('user_id', user.id)
-          .maybeSingle()
-        const current = String((us as any)?.testing_status || 'inactive').toLowerCase()
-        if (current === 'testing') {
-          await (supabaseAdmin as any)
-            .from('user_supplement')
-            .update({ testing_status: target } as any)
-            .eq('id', effectiveUserSuppId)
-            .eq('user_id', user.id)
-        }
-      }
-    } catch {}
+    // IMPORTANT: completion is determined by the existence of a row in supplement_truth_reports.
+    // Do not write to user_supplement.testing_status here (DB constraint only allows 'inactive'|'testing'|'paused').
 
     // Invalidate dashboard cache so new verdict shows up immediately.
     try {

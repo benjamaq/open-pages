@@ -170,9 +170,18 @@ export default function TruthReportView({ report }: { report: TruthReport }) {
           <div className="text-sm text-slate-400">
             {(() => {
               const s = String((report as any)?.confoundsSummary || '')
+              // For implicit reports, there are two similar-but-different counts:
+              // - "days analyzed": days with usable metric values used in effect computation (effect.sampleOn + effect.sampleOff)
+              // - "ON/OFF window days": total classified ON/OFF days (meta.sampleOn + meta.sampleOff), even if some days lacked usable metrics
               if (!isImplicit) return s
-              // Clarify implicit reports: this is wearable-day coverage, not “intake days logged”
-              return s.replace(/days analysed/gi, 'days of wearable data scanned')
+              const analyzed = Number((report as any)?.effect?.sampleOn || 0) + Number((report as any)?.effect?.sampleOff || 0)
+              const windowDays = Number((report as any)?.meta?.sampleOn || 0) + Number((report as any)?.meta?.sampleOff || 0)
+              const excluded = Number((report as any)?.meta?.daysExcluded || 0)
+              const parts: string[] = []
+              if (Number.isFinite(analyzed) && analyzed > 0) parts.push(`${analyzed} days analyzed (wearables)`)
+              if (Number.isFinite(windowDays) && windowDays > 0) parts.push(`${windowDays} ON/OFF window day(s)`)
+              if (Number.isFinite(excluded) && excluded > 0) parts.push(`${excluded} excluded due to confounds`)
+              return parts.length > 0 ? parts.join(' • ') : s.replace(/days analysed/gi, 'days analyzed (wearables)')
             })()}
           </div>
           <div className="mt-2 text-sm text-slate-200 space-y-0.5">

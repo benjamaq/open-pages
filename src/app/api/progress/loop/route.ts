@@ -1168,6 +1168,12 @@ export async function GET(request: Request) {
             if (mapped) {
               ;(r as any).effectCategory = mapped
             ;(r as any).primaryMetricLabel = (truth as any)?.primary_metric ?? (r as any)?.primaryMetricLabel ?? null
+              // Expose raw truth fields so the dashboard card can render completed details consistently.
+              ;(r as any).truthStatus = (truth as any)?.status ?? null
+              ;(r as any).truthEffectSize = (truth as any)?.effect_size ?? null
+              ;(r as any).truthEffectDirection = (truth as any)?.effect_direction ?? null
+              ;(r as any).truthSampleDaysOn = (truth as any)?.sample_days_on ?? null
+              ;(r as any).truthSampleDaysOff = (truth as any)?.sample_days_off ?? null
               if (truth && typeof truth.percent_change === 'number') {
                 r.effectPct = Number(truth.percent_change)
               } else if (truth && typeof truth.effect_size === 'number') {
@@ -1539,11 +1545,14 @@ export async function GET(request: Request) {
         let showVerdict = false
         // Map effectCategory directly to badge when a final verdict exists
         const ecToBadge: Record<string, { key: string; text: string }> = {
+          // Completed verdicts come from supplement_truth_reports.status (not user_supplement.testing_status).
           'works': { key: 'keep', text: '✓ KEEP' },
           'proven_positive': { key: 'keep', text: '✓ KEEP' },
+          // "no_effect" / "no_detectable_effect" should read as "NO CLEAR SIGNAL"
           'no_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
           'no_detectable_effect': { key: 'no_clear_signal', text: '○ NO CLEAR SIGNAL' },
-          'negative': { key: 'negative', text: 'NEGATIVE' }
+          // Actionable UI label for negative results
+          'negative': { key: 'drop', text: '✗ DROP' }
         }
         let badge = has_final_verdict ? (ecToBadge[ec] || { key: 'testing', text: '◐ TESTING' }) : { key: 'testing', text: '◐ TESTING' }
         let label = ''

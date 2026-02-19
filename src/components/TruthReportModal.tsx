@@ -14,6 +14,7 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId, su
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<any>(null)
+  const [refreshNonce, setRefreshNonce] = useState(0)
 
   useEffect(() => {
     if (!isOpen) return
@@ -22,7 +23,8 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId, su
       try {
         setLoading(true); setError(null)
         try { console.log('[report] Modal received ID:', userSupplementId) } catch {}
-        const url = `/api/truth-report/${encodeURIComponent(userSupplementId)}?force=true`
+        // Default behavior: read the stored truth report. Only recompute when the user explicitly refreshes.
+        const url = `/api/truth-report/${encodeURIComponent(userSupplementId)}${refreshNonce ? `?force=true&__bust=${Date.now()}` : ''}`
         try { console.log('[report] API called with ID:', userSupplementId, 'url:', url) } catch {}
         const res = await fetch(url, { cache: 'no-store', credentials: 'include' })
         const json = await res.json()
@@ -36,13 +38,22 @@ export default function TruthReportModal({ isOpen, onClose, userSupplementId, su
       }
     })()
     return () => { mounted = false }
-  }, [isOpen, userSupplementId])
+  }, [isOpen, userSupplementId, refreshNonce])
 
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-50 bg-black/60">
       <div className="absolute inset-0 overflow-auto">
-        <button onClick={onClose} className="fixed top-4 right-4 text-slate-200 text-sm">Close</button>
+        <div className="fixed top-4 right-4 flex items-center gap-3">
+          <button
+            onClick={() => setRefreshNonce(n => n + 1)}
+            className="text-slate-200 text-sm underline underline-offset-4"
+            title="Recompute this report now"
+          >
+            Refresh analysis
+          </button>
+          <button onClick={onClose} className="text-slate-200 text-sm">Close</button>
+        </div>
         {loading && (
           <div className="min-h-screen grid place-items-center text-slate-200 text-sm">Running analysis…</div>
         )}
