@@ -1673,6 +1673,7 @@ export async function GET(request: Request) {
         // If verdict is calculated but not unlocked yet, keep it in Testing.
         // IMPORTANT UX: do NOT show any "verdict ready" / lock messaging. It should look like normal testing.
         if (shouldLockVerdictReady) {
+          ;(r as any).gateLocked = true
           section = 'testing'
           progress = Math.min(95, Math.max(5, Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0) || 95))
           badge = { key: 'testing', text: '◐ TESTING' }
@@ -1691,6 +1692,7 @@ export async function GET(request: Request) {
         } else
         // HARD OVERRIDE (Wayne): if the stored truthStatus is a final verdict, force completed display.
         if (isFinalTruthStatus) {
+          ;(r as any).gateLocked = false
           section = 'completed'
           progress = 100
           // Show verdict badge/details on completed cards (Wayne is Pro; also avoids "TESTING 100%" confusion).
@@ -1698,6 +1700,7 @@ export async function GET(request: Request) {
           badge = badgeFromTruth(truthStatusRaw)
         } else
         if (!is_implicit) {
+          ;(r as any).gateLocked = false
           if (!has_final_verdict) {
             section = 'testing'
             label = 'Actively testing'
@@ -1708,6 +1711,7 @@ export async function GET(request: Request) {
             showVerdict = (userTier === 'pro')
           }
         } else {
+          ;(r as any).gateLocked = false
           if (is_gate_locked) {
             section = 'testing'
             // ensure cap (upload formula already applied upstream)

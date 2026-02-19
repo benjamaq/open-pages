@@ -789,6 +789,7 @@ export default function ResultsPage() {
             .filter(r => r.lifecycle === 'Active' && !paused[r.id])
             .filter(r => {
               const l = loopById[r.id]
+              if (Boolean((l as any)?.gateLocked)) return false
               const done = (l?.daysOnClean ?? 0) + (l?.daysOffClean ?? 0)
               const need = (l?.requiredOnDays ?? l?.requiredDays ?? 0) + (l?.requiredOffDays ?? 0)
               return need > 0 && (done / need) >= 0.8

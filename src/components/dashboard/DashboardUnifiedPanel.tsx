@@ -293,6 +293,7 @@ export function DashboardUnifiedPanel({
     // Consider both Building and Needs Data (too early) for "Next result likely"
     // Only include items that have any check-in data (clean or total ON/OFF > 0)
     const nextPool = [...building, ...needsData].filter((r: any) => {
+      if (Boolean((r as any)?.gateLocked)) return false
       const onClean = Number(r?.daysOnClean ?? r?.daysOn ?? 0)
       const offClean = Number(r?.daysOffClean ?? r?.daysOff ?? 0)
       return (onClean + offClean) > 0
@@ -326,6 +327,7 @@ export function DashboardUnifiedPanel({
       ...(s.building || []),
     ]
     const readyRows = allRows.filter(r => {
+      if (Boolean((r as any)?.gateLocked)) return false
       const cat = String((r as any)?.effectCategory || '').toLowerCase()
       const isFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect')
       const on = Number((r as any).daysOnClean ?? (r as any).daysOn ?? 0)
@@ -809,11 +811,28 @@ export function DashboardUnifiedPanel({
                 ...((progress?.sections?.needsData) || [])
               ]
               for (const r of pool as any[]) {
+                if (Boolean((r as any)?.gateLocked)) continue
                 const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
                 const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
                 if ((on + off) > 0) return true
               }
               return false
+            })()
+            const gatedOnly = (() => {
+              const pool = [
+                ...((progress?.sections?.building) || []),
+                ...((progress?.sections?.needsData) || [])
+              ] as any[]
+              const anyGated = pool.some((r: any) => Boolean((r as any)?.gateLocked))
+              if (!anyGated) return false
+              // If there is no eligible (non-gated) candidate with any ON/OFF data, we consider the pool "gated-only"
+              for (const r of pool) {
+                if (Boolean((r as any)?.gateLocked)) continue
+                const on = Number((r as any)?.daysOnClean ?? (r as any)?.daysOn ?? 0)
+                const off = Number((r as any)?.daysOffClean ?? (r as any)?.daysOff ?? 0)
+                if ((on + off) > 0) return false
+              }
+              return true
             })()
             if (!nextResult && ((buildingLen + needsLen) === 0 || !hasCheckinCandidate)) {
               // If no active testing items, prefer a gentle nudge for upload-only scenarios
@@ -835,6 +854,9 @@ export function DashboardUnifiedPanel({
               return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'Keep checking in — your first result is building'}</div>
             }
             if (!nextResult) {
+              if (gatedOnly) {
+                return <div className="text-sm text-gray-700">Keep checking in — each check-in brings you closer to your next result.</div>
+              }
               return <div className="text-sm text-gray-700">—</div>
             }
             const title = <div className="text-base font-semibold text-gray-900">{abbreviateSupplementName(String(nextResult.name || ''))}</div>
