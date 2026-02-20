@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import PaywallModal from './PaywallModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { isProActive } from '@/lib/entitlements/pro'
 
 export default function UpgradeButton({
   compact = false,
@@ -43,7 +44,8 @@ export default function UpgradeButton({
         try {
           const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(res => res.ok ? res.data : {})
           if (mounted) {
-            setIsPro(String((me as any)?.tier || '').toLowerCase() === 'pro')
+            const pro = isProActive({ tier: (me as any)?.tier ?? null, pro_expires_at: (me as any)?.pro_expires_at ?? null })
+            setIsPro(pro)
             setIsTrial(Boolean((me as any)?.pro_expires_at))
           }
         } catch { if (mounted) setIsPro(false) }

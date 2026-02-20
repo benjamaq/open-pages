@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings/SettingsForm'
 import UpgradeButton from '@/components/billing/UpgradeButton'
-import { isProActive } from '@/lib/entitlements/pro'
+import { getTrialDaysRemaining, isProActive, isProTrial } from '@/lib/entitlements/pro'
 
 export default async function SettingsPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const supabase = await createClient()
@@ -18,6 +18,8 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
     .maybeSingle()
   const tierLc = String((profileRow as any)?.tier || '').toLowerCase()
   const isPaidByTier = isProActive({ tier: (profileRow as any)?.tier, pro_expires_at: (profileRow as any)?.pro_expires_at })
+  const trialActive = isProTrial({ pro_expires_at: (profileRow as any)?.pro_expires_at })
+  const trialDaysLeft = getTrialDaysRemaining({ pro_expires_at: (profileRow as any)?.pro_expires_at })
 
   const hdrs = await headers()
   const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3010'
@@ -71,7 +73,9 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                 <div className="text-sm text-[#111111]">
                   Plan:{' '}
                   <span className="font-medium">
-                    {tierLc === 'creator' ? 'Creator ✓' : 'Pro ✓'}
+                    {tierLc === 'creator'
+                      ? 'Creator ✓'
+                      : (trialActive ? `Pro Trial ✓${(trialDaysLeft != null ? ` (${trialDaysLeft} days left)` : '')}` : 'Pro ✓')}
                   </span>
                 </div>
                 <div className="mt-1 text-sm text-[#4B5563]">
