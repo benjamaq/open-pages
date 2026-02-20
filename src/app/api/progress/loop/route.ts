@@ -30,9 +30,11 @@ export async function GET(request: Request) {
     // Optional deep intake debug for a specific user_supplement id
     let debugSuppId: string | null = null
     let forceNoCache = false
+    let dbg = false
     try {
       const url = new URL(request.url)
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
+      dbg = url.searchParams.get('dbg') === '1' || url.searchParams.get('debug') === '1'
       // Server-side cache bypass:
       // - nocache=1 (explicit)
       // - force=1 (legacy)
@@ -45,12 +47,18 @@ export async function GET(request: Request) {
         url.searchParams.has('_bust')
     } catch {}
     const TRACE_BUCKETS = Boolean(debugSuppId)
+    if (dbg) forceNoCache = true
     // Attach rotation selection debug in response for easier inspection
     let rotationDebug: { chosenCategory?: string; categoryIndex?: number; top5?: any[] } = {}
+    const debugTrace: any = dbg ? { steps: [] as any[] } : null
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (VERBOSE) { try { console.log('[progress/loop] user:', user.id) } catch {} }
+    if (dbg) {
+      try { console.log('[dbg] start', { userId: user.id, url: request.url }) } catch {}
+      try { debugTrace.steps.push({ step: 'start', userId: user.id }) } catch {}
+    }
 
     // Resolve profile (auto-create minimal if missing)
     // IMPORTANT: Some users can have duplicate profiles (historical bug/flows).
@@ -126,6 +134,11 @@ export async function GET(request: Request) {
           .maybeSingle()
         if (adminProfile) profileId = (adminProfile as any).id
       } catch {}
+    }
+
+    if (dbg) {
+      try { console.log('[dbg] profileId', { userId: user.id, profileId }) } catch {}
+      try { debugTrace.steps.push({ step: 'profile', profileId }) } catch {}
     }
 
     // If profile is still missing, return a safe empty payload instead of crashing
@@ -204,6 +217,10 @@ export async function GET(request: Request) {
             }
           } catch {}
           if (!cacheStaleDueToNewSupp) {
+            if (dbg) {
+              try { console.log('[dbg] cache-hit', { computed_at: cached.computed_at }) } catch {}
+              try { debugTrace.steps.push({ step: 'cache', hit: true, computed_at: cached.computed_at }) } catch {}
+            }
             try { console.log('CACHE HIT', { computed_at: cached.computed_at }) } catch {}
             return new NextResponse(JSON.stringify(cached.payload), {
               status: 200,
@@ -219,6 +236,9 @@ export async function GET(request: Request) {
         }
       } else {
         try { console.log('CACHE BYPASS', { reason: 'query', nocache: true }) } catch {}
+        if (dbg) {
+          try { debugTrace.steps.push({ step: 'cache', hit: false, bypass: true }) } catch {}
+        }
       }
     } catch (e) { try { console.log('[dashboard_cache] read error (ignored):', (e as any)?.message || e) } catch {} }
 
@@ -237,6 +257,10 @@ export async function GET(request: Request) {
       iErr = res.error
       if (iErr) {
         lastQueryError = iErr.message
+      }
+      if (dbg) {
+        try { console.log('[dbg] stack_items', { profileId, count: (items || []).length, error: iErr?.message || null }) } catch {}
+        try { debugTrace.steps.push({ step: 'stack_items', profileId, count: (items || []).length, error: iErr?.message || null }) } catch {}
       }
       // Union in active user_supplement rows that are not represented in stack_items to avoid missing cards
       try {
@@ -261,6 +285,10 @@ export async function GET(request: Request) {
           items = [...(items || []), ...extras]
           if (VERBOSE) { try { console.log('[progress/loop] unioned user_supplement extras:', extras.map((e: any) => e.id)) } catch {} }
         }
+        if (dbg) {
+          try { console.log('[dbg] union_extras', { extras: extras.length, after: (items || []).length }) } catch {}
+          try { debugTrace.steps.push({ step: 'union_extras', extras: extras.length, after: (items || []).length }) } catch {}
+        }
       } catch {}
     }
     // Fallback: some accounts only have user_supplement rows
@@ -279,6 +307,10 @@ export async function GET(request: Request) {
         created_at: r.created_at,
         monthly_cost: r.monthly_cost_usd
       }))
+      if (dbg) {
+        try { console.log('[dbg] fallback user_supplement items', { count: (items || []).length }) } catch {}
+        try { debugTrace.steps.push({ step: 'fallback_user_supplement', count: (items || []).length }) } catch {}
+      }
     }
 
     // Debug: show exactly what items the dashboard is building cards from.
@@ -583,6 +615,9 @@ export async function GET(request: Request) {
     // Compute supplement progress
     const requiredDaysDefault = 14
     const progressRows: SupplementProgress[] = []
+    if (dbg) {
+      try { debugTrace.steps.push({ step: 'items_final', queryTable, itemsCount: (items || []).length, lastQueryError }) } catch {}
+    }
     if (VERBOSE) {
       try {
         console.log('[progress/loop] items:', (items || []).length)
@@ -709,6 +744,10 @@ export async function GET(request: Request) {
         // @ts-ignore
         createdAtIso: createdAtRaw ? String(createdAtRaw).slice(0,10) : null
       })
+    }
+    if (dbg) {
+      try { console.log('[dbg] progressRows_built', { count: progressRows.length }) } catch {}
+      try { debugTrace.steps.push({ step: 'progressRows_built', count: progressRows.length }) } catch {}
     }
 
     // Attach effect categories when available (map by user_supplement_id; aligns with fallback path)
@@ -983,12 +1022,29 @@ export async function GET(request: Request) {
             // User intent wins: if they explicitly stopped testing (inactive) or set inactive/archived, hide it,
             // even if there is an implicit or stored truth report.
             ;(r as any)._excluded = true
+            ;(r as any)._excluded_reason = st === 'inactive' ? 'testing_status=inactive' : 'is_active=false'
           }
         } catch {}
         if (VERBOSE) {
           try { console.log('[id-resolve:init]', { rowId: idKey, name: nm, resolvedUserSuppId: uid, byStack: stackIdToUserSuppId.get(idKey) || null }) } catch {}
         }
       } catch { (r as any).testingActive = true }
+    }
+    if (dbg) {
+      try {
+        const excluded = progressRows.filter((r: any) => (r as any)._excluded)
+        const sample = progressRows.slice(0, 12).map((r: any) => ({
+          rowId: String(r.id || ''),
+          name: String((r as any).name || ''),
+          userSuppId: String((r as any).userSuppId || ''),
+          testing_status: String((r as any).testingStatus || ''),
+          testingActive: Boolean((r as any).testingActive),
+          excluded: Boolean((r as any)._excluded),
+          reason: (r as any)._excluded_reason || null,
+        }))
+        console.log('[dbg] exclude_pass', { total: progressRows.length, excluded: excluded.length, sample })
+        debugTrace.steps.push({ step: 'exclude_pass', total: progressRows.length, excluded: excluded.length, sample })
+      } catch {}
     }
     for (const r of progressRows) {
       const eff = effBySupp.get(r.id)
@@ -1974,6 +2030,10 @@ export async function GET(request: Request) {
     // Note: declared earlier due to use in row calculations
     // Apply exclusion filter (inactive/archived supplements should not appear on dashboard)
     const visibleRows = progressRows.filter(r => !(r as any)._excluded)
+    if (dbg) {
+      try { console.log('[dbg] visibleRows', { count: visibleRows.length }) } catch {}
+      try { debugTrace.steps.push({ step: 'visibleRows', count: visibleRows.length }) } catch {}
+    }
     // Group sections per rules (do not hide 100%+ without verdict):
     // - Clear Effects Detected: effectCategory='works'
     // - No Effect Detected: effectCategory='no_effect'
@@ -1989,6 +2049,13 @@ export async function GET(request: Request) {
     const inconsistent = visibleRows.filter(r => (r as any).effectCategory === 'inconsistent')
     const needsData = visibleRows.filter(r => (r as any).effectCategory === 'needs_more_data')
     const building = visibleRows.filter(r => !(r as any).effectCategory)
+    if (dbg) {
+      try {
+        const sectionCounts = { clearSignal: clearSignal.length, noSignal: noEffect.length, inconsistent: inconsistent.length, needsData: needsData.length, building: building.length }
+        console.log('[dbg] sections', sectionCounts)
+        debugTrace.steps.push({ step: 'sections', ...sectionCounts })
+      } catch {}
+    }
 
     // Debug: log every supplement row and where it landed (Issue 1).
     if (TRACE_BUCKETS) {
@@ -2394,6 +2461,7 @@ export async function GET(request: Request) {
     const responsePayload = {
       _v: DASHBOARD_CACHE_VERSION,
       debug,
+      ...(dbg ? { _debugTrace: debugTrace } : {}),
       userId: user.id,
       daysTracked: totalDistinctDays,
       firstCheckin,
