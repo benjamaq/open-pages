@@ -10,6 +10,8 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showAccessCode, setShowAccessCode] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,6 +34,10 @@ export default function LoginPage() {
           localStorage.setItem('supabase_session', JSON.stringify(session))
         }
       } catch {}
+      // Stash access code so AuthSessionHydrator can redeem after auth is established.
+      if (accessCode.trim()) {
+        try { localStorage.setItem('bs_pending_access_code', accessCode.trim().toUpperCase()) } catch {}
+      }
     } catch (err: any) {
       setError(err?.message || 'Auth client error. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
       setLoading(false)
@@ -91,6 +97,30 @@ export default function LoginPage() {
               required
               disabled={isInAppBrowser()}
             />
+          </div>
+          <div className="pt-1">
+            <button
+              type="button"
+              className="text-sm text-gray-700 hover:underline"
+              onClick={() => setShowAccessCode(v => !v)}
+              disabled={isInAppBrowser()}
+            >
+              Have a promo or beta code?
+            </button>
+            {showAccessCode && (
+              <div className="mt-2 grid gap-1">
+                <label className="text-sm text-gray-700">Promo / Beta Code</label>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  placeholder="Enter code (e.g., PH30)"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  autoCapitalize="characters"
+                  disabled={isInAppBrowser()}
+                />
+              </div>
+            )}
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button

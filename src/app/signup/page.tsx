@@ -21,12 +21,64 @@ function SignupInner() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showAccessCode, setShowAccessCode] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  async function redeemAccessCode(codeRaw: string): Promise<{ redeemed: boolean; hardUnlock: boolean; error?: string }> {
+    const code = String(codeRaw || '').trim().toUpperCase()
+    if (!code) return { redeemed: false, hardUnlock: false }
+
+    // Persist so AuthSessionHydrator can retry later (e.g., if signup requires email verification)
+    try { localStorage.setItem('bs_pending_access_code', code) } catch {}
+
+    // Try redeem now (works when user session is active immediately after signUp)
+    try {
+      const r = await fetch('/api/promo/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+      const j = await r.json().catch(() => ({} as any))
+      if (r.ok) {
+        try { localStorage.removeItem('bs_pending_access_code') } catch {}
+        return { redeemed: true, hardUnlock: true }
+      }
+      const msg = String(j?.error || '').trim()
+
+      // If it wasn't a promo code, try beta code validation.
+      if (msg === 'Code not found') {
+        const b = await fetch('/api/beta/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        })
+        if (b.ok) {
+          try { localStorage.removeItem('bs_pending_access_code') } catch {}
+          return { redeemed: true, hardUnlock: true }
+        }
+        try { localStorage.removeItem('bs_pending_access_code') } catch {}
+        return { redeemed: false, hardUnlock: false, error: 'Code not found' }
+      }
+
+      // Other promo errors: don't keep retrying.
+      if (msg) {
+        try { localStorage.removeItem('bs_pending_access_code') } catch {}
+        return { redeemed: false, hardUnlock: false, error: msg }
+      }
+      return { redeemed: false, hardUnlock: false }
+    } catch {
+      // Keep pending code for hydrator retry (offline, auth not ready, etc.)
+      return { redeemed: false, hardUnlock: false }
+    }
+  }
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setMessage(null)
     setLoading(true)
     // Debug: trace plan params
     try { console.log('Plan param:', params.get('plan'), 'Period param:', params.get('period')) } catch {}
@@ -96,10 +148,19 @@ function SignupInner() {
     setLoading(false)
     // Prevent cross-account bleed: clear any previous onboarding draft
     try { clearDraft() } catch {}
+
+    // If an access code was provided, try to redeem immediately. If it unlocks Pro, skip Stripe checkout even on paid plan URLs.
+    const codeRes = await redeemAccessCode(accessCode)
+    if (codeRes?.error) {
+      setMessage(codeRes.error)
+    } else if (codeRes?.redeemed) {
+      setMessage('🎉 Code applied — Pro unlocked!')
+    }
+
     // Redirect based on plan from URL
     const plan = (params.get('plan') || '').toLowerCase()
     const period = (params.get('period') || 'monthly').toLowerCase()
-    if (plan === 'premium' || plan === 'pro') {
+    if (!codeRes?.hardUnlock && (plan === 'premium' || plan === 'pro')) {
       try {
         console.log('Creating Stripe session...')
         const res = await fetch('/api/billing/create-checkout-session', {
@@ -175,7 +236,31 @@ function SignupInner() {
             />
             <div className="text-xs text-gray-500 mt-1">At least 8 characters.</div>
           </div>
+          <div className="pt-1">
+            <button
+              type="button"
+              className="text-sm text-gray-700 hover:underline"
+              onClick={() => setShowAccessCode(v => !v)}
+            >
+              Have a promo or beta code?
+            </button>
+            {showAccessCode && (
+              <div className="mt-2 grid gap-1">
+                <label className="text-sm text-gray-700">Promo / Beta Code</label>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  placeholder="Enter code (e.g., PH30)"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  autoCapitalize="characters"
+                />
+                <div className="text-xs text-gray-500 mt-1">Optional. If valid, we’ll apply it right after signup.</div>
+              </div>
+            )}
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
+          {message && !error && <p className="text-sm text-gray-700">{message}</p>}
           <button
             type="submit"
             disabled={loading}
