@@ -46,6 +46,11 @@ function SignupInner() {
         try { localStorage.removeItem('bs_pending_access_code') } catch {}
         return { redeemed: true, hardUnlock: true }
       }
+      // If the user isn't authenticated yet (common when email confirmation is required),
+      // keep the pending code so it can be redeemed later after login.
+      if (r.status === 401) {
+        return { redeemed: false, hardUnlock: false }
+      }
       const msg = String(j?.error || '').trim()
 
       // If it wasn't a promo code, try beta code validation.

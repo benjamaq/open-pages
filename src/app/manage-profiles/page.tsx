@@ -67,27 +67,16 @@ export default function ManageProfilesPage() {
         return
       }
 
-      // Keep the most recent profile (first in the ordered list)
-      const keepProfile = profiles[0]
-      const duplicateProfiles = profiles.slice(1)
-
-      console.log(`🧹 Cleaning up ${duplicateProfiles.length} duplicate profiles`)
-      console.log(`✅ Keeping profile: ${keepProfile.id} (${keepProfile.display_name})`)
-
-      // Delete duplicate profiles
-      const duplicateIds = duplicateProfiles.map(p => p.id)
-      const { error: deleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .in('id', duplicateIds)
-
-      if (deleteError) {
-        console.error('Error deleting duplicate profiles:', deleteError)
-        setError(`Failed to delete duplicate profiles: ${deleteError.message}`)
+      // IMPORTANT: Never delete profiles directly client-side.
+      // stack_items is profile-scoped; deleting the "wrong" duplicate can cascade-delete a user's entire stack.
+      const r = await fetch('/api/cleanup-profiles', { method: 'POST' })
+      const j = await r.json().catch(() => ({} as any))
+      if (!r.ok) {
+        setError(String(j?.error || 'Failed to clean up profiles'))
       } else {
-        console.log(`🗑️ Deleted ${duplicateIds.length} duplicate profiles`)
-        setSuccess(`Successfully cleaned up ${duplicateIds.length} duplicate profiles!`)
-        // Reload profiles
+        const moved = Number(j?.movedStackItems || 0)
+        const deleted = Number(j?.deletedProfiles || 0)
+        setSuccess(`Successfully cleaned up ${deleted} duplicate profile(s). Moved ${moved} stack item(s).`)
         await loadProfiles()
       }
     } catch (err) {

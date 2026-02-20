@@ -17,6 +17,7 @@ export default function UpgradeButton({
 }) {
   const [open, setOpen] = useState(false)
   const [isPro, setIsPro] = useState<boolean | null>(typeof isProOverride === 'boolean' ? isProOverride : null)
+  const [isTrial, setIsTrial] = useState<boolean>(false)
 
   useEffect(() => {
     // If parent provided a definitive membership flag (dashboard combined load), don't fetch.
@@ -31,11 +32,20 @@ export default function UpgradeButton({
         const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
         const j = r.ok ? r.data : {}
         const paid = Boolean(j?.isPaid) || Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
-        if (mounted && paid) { setIsPro(true); return }
+        if (mounted && paid) {
+          setIsPro(true)
+          // If Pro is granted via pro_expires_at, show "Pro Trial" instead of permanent Pro.
+          const exp = j?.pro_expires_at ? String(j.pro_expires_at) : ''
+          setIsTrial(Boolean(exp))
+          return
+        }
         // Optional: probe profile tier if available
         try {
           const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(res => res.ok ? res.data : {})
-          if (mounted) setIsPro(String((me as any)?.tier || '').toLowerCase() === 'pro')
+          if (mounted) {
+            setIsPro(String((me as any)?.tier || '').toLowerCase() === 'pro')
+            setIsTrial(Boolean((me as any)?.pro_expires_at))
+          }
         } catch { if (mounted) setIsPro(false) }
       } catch { if (mounted) setIsPro(false) }
     })()
@@ -60,7 +70,7 @@ export default function UpgradeButton({
           aria-label="Pro plan active"
           title="Pro plan active"
         >
-          Pro <span aria-hidden="true">✓</span>
+          {isTrial ? 'Pro Trial' : 'Pro'} <span aria-hidden="true">✓</span>
         </span>
       ) : (
         <button

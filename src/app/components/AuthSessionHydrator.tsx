@@ -40,6 +40,10 @@ export default function AuthSessionHydrator() {
             body: JSON.stringify({ code: pending })
           })
           const j = await r.json().catch(() => ({} as any))
+          if (r.status === 401) {
+            // Not logged in yet; keep pending for later retry.
+            return
+          }
           if (r.ok) {
             clearPending()
             toast.success('Pro unlocked', { description: '🎉 Pro unlocked for 30 days — welcome from Product Hunt!' } as any)

@@ -29,15 +29,55 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Keep the most recent profile (first in the ordered list)
-    const keepProfile = (profiles as any[])[0] as any
-    const duplicateProfiles = (profiles as any[]).slice(1) as any[]
+    // Choose the profile to keep.
+    // CRITICAL: stack_items is profile-scoped. If we delete the profile that owns stack_items, the stack can be lost (often via FK cascades).
+    // So we keep the profile with the MOST stack_items, and migrate any stack_items from duplicates to the kept profile before deletion.
+    const allProfiles = (profiles as any[]) as any[]
+    const profileIds = allProfiles.map((p: any) => String(p?.id || '')).filter(Boolean)
+    const countsByProfileId = new Map<string, number>()
+    for (const pid of profileIds) {
+      const { count } = await supabase
+        .from('stack_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', pid)
+      countsByProfileId.set(pid, Number(count || 0))
+    }
+    const sortedByMostStack = [...allProfiles].sort((a: any, b: any) => {
+      const ca = countsByProfileId.get(String(a?.id || '')) || 0
+      const cb = countsByProfileId.get(String(b?.id || '')) || 0
+      if (cb !== ca) return cb - ca
+      // tie-break: keep most recent
+      const am = Date.parse(String(a?.created_at || '')) || 0
+      const bm = Date.parse(String(b?.created_at || '')) || 0
+      return bm - am
+    })
+    const keepProfile = sortedByMostStack[0] as any
+    const duplicateProfiles = sortedByMostStack.slice(1) as any[]
 
     console.log(`🧹 Found ${duplicateProfiles.length} duplicate profiles for user ${user.id}`)
     console.log(`✅ Keeping profile: ${keepProfile.id} (${keepProfile.display_name})`)
 
-    // Delete duplicate profiles
-    const duplicateIds = duplicateProfiles.map((p: any) => p.id)
+    const duplicateIds = duplicateProfiles.map((p: any) => String(p.id)).filter(Boolean)
+
+    // 1) Migrate stack_items from duplicate profiles → kept profile
+    let movedStackItems = 0
+    if (duplicateIds.length > 0) {
+      const { count: moveCount, error: moveErr } = await (supabase
+        .from('stack_items') as any)
+        .update({ profile_id: String(keepProfile.id) })
+        .in('profile_id', duplicateIds)
+        .select('id', { count: 'exact', head: true })
+      if (moveErr) {
+        console.error('Error migrating stack_items from duplicate profiles:', moveErr)
+        return NextResponse.json({
+          error: 'Failed to migrate stack items from duplicate profiles',
+          details: moveErr.message
+        }, { status: 500 })
+      }
+      movedStackItems = Number(moveCount || 0)
+    }
+
+    // 2) Delete duplicate profiles (after migration)
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
@@ -61,7 +101,8 @@ export async function POST(request: NextRequest) {
         display_name: (keepProfile as any).display_name,
         slug: (keepProfile as any).slug
       },
-      deletedProfiles: duplicateIds.length
+      deletedProfiles: duplicateIds.length,
+      movedStackItems
     })
 
   } catch (error) {

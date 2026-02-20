@@ -55,6 +55,8 @@ export async function GET(request: Request) {
           current_period_end: new Date().toISOString(),
           features: []
         },
+        tier: (profile as any)?.tier ?? null,
+        pro_expires_at: (profile as any)?.pro_expires_at ?? null,
         isPaid: Boolean(isPaidByTier),
         ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, stripeConfigured: false } } : {})
       })
@@ -89,6 +91,8 @@ export async function GET(request: Request) {
         payment_method: null,
         invoices: [],
         usage: await getUserUsage(supabase, user.id),
+        tier: (profile as any)?.tier ?? null,
+        pro_expires_at: (profile as any)?.pro_expires_at ?? null,
         isPaid: Boolean(isPaidByTier),
         ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, hasStripeCustomerId: false } } : {})
       })
@@ -170,6 +174,8 @@ export async function GET(request: Request) {
       payment_method: paymentMethodInfo,
       invoices: invoiceInfo,
       usage: await getUserUsage(supabase, user.id),
+      tier: (profileTierRow as any)?.tier ?? null,
+      pro_expires_at: (profileTierRow as any)?.pro_expires_at ?? null,
       isPaid: finalIsPaid,
       ...(debug ? { _debug: { userId: user.id, email: user.email, tierLc, isPaidByTier, hasActiveSubscription, finalIsPaid } } : {})
     })
