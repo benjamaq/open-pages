@@ -15,6 +15,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [referralCode, setReferralCode] = useState('')
+  const [accessCode, setAccessCode] = useState('')
+  const [showAccessCode, setShowAccessCode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -67,6 +69,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const cleanEmail = email.trim()
       const cleanName = name.trim()
       const cleanReferral = referralCode.trim()
+      const cleanAccess = accessCode.trim()
 
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
@@ -141,6 +144,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
           } catch (e) {
             console.warn('Free tier init failed (non-blocking):', e)
           }
+
+          // Stash promo/beta access code for redemption after auth is established.
+          // (Promo redemption requires an authenticated session; some projects require email verification before session is active.)
+          if (cleanAccess) {
+            try { localStorage.setItem('bs_pending_access_code', cleanAccess.toUpperCase()) } catch {}
+          }
           // Create profile with anon client (may succeed if RLS allows). If it fails, we’ll fall back to server-side bootstrap.
           try {
             // Generate a unique slug
@@ -194,13 +203,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
             console.warn('Profile bootstrap request failed', e)
           }
 
-          // Check if referral code is actually a beta code
-          if (referralCode.trim()) {
+          // Check if access code is a beta code (promo codes are redeemed via /api/promo/redeem after auth).
+          if (cleanAccess) {
             try {
               const betaResponse = await fetch('/api/beta/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: referralCode.trim() })
+                body: JSON.stringify({ code: cleanAccess })
               })
 
               if (betaResponse.ok) {
@@ -285,6 +294,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else {
+          // Stash promo/beta access code for redemption after auth is established.
+          if (accessCode.trim()) {
+            try { localStorage.setItem('bs_pending_access_code', accessCode.trim().toUpperCase()) } catch {}
+          }
           try { sessionStorage.setItem('justSignedUp', '1') } catch {}
           if (nextUrl) {
             if (typeof window !== 'undefined') {
@@ -370,7 +383,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {isSignUp && (
               <div>
                 <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
-                  Referral or Beta Code <span className="text-gray-400 font-normal">(optional)</span>
+                  Referral Code <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -380,14 +393,46 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
-                    placeholder="Enter beta or referral code"
+                    placeholder="Enter referral code"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  Have a beta code? Enter it here to unlock 6 months of free Pro access!
+                  Optional. If you were given a referral code, enter it here.
                 </p>
               </div>
             )}
+
+            <div className={isSignUp ? '-mt-2' : ''}>
+              <button
+                type="button"
+                className="text-sm text-gray-700 hover:underline"
+                onClick={() => setShowAccessCode(v => !v)}
+              >
+                Have a promo or beta code?
+              </button>
+              {showAccessCode && (
+                <div className="mt-2">
+                  <label htmlFor="accessCode" className="block text-sm font-medium text-gray-700">
+                    Promo / Beta Code <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="accessCode"
+                      name="accessCode"
+                      type="text"
+                      value={accessCode}
+                      onChange={(e) => setAccessCode(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white sm:text-sm"
+                      placeholder="Enter code (e.g., PH30)"
+                      autoCapitalize="characters"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Product Hunt promo codes unlock Pro for a limited time. Beta codes unlock extended access.
+                  </p>
+                </div>
+              )}
+            </div>
 
 
             <div>
