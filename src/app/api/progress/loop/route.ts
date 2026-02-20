@@ -53,12 +53,47 @@ export async function GET(request: Request) {
     if (VERBOSE) { try { console.log('[progress/loop] user:', user.id) } catch {} }
 
     // Resolve profile (auto-create minimal if missing)
-    let { data: profile, error: pErr } = await supabase
+    // IMPORTANT: Some users can have duplicate profiles (historical bug/flows).
+    // The dashboard reads stack_items by profile_id, so picking the wrong profile can make the dashboard look empty.
+    // We pick the profile that owns the most stack_items (tie-break: newest created_at).
+    let profile: any = null
+    const { data: profilesRows, error: pErr } = await supabase
       .from('profiles')
-      .select('id,tier,pro_expires_at')
+      .select('id,tier,pro_expires_at,created_at')
       .eq('user_id', user.id)
-      .maybeSingle()
+      .order('created_at', { ascending: false })
+      .limit(10)
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
+    if (profilesRows && profilesRows.length > 0) {
+      if (profilesRows.length === 1) {
+        profile = profilesRows[0]
+      } else {
+        let best = profilesRows[0]
+        let bestCount = -1
+        for (const p of profilesRows) {
+          try {
+            const { count } = await supabaseAdmin
+              .from('stack_items')
+              .select('id', { count: 'exact', head: true })
+              .eq('profile_id', (p as any).id)
+            const c = Number(count || 0)
+            if (c > bestCount) {
+              bestCount = c
+              best = p
+            }
+          } catch {}
+        }
+        profile = best
+        try {
+          console.log('[progress/loop] multiple profiles detected; selected profile for dashboard:', {
+            userId: user.id,
+            pickedProfileId: (profile as any)?.id || null,
+            pickedCount: bestCount,
+            candidates: (profilesRows || []).map((p: any) => ({ id: p.id, created_at: p.created_at }))
+          })
+        } catch {}
+      }
+    }
     if (!profile) {
       // Attempt to create a minimal profile so new accounts don't 404
       try {
@@ -84,12 +119,12 @@ export async function GET(request: Request) {
       try {
         const { data: adminProfile } = await supabaseAdmin
           .from('profiles')
-          .select('id')
+          .select('id,created_at')
           .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle()
-        if (adminProfile) {
-          profileId = (adminProfile as any).id
-        }
+        if (adminProfile) profileId = (adminProfile as any).id
       } catch {}
     }
 
