@@ -193,13 +193,24 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line no-console
     console.log('[checkin] upsert result:', { ok: !error, id: (upserted as any)?.id, error })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    // Invalidate dashboard cache so next dashboard load recomputes
+    // Invalidate dashboard cache so next dashboard load recomputes.
+    // Use DELETE as the strongest invalidation (UPDATE can be a no-op if no row exists yet).
     try {
-      await supabaseAdmin
+      const del = await supabaseAdmin
         .from('dashboard_cache')
-        .update({ invalidated_at: new Date().toISOString() } as any)
+        .delete()
         .eq('user_id', user.id)
-    } catch (e) { try { console.log('[dashboard_cache] invalidate error (ignored):', (e as any)?.message || e) } catch {} }
+      if ((del as any)?.error) throw (del as any).error
+      try { console.log('[dashboard_cache] invalidated via delete', { userId: user.id }) } catch {}
+    } catch (e) {
+      try { console.log('[dashboard_cache] delete invalidate failed, fallback to update:', (e as any)?.message || e) } catch {}
+      try {
+        await supabaseAdmin
+          .from('dashboard_cache')
+          .update({ invalidated_at: new Date().toISOString() } as any)
+          .eq('user_id', user.id)
+      } catch (e2) { try { console.log('[dashboard_cache] update invalidate error (ignored):', (e2 as any)?.message || e2) } catch {} }
+    }
     return NextResponse.json({ success: true, id: (upserted as any)?.id, upserted: true, micro_wins: microWins })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })

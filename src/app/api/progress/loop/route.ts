@@ -1311,7 +1311,8 @@ export async function GET(request: Request) {
         // Count explicit check-in days since the supplement was added.
         // Use createdAtIso (DB created_at), not restartIso/inferred_start_at.
         try {
-          const gateStart = createdAtIso ? String(createdAtIso).slice(0, 10) : null
+          // Fallback: if createdAtIso is missing, use todayKey so users aren't stuck at 0 forever.
+          const gateStart = createdAtIso ? String(createdAtIso).slice(0, 10) : String(todayKey).slice(0, 10)
           if (gateStart) {
             let n = 0
             for (const d of explicitDailyCheckinDays) {
@@ -1325,6 +1326,19 @@ export async function GET(request: Request) {
           checkinsSinceAdded = 0
         }
         ;(r as any).explicitCleanCheckins = checkinsSinceAdded
+        if (dbg) {
+          try {
+            console.log('[GATE-DEBUG]', {
+              name: String((r as any).name || ''),
+              createdAtIso,
+              gateStart: createdAtIso ? String(createdAtIso).slice(0, 10) : String(todayKey).slice(0, 10),
+              explicitDailyCheckinDaysSize: explicitDailyCheckinDays.size,
+              explicitDailyCheckinDaysSample: Array.from(explicitDailyCheckinDays).slice(0, 5),
+              checkinsSinceAdded,
+              confirmCheckinsRequired: (r as any).confirmCheckinsRequired,
+            })
+          } catch {}
+        }
         // Bug 28: dynamic confirmation gate (implicit strong evidence can require only 1 check-in)
         try {
           const uid0 = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
