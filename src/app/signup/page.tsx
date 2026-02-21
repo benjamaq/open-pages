@@ -173,7 +173,6 @@ function SignupInner() {
             .upsert({
               user_id: data.user.id,
               display_name: cleanName,
-              first_name: firstName,
               slug,
               public: true,
               allow_stack_follow: true,

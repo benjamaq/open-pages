@@ -50,14 +50,13 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString()
-    const firstName = (name || '').split(' ')[0] || null
 
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .insert({
         user_id,
-        first_name: firstName,
-        display_name: name || firstName || (email ? email.split('@')[0] : 'User'),
+        // NOTE: production `profiles` does not have a `first_name` column.
+        display_name: name || (email ? email.split('@')[0] : 'User'),
         slug: candidate,
         public: true,
         allow_stack_follow: true,

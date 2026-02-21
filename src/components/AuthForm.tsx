@@ -177,7 +177,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
               .upsert({
                 user_id: data.user.id,
                 display_name: cleanName,
-                first_name: cleanName,
                 referral_code: cleanReferral || null,
                 referral_source: cleanReferral === 'redditgo' ? 'reddit' : null,
                 slug: uniqueSlug,
