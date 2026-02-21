@@ -27,7 +27,10 @@ function SignupInner() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
-  async function redeemAccessCode(codeRaw: string): Promise<{ redeemed: boolean; hardUnlock: boolean; error?: string }> {
+  async function redeemAccessCode(
+    codeRaw: string,
+    args?: { userId?: string | null }
+  ): Promise<{ redeemed: boolean; hardUnlock: boolean; error?: string }> {
     const code = String(codeRaw || '').trim().toUpperCase()
     if (!code) return { redeemed: false, hardUnlock: false }
 
@@ -36,12 +39,14 @@ function SignupInner() {
 
     // Try redeem now (works when user session is active immediately after signUp)
     try {
+      try { console.log('[PROMO] attempting redemption', { code, userId: args?.userId || null }) } catch {}
       const r = await fetch('/api/promo/redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
       })
       const j = await r.json().catch(() => ({} as any))
+      try { console.log('[PROMO] response', { status: r.status, body: j }) } catch {}
       if (r.ok) {
         try { localStorage.removeItem('bs_pending_access_code') } catch {}
         return { redeemed: true, hardUnlock: true }
@@ -74,7 +79,8 @@ function SignupInner() {
         return { redeemed: false, hardUnlock: false, error: msg }
       }
       return { redeemed: false, hardUnlock: false }
-    } catch {
+    } catch (error: any) {
+      try { console.log('[PROMO] error', error) } catch {}
       // Keep pending code for hydrator retry (offline, auth not ready, etc.)
       return { redeemed: false, hardUnlock: false }
     }
@@ -155,10 +161,13 @@ function SignupInner() {
     try { clearDraft() } catch {}
 
     // If an access code was provided, try to redeem immediately. If it unlocks Pro, skip Stripe checkout even on paid plan URLs.
-    const codeRes = await redeemAccessCode(accessCode)
+    // Tie logs to the actual created user id for debugging.
+    try { if (accessCode.trim()) console.log('[PROMO] signup created user', { userId: createdUserId, code: accessCode.trim().toUpperCase() }) } catch {}
+    const codeRes = await redeemAccessCode(accessCode, { userId: createdUserId })
     if (codeRes?.error) {
       setMessage(codeRes.error)
     } else if (codeRes?.redeemed) {
+      // IMPORTANT: only show success after confirmed 200 from /api/promo/redeem.
       setMessage('🎉 Code applied — Pro unlocked!')
     }
 

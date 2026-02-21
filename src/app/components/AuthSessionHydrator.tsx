@@ -34,19 +34,27 @@ export default function AuthSessionHydrator() {
 
         // Try promo redemption first; if not found, fall back to beta code validation.
         try {
+          try {
+            const { data: u } = await supabase.auth.getUser()
+            console.log('[PROMO] attempting redemption', { code: pending, userId: u?.user?.id || null })
+          } catch {
+            try { console.log('[PROMO] attempting redemption', { code: pending, userId: null }) } catch {}
+          }
           const r = await fetch('/api/promo/redeem', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: pending })
           })
           const j = await r.json().catch(() => ({} as any))
+          try { console.log('[PROMO] response', { status: r.status, body: j }) } catch {}
           if (r.status === 401) {
             // Not logged in yet; keep pending for later retry.
             return
           }
           if (r.ok) {
             clearPending()
-            toast.success('Pro unlocked', { description: '🎉 Pro unlocked for 30 days — welcome from Product Hunt!' } as any)
+            // IMPORTANT: only show success AFTER confirmed 200 from /api/promo/redeem.
+            toast.success('Pro unlocked', { description: String(j?.message || '🎉 Pro unlocked!') } as any)
             return
           }
           const msg = String(j?.error || '').trim()
@@ -72,7 +80,8 @@ export default function AuthSessionHydrator() {
             clearPending()
           }
           if (msg) toast.error('Promo code', { description: msg } as any)
-        } catch {
+        } catch (error) {
+          try { console.log('[PROMO] error', error) } catch {}
           // Keep pending code for later retry (offline/etc.)
         }
       } catch {}
