@@ -85,6 +85,82 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
   const [notifSaveMessage, setNotifSaveMessage] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [showFallbackPicker, setShowFallbackPicker] = useState(false)
+  // Promo / access code redemption (Settings)
+  const [accessCode, setAccessCode] = useState('')
+  const [redeemingCode, setRedeemingCode] = useState(false)
+  const [redeemMsg, setRedeemMsg] = useState<string>('')
+
+  const trialExpiryText = (() => {
+    try {
+      const iso = trialInfo?.trialEndedAt ? String(trialInfo.trialEndedAt) : ''
+      if (!iso) return null
+      const d = new Date(iso)
+      if (!Number.isFinite(d.getTime())) return null
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    } catch {
+      return null
+    }
+  })()
+
+  const trialDaysRemaining = (() => {
+    try {
+      const iso = trialInfo?.trialEndedAt ? String(trialInfo.trialEndedAt) : ''
+      if (!iso) return null
+      const ms = Date.parse(iso)
+      if (!Number.isFinite(ms)) return null
+      const diff = ms - Date.now()
+      if (diff <= 0) return 0
+      return Math.ceil(diff / (1000 * 60 * 60 * 24))
+    } catch {
+      return null
+    }
+  })()
+
+  const redeemEnteredCode = async () => {
+    const code = String(accessCode || '').trim().toUpperCase()
+    if (!code) return
+    setRedeemingCode(true)
+    setRedeemMsg('')
+    try {
+      const r = await fetch('/api/promo/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const j = await r.json().catch(() => ({} as any))
+      if (r.status === 401) {
+        setRedeemMsg('Please sign in again, then retry.')
+        return
+      }
+      if (r.ok) {
+        setRedeemMsg('Promo code redeemed ✓')
+        // Refresh so trialInfo updates and the UI swaps to redeemed state
+        setTimeout(() => { try { window.location.reload() } catch {} }, 600)
+        return
+      }
+      const msg = String((j as any)?.error || '').trim()
+      if (msg === 'Code not found') {
+        // Beta fallback
+        const b = await fetch('/api/beta/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        })
+        if (b.ok) {
+          setRedeemMsg('Code redeemed ✓')
+          setTimeout(() => { try { window.location.reload() } catch {} }, 600)
+          return
+        }
+        setRedeemMsg('Code not found.')
+        return
+      }
+      setRedeemMsg(msg || 'Failed to redeem code.')
+    } catch (e: any) {
+      setRedeemMsg(e?.message || 'Failed to redeem code.')
+    } finally {
+      setRedeemingCode(false)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -1271,18 +1347,98 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             </div>
             
             <div className="border-t border-gray-200 pt-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium text-gray-900">Biostackr Pro</h3>
-                  <p className="text-sm text-gray-600">$29/month</p>
+              {(() => {
+                const hasPaidSubscription = Boolean(subscription && subscription.plan_type === 'pro' && String(subscription.status || '').toLowerCase() !== 'canceled')
+                const isTrialViaPromo = Boolean(trialInfo?.isInTrial) && !hasPaidSubscription
+                // NOTE: this render branch is already "Pro" (not Free/Beta/Creator), so treat as Pro by construction.
+                const isBillingOutsideStripe = !isTrialViaPromo && !hasPaidSubscription
+
+                if (isTrialViaPromo) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                        <div className="font-medium">You’re on a free trial via promo code — no payment method required.</div>
+                        <div className="mt-1 text-blue-800">
+                          To keep Pro access after your trial ends, upgrade below.
+                          {trialExpiryText ? ` Trial ends ${trialExpiryText}.` : ''}
+                          {typeof trialDaysRemaining === 'number' ? ` (${trialDaysRemaining} days remaining)` : ''}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-gray-900">Biostackr Pro Trial</h3>
+                          <p className="text-sm text-gray-600">No billing yet</p>
+                        </div>
+                        <a
+                          href="/pricing/pro"
+                          className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                        >
+                          Upgrade to Pro →
+                        </a>
+                      </div>
+                    </div>
+                  )
+                }
+
+                if (isBillingOutsideStripe) {
+                  return (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
+                      <div className="font-medium">Billing managed outside Stripe</div>
+                      <div className="mt-1 text-gray-600">
+                        Your account has Pro access, but we couldn’t find a Stripe subscription to manage here.
+                        If you need to change billing, contact support.
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium text-gray-900">Biostackr Pro</h3>
+                      <p className="text-sm text-gray-600">$29/month</p>
+                    </div>
+                    <a
+                      href="/dash/billing"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Manage Billing
+                    </a>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Promo code / redeemed state */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="font-medium text-gray-900 mb-2">Promo code</h3>
+              {trialInfo?.isInTrial ? (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                  <div className="font-medium">Promo code redeemed ✓</div>
+                  <div className="mt-1 text-blue-800">
+                    Pro Trial active{trialExpiryText ? ` until ${trialExpiryText}` : ''}.
+                  </div>
                 </div>
-                <a
-                  href="/dash/billing"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Manage Billing
-                </a>
-              </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    placeholder="Enter code (e.g., PH30)"
+                    className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    autoCapitalize="characters"
+                  />
+                  <button
+                    onClick={redeemEnteredCode}
+                    disabled={redeemingCode || !accessCode.trim()}
+                    className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {redeemingCode ? 'Applying…' : 'Apply'}
+                  </button>
+                </div>
+              )}
+              {redeemMsg ? <div className="mt-2 text-sm text-gray-700">{redeemMsg}</div> : null}
             </div>
           </div>
         )}
