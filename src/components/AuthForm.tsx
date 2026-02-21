@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -23,6 +23,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
+
+  // Promo code UX on auth signup (in case this form is used anywhere):
+  // - Visible by default on signup
+  // - Auto-fill from ?promo=PH30 and auto-show input
+  useEffect(() => {
+    if (mode !== 'signup') return
+    try {
+      setShowAccessCode(true)
+      const promo = String(searchParams?.get('promo') || '').trim()
+      if (promo && !accessCode.trim()) {
+        setAccessCode(promo.toUpperCase())
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, searchParams])
 
   // Read and sanitize ?next= without using window to avoid hydration mismatches
   const nextUrl = useMemo(() => {
@@ -403,13 +418,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
             )}
 
             <div className={isSignUp ? '-mt-2' : ''}>
-              <button
-                type="button"
-                className="text-sm text-gray-700 hover:underline"
-                onClick={() => setShowAccessCode(v => !v)}
-              >
-                Have a promo or beta code?
-              </button>
+              {!isSignUp ? (
+                <button
+                  type="button"
+                  className="text-sm text-gray-700 hover:underline"
+                  onClick={() => setShowAccessCode(v => !v)}
+                >
+                  Have a promo or beta code?
+                </button>
+              ) : null}
               {showAccessCode && (
                 <div className="mt-2">
                   <label htmlFor="accessCode" className="block text-sm font-medium text-gray-700">
@@ -512,8 +529,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <Link
                 href={
                   isSignUp
-                    ? (`/auth/signin${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
-                    : (`/auth/signup${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
+                    ? (`/login${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
+                    : (`/signup${nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''}`)
                 }
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
               >

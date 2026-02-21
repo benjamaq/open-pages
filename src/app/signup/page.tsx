@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -21,11 +21,24 @@ function SignupInner() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showAccessCode, setShowAccessCode] = useState(false)
   const [accessCode, setAccessCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  // Promo code UX:
+  // - Visible by default (no toggle)
+  // - Auto-fill from ?promo=PH30
+  useEffect(() => {
+    try {
+      const promo = String(params?.get('promo') || '').trim()
+      if (promo && !accessCode.trim()) {
+        setAccessCode(promo.toUpperCase())
+      }
+    } catch {}
+    // Intentionally do not include accessCode in deps to avoid overriding user typing mid-session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   async function redeemAccessCode(
     codeRaw: string,
@@ -304,27 +317,18 @@ function SignupInner() {
             <div className="text-xs text-gray-500 mt-1">At least 8 characters.</div>
           </div>
           <div className="pt-1">
-            <button
-              type="button"
-              className="text-sm text-gray-700 hover:underline"
-              onClick={() => setShowAccessCode(v => !v)}
-            >
-              Have a promo or beta code?
-            </button>
-            {showAccessCode && (
-              <div className="mt-2 grid gap-1">
-                <label className="text-sm text-gray-700">Promo / Beta Code</label>
-                <input
-                  type="text"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
-                  placeholder="Enter code (e.g., PH30)"
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                  autoCapitalize="characters"
-                />
-                <div className="text-xs text-gray-500 mt-1">Optional. If valid, we’ll apply it right after signup.</div>
-              </div>
-            )}
+            <div className="grid gap-1">
+              <label className="text-sm text-gray-700">Promo / Beta Code (optional)</label>
+              <input
+                type="text"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                placeholder="Enter code (e.g., PH30)"
+                className="w-full rounded-md border px-3 py-2 text-sm"
+                autoCapitalize="characters"
+              />
+              <div className="text-xs text-gray-500 mt-1">Optional. If valid, we’ll apply it right after signup.</div>
+            </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           {message && !error && <p className="text-sm text-gray-700">{message}</p>}
