@@ -28,33 +28,6 @@ async function postToSlack(args: { text: string; blocks?: any[] }) {
   }
 }
 
-async function lookupRedeemedPromoForUser(userId: string): Promise<{ used: boolean; code: string | null } | null> {
-  const uid = String(userId || '').trim()
-  if (!uid) return null
-  try {
-    const { data: red, error: redErr } = await supabaseAdmin
-      .from('promo_redemptions')
-      .select('promo_code_id, redeemed_at')
-      .eq('user_id', uid)
-      .order('redeemed_at', { ascending: false })
-      .limit(1)
-    if (redErr) return { used: false, code: null }
-    const promoCodeId = (red && red[0] ? String((red[0] as any).promo_code_id || '') : '') || ''
-    if (!promoCodeId) return { used: false, code: null }
-
-    const { data: promo } = await supabaseAdmin
-      .from('promo_codes')
-      .select('code')
-      .eq('id', promoCodeId)
-      .maybeSingle()
-
-    const code = promo && (promo as any)?.code ? String((promo as any).code) : null
-    return { used: true, code: code || null }
-  } catch {
-    return { used: false, code: null }
-  }
-}
-
 /**
  * POST /api/notify/signup
  *
@@ -115,18 +88,12 @@ export async function POST(request: Request) {
   const userId = String((user as any)?.id || '')
   const createdAt = clientTimestamp || new Date().toISOString()
 
-  // Promo redemption might happen after signup; we include both "entered" and "redeemed" signals.
-  const redeemed = userId ? await lookupRedeemedPromoForUser(userId) : null
-  const promoRedeemed = redeemed?.used ? 'yes' : 'no'
-  const promoRedeemedCode = redeemed?.code ? String(redeemed.code) : null
-
   const subject = `New signup: ${email || '(unknown email)'}`
   const text = [
     'New user signup',
     `Email: ${email || '(unknown)'}`,
     `Timestamp: ${createdAt}`,
     promoCodeEntered ? `Promo entered: ${promoCodeEntered}` : 'Promo entered: (none)',
-    `Promo redeemed: ${promoRedeemed}${promoRedeemedCode ? ` (${promoRedeemedCode})` : ''}`,
     userId ? `User ID: ${userId}` : '',
     `Auth: ${authSource}`,
   ].filter(Boolean).join('\n')
@@ -137,7 +104,6 @@ export async function POST(request: Request) {
       <p style="margin: 0 0 6px 0"><strong>Email:</strong> ${email || '(unknown)'}</p>
       <p style="margin: 0 0 6px 0"><strong>Timestamp:</strong> ${createdAt}</p>
       <p style="margin: 0 0 6px 0"><strong>Promo entered:</strong> ${promoCodeEntered || '(none)'}</p>
-      <p style="margin: 0 0 6px 0"><strong>Promo redeemed:</strong> ${promoRedeemed}${promoRedeemedCode ? ` (${promoRedeemedCode})` : ''}</p>
       ${userId ? `<p style="margin: 0 0 6px 0"><strong>User ID:</strong> ${userId}</p>` : ''}
       <p style="margin: 0 0 6px 0"><strong>Auth:</strong> ${authSource}</p>
     </div>
@@ -145,7 +111,7 @@ export async function POST(request: Request) {
 
   const ok = await sendEmail({ to, subject, html, text })
   await postToSlack({
-    text: `New signup: ${email || '(unknown)'} • promo entered: ${promoCodeEntered || '(none)'} • redeemed: ${promoRedeemed}${promoRedeemedCode ? ` (${promoRedeemedCode})` : ''}`,
+    text: `New signup: ${email || '(unknown)'} • promo entered: ${promoCodeEntered || '(none)'}`,
   })
 
   try {
@@ -155,8 +121,6 @@ export async function POST(request: Request) {
       email: maskEmail(email),
       userId: userId || null,
       promoCodeEntered,
-      promoRedeemed,
-      promoRedeemedCode,
       authSource,
       ms: Date.now() - startedAt,
     })

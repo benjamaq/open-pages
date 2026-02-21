@@ -8,10 +8,12 @@ export function SettingsForm({
   initial,
   email,
   isMember,
+  promoTrialExpiresAt,
 }: {
   initial: { reminder_enabled: boolean; reminder_time: string; reminder_timezone: string | null }
   email: string | null
   isMember: boolean
+  promoTrialExpiresAt?: string | null
 }) {
   const detectedTz = useMemo(() => {
     try { return detectTimezone() || null } catch { return null }
@@ -137,8 +139,29 @@ export function SettingsForm({
       {/* Promo Code */}
       <section className="rounded-xl border border-[#E4E1DC] bg-white p-5">
         <div className="text-base font-semibold text-gray-900 mb-2">Promo Code</div>
-        <div className="text-sm text-gray-700">Redeem a promo code to unlock Pro access.</div>
-        <PromoRedeemer defaultOpen showToggle={false} />
+        {(() => {
+          const iso = promoTrialExpiresAt ? String(promoTrialExpiresAt) : ''
+          const ms = iso ? Date.parse(iso) : NaN
+          const active = Number.isFinite(ms) ? ms > Date.now() : false
+          if (!active) return null
+          const d = new Date(ms)
+          const until = Number.isFinite(d.getTime())
+            ? d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+            : null
+          return (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <div className="font-medium">Promo code redeemed ✓</div>
+              <div className="mt-1 text-blue-800">
+                Pro Trial active{until ? ` until ${until}` : ''}.
+              </div>
+            </div>
+          )
+        })() || (
+          <>
+            <div className="text-sm text-gray-700">Redeem a promo code to unlock Pro access.</div>
+            <PromoRedeemer defaultOpen showToggle={false} />
+          </>
+        )}
       </section>
 
       {/* Account */}

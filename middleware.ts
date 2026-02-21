@@ -46,6 +46,6 @@ export const config = {
      */
     // Exclude API routes, Next internals, assets, and favicon from middleware
     // Also explicitly allow the magic check-in endpoint to be public
-    '/((?!api/checkin/magic|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/checkin/magic|sw\\.js$|manifest\\.json$|manifest-v2\\.json$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

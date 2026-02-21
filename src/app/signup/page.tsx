@@ -126,11 +126,6 @@ function SignupInner() {
   }
 
   const onSubmit = async (e: React.FormEvent) => {
-    console.log('[SUBMIT-DEBUG] onSubmit fired', {
-      accessCode,
-      accessCodeTrimmed: accessCode.trim(),
-      accessCodeLength: accessCode.length,
-    })
     e.preventDefault()
     setError(null)
     setMessage(null)
@@ -244,10 +239,6 @@ function SignupInner() {
     // Redirect based on plan from URL
     const plan = (params.get('plan') || '').toLowerCase()
     const period = (params.get('period') || 'monthly').toLowerCase()
-    console.log('[SUBMIT-DEBUG] about to redirect', {
-      codeRes,
-      destination: plan === 'premium' || plan === 'pro' ? 'stripe' : '/onboarding',
-    })
     if (!codeRes?.hardUnlock && (plan === 'premium' || plan === 'pro')) {
       try {
         console.log('Creating Stripe session...')

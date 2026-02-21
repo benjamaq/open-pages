@@ -205,20 +205,6 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
     return () => { cancelled = true }
   }, [])
 
-  // Debug: verify trialInfo plumbing for promo trials (temporary).
-  useEffect(() => {
-    try {
-      console.log('[SETTINGS-DEBUG]', {
-        trialInfo,
-        profileTier: (profile as any)?.tier ?? null,
-        proExpiresAt: (profile as any)?.pro_expires_at ?? null,
-        isInTrial: (trialInfo as any)?.isInTrial,
-        hasSubscription: !!subscription,
-      })
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trialInfo, profile, subscription])
-
   // Keep preferences.reminder_time in sync with the local reminderTime used by push UI,
   // so that any later saves don’t overwrite the value back to defaults.
   useEffect(() => {

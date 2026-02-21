@@ -110,13 +110,26 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                     </button>
                   </form>
                 ) : (
-                  <div className="mt-4 rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-3 text-sm text-[#111111]">
-                    <div className="font-medium">Billing managed outside Stripe</div>
-                    <div className="text-[#4B5563] mt-1">
-                      Your account has Pro access, but we couldn’t find a Stripe subscription to manage here.
-                      If you need to change billing, contact support.
+                  trialActive ? (
+                    <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                      <div className="font-medium">You’re on a free trial via promo code — no payment method required.</div>
+                      <div className="mt-1 text-blue-800">
+                        To keep Pro access after your trial ends, upgrade below.
+                        {trialExpiresAt
+                          ? ` Trial ends ${new Date(trialExpiresAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}.`
+                          : ''}
+                        {typeof trialDaysLeft === 'number' ? ` (${trialDaysLeft} days remaining)` : ''}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="mt-4 rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-3 text-sm text-[#111111]">
+                      <div className="font-medium">Billing managed outside Stripe</div>
+                      <div className="text-[#4B5563] mt-1">
+                        Your account has Pro access, but we couldn’t find a Stripe subscription to manage here.
+                        If you need to change billing, contact support.
+                      </div>
+                    </div>
+                  )
                 )}
                 {trialActive && (
                   <div className="mt-4">
@@ -157,6 +170,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
           }}
           email={settings?.email || user.email}
           isMember={Boolean(plan?.is_member)}
+          promoTrialExpiresAt={trialExpiresAt}
         />
       </main>
     </div>
