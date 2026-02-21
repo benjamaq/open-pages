@@ -177,6 +177,33 @@ function SignupInner() {
           console.warn('profiles bootstrap failed:', e)
         }
       }
+
+      // Fire-and-forget: notify Benja on every signup. Do NOT block signup on this.
+      // Uses bearer token so it works even before server cookies are established.
+      try {
+        const { data: sess } = await supabase.auth.getSession()
+        const accessToken = sess?.session?.access_token ? String(sess.session.access_token) : ''
+        const entered = accessCode.trim() ? accessCode.trim().toUpperCase() : null
+        // Minimal client-side log for verification
+        try {
+          console.log('[SIGNUP-NOTIFY] calling /api/notify/signup (fire-and-forget)', {
+            hasToken: !!accessToken,
+            userId: createdUserId,
+            promoCodeEntered: entered,
+          })
+        } catch {}
+        fetch('/api/notify/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          },
+          body: JSON.stringify({
+            promoCodeEntered: entered,
+            timestamp: new Date().toISOString(),
+          })
+        }).catch(() => {})
+      } catch {}
     } catch (err: any) {
       setError(err?.message || 'Auth client error. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
       setLoading(false)
