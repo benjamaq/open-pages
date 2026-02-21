@@ -88,6 +88,49 @@ export default function ResultsPage() {
   const [showArchived, setShowArchived] = useState<boolean>(false)
   // UI-only pause/resume map for Cabinet view (id -> pausedAt ISO)
   const [paused, setPaused] = useState<Record<string, string>>({})
+  const [scheduledOffToday, setScheduledOffToday] = useState<string[]>([])
+
+  // Keep My Stack's "Today's Protocol" consistent with the dashboard rotation message.
+  // Dashboard/check-in writes this into localStorage as { date: 'YYYY-MM-DD', names: string[] }.
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('biostackr_skip_names_today') : null
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      const todayStr = new Date().toISOString().split('T')[0]
+      if (parsed?.date !== todayStr) return
+      const names = Array.isArray(parsed?.names)
+        ? parsed.names.map((s: any) => String(s || '')).filter(Boolean)
+        : []
+      setScheduledOffToday(names)
+    } catch {}
+  }, [])
+
+  const normalizeForMatch = (s: string) => {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/\[[^\]]+\]/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  }
+  const isScheduledOffName = (name: string) => {
+    const n = normalizeForMatch(name)
+    if (!n) return false
+    for (const raw of (scheduledOffToday || [])) {
+      const full = normalizeForMatch(raw)
+      if (!full) continue
+      if (full === n) return true
+      // Also match the portion after the first comma (common "Brand, Ingredient" naming)
+      const parts = String(raw).split(',').map(p => p.trim()).filter(Boolean)
+      const afterComma = parts.length >= 2 ? normalizeForMatch(parts.slice(1).join(' ')) : ''
+      if (afterComma && afterComma === n) return true
+      // Fuzzy containment for short supplement names
+      if ((full.length >= 6 && n.includes(full)) || (n.length >= 6 && full.includes(n))) return true
+      if (afterComma && ((afterComma.length >= 6 && n.includes(afterComma)) || (n.length >= 6 && afterComma.includes(n)))) return true
+    }
+    return false
+  }
   // Edit modal state for dose/timing/brand
   const [editOpen, setEditOpen] = useState(false)
   const [editDraft, setEditDraft] = useState<{ id: string; dose: string; timing: string; brand: string; frequency: string; monthly?: string }>({ id: '', dose: '', timing: '', brand: '', frequency: '', monthly: '' })
@@ -687,12 +730,14 @@ export default function ResultsPage() {
               // not that the user stopped taking the supplement.
               return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id]
             })
+            const takeToday = active.filter(r => !isScheduledOffName(String((r as any)?.name || r.name || '')))
             // Debug monthly inputs
             try {
               console.log('[results] Active monthly inputs:', active.map(r => ({ id: r.id, name: r.name, monthly: r.monthly })))
             } catch {}
             const monthly = active.reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0)
-            const daily = monthly / 30
+            const monthlyToday = takeToday.reduce((s, r) => s + (typeof r.monthly === 'number' ? r.monthly : 0), 0)
+            const daily = monthlyToday / 30
             const includedIds = active.map(r => r.id)
             try {
               console.log('[results] Totals: daily=', daily, 'monthly=', monthly, 'included=', includedIds)
@@ -705,8 +750,13 @@ export default function ResultsPage() {
                 <div>
                   <div className="section-header">Today&apos;s Protocol</div>
                   <div className="section-subtitle">
-                    {active.length} {active.length === 1 ? 'supplement' : 'supplements'} to take today
+                    {takeToday.length} {takeToday.length === 1 ? 'supplement' : 'supplements'} to take today
                   </div>
+                  {scheduledOffToday.length > 0 && (
+                    <div className="mt-1 text-[12px] text-[#6B7280]">
+                      Scheduled OFF today (rotation): {scheduledOffToday.slice(0, 3).join(', ')}{scheduledOffToday.length > 3 ? ` +${scheduledOffToday.length - 3} more` : ''}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -740,6 +790,7 @@ export default function ResultsPage() {
               const s = supps.find(x => x.id === r.id) as any
               const fallbackName = String(s?.name || (loopById[r.id] as any)?.name || r.name || '')
               const { brand, shortName } = parseBrandAndShortName({ ...s, name: fallbackName })
+              const offToday = isScheduledOffName(String(fallbackName || r.name || ''))
               let dose = getDose(s)
               // If dose is purely numeric (legacy), add 'x' to improve clarity
               if (dose && /^\d+(\.\d+)?$/.test(dose)) dose = `${dose}x`
@@ -752,7 +803,16 @@ export default function ResultsPage() {
               const doseWhen = parts.length ? parts.join(' • ') : '—'
                 return (
                 <div key={r.id} className="protocol-row">
-                  <div className="supplement-name line-clamp-2 sm:line-clamp-1">{shortName || r.name}</div>
+                  <div className="supplement-name line-clamp-2 sm:line-clamp-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`${offToday ? 'text-[#6B7280]' : ''}`}>{shortName || r.name}</span>
+                      {offToday && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: '#E4E1DC', backgroundColor: '#F6F5F3', color: '#6B7280' }}>
+                          OFF today
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <div className="brand-name truncate">{brand || '—'}</div>
                   <div className="dosewhen">{doseWhen}</div>
                 </div>

@@ -322,7 +322,7 @@ function SignupInner() {
                 type="text"
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
-                placeholder="Enter code (e.g., PH30)"
+                placeholder="Enter promo code"
                 className="w-full rounded-md border px-3 py-2 text-sm"
                 autoCapitalize="characters"
               />

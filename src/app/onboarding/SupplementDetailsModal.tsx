@@ -402,12 +402,13 @@ export function SupplementDetailsModal({
            <div className="text-xs text-slate-500 mt-1">Select up to 2.</div>
          </section>
 
-         {/* Section C — Timing & context */}
+         {/* Section C — Timeline */}
          <section className="rounded-xl border border-[#E4E1DC] bg-[#F6F5F3] p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Timing & context</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Your supplement timeline</div>
           <div className="text-xs text-slate-700 mb-2 max-w-prose">
             <span className="mr-1">⚡</span>
-            <span className="font-semibold">Accurate dates = accurate verdicts.</span> We compare your health before vs after you started.
+            <span className="font-semibold">This is the most important input for your verdict.</span> We compare your health during periods ON this supplement vs periods OFF.
+            The more accurate your dates, the more reliable your result.
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
              <label className="text-xs text-slate-700 min-w-0">
@@ -479,7 +480,7 @@ export function SupplementDetailsModal({
            <div className="mt-4">
              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Additional intake periods</div>
              {intakePeriods.length === 0 && (
-               <div className="text-xs text-slate-500 mb-2">Add past start/stop windows to capture breaks.</div>
+              <div className="text-xs text-slate-500 mb-2">Did you take any breaks? Adding stop/start periods helps us separate ON days from OFF days more accurately.</div>
              )}
             <div className="space-y-2">
               {intakePeriods.map((p, i) => (

@@ -510,7 +510,7 @@ export function DashboardUnifiedPanel({
   }
 
   // Economics donut + spend
-  const { chartData, totalYearly, econEffectiveYear, econInconclusiveYear, econCutYear, econAwaitingYear, econActiveSuppCount } = useMemo(() => {
+  const { chartData, totalYearly, econEffectiveYear, econInconclusiveYear, econCutYear, econAwaitingYear, econActiveSuppCount, econZeroCostVerdictCount } = useMemo(() => {
     // Build spend segments; prefer progress/loop monthlyCost when supplement lacks monthly_cost_usd
     type Acc = Record<string, number>
     const acc: Acc = {}
@@ -641,6 +641,7 @@ export function DashboardUnifiedPanel({
     let cutMonthlyFromHeader = 0
     let inconclusiveMonthlyFromHeader = 0
     let awaitingMonthlyFromHeader = 0
+    let zeroCostVerdictCount = 0
     for (const s of activeSuppsForEcon) {
       const id = String((s as any)?.id || '')
       const nameLc = String((s as any)?.name || '').toLowerCase()
@@ -658,6 +659,8 @@ export function DashboardUnifiedPanel({
         (catLower === 'no_effect') ||
         (catLower === 'no_detectable_effect') ||
         (verdictLower === 'no_clear_signal')
+      const isVerdict = isEffective || isDrop || isNoClear
+      if (isVerdict && Number(m || 0) === 0) zeroCostVerdictCount += 1
       if (isEffective) effMonthlyFromHeader += m
       else if (isDrop) cutMonthlyFromHeader += m
       else if (isNoClear) inconclusiveMonthlyFromHeader += m
@@ -671,6 +674,7 @@ export function DashboardUnifiedPanel({
       econInconclusiveYear: Math.round(inconclusiveMonthlyFromHeader * 12),
       econAwaitingYear: Math.round(awaitingMonthlyFromHeader * 12),
       econActiveSuppCount: activeSuppsForEcon.length,
+      econZeroCostVerdictCount: zeroCostVerdictCount,
     }
   }, [supps, progress])
 
@@ -866,7 +870,12 @@ export function DashboardUnifiedPanel({
                 return <div className="text-sm text-gray-700">All results are in ✓</div>
               }
               // If this is an upload-only account, suggest confirming; otherwise encourage continued tracking.
-              return <div className="text-sm text-gray-700">{allImplicit ? 'Start daily check-ins to confirm your results' : 'Keep checking in — your first result is building'}</div>
+              const hasCheckedInToday = Boolean((progress as any)?.checkins?.hasCheckedInToday)
+              // If the user has already started checking in, don’t tell them to “start”.
+              const implicitCopy = (hasCheckedInToday || totalDaysTracked > 0)
+                ? 'Keep checking in daily to confirm your results'
+                : 'Start daily check-ins to confirm your results'
+              return <div className="text-sm text-gray-700">{allImplicit ? implicitCopy : 'Keep checking in — your first result is building'}</div>
             }
             if (!nextResult) {
               if (gatedOnly) {
@@ -1057,6 +1066,11 @@ export function DashboardUnifiedPanel({
           {Number(econActiveSuppCount || 0) > 0 && Number(totalYearly || 0) === 0 ? (
             <div className="text-xs text-gray-600 mb-4">
               Costs are optional. Add costs in <a href="/results" className="hover:underline" style={{ color: '#6A3F2B' }}>My Stack</a> to track your spending.
+            </div>
+          ) : Number(econZeroCostVerdictCount || 0) > 0 ? (
+            <div className="text-xs text-gray-600 mb-4">
+              {Number(econZeroCostVerdictCount || 0)} completed supplement{Number(econZeroCostVerdictCount || 0) === 1 ? '' : 's'} {Number(econZeroCostVerdictCount || 0) === 1 ? 'has' : 'have'} no cost set — add it in{' '}
+              <a href="/results" className="hover:underline" style={{ color: '#6A3F2B' }}>My Stack</a> for accurate economics.
             </div>
           ) : null}
           {/* Chart + Legend Row */}

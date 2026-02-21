@@ -1047,6 +1047,19 @@ function RowItem({ row, ready, noSignal, isMember = false, spendMonthly, headerC
             <div className="h-full" style={{ width: `100%`, backgroundColor: fillColor }} />
           </div>
           {(() => {
+            // Quick-glance recommendation for NO CLEAR SIGNAL so users know what to do without opening the report.
+            if (!isMember) return null
+            const cat = String((row as any)?.effectCategory || '').toLowerCase()
+            const ts = String((row as any)?.truthStatus || '').toLowerCase()
+            const isNoClear = (cat === 'no_effect' || cat === 'no_detectable_effect') || (ts === 'no_effect' || ts === 'no_detectable_effect')
+            if (!isNoClear) return null
+            return (
+              <div className="mt-2 text-[12px] text-gray-700">
+                No detectable effect at this dose — consider dropping or retesting.
+              </div>
+            )
+          })()}
+          {(() => {
             const conf = (row as any)?.confidence
             const confNum = typeof conf === 'number' ? Math.max(0, Math.min(1, Number(conf))) : null
             const confPct = confNum == null ? null : Math.round(confNum * 100)

@@ -552,6 +552,8 @@ export async function GET(request: Request) {
       wearableCountAll = wc || 0
     } catch {}
     const meetsWearableThreshold = wearableCountAll >= 30
+    // Cache wearable ON/OFF splits by inferred_start_at (shared across supplements that start same day).
+    const wearableSplitByInferredStart = new Map<string, { on: number; off: number; total: number }>()
 
     // Use max of sources to avoid undercounting
     const totalDistinctDaysFromCheckins = distinctCheckinDays.size
@@ -1558,6 +1560,55 @@ export async function GET(request: Request) {
             try { console.log('[IMPLICIT-SANITY]', { name, inferred_start_at: inferred, wearableDaysAll: wearableCountAll, forced: 'explicit (insufficient conditions)' }) } catch {}
           }
         } catch {}
+
+        // IMPORTANT (E2E: yoni@mac.com):
+        // Even when a supplement is "held" (verdict hidden), we must still show wearable-based progress.
+        // Derive implicit eligibility from inferred_start_at + wearableDays, NOT from existence of a truth report.
+        try {
+          const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+          const meta = uid ? (suppMetaById.get(String(uid)) as any) : null
+          const inferred = meta?.inferred ? String(meta.inferred).slice(0, 10) : null
+          const hasRestart = Boolean(meta?.restart)
+          const implicitEligible = Boolean(inferred) && meetsWearableThreshold
+          if (!analysisSrc && implicitEligible) {
+            analysisSrc = 'implicit'
+            ;(r as any).analysisSource = 'implicit'
+          }
+          // If we have wearables + inferred date, compute ALL-TIME ON/OFF split via counts.
+          // This avoids the "0% progress until first check-in" bug caused by only scanning entries365 (365-day window).
+          if (!hasRestart && implicitEligible && inferred) {
+            const key = inferred
+            const cached = wearableSplitByInferredStart.get(key)
+            if (cached) {
+              ;(r as any).daysOn = cached.on
+              ;(r as any).daysOff = cached.off
+              ;(r as any).daysOnClean = cached.on
+              ;(r as any).daysOffClean = cached.off
+              ;(r as any).daysOfData = cached.total
+              ;(r as any).daysTracked = cached.total
+            } else {
+              let on = 0
+              try {
+                const { count: onCnt } = await supabase
+                  .from('daily_entries')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('user_id', user.id)
+                  .not('wearables', 'is', null)
+                  .gte('local_date', key as any)
+                on = Number(onCnt || 0)
+              } catch {}
+              const total = Math.max(0, Number(wearableCountAll || 0))
+              const off = Math.max(0, total - on)
+              wearableSplitByInferredStart.set(key, { on, off, total })
+              ;(r as any).daysOn = on
+              ;(r as any).daysOff = off
+              ;(r as any).daysOnClean = on
+              ;(r as any).daysOffClean = off
+              ;(r as any).daysOfData = total
+              ;(r as any).daysTracked = total
+            }
+          }
+        } catch {}
         const isImplicit = analysisSrc === 'implicit'
         // For logging compatibility
         const finalPct = activeProgress
@@ -2393,10 +2444,21 @@ export async function GET(request: Request) {
     } catch {}
     if (totalDistinctDays < baselineDaysNeeded) {
       rotation.phase = 'baseline'
+      // "Take as normal" should include ALL active supplements (completed + testing), excluding paused/inactive.
+      const takeAllActive = (progressRows || []).filter((r: any) => {
+        const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+        if (!uid) return false
+        const activeFlag = isActiveById.get(String(uid))
+        if (activeFlag === false) return false
+        const st = String(testingStatusById.get(String(uid)) || '').toLowerCase()
+        if (st === 'inactive' || st === 'paused') return false
+        return true
+      }).map((r: any) => ({ id: String(r.id), name: String(r.name || 'Supplement') }))
       rotation.action = {
         headline: "TODAY'S ACTION",
         primary: 'Take your supplements as normal.',
-        note: `We\'re establishing your baseline. Rotation starts in ${Math.max(0, baselineDaysNeeded - totalDistinctDays)} day(s).`
+        note: `We\'re establishing your baseline. Rotation starts in ${Math.max(0, baselineDaysNeeded - totalDistinctDays)} day(s).`,
+        take: takeAllActive,
       }
     } else if (groupEntries.length > 0) {
       rotation.phase = 'rotation'
@@ -2472,7 +2534,18 @@ export async function GET(request: Request) {
         })
         .slice(0, toSkipCount)
       const skipIds = new Set(skipList.map(s => s.id))
-      const takeList = stackItems.filter(s => !skipIds.has(s.id))
+      // "Take as normal" should include completed + testing supplements (but not paused/inactive),
+      // excluding any that are scheduled OFF today.
+      const allActiveForTake = (progressRows || []).filter((r: any) => {
+        const uid = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
+        if (!uid) return false
+        const activeFlag = isActiveById.get(String(uid))
+        if (activeFlag === false) return false
+        const st = String(testingStatusById.get(String(uid)) || '').toLowerCase()
+        if (st === 'inactive' || st === 'paused') return false
+        return true
+      }).map((r: any) => ({ id: String(r.id), name: String(r.name || 'Supplement') }))
+      const takeList = allActiveForTake.filter(s => !skipIds.has(s.id))
       const reasonByCat: Record<string, string> = {
         sleep: "This helps us isolate what's affecting your sleep.",
         energy: "This helps us isolate what impacts your daytime energy.",
@@ -2497,7 +2570,7 @@ export async function GET(request: Request) {
           const chosen = offNeedCandidates[idx]
           const chosenId = String((chosen as any)?.id)
           const chosenName = String((chosen as any)?.name || 'Supplement')
-          const takeListFallback = stackItems.filter(s => s.id !== chosenId)
+          const takeListFallback = allActiveForTake.filter(s => s.id !== chosenId)
           rotation.action = {
             headline: "TODAY'S ACTION",
             skipCategory: 'priority_override',
