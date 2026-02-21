@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import PaywallModal from '../../components/billing/PaywallModal'
 import StackPillGrid from '../../components/stack/StackPillGrid'
 import type { StackConstellationItem } from '../../components/stack/StackConstellation'
-import { isFinalVerdictStatus, verdictLabelsForStatus } from '@/lib/verdictLabels'
+import { verdictLabelsForStatus } from '@/lib/verdictLabels'
 
 type EffectRow = {
   user_supplement_id: string
@@ -682,22 +682,10 @@ export default function ResultsPage() {
         {/* Today's Protocol */}
         <div className="mt-6 section-todays-protocol">
           {(() => {
-            const isEligibleForProtocol = (id: string) => {
-              // Never tell users to "take today" for anything with a final verdict (KEEP/DROP/NO CLEAR SIGNAL/INCONCLUSIVE).
-              const l = loopById[id] as any
-              const statusForFinalCheck = (() => {
-                const truth = String(l?.truthStatus || '').toLowerCase()
-                if (truth) return truth
-                const v = String(l?.verdict || '').toLowerCase()
-                if (v === 'keep') return 'proven_positive'
-                if (v === 'drop') return 'negative'
-                return String(l?.effectCategory || '').toLowerCase()
-              })()
-              return !isFinalVerdictStatus(statusForFinalCheck)
-            }
-
             const active = uiRows.filter(r => {
-              return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id] && isEligibleForProtocol(r.id)
+              // Protocol = what you take today. A completed verdict means the test is done,
+              // not that the user stopped taking the supplement.
+              return r.lifecycle !== 'Archived' && isActiveStackSupp(r.id) && !paused[r.id]
             })
             // Debug monthly inputs
             try {
@@ -746,18 +734,8 @@ export default function ResultsPage() {
               <div className="dosewhen uppercase tracking-wide text-right">Dose • When</div>
             </div>
             {uiRows.filter(u => {
-              // Match the summary count above: protocol should only include actively testing supplements with no final verdict.
-              const l = loopById[u.id] as any
-              const statusForFinalCheck = (() => {
-                const truth = String(l?.truthStatus || '').toLowerCase()
-                if (truth) return truth
-                const v = String(l?.verdict || '').toLowerCase()
-                if (v === 'keep') return 'proven_positive'
-                if (v === 'drop') return 'negative'
-                return String(l?.effectCategory || '').toLowerCase()
-              })()
-              const allow = !isFinalVerdictStatus(statusForFinalCheck)
-              return u.lifecycle !== 'Archived' && isActiveStackSupp(u.id) && !paused[u.id] && allow
+              // Match the summary count above: include all active + not paused + not archived.
+              return u.lifecycle !== 'Archived' && isActiveStackSupp(u.id) && !paused[u.id]
             }).map(r => {
               const s = supps.find(x => x.id === r.id) as any
               const fallbackName = String(s?.name || (loopById[r.id] as any)?.name || r.name || '')
