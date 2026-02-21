@@ -513,24 +513,32 @@ export async function GET(request: Request) {
       }
     }
 
-    // IMPORTANT: "check-ins completed" must only count explicit user check-ins,
+    // IMPORTANT: gated implicit verdict confirmation must count explicit user check-ins,
     // not wearable-imported / inferred historical days.
-    // Source of truth for explicit check-ins: checkin table (distinctCheckinDays).
-    const totalUserCheckins = distinctCheckinDays.size
-    const explicitCleanCheckins = (() => {
-      try {
-        // A "clean" check-in day is one without noise tags.
-        // cleanDatesSet is derived from daily_entries by excluding NOISE_TAGS.
-        // We intersect with distinctCheckinDays so uploads can't inflate this number.
-        let n = 0
-        for (const d of distinctCheckinDays) {
-          if (cleanDatesSet.has(d)) n++
-        }
-        return n
-      } catch {
-        return distinctCheckinDays.size
+    //
+    // Source of truth: daily_entries rows with explicit check-in fields present.
+    // We use this (not the 'checkin' table) so the counter increments immediately after a check-in.
+    const explicitDailyCheckinDays = new Set<string>()
+    try {
+      for (const e of (entries365 || [])) {
+        const dKey = String((e as any)?.local_date || '').slice(0, 10)
+        if (!dKey) continue
+        const energy = (e as any)?.energy
+        const focus = (e as any)?.focus
+        const mood = (e as any)?.mood
+        const sleepQ = (e as any)?.sleep_quality
+        const sleep = (e as any)?.sleep
+        const hasAnyRating =
+          typeof energy === 'number' ||
+          typeof focus === 'number' ||
+          typeof mood === 'number' ||
+          typeof sleepQ === 'number' ||
+          typeof sleep === 'number'
+        if (hasAnyRating) explicitDailyCheckinDays.add(dKey)
       }
-    })()
+    } catch {}
+    // Account-level count (all time window): useful for debug/telemetry but NOT used for per-supplement gate unlocks.
+    const totalUserCheckins = explicitDailyCheckinDays.size
 
     // Compute total wearable days across all time to gate implicit behavior/UI
     let wearableCountAll = 0
@@ -1233,7 +1241,10 @@ export async function GET(request: Request) {
         // Always recompute to avoid stale effect table counts
         let on = 0, off = 0
         let onClean = 0, offClean = 0
-        let explicitCleanCheckins = 0
+        // Per-supplement gated confirmation counter:
+        // MUST count explicit daily_entries check-ins since the supplement was added (createdAtIso),
+        // NOT since backdated start/inferred_start_at.
+        let checkinsSinceAdded = 0
         for (const entry of (entries365 || [])) {
           const dKey = String((entry as any).local_date).slice(0,10)
           if (restartIso && dKey < restartIso.slice(0,10)) continue
@@ -1282,12 +1293,9 @@ export async function GET(request: Request) {
               console.log('[daysOn]', { suppId, date: dKey, intake: (intake ? (intake as any)[suppId] : undefined), tags: (entry as any).tags, isClean })
             } catch {}
           }
-          // Count explicit, clean check-ins since confirm start (if defined)
-          if (hasExplicitRecord && isClean) {
-            if (!confirmStartIso || dKey >= String(confirmStartIso).slice(0,10)) {
-              explicitCleanCheckins++
-            }
-          }
+          // NOTE: We intentionally do NOT count supplement_intake records here for the gate counter.
+          // The gate is a habit mechanism: it should advance on explicit daily check-ins, even if
+          // the user doesn't toggle supplement intake for the day.
           if (isOff) {
             if (isClean) { off++; offClean++ }
           } else if (isTaken) {
@@ -1299,7 +1307,23 @@ export async function GET(request: Request) {
         ;(r as any).daysOff = off
         ;(r as any).daysOnClean = onClean
         ;(r as any).daysOffClean = offClean
-        ;(r as any).explicitCleanCheckins = explicitCleanCheckins
+        // Count explicit check-in days since the supplement was added.
+        // Use createdAtIso (DB created_at), not restartIso/inferred_start_at.
+        try {
+          const gateStart = createdAtIso ? String(createdAtIso).slice(0, 10) : null
+          if (gateStart) {
+            let n = 0
+            for (const d of explicitDailyCheckinDays) {
+              if (d >= gateStart) n++
+            }
+            checkinsSinceAdded = n
+          } else {
+            checkinsSinceAdded = 0
+          }
+        } catch {
+          checkinsSinceAdded = 0
+        }
+        ;(r as any).explicitCleanCheckins = checkinsSinceAdded
         // Bug 28: dynamic confirmation gate (implicit strong evidence can require only 1 check-in)
         try {
           const uid0 = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
@@ -1600,9 +1624,9 @@ export async function GET(request: Request) {
           if (finalImplicitVerdict) {
             const uidForStatus = (r as any).userSuppId || (queryTable === 'user_supplement' ? String((r as any).id) : null)
             const dbTestingStatus = uidForStatus ? (testingStatusById.get(String(uidForStatus)) || '') : ''
-            // Simplified unlock: final verdict AND total user check-ins >= 3
-            const userOK = totalUserCheckins >= 3
-            const confirmUnlocked = finalImplicitVerdict && userOK
+            // Unlock final implicit verdict only after enough post-add explicit check-ins for THIS supplement.
+            const perSuppCheckins = Number((r as any)?.explicitCleanCheckins || 0)
+            const confirmUnlocked = finalImplicitVerdict && perSuppCheckins >= 3
             if (confirmUnlocked) {
               uploadProgress = 100
               sOn = Math.max(sOn, Number((r as any).daysOnClean ?? 0))
@@ -1714,10 +1738,6 @@ export async function GET(request: Request) {
     })()
     for (const r of progressRows as any[]) {
       try {
-        // Attach explicit clean check-in count for UI teases and gating.
-        ;(r as any).explicitCleanCheckins = explicitCleanCheckins
-        ;(r as any).confirmCheckinsRequired = AUTO_UNLOCK_REQ
-
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
         // Prefer effectCategory; if missing, derive from stored truth status so Completed cards don't show "TESTING 100%".
@@ -1744,7 +1764,8 @@ export async function GET(request: Request) {
         const confirmReq = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
         // IMPORTANT: if a final truth report exists (truthStatusRaw is final), do NOT gate-lock it into TESTING.
         // The Completed section is driven by the existence of supplement_truth_reports, not by check-in confirmation UI gates.
-        const is_gate_locked = Boolean(is_implicit && !isFinalTruthStatus && !(has_final_verdict && totalUserCheckins >= confirmReq))
+        const checkinsCompleted = Number((r as any)?.explicitCleanCheckins || 0)
+        const is_gate_locked = Boolean(is_implicit && !isFinalTruthStatus && !(has_final_verdict && checkinsCompleted >= confirmReq))
         // Section and progress per rules
         let section: 'testing' | 'completed' = 'testing'
         let progress = Number(r.progressPercent || 0)
@@ -1768,17 +1789,19 @@ export async function GET(request: Request) {
         // One free instant verdict per account:
         // If user already received an auto-unlocked verdict, all other final verdicts require 3 explicit clean check-ins.
         const shouldLockVerdictReady =
-          Boolean(hasAutoUnlocked && isGatableFinalVerdict && !truthAutoUnlocked && explicitCleanCheckins < AUTO_UNLOCK_REQ)
+          Boolean(hasAutoUnlocked && isGatableFinalVerdict && !truthAutoUnlocked && checkinsCompleted < AUTO_UNLOCK_REQ)
 
         // If verdict is calculated but not unlocked yet, keep it in Testing.
         // IMPORTANT UX: do NOT show any "verdict ready" / lock messaging. It should look like normal testing.
         if (shouldLockVerdictReady) {
           ;(r as any).gateLocked = true
+          // For the one-free-verdict gate, the requirement is always "3 check-ins" before unlock.
+          ;(r as any).confirmCheckinsRequired = AUTO_UNLOCK_REQ
           section = 'testing'
           progress = Math.min(95, Math.max(5, Number((r as any)?.uploadProgress ?? r.progressPercent ?? 0) || 95))
           badge = { key: 'testing', text: '◐ TESTING' }
           label = usingUpload ? 'Signal from historical data' : 'Actively testing'
-          subtext = `Check-ins completed: ${explicitCleanCheckins} of ${AUTO_UNLOCK_REQ}`
+          subtext = `Check-ins completed: ${checkinsCompleted} of ${AUTO_UNLOCK_REQ}`
           showVerdict = false
           // IMPORTANT: Do not leak verdict details for locked rows.
           ;(r as any).truthStatus = ''
@@ -1922,7 +1945,8 @@ export async function GET(request: Request) {
           }
           const extraGate = createdWithin7Days && !hasCheckinAfterAdd
           const req = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
-          if (isImp && ((totalUserCheckins < req) || extraGate)) {
+          const perSuppCheckins = Number((r as any)?.explicitCleanCheckins || 0)
+          if (isImp && ((perSuppCheckins < req) || extraGate)) {
             ;(r as any).isReady = false
           }
         } catch {}
@@ -2011,7 +2035,9 @@ export async function GET(request: Request) {
         const cat = String((r as any).effectCategory || '').toLowerCase()
         const hasFinal = (cat === 'works' || cat === 'no_effect' || cat === 'no_detectable_effect' || cat === 'negative' || cat === 'proven_positive')
         const req = Math.max(1, Number((r as any)?.confirmCheckinsRequired || 3))
-        const gateApplies = isImp && !(hasFinal && totalUserCheckins >= req)
+        // Gate is per-supplement: count explicit daily_entries check-ins since this supplement was added.
+        const perSuppCheckins = Number((r as any)?.explicitCleanCheckins || 0)
+        const gateApplies = isImp && !(hasFinal && perSuppCheckins >= req)
         if (gateApplies) {
           if ((r as any).effectCategory) {
             (r as any).heldEffectCategory = (r as any).effectCategory
