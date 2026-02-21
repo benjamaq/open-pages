@@ -32,59 +32,11 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// SAFETY: passthrough fetch handler.
+// If a SW fetch handler is buggy, it can stall the entire site. For now we do not cache or
+// special-case any requests; everything goes straight to the network.
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-
-  // Only handle GET
-  if (request.method !== 'GET') return;
-
-  const url = new URL(request.url);
-
-  // In local development, never intercept - avoid "offline" false positives
-  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-    return;
-  }
-
-  // Never cache API calls by default
-  if (url.pathname.startsWith('/api/')) return;
-
-  // Navigation requests: network-first with offline fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      (async () => {
-        try {
-          const fresh = await fetch(request);
-          return fresh;
-        } catch (err) {
-          const cache = await caches.open(RUNTIME_CACHE);
-          const cached = await cache.match(OFFLINE_FALLBACK_URL);
-          return cached || new Response('You are offline', { status: 503, statusText: 'Offline' });
-        }
-      })()
-    );
-    return;
-  }
-
-  // Static assets: stale-while-revalidate
-  if (url.origin === self.origin && (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/public/') || url.pathname.match(/\.(?:js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/))) {
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(RUNTIME_CACHE);
-        const cachedResponse = await cache.match(request);
-        const networkFetch = fetch(request)
-          .then((response) => {
-            // Clone and store a successful response
-            if (response && response.status === 200) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          })
-          .catch(() => undefined);
-
-        return cachedResponse || (await networkFetch) || new Response('Offline', { status: 503 });
-      })()
-    );
-  }
+  event.respondWith(fetch(event.request));
 });
 
 
