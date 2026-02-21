@@ -1092,7 +1092,7 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
             <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-sm">⭐</span>
             </div>
-          ) : trialInfo.tier === 'pro' && !isBetaUser ? (
+          ) : (trialInfo.tier === 'pro' || trialInfo.isInTrial) && !isBetaUser ? (
             <Crown className="w-6 h-6 text-yellow-500" />
           ) : isBetaUser ? (
             <TestTube className="w-6 h-6 text-blue-500" />
@@ -1101,7 +1101,8 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
           )}
           <h2 className="text-xl font-semibold text-gray-900">
             {trialInfo.tier === 'creator' ? 'Biostackr Creator' : 
-             trialInfo.tier === 'pro' && !isBetaUser ? 'Biostackr Pro' : 
+             (trialInfo.isInTrial && !isBetaUser) ? 'Biostackr Pro Trial' :
+             (trialInfo.tier === 'pro' && !isBetaUser) ? 'Biostackr Pro' : 
              isBetaUser ? 'Beta Tester' : 'Subscription'}
           </h2>
           {trialInfo.tier === 'creator' && (
@@ -1109,7 +1110,12 @@ export default function SettingsClient({ profile, userEmail, trialInfo }: Settin
               ⭐ CREATOR
             </span>
           )}
-          {trialInfo.tier === 'pro' && !isBetaUser && (
+          {trialInfo.isInTrial && !isBetaUser && (
+            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+              PRO TRIAL
+            </span>
+          )}
+          {trialInfo.tier === 'pro' && !trialInfo.isInTrial && !isBetaUser && (
             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
               PRO
             </span>

@@ -5,6 +5,7 @@ import { statusToCategory } from '@/lib/verdictMapping'
 import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { normalizeTruthStatus } from '@/lib/verdictLabels'
+import { isProActive } from '@/lib/entitlements/pro'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
 const DASHBOARD_CACHE_VERSION = 1
@@ -1725,17 +1726,14 @@ export async function GET(request: Request) {
       if (st === 'too_early' || st === 'needs_more_data') return { key: 'testing', text: '◐ TESTING' }
       return { key: 'starting', text: '◐ STARTING' }
     }
-    // Resolve display state per truth table
-    const userTier: 'free' | 'pro' = (() => {
-      const tierLc = String((profile as any)?.tier || '').toLowerCase()
-      const exp = (profile as any)?.pro_expires_at ? String((profile as any).pro_expires_at) : ''
-      const isProTier = tierLc === 'pro' || tierLc === 'premium' || tierLc === 'creator'
-      if (!isProTier) return 'free'
-      if (!exp) return 'pro'
-      const ms = Date.parse(exp)
-      if (!Number.isFinite(ms)) return 'pro'
-      return ms > Date.now() ? 'pro' : 'free'
-    })()
+    // Resolve display state per truth table.
+    // IMPORTANT: promo/manual trials should be treated as Pro via pro_expires_at, even when tier remains 'free'.
+    const userTier: 'free' | 'pro' = isProActive({
+      tier: (profile as any)?.tier ?? null,
+      pro_expires_at: (profile as any)?.pro_expires_at ?? null,
+    })
+      ? 'pro'
+      : 'free'
     for (const r of progressRows as any[]) {
       try {
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
