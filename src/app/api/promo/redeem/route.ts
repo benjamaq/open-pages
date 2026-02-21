@@ -124,12 +124,11 @@ export async function POST(request: Request) {
       return Date.now()
     })()
     const newExpiry = new Date(baseMs + grantsDays * 24 * 60 * 60 * 1000).toISOString()
-    // CRITICAL: use UPSERT so we still write pro_expires_at even if the profiles row doesn't exist yet.
+    // IMPORTANT: update only. Upsert can try to INSERT and fail on required fields (e.g., slug).
     const { data: upRows, error: upErr } = await (supabaseAdmin as any)
       .from('profiles')
-      // IMPORTANT: do NOT set tier='pro' here. pro_expires_at alone grants temporary Pro access.
-      // Setting tier creates a permanent backdoor if any code checks tier directly.
-      .upsert({ user_id: user.id, pro_expires_at: newExpiry } as any, { onConflict: 'user_id' } as any)
+      .update({ pro_expires_at: newExpiry } as any)
+      .eq('user_id', user.id)
       .select('user_id,pro_expires_at')
     if (upErr) {
       try { console.log('[PROMO][redeem] profile upsert error', { code, userId: user.id, error: upErr.message }) } catch {}
