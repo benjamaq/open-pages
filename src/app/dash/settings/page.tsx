@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SettingsClient from './SettingsClient'
 import CacheBuster from '../../../components/CacheBuster'
 import type { Metadata } from 'next'
+import { isProTrial } from '@/lib/entitlements/pro'
 
 // Add cache-busting metadata for Safari
 export const metadata: Metadata = {
@@ -45,23 +46,27 @@ export default async function SettingsPage() {
     notFound()
   }
 
-  // Get trial information from user_usage with cache busting
-  const { data: usageData, error: usageError } = await supabase
+  // Trial info:
+  // - Stripe trials may be tracked in user_usage
+  // - Promo/manual trials are tracked via profiles.pro_expires_at
+  const { data: usageData } = await supabase
     .from('user_usage')
     .select('is_in_trial, trial_started_at, trial_ended_at, tier')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  const trialInfo = usageData ? {
-    isInTrial: (usageData as any).is_in_trial || false,
-    trialStartedAt: (usageData as any).trial_started_at,
-    trialEndedAt: (usageData as any).trial_ended_at,
-    tier: (usageData as any).tier || 'free'
-  } : {
-    isInTrial: false,
-    trialStartedAt: null,
-    trialEndedAt: null,
-    tier: 'free'
+  const promoTrialActive = isProTrial({ pro_expires_at: (profile as any)?.pro_expires_at ?? null })
+  const profileTierLc = String((profile as any)?.tier || '').toLowerCase()
+  const tierFromProfile: 'free' | 'pro' | 'creator' =
+    profileTierLc === 'creator' ? 'creator' : (profileTierLc === 'pro' ? 'pro' : 'free')
+
+  const trialInfo = {
+    isInTrial: Boolean((usageData as any)?.is_in_trial) || promoTrialActive,
+    trialStartedAt: (usageData as any)?.trial_started_at ?? null,
+    // Prefer user_usage trial end (Stripe); else promo expiry from profiles
+    trialEndedAt: (usageData as any)?.trial_ended_at ?? ((profile as any)?.pro_expires_at ?? null),
+    // Tier comes from profile (promo trials should not require tier='pro')
+    tier: tierFromProfile,
   }
 
   return (

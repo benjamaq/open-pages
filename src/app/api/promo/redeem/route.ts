@@ -4,9 +4,25 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let { data: { user } } = await supabase.auth.getUser()
+  let authSource: 'cookie' | 'bearer' | 'none' = user ? 'cookie' : 'none'
+  // Signup/login flows can have session in localStorage but not in server cookies yet.
+  // Allow client to pass Authorization: Bearer <access_token> for immediate redemption.
   if (!user) {
-    try { console.log('[PROMO][redeem] unauthorized (no user)') } catch {}
+    try {
+      const authHeader = request.headers.get('authorization') || request.headers.get('Authorization') || ''
+      const token = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : ''
+      if (token) {
+        const u = await (supabaseAdmin as any).auth.getUser(token)
+        if (u?.data?.user) {
+          user = u.data.user
+          authSource = 'bearer'
+        }
+      }
+    } catch {}
+  }
+  if (!user) {
+    try { console.log('[PROMO][redeem] unauthorized (no user)', { authSource }) } catch {}
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -15,7 +31,7 @@ export async function POST(request: Request) {
   if (!code) return NextResponse.json({ error: 'Code not found' }, { status: 400 })
 
   try {
-    try { console.log('[PROMO][redeem] attempting', { code, userId: user.id }) } catch {}
+    try { console.log('[PROMO][redeem] attempting', { code, userId: user.id, authSource }) } catch {}
     // Use new DB tables:
     // - public.promo_codes(id, code, max_redemptions, days_granted, expires_at, created_at)
     // - public.promo_redemptions(id, user_id, promo_code_id, redeemed_at, UNIQUE(user_id,promo_code_id))

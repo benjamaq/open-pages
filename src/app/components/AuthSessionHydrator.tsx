@@ -40,9 +40,14 @@ export default function AuthSessionHydrator() {
           } catch {
             try { console.log('[PROMO] attempting redemption', { code: pending, userId: null }) } catch {}
           }
+          const { data: sess } = await supabase.auth.getSession()
+          const accessToken = sess?.session?.access_token ? String(sess.session.access_token) : ''
           const r = await fetch('/api/promo/redeem', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
             body: JSON.stringify({ code: pending })
           })
           const j = await r.json().catch(() => ({} as any))
@@ -62,7 +67,10 @@ export default function AuthSessionHydrator() {
             // Beta fallback
             const b = await fetch('/api/beta/validate', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+              },
               body: JSON.stringify({ code: pending })
             })
             if (b.ok) {

@@ -39,48 +39,74 @@ function SignupInner() {
 
     // Try redeem now (works when user session is active immediately after signUp)
     try {
-      try { console.log('[PROMO] attempting redemption', { code, userId: args?.userId || null }) } catch {}
-      const r = await fetch('/api/promo/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      })
-      const j = await r.json().catch(() => ({} as any))
-      try { console.log('[PROMO] response', { status: r.status, body: j }) } catch {}
-      if (r.ok) {
-        try { localStorage.removeItem('bs_pending_access_code') } catch {}
-        return { redeemed: true, hardUnlock: true }
-      }
-      // If the user isn't authenticated yet (common when email confirmation is required),
-      // keep the pending code so it can be redeemed later after login.
-      if (r.status === 401) {
-        return { redeemed: false, hardUnlock: false }
-      }
-      const msg = String(j?.error || '').trim()
+      const supabase = createClient()
+      const wait = (ms: number) => new Promise(res => setTimeout(res, ms))
 
-      // If it wasn't a promo code, try beta code validation.
-      if (msg === 'Code not found') {
-        const b = await fetch('/api/beta/validate', {
+      // Retry on 401 up to 3 times (session cookie/localStorage propagation can lag).
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { data: sess } = await supabase.auth.getSession()
+        const accessToken = sess?.session?.access_token ? String(sess.session.access_token) : ''
+        const hasSession = Boolean(sess?.session)
+        const uid = sess?.session?.user?.id || args?.userId || null
+        try {
+          console.log('[PROMO-SIGNUP] about to call /api/promo/redeem', { code, hasSession, userId: uid, attempt })
+        } catch {}
+
+        const r = await fetch('/api/promo/redeem', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          },
           body: JSON.stringify({ code })
         })
-        if (b.ok) {
+        const j = await r.json().catch(() => ({} as any))
+        try { console.log('[PROMO-SIGNUP] response', { status: r.status, body: j, attempt }) } catch {}
+
+        if (r.ok) {
           try { localStorage.removeItem('bs_pending_access_code') } catch {}
           return { redeemed: true, hardUnlock: true }
         }
-        try { localStorage.removeItem('bs_pending_access_code') } catch {}
-        return { redeemed: false, hardUnlock: false, error: 'Code not found' }
+
+        if (r.status === 401) {
+          try { console.log('[PROMO-SIGNUP] 401 unauthorized; will retry', { attempt }) } catch {}
+          if (attempt < 3) {
+            await wait(2000)
+            continue
+          }
+          // Keep pending code for hydrator retry (email confirmation / auth not ready).
+          return { redeemed: false, hardUnlock: false }
+        }
+
+        const msg = String((j as any)?.error || '').trim()
+        // If it wasn't a promo code, try beta code validation.
+        if (msg === 'Code not found') {
+          const b = await fetch('/api/beta/validate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            body: JSON.stringify({ code })
+          })
+          if (b.ok) {
+            try { localStorage.removeItem('bs_pending_access_code') } catch {}
+            return { redeemed: true, hardUnlock: true }
+          }
+          try { localStorage.removeItem('bs_pending_access_code') } catch {}
+          return { redeemed: false, hardUnlock: false, error: 'Code not found' }
+        }
+        // Other promo errors: don't keep retrying.
+        if (msg) {
+          try { localStorage.removeItem('bs_pending_access_code') } catch {}
+          return { redeemed: false, hardUnlock: false, error: msg }
+        }
+        return { redeemed: false, hardUnlock: false }
       }
 
-      // Other promo errors: don't keep retrying.
-      if (msg) {
-        try { localStorage.removeItem('bs_pending_access_code') } catch {}
-        return { redeemed: false, hardUnlock: false, error: msg }
-      }
       return { redeemed: false, hardUnlock: false }
     } catch (error: any) {
-      try { console.log('[PROMO] error', error) } catch {}
+      try { console.log('[PROMO-SIGNUP] error', error) } catch {}
       // Keep pending code for hydrator retry (offline, auth not ready, etc.)
       return { redeemed: false, hardUnlock: false }
     }
@@ -162,7 +188,7 @@ function SignupInner() {
 
     // If an access code was provided, try to redeem immediately. If it unlocks Pro, skip Stripe checkout even on paid plan URLs.
     // Tie logs to the actual created user id for debugging.
-    try { if (accessCode.trim()) console.log('[PROMO] signup created user', { userId: createdUserId, code: accessCode.trim().toUpperCase() }) } catch {}
+    try { if (accessCode.trim()) console.log('[PROMO-SIGNUP] signup created user', { userId: createdUserId, code: accessCode.trim().toUpperCase() }) } catch {}
     const codeRes = await redeemAccessCode(accessCode, { userId: createdUserId })
     if (codeRes?.error) {
       setMessage(codeRes.error)
