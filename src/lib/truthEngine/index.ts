@@ -583,6 +583,68 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   // Compute missing-metric counts (labeled ON/OFF days that lacked usable metric)
   const missingOnMetrics = Math.max(0, sampleOnCount - (effect.sampleOn || 0))
   const missingOffMetrics = Math.max(0, sampleOffCount - (effect.sampleOff || 0))
+
+  // ===== Implicit confounding guard (rotation) =====
+  // When multiple supplements share the same inferred_start_at window, implicit ON/OFF splits become identical
+  // and we can’t attribute any effect. In that case, only allow ONE supplement to produce a final verdict.
+  // Others should stay in testing until the user differentiates intake (periods/check-ins).
+  try {
+    const inferredStart = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0, 10) : null
+    if (pathImplicit && meetsWearableThreshold && !hasExplicitIntake && inferredStart) {
+      const ms = Date.parse(`${inferredStart}T00:00:00Z`)
+      if (Number.isFinite(ms)) {
+        const d0 = new Date(ms)
+        const w0 = new Date(d0); w0.setDate(w0.getDate() - 14)
+        const w1 = new Date(d0); w1.setDate(w1.getDate() + 14)
+        const startWin = w0.toISOString().slice(0, 10)
+        const endWin = w1.toISOString().slice(0, 10)
+        const { data: peers } = await supabase
+          .from('user_supplement')
+          .select('id,created_at,inferred_start_at,is_active,testing_status')
+          .eq('user_id', userId)
+          .or('is_active.eq.true,is_active.is.null')
+          .eq('testing_status', 'testing')
+          .gte('inferred_start_at', startWin as any)
+          .lte('inferred_start_at', endWin as any)
+        const peerIds = (peers || [])
+          .map((p: any) => ({
+            id: String(p?.id || ''),
+            created_at: p?.created_at ? String(p.created_at) : null
+          }))
+          .filter(p => p.id)
+        if (peerIds.length > 1) {
+          const sorted = [...peerIds].sort((a, b) => {
+            const am = a.created_at ? Date.parse(a.created_at) : Number.POSITIVE_INFINITY
+            const bm = b.created_at ? Date.parse(b.created_at) : Number.POSITIVE_INFINITY
+            if (Number.isFinite(am) && Number.isFinite(bm) && am !== bm) return am - bm
+            return String(a.id).localeCompare(String(b.id))
+          })
+          const winner = sorted[0]?.id
+          const isHeld = winner && String(winner) !== String(userSupplementId)
+          debugLog(`IMPLICIT_ROTATION_GUARD: inferredStart=${inferredStart}, peers=${peerIds.length}, winner=${winner || 'null'}, held=${isHeld}`)
+          if (isHeld) {
+            return buildReport({
+              supplementName: supplementName || undefined,
+              status: 'too_early',
+              effect,
+              primaryMetric,
+              canonical,
+              confoundedDays: samples.length - cleanSamples.length,
+              cohort: null,
+              sampleOnOverride: sampleOnCount,
+              sampleOffOverride: sampleOffCount,
+              metricLabelOverride: metricLabelOverride || undefined,
+              missingOnMetrics,
+              missingOffMetrics,
+              analysisSource: 'implicit'
+            })
+          }
+        }
+      }
+    }
+  } catch (e: any) {
+    debugLog(`IMPLICIT_ROTATION_GUARD_ERROR: ${(e as any)?.message || e}`)
+  }
   try {
     console.log('[truth-engine] Effect computed:', {
       metric: primaryMetric,

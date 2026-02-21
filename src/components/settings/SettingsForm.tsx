@@ -149,9 +149,9 @@ export function SettingsForm({
             ? d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
             : null
           return (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <div className="rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-4 text-sm text-[#111111]">
               <div className="font-medium">Promo code redeemed ✓</div>
-              <div className="mt-1 text-blue-800">
+              <div className="mt-1 text-[#4B5563]">
                 Pro Trial active{until ? ` until ${until}` : ''}.
               </div>
             </div>

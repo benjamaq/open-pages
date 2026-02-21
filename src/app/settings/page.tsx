@@ -111,9 +111,9 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                   </form>
                 ) : (
                   trialActive ? (
-                    <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    <div className="mt-4 rounded-lg border border-[#E4E1DC] bg-[#F6F5F3] p-3 text-sm text-[#111111]">
                       <div className="font-medium">You’re on a free trial via promo code — no payment method required.</div>
-                      <div className="mt-1 text-blue-800">
+                      <div className="mt-1 text-[#4B5563]">
                         To keep Pro access after your trial ends, upgrade below.
                         {trialExpiresAt
                           ? ` Trial ends ${new Date(trialExpiresAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}.`

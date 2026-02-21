@@ -63,7 +63,17 @@ export function DailyProgressLoop({
   })
   const [isMember, setIsMember] = useState<boolean>(false)
   const [hasWearables, setHasWearables] = useState<boolean>(false)
-  const [suppressMilestonePopups, setSuppressMilestonePopups] = useState<boolean>(false)
+  const [suppressMilestonePopups, setSuppressMilestonePopups] = useState<boolean>(() => {
+    try {
+      const url = new URL(window.location.href)
+      const fromUpload = url.searchParams.get('upload') === 'success' || url.searchParams.get('baseline') === 'success'
+      const uploadedFlag =
+        localStorage.getItem('bs_uploaded_wearables') === '1' || localStorage.getItem('wearable_postupload_seen') === '1'
+      return Boolean(fromUpload || uploadedFlag)
+    } catch {
+      return false
+    }
+  })
 
   // Debug: confirm membership gating value on each change
   useEffect(() => {
@@ -217,7 +227,7 @@ export function DailyProgressLoop({
         const candidate = readyRows.find(r => r.progressPercent >= 100 && !hasShown(`verdict_toast_${r.id}`))
         if (candidate) {
           // If another blocking modal is open (e.g. Baseline enhanced), queue this verdict modal instead of stacking.
-          if (modalBlocked) {
+          if (modalBlocked || suppressMilestonePopups) {
             setPendingVerdictModal({ id: candidate.id, name: candidate.name })
             return
           }

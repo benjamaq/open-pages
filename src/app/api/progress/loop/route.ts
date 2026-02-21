@@ -935,7 +935,7 @@ export async function GET(request: Request) {
     const { data: userSuppRows, error: userSuppError } = await supabaseAdmin
       .from('user_supplement')
       // IMPORTANT: only select columns that are confirmed to exist in production schema.
-      .select('id,name,retest_started_at,inferred_start_at,trial_number,testing_status,is_active')
+      .select('id,name,created_at,retest_started_at,inferred_start_at,trial_number,testing_status,is_active')
       .eq('user_id', user.id)
     // Verification log (Wayne debugging): confirm we loaded testing_status/is_active from the canonical table.
     try {
@@ -954,6 +954,7 @@ export async function GET(request: Request) {
     /* nameToUserSuppId initialized earlier */
     const userSuppIdToName = new Map<string, string>()
     const suppMetaById = new Map<string, { restart?: string | null; inferred?: string | null; updated?: string | null; trial?: number | null; testing?: boolean; status?: string }>()
+    const createdAtByUserSuppId = new Map<string, string | null>()
     const testingActiveIds = new Set<string>()
     const testingStatusById = new Map<string, string>()
     const isActiveById = new Map<string, boolean | null>()
@@ -970,6 +971,7 @@ export async function GET(request: Request) {
       userSuppIdToName.set(uid, String((u as any).name || ''))
       const status = String((u as any).testing_status || 'inactive').toLowerCase()
       const isTesting = status === 'testing'
+      createdAtByUserSuppId.set(uid, (u as any)?.created_at ? String((u as any).created_at) : null)
       suppMetaById.set(uid, {
         restart: (u as any).retest_started_at ?? null,
         inferred: (u as any).inferred_start_at ?? null,
@@ -983,6 +985,53 @@ export async function GET(request: Request) {
       testingStatusById.set(uid, status)
       isActiveById.set(uid, ((u as any).is_active === null || (u as any).is_active === undefined) ? null : Boolean((u as any).is_active))
     }
+
+    // ===== Implicit rotation/confounding hold =====
+    // If multiple supplements were backdated to the same start window (implicit inferred_start_at),
+    // the truth engine can produce identical ON/OFF splits for each. Hold all but one so results
+    // don’t appear simultaneously with confounded/identical data.
+    const implicitRotationHoldIds = new Set<string>()
+    try {
+      // Only apply this hold in the implicit wearable path.
+      if (meetsWearableThreshold) {
+        const candidates: Array<{ id: string; start: string; created_at: string | null }> = []
+        for (const u of userSuppRows || []) {
+          const uid = String((u as any).id || '').trim()
+          if (!uid) continue
+          const status = String((u as any).testing_status || '').toLowerCase()
+          const active = (u as any).is_active === false ? false : true
+          const inferred = (u as any).inferred_start_at ? String((u as any).inferred_start_at).slice(0, 10) : ''
+          if (!active) continue
+          if (status !== 'testing') continue
+          if (!inferred) continue
+          candidates.push({ id: uid, start: inferred, created_at: (u as any)?.created_at ? String((u as any).created_at) : null })
+        }
+        const groups = new Map<string, Array<{ id: string; created_at: string | null }>>()
+        for (const c of candidates) {
+          const arr = groups.get(c.start) || []
+          arr.push({ id: c.id, created_at: c.created_at })
+          groups.set(c.start, arr)
+        }
+        for (const [start, arr] of groups.entries()) {
+          if (!arr || arr.length <= 1) continue
+          // Winner = earliest created_at (stable); holds = all other supplements in this start cluster.
+          const sorted = [...arr].sort((a, b) => {
+            const am = a.created_at ? Date.parse(a.created_at) : Number.POSITIVE_INFINITY
+            const bm = b.created_at ? Date.parse(b.created_at) : Number.POSITIVE_INFINITY
+            if (Number.isFinite(am) && Number.isFinite(bm) && am !== bm) return am - bm
+            return String(a.id).localeCompare(String(b.id))
+          })
+          const winner = sorted[0]?.id
+          for (const it of sorted) {
+            if (!winner) continue
+            if (String(it.id) !== String(winner)) implicitRotationHoldIds.add(String(it.id))
+          }
+        }
+        if (implicitRotationHoldIds.size > 0) {
+          try { console.log('[rotation-hold]', { holds: Array.from(implicitRotationHoldIds).slice(0, 10), total: implicitRotationHoldIds.size }) } catch {}
+        }
+      }
+    } catch {}
     // Fast map from stack_items.id -> user_supplement_id when present to avoid name fuzziness
     const stackIdToUserSuppId = new Map<string, string>()
     try {
@@ -1055,6 +1104,8 @@ export async function GET(request: Request) {
         debugTrace.steps.push({ step: 'exclude_pass', total: progressRows.length, excluded: excluded.length, sample })
       } catch {}
     }
+    // Only generate at most 1 implicit truth report per request (prevents “all verdicts at once” on upload).
+    let didRefreshImplicitTruth = false
     for (const r of progressRows) {
       const eff = effBySupp.get(r.id)
       if (eff) {
@@ -1075,7 +1126,11 @@ export async function GET(request: Request) {
           const STALE_MS = 60 * 60 * 1000
           const stale = !truthRec || (Date.now() - createdAt > STALE_MS)
           // Do not refresh/overwrite if we already have an implicit truth for this supplement
-          if (stale && uid && !implicitTruthBySupp.has(String(uid))) {
+          const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
+          const isImplicit = Boolean(inferred) && meetsWearableThreshold
+          const isHeldImplicit = Boolean(isImplicit && uid && implicitRotationHoldIds.has(String(uid)))
+          const refreshBudgetOk = !isImplicit || !didRefreshImplicitTruth
+          if (stale && uid && !implicitTruthBySupp.has(String(uid)) && refreshBudgetOk && !isHeldImplicit) {
             // BUG 36 (Retest): if a retest is active, do NOT regenerate a truth report on dashboard load.
             // Otherwise, the overlay-refresh will immediately "self-heal" and put the card back into COMPLETED.
             const meta = suppMetaById.get(String(uid))
@@ -1112,6 +1167,7 @@ export async function GET(request: Request) {
             } else {
             try { if (VERBOSE) console.log('[overlay-refresh] generating truth for', { uid, cardId: (r as any).id, name: (r as any).name }) } catch {}
             const fresh = await generateTruthReportForSupplement(user.id, uid)
+            if (isImplicit) didRefreshImplicitTruth = true
             // Persist the freshly generated report so downstream reads are consistent
             try {
               const payloadToStore = {
@@ -1180,7 +1236,13 @@ export async function GET(request: Request) {
             }
           }
         } catch {}
-        const truth = uid ? truthBySupp.get(String(uid)) : undefined
+        const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
+        const isImplicit = Boolean(inferred) && meetsWearableThreshold
+        const isHeldImplicit = Boolean(isImplicit && uid && implicitRotationHoldIds.has(String(uid)))
+        if (isHeldImplicit) {
+          ;(r as any).rotationHold = true
+        }
+        const truth = (uid && !isHeldImplicit) ? truthBySupp.get(String(uid)) : undefined
         const mapped = truth ? mapTruthToCategory(truth.status) : undefined
         if (mapped) {
           ;(r as any).effectCategory = mapped
@@ -1753,7 +1815,12 @@ export async function GET(request: Request) {
         const analysis_source = String((r.analysisSource || '')).toLowerCase() || null
         const uid = (r.userSuppId || nameToUserSuppId.get(String(r.name || '').trim().toLowerCase()) || '')
         // Prefer effectCategory; if missing, derive from stored truth status so Completed cards don't show "TESTING 100%".
-        const truthRec = uid ? ((truthBySupp.get(String(uid)) as any) || (implicitTruthBySupp.get(String(uid)) as any) || null) : null
+        const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
+        const is_implicit = Boolean(inferred) && meetsWearableThreshold
+        const isHeldImplicit = Boolean(is_implicit && uid && implicitRotationHoldIds.has(String(uid)))
+        const truthRec = (uid && !isHeldImplicit)
+          ? ((truthBySupp.get(String(uid)) as any) || (implicitTruthBySupp.get(String(uid)) as any) || null)
+          : null
         const truthStatusRaw = truthRec ? String(truthRec?.status || '') : ''
         const truthAutoUnlocked = Boolean(truthRec?.auto_unlocked) || (autoUnlockedSuppId ? String(autoUnlockedSuppId) === String(uid) : false)
         const derivedCat = truthStatusRaw ? String(statusToCategory(truthStatusRaw) || '') : ''
@@ -1765,9 +1832,7 @@ export async function GET(request: Request) {
           const st = normalizeTruthStatus(truthStatusRaw)
           return st === 'proven_positive' || st === 'negative' || st === 'no_effect' || st === 'no_detectable_effect'
         })()
-        // Derive implicit from inferred_start_at + wearable_days
-        const inferred = uid ? (suppMetaById.get(String(uid)) as any)?.inferred : null
-        const is_implicit = Boolean(inferred) && meetsWearableThreshold
+        // Derive implicit from inferred_start_at + wearable_days (already computed above)
         const createdIso = String((r as any)?.createdAtIso || '').slice(0,10)
         const createdMs = createdIso ? Date.parse(`${createdIso}T00:00:00Z`) : NaN
         const supplement_age_days = Number.isFinite(createdMs) ? Math.floor((Date.now() - createdMs) / (24*60*60*1000)) : 9999

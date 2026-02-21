@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type PeriodPayload = {
   id?: string
@@ -39,7 +40,25 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabase
+  // Use service role for DB reads/writes (RLS-safe), but enforce ownership explicitly.
+  // "intervention_id" is a stack_items.id in this codebase.
+  const { data: si } = await supabaseAdmin
+    .from('stack_items')
+    .select('id,profile_id')
+    .eq('id', id)
+    .maybeSingle()
+  const profileId = (si as any)?.profile_id ? String((si as any).profile_id) : ''
+  if (!profileId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const { data: prof } = await supabaseAdmin
+    .from('profiles')
+    .select('user_id')
+    .eq('id', profileId)
+    .maybeSingle()
+  if (String((prof as any)?.user_id || '') !== String(user.id)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { data, error } = await supabaseAdmin
     .from('intervention_periods')
     .select('*')
     .eq('intervention_id', id)
@@ -68,7 +87,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Debug logging: payload and target column names
     console.log('[POST periods] intervention_id:', id, 'payload:', body)
 
-    const { data: existing, error: existingError } = await supabase
+    // Enforce ownership (stack_items.id → profiles.user_id)
+    const { data: si } = await supabaseAdmin
+      .from('stack_items')
+      .select('id,profile_id,user_supplement_id')
+      .eq('id', id)
+      .maybeSingle()
+    const profileId = (si as any)?.profile_id ? String((si as any).profile_id) : ''
+    if (!profileId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const { data: prof } = await supabaseAdmin
+      .from('profiles')
+      .select('user_id')
+      .eq('id', profileId)
+      .maybeSingle()
+    if (String((prof as any)?.user_id || '') !== String(user.id)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from('intervention_periods')
       .select('start_date, end_date')
       .eq('intervention_id', id)
@@ -88,7 +124,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       dose: body.dose ?? null,
       notes: body.notes ?? null
     }
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('intervention_periods')
       .insert(insertPayload as any)
       .select()
@@ -112,23 +148,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .maybeSingle()
       const earliest = (earliestRow as any)?.start_date ? String((earliestRow as any).start_date).slice(0,10) : String(body.start_date).slice(0,10)
       // Update stack_items.start_date
-      await (supabase as any)
+      await (supabaseAdmin as any)
         .from('stack_items')
         .update({ start_date: earliest } as any)
         .eq('id', id)
       // Look up a linked user_supplement_id on this stack item
-      const { data: si } = await supabase
-        .from('stack_items')
-        .select('user_supplement_id')
-        .eq('id', id)
-        .maybeSingle()
       const userSuppId = (si as any)?.user_supplement_id ? String((si as any).user_supplement_id) : null
       if (userSuppId) {
-        const { error: usErr } = await (supabase as any)
+        const { error: usErr } = await (supabaseAdmin as any)
           .from('user_supplement')
           .update({ inferred_start_at: earliest } as any)
           .eq('id', userSuppId)
-          .eq('user_id', user.id)
         if (usErr) {
           console.warn('[POST periods] failed to update user_supplement.inferred_start_at:', usErr.message)
         }
@@ -159,7 +189,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   // Pull existing to validate overlap (excluding the edited one)
-  const { data: existing } = await supabase
+  // Enforce ownership
+  const { data: si } = await supabaseAdmin
+    .from('stack_items')
+    .select('id,profile_id')
+    .eq('id', id)
+    .maybeSingle()
+  const profileId = (si as any)?.profile_id ? String((si as any).profile_id) : ''
+  if (!profileId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const { data: prof } = await supabaseAdmin
+    .from('profiles')
+    .select('user_id')
+    .eq('id', profileId)
+    .maybeSingle()
+  if (String((prof as any)?.user_id || '') !== String(user.id)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { data: existing } = await supabaseAdmin
     .from('intervention_periods')
     .select('id, start_date, end_date')
     .eq('intervention_id', id)
@@ -182,7 +229,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.dose !== undefined) updates.dose = body.dose
   if (body.notes !== undefined) updates.notes = body.notes
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (supabaseAdmin as any)
     .from('intervention_periods')
     .update(updates as any)
     .eq('id', body.periodId)
@@ -203,7 +250,24 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { periodId } = (await req.json()) as { periodId: string }
   if (!periodId) return NextResponse.json({ error: 'periodId is required' }, { status: 400 })
 
-  const { error } = await supabase
+  // Enforce ownership
+  const { data: si } = await supabaseAdmin
+    .from('stack_items')
+    .select('id,profile_id')
+    .eq('id', id)
+    .maybeSingle()
+  const profileId = (si as any)?.profile_id ? String((si as any).profile_id) : ''
+  if (!profileId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const { data: prof } = await supabaseAdmin
+    .from('profiles')
+    .select('user_id')
+    .eq('id', profileId)
+    .maybeSingle()
+  if (String((prof as any)?.user_id || '') !== String(user.id)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { error } = await supabaseAdmin
     .from('intervention_periods')
     .delete()
     .eq('id', periodId)

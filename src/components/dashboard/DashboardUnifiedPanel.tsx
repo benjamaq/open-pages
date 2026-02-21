@@ -1054,6 +1054,11 @@ export function DashboardUnifiedPanel({
               )
             })()}
           </div>
+          {Number(econActiveSuppCount || 0) > 0 && Number(totalYearly || 0) === 0 ? (
+            <div className="text-xs text-gray-600 mb-4">
+              Costs are optional. Add costs in <a href="/results" className="hover:underline" style={{ color: '#6A3F2B' }}>My Stack</a> to track your spending.
+            </div>
+          ) : null}
           {/* Chart + Legend Row */}
           <div className="flex items-start gap-4 sm:gap-8 mb-5">
             {/* Donut Chart */}
