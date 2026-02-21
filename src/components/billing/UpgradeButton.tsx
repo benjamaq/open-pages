@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import PaywallModal from './PaywallModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
-import { isProActive } from '@/lib/entitlements/pro'
+import { getTrialDaysRemaining, isProActive, isProTrial } from '@/lib/entitlements/pro'
 
 export default function UpgradeButton({
   compact = false,
@@ -19,36 +19,51 @@ export default function UpgradeButton({
   const [open, setOpen] = useState(false)
   const [isPro, setIsPro] = useState<boolean | null>(typeof isProOverride === 'boolean' ? isProOverride : null)
   const [isTrial, setIsTrial] = useState<boolean>(false)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
 
   useEffect(() => {
-    // If parent provided a definitive membership flag (dashboard combined load), don't fetch.
-    if (typeof isProOverride === 'boolean') {
-      setIsPro(isProOverride)
+    // If parent forces "not pro", don't fetch/override (used when we want an upgrade CTA even for trial users).
+    if (typeof isProOverride === 'boolean' && isProOverride === false) {
+      setIsPro(false)
+      setIsTrial(false)
+      setTrialDaysLeft(null)
       return
     }
     let mounted = true
     ;(async () => {
       try {
-        // Prefer billing endpoint; fallback to profile tier if exposed
-        const r = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
-        const j = r.ok ? r.data : {}
-        const paid = Boolean(j?.isPaid) || Boolean(j?.subscription && (j.subscription.status === 'active' || j.subscription.status === 'trialing'))
+        // Prefer billing endpoint; fallback to /api/me.
+        const billing = await dedupedJson<any>('/api/billing/info', { cache: 'no-store' })
+        const bj = billing.ok ? billing.data : {}
+        const profileFromBilling = {
+          tier: (bj as any)?.tier ?? null,
+          pro_expires_at: (bj as any)?.pro_expires_at ?? null,
+        }
+        const paidByBilling = Boolean((bj as any)?.isPaid) ||
+          Boolean((bj as any)?.subscription && (((bj as any).subscription.status === 'active') || ((bj as any).subscription.status === 'trialing')))
+        const paidByProfile = isProActive(profileFromBilling)
+        const paid = paidByBilling || paidByProfile
+
         if (mounted && paid) {
+          // Trial status is determined ONLY by pro_expires_at (promo/manual trials),
+          // not by Stripe subscription trialing.
+          const trialActive = isProTrial(profileFromBilling)
           setIsPro(true)
-          // If Pro is granted via pro_expires_at, show "Pro Trial" instead of permanent Pro.
-          const exp = j?.pro_expires_at ? String(j.pro_expires_at) : ''
-          setIsTrial(Boolean(exp))
+          setIsTrial(trialActive)
+          setTrialDaysLeft(trialActive ? getTrialDaysRemaining(profileFromBilling) : null)
           return
         }
-        // Optional: probe profile tier if available
-        try {
-          const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(res => res.ok ? res.data : {})
-          if (mounted) {
-            const pro = isProActive({ tier: (me as any)?.tier ?? null, pro_expires_at: (me as any)?.pro_expires_at ?? null })
-            setIsPro(pro)
-            setIsTrial(Boolean((me as any)?.pro_expires_at))
-          }
-        } catch { if (mounted) setIsPro(false) }
+
+        // Fallback: probe /api/me for tier + pro_expires_at.
+        const me = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' }).then(res => res.ok ? res.data : {})
+        if (mounted) {
+          const prof = { tier: (me as any)?.tier ?? null, pro_expires_at: (me as any)?.pro_expires_at ?? null }
+          const pro = isProActive(prof)
+          const trialActive = isProTrial(prof)
+          setIsPro(pro)
+          setIsTrial(trialActive)
+          setTrialDaysLeft(trialActive ? getTrialDaysRemaining(prof) : null)
+        }
       } catch { if (mounted) setIsPro(false) }
     })()
     return () => { mounted = false }
@@ -72,7 +87,20 @@ export default function UpgradeButton({
           aria-label="Pro plan active"
           title="Pro plan active"
         >
-          {isTrial ? 'Pro Trial' : 'Pro'} <span aria-hidden="true">✓</span>
+          {isTrial ? (
+            <>
+              Pro Trial <span aria-hidden="true">✓</span>
+              {typeof trialDaysLeft === 'number' ? (
+                <span className="ml-1 text-[12px] font-semibold opacity-80">
+                  ({trialDaysLeft}d left)
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <>
+              Pro <span aria-hidden="true">✓</span>
+            </>
+          )}
         </span>
       ) : (
         <button

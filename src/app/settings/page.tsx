@@ -20,6 +20,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
   const isPaidByTier = isProActive({ tier: (profileRow as any)?.tier, pro_expires_at: (profileRow as any)?.pro_expires_at })
   const trialActive = isProTrial({ pro_expires_at: (profileRow as any)?.pro_expires_at })
   const trialDaysLeft = getTrialDaysRemaining({ pro_expires_at: (profileRow as any)?.pro_expires_at })
+  const trialExpiresAt = (profileRow as any)?.pro_expires_at ? String((profileRow as any).pro_expires_at) : null
 
   const hdrs = await headers()
   const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3010'
@@ -75,9 +76,24 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                   <span className="font-medium">
                     {tierLc === 'creator'
                       ? 'Creator ✓'
-                      : (trialActive ? `Pro Trial ✓${(trialDaysLeft != null ? ` (${trialDaysLeft} days left)` : '')}` : 'Pro ✓')}
+                      : (trialActive ? 'Pro Trial ✓' : 'Pro ✓')}
                   </span>
                 </div>
+                {trialActive && (
+                  <div className="mt-2 text-sm text-[#4B5563]">
+                    Pro Trial —{' '}
+                    <span className="font-medium text-[#111111]">
+                      {trialDaysLeft != null ? `${trialDaysLeft} days remaining` : 'Active'}
+                    </span>
+                    {trialExpiresAt ? (
+                      <>
+                        {' '}
+                        (expires{' '}
+                        {new Date(trialExpiresAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })})
+                      </>
+                    ) : null}
+                  </div>
+                )}
                 <div className="mt-1 text-sm text-[#4B5563]">
                   Member since:{' '}
                   {memberSinceISO
@@ -100,6 +116,16 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
                       Your account has Pro access, but we couldn’t find a Stripe subscription to manage here.
                       If you need to change billing, contact support.
                     </div>
+                  </div>
+                )}
+                {trialActive && (
+                  <div className="mt-4">
+                    <UpgradeButton
+                      // Force CTA even while trial is active
+                      isPro={false}
+                      label="Upgrade to permanent Pro →"
+                      className="inline-flex items-center justify-center px-4 h-10 rounded-lg bg-[#111111] text-white text-sm font-semibold hover:bg-black"
+                    />
                   </div>
                 )}
               </div>
@@ -136,6 +162,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
     </div>
   )
 }
+
 
 
 
