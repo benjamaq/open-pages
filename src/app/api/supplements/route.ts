@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { isProActive } from '@/lib/entitlements/pro'
+import { HEALTH_PRIORITIES } from '@/lib/types'
 
 export async function GET() {
   const supabase = await createClient()
@@ -36,9 +37,20 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // Normalize rows:
-    // - Ensure primary_goal_tags present (fallback to primary_metric when missing)
+    // - Ensure primary_goal_tags present (declared intent only)
     // - Clamp monthly_cost_usd to [0, 500] to avoid unrealistic UI outliers
     let rows: any[] = data || []
+
+    // Only accept goal tags that are actual user goal categories (avoid leaking truth-engine metrics like "sleep_quality")
+    const ALLOWED_GOAL_KEYS = new Set<string>(HEALTH_PRIORITIES.map(p => String(p.key)))
+    const sanitizeGoalTags = (raw: unknown): string[] => {
+      const arr: string[] = Array.isArray(raw) ? (raw as any[]).map(x => String(x || '').trim().toLowerCase()).filter(Boolean) : []
+      const out: string[] = []
+      for (const t of arr) {
+        if (ALLOWED_GOAL_KEYS.has(t)) out.push(t)
+      }
+      return out
+    }
 
     // Resolve profile id with admin fallback to avoid RLS/race blocking
     let profileId: string | null = null
@@ -86,7 +98,7 @@ export async function GET() {
         if (nm && Number.isFinite(cost) && cost > 0) {
           costByName.set(nm, Math.max(0, Math.min(80, cost)))
         }
-        const tags = Array.isArray((r as any)?.primary_goal_tags) ? (r as any).primary_goal_tags : []
+        const tags = sanitizeGoalTags((r as any)?.primary_goal_tags)
         if (nm && tags.length > 0) {
           tagsByName.set(nm, tags)
         }
@@ -99,14 +111,23 @@ export async function GET() {
         const nm = String(r?.name || '').trim().toLowerCase()
         const mc = Number(r?.monthly_cost ?? 0)
         const monthly_cost_usd = Number.isFinite(mc) && mc > 0 ? Math.max(0, Math.min(80, mc)) : (costByName.get(nm) ?? 0)
-        const mergedTags: string[] =
-          Array.isArray(r.primary_goal_tags) && r.primary_goal_tags.length > 0
-            ? r.primary_goal_tags
-            : (tagsByName.get(nm) || (Array.isArray(r.tags) ? r.tags : []))
         // Intake linkage: prefer explicit FK if present; else fuzzy by normalized name
         const linkedUserSuppId = r.user_supplement_id || idByName.get(nm) || null
         const intake_id = linkedUserSuppId || r.id
         const meta = (linkedUserSuppId ? metaById.get(String(linkedUserSuppId)) : null) || metaByName.get(nm) || null
+        // Goal tags: prefer stack_items.primary_goal_tags, else linked user_supplement.primary_goal_tags, else name-fallback.
+        // IMPORTANT: ignore legacy stack_items.tags unless they are valid goal keys.
+        const mergedTags: string[] = (() => {
+          const fromStack = sanitizeGoalTags((r as any)?.primary_goal_tags)
+          if (fromStack.length > 0) return fromStack
+          const fromLinked = sanitizeGoalTags((meta as any)?.primary_goal_tags)
+          if (fromLinked.length > 0) return fromLinked
+          const fromName = tagsByName.get(nm) || []
+          if (fromName.length > 0) return fromName
+          const fromLegacy = sanitizeGoalTags((r as any)?.tags)
+          if (fromLegacy.length > 0) return fromLegacy
+          return []
+        })()
         const is_active = meta?.is_active === false ? false : true
         const testing_status = String(meta?.testing_status || 'testing').toLowerCase()
         // Prefer retest/inferred start dates from user_supplement when present
@@ -144,7 +165,7 @@ export async function GET() {
 
     const normalized = rows.map((row: any) => {
       // Declared intent only — no name-based inference
-      const primary_goal_tags = Array.isArray(row?.primary_goal_tags) ? row.primary_goal_tags : []
+      const primary_goal_tags = sanitizeGoalTags(row?.primary_goal_tags)
 
       const rawMonthly = Number(row?.monthly_cost_usd)
       const monthly_cost_usd = Number.isFinite(rawMonthly)
@@ -396,6 +417,8 @@ export async function POST(request: Request) {
           } catch {}
           if (typeof monthlyFromBody === 'number') stackPayload.monthly_cost = monthlyFromBody
           if (inferredStartISO) stackPayload.start_date = inferredStartISO
+          // Persist user-selected goal categories on stack_items for economics + My Stack grouping
+          if (Array.isArray(bodyTags)) stackPayload.primary_goal_tags = bodyTags
           await supabase.from('stack_items').insert(stackPayload)
         }
       } catch {}
