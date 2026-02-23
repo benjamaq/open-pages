@@ -9,6 +9,7 @@ import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
 import AuthSessionHydrator from "./components/AuthSessionHydrator";
 import { Toaster } from 'sonner'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -127,6 +128,7 @@ export default function RootLayout({
           <HeaderGate />
           {children}
         </div>
+        <Analytics />
         <Script id="pwa-marker" strategy="afterInteractive">
           {`
             console.log('🔎 PWA marker: data-pwa-client =', document.body?.getAttribute('data-pwa-client'));
