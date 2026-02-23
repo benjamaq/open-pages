@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "@/lib/animations.css";
 import Script from "next/script";
+import { Analytics } from '@vercel/analytics/react'
 import PWARegister from "./components/PWARegister";
 import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
@@ -149,6 +150,7 @@ export default function RootLayout({
             } catch (e) { console.warn('[Attribution] capture failed', e); }
           `}
         </Script>
+        <Analytics />
       </body>
     </html>
   );
