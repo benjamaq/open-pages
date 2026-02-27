@@ -133,6 +133,13 @@ function SignupInner() {
     // Debug: trace plan params
     try { console.log('Plan param:', params.get('plan'), 'Period param:', params.get('period')) } catch {}
     let createdUserId: string | null = null
+    const detectedTz = (() => {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      } catch {
+        return 'UTC'
+      }
+    })()
     try {
       const supabase = createClient()
       const cleanEmail = email.trim()
@@ -147,7 +154,8 @@ function SignupInner() {
             first_name: firstName,
             // Default daily reminders ON at 08:00 local by default
             reminder_enabled: true,
-            reminder_time: '08:00'
+            reminder_time: '09:00',
+            reminder_timezone: detectedTz
           }
         }
       })
@@ -171,6 +179,12 @@ function SignupInner() {
               slug,
               public: true,
               allow_stack_follow: true,
+              // Daily email reminders ON by default for new users (user can disable in Settings).
+              reminder_enabled: true,
+              reminder_time: '09:00',
+              reminder_timezone: detectedTz,
+              reminder_timezone_autodetected: true,
+              timezone: detectedTz,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             } as any, { onConflict: 'user_id', ignoreDuplicates: false })
@@ -183,7 +197,7 @@ function SignupInner() {
           await fetch('/api/profiles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: data.user.id, name: cleanName, email: cleanEmail })
+            body: JSON.stringify({ user_id: data.user.id, name: cleanName, email: cleanEmail, timezone: detectedTz })
           })
         } catch (e) {
           console.warn('profiles bootstrap failed:', e)

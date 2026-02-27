@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
-import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal'
 import { HEALTH_PRIORITIES } from '@/lib/types'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 
@@ -42,7 +41,6 @@ export function DashboardUnifiedPanel({
   const [isMember, setIsMember] = useState<boolean>(false)
   const [settings, setSettings] = useState<any | null>(null)
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
-  const [showReminder, setShowReminder] = useState<boolean>(false)
   const [showCommitment, setShowCommitment] = useState<boolean>(false)
   const [overrideSkipNames, setOverrideSkipNames] = useState<string[] | null>(null)
   const [showUploadSuccess, setShowUploadSuccess] = useState<{ days?: number; source?: string } | null>(null)
@@ -389,37 +387,6 @@ export function DashboardUnifiedPanel({
     }
   }, [progress, supps])
 
-  // Day-2 reminder popup trigger
-  useEffect(() => {
-    try {
-      if (!settingsLoaded) { setShowReminder(false); return }
-      const totalDays = Number(progress?.checkins?.totalDistinctDays || 0)
-      const enabled = Boolean(settings?.reminder_enabled)
-      const dismissed = Boolean(settings?.reminder_popup_dismissed)
-      const shouldByDay = totalDays >= 1 && !enabled && !dismissed
-      // Snooze gating (avoid popping over other modals or right after uploads)
-      let blockedBySnooze = false
-      try {
-        const raw = typeof window !== 'undefined' ? localStorage.getItem('bs_reminder_snooze_until') : null
-        const until = raw ? Number(raw) : 0
-        blockedBySnooze = Number.isFinite(until) && Date.now() < until
-      } catch {}
-      const blockedByOtherModal = Boolean(showUploadSuccess)
-      const shouldShow = shouldByDay && !blockedBySnooze && !blockedByOtherModal
-      setShowReminder(shouldShow)
-      try {
-        console.log('Reminder gating:', {
-          totalDays,
-          reminder_enabled: enabled,
-          reminder_popup_dismissed: dismissed,
-          blockedBySnooze,
-          blockedByOtherModal,
-          showReminder: shouldShow
-        })
-      } catch {}
-    } catch {}
-  }, [progress, settings, settingsLoaded, showUploadSuccess])
-
   // Commitment moment trigger (Day 3-5 inclusive, once)
   useEffect(() => {
     try {
@@ -436,78 +403,6 @@ export function DashboardUnifiedPanel({
       }
     } catch {}
   }, [progress, settings])
-
-  async function dismissReminder() {
-    setShowReminder(false)
-    try {
-      await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reminder_popup_dismissed: true })
-      })
-    } catch {}
-  }
-
-  async function enableReminder(payload: { time: string; timezone: string | null }) {
-    setShowReminder(false)
-    try {
-      // 1) Request browser notification permission (user gesture)
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-          await Notification.requestPermission()
-        }
-      } catch {}
-      // 2) Best-effort: register service worker and subscribe to push with VAPID (if configured)
-      try {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-          const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }))
-          const existing = await reg.pushManager.getSubscription()
-          let sub = existing
-          if (!sub) {
-            const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as any
-            const appServerKey = vapid ? urlBase64ToUint8Array(String(vapid)) : undefined
-            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey })
-          }
-          try {
-            await fetch('/api/push/subscribe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ subscription: (sub as any)?.toJSON?.() || sub })
-            })
-          } catch {}
-        }
-      } catch {}
-      // 3) Persist reminder settings server-side
-      await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reminder_enabled: true,
-          reminder_time: payload.time,
-          reminder_timezone: payload.timezone,
-          reminder_popup_dismissed: true
-        })
-      })
-      const s = await fetch('/api/settings', { cache: 'no-store' })
-      if (s.ok) setSettings(await s.json())
-      // 4) Local confirmation or guidance
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification('Reminders enabled', { body: `We will nudge you daily at ${payload.time}` })
-        } else if (typeof window !== 'undefined') {
-          window.alert('Reminders enabled. If you don’t see notifications, enable them in your browser settings.')
-        }
-      } catch {}
-    } catch {}
-  }
-  function urlBase64ToUint8Array(base64String: string) {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-    const rawData = typeof window !== 'undefined' ? window.atob(base64) : Buffer.from(base64, 'base64').toString('binary')
-    const outputArray = new Uint8Array(rawData.length)
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
-    return outputArray
-  }
 
   // Economics donut + spend
   const { chartData, totalYearly, econEffectiveYear, econInconclusiveYear, econCutYear, econAwaitingYear, econActiveSuppCount, econZeroCostVerdictCount } = useMemo(() => {
@@ -1199,7 +1094,6 @@ export function DashboardUnifiedPanel({
         </div>
       </div>
     )}
-    <EnableRemindersModal isOpen={showReminder} onClose={dismissReminder} />
     </>
   )
 }

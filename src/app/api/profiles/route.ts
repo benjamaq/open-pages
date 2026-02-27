@@ -16,19 +16,43 @@ export async function POST(req: NextRequest) {
     const user_id = String(body?.user_id || '').trim()
     const name = String(body?.name || '').trim()
     const email = typeof body?.email === 'string' ? body.email : ''
+    const tz = (() => {
+      const raw = String(body?.timezone || '').trim()
+      return raw || 'UTC'
+    })()
 
     if (!user_id) {
       return NextResponse.json({ error: 'user_id required' }, { status: 400 })
     }
 
-    // If profile already exists, no-op
+    // If profile already exists, do not create a duplicate.
+    // But backfill reminder defaults if legacy/trigger-created rows are missing them.
     try {
       const { data: existing } = await supabaseAdmin
         .from('profiles')
-        .select('id, slug')
+        .select('id, slug, reminder_enabled, reminder_time, reminder_timezone, reminder_timezone_autodetected, timezone')
         .eq('user_id', user_id)
         .maybeSingle()
       if (existing) {
+        try {
+          const reminderEnabled = (existing as any)?.reminder_enabled
+          // Only backfill when the column is missing/NULL (do not override explicit user choice).
+          const needsBackfill = reminderEnabled == null
+          if (needsBackfill) {
+            const tzToWrite = (existing as any)?.reminder_timezone || (existing as any)?.timezone || tz || 'UTC'
+            await supabaseAdmin
+              .from('profiles')
+              .update({
+                reminder_enabled: true,
+                reminder_time: (existing as any)?.reminder_time || '09:00',
+                reminder_timezone: (existing as any)?.reminder_timezone || tzToWrite,
+                reminder_timezone_autodetected: true,
+                timezone: (existing as any)?.timezone || tzToWrite,
+                updated_at: new Date().toISOString(),
+              } as any)
+              .eq('user_id', user_id)
+          }
+        } catch {}
         return NextResponse.json({ ok: true, id: existing.id, slug: (existing as any).slug })
       }
     } catch {}
@@ -60,6 +84,13 @@ export async function POST(req: NextRequest) {
         slug: candidate,
         public: true,
         allow_stack_follow: true,
+        // Daily email reminders ON by default for new users (user can disable in Settings).
+        reminder_enabled: true,
+        reminder_time: '09:00',
+        reminder_timezone: tz,
+        reminder_timezone_autodetected: true,
+        // Used by daily email cron for local-time windowing.
+        timezone: tz,
         created_at: now,
         updated_at: now
       })

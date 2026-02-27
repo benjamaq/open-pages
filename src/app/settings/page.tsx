@@ -5,7 +5,8 @@ import { SettingsForm } from '@/components/settings/SettingsForm'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import { getTrialDaysRemaining, isProActive, isProTrial } from '@/lib/entitlements/pro'
 
-export default async function SettingsPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -36,7 +37,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Re
   const settings = settingsRes.ok ? await settingsRes.json() : { reminder_enabled: false, reminder_time: '06:00', reminder_timezone: null, email: user.email }
   const plan = planRes && planRes.ok ? await planRes.json() : { is_member: false }
   const billing = billingRes && billingRes.ok ? await billingRes.json() : { isPaid: false, subscription: null }
-  const billingError = String(searchParams?.billing_error || '').trim()
+  const billingError = String((params as any)?.billing_error || '').trim()
   const isPaid = Boolean(billing?.isPaid) || Boolean(isPaidByTier)
   const hasStripeSubscription = Boolean(billing?.subscription)
   const memberSinceISO =

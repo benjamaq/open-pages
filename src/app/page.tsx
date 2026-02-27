@@ -8,6 +8,21 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
+function WearableBadge({ align = 'center' }: { align?: 'center' | 'left' }) {
+  return (
+    <div className={align === 'left' ? 'text-left' : 'text-center'}>
+      <div className="mt-3 border-t border-neutral-200/70 pt-3">
+        <div className="text-sm font-semibold text-neutral-900">
+          Use a wearable? You could get results today.
+        </div>
+        <div className="mt-1 text-xs text-neutral-500">
+          Upload from Whoop, Apple Health, Oura, or any wearable and fast-track your results.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const [monthlySpend, setMonthlySpend] = useState(247)
   const carouselRef = useRef<HTMLDivElement | null>(null)
@@ -50,7 +65,7 @@ export default function Page() {
           <p className="mb-6 text-base text-neutral-600 leading-relaxed text-center">
             BioStackr shows you what actually works — and what’s just wasting your money.
           </p>
-          <div className="flex flex-col items-center gap-3 justify-center">
+          <div className="flex flex-col items-center justify-center">
             <Link href="/signup">
               <Button
                 size="lg"
@@ -59,12 +74,13 @@ export default function Page() {
                 Get My Breakup Report
               </Button>
             </Link>
-            <p className="text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
+            <p className="mt-3 text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
+            <WearableBadge />
           </div>
           {/* Full‑bleed hero image below text */}
           <div className="-mx-6 mt-8">
             <img
-              src="/pill bottle.png"
+              src="/pill-bottle.png"
               alt="Supplement bottle"
               className="w-screen h-[48vh] object-cover object-[90%_40%]"
               loading="eager"
@@ -76,7 +92,7 @@ export default function Page() {
       <section
         className="hidden sm:block relative pt-32 pb-20 px-6 lg:pt-40 lg:pb-28 overflow-hidden w-full min-h-[600px] lg:min-h-[750px]"
         style={{
-          backgroundImage: "url('/pill bottle.png')",
+          backgroundImage: "url('/pill-bottle.png')",
           backgroundPosition: "right center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
@@ -105,6 +121,7 @@ export default function Page() {
               </Link>
               <p className="text-sm text-neutral-500">Free to start. Wearable optional.</p>
             </div>
+            <WearableBadge align="left" />
           </div>
         </div>
       </section>
@@ -530,7 +547,7 @@ export default function Page() {
               This is your real-life experiment.
             </h2>
             <p className="mt-4 text-lg font-medium text-neutral-700 max-w-3xl mx-auto leading-snug">
-              Supplements don’t work in isolation. They reveal themselves — or don’t — through missed doses, bad sleep, stress, and inconsistency.
+              Supplements don’t work in isolation. They reveal themselves — or don’t — through missed doses, stress, and inconsistency.
               <br />
               BioStackr measures how each one performs in your real life, so you know which ones are worth committing to, and which ones aren’t.
             </p>
@@ -544,7 +561,7 @@ export default function Page() {
                 <div className="text-xs font-semibold tracking-wider uppercase text-gray-500">WHAT YOU DO</div>
                 <div className="mt-4 text-sm text-neutral-700 leading-relaxed space-y-3">
                   <p><span className="font-semibold">Tell us what you’re taking.</span> Your stack, what you’re taking it for, and what it costs you each month.</p>
-                  <p><span className="font-semibold">Check in briefly.</span> Sleep, energy, mood. Three sliders. About ten seconds.</p>
+                  <p><span className="font-semibold">Check in briefly.</span> Energy, focus, mood. Three sliders. About ten seconds.</p>
                   <p><span className="font-semibold">Flag unusual days (optional).</span> Alcohol, illness, travel, high stress — one tap.</p>
                 </div>
               </div>
@@ -691,7 +708,7 @@ export default function Page() {
                 </div>
 
                 <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">Six months and your deep sleep hasn&apos;t budged. This one&apos;s coasting.</p>
+                  <p className="text-xs text-neutral-600 mb-2">Six months and your recovery hasn&apos;t budged. This one&apos;s coasting.</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xl font-bold text-neutral-900">$174</span>
                     <span className="text-xs text-neutral-500">wasted</span>
@@ -782,7 +799,7 @@ export default function Page() {
                 </div>
 
                 <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">Quiet but consistent. Joint pain down. Recovery up. The strong, silent type.</p>
+                  <p className="text-xs text-neutral-600 mb-2">Quiet but consistent. Recovery up. The strong, silent type.</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xl font-bold text-neutral-900">$128</span>
                     <span className="text-xs text-neutral-500">invested</span>
@@ -886,7 +903,7 @@ export default function Page() {
                   <h3 className="text-2xl font-bold text-black mb-6">Green flags:</h3>
                   <ul className="space-y-4">
                     <li className="text-lg text-neutral-700 leading-relaxed">You spend €50–€150/month and wonder if it&apos;s worth it</li>
-                    <li className="text-lg text-neutral-700 leading-relaxed">You track sleep, energy, or recovery — even casually</li>
+                    <li className="text-lg text-neutral-700 leading-relaxed">You track how you feel (energy, focus, recovery) — even casually</li>
                     <li className="text-lg text-neutral-700 leading-relaxed">You&apos;d rather know than hope</li>
                     <li className="text-lg text-neutral-700 leading-relaxed">You&apos;re willing to break up with what isn&apos;t working</li>
                   </ul>

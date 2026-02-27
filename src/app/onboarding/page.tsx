@@ -28,6 +28,8 @@ export default function OnboardingPage() {
   const [pendingProduct, setPendingProduct] = useState<ProductLike | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [showWearableInfo, setShowWearableInfo] = useState(false)
+  const [savingWearableFlag, setSavingWearableFlag] = useState(false)
   const mySuppsRef = useRef<HTMLDivElement | null>(null)
   const searchResultsRef = useRef<HTMLDivElement | null>(null)
 
@@ -107,6 +109,23 @@ export default function OnboardingPage() {
     return () => { mounted = false }
   }, [])
 
+  // Wearable info modal (one-time) — show immediately on onboarding.
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const r = await fetch('/api/settings', { cache: 'no-store', credentials: 'include' })
+        const j = await r.json().catch(() => ({}))
+        if (!mounted) return
+        const dismissed = Boolean((j as any)?.wearable_info_dismissed)
+        if (!dismissed) setShowWearableInfo(true)
+      } catch {
+        // fail open: don't block onboarding
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+
   function addSupplement(product: Product) {
     const isDuplicate = supplements.some((s) => {
       const sameCanonical = s.canonicalSupplementId && String(s.canonicalSupplementId) === String(product.canonicalSupplementId);
@@ -132,6 +151,7 @@ export default function OnboardingPage() {
     // Debug logs requested
     // eslint-disable-next-line no-console
     console.log('=== MODAL SAVED DETAILS ===', details)
+    const wasEmptyBefore = editIndex == null && supplements.length === 0
     if (editIndex != null) {
       const next = [...supplements];
       next[editIndex] = details;
@@ -231,10 +251,33 @@ export default function OnboardingPage() {
       } catch (e) {
         console.warn('Persist error (non-blocking):', e)
       }
+
+      // Wearable action prompt (one-time) immediately after first supplement is added.
+      if (wasEmptyBefore) {
+        // Let users know reminders are ON (toast first, then wearable modal).
+        try {
+          toast('Daily check-in reminders are on', {
+            description: "We'll email you when it's time. Miss a day? No stress — just come back when you're ready. You can change this in Settings.",
+          } as any)
+        } catch {}
+      }
     }
     setPendingProduct(null);
     setSearchQuery('');
     setSearchResults([]);
+  }
+
+  async function dismissWearableInfo() {
+    setSavingWearableFlag(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wearable_info_dismissed: true }),
+      })
+    } catch {}
+    setSavingWearableFlag(false)
+    setShowWearableInfo(false)
   }
 
   async function handleContinue() {
@@ -275,6 +318,31 @@ export default function OnboardingPage() {
         backgroundPosition: 'center'
       }}
     >
+      {/* Wearable info modal (first thing after signup) */}
+      {showWearableInfo && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200 p-6">
+            <h3 className="text-xl font-semibold text-gray-900 text-center">Want verdicts fast?</h3>
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+              If you use Whoop, Oura, Apple Health, or any wearable, you could get your first supplement verdict today — no waiting.
+            </p>
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+              Upload your data after adding your supplements and we&apos;ll do the rest.
+            </p>
+            <div className="mt-5">
+              <button
+                type="button"
+                disabled={savingWearableFlag}
+                onClick={dismissWearableInfo}
+                className="w-full rounded-xl bg-gray-900 text-white px-4 py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-60"
+              >
+                Got it — let&apos;s add my supplements
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 max-w-[760px] mx-auto px-4 py-8 sm:px-6 sm:py-16">
         <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-4 sm:p-10 flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-none overflow-hidden sm:overflow-visible">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden sm:overflow-visible pr-0 sm:pr-1">

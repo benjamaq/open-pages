@@ -6,6 +6,7 @@ import { addStackItem } from '../lib/actions/stack'
 import { useRouter } from 'next/navigation'
 import { checkItemLimit } from '../lib/actions/trial-limits'
 import UpgradeModal from './UpgradeModal'
+import { toast } from 'sonner'
 
 interface AddStackItemFormProps {
   onClose: () => void
@@ -34,6 +35,9 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
   const [error, setError] = useState<string | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [limitInfo, setLimitInfo] = useState({ canAdd: true, currentCount: 0, limit: 0 })
+  const [showWearablePrompt, setShowWearablePrompt] = useState(false)
+  const [pendingSuccessName, setPendingSuccessName] = useState<string | null>(null)
+  const [savingWearableDismiss, setSavingWearableDismiss] = useState(false)
   const router = useRouter()
 
   // Body scroll lock (prevents iOS keyboard/viewport flicker behind modal)
@@ -96,6 +100,7 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
     // For supplements, start date is optional in the new flow
 
     try {
+      const isFirstSupplement = itemType === 'supplements' && (limitInfo.currentCount || 0) === 0
       if (itemType === 'supplements') {
         // Use API route so we get the created item id, then create initial period
         const resp = await fetch('/api/stack-items', {
@@ -134,6 +139,27 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
         // Non-supplement items: use existing server action
         await addStackItem({ ...formData, itemType })
       }
+
+      // Transparent reminder notice (only after first supplement add).
+      if (isFirstSupplement) {
+        toast('Daily check-in reminders are on', {
+          description: "We'll email you when it's time. Miss a day? No stress — just come back when you're ready. You can change this in Settings.",
+        } as any)
+      }
+
+      // Wearable prompt (one-time) after first supplement is added.
+      if (isFirstSupplement) {
+        try {
+          const r = await fetch('/api/settings', { credentials: 'include', cache: 'no-store' })
+          const j = await r.json().catch(() => ({}))
+          const alreadyDismissed = Boolean((j as any)?.wearable_prompt_dismissed)
+          if (!alreadyDismissed) {
+            setPendingSuccessName(formData.name)
+            setShowWearablePrompt(true)
+            return
+          }
+        } catch {}
+      }
       
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -165,6 +191,40 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const completeAfterWearablePrompt = async (action: 'upload' | 'skip') => {
+    const nameToUse = pendingSuccessName || formData.name
+    setSavingWearableDismiss(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wearable_prompt_dismissed: true }),
+      }).catch(() => {})
+    } catch {}
+    setSavingWearableDismiss(false)
+    setShowWearablePrompt(false)
+
+    if (action === 'upload') {
+      try {
+        if (onSuccess) onSuccess(nameToUse)
+      } catch {}
+      try {
+        router.push('/upload')
+      } catch {
+        try { window.location.href = '/upload' } catch {}
+      }
+      return
+    }
+
+    // Skip: proceed with normal success flow
+    if (onSuccess) {
+      onSuccess(nameToUse)
+      return
+    }
+    onClose()
+    router.refresh()
   }
 
   const handleFrequencyChange = (frequency: string) => {
@@ -235,6 +295,34 @@ export default function AddStackItemForm({ onClose, itemType = 'supplements', on
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+      {showWearablePrompt && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200 p-6">
+            <h3 className="text-xl font-semibold text-gray-900">Ready to upload your wearable data?</h3>
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+              You&apos;ve added your first supplement. Upload your wearable history now and we&apos;ll fast-track your verdict.
+            </p>
+            <div className="mt-5 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                disabled={savingWearableDismiss}
+                onClick={() => completeAfterWearablePrompt('upload')}
+                className="flex-1 rounded-xl bg-gray-900 text-white px-4 py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-60"
+              >
+                Upload Wearable Data
+              </button>
+              <button
+                type="button"
+                disabled={savingWearableDismiss}
+                onClick={() => completeAfterWearablePrompt('skip')}
+                className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+              >
+                Skip for now — I&apos;ll check in daily
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[20rem] sm:max-w-sm max-h-[82vh] sm:max-h-[82vh] flex flex-col overflow-hidden" style={{ WebkitOverflowScrolling: 'touch' as any }}>
         {/* Header */}
         <div className="bg-white rounded-t-2xl border-b border-gray-100 p-2 sm:p-3">

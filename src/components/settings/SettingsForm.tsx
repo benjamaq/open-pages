@@ -18,13 +18,44 @@ export function SettingsForm({
   const detectedTz = useMemo(() => {
     try { return detectTimezone() || null } catch { return null }
   }, [])
-  const [enabled, setEnabled] = useState<boolean>(Boolean(initial?.reminder_enabled))
+  // IMPORTANT: this section must reflect the real DB state on first render.
+  // We load /api/settings client-side and show a skeleton until it returns to prevent a wrong "OFF" flash.
+  const [remindersLoaded, setRemindersLoaded] = useState(false)
+  const [enabled, setEnabled] = useState<boolean>(true)
   const [time, setTime] = useState<string>(initial?.reminder_time || '06:00')
   const [tz, setTz] = useState<string>(initial?.reminder_timezone || detectedTz || 'UTC')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string>('')
   const [tzTouched, setTzTouched] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const r = await fetch('/api/settings', { cache: 'no-store', credentials: 'include' })
+        const j = await r.json().catch(() => ({} as any))
+        if (!mounted) return
+        if (r.ok) {
+          setEnabled(Boolean((j as any)?.reminder_enabled))
+          if ((j as any)?.reminder_time) setTime(String((j as any).reminder_time).slice(0, 5))
+          if ((j as any)?.reminder_timezone) setTz(String((j as any).reminder_timezone))
+          setRemindersLoaded(true)
+          return
+        }
+      } catch (e: any) {
+      }
+      // Fallback if fetch fails: use server-provided initial, but default ON to match new-user defaults.
+      if (!mounted) return
+      setEnabled(initial?.reminder_enabled ?? true)
+      setTime(String(initial?.reminder_time || '06:00').slice(0, 5))
+      setTz(String(initial?.reminder_timezone || detectedTz || 'UTC'))
+      setRemindersLoaded(true)
+    })()
+    return () => { mounted = false }
+    // initial is server-provided; we only want one fetch on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const displayTimes: Array<{ v: string; l: string }> = useMemo(() => {
     // 30-minute increments from 06:00 through 23:30
@@ -89,39 +120,55 @@ export function SettingsForm({
       {/* Daily Reminders */}
       <section className="rounded-xl border border-[#E4E1DC] bg-white p-5">
         <div className="text-base font-semibold text-gray-900 mb-2">Daily Reminders</div>
-        <div className="flex items-center justify-between py-2">
-          <div className="text-sm text-gray-800">Send me a daily check‑in reminder</div>
-          <button
-            onClick={() => setEnabled(!enabled)}
-            className={`h-6 w-11 rounded-full transition-colors ${enabled ? 'bg-[#C65A2E]' : 'bg-gray-300'}`}
-            aria-pressed={enabled}
-            aria-label="Toggle daily reminder"
-          >
-            <span className={`block h-5 w-5 bg-white rounded-full transform transition-transform ${enabled ? 'translate-x-[22px]' : 'translate-x-[2px]'}`} />
-          </button>
-        </div>
-        {enabled && (
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="text-xs text-gray-700">
-              Reminder time
-              <select value={roundTimeTo30Min(time)} onChange={e => setTime(roundTimeTo30Min(e.target.value))} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
-                {displayTimes.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
-              </select>
-            </label>
-            <label className="text-xs text-gray-700">
-              Timezone
-              <select
-                value={tz}
-                onChange={e => { setTzTouched(true); setTz(e.target.value) }}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                {tzOptions.map(z => <option key={z} value={z}>{z}</option>)}
-              </select>
-            </label>
-            <p className="sm:col-span-2 text-xs text-gray-500 mt-1">
-              You&apos;ll get a quick email each morning with your supplements and one‑click check‑in.
-            </p>
+        {!remindersLoaded ? (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <div className="h-4 w-48 rounded bg-gray-100 animate-pulse" />
+              <div className="h-6 w-11 rounded-full bg-gray-100 animate-pulse" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+              <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+            </div>
+            <div className="h-3 w-80 max-w-full rounded bg-gray-100 animate-pulse" />
           </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between py-2">
+              <div className="text-sm text-gray-800">Send me a daily check‑in reminder</div>
+              <button
+                onClick={() => setEnabled(!enabled)}
+                className={`h-6 w-11 rounded-full transition-colors ${enabled ? 'bg-[#C65A2E]' : 'bg-gray-300'}`}
+                aria-pressed={enabled}
+                aria-label="Toggle daily reminder"
+              >
+                <span className={`block h-5 w-5 bg-white rounded-full transform transition-transform ${enabled ? 'translate-x-[22px]' : 'translate-x-[2px]'}`} />
+              </button>
+            </div>
+            {enabled && (
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="text-xs text-gray-700">
+                  Reminder time
+                  <select value={roundTimeTo30Min(time)} onChange={e => setTime(roundTimeTo30Min(e.target.value))} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md">
+                    {displayTimes.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs text-gray-700">
+                  Timezone
+                  <select
+                    value={tz}
+                    onChange={e => { setTzTouched(true); setTz(e.target.value) }}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    {tzOptions.map(z => <option key={z} value={z}>{z}</option>)}
+                  </select>
+                </label>
+                <p className="sm:col-span-2 text-xs text-gray-500 mt-1">
+                  You&apos;ll get a quick email each morning with your supplements and one‑click check‑in.
+                </p>
+              </div>
+            )}
+          </>
         )}
         <div className="mt-4 flex items-center gap-3">
           <button

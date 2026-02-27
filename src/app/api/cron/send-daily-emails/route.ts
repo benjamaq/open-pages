@@ -15,6 +15,8 @@ type ProfileRow = {
   timezone?: string | null;
   profile_id?: string;
   reminder_enabled?: boolean | null;
+  reminder_time?: string | null;
+  reminder_timezone?: string | null;
 }
 
 async function handler(req: NextRequest) {
@@ -76,7 +78,8 @@ async function handler(req: NextRequest) {
     console.log('[daily-cron] Querying profiles...')
     const { data: profiles, error } = await supabaseAdmin
       .from('profiles')
-      .select('id, user_id, display_name, timezone, reminder_enabled')
+      .select('id, user_id, display_name, timezone, reminder_enabled, reminder_time, reminder_timezone')
+      .eq('reminder_enabled', true)
       .limit(10000)
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Found profiles:', (profiles as any)?.length || 0)
@@ -92,7 +95,9 @@ async function handler(req: NextRequest) {
       display_name: p.display_name,
       timezone: p.timezone,
       profile_id: p.id,
-      reminder_enabled: p.reminder_enabled
+      reminder_enabled: p.reminder_enabled,
+      reminder_time: p.reminder_time,
+      reminder_timezone: p.reminder_timezone,
     }))
 
     // If forcing to a specific email, resolve that user immediately and bypass all filters
@@ -243,18 +248,34 @@ async function handler(req: NextRequest) {
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
 
-    // Timezone window filter (send only to users in 7:00-7:59 local)
+    // Time window filter: send when user's local time matches their reminder_time.
     const now = new Date()
     const profilesInWindow = scopedProfiles.filter(p => {
       if (bypassAll) return true // bypass hour gate for targeted dry/force
-    const tz = p.timezone || 'UTC'
-    const userTime = new Date(now.toLocaleString('en-US', { timeZone: tz }))
-    const hour = userTime.getHours()
-    return hour >= 7 && hour < 8
+      const tz = (p.reminder_timezone || p.timezone || 'UTC').toString()
+      const rtRaw = String(p.reminder_time || '09:00').trim()
+      const m = rtRaw.match(/^(\d{1,2}):(\d{2})/)
+      const targetH = m ? Math.max(0, Math.min(23, parseInt(m[1], 10))) : 9
+      const targetM = m ? Math.max(0, Math.min(59, parseInt(m[2], 10))) : 0
+      try {
+        const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false })
+        const parts = fmt.formatToParts(now)
+        const curH = parseInt(parts.find(x => x.type === 'hour')?.value || '0', 10)
+        const curM = parseInt(parts.find(x => x.type === 'minute')?.value || '0', 10)
+        const diff = Math.abs((curH * 60 + curM) - (targetH * 60 + targetM))
+        // Cron runs hourly; still allow a small window to tolerate runtime drift.
+        return diff <= 5
+      } catch {
+        // Fallback: treat as UTC.
+        const curH = now.getUTCHours()
+        const curM = now.getUTCMinutes()
+        const diff = Math.abs((curH * 60 + curM) - (targetH * 60 + targetM))
+        return diff <= 5
+      }
   })
 
     // eslint-disable-next-line no-console
-    console.log(`[daily-cron] Users in 7-8am window: ${profilesInWindow.length} (bypassAll=${bypassAll})`)
+    console.log(`[daily-cron] Users in reminder_time window: ${profilesInWindow.length} (bypassAll=${bypassAll})`)
     // eslint-disable-next-line no-console
     console.log(`[daily-cron] Preparing to send ${profilesInWindow.length} emails (dry=${dryRun})`)
 
@@ -314,7 +335,7 @@ async function handler(req: NextRequest) {
         }
 
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
-        const tz = p.timezone || 'UTC'
+        const tz = (p.reminder_timezone || p.timezone || 'UTC').toString()
         const localYesterdayStr = formatInTimeZone(addDays(new Date(), -1), tz, 'yyyy-MM-dd')
         // Pull yesterday entry (optional; do not skip)
         const { data: entry } = await supabaseAdmin
@@ -457,7 +478,7 @@ async function handler(req: NextRequest) {
           console.log('[daily-cron] HTML contains Check in?', (typeof html === 'string') ? html.includes('Check in') : false)
         } catch {}
 
-        let subject = `${Math.max(0, Math.min(100, progressPercent))}% complete`
+        let subject = `Quick check-in — 10 seconds`
 
         if (dryRun) {
           // eslint-disable-next-line no-console
@@ -515,6 +536,20 @@ async function handler(req: NextRequest) {
                 }
               } catch (insErr) {
                 console.error('[daily-cron] email_sends insert exception:', insErr)
+              }
+              // Critical for idempotency: mark as sent after successful email delivery.
+              try {
+                const { error: updErr } = await supabaseAdmin
+                  .from('profiles')
+                  .update({ last_reminder_sent_at: new Date().toISOString() } as any)
+                  .eq('user_id', p.user_id)
+                if (updErr) {
+                  console.error('[daily-cron] profiles update failed (last_reminder_sent_at):', { user_id: p.user_id, error: updErr })
+                } else {
+                  console.log('[daily-cron] profiles updated last_reminder_sent_at:', { user_id: p.user_id })
+                }
+              } catch (updEx) {
+                console.error('[daily-cron] profiles update exception (last_reminder_sent_at):', { user_id: p.user_id, error: (updEx as any)?.message || updEx })
               }
               results.push({ user_id: p.user_id, email, ok: true, id: resendId })
               successCount++
