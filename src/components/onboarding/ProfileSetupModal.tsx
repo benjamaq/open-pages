@@ -207,7 +207,7 @@ export default function ProfileSetupModal({
                     id="mission"
                     rows={3}
                     className="mt-1 block w-full px-3 py-2 border-2 border-gray-300 rounded-lg shadow-sm bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition-colors"
-                    placeholder="e.g., Managing chronic pain, Optimizing my sleep, Tracking my fertility journey..."
+                    placeholder="e.g., Testing supplements for energy and focus, Improving recovery, Building better habits..."
                     value={mission}
                     onChange={(e) => setMission(e.target.value)}
                   />

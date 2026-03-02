@@ -8,6 +8,7 @@ import { DailyProgressLoop } from '@/components/dashboard/DailyProgressLoop'
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel'
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
 import { useDashboardLoad } from '@/hooks/useDashboardLoad'
+import { useMemo, useState } from 'react'
 
 function DashboardSkeleton() {
   return (
@@ -27,6 +28,21 @@ export function DashboardPageClient() {
   const { data, loading, error } = useDashboardLoad()
 
   const isMember = Boolean((data as any)?.billingInfo?.isPaid) || Boolean((data as any)?.paymentsStatus?.is_member)
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false)
+
+  const shouldShowWelcomeBack = useMemo(() => {
+    const daysSince = (data as any)?.elliContext?.daysSinceLastCheckin
+    const hasToday = Boolean((data as any)?.elliContext?.hasCheckinToday)
+    const dismissedAt = (data as any)?.settings?.welcome_back_banner_dismissed_at
+    const dismissedRecently = (() => {
+      if (!dismissedAt) return false
+      const ms = Date.parse(String(dismissedAt))
+      if (!Number.isFinite(ms)) return false
+      return Date.now() - ms < 7 * 24 * 60 * 60 * 1000
+    })()
+    const dismissed = bannerDismissed || dismissedRecently
+    return !dismissed && !hasToday && typeof daysSince === 'number' && daysSince >= 2
+  }, [data, bannerDismissed])
 
   if (loading) return <DashboardSkeleton />
   if (error || !data) return <div className="p-6 text-sm text-gray-600">Failed to load dashboard.</div>
@@ -67,6 +83,33 @@ export function DashboardPageClient() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="space-y-6">
+          {shouldShowWelcomeBack && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-start justify-between gap-3">
+              <div className="leading-snug">
+                <div className="font-semibold">Welcome back!</div>
+                <div className="text-amber-800/90">
+                  Missed days are totally fine — your data still works. Just check in when you can.
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shrink-0 rounded-md px-2 py-1 text-amber-900/70 hover:text-amber-900 hover:bg-amber-100"
+                aria-label="Dismiss welcome back message"
+                onClick={() => {
+                  setBannerDismissed(true)
+                  try {
+                    fetch('/api/settings', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ welcome_back_banner_dismissed_at: new Date().toISOString() }),
+                    }).catch(() => {})
+                  } catch {}
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
           <DashboardAddSupplementGate />
 
           <div className="mb-2">

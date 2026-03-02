@@ -27,6 +27,21 @@ export async function GET() {
     const currentStreak = calculateStreak(checkinDays || [])
     const longestStreak = Math.max(((profile as any)?.longest_streak || 0), currentStreak)
 
+    const lastCheckinAt = (() => {
+      const first = ((checkinDays as any[] | null) || [])[0]
+      const raw = first?.created_at ? String(first.created_at) : ''
+      return raw || null
+    })()
+    const daysSinceLastCheckin = (() => {
+      if (!lastCheckinAt) return null
+      const lastYmd = new Date(lastCheckinAt).toISOString().slice(0, 10)
+      const todayYmd = new Date().toISOString().slice(0, 10)
+      const lastMs = Date.parse(`${lastYmd}T00:00:00Z`)
+      const todayMs = Date.parse(`${todayYmd}T00:00:00Z`)
+      if (!Number.isFinite(lastMs) || !Number.isFinite(todayMs)) return null
+      return Math.max(0, Math.round((todayMs - lastMs) / 86400000))
+    })()
+
     // Today / yesterday
     const todayStr = new Date().toISOString().slice(0, 10)
     const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
@@ -113,6 +128,8 @@ export async function GET() {
       totalCheckins: (checkinDays || []).length,
       currentStreak,
       longestStreak,
+      lastCheckinAt,
+      daysSinceLastCheckin,
       hasCheckinToday: !!today,
       hasWearableData,
       activeTests,

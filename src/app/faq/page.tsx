@@ -143,9 +143,9 @@ export default function FAQPage() {
                 Anyone juggling multiple health interventions and trying to figure out what actually helps:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 ml-4">
-                <li>Chronic pain patients trying different meds/treatments</li>
-                <li>People with ADHD managing medication + lifestyle changes</li>
-                <li>Biohackers running experiments on themselves</li>
+                <li>People testing multiple supplements at once</li>
+                <li>Anyone optimizing energy, focus, mood, or recovery</li>
+                <li>Biohackers who want evidence, not vibes</li>
                 <li>Anyone who blanks when their doctor asks "how's the new medication working?"</li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
@@ -157,7 +157,7 @@ export default function FAQPage() {
             <div id="trust" className="pb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Why should I trust a tool built by some guy on Reddit?</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                <strong>Fair question.</strong> I built this for my mum who has chronic pain and ADHD. She was trying 15+ different treatments and couldn't tell what was helping.
+                <strong>Fair question.</strong> I built this for my mum. She was trying a lot of different things and couldn’t tell what was actually helping.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
                 Doctors would ask "how's it going?" and she'd just say "I think okay?" No data. No patterns. Just vibes.

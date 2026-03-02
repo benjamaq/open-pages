@@ -45,18 +45,18 @@ function generatePersonalizedInsight(dayOneData: {
 }): { message: string; type: 'pain_high' | 'pain_low' | 'mood_high' | 'mood_low' } {
   const { mood, sleep_quality, pain } = dayOneData;
   
-  // Priority: Pain > Mood (since this is a chronic pain/illness app)
+  // Priority: high-symptom days first, then mood.
   if (pain !== null && pain >= 7) {
     return {
       type: 'pain_high',
-      message: `You logged pain at ${pain}/10 today. Tomorrow, we'll start watching for triggers. Common ones: sleep quality, stress, skipped meals.`
+      message: `Today looked like a tougher day. Tomorrow, we’ll start building a clearer baseline so your supplement results get more reliable over time.`
     };
   }
   
   if (pain !== null && pain < 4) {
     return {
       type: 'pain_low',
-      message: `Pain was low today (${pain}/10). We'll track what's keeping it manageable so you can maintain this pattern.`
+      message: `Nice — today looked like a smoother day. We’ll keep tracking so we can see what stays consistent (and what actually changes when you take/skip something).`
     };
   }
   
@@ -77,7 +77,7 @@ function generatePersonalizedInsight(dayOneData: {
   // Default case
   return {
     type: 'mood_low',
-    message: `Today's baseline is set. Over the next few days, we'll start identifying patterns in your mood, sleep, and pain levels.`
+    message: `Baseline set. Over the next few days, we’ll start separating signal from noise — so you can see what’s actually worth keeping in your stack.`
   };
 }
 
@@ -115,10 +115,10 @@ async function getCommunityStats(
       .eq('local_date', today);
     
     if (pain !== null && pain >= 6) {
-      condition = 'chronic pain';
+      condition = 'tough days';
       similarUsersQuery = similarUsersQuery.gte('pain', 6);
     } else if (pain !== null && pain <= 3) {
-      condition = 'low pain days';
+      condition = 'smoother days';
       similarUsersQuery = similarUsersQuery.lte('pain', 3);
     } else if (mood !== null && mood <= 4) {
       condition = 'mood challenges';

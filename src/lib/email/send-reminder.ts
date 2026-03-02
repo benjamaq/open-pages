@@ -67,7 +67,7 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     progressPercent,
     checkinUrl: `${baseUrl}/dashboard?checkin=open`,
   })
-  const subject = `${progressPercent}% complete`
+  const subject = `Quick check-in — 10 seconds`
   if (dry || preview) {
     return { ok: true, dry: true, subject, html, supplementCount, progressPercent }
   }

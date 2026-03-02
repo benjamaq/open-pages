@@ -44,6 +44,8 @@ export function DashboardUnifiedPanel({
   const [showCommitment, setShowCommitment] = useState<boolean>(false)
   const [overrideSkipNames, setOverrideSkipNames] = useState<string[] | null>(null)
   const [showUploadSuccess, setShowUploadSuccess] = useState<{ days?: number; source?: string } | null>(null)
+  const [showFirstCheckinPrompt, setShowFirstCheckinPrompt] = useState<boolean>(false)
+  const [checkinPromptUserId, setCheckinPromptUserId] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -187,6 +189,39 @@ export function DashboardUnifiedPanel({
     })()
     return () => { mounted = false }
   }, [suggestionsPayload, progressPayload, supplementsPayload, effectsPayload, hasDailyPayload, wearableStatusPayload, settingsPayload, isMemberProp])
+
+  // First-visit check-in prompt (dismissible, local-only).
+  useEffect(() => {
+    try {
+      const uid =
+        (Array.isArray(supps) && supps.length > 0 && (supps[0] as any)?.user_id)
+          ? String((supps[0] as any).user_id)
+          : null
+      setCheckinPromptUserId(uid)
+
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('biostackr_checkin_prompt_dismissed') : null
+      const dismissed =
+        raw === '1' ? true : (uid ? raw === uid : Boolean(raw))
+      if (dismissed) { setShowFirstCheckinPrompt(false); return }
+
+      // Only show when: has ≥1 supplement but zero daily entries.
+      if (Array.isArray(supps) && supps.length > 0 && hasDaily === false) {
+        setShowFirstCheckinPrompt(true)
+      } else {
+        setShowFirstCheckinPrompt(false)
+      }
+    } catch {
+      // fail closed
+      setShowFirstCheckinPrompt(false)
+    }
+  }, [supps, hasDaily])
+
+  // If the user completes their first check-in, permanently stop showing it.
+  useEffect(() => {
+    if (hasDaily !== true) return
+    try { localStorage.setItem('biostackr_checkin_prompt_dismissed', checkinPromptUserId || '1') } catch {}
+    setShowFirstCheckinPrompt(false)
+  }, [hasDaily, checkinPromptUserId])
 
   // Show post-upload success modal only when explicitly signaled by URL
   useEffect(() => {
@@ -596,6 +631,31 @@ export function DashboardUnifiedPanel({
 
   return (
     <>
+      {showFirstCheckinPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              try { localStorage.setItem('biostackr_checkin_prompt_dismissed', checkinPromptUserId || '1') } catch {}
+              setShowFirstCheckinPrompt(false)
+            }}
+          />
+          <div className="relative z-10 w-full max-w-[520px] rounded-2xl bg-white/95 p-8 sm:p-10 shadow-lg ring-1 ring-black/5 border border-gray-200">
+            <p className="text-lg sm:text-xl font-medium text-center text-gray-800">
+              Complete today's check-in to get started
+            </p>
+            <button
+              onClick={() => {
+                try { localStorage.setItem('biostackr_checkin_prompt_dismissed', checkinPromptUserId || '1') } catch {}
+                setShowFirstCheckinPrompt(false)
+              }}
+              className="w-full h-12 mt-6 bg-slate-900 text-white rounded-full hover:bg-slate-800 font-semibold"
+            >
+              OK, cool
+            </button>
+          </div>
+        </div>
+      )}
     <section className="bg-white border border-gray-200 rounded-lg">
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* TL: Today's Action (original location) */}
@@ -622,12 +682,17 @@ export function DashboardUnifiedPanel({
               </>
             ) : (
               <div className="flex flex-col items-stretch">
-                <button
-                  onClick={() => { window.location.href = '/dashboard?checkin=open' }}
-                  className="w-full inline-flex items-center justify-center rounded-full bg-[#111111] px-4 py-2 text-xs sm:px-6 sm:py-3 sm:text-sm font-medium text-white whitespace-nowrap"
-                >
-                  Complete Today’s Check‑In →
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      // Don’t dismiss on click; dismiss after first check-in OR explicit dismiss.
+                      window.location.href = '/dashboard?checkin=open'
+                    }}
+                    className="w-full inline-flex items-center justify-center rounded-full bg-[#111111] px-4 py-2 text-xs sm:px-6 sm:py-3 sm:text-sm font-medium text-white whitespace-nowrap"
+                  >
+                    Complete Today’s Check‑In →
+                  </button>
+                </div>
               </div>
             )}
             {/* Rotation instructions from /api/progress/loop */}

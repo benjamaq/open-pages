@@ -5,6 +5,7 @@ import UploadInstructions from '@/components/upload/UploadInstructions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
+import OnboardingProgressBar from '@/components/onboarding/OnboardingProgressBar'
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-xl border border-gray-200 bg-white ${className}`}>{children}</div>
@@ -13,7 +14,7 @@ function Button({ children, className = '', ...rest }: React.ButtonHTMLAttribute
   return (
     <button
       type={rest.type || 'button'}
-      className={`inline-flex items-center rounded-lg bg-gray-900 text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center rounded-xl bg-gray-900 text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 ${className}`}
       {...rest}
     >
       {children}
@@ -288,13 +289,18 @@ export default function UploadCenter() {
       <div className="max-w-[760px] mx-auto px-6 py-16">
         <div className="rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/[0.04] p-6 sm:p-10 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Upload Your Data</h1>
-          <p className="text-gray-600">Import health data and supplement logs. We’ll handle the rest.</p>
+        <div className="w-full sm:w-auto">
+          <div className="mb-7">
+            <OnboardingProgressBar active="wearable" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Upload your wearable data</h1>
+          <p className="text-slate-700">
+            Your wearable has months of health data we can analyse. Upload it and you could get your first verdict today.
+          </p>
         </div>
         <Link href="/dashboard">
           <Button className="px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap">
-            Skip for now
+            Skip for now — I’ll use daily check-ins
           </Button>
         </Link>
       </div>

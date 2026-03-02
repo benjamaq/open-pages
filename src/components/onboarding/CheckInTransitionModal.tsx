@@ -45,7 +45,7 @@ export default function CheckInTransitionModal({
     
     // Tone-specific transitions
     if (toneProfile.empathyLevel >= 9) {
-      // High empathy (chronic pain, mental health, perimenopause)
+      // High empathy (sensitive contexts)
       return `Now let me see where you're at today, ${userName}.
 
 Move the sliders to how you're feeling right now. No wrong answers. Just honest.

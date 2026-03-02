@@ -69,9 +69,9 @@ export default function Step5MissionProfile({ userId, displayName, onNext, onSki
           <div className="mb-5 sm:mb-6">
             <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Some people say:</p>
             <div className="space-y-2 text-xs sm:text-sm text-gray-600">
-              <p>💬 "I haven't slept well in months and need to figure out why"</p>
-              <p>💬 "I'm managing chronic pain and want to find what actually helps"</p>
-              <p>💬 "I'm exhausted and need to understand what's draining my energy"</p>
+              <p>💬 "I want to find out which supplements are actually worth keeping"</p>
+              <p>💬 "I’m optimizing my energy and focus and want real data"</p>
+              <p>💬 "I want to reduce my supplement spend without losing results"</p>
               <p>💬 "I want proof of what's working so I can feel confident in my choices"</p>
             </div>
           </div>

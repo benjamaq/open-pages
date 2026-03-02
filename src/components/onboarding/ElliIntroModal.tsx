@@ -16,7 +16,7 @@ interface ElliIntroModalProps {
  * ElliIntroModal
  * 
  * The FIRST thing users see after signup.
- * Generic welcome that works for everyone (chronic pain, fertility, biohacking, etc.)
+ * Generic welcome that works for everyone.
  * 
  * Flow: Sign up → THIS → Category selection → etc.
  */
@@ -40,13 +40,13 @@ export default function ElliIntroModal({
 
   if (!isOpen) return null;
 
-  const welcomeMessage = `Hey ${userName}, welcome to BioStackr\n\nI'm really happy you're here.\n\nLet's figure out what's going on with your health — we'll help you discover patterns you'd never spot on your own.\n\nWhat brings you here today?`;
+  const welcomeMessage = `Hey ${userName}, welcome to BioStackr\n\nI'm really happy you're here.\n\nWe’ll help you test your supplements with real data — so you can keep what works, drop what doesn’t, and stop guessing.\n\nWhat are you hoping to improve?`;
 
   const dropdowns: { key: string; label: string; options: string[] }[] = [
-    { key: 'sleep', label: 'Sleep', options: ['General sleep issues','Insomnia','Sleep apnea','Other sleep concerns'] },
-    { key: 'pain', label: 'Chronic Pain', options: ['Fibromyalgia','Arthritis','Back pain','General chronic pain','Other pain condition'] },
-    { key: 'migraines', label: 'Migraines', options: ['Chronic migraines','Cluster headaches','Tension headaches'] },
-    { key: 'other', label: 'Other', options: ['Energy or Chronic Fatigue','Mental Health & Focus','Autoimmune or Inflammatory','Fertility or Cycle Tracking','Meds & Treatment Tracking','Pattern Discovery','Complex / Undiagnosed'] },
+    { key: 'energy', label: 'Energy & stamina', options: ['More energy','Less afternoon crash','Better workouts','General stamina'] },
+    { key: 'focus', label: 'Focus & clarity', options: ['Better focus','Less brain fog','More motivation','Calmer mood'] },
+    { key: 'recovery', label: 'Recovery', options: ['Better recovery','Less soreness','More consistency','General wellness'] },
+    { key: 'other', label: 'Other', options: ['Digestion','Stress resilience','Immune support','Not sure yet'] },
   ];
 
   return (

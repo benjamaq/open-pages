@@ -5,8 +5,8 @@ export default function FounderStory() {
         <img src="/mum photo.png" alt="Ben and his mum" className="w-full max-w-[500px] h-auto rounded-2xl mx-auto mb-10 shadow-xl" />
         <h2 className="text-3xl md:text-4xl font-bold mb-6">"I Built This After Watching My Mum Suffer"</h2>
         <div className="space-y-6 text-lg text-gray-700 leading-relaxed">
-          <p>My mum tried everything for chronic pain for years. Doctors, apps, supplements, trackers. She had more data than ever — but zero answers. Every app gave her graphs. None told her what to actually do.</p>
-          <p>So I built BioStackr. Not to give you more data. To give you clarity. To find the hidden patterns your body's been trying to show you.</p>
+          <p>My mum tried everything to feel better for years — different routines, different supplements, different “systems.” She had more effort than ever — but not more clarity. Every app gave her graphs. None told her what to actually do.</p>
+          <p>So I built BioStackr. Not to give you more data. To give you clarity: keep what works, drop what doesn’t, and stop guessing.</p>
           <p><strong>This isn't a tech company trying to sell you widgets. It's a tool built by someone who needed it to exist.</strong></p>
         </div>
         <p className="text-sm text-gray-600 mt-8">— Ben, Founder</p>

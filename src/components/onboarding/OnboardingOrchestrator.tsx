@@ -20,7 +20,7 @@ import { createClient } from '@/lib/supabase/client';
  * Manages the complete onboarding flow with correct order:
  * 1. Intro (generic welcome)
  * 2. Category selection
- * 3. Subcategory (if chronic pain)
+ * 3. Subcategory (if applicable)
  * 4. Category validation (tone profile SET here)
  * 5. Transition to check-in
  * 6. Check-in sliders

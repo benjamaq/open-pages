@@ -7,13 +7,15 @@ export async function GET() {
   if (!user) return NextResponse.json({ hasData: false }, { status: 200 })
   const { count, error } = await supabase
     .from('daily_entries')
-    .select('id', { count: 'exact', head: true })
+    // Some deployments use (user_id, local_date) as PK and have no `id` column.
+    // Selecting `local_date` keeps this count query schema-safe.
+    .select('local_date', { count: 'exact', head: true })
     .eq('user_id', user.id)
   if (error) return NextResponse.json({ hasData: false }, { status: 200 })
   // Wearable days: number of entries that include any wearables payload
   const { count: wearableDays = 0 } = await supabase
     .from('daily_entries')
-    .select('id', { count: 'exact', head: true })
+    .select('local_date', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .not('wearables', 'is', null)
   return NextResponse.json({

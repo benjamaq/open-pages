@@ -10,7 +10,7 @@ export default function Header() {
             <Image src="/logo.svg" alt="BioStackr" width={32} height={32} />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">BioStackr</h1>
-              <p className="text-xs text-gray-500 mt-0.5">Pattern discovery for your health</p>
+              <p className="text-xs text-gray-500 mt-0.5">Supplement clarity from your data</p>
             </div>
           </div>
           

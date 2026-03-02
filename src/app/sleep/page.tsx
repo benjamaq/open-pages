@@ -1,4 +1,12 @@
-export { metadata } from '../sleep-v3/page'
-export { default } from '../sleep-v3/page'
+import type { Metadata } from 'next'
+import { permanentRedirect } from 'next/navigation'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
+
+export default function SleepPage() {
+  permanentRedirect('/')
+}
 
 

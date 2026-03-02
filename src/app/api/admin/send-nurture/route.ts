@@ -30,9 +30,9 @@ function renderJesseSpecial(firstName: string): { subject: string; html: string 
       <div style="max-width:640px;margin:0 auto;padding:24px;">
         <p>Hi ${firstName},</p>
         <p>Ben here (founder of BioStackr). I wanted to reach out with a quick tip that could really help you.</p>
-        <p style="color:#374151">(Quick privacy note: I can see that you've tracked 2 days — awesome! — and that you haven't selected lifestyle tags yet. But I can't see your actual pain scores, symptoms, or any of your personal health data. That's yours alone. Just wanted you to know!)</p>
+        <p style="color:#374151">(Quick privacy note: I can see that you've tracked 2 days — awesome! — and that you haven't selected lifestyle tags yet. But I can't see your personal check-in values or any private health data. That's yours alone. Just wanted you to know!)</p>
         <p>Here's the thing: I noticed you haven't been selecting lifestyle tags (like caffeine, supplements, exercise, stress, etc.) when you check in.</p>
-        <p>This matters because our pattern detection looks at TWO types of patterns:</n><ol><li>Metric patterns — how your sleep quality affects your mood (we'll catch these!)</li><li>Lifestyle patterns — how caffeine, supplements, and food affect you (we'll miss these if you don't select tags)</li></ol></p>
+        <p>This matters because our insights look at TWO types of signals:</n><ol><li>Check-in signals — how your scores move over time (we’ll catch these)</li><li>Lifestyle signals — how caffeine, supplements, stress, travel, etc. relate to changes (we can miss these if you don’t tag them)</li></ol></p>
         <p>So when you check in today: try tapping a few lifestyle tags that apply. Even just “caffeine” or “stress” helps us find patterns you’d never spot on your own.</p>
         <p>You're 3 days away from your first personalized insight — let's make sure we catch everything that might be affecting you!</p>
         <p>Keep going,<br/>Ben</p>
@@ -49,15 +49,15 @@ function renderNurture(firstName: string, daysTracked: number, daysNeeded: numbe
       <div style="max-width:640px;margin:0 auto;padding:24px;">
         <p>Hey ${firstName},</p>
         <p>Ben here — I’m the person building BioStackr. Thanks for jumping in and starting to track — that means a lot to me.</p>
-        <p style="color:#374151">(Quick note: I can see you’ve been tracking — that’s amazing — but I can’t see your actual pain scores, symptoms, or personal health data. That’s private to you. I’m reaching out because you’re an early user and I genuinely want to help you get the most out of this.)</p>
-        <p>This whole thing started because I watched my mum struggle with chronic pain for years — trying supplement after supplement, changing her diet, adjusting her sleep — but never really knowing what actually helped. Just guessing in the dark.</p>
+        <p style="color:#374151">(Quick note: I can see you’ve been tracking — that’s amazing — but I can’t see your personal check-in values or private health data. That’s yours. I’m reaching out because you’re an early user and I genuinely want to help you get the most out of this.)</p>
+        <p>This whole thing started because I watched my mum try supplement after supplement, change routines, and still not know what actually helped. Just guessing in the dark.</p>
         <p>So I built this for her. And for anyone who’s tired of that same guessing game.</p>
         <p>You’re ${daysTracked} day${daysTracked === 1 ? '' : 's'} into tracking. That’s brilliant. But here’s what most people don’t realize — the magic kicks in at Day 5.</p>
         <p>That’s when we have enough data to spot patterns you’d never see on your own. Things like:</p>
         <ul>
-          <li>“Your pain drops 2 points on days you sleep 7+ hours”</li>
-          <li>“Caffeine after 2pm correlates with worse sleep quality”</li>
-          <li>“That magnesium you take? It’s working — your pain is ~30% lower on days you take it”</li>
+          <li>“This supplement is associated with higher energy on clean days”</li>
+          <li>“Caffeine late in the day correlates with worse next-day scores”</li>
+          <li>“This one isn’t doing anything measurable at your current dose”</li>
         </ul>
         <p>But we can’t find those patterns unless you:</p>
         <ol>

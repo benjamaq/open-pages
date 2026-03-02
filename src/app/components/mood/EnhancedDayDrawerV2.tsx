@@ -280,7 +280,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
       '🥗 Ate clean', '💊 Missed supps', '🍺 Hangover', '🥤 Low hydration'
     ],
     illness: [
-      '🤧 Cold/Flu', '🤕 Migraine', '🦠 Infection', '🌡️ Fever',
+      '🤧 Cold/Flu', '🦠 Infection', '🌡️ Fever',
       '🤢 Nausea', '🤮 Vomiting', '😷 Allergies', '🌸 Hay fever',
       '💊 Flare-up', '🩹 Injury', '😵 Dizzy', '🥶 Chills'
     ],
@@ -318,7 +318,6 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
     '🍺 Hangover': 'hangover',
     '🥤 Low hydration': 'dehydrated',
     '🤧 Cold/Flu': 'getting_sick',
-    '🤕 Migraine': 'migraine',
     '🦠 Infection': 'getting_sick',
     '🌡️ Fever': 'fever_chills',
     '🤢 Nausea': 'gi_upset',

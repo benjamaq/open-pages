@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+function toSlugBase(input: string) {
+  const base = (input || '').trim().toLowerCase()
+  const cleaned = base
+    .replace(/@.*$/, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return cleaned || 'user'
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   let { data: { user } } = await supabase.auth.getUser()
@@ -31,6 +40,7 @@ export async function POST(request: Request) {
   if (!code) return NextResponse.json({ error: 'Code not found' }, { status: 400 })
 
   try {
+    const userMeta = (user as any)?.user_metadata || {}
     try { console.log('[PROMO][redeem] attempting', { code, userId: user.id, authSource }) } catch {}
     // Use new DB tables:
     // - public.promo_codes(id, code, max_redemptions, days_granted, expires_at, created_at)
@@ -125,7 +135,7 @@ export async function POST(request: Request) {
     })()
     const newExpiry = new Date(baseMs + grantsDays * 24 * 60 * 60 * 1000).toISOString()
     // IMPORTANT: update only. Upsert can try to INSERT and fail on required fields (e.g., slug).
-    const { data: upRows, error: upErr } = await (supabaseAdmin as any)
+    let { data: upRows, error: upErr } = await (supabaseAdmin as any)
       .from('profiles')
       .update({ pro_expires_at: newExpiry } as any)
       .eq('user_id', user.id)
@@ -143,6 +153,83 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: upErr.message }, { status: 500 })
     }
     const wrote = Array.isArray(upRows) ? upRows.length > 0 : Boolean((upRows as any)?.user_id)
+
+    // If no profile row was updated, the redemption still got recorded, but the user won't be upgraded.
+    // This can happen if the profile row doesn't exist yet (signup/onboarding race). Fix it here.
+    if (!wrote) {
+      try { console.log('[PROMO][redeem] no profile row updated; attempting to create profile row', { userId: user.id }) } catch {}
+      try {
+        const email = String((user as any)?.email || '').trim()
+        const displayName =
+          String(userMeta?.name || userMeta?.full_name || userMeta?.first_name || '').trim() ||
+          (email.includes('@') ? email.split('@')[0] : 'User')
+        const tz =
+          String(userMeta?.reminder_timezone || userMeta?.timezone || 'UTC').trim() || 'UTC'
+
+        const base = toSlugBase(displayName || email)
+        let candidate = base
+        for (let i = 0; i < 5; i++) {
+          const { data: clash } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('slug', candidate)
+            .maybeSingle()
+          if (!clash) break
+          const suffix = Math.random().toString(36).slice(2, 7)
+          candidate = `${base}-${suffix}`
+        }
+
+        const now = new Date().toISOString()
+        const { error: insProfErr } = await supabaseAdmin
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            display_name: displayName,
+            slug: candidate,
+            public: true,
+            allow_stack_follow: true,
+            reminder_enabled: true,
+            reminder_time: '09:00',
+            reminder_timezone: tz,
+            reminder_timezone_autodetected: true,
+            timezone: tz,
+            created_at: now,
+            updated_at: now,
+          } as any)
+        if (insProfErr) {
+          try { console.log('[PROMO][redeem] profile insert failed', { userId: user.id, error: insProfErr.message }) } catch {}
+        }
+      } catch (e: any) {
+        try { console.log('[PROMO][redeem] profile create attempt threw', { userId: user.id, error: e?.message || String(e) }) } catch {}
+      }
+
+      // Retry update now that profile should exist.
+      try {
+        const retry = await (supabaseAdmin as any)
+          .from('profiles')
+          .update({ pro_expires_at: newExpiry } as any)
+          .eq('user_id', user.id)
+          .select('user_id,pro_expires_at')
+        upRows = retry?.data
+        upErr = retry?.error
+      } catch (e: any) {
+        upErr = { message: e?.message || 'retry_failed' } as any
+      }
+
+      const wroteAfterRetry = !upErr && (Array.isArray(upRows) ? upRows.length > 0 : Boolean((upRows as any)?.user_id))
+      if (!wroteAfterRetry) {
+        // Roll back redemption so the user can retry later when profile exists.
+        try {
+          await supabaseAdmin
+            .from('promo_redemptions')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('promo_code_id', String((promo as any).id))
+        } catch {}
+        return NextResponse.json({ error: 'Failed to apply promo to profile. Please retry in a moment.' }, { status: 500 })
+      }
+    }
+
     try {
       console.log('[PROMO][redeem] success', {
         code,

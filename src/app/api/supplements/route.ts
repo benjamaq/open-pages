@@ -419,7 +419,38 @@ export async function POST(request: Request) {
           if (inferredStartISO) stackPayload.start_date = inferredStartISO
           // Persist user-selected goal categories on stack_items for economics + My Stack grouping
           if (Array.isArray(bodyTags)) stackPayload.primary_goal_tags = bodyTags
-          await supabase.from('stack_items').insert(stackPayload)
+          // Use admin client to avoid RLS blocking stack item creation.
+          // Some deployments have a slimmer `stack_items` schema; if insert fails due to missing columns,
+          // retry a minimal insert so the dashboard still has a stack item row.
+          try {
+            let payload: any = { ...stackPayload }
+            let lastErr: any = null
+            for (let i = 0; i < 6; i++) {
+              const ins = await supabaseAdmin.from('stack_items').insert(payload as any)
+              if (!(ins as any)?.error) {
+                lastErr = null
+                break
+              }
+              lastErr = (ins as any).error
+              const msg = String((lastErr as any)?.message || '')
+              // If a column is missing, strip it and retry.
+              const missingCol =
+                (msg.match(/column \"([^\"]+)\" of relation \"stack_items\" does not exist/i)?.[1]) ||
+                (msg.match(/Could not find the '([^']+)' column of 'stack_items'/i)?.[1]) ||
+                null
+              if (missingCol && payload[missingCol] !== undefined) {
+                delete payload[missingCol]
+                continue
+              }
+              // If it's some other error, stop retrying.
+              break
+            }
+            if (lastErr) {
+              // Fallback: minimal insert.
+              const minimal: any = { profile_id: profileId, name: rawName }
+              await supabaseAdmin.from('stack_items').insert(minimal as any)
+            }
+          } catch {}
         }
       } catch {}
       // Invalidate cached dashboard payload so newly added supplements appear immediately.

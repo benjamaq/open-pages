@@ -20,9 +20,9 @@ export default function Step5MissionStatement({ userId, displayName, onNext, onS
   const supabase = createClient()
 
   const examples = [
-    "I haven't slept well in months and I need to figure out why",
-    "I'm managing chronic pain and want to find what actually helps",
-    "I'm exhausted and need to understand what's draining my energy",
+    "I want to find out which supplements are actually worth keeping",
+    "I’m optimizing my energy and focus and want real data (not vibes)",
+    "I want to reduce my supplement spend without losing results",
     "I want proof of what's working so I can feel confident in my choices"
   ]
 

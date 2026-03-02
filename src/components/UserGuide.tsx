@@ -43,7 +43,7 @@ const tourSteps: TourStep[] = [
   {
     id: 'mood-tracker',
     title: 'Mood & Health Tracking',
-    description: 'Track your daily mood, sleep, and pain levels. Click "Daily Check-in" to log your day, or "Heatmap" to see your progress over time.',
+    description: 'Do a quick daily check-in (energy, focus, mood). This is the data we use to measure your supplements over time.',
     target: '[data-tour="mood-tracker"]',
     position: 'bottom',
     icon: <BarChart3 className="w-6 h-6" />,

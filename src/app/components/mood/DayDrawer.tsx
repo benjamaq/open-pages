@@ -234,7 +234,7 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Track pain level
+                  Track symptom intensity
                 </span>
               </label>
             </div>
@@ -243,7 +243,7 @@ export default function DayDrawer({ isOpen, onClose, date, initialData }: DayDra
             {showPain && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pain (0-10)
+                  Symptom intensity (0-10)
                 </label>
                 <div className="flex items-center space-x-3">
                   <span className="text-sm text-gray-500">0</span>

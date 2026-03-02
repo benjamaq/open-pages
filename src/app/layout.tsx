@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     title: "BioStackr — Find Out What Actually Works",
     description: "Find out which supplements actually work for you. BioStackr analyzes your wearable data to test your stack and tell you what to keep, drop, or keep testing.",
     type: "website",
+    images: [{ url: 'https://www.biostackr.io/pill-bottle.png' }],
   },
   twitter: {
     card: "summary_large_image",

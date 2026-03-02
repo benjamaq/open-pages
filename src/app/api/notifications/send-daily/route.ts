@@ -232,7 +232,7 @@ async function handleSend() {
             ...(latest?.mood != null ? { mood: latest.mood } : {})
           })
           try { console.log('[notifications/send-daily] Latest metrics:', latest) } catch {}
-          const subject = `${progressPercent}% complete`
+          const subject = `Quick check-in — 10 seconds`
           const sendResp = await resend.emails.send({
             from,
             to: userEmail!,
