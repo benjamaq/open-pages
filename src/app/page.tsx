@@ -46,7 +46,7 @@ export default function Page() {
             <span className="block">That Don&apos;t Work.</span>
           </h1>
           <p className="mb-3 text-lg text-black font-bold leading-relaxed text-center">
-            Tinder for your supplements.
+            Tinder for your supplements. Keep what works. Break up with what doesn&apos;t.
           </p>
           <p className="mb-6 text-base text-neutral-600 leading-relaxed text-center">
             Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
@@ -91,7 +91,7 @@ export default function Page() {
               <span className="block">That Don&apos;t Work.</span>
             </h1>
             <p className="mb-6 text-2xl text-black font-bold leading-relaxed">
-              Tinder for your supplements.
+              Tinder for your supplements. Keep what works. Break up with what doesn&apos;t.
             </p>
             <p className="mb-10 text-lg text-neutral-600 leading-relaxed">
               Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
