@@ -8,21 +8,6 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
-function WearableBadge({ align = 'center' }: { align?: 'center' | 'left' }) {
-  return (
-    <div className={align === 'left' ? 'text-left' : 'text-center'}>
-      <div className="mt-3 border-t border-neutral-200/70 pt-3">
-        <div className="text-sm font-semibold text-neutral-900">
-          Use a wearable? You could get results today.
-        </div>
-        <div className="mt-1 text-xs text-neutral-500">
-          Upload from Whoop, Apple Health, Oura, or any wearable and fast-track your results.
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Page() {
   const [monthlySpend, setMonthlySpend] = useState(247)
   const carouselRef = useRef<HTMLDivElement | null>(null)
@@ -57,13 +42,14 @@ export default function Page() {
       >
         <div className="mx-auto max-w-xl">
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-black leading-[1.1] text-center">
-            Tinder for Your Supplements.
+            Stop Paying for Supplements
+            <span className="block">That Don&apos;t Work.</span>
           </h1>
           <p className="mb-3 text-lg text-black font-bold leading-relaxed text-center">
-            Swipe right on what works. Break up with what doesn’t.
+            Like Tinder, for your supplements. Keep what works. Break up with what doesn&apos;t.
           </p>
           <p className="mb-6 text-base text-neutral-600 leading-relaxed text-center">
-            BioStackr shows you what actually works — and what’s just wasting your money.
+            Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
           </p>
           <div className="flex flex-col items-center justify-center">
             <Link href="/signup">
@@ -71,11 +57,10 @@ export default function Page() {
                 size="lg"
                 className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all"
               >
-                Get My Breakup Report
+                Test My Supplements
               </Button>
             </Link>
-            <p className="mt-3 text-sm text-neutral-500 text-center">Free to start. Wearable optional.</p>
-            <WearableBadge />
+            <p className="mt-3 text-sm text-neutral-500 text-center">Free to start. Takes 2 minutes.</p>
           </div>
           {/* Full‑bleed hero image below text */}
           <div className="-mx-6 mt-8">
@@ -102,13 +87,14 @@ export default function Page() {
         <div className="mx-auto max-w-7xl w-full">
           <div className="max-w-xl lg:max-w-2xl">
             <h1 className="mb-8 text-6xl lg:text-7xl font-bold tracking-tight text-black leading-[1.05]">
-              Tinder for Your Supplements.
+              Stop Paying for Supplements
+              <span className="block">That Don&apos;t Work.</span>
             </h1>
             <p className="mb-6 text-2xl text-black font-bold leading-relaxed">
-              Swipe right on what works. Break up with what doesn’t.
+              Like Tinder, for your supplements. Keep what works. Break up with what doesn&apos;t.
             </p>
             <p className="mb-10 text-lg text-neutral-600 leading-relaxed">
-              BioStackr shows you what actually works — and what’s just wasting your money.
+              Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
             </p>
             <div className="flex items-center gap-4">
               <Link href="/signup">
@@ -116,12 +102,11 @@ export default function Page() {
                   size="lg"
                   className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
                 >
-                  Get My Breakup Report
+                  Test My Supplements
                 </Button>
               </Link>
-              <p className="text-sm text-neutral-500">Free to start. Wearable optional.</p>
+              <p className="text-sm text-neutral-500">Free to start. Takes 2 minutes.</p>
             </div>
-            <WearableBadge align="left" />
           </div>
         </div>
       </section>

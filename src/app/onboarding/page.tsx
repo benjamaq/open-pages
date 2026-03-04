@@ -859,7 +859,7 @@ export default function OnboardingPage() {
                         })
                       }}
                       className={`rounded-full px-3.5 py-2 text-sm border ${
-                        goalNotSure ? 'bg-slate-50 border-slate-400 text-slate-900' : 'border-slate-200 bg-white text-slate-600'
+                        goalNotSure ? 'bg-slate-50 border-slate-500 text-slate-900' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
                       }`}
                     >
                       Not sure yet — Skip for now
@@ -878,7 +878,7 @@ export default function OnboardingPage() {
                           onClick={() => toggleGoal(g.key)}
                           disabled={goalNotSure}
                           className={`rounded-full h-10 px-4 text-sm border transition ${
-                            selected ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-200 text-slate-700 bg-white hover:border-slate-400'
+                            selected ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-300 text-slate-800 bg-white hover:border-slate-500'
                           } ${goalNotSure ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           {g.label}
@@ -908,7 +908,7 @@ export default function OnboardingPage() {
                             onClick={() => toggleGoal(g.key)}
                             disabled={goalNotSure}
                             className={`rounded-full h-10 px-4 text-sm border transition ${
-                              selected ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-200 text-slate-700 bg-white hover:border-slate-400'
+                              selected ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-300 text-slate-800 bg-white hover:border-slate-500'
                             } ${goalNotSure ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {g.label}
