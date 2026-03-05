@@ -24,12 +24,12 @@ export default function PricingPage() {
             <div className="text-5xl font-bold text-neutral-900 mb-6">$0<span className="text-base font-normal text-neutral-600">/month</span></div>
             <ul className="space-y-3 text-neutral-700 mb-8">
               <li>Track up to 3 supplements</li>
-              <li>Manual check-ins</li>
-              <li>Basic pattern insights</li>
+              <li>Daily check-ins</li>
+              <li>Basic insights</li>
             </ul>
             <Link href="/signup?plan=free">
               <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
-                Start Casual →
+                Start Free
               </Button>
             </Link>
           </div>
@@ -37,19 +37,19 @@ export default function PricingPage() {
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="inline-block rounded-full bg-black text-white px-4 py-1 text-xs font-semibold">POPULAR</span>
             </div>
-            <h2 className="text-2xl font-bold text-neutral-900 mb-2">Premium</h2>
+            <h2 className="text-2xl font-bold text-neutral-900 mb-2">Pro</h2>
             <p className="text-sm text-neutral-600 mb-1">$19/month</p>
             <div className="text-5xl font-bold text-neutral-900 mb-1">$19<span className="text-base font-normal text-neutral-600">/month</span></div>
             <div className="text-sm text-neutral-700 mb-6">or <span className="font-semibold">$149/year</span> <span className="text-neutral-500">• $12.42/mo • Billed annually</span></div>
             <ul className="space-y-3 text-neutral-700 mb-8">
               <li>Unlimited supplements</li>
               <li>Wearable data analysis</li>
-              <li>Cohen&apos;s d effect sizing</li>
-              <li>Full Breakup Reports</li>
+              <li>Full statistical analysis</li>
+              <li>Complete verdict reports</li>
             </ul>
             <Link href="/signup?plan=premium">
               <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
-                Get Answers →
+                Get Answers
               </Button>
             </Link>
           </div>

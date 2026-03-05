@@ -55,11 +55,11 @@ export default function BioStackrLandingPage() {
     { id: 'truth', label: 'Truth' },
     { id: 'speed', label: 'Speed' },
     { id: 'how', label: 'How it works' },
-    { id: 'profiles', label: 'Profiles' },
-    { id: 'ick', label: 'The ick' },
+    { id: 'profiles', label: 'Examples' },
+    { id: 'ick', label: 'Negative effects' },
     { id: 'calculator', label: 'Calculator' },
     { id: 'science', label: 'Science' },
-    { id: 'exes', label: 'Hall of Exes' },
+    { id: 'exes', label: 'What people dropped' },
     { id: 'who', label: 'Who it’s for' },
     { id: 'pricing', label: 'Pricing' },
   ]
@@ -117,7 +117,7 @@ export default function BioStackrLandingPage() {
             href="/onboarding"
             className="inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition"
           >
-            Get My Breakup Report
+            Test My Supplements
           </a>
         </div>
       </header>
@@ -130,17 +130,18 @@ export default function BioStackrLandingPage() {
           <div className="grain" />
           <div className="relative z-10 max-w-4xl">
             <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-green)]">Tinder</span> for Your Supplements.
+              Stop Paying for Supplements That Don&apos;t Work.
             </h1>
-            <p className="mt-4 text-xl text-[var(--text-muted-light)]">Swipe right on what works. Break up with what doesn't.</p>
+            <p className="mt-4 text-xl text-[var(--text-muted-light)]">
+              You built your stack on podcasts and Instagram. Not on data. Test what&apos;s actually working — and drop what isn&apos;t.
+            </p>
             <div className="mt-6 space-y-4 text-[var(--accent-silver)] leading-relaxed">
-              <p>You're in a relationship with a dozen supplements. But how many are actually working for you?</p>
-              <p>BioStackr tracks your real-world patterns to show you what actually works. And if you use a wearable, it helps us read the signs even faster.</p>
-              <p>No judgment. Just clarity.</p>
+              <p>Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.</p>
+              <p>Start with one supplement. Or test your whole stack.</p>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-3">
               <a href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
-                Get My Breakup Report
+                Test My Supplements
               </a>
               <div className="text-sm text-[var(--text-muted-light)]">Free to start. Upload data from any wearable — or just check in daily.</div>
             </div>
@@ -151,7 +152,7 @@ export default function BioStackrLandingPage() {
         <section id="truth" className="py-24 bg-[var(--bg-warm)] text-[var(--text-dark)] rounded-3xl mt-8">
           <div className="max-w-3xl">
             <h2 className="text-3xl font-bold">The Uncomfortable Truth</h2>
-            <p className="mt-1 text-[var(--text-muted-dark)]">Let's talk about your situationship with ashwagandha.</p>
+            <p className="mt-1 text-[var(--text-muted-dark)]">Let&apos;s talk about what&apos;s actually in your stack.</p>
             <div className="mt-6 space-y-4 text-[var(--text-dark)]">
               <p>You've been taking it for six months. You've spent €234. You think it's helping. But you've never been sure.</p>
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg hover:shadow-xl transition">
@@ -185,19 +186,19 @@ export default function BioStackrLandingPage() {
 
         {/* HOW IT WORKS */}
         <section id="how" className="py-24 bg-[var(--bg-warm)] text-[var(--text-dark)] rounded-3xl mt-8">
-          <h2 className="text-3xl font-bold">How to find the one(s)</h2>
+          <h2 className="text-3xl font-bold">How it works</h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Step num={1} title="Add your supplements" body="All of them. Even the impulsive podcast purchases." />
-            <Step num={2} title="Check in daily" body="30 seconds. Rate your mood, energy, focus. Flag anything unusual." />
-            <Step num={3} title="We check for chemistry" body="Real statistics: effect sizes, confidence intervals, timelines. Science, not vibes." />
-            <Step num={4} title="See your compatibility evolve" body="Every supplement gets a score that updates as you check in. Keep, Drop, or It's Complicated." />
+            <Step num={1} title="Add your supplements" body="Start with one — or add your whole stack." />
+            <Step num={2} title="Check in daily" body="30 seconds. Sleep, energy, focus, mood. Flag anything unusual." />
+            <Step num={3} title="We run the analysis" body="Real statistics: effect sizes, confidence intervals, timelines. Science, not vibes." />
+            <Step num={4} title="Get a verdict" body="Each supplement trends toward KEEP, DROP, or TESTING as data builds." />
           </div>
           <p className="mt-4 text-sm text-[var(--text-muted-dark)]">Use a wearable? Upload your data to speed things up.</p>
         </section>
 
         {/* DATING PROFILES */}
         <section id="profiles" className="py-24 bg-[var(--bg-slate)] text-white rounded-3xl mt-8">
-          <h2 className="text-3xl font-bold">Your supplements get dating profiles.</h2>
+          <h2 className="text-3xl font-bold">Your supplements get verdicts.</h2>
           <div className="mt-8 overflow-x-auto">
             <div className="flex gap-6 min-w-full">
               <ProfileCard name="Ashwagandha" compat={19} color="red" duration="6 months • €234 spent" line1="No chemistry. Your sleep didn't budge." badge="Drop" />
@@ -206,7 +207,7 @@ export default function BioStackrLandingPage() {
               <ProfileCard name="CBD Gummies" compat={12} color="red" duration="4 months • €316 spent" line1="Love-bombed your wallet. Ghosted your biomarkers." badge="Drop" />
             </div>
           </div>
-          <p className="mt-3 text-sm text-[var(--text-muted-light)]">Swipe on mobile to browse.</p>
+          <p className="mt-3 text-sm text-[var(--text-muted-light)]">Scroll to browse examples.</p>
         </section>
 
         {/* THE ICK */}
@@ -226,14 +227,14 @@ export default function BioStackrLandingPage() {
               </ul>
               <p>The same supplement from one brand might work. From another? Nothing. Or worse.</p>
               <p>That influencer who swore it changed their life? They got paid to say that. Your biology doesn't care about sponsorship deals.</p>
-              <p>BioStackr helps you find the good ones. And break up with the bad.</p>
+              <p>BioStackr helps you find the good ones — and stop paying for the bad.</p>
             </div>
           </div>
         </section>
 
         {/* CALCULATOR */}
         <section id="calculator" className="py-24 bg-[var(--bg-warm)] text-[var(--text-dark)] rounded-3xl mt-8">
-          <h2 className="text-3xl font-bold">How much are you spending on supplements that don't love you back?</h2>
+          <h2 className="text-3xl font-bold">How much are you spending on supplements that aren&apos;t doing anything?</h2>
           <div className="mt-8 grid gap-8 md:grid-cols-2 md:items-start">
             <div>
               <label className="text-sm font-medium text-[var(--text-muted-dark)]">Estimate your monthly supplement spend</label>
@@ -255,13 +256,13 @@ export default function BioStackrLandingPage() {
                 Based on research, <span className="font-semibold">40–60%</span> of supplements show no measurable effect.
               </p>
               <p className="mt-2 text-[var(--text-dark)]">
-                That's potentially <span className="font-semibold">€{animLow.toLocaleString()}–€{animHigh.toLocaleString()}/month</span> on one-sided relationships.
+                That&apos;s potentially <span className="font-semibold">€{animLow.toLocaleString()}–€{animHigh.toLocaleString()}/month</span> on supplements that aren&apos;t doing anything.
               </p>
               <p className="mt-2 text-[var(--text-dark)]">
                 <span className="font-semibold">€{animLowYear.toLocaleString()}–€{animHighYear.toLocaleString()}/year</span> on supplements that aren't doing anything.
               </p>
               <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-[var(--bg-dark)] px-5 text-sm font-semibold text-white shadow hover:shadow-lg hover:scale-[1.02] transition">
-                Find out which ones →
+                Find out which ones matter →
               </a>
             </div>
           </div>
@@ -271,7 +272,7 @@ export default function BioStackrLandingPage() {
         <section id="science" className="py-24 bg-[var(--bg-dark)] text-white rounded-3xl mt-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
           <div className="grain" />
-          <h2 className="text-3xl font-bold relative z-10">The science behind the breakups</h2>
+          <h2 className="text-3xl font-bold relative z-10">The science behind the verdicts</h2>
           <ul className="mt-6 grid gap-3 text-white/90 sm:grid-cols-2 relative z-10">
             <li className="rounded-2xl border border-white/10 p-4 shadow hover:shadow-lg transition">Effect detection using Cohen's d (same method used in clinical trials)</li>
             <li className="rounded-2xl border border-white/10 p-4 shadow hover:shadow-lg transition">Bootstrap confidence intervals for statistical reliability</li>
@@ -317,28 +318,28 @@ export default function BioStackrLandingPage() {
 
         {/* PRICING */}
         <section id="pricing" className="py-24 bg-[var(--bg-slate)] text-white rounded-3xl mt-8">
-          <h2 className="text-3xl font-bold">Ready to stop settling?</h2>
+          <h2 className="text-3xl font-bold">Start free. Upgrade when you want deeper analysis.</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <div className="rounded-2xl p-6 shadow-lg hover:shadow-xl transition bg-gradient-to-br from-[#1f1f1f] to-[#2b2b2b] border border-white/10">
-              <h3 className="text-xl font-semibold">FREE — <span className="text-[var(--text-muted-light)]">First Date</span></h3>
+              <h3 className="text-xl font-semibold">Starter — <span className="text-[var(--text-muted-light)]">$0/month</span></h3>
               <ul className="mt-3 space-y-1 text-white/90">
                 <li>• Add your supplements</li>
                 <li>• Daily check-ins</li>
-                <li>• See your compatibility overview</li>
+                <li>• Basic insights</li>
                 <li>• Upload wearable data (optional)</li>
               </ul>
-              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg">Get Started Free</a>
+              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg">Start Free</a>
             </div>
             <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition bg-gradient-to-br from-[#2b2b2b] to-[#3a2f5e] border border-white/10">
-              <h3 className="text-xl font-semibold">PRO — €9/month — <span className="text-[var(--text-muted-light)]">Get Serious</span></h3>
+              <h3 className="text-xl font-semibold">Pro — <span className="text-[var(--text-muted-light)]">$149/year</span></h3>
               <ul className="mt-3 space-y-1 text-white/90">
-                <li>• Full compatibility tracking</li>
+                <li>• Full statistical analysis</li>
                 <li>• Red flag detection (negative effects)</li>
                 <li>• Stack economics (what you're wasting)</li>
                 <li>• Priority analysis</li>
               </ul>
-              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition">Start Pro</a>
-              <p className="mt-2 text-xs text-[var(--text-muted-light)]">Cancel anytime. No hard feelings.</p>
+              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition">Get Answers</a>
+              <p className="mt-2 text-xs text-[var(--text-muted-light)]">Billed yearly. Cancel anytime.</p>
             </div>
           </div>
         </section>
@@ -349,11 +350,11 @@ export default function BioStackrLandingPage() {
             <div className="absolute -bottom-16 -right-16 h-64 w-64 bg-[var(--accent-purple)]/20 blur-3xl rounded-full" />
             <h2 className="text-3xl font-bold relative z-10">Your stack deserves a reality check.</h2>
             <div className="mt-4 space-y-4 text-white/90 relative z-10">
-              <p>You've been committed to your supplements for months. Time to find out which ones actually deserve you.</p>
+              <p>You&apos;ve spent years building your stack. Spend two minutes testing it.</p>
               <a href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
-                Get My Breakup Report
+                Test My Supplements
               </a>
-              <p className="text-sm text-[var(--text-muted-light)]">Stop dating supplements that aren't into you.</p>
+              <p className="text-sm text-[var(--text-muted-light)]">Free. No credit card required.</p>
             </div>
           </div>
         </section>
