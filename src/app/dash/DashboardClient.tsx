@@ -2362,12 +2362,21 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
     return 'rgba(0,0,0,' // Auto defaults to dark
   }
 
-  // Fire Meta Pixel CompleteRegistration once after signup with attribution
+  // Fire Meta Pixel CompleteRegistration once after signup (or email verification callback)
   useEffect(() => {
     try {
       const flag = sessionStorage.getItem('justSignedUp')
       const cookieFlag = document.cookie.match(/(?:^|; )bs_cr=1/) ? true : false
-      if (flag || cookieFlag) {
+      const urlCr = searchParams.get('cr') === '1'
+      if (flag || cookieFlag || urlCr) {
+        // 1) Sync fbq call (most reliable for Ads Manager)
+        try {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'CompleteRegistration')
+            console.log('✅ Meta Pixel: CompleteRegistration fired (sync, dash)')
+          }
+        } catch {}
+        // 2) Async with attribution
         try {
           const ft = (() => { try { return document.cookie.match(/(?:^|; )bs_ft=([^;]+)/)?.[1] } catch { return undefined } })()
           const lt = (() => { try { return document.cookie.match(/(?:^|; )bs_lt=([^;]+)/)?.[1] } catch { return undefined } })()
@@ -2387,9 +2396,16 @@ export default function DashboardClient({ profile, counts, todayItems, userId }:
         } catch {}
         sessionStorage.removeItem('justSignedUp')
         try { document.cookie = 'bs_cr=; Max-Age=0; Path=/; SameSite=Lax' } catch {}
+        // Remove cr=1 from URL without full reload
+        if (urlCr) {
+          const url = new URL(window.location.href)
+          url.searchParams.delete('cr')
+          const clean = url.pathname + (url.search || '') + url.hash
+          window.history.replaceState({}, '', clean)
+        }
       }
     } catch {}
-  }, [])
+  }, [searchParams, firstName, lastName, userId])
 
   return (
     <>

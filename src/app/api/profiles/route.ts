@@ -55,7 +55,9 @@ export async function POST(req: NextRequest) {
         } catch {}
         return NextResponse.json({ ok: true, id: existing.id, slug: (existing as any).slug })
       }
-    } catch {}
+    } catch (existingErr) {
+      console.warn('[api/profiles] existing check failed:', (existingErr as Error)?.message)
+    }
 
     // Generate a unique slug
     const base = toSlugBase(name || email)
@@ -98,11 +100,22 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
+      // Profile may already exist from auth trigger — treat as success
+      if (error.code === '23505') {
+        const { data: existing } = await supabaseAdmin
+          .from('profiles')
+          .select('id, slug')
+          .eq('user_id', user_id)
+          .maybeSingle()
+        return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
+      }
+      console.error('[api/profiles] insert error:', error.code, error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, id: data?.id, slug: (data as any)?.slug })
   } catch (e: any) {
+    console.error('[api/profiles] unexpected error:', e?.message)
     return NextResponse.json({ error: e?.message || 'Failed to create profile' }, { status: 500 })
   }
 }

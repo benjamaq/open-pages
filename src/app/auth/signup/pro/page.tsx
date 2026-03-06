@@ -130,6 +130,23 @@ export default function ProSignUpPage() {
       if (error) {
         setError(error.message)
       } else if (data.user) {
+        // Fire Meta Pixel CompleteRegistration FIRST — before any profile/API calls
+        console.log('[META] CompleteRegistration firing (pro signup success)')
+        try {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'CompleteRegistration')
+            console.log('[META] CompleteRegistration sent via fbq')
+          } else {
+            const pixelId = '704287959370274'
+            const url = `https://www.facebook.com/tr?id=${pixelId}&ev=CompleteRegistration&dl=${encodeURIComponent(window.location.href)}&ts=${Date.now()}`
+            const img = new Image()
+            img.src = url
+            console.log('[META] CompleteRegistration sent via image beacon fallback')
+          }
+        } catch (e) {
+          console.warn('[META] CompleteRegistration failed:', e)
+        }
+
         // Upsert profile with name and referral code - handles race conditions atomically
         try {
           const { error: profileError } = await (supabase as any)

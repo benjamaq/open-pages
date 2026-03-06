@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
+import { fireMetaEvent, attachAttributionToParams } from '@/lib/analytics'
 import Link from 'next/link'
 
 export default function SignupPage() {
@@ -164,9 +165,46 @@ function SignupInner() {
         setLoading(false)
         return
       }
-      // Ensure a profile row exists with display_name
+      // Debug: confirm we reach this point and have a user (before any profile/API calls)
+      console.log('[META] signUp returned', { hasUser: !!data?.user, userId: data?.user?.id })
+
+      // Fire Meta Pixel CompleteRegistration FIRST — before any profile upsert or API calls.
+      // If profile/API errors cause early exit, the pixel must already have fired.
       if (data?.user) {
+        console.log('[META] CompleteRegistration firing (signup success)')
+        const fbqAvailable = typeof window !== 'undefined' ? typeof (window as any).fbq : 'no-window'
+        console.log('[META] fbq available:', fbqAvailable)
+        try {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'CompleteRegistration')
+            console.log('[META] CompleteRegistration sent via fbq')
+          } else {
+            const pixelId = '704287959370274'
+            const url = `https://www.facebook.com/tr?id=${pixelId}&ev=CompleteRegistration&dl=${encodeURIComponent(window.location.href)}&ts=${Date.now()}`
+            const img = new Image()
+            img.src = url
+            console.log('[META] CompleteRegistration sent via image beacon fallback')
+          }
+        } catch (e) {
+          console.warn('[META] CompleteRegistration failed:', e)
+        }
+        // Async fire with advanced matching (fire-and-forget)
+        try {
+          const attrib = attachAttributionToParams({})
+          fireMetaEvent('CompleteRegistration', attrib, {
+            email: cleanEmail,
+            firstName: cleanName.split(' ')[0] || undefined,
+            lastName: cleanName.split(' ').slice(1).join(' ') || undefined,
+            externalId: data.user.id
+          }).then(method => {
+            console.log('[META] CompleteRegistration (advanced) via', method)
+          }).catch(() => {})
+        } catch {}
+
         createdUserId = String(data.user.id)
+        try { sessionStorage.setItem('justSignedUp', '1') } catch {}
+
+        // Profile upsert and API bootstrap — AFTER pixel. Non-blocking; errors must not prevent redirect.
         try {
           const baseSlug = cleanEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
           const ts = Date.now().toString(36)
@@ -269,6 +307,8 @@ function SignupInner() {
         const j = await res.json()
         try { console.log('Stripe response:', j) } catch {}
         if (res.ok && j?.url) {
+          // Allow Meta pixel to flush before redirect
+          await new Promise(r => setTimeout(r, 500))
           window.location.href = j.url
           return
         }
@@ -276,6 +316,8 @@ function SignupInner() {
         // Fall through to onboarding if checkout cannot start
       }
     }
+    // Allow Meta pixel to flush before client-side navigation
+    await new Promise(r => setTimeout(r, 500))
     router.push('/onboarding')
   }
 

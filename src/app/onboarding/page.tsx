@@ -155,6 +155,20 @@ export default function OnboardingPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
+  // Fire Meta Pixel CompleteRegistration when landing from signup (justSignedUp set before redirect)
+  useEffect(() => {
+    try {
+      const flag = typeof window !== 'undefined' ? sessionStorage.getItem('justSignedUp') : null
+      if (flag) {
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'CompleteRegistration')
+          try { console.log('✅ Meta Pixel: CompleteRegistration fired (signup→onboarding)') } catch {}
+        }
+        sessionStorage.removeItem('justSignedUp')
+      }
+    } catch {}
+  }, [])
+
   const [step, setStep] = useState<Step>('pick')
 
   const [addedCount, setAddedCount] = useState<number>(0)

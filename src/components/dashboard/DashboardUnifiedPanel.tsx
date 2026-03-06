@@ -81,7 +81,9 @@ export function DashboardUnifiedPanel({
 
         if (hasDailyPayload !== undefined) {
           const j = hasDailyPayload
-          setHasDaily(Boolean(j?.hasData))
+          // Gate "first check-in" prompt on *check-ins*, not just daily_entries (which can be wearables-only).
+          // Back-compat: if hasCheckins is missing, fall back to legacy hasData.
+          setHasDaily(Boolean(j?.hasCheckins ?? j?.hasData))
           setWearableDays(Number(j?.wearableDays || 0))
         }
 
@@ -148,7 +150,7 @@ export function DashboardUnifiedPanel({
 
         if (has.ok) {
           const j = has.data
-          setHasDaily(Boolean(j?.hasData))
+          setHasDaily(Boolean(j?.hasCheckins ?? j?.hasData))
           setWearableDays(Number(j?.wearableDays || 0))
         } else setHasDaily(false)
 
@@ -204,7 +206,7 @@ export function DashboardUnifiedPanel({
         raw === '1' ? true : (uid ? raw === uid : Boolean(raw))
       if (dismissed) { setShowFirstCheckinPrompt(false); return }
 
-      // Only show when: has ≥1 supplement but zero daily entries.
+      // Only show when: has ≥1 supplement but zero check-ins.
       if (Array.isArray(supps) && supps.length > 0 && hasDaily === false) {
         setShowFirstCheckinPrompt(true)
       } else {

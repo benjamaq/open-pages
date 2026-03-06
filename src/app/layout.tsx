@@ -9,6 +9,7 @@ import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
 import AuthSessionHydrator from "./components/AuthSessionHydrator";
+import { PostHogProvider } from "./providers";
 import { Toaster } from 'sonner'
 
 const inter = Inter({
@@ -116,6 +117,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed overflow-x-hidden" style={{ backgroundColor: '#FFFFFF' }}>
+        <PostHogProvider>
         <AuthSessionHydrator />
         <Toaster position="top-center" richColors />
         <noscript>
@@ -152,6 +154,7 @@ export default function RootLayout({
           `}
         </Script>
         <Analytics />
+        </PostHogProvider>
       </body>
     </html>
   );
