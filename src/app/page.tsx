@@ -46,7 +46,7 @@ export default function Page() {
             <span className="block">That Don&apos;t Work.</span>
           </h1>
           <p className="mb-6 text-base text-neutral-700 leading-relaxed text-center">
-            BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or learn at your own pace.
+            BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
           </p>
           <div className="flex flex-col items-center justify-center">
             <Link href="/signup">
@@ -87,7 +87,7 @@ export default function Page() {
               <span className="block">That Don&apos;t Work.</span>
             </h1>
             <p className="mb-10 text-xl text-neutral-700 leading-relaxed">
-              BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or learn at your own pace.
+              BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
             </p>
             <div className="flex items-center gap-4">
               <Link href="/signup">
