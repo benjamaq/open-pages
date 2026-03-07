@@ -189,42 +189,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Wearable Section — Primary CTA path (moved up for cold traffic) */}
-      <section className="py-24 lg:py-28 px-6 bg-[#faf9f7]">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 leading-tight">
-            Already Tracking Your Health?
-          </h2>
-          <p className="mt-4 text-xl text-neutral-700 max-w-2xl mx-auto">
-            If you use Apple Health, WHOOP, or Oura — you already have the data. BioStackr uses your existing history to generate insights fast. No waiting around.
-          </p>
-
-          <div className="mt-10 flex flex-wrap justify-center gap-10">
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">Apple Health</span>
-            </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">WHOOP</span>
-            </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">Oura Ring</span>
-            </div>
-          </div>
-
-          <p className="mt-8 text-neutral-700 max-w-xl mx-auto">
-            Upload your data during signup and we&apos;ll analyse your supplement history against your sleep, recovery and energy scores automatically.
-          </p>
-
-          <div className="mt-8">
-            <Link href="/signup">
-              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold">
-                Upload My Data & Get Started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* The Stuff Nobody Tells You (Stats) */}
       <section
         className="relative py-16 lg:py-20 px-6"
@@ -291,6 +255,232 @@ export default function Page() {
                 className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
               >
                 Test What You&apos;re Actually Taking
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Supplement Verdict Cards — Vitamin D3 KEEP, Magnesium DROP, Ashwagandha TESTING */}
+      <section
+        className="py-24 lg:py-32 px-6 bg-white"
+        style={{
+          backgroundImage: "url('/spotlight.png')",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="mx-auto max-w-7xl">
+          <h2
+            className="text-4xl lg:text-5xl font-bold tracking-tight text-white text-center leading-tight"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+          >
+            We Need to Talk
+          </h2>
+          <p
+            className="mt-3 mb-16 text-center text-[#d0d0d0] text-xl lg:text-2xl font-medium"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}
+          >
+            Your data doesn&apos;t care what the label says.
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* Vitamin D3 Card */}
+            <Card
+              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
+              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+            >
+              <div className="p-6">
+                <div className="mb-3">
+                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                    KEEP
+                  </Badge>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-black mb-1">Vitamin D3</h3>
+                  <p className="text-xs text-neutral-600">5000 IU Daily</p>
+                </div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-neutral-800" style={{ width: "89%" }} />
+                      </div>
+                      <span className="text-sm font-semibold text-neutral-900">89%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-neutral-600">
+                    <Clock className="h-3 w-3" />
+                    <span>4 months together</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs text-neutral-600 mb-2">Reliable. Shows up. Your energy scores are 23% better since you committed.</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-neutral-900">$138</span>
+                    <span className="text-xs text-neutral-500">invested</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Magnesium Card */}
+            <Card
+              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
+              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+            >
+              <div className="p-6">
+                <div className="mb-3">
+                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                    DROP
+                  </Badge>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-black mb-1">Magnesium Glycinate</h3>
+                  <p className="text-xs text-neutral-600">400mg Before Bed</p>
+                </div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-neutral-800" style={{ width: "22%" }} />
+                      </div>
+                      <span className="text-sm font-semibold text-neutral-900">22%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-neutral-600">
+                    <Clock className="h-3 w-3" />
+                    <span>6 months together</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs text-neutral-600 mb-2">Six months and your recovery hasn&apos;t budged. This one&apos;s coasting.</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-neutral-900">$174</span>
+                    <span className="text-xs text-neutral-500">wasted</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Ashwagandha Card */}
+            <Card
+              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
+              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+            >
+              <div className="p-6">
+                <div className="mb-3">
+                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                    TESTING
+                  </Badge>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-black mb-1">Ashwagandha</h3>
+                  <p className="text-xs text-neutral-600">600mg Morning</p>
+                </div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-neutral-800" style={{ width: "54%" }} />
+                      </div>
+                      <span className="text-sm font-semibold text-neutral-900">54%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-neutral-600">
+                    <Clock className="h-3 w-3" />
+                    <span>2 months together</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs text-neutral-600 mb-2">
+                    Stress is lower, but your energy dipped. Worth investigating.
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-neutral-900">$47</span>
+                    <span className="text-xs text-neutral-500">spent</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Fish Oil Card */}
+            <Card
+              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
+              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+            >
+              <div className="p-6">
+                <div className="mb-3">
+                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                    KEEP
+                  </Badge>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-black mb-1">Fish Oil</h3>
+                  <p className="text-xs text-neutral-600">2000mg Daily</p>
+                </div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-neutral-800" style={{ width: "76%" }} />
+                      </div>
+                      <span className="text-sm font-semibold text-neutral-900">76%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-neutral-600">
+                    <Clock className="h-3 w-3" />
+                    <span>8 months together</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs text-neutral-600 mb-2">Quiet but consistent. Recovery up. The strong, silent type.</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-neutral-900">$128</span>
+                    <span className="text-xs text-neutral-500">invested</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Already Tracking Your Health? — Wearable section */}
+      <section className="py-24 lg:py-28 px-6 bg-[#faf9f7]">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 leading-tight">
+            Already Tracking Your Health?
+          </h2>
+          <p className="mt-4 text-xl text-neutral-700 max-w-2xl mx-auto">
+            If you use Apple Health, WHOOP, or Oura — you already have the data. BioStackr uses your existing history to generate insights fast. No waiting around.
+          </p>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-10">
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">Apple Health</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">WHOOP</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">Oura Ring</span>
+            </div>
+          </div>
+
+          <p className="mt-8 text-neutral-700 max-w-xl mx-auto">
+            Upload your data during signup and we&apos;ll analyse your supplement history against your sleep, recovery and energy scores automatically.
+          </p>
+
+          <div className="mt-8">
+            <Link href="/signup">
+              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold">
+                Upload My Data & Get Started
               </Button>
             </Link>
           </div>
@@ -815,212 +1005,6 @@ export default function Page() {
           </div>
 
           {/* NOTE: No pricing CTA, no dashboard metrics, no supplement lists in this section */}
-        </div>
-      </section>
-
-      {/* Supplement Dating Profiles Section */}
-      <section
-        className="py-24 lg:py-32 px-6 bg-white"
-        style={{
-          backgroundImage: "url('/spotlight.png')",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="mx-auto max-w-7xl">
-          <h2
-            className="text-4xl lg:text-5xl font-bold tracking-tight text-white text-center leading-tight"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
-          >
-            We Need to Talk
-          </h2>
-          <p
-            className="mt-3 mb-16 text-center text-[#d0d0d0] text-xl lg:text-2xl font-medium"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}
-          >
-            Your data doesn&apos;t care what the label says.
-          </p>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {/* Vitamin D3 Card */}
-            <Card
-              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
-              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-            >
-              <div className="p-6">
-                {/* Status chip on top */}
-                <div className="mb-3">
-                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                    KEEP
-                  </Badge>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-black mb-1">Vitamin D3</h3>
-                  <p className="text-xs text-neutral-600">5000 IU Daily</p>
-                </div>
-
-                <div className="space-y-3 mb-5">
-                  <div>
-                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-neutral-800" style={{ width: "89%" }} />
-                      </div>
-                      <span className="text-sm font-semibold text-neutral-900">89%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-neutral-600">
-                    <Clock className="h-3 w-3" />
-                    <span>4 months together</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">Reliable. Shows up. Your energy scores are 23% better since you committed.</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-neutral-900">$138</span>
-                    <span className="text-xs text-neutral-500">invested</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Magnesium Card */}
-            <Card
-              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
-              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-            >
-              <div className="p-6">
-                {/* Status chip on top */}
-                <div className="mb-3">
-                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                    DROP
-                  </Badge>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-black mb-1">Magnesium Glycinate</h3>
-                  <p className="text-xs text-neutral-600">400mg Before Bed</p>
-                </div>
-
-                <div className="space-y-3 mb-5">
-                  <div>
-                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-neutral-800" style={{ width: "22%" }} />
-                      </div>
-                      <span className="text-sm font-semibold text-neutral-900">22%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-neutral-600">
-                    <Clock className="h-3 w-3" />
-                    <span>6 months together</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">Six months and your recovery hasn&apos;t budged. This one&apos;s coasting.</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-neutral-900">$174</span>
-                    <span className="text-xs text-neutral-500">wasted</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Ashwagandha Card */}
-            <Card
-              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
-              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-            >
-              <div className="p-6">
-                {/* Status chip on top */}
-                <div className="mb-3">
-                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                    TESTING
-                  </Badge>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-black mb-1">Ashwagandha</h3>
-                  <p className="text-xs text-neutral-600">600mg Morning</p>
-                </div>
-
-                <div className="space-y-3 mb-5">
-                  <div>
-                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-neutral-800" style={{ width: "54%" }} />
-                      </div>
-                      <span className="text-sm font-semibold text-neutral-900">54%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-neutral-600">
-                    <Clock className="h-3 w-3" />
-                    <span>2 months together</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">
-                    Stress is lower, but your energy dipped. Worth investigating.
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-neutral-900">$47</span>
-                    <span className="text-xs text-neutral-500">spent</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Fish Oil Card */}
-            <Card
-              className="overflow-hidden border border-neutral-200 transition-all bg-[#faf9f7] rounded-2xl"
-              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-            >
-              <div className="p-6">
-                {/* Status chip on top */}
-                <div className="mb-3">
-                  <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                    KEEP
-                  </Badge>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-black mb-1">Fish Oil</h3>
-                  <p className="text-xs text-neutral-600">2000mg Daily</p>
-                </div>
-
-                <div className="space-y-3 mb-5">
-                  <div>
-                    <p className="text-xs text-neutral-600 mb-1">Compatibility</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-neutral-800" style={{ width: "76%" }} />
-                      </div>
-                      <span className="text-sm font-semibold text-neutral-900">76%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-neutral-600">
-                    <Clock className="h-3 w-3" />
-                    <span>8 months together</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-600 mb-2">Quiet but consistent. Recovery up. The strong, silent type.</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-neutral-900">$128</span>
-                    <span className="text-xs text-neutral-500">invested</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
         </div>
       </section>
 
