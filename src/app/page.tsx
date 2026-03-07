@@ -1008,64 +1008,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* What People Are Finding Out — Real Discoveries */}
-      <section
-        className="py-24 lg:py-28 px-6"
-        style={{
-          backgroundImage: "url('/row.png')",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-black text-center leading-tight">
-            What People Are Finding Out
-          </h2>
-          <p className="mt-4 text-lg text-neutral-700 text-center max-w-2xl mx-auto">
-            Real verdicts from real users. Human, specific, money-focused.
-          </p>
-
-          {/* Outcome cards — match supplement card styling */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-              <div className="mb-3">
-                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                  DROP
-                </Badge>
-              </div>
-              <h3 className="text-lg font-bold text-black">Magnesium Glycinate</h3>
-              <p className="mt-2 text-sm text-neutral-700 italic">&quot;No measurable effect on my sleep after 6 weeks.&quot;</p>
-              <p className="mt-3 text-sm font-semibold text-neutral-900">Saving €22/month</p>
-            </div>
-            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-              <div className="mb-3">
-                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                  KEEP
-                </Badge>
-              </div>
-              <h3 className="text-lg font-bold text-black">Fish Oil</h3>
-              <p className="mt-2 text-sm text-neutral-700 italic">&quot;Recovery scores improved consistently during the testing period.&quot;</p>
-              <p className="mt-3 text-sm font-semibold text-neutral-900">Worth every penny</p>
-            </div>
-            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-              <div className="mb-3">
-                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
-                  DROP
-                </Badge>
-              </div>
-              <h3 className="text-lg font-bold text-black">Ashwagandha</h3>
-              <p className="mt-2 text-sm text-neutral-700 italic">&quot;Energy levels were actually lower on days I took it.&quot;</p>
-              <p className="mt-3 text-sm font-semibold text-neutral-900">Saving €34/month</p>
-            </div>
-          </div>
-
-          <p className="mt-8 text-center text-neutral-700 max-w-2xl mx-auto">
-            These aren&apos;t generic findings. They&apos;re personal — based on your data, your body, your supplements.
-          </p>
-        </div>
-      </section>
-
       {/* Who This Is For Section */}
       <section
         className="py-24 lg:py-32 px-6"
