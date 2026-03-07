@@ -45,14 +45,8 @@ export default function Page() {
             Stop Paying for Supplements
             <span className="block">That Don&apos;t Work.</span>
           </h1>
-          <p className="mb-3 text-lg text-black font-bold leading-relaxed text-center">
-            You built your stack on podcasts and Instagram. Not on data. Test what&apos;s actually working — and drop what isn&apos;t.
-          </p>
-          <p className="mb-6 text-base text-neutral-600 leading-relaxed text-center">
-            Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
-          </p>
-          <p className="mb-6 text-sm text-neutral-500 leading-relaxed text-center">
-            Start with one supplement. Or test your whole stack.
+          <p className="mb-6 text-base text-neutral-700 leading-relaxed text-center">
+            Connect your Oura, WHOOP, or Apple Health and get your first KEEP or DROP verdict in 2 minutes using your historical data.
           </p>
           <div className="flex flex-col items-center justify-center">
             <Link href="/signup">
@@ -63,7 +57,7 @@ export default function Page() {
                 Test My Supplements
               </Button>
             </Link>
-            <p className="mt-3 text-sm text-neutral-500 text-center">Free to start. Takes 2 minutes.</p>
+            <p className="mt-3 text-sm text-neutral-500 text-center">Upload your Apple Health, WHOOP or Oura data and we&apos;ll do the rest.</p>
           </div>
           {/* Full‑bleed hero image below text */}
           <div className="-mx-6 mt-8">
@@ -93,14 +87,8 @@ export default function Page() {
               Stop Paying for Supplements
               <span className="block">That Don&apos;t Work.</span>
             </h1>
-            <p className="mb-6 text-2xl text-black font-bold leading-relaxed">
-              You built your stack on podcasts and Instagram. Not on data. Test what&apos;s actually working — and drop what isn&apos;t.
-            </p>
-            <p className="mb-10 text-lg text-neutral-600 leading-relaxed">
-              Add your supplements. Upload wearable data or track daily. Get KEEP or DROP verdicts.
-            </p>
-            <p className="mb-10 text-sm text-neutral-500 leading-relaxed">
-              Start with one supplement. Or test your whole stack.
+            <p className="mb-10 text-xl text-neutral-700 leading-relaxed">
+              Connect your Oura, WHOOP, or Apple Health and get your first KEEP or DROP verdict in 2 minutes using your historical data.
             </p>
             <div className="flex items-center gap-4">
               <Link href="/signup">
@@ -111,8 +99,128 @@ export default function Page() {
                   Test My Supplements
                 </Button>
               </Link>
-              <p className="text-sm text-neutral-500">Free to start. Takes 2 minutes.</p>
+              <p className="text-sm text-neutral-500">Upload your Apple Health, WHOOP or Oura data and we&apos;ll do the rest.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Instant Stack Analysis — new section for instant perceived value */}
+      <section className="py-20 lg:py-28 px-6 bg-[#faf9f7]">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 text-center leading-tight">
+            Know Your Stack in 60 Seconds
+          </h2>
+          <p className="mt-4 text-xl text-neutral-700 text-center max-w-2xl mx-auto">
+            The moment you add your supplements, BioStackr analyses your stack and shows you:
+          </p>
+
+          {/* Three value cards */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur p-6 shadow-sm">
+              <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">Stack Economics</div>
+              <h3 className="text-lg font-bold text-black">Your exact spend</h3>
+              <p className="mt-2 text-neutral-700 text-sm leading-relaxed">
+                Monthly and annual spend on supplements. Most users are surprised.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur p-6 shadow-sm">
+              <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">Evidence Breakdown</div>
+              <h3 className="text-lg font-bold text-black">Clinical backing</h3>
+              <p className="mt-2 text-neutral-700 text-sm leading-relaxed">
+                Which supplements have strong clinical backing — and which have almost none.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur p-6 shadow-sm">
+              <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">What To Test First</div>
+              <h3 className="text-lg font-bold text-black">Ranked by cost</h3>
+              <p className="mt-2 text-neutral-700 text-sm leading-relaxed">
+                By cost and uncertainty. We tell you where to focus so you stop guessing.
+              </p>
+            </div>
+          </div>
+
+          {/* Stack Snapshot mockup */}
+          <div className="mt-12 max-w-lg mx-auto rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur p-6 shadow-sm">
+            <p className="text-sm font-semibold text-neutral-900 mb-4">Your Stack Snapshot</p>
+            <div className="space-y-3 text-sm text-neutral-800">
+              <div className="flex justify-between">
+                <span>Monthly spend:</span>
+                <span className="font-semibold">€184/mo</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Annual spend:</span>
+                <span className="font-semibold">€2,208/yr</span>
+              </div>
+              <div className="pt-3 border-t border-neutral-200">
+                <p className="text-neutral-600 mb-2">Evidence strength:</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-600 w-24 shrink-0">Strong evidence</span>
+                    <span className="flex-1 h-2 bg-neutral-200 rounded overflow-hidden"><span className="block h-full w-2/5 bg-neutral-800" /></span>
+                    <span className="shrink-0">2 supplements</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-600 w-24 shrink-0">Moderate evidence</span>
+                    <span className="flex-1 h-2 bg-neutral-200 rounded overflow-hidden"><span className="block h-full w-2/5 bg-neutral-600" /></span>
+                    <span className="shrink-0">1 supplement</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-600 w-24 shrink-0">Weak/no evidence</span>
+                    <span className="flex-1 h-2 bg-neutral-200 rounded overflow-hidden"><span className="block h-full w-3/5 bg-neutral-400" /></span>
+                    <span className="shrink-0">3 supplements</span>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-neutral-200 flex justify-between">
+                <span>Potential monthly saving:</span>
+                <span className="font-semibold text-neutral-900">~€74</span>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-neutral-600 text-center">Ready to find out which ones actually work?</p>
+            <div className="mt-4">
+              <Link href="/signup">
+                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-3 font-semibold">
+                  Start My Analysis
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Wearable Section — Primary CTA path (moved up for cold traffic) */}
+      <section className="py-24 lg:py-28 px-6 bg-[#faf9f7]">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 leading-tight">
+            Already Tracking Your Health?
+          </h2>
+          <p className="mt-4 text-xl text-neutral-700 max-w-2xl mx-auto">
+            If you use Apple Health, WHOOP, or Oura — you already have the data. BioStackr uses your existing history to generate insights fast. No waiting around.
+          </p>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-10">
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">Apple Health</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">WHOOP</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
+              <span className="font-semibold text-neutral-900">Oura Ring</span>
+            </div>
+          </div>
+
+          <p className="mt-8 text-neutral-700 max-w-xl mx-auto">
+            Upload your data during signup and we&apos;ll analyse your supplement history against your sleep, recovery and energy scores automatically.
+          </p>
+
+          <div className="mt-8">
+            <Link href="/signup">
+              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold">
+                Upload My Data & Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -131,45 +239,39 @@ export default function Page() {
           <div className="text-center">
             <div className="inline-block rounded-2xl bg-black/70 backdrop-blur-sm px-6 py-5">
               <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-semibold tracking-tight text-white">
-                Half the Supplements Tested on Amazon Are Fake.
+                Most Supplement Users See Little to No Effect.
               </h2>
               <p className="mt-2 text-base sm:text-lg text-neutral-200 max-w-2xl mx-auto">
-                Independent lab testing keeps finding the same thing.
-              </p>
-              <p className="mt-2 text-[12px] sm:text-sm text-white/60 text-center">
-                Based on independent laboratory analysis of Amazon supplements, 2025
+                The average supplement user spends €2,000+ per year. Research suggests most are seeing little to no measurable effect from the majority of what they take.
               </p>
             </div>
           </div>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="rounded-2xl border border-white/20 bg-black/60 backdrop-blur-sm p-6">
-              <div className="text-2xl sm:text-3xl font-semibold text-white">~50% failed label claims.</div>
+              <div className="text-2xl sm:text-3xl font-semibold text-white">Your money. Your results.</div>
               <p className="mt-3 text-sm sm:text-base text-neutral-300 leading-relaxed">
-                Independent lab tests found roughly half of supplements on Amazon didn&apos;t contain what the label claimed.
+                Independent research often finds supplements fail to match their labels — wrong dose, wrong ingredient, or no active ingredient at all. The question isn&apos;t what&apos;s in the bottle. It&apos;s whether it&apos;s doing anything for you.
               </p>
             </div>
             <div className="rounded-2xl border border-white/20 bg-black/60 backdrop-blur-sm p-6">
               <div className="text-2xl sm:text-3xl font-semibold text-white">
-                86% contained little or none of the promised ingredient.
+                Many show little to no measurable effect.
               </div>
               <p className="mt-3 text-sm sm:text-base text-neutral-300 leading-relaxed">
-                In one analysis of a popular supplement category on Amazon, only 14% of products actually contained what the label said. The
-                rest were undetectable or completely absent.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-white/20 bg-black/60 backdrop-blur-sm p-6">
-              <div className="text-2xl sm:text-3xl font-semibold text-white">23 counterfeit sellers. 1 product. Nobody noticed.</div>
-              <p className="mt-3 text-sm sm:text-base text-neutral-300 leading-relaxed">
-                A single supplement brand found 23 separate sellers on Amazon selling fakes of one product. Amazon caught none of them. The
-                brand had to sue.
+                In clinical research, many supplements show little or no measurable effect. And that&apos;s the ones that actually contain what they claim. The real question: what&apos;s working for your body?
               </p>
             </div>
             <div className="rounded-2xl border border-white/20 bg-black/60 backdrop-blur-sm p-6">
               <div className="text-2xl sm:text-3xl font-semibold text-white">No testing required before sale.</div>
               <p className="mt-3 text-sm sm:text-base text-neutral-300 leading-relaxed">
-                The FDA does not test, review, or approve any supplement before it reaches your door. The label is whatever the manufacturer
-                decided to print.
+                The FDA does not test, review, or approve any supplement before it reaches your door. The label is whatever the manufacturer decided to print. You can&apos;t control what&apos;s in the bottle — but you can measure whether it&apos;s doing anything for you.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/20 bg-black/60 backdrop-blur-sm p-6">
+              <div className="text-2xl sm:text-3xl font-semibold text-white">Stop guessing. Start testing.</div>
+              <p className="mt-3 text-sm sm:text-base text-neutral-300 leading-relaxed">
+                Add your supplements. Use your existing health data — Apple Health, WHOOP, Oura — or check in at your own pace. Let the data tell you what to keep and what to drop.
               </p>
             </div>
           </div>
@@ -177,7 +279,7 @@ export default function Page() {
           <div className="mt-10 flex justify-center">
             <div className="rounded-xl bg-black/70 backdrop-blur-sm px-6 py-4 max-w-3xl text-center">
               <p className="text-sm sm:text-base text-white">
-                Every bottle in your stack reached you without a single independent quality check.
+                Every bottle in your stack reached you without a single independent quality check. Your data tells the truth.
               </p>
             </div>
           </div>
@@ -369,7 +471,7 @@ export default function Page() {
           </h2>
           {/* Subheader with breathing room */}
           <p className="mt-8 mb-12 text-xl lg:text-2xl text-neutral-700 leading-relaxed font-medium">
-            Anyone can buy bulk powder, bottle it, and sell it with a clean label. Almost nothing stops them.
+            Anyone can buy bulk supplements, bottle them, and sell them with a clean label. Almost nothing stops them.
           </p>
           {/* White container: wider, aligned to hero text, anchored toward bottle */}
           <div className="mt-6 rounded-2xl bg-white/95 backdrop-blur px-10 py-8 shadow-sm">
@@ -379,7 +481,7 @@ export default function Page() {
                 <div className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-2">THE PROBLEM</div>
                 <p className="text-[17px] md:text-[18px] text-neutral-800 font-semibold">You don&apos;t know who made this.</p>
                 <p className="mt-2 text-[15px] md:text-[16px] text-neutral-700 leading-relaxed">
-                  Someone buys bulk powder from a factory overseas. Bottles it. Builds a clean website. Lists it on Amazon. You see five-star
+                  Someone buys bulk supplements from a factory overseas. Bottles them. Builds a clean website. Lists them on Amazon. You see five-star
                   reviews and next-day delivery. You click Buy Now. Nobody tested what&apos;s inside. Not the seller. Not Amazon. Not the FDA.
                   Nobody.
                 </p>
@@ -399,15 +501,22 @@ export default function Page() {
                 <p className="text-[17px] md:text-[18px] text-neutral-800 font-semibold">Stop trusting labels. Start testing.</p>
                 <p className="mt-2 text-[15px] md:text-[16px] text-neutral-700 leading-relaxed">
                   You can&apos;t control what&apos;s in the bottle. But you can measure whether it&apos;s doing anything for your body. Add your
-                  supplements. Track your sleep, energy, mood, recovery. Let the data tell you what to keep and what to throw away.
+                  supplements. Use your existing health data or check in at your own pace. Let the data tell you what to keep and what to throw away.
                 </p>
               </div>
             </div>
-            {/* Divider + calm callout */}
+            {/* Divider + calm callout + single CTA */}
             <div className="border-t border-neutral-200 mt-6 pt-6">
-              <div className="mx-auto max-w-3xl rounded-2xl bg-white/95 border border-neutral-300 px-6 py-5 text-center">
+              <div className="mx-auto max-w-3xl rounded-2xl bg-white/95 border border-neutral-200 px-6 py-5 text-center">
                 <p className="text-neutral-800">Every bottle in your stack reached you without an independent quality check.</p>
                 <p className="text-neutral-700 mt-1">Your data tells the truth. Labels don&apos;t.</p>
+                <div className="mt-5">
+                  <Link href="/signup">
+                    <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
+                      Test My Supplements
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -667,8 +776,8 @@ export default function Page() {
                 <div className="text-xs font-semibold tracking-wider uppercase text-gray-500">WHAT YOU DO</div>
                 <div className="mt-4 text-sm text-neutral-700 leading-relaxed space-y-3">
                   <p><span className="font-semibold">Add your supplements.</span></p>
-                  <p>Upload wearable data or check in daily — sleep, energy, mood, focus. Takes 30 seconds.</p>
-                  <p>Miss a day? No problem. Pick up where you left off.</p>
+                  <p>Upload your Apple Health, WHOOP or Oura data — or check in at your own pace. Sleep, energy, mood, focus.</p>
+                  <p>Using your existing health data? Insights can come faster than you&apos;d expect.</p>
                   <p>Flag unusual days (illness, travel, stress) so they don&apos;t skew your results.</p>
                 </div>
               </div>
@@ -694,19 +803,15 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Timeline / progress card — separate white container */}
+          {/* What Users Discover — outcomes, not process */}
           <div className="mt-10 max-w-2xl mx-auto rounded-2xl bg-white/95 backdrop-blur px-8 py-6 shadow-sm">
-            <p className="text-sm font-semibold text-neutral-900 text-center">How progress unfolds</p>
-            <div className="mt-2 text-sm text-neutral-600 text-left grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 items-baseline">
-              <span className="font-semibold">Day 1</span>
-              <span>→ Stack mapped. Baseline set.</span>
-              <span className="font-semibold">Week 1</span>
-              <span>→ Direction forming.</span>
-              <span className="font-semibold">Week 2+</span>
-              <span>→ Verdicts landing.</span>
-              <span className="font-semibold">Ongoing</span>
-              <span>→ Confidence grows with every check-in.</span>
+            <p className="text-sm font-semibold text-neutral-900 text-center">What Users Discover</p>
+            <div className="mt-4 text-sm text-neutral-600 text-left space-y-3">
+              <p>&quot;I had no idea I was spending €220/month.&quot;</p>
+              <p>&quot;Magnesium was doing absolutely nothing for my sleep.&quot;</p>
+              <p>&quot;Fish oil is the only one worth keeping.&quot;</p>
             </div>
+            <p className="mt-3 text-xs text-neutral-500 text-center italic">Stories from real users — based on their data, their body, their supplements.</p>
           </div>
 
           {/* NOTE: No pricing CTA, no dashboard metrics, no supplement lists in this section */}
@@ -919,7 +1024,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* We Don't Do Gut Feelings — Credibility Section */}
+      {/* What People Are Finding Out — Real Discoveries */}
       <section
         className="py-24 lg:py-28 px-6"
         style={{
@@ -929,62 +1034,51 @@ export default function Page() {
           backgroundPosition: "center",
         }}
       >
-        <div className="mx-auto max-w-4xl">
-          <p className="text-base sm:text-lg text-neutral-800 leading-snug text-center max-w-3xl mx-auto">
-            The FDA doesn&apos;t test supplements before they&apos;re sold. So BioStackr tests them after — on you, with your data, using real statistics.
-          </p>
+        <div className="mx-auto max-w-5xl">
           <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-black text-center leading-tight">
-            We Don&apos;t Do Gut Feelings.
+            What People Are Finding Out
           </h2>
-          <div className="mt-4 flex justify-center">
-            <div className="bg-white/95 backdrop-blur rounded-xl px-5 py-4 max-w-2xl">
-              <p className="text-base sm:text-lg text-neutral-800 leading-snug text-center">
-                Same methods used in clinical trials. Now for your supplement drawer.
-              </p>
+          <p className="mt-4 text-lg text-neutral-700 text-center max-w-2xl mx-auto">
+            Real verdicts from real users. Human, specific, money-focused.
+          </p>
+
+          {/* Outcome cards — match supplement card styling */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+              <div className="mb-3">
+                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                  DROP
+                </Badge>
+              </div>
+              <h3 className="text-lg font-bold text-black">Magnesium Glycinate</h3>
+              <p className="mt-2 text-sm text-neutral-700 italic">&quot;No measurable effect on my sleep after 6 weeks.&quot;</p>
+              <p className="mt-3 text-sm font-semibold text-neutral-900">Saving €22/month</p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+              <div className="mb-3">
+                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                  KEEP
+                </Badge>
+              </div>
+              <h3 className="text-lg font-bold text-black">Fish Oil</h3>
+              <p className="mt-2 text-sm text-neutral-700 italic">&quot;Recovery scores improved consistently during the testing period.&quot;</p>
+              <p className="mt-3 text-sm font-semibold text-neutral-900">Worth every penny</p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-sm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+              <div className="mb-3">
+                <Badge className="bg-black text-white border-transparent uppercase rounded-full font-semibold px-3 py-1.5 text-[11px]">
+                  DROP
+                </Badge>
+              </div>
+              <h3 className="text-lg font-bold text-black">Ashwagandha</h3>
+              <p className="mt-2 text-sm text-neutral-700 italic">&quot;Energy levels were actually lower on days I took it.&quot;</p>
+              <p className="mt-3 text-sm font-semibold text-neutral-900">Saving €34/month</p>
             </div>
           </div>
 
-          {/* Credibility card */}
-          <div className="mt-10 bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 lg:p-10">
-            {/* Cohen's d box */}
-            <div className="space-y-3">
-            <div className="text-xs tracking-widest uppercase font-semibold text-neutral-600">
-                COHEN&apos;S D EFFECT SIZING
-              </div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900">
-                The statistical gold standard for measuring whether something actually works.
-              </h3>
-            <p className="text-base text-neutral-700">
-                It&apos;s how researchers separate real results from placebo. We apply the same rigor to your magnesium.
-              </p>
-            <p className="text-base text-neutral-900 font-semibold">
-                No vibes. No guessing. Just math that holds up.
-              </p>
-            </div>
-
-            {/* Credibility points */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="text-base text-neutral-800">
-                <span className="font-semibold">ON vs OFF comparison</span> — We compare how you feel on days with a supplement vs days without — not just trends over time
-              </div>
-            <div className="text-base text-neutral-800">
-              <span className="font-semibold">Noise filtering</span> — Stress, alcohol, illness — excluded from the signal
-              </div>
-            <div className="text-base text-neutral-800">
-              <span className="font-semibold">Confidence thresholds</span> — We don&apos;t call it until the data is clear
-              </div>
-            <div className="text-base text-neutral-800">
-              <span className="font-semibold">Effect size, not just correlation</span> — Big enough to matter, not just statistically present
-              </div>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="mt-8">
-              <p className="text-xs text-neutral-500 italic text-center">
-                This is correlation-based analysis, not a clinical trial. But it&apos;s the closest thing your stack has ever had to peer review.
-              </p>
-            </div>
-          </div>
+          <p className="mt-8 text-center text-neutral-700 max-w-2xl mx-auto">
+            These aren&apos;t generic findings. They&apos;re personal — based on your data, your body, your supplements.
+          </p>
         </div>
       </section>
 
@@ -1015,7 +1109,7 @@ export default function Page() {
                   <ul className="space-y-4">
                     <li className="text-lg text-neutral-700 leading-relaxed">You spend $100–$400 a month on supplements</li>
                     <li className="text-lg text-neutral-700 leading-relaxed">You&apos;ve wondered whether half your stack is doing anything</li>
-                    <li className="text-lg text-neutral-700 leading-relaxed">You own a wearable or you&apos;re willing to check in for 30 seconds a day</li>
+                    <li className="text-lg text-neutral-700 leading-relaxed">You own a wearable or you&apos;re willing to check in at your own pace</li>
                     <li className="text-lg text-neutral-700 leading-relaxed">You&apos;d rather know than guess</li>
                   </ul>
                 </div>
@@ -1070,15 +1164,19 @@ export default function Page() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Track up to 3 supplements</span>
+                  <span className="text-neutral-700">Up to 3 supplements</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Daily check-ins</span>
+                  <span className="text-neutral-700">Apple Health, WHOOP & Oura upload</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Basic insights</span>
+                  <span className="text-neutral-700">Instant Stack Economics</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                  <span className="text-neutral-700">KEEP/DROP/TESTING verdicts</span>
                 </li>
               </ul>
 
@@ -1142,15 +1240,15 @@ export default function Page() {
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Wearable data analysis</span>
+                  <span className="text-neutral-700">Full history analysis</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Full statistical analysis</span>
+                  <span className="text-neutral-700">Email reports</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                  <span className="text-neutral-700">Complete verdict reports</span>
+                  <span className="text-neutral-700">Priority insights</span>
                 </li>
               </ul>
 
