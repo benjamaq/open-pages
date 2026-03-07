@@ -57,6 +57,7 @@ export default function Page() {
                 Test My Supplements
               </Button>
             </Link>
+            <p className="mt-3 text-sm text-neutral-500 text-center">Free to start · No credit card required</p>
           </div>
           {/* Full‑bleed hero image below text */}
           <div className="-mx-6 mt-8">
@@ -89,7 +90,7 @@ export default function Page() {
             <p className="mb-10 text-xl text-neutral-700 leading-relaxed">
               BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-3">
               <Link href="/signup">
                 <Button
                   size="lg"
@@ -98,6 +99,7 @@ export default function Page() {
                   Test My Supplements
                 </Button>
               </Link>
+              <p className="text-sm text-neutral-500">Free to start · No credit card required</p>
             </div>
           </div>
         </div>
@@ -251,9 +253,9 @@ export default function Page() {
                   </div>
                 </div>
               </div>
-              <div className="pt-3 border-t border-neutral-200 flex justify-between">
-                <span>Potential monthly saving:</span>
-                <span className="font-semibold text-neutral-900">~€74</span>
+              <div className="pt-3 border-t border-neutral-200 flex justify-between items-center">
+                <span>Potential waste:</span>
+                <span className="font-bold text-red-600">€74/month</span>
               </div>
             </div>
             <p className="mt-4 text-sm text-neutral-600 text-center">Ready to find out which ones actually work?</p>
@@ -283,13 +285,14 @@ export default function Page() {
             className="text-4xl lg:text-5xl font-bold tracking-tight text-white text-center leading-tight"
             style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
           >
-            We Need to Talk
+            Some Supplements Work.
+            <span className="block">Many Don&apos;t.</span>
           </h2>
           <p
             className="mt-3 mb-16 text-center text-[#d0d0d0] text-xl lg:text-2xl font-medium"
             style={{ textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}
           >
-            Your data doesn&apos;t care what the label says.
+            Your magnesium. Six months. $174. Not a single measurable effect.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
