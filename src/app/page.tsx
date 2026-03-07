@@ -46,18 +46,17 @@ export default function Page() {
             <span className="block">That Don&apos;t Work.</span>
           </h1>
           <p className="mb-6 text-base text-neutral-700 leading-relaxed text-center">
-            Connect your Oura, WHOOP, or Apple Health and get your first KEEP or DROP verdict in 2 minutes using your historical data.
+            BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or learn at your own pace.
           </p>
           <div className="flex flex-col items-center justify-center">
             <Link href="/signup">
               <Button
                 size="lg"
-                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all"
+                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all whitespace-nowrap"
               >
                 Test My Supplements
               </Button>
             </Link>
-            <p className="mt-3 text-sm text-neutral-500 text-center">Upload your Apple Health, WHOOP or Oura data and we&apos;ll do the rest.</p>
           </div>
           {/* Full‑bleed hero image below text */}
           <div className="-mx-6 mt-8">
@@ -88,18 +87,17 @@ export default function Page() {
               <span className="block">That Don&apos;t Work.</span>
             </h1>
             <p className="mb-10 text-xl text-neutral-700 leading-relaxed">
-              Connect your Oura, WHOOP, or Apple Health and get your first KEEP or DROP verdict in 2 minutes using your historical data.
+              BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or learn at your own pace.
             </p>
             <div className="flex items-center gap-4">
               <Link href="/signup">
                 <Button
                   size="lg"
-                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
+                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all whitespace-nowrap"
                 >
                   Test My Supplements
                 </Button>
               </Link>
-              <p className="text-sm text-neutral-500">Upload your Apple Health, WHOOP or Oura data and we&apos;ll do the rest.</p>
             </div>
           </div>
         </div>
@@ -180,7 +178,7 @@ export default function Page() {
             <p className="mt-4 text-sm text-neutral-600 text-center">Ready to find out which ones actually work?</p>
             <div className="mt-4">
               <Link href="/signup">
-                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-3 font-semibold">
+                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-3 font-semibold whitespace-nowrap">
                   Start My Analysis
                 </Button>
               </Link>
@@ -252,7 +250,7 @@ export default function Page() {
             <Link href="/signup">
               <Button
                 size="lg"
-                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all"
+                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all whitespace-nowrap"
               >
                 Test What You&apos;re Actually Taking
               </Button>
@@ -479,7 +477,7 @@ export default function Page() {
 
           <div className="mt-8">
             <Link href="/signup">
-              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold">
+              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold whitespace-nowrap">
                 Upload My Data & Get Started
               </Button>
             </Link>
@@ -702,7 +700,7 @@ export default function Page() {
                 <p className="text-neutral-700 mt-1">Your data tells the truth. Labels don&apos;t.</p>
                 <div className="mt-5">
                   <Link href="/signup">
-                    <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
+                    <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold whitespace-nowrap">
                       Test My Supplements
                     </Button>
                   </Link>
@@ -808,7 +806,7 @@ export default function Page() {
               </p>
               <div className="pt-2">
                 <Link href="/signup">
-                  <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
+                  <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold whitespace-nowrap">
                     Find Out Which Ones Are Worth Keeping
                   </Button>
                 </Link>
@@ -925,7 +923,7 @@ export default function Page() {
               </p>
               <div className="pt-2">
                 <Link href="/signup">
-                  <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold">
+                  <Button className="bg-black hover:bg-neutral-800 text-white rounded-full px-6 py-3 font-semibold whitespace-nowrap">
                     Find Out Which Ones Are Worth Keeping
                   </Button>
                 </Link>
@@ -1107,7 +1105,7 @@ export default function Page() {
               </ul>
 
               <Link href="/signup?plan=free">
-                <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
+                <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold whitespace-nowrap">
                   Start Free
                 </Button>
               </Link>
@@ -1179,7 +1177,7 @@ export default function Page() {
               </ul>
 
               <Link href={`/signup?plan=premium&period=${billingPeriod}`}>
-                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
+                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold whitespace-nowrap">
                   Get Answers
                 </Button>
               </Link>
@@ -1208,7 +1206,7 @@ export default function Page() {
           <Link href="/signup">
             <Button
               size="lg"
-              className="bg-transparent border-2 border-white text-white hover:bg-white/10 hover:scale-105 rounded-full px-12 py-6 text-lg font-semibold transition-all"
+              className="bg-transparent border-2 border-white text-white hover:bg-white/10 hover:scale-105 rounded-full px-12 py-6 text-lg font-semibold transition-all whitespace-nowrap"
             >
               Test My Supplements
             </Button>
