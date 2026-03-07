@@ -659,7 +659,7 @@ export default function Page() {
           </h2>
           {/* Subheader with breathing room */}
           <p className="mt-8 mb-12 text-xl lg:text-2xl text-neutral-700 leading-relaxed font-medium">
-            Anyone can buy bulk supplements, bottle them, and sell them with a clean label. Almost nothing stops them.
+            Anyone can source bulk supplements — powders, capsules, vitamins, etc — bottle them, and sell them with a clean label. Almost nothing stops them.
           </p>
           {/* White container: wider, aligned to hero text, anchored toward bottle */}
           <div className="mt-6 rounded-2xl bg-white/95 backdrop-blur px-10 py-8 shadow-sm">
