@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   try {
     const host = request.headers.get('host') || ''
     // Only enforce in production and only for the primary domain.
-    if (process.env.NODE_ENV === 'production' && host === 'biostackr.io') {
+    if (process.env.NODE_ENV === 'production' && host.toLowerCase() === 'biostackr.io') {
       const url = request.nextUrl.clone()
       url.host = 'www.biostackr.io'
       return NextResponse.redirect(url)

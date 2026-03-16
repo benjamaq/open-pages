@@ -50,20 +50,22 @@ export async function updateSession(request: NextRequest) {
     if (
       path.startsWith('/login') ||
       path.startsWith('/signup') ||
-      path.startsWith('/api/')
+      path.startsWith('/api/') ||
+      path.startsWith('/cohorts') ||
+      path.startsWith('/sleep') ||
+      path.startsWith('/pricing') ||
+      path.startsWith('/faq') ||
+      path.startsWith('/contact') ||
+      path.startsWith('/biostackr')
     ) {
       return supabaseResponse
     }
 
     // EXISTING SYSTEM: original guard & redirects to /auth/signin
-    if (
-      !path.startsWith('/auth') &&
-      path !== '/' &&
-      path !== '/u' &&
-      !path.startsWith('/u/') &&
-      path !== '/checkin/quick-save' &&
-      path !== '/checkin/success'
-    ) {
+    // Allow remaining public landing pages without auth
+    const publicPaths = ['/', '/u', '/checkin/quick-save', '/checkin/success', '/cohorts', '/sleep', '/sleep-v2', '/sleep-v3', '/pricing', '/faq', '/contact', '/biostackr']
+    const isPublic = publicPaths.some((p) => path === p || path.startsWith(p + '/')) || path.startsWith('/auth') || path.startsWith('/u/')
+    if (!isPublic) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/signin'
       return NextResponse.redirect(url)
