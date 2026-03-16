@@ -15,6 +15,10 @@ export async function middleware(request: NextRequest) {
   } catch {}
 
   const { pathname } = request.nextUrl
+  // Static assets: serve directly without auth (PDF sample report, etc.)
+  if (/\.(?:pdf|svg|png|jpg|jpeg|gif|webp)$/i.test(pathname)) {
+    return NextResponse.next()
+  }
   // Temporary redirect: old dashboard route → new dashboard route
   if (pathname === '/dash') {
     const url = request.nextUrl.clone()
@@ -46,6 +50,6 @@ export const config = {
      */
     // Exclude API routes, Next internals, assets, and favicon from middleware
     // Also explicitly allow the magic check-in endpoint to be public
-    '/((?!api/checkin/magic|sw\\.js$|manifest\\.json$|manifest-v2\\.json$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/checkin/magic|sw\\.js$|manifest\\.json$|manifest-v2\\.json$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)',
   ],
 }
