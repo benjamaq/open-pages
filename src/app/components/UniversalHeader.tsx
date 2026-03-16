@@ -24,13 +24,13 @@ export default function UniversalHeader() {
   }, []);
 
   const headerClass =
-    "sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80";
-  const logoTitleClass = `${tomorrow.className} text-lg sm:text-xl md:text-2xl font-medium text-gray-900 whitespace-nowrap`;
-  const navLinkBase = "text-[12px] sm:text-sm md:text-base text-gray-700 hover:text-gray-900 whitespace-nowrap";
+    "fixed left-0 right-0 top-0 z-50 w-full border-b border-neutral-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80";
+  const logoTitleClass = `${tomorrow.className} text-base sm:text-xl md:text-2xl font-medium text-gray-900 whitespace-nowrap`;
+  const navLinkBase = "text-xs sm:text-sm md:text-base text-gray-700 hover:text-gray-900 whitespace-nowrap";
   const signUpBtn =
-    "inline-flex items-center justify-center h-8 sm:h-9 rounded-full border border-neutral-300 px-3 text-[12px] sm:text-sm text-gray-900 font-semibold hover:bg-neutral-100";
+    "inline-flex items-center justify-center h-7 sm:h-9 rounded-full border border-neutral-300 px-2.5 sm:px-3 text-xs sm:text-sm text-gray-900 font-semibold hover:bg-neutral-100";
   const signOutBtn =
-    "inline-flex items-center justify-center h-9 sm:h-10 rounded-full border border-neutral-300 px-4 text-gray-800 hover:bg-neutral-100";
+    "inline-flex items-center justify-center h-7 sm:h-10 rounded-full border border-neutral-300 px-2.5 sm:px-4 text-sm text-gray-800 hover:bg-neutral-100";
 
   const homeHref = isAuthed ? "/dashboard" : "/";
   const signUpHref = pathname === "/" ? "/#pricing" : "/pricing";
@@ -55,14 +55,23 @@ export default function UniversalHeader() {
   return (
     <header className={headerClass}>
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-        <div className="h-14 sm:h-16 flex items-center justify-between">
+        <div className="h-12 sm:h-16 flex items-center justify-between">
           <Link href={homeHref} className={logoTitleClass} aria-label="BioStackr home">
             <span className="tracking-wider">BIOSTACK</span>
             <span className="inline-block align-baseline ml-1 origin-center scale-x-[-1] text-[1.2em]">R</span>
           </Link>
-          <nav className="flex items-center gap-3 sm:gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
             {!isAuthed ? (
               <>
+                {pathname?.startsWith('/cohorts') ? (
+                  <Link href="/" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                    For Individuals
+                  </Link>
+                ) : (
+                  <Link href="/cohorts" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                    For Brands
+                  </Link>
+                )}
                 <Link href="/auth/signin" className={navLinkBase}>
                   Sign In
                 </Link>
@@ -72,6 +81,15 @@ export default function UniversalHeader() {
               </>
             ) : (
               <>
+                {pathname?.startsWith('/cohorts') ? (
+                  <Link href="/" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                    For Individuals
+                  </Link>
+                ) : (
+                  <Link href="/cohorts" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                    For Brands
+                  </Link>
+                )}
                 <Link href="/auth/signout" className={signOutBtn}>
                   Sign Out
                 </Link>

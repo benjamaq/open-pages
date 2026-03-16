@@ -5,10 +5,16 @@ import UniversalHeader from "./UniversalHeader";
 export default function HeaderGate() {
   const pathname = usePathname() || "/";
   // Show the marketing header only on public landing routes
-  const allow = ["/", "/sleep", "/sleep-v2", "/sleep-v3"]; 
+  const allow = ["/", "/cohorts", "/sleep", "/sleep-v2", "/sleep-v3", "/pricing", "/faq", "/contact", "/biostackr"];
   const isLanding = allow.some((p) => pathname === p || pathname.startsWith(p + "/"));
   if (!isLanding) return null;
-  return <UniversalHeader />;
+  return (
+    <>
+      <UniversalHeader />
+      {/* Spacer for fixed header (h-12 sm:h-16) so content doesn't hide underneath */}
+      <div className="h-12 sm:h-16" aria-hidden />
+    </>
+  );
 }
 
 

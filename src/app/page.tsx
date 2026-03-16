@@ -105,6 +105,26 @@ export default function Page() {
         </div>
       </section>
 
+      {/* For Supplement Brands — B2B CTA */}
+      <section className="py-4 px-6 bg-neutral-900 border-y border-neutral-700">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-semibold text-lg sm:text-xl">For Supplement Brands</p>
+            <p className="text-neutral-300 text-sm sm:text-base mt-0.5">
+              Run real-world cohort studies with your customers. Claim-ready evidence for Meta ads, retail, and landing pages.
+            </p>
+          </div>
+          <Link href="/cohorts">
+            <Button
+              variant="outline"
+              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black rounded-full px-6 py-3 font-semibold whitespace-nowrap shrink-0"
+            >
+              For Brands →
+            </Button>
+          </Link>
+        </div>
+      </section>
+
       {/* The Fear / Pain — Most Supplement Users See Little to No Effect (position 2) */}
       <section
         className="relative py-16 lg:py-20 px-6"
@@ -532,18 +552,33 @@ export default function Page() {
             Already Tracking Your Health?
           </h2>
           <p className="mt-4 text-xl text-neutral-700 max-w-2xl mx-auto">
-            If you use Apple Health, WHOOP, or Oura — you already have the data. BioStackr uses your existing history to generate insights fast. No waiting around.
+            Apple Health, WHOOP, Oura and many others.
           </p>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-10">
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">Apple Health</span>
+          <div className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-6">
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Apple Health</span>
             </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">WHOOP</span>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">WHOOP</span>
             </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-6 py-4 min-w-[140px]">
-              <span className="font-semibold text-neutral-900">Oura Ring</span>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Oura</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Garmin</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Fitbit</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Samsung Health</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">Polar</span>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur px-5 py-3 sm:px-6 sm:py-4">
+              <span className="font-semibold text-neutral-900 text-sm sm:text-base">+ more</span>
             </div>
           </div>
 
@@ -598,10 +633,10 @@ export default function Page() {
               {/* 7 testimonials */}
               <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
                 <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
-                  Identifying supplements that weren’t contributing
+                  Identifying supplements that weren't contributing
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  Dropped 4 supplements. <span className="font-semibold">Saving €90/month.</span> Should’ve done this years ago.
+                  <span className="font-bold text-black">Dropped 4 supplements. Saving €90/month.</span> Should've done this years ago.
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— Marcus T., saving €90/month</p>
               </div>
@@ -610,7 +645,7 @@ export default function Page() {
                   Reducing the stack without losing results
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  From 12 bottles to 3 that actually moved the needle. <span className="font-semibold">Same results, less clutter.</span>
+                  From 12 bottles to 3 that actually moved the needle. <span className="font-bold text-black">Same results, less clutter.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— Jen, dropped 9 supplements</p>
               </div>
@@ -619,7 +654,7 @@ export default function Page() {
                   Isolating what actually made a difference
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  Thought it was all guesswork. <span className="font-semibold">Only one thing really helped.</span>
+                  Thought it was all guesswork. <span className="font-bold text-black">Only one thing really helped.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— @biohack_ben, Whoop user</p>
               </div>
@@ -628,7 +663,7 @@ export default function Page() {
                   Different brands can perform differently
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  Same ingredient, two brands. One made a difference, one didn’t. <span className="font-semibold">Now I know which to keep.</span>
+                  Same ingredient, two brands. One made a difference, one didn't. <span className="font-bold text-black">Now I know which to keep.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— Sophie K., tested 2 brands</p>
               </div>
@@ -637,7 +672,7 @@ export default function Page() {
                   Reducing complexity in the daily routine
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  <span className="font-semibold">Less really is more.</span> Fewer pills, clearer routine.
+                  <span className="font-bold text-black">Less really is more.</span> Fewer pills, clearer routine.
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— David, simplified his stack</p>
               </div>
@@ -646,16 +681,16 @@ export default function Page() {
                   Sleep consistency on demanding schedules
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  HRV steadier on the nights I take it. <span className="font-semibold">Fewer 3am crashes.</span>
+                  HRV steadier on the nights I take it. <span className="font-bold text-black">Fewer 3am crashes.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— ER nurse, nights</p>
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-sm w-[300px] snap-start shrink-0">
                 <div className="text-[11px] tracking-[0.2em] uppercase text-neutral-500/80 font-semibold">
-                  Clarifying what’s worth paying for
+                  Clarifying what's worth paying for
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  I stopped guessing. <span className="font-semibold">Now I know what’s worth paying for.</span>
+                  I stopped guessing. <span className="font-bold text-black">Now I know what&apos;s worth paying for.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— Alex P.</p>
               </div>
@@ -664,7 +699,7 @@ export default function Page() {
                   Resetting after years of trial and error
                 </div>
                 <p className="mt-4 text-[15px] leading-relaxed text-neutral-900">
-                  After years of trying everything, I finally <span className="font-semibold">reset to what works.</span>
+                  After years of trying everything, I finally <span className="font-bold text-black">reset to what works.</span>
                 </p>
                 <p className="mt-4 text-[12px] text-neutral-500">— Priya, back to basics</p>
               </div>
@@ -879,14 +914,17 @@ export default function Page() {
               changes.
             </div>
             <div className="flex items-center gap-6 text-sm text-neutral-600">
+              <Link href="/cohorts" className="hover:text-neutral-900 transition-colors font-medium">
+                For Brands
+              </Link>
+              <Link href="/contact" className="hover:text-neutral-900 transition-colors">
+                Contact
+              </Link>
               <a href="#" className="hover:text-neutral-900 transition-colors">
                 Privacy
               </a>
               <a href="#" className="hover:text-neutral-900 transition-colors">
                 Terms
-              </a>
-              <a href="#" className="hover:text-neutral-900 transition-colors">
-                Contact
               </a>
             </div>
           </div>

@@ -55,7 +55,7 @@ export default function CohortsPage() {
     <div className="min-h-screen bg-white">
       {/* Section 1 — Hero */}
       <section
-        className="relative pt-28 sm:pt-36 pb-16 sm:pb-28 px-4 sm:px-6 overflow-hidden w-full min-h-[520px] sm:min-h-[680px] lg:min-h-[750px]"
+        className="relative pt-20 sm:pt-36 pb-12 sm:pb-28 px-4 sm:px-6 overflow-hidden w-full min-h-[420px] sm:min-h-[680px] lg:min-h-[750px]"
         style={{
           backgroundImage: "url('/amber.png')",
           backgroundPosition: "center",
@@ -73,13 +73,13 @@ export default function CohortsPage() {
         />
         <div className="relative mx-auto max-w-7xl">
           <div className="max-w-2xl lg:max-w-2xl sm:text-left text-center">
-            <h1 className="mb-6 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
+            <h1 className="mb-4 sm:mb-6 text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
               Your customers just proved your product works.
             </h1>
             {/* Proof strip — label + stat chips */}
-            <div className="mb-8">
-              <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-3">Example BioStackr cohort result</p>
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-4">
+            <div className="mb-6 sm:mb-8">
+              <p className="text-[10px] sm:text-xs font-medium text-white/60 uppercase tracking-wider mb-2 sm:mb-3">Example BioStackr cohort result</p>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4">
                 {[
                   { stat: '47', label: 'participants' },
                   { stat: '18', label: 'wearable data uploads' },
@@ -88,22 +88,22 @@ export default function CohortsPage() {
                 ].map((chip) => (
                   <div
                     key={chip.label}
-                    className="rounded-lg border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 min-w-0 text-center"
+                    className="rounded-lg border border-white/20 bg-white/10 backdrop-blur-sm px-2.5 py-2 sm:px-4 sm:py-3 min-w-0 text-center"
                   >
-                    <p className="text-base sm:text-lg font-bold text-white">{chip.stat}</p>
-                    <p className="text-xs text-white/70">{chip.label}</p>
+                    <p className="text-sm sm:text-lg font-bold text-white">{chip.stat}</p>
+                    <p className="text-[10px] sm:text-xs text-white/70">{chip.label}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <p className="mb-12 text-xl sm:text-2xl text-neutral-200 leading-relaxed">
+            <p className="mb-8 sm:mb-12 text-base sm:text-2xl text-neutral-200 leading-relaxed">
               BioStackr runs 30-day real-world cohort studies using your existing customers — delivering the claim-ready evidence you need for Meta ads, landing pages, and retail buyers.
             </p>
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4">
               <button
                 type="button"
                 onClick={scrollToContact}
-                className="inline-flex items-center justify-center rounded-full px-8 sm:px-10 py-5 sm:py-6 text-base sm:text-lg font-semibold bg-white text-black hover:bg-neutral-100 active:scale-[0.98] sm:hover:scale-105 transition-all whitespace-nowrap min-h-[48px] touch-manipulation"
+                className="inline-flex items-center justify-center rounded-full px-6 sm:px-10 py-3.5 sm:py-6 text-sm sm:text-lg font-semibold bg-white text-black hover:bg-neutral-100 active:scale-[0.98] sm:hover:scale-105 transition-all whitespace-nowrap min-h-[44px] sm:min-h-[48px] touch-manipulation"
                 style={{ color: '#000' }}
               >
                 Request a study overview
@@ -112,7 +112,7 @@ export default function CohortsPage() {
                 href="/BioStackr_Sample_Report_Final.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/95 hover:text-white underline underline-offset-4 text-base font-medium"
+                className="text-white/95 hover:text-white underline underline-offset-4 text-sm sm:text-base font-medium"
               >
                 Download sample report
               </a>
@@ -133,10 +133,12 @@ export default function CohortsPage() {
       >
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative mx-auto max-w-6xl">
-          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white text-center mb-10 sm:mb-16">
+          <h2 className="hidden lg:block text-2xl sm:text-4xl font-bold tracking-tight text-white text-center mb-10 sm:mb-16">
             From this — to this.
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-0 items-stretch">
+            {/* Mobile: "from this" label */}
+            <p className="lg:hidden text-center text-white font-bold text-2xl mb-1">from this</p>
             {/* Before panel */}
             <div className="rounded-2xl lg:rounded-r-none border border-neutral-200 bg-neutral-100/95 p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
               <p className="text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-4">Before BioStackr</p>
@@ -151,6 +153,8 @@ export default function CohortsPage() {
             <div className="flex justify-center items-center py-4 lg:py-8 lg:px-4">
               <ArrowRight className="w-6 h-6 lg:w-8 lg:h-8 text-white/80 rotate-90 lg:rotate-0" aria-hidden />
             </div>
+            {/* Mobile: "to this" label */}
+            <p className="lg:hidden text-center text-white font-bold text-2xl mb-1">to this</p>
             {/* After panel — no border, warm off-white, subtle shadow only */}
             <div className="rounded-2xl lg:rounded-l-none bg-[#faf9f7] p-6 sm:p-8 lg:p-10 flex flex-col justify-center" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
               <p className="text-xs font-semibold tracking-wider uppercase text-neutral-600 mb-4">After a BioStackr study</p>
