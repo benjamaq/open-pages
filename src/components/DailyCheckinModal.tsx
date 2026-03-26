@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
+import CohortCheckinLayout from '@/components/CohortCheckinLayout'
 
 // Constants for symptom tracking
 const coreSymptoms = [
@@ -223,6 +224,7 @@ export default function DailyCheckinModal({
   const [moodScore, setMoodScore] = useState<number>(5)
   const [customSymptomInput, setCustomSymptomInput] = useState('')
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
+  const [cohortId, setCohortId] = useState<string | null>(null)
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -236,6 +238,30 @@ export default function DailyCheckinModal({
     { id: 'late_caffeine', label: 'Late caffeine' },
     { id: 'very_high_carbs', label: 'Very high carbs' },
   ]
+
+  // Cohort study participants: fetch profile.cohort_id when modal opens (standard flow unchanged)
+  useEffect(() => {
+    if (!isOpen || !userId) {
+      setCohortId(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const sb = createClient()
+        const { data } = await sb.from('profiles').select('cohort_id').eq('user_id', userId).maybeSingle()
+        if (cancelled) return
+        const raw = (data as { cohort_id?: string | null } | null)?.cohort_id
+        setCohortId(raw != null && String(raw).trim() !== '' ? String(raw) : null)
+      } catch {
+        if (!cancelled) setCohortId(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, userId])
 
   // Load saved data when modal opens
 useEffect(() => {
@@ -878,6 +904,12 @@ useEffect(() => {
   }
 
   if (!isOpen) return null
+
+  if (cohortId) {
+    return (
+      <CohortCheckinLayout isOpen={isOpen} onClose={onClose} onEnergyUpdate={onEnergyUpdate} userId={userId} />
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">

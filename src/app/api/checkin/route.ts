@@ -8,6 +8,112 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // ── COHORT BRANCH (participants with profiles.cohort_id set) ───────────────
+    // Early return only here — standard path and validation below are unchanged.
+    // Truth engine: primary metric extraction prefers sleep_quality when present;
+    // mood/focus nulls are not used in that path. Fallback chain uses _raw wearables
+    // then subjective fields only if earlier sources missing — verify in QA for cohort rows.
+    const { data: cohortProfileRow } = await supabase
+      .from('profiles')
+      .select('cohort_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if ((cohortProfileRow as { cohort_id?: string | null } | null)?.cohort_id) {
+      const cohortBody = (await request.json().catch(() => ({}))) as Record<string, unknown>
+      const clamp10 = (v: unknown): number | null => {
+        const n = Number(v)
+        if (!Number.isFinite(n)) return null
+        return Math.max(1, Math.min(10, Math.round(n)))
+      }
+      const sleepQ = clamp10(cohortBody.sleep_quality)
+      const energyC = clamp10(cohortBody.energy)
+      if (sleepQ == null || energyC == null) {
+        return NextResponse.json(
+          { error: 'Missing required cohort fields: sleep_quality and energy' },
+          { status: 400 }
+        )
+      }
+      const sobRaw = cohortBody.sleep_onset_bucket
+      const nwRaw = cohortBody.night_wakes
+      if (sobRaw !== undefined && sobRaw !== null && ![1, 2, 3, 4].includes(Number(sobRaw))) {
+        return NextResponse.json({ error: 'Invalid sleep_onset_bucket value' }, { status: 400 })
+      }
+      if (nwRaw !== undefined && nwRaw !== null && ![0, 1, 2].includes(Number(nwRaw))) {
+        return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
+      }
+      const localDate = new Date().toISOString().slice(0, 10)
+      const sleep_onset_bucket =
+        sobRaw === undefined || sobRaw === null ? null : (Number(sobRaw) as 1 | 2 | 3 | 4)
+      const night_wakes =
+        nwRaw === undefined || nwRaw === null ? null : (Number(nwRaw) as 0 | 1 | 2)
+
+      const cohortDePayload: Record<string, unknown> = {
+        user_id: user.id,
+        local_date: localDate,
+        sleep_quality: sleepQ,
+        energy: energyC,
+        sleep_onset_bucket,
+        night_wakes,
+        mood: null,
+        focus: null,
+      }
+
+      const { error: cohortDeErr } = await supabaseAdmin
+        .from('daily_entries')
+        .upsert(cohortDePayload, { onConflict: 'user_id,local_date' })
+
+      if (cohortDeErr) {
+        return NextResponse.json({ error: cohortDeErr.message }, { status: 500 })
+      }
+
+      try {
+        const todayStr = localDate
+        const yDate = new Date()
+        yDate.setDate(yDate.getDate() - 1)
+        const yesterdayStr = yDate.toISOString().slice(0, 10)
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('id,current_streak,last_checkin_date,first_activity_date')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (prof && (prof as any).id) {
+          let currentStreak = Number((prof as any).current_streak || 0) || 0
+          const lastDate: string | null = (prof as any).last_checkin_date || null
+          if (lastDate !== todayStr) {
+            if (lastDate === yesterdayStr) currentStreak += 1
+            else currentStreak = 1
+          }
+          await (supabase as any)
+            .from('profiles')
+            .update({
+              current_streak: currentStreak,
+              last_checkin_date: todayStr,
+              first_activity_date: (prof as any).first_activity_date || todayStr,
+            } as any)
+            .eq('id', (prof as any).id)
+        }
+      } catch {
+        /* ignore streak errors for cohort */
+      }
+
+      try {
+        const del = await supabaseAdmin.from('dashboard_cache').delete().eq('user_id', user.id)
+        if ((del as any)?.error) throw (del as any).error
+      } catch (e) {
+        try {
+          await supabaseAdmin
+            .from('dashboard_cache')
+            .update({ invalidated_at: new Date().toISOString() } as any)
+            .eq('user_id', user.id)
+        } catch {
+          /* ignore */
+        }
+      }
+
+      return NextResponse.json({ success: true, cohort: true })
+    }
+
     const body = await request.json().catch(() => ({}))
     try { console.log('[checkin] received body:', body) } catch {}
     let { mood, energy, focus, sleep, stress, tags, supplement_intake } = body || {}
