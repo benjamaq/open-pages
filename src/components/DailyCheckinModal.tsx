@@ -77,6 +77,8 @@ interface DailyCheckinModalProps {
   todayItems: any
   userId: string
   profileSlug?: string
+  /** From /api/me (server session). Browser Supabase often cannot read profiles.cohort_id under RLS. */
+  cohortIdHint?: string | null
 }
 
 // Helper functions
@@ -84,6 +86,12 @@ const formatDate = (d: Date) =>
   d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 
 const isNum = (n: unknown): n is number => typeof n === 'number' && !Number.isNaN(n)
+
+function trimCohortId(raw: unknown): string | null {
+  if (raw == null) return null
+  const s = String(raw).trim()
+  return s !== '' ? s : null
+}
 
 function energyToColor(n: number) {
   if (n >= 8) return 'text-emerald-600'
@@ -201,7 +209,8 @@ export default function DailyCheckinModal({
   currentEnergy,
   todayItems,
   userId,
-  profileSlug
+  profileSlug,
+  cohortIdHint,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -224,7 +233,10 @@ export default function DailyCheckinModal({
   const [moodScore, setMoodScore] = useState<number>(5)
   const [customSymptomInput, setCustomSymptomInput] = useState('')
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
-  const [cohortId, setCohortId] = useState<string | null>(null)
+  const [cohortIdFromClient, setCohortIdFromClient] = useState<string | null>(null)
+
+  const effectiveCohortId =
+    cohortIdHint !== undefined ? trimCohortId(cohortIdHint) : cohortIdFromClient
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -239,10 +251,14 @@ export default function DailyCheckinModal({
     { id: 'very_high_carbs', label: 'Very high carbs' },
   ]
 
-  // Cohort study participants: fetch profile.cohort_id when modal opens (standard flow unchanged)
+  // Cohort: prefer server hint (same session as /api/me). Browser anon select often returns no row under RLS.
   useEffect(() => {
-    if (!isOpen || !userId) {
-      setCohortId(null)
+    if (!isOpen || !userId || userId === 'guest') {
+      setCohortIdFromClient(null)
+      return
+    }
+    if (cohortIdHint !== undefined) {
+      setCohortIdFromClient(null)
       return
     }
     let cancelled = false
@@ -253,15 +269,15 @@ export default function DailyCheckinModal({
         const { data } = await sb.from('profiles').select('cohort_id').eq('user_id', userId).maybeSingle()
         if (cancelled) return
         const raw = (data as { cohort_id?: string | null } | null)?.cohort_id
-        setCohortId(raw != null && String(raw).trim() !== '' ? String(raw) : null)
+        setCohortIdFromClient(trimCohortId(raw))
       } catch {
-        if (!cancelled) setCohortId(null)
+        if (!cancelled) setCohortIdFromClient(null)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [isOpen, userId])
+  }, [isOpen, userId, cohortIdHint])
 
   // Load saved data when modal opens
 useEffect(() => {
@@ -905,7 +921,7 @@ useEffect(() => {
 
   if (!isOpen) return null
 
-  if (cohortId) {
+  if (effectiveCohortId) {
     return (
       <CohortCheckinLayout isOpen={isOpen} onClose={onClose} onEnergyUpdate={onEnergyUpdate} userId={userId} />
     )
