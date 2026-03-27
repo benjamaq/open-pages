@@ -37,6 +37,7 @@ export function CheckinLauncher({
   const [currentEnergy, setCurrentEnergy] = useState<number>(5)
   /** Set only when mePayload is undefined (standalone fetch). */
   const [asyncCohortHint, setAsyncCohortHint] = useState<string | null | undefined>(undefined)
+  const [asyncCheckinFields, setAsyncCheckinFields] = useState<string[] | null | undefined>(undefined)
 
   useEffect(() => {
     const val = search.get('checkin')
@@ -70,6 +71,7 @@ export function CheckinLauncher({
         if (data?.firstName) setUserName(String(data.firstName))
       } catch {}
       setAsyncCohortHint(undefined)
+      setAsyncCheckinFields(undefined)
       return () => { cancelled = true }
     }
     ;(async () => {
@@ -81,8 +83,17 @@ export function CheckinLauncher({
         if (data?.userId) setUserId(String(data.userId))
         if (data?.firstName) setUserName(String(data.firstName))
         setAsyncCohortHint(trimCohortId(data?.cohortId))
+        if ('checkinFields' in data) {
+          const cf = (data as { checkinFields?: string[] | null }).checkinFields
+          setAsyncCheckinFields(Array.isArray(cf) ? cf : cf === null ? null : null)
+        } else {
+          setAsyncCheckinFields(null)
+        }
       } catch {
-        if (!cancelled) setAsyncCohortHint(null)
+        if (!cancelled) {
+          setAsyncCohortHint(null)
+          setAsyncCheckinFields(null)
+        }
       }
     })()
     return () => { cancelled = true }
@@ -180,6 +191,13 @@ export function CheckinLauncher({
 
   const cohortIdHint = mePayload !== undefined ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
 
+  const cohortCheckinFieldsHint =
+    mePayload !== undefined
+      ? (('checkinFields' in (mePayload || {})
+          ? (mePayload as { checkinFields?: string[] | null }).checkinFields
+          : null) as string[] | null | undefined)
+      : asyncCheckinFields
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -200,6 +218,7 @@ export function CheckinLauncher({
           todayItems={todayItems}
           userId={userId || 'guest'}
           cohortIdHint={cohortIdHint}
+          cohortCheckinFieldsHint={cohortCheckinFieldsHint}
         />
       )}
     </>

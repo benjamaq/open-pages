@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 
 function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
   const raw = body?.local_date
@@ -34,28 +35,48 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if ((cohortProfileRow as { cohort_id?: string | null } | null)?.cohort_id) {
+    const cohortSlugRaw = (cohortProfileRow as { cohort_id?: string | null } | null)?.cohort_id
+    const cohortSlug = cohortSlugRaw != null ? String(cohortSlugRaw).trim() : ''
+    if (cohortSlug) {
       const cohortBody = (await request.json().catch(() => ({}))) as Record<string, unknown>
       const clamp10 = (v: unknown): number | null => {
         const n = Number(v)
         if (!Number.isFinite(n)) return null
         return Math.max(1, Math.min(10, Math.round(n)))
       }
-      const sleepQ = clamp10(cohortBody.sleep_quality)
-      const energyC = clamp10(cohortBody.energy)
-      if (sleepQ == null || energyC == null) {
-        return NextResponse.json(
-          { error: 'Missing required cohort fields: sleep_quality and energy' },
-          { status: 400 }
-        )
+      let checkinFields = normalizeCohortCheckinFields(null)
+      try {
+        const { data: cdef } = await supabase
+          .from('cohorts')
+          .select('checkin_fields')
+          .eq('slug', cohortSlug)
+          .maybeSingle()
+        if (cdef != null && Array.isArray((cdef as { checkin_fields?: unknown }).checkin_fields)) {
+          checkinFields = normalizeCohortCheckinFields(
+            (cdef as { checkin_fields: unknown }).checkin_fields
+          )
+        }
+      } catch {
+        /* use default fields */
+      }
+      const sliderKeys = ['sleep_quality', 'energy', 'mood', 'focus'] as const
+      for (const k of sliderKeys) {
+        if (!checkinFields.includes(k)) continue
+        if (clamp10(cohortBody[k]) == null) {
+          return NextResponse.json({ error: `Missing required cohort field: ${k}` }, { status: 400 })
+        }
       }
       const sobRaw = cohortBody.sleep_onset_bucket
       const nwRaw = cohortBody.night_wakes
-      if (sobRaw !== undefined && sobRaw !== null && ![1, 2, 3, 4].includes(Number(sobRaw))) {
-        return NextResponse.json({ error: 'Invalid sleep_onset_bucket value' }, { status: 400 })
+      if (checkinFields.includes('sleep_onset_bucket')) {
+        if (sobRaw !== undefined && sobRaw !== null && ![1, 2, 3, 4].includes(Number(sobRaw))) {
+          return NextResponse.json({ error: 'Invalid sleep_onset_bucket value' }, { status: 400 })
+        }
       }
-      if (nwRaw !== undefined && nwRaw !== null && ![0, 1, 2].includes(Number(nwRaw))) {
-        return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
+      if (checkinFields.includes('night_wakes')) {
+        if (nwRaw !== undefined && nwRaw !== null && ![0, 1, 2].includes(Number(nwRaw))) {
+          return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
+        }
       }
       const localDate = parseClientLocalDateYmd(cohortBody)
       const sleep_onset_bucket =
@@ -66,12 +87,20 @@ export async function POST(request: NextRequest) {
       const cohortDePayload: Record<string, unknown> = {
         user_id: user.id,
         local_date: localDate,
-        sleep_quality: sleepQ,
-        energy: energyC,
-        sleep_onset_bucket,
-        night_wakes,
-        mood: null,
-        focus: null,
+      }
+      const allCohortKeys = ['sleep_quality', 'energy', 'mood', 'focus', 'sleep_onset_bucket', 'night_wakes'] as const
+      for (const k of allCohortKeys) {
+        if (!checkinFields.includes(k)) {
+          cohortDePayload[k] = null
+          continue
+        }
+        if (k === 'sleep_onset_bucket') {
+          cohortDePayload[k] = sleep_onset_bucket
+        } else if (k === 'night_wakes') {
+          cohortDePayload[k] = night_wakes
+        } else {
+          cohortDePayload[k] = clamp10(cohortBody[k])
+        }
       }
 
       const { error: cohortDeErr } = await supabaseAdmin
