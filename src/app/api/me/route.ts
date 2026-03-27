@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
     let tier: string | null = null
     let pro_expires_at: string | null = null
     let cohortId: string | null = null
+    let checkinFields: string[] | null = null
 
     if (!authError && user) {
       email = user.email || null
@@ -73,6 +75,24 @@ export async function GET(request: Request) {
         } catch {
           cohortId = null
         }
+        if (cohortId) {
+          try {
+            const { data: cdef } = await supabase
+              .from('cohorts')
+              .select('checkin_fields')
+              .eq('slug', cohortId)
+              .maybeSingle()
+            if (cdef != null && Array.isArray((cdef as { checkin_fields?: unknown }).checkin_fields)) {
+              checkinFields = normalizeCohortCheckinFields(
+                (cdef as { checkin_fields: unknown }).checkin_fields
+              )
+            } else {
+              checkinFields = null
+            }
+          } catch {
+            checkinFields = null
+          }
+        }
         // Fallback legacy app_user table
         if (!firstName) {
           const { data: profile } = await supabase
@@ -105,6 +125,7 @@ export async function GET(request: Request) {
       tier,
       pro_expires_at,
       cohortId,
+      checkinFields,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })

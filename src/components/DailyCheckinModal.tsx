@@ -80,6 +80,8 @@ interface DailyCheckinModalProps {
   profileSlug?: string
   /** From /api/me (server session). Browser Supabase often cannot read profiles.cohort_id under RLS. */
   cohortIdHint?: string | null
+  /** From public.cohorts.checkin_fields via /api/me; null = use defaults; undefined = same as null for layout */
+  cohortCheckinFieldsHint?: string[] | null
 }
 
 // Helper functions
@@ -212,6 +214,7 @@ export default function DailyCheckinModal({
   userId,
   profileSlug,
   cohortIdHint,
+  cohortCheckinFieldsHint,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -925,7 +928,13 @@ useEffect(() => {
 
   if (effectiveCohortId) {
     return (
-      <CohortCheckinLayout isOpen={isOpen} onClose={onClose} onEnergyUpdate={onEnergyUpdate} userId={userId} />
+      <CohortCheckinLayout
+        isOpen={isOpen}
+        onClose={onClose}
+        onEnergyUpdate={onEnergyUpdate}
+        userId={userId}
+        checkinFields={cohortCheckinFieldsHint}
+      />
     )
   }
 
