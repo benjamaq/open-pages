@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 export function PersonalHeader({
   me,
@@ -82,7 +83,7 @@ export function PersonalHeader({
         let rdy = 0
         let testing = 0
         try {
-          const p = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
+          const p = await dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' })
           if (p.ok) {
             const j = p.data
             const sec = j?.sections || {}

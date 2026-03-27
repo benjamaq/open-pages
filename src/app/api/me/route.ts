@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         // Attempt primary profiles table first
         const { data: prof } = await supabase
           .from('profiles')
-          .select('first_name, display_name, full_name, tier, pro_expires_at, cohort_id')
+          .select('first_name, display_name, full_name, tier, pro_expires_at')
           .eq('user_id', userId)
           .maybeSingle()
         const fromProfiles =
@@ -61,9 +61,17 @@ export async function GET(request: Request) {
         if (fromProfiles) firstName = String(fromProfiles)
         tier = (prof as any)?.tier ?? null
         pro_expires_at = (prof as any)?.pro_expires_at ?? null
-        {
-          const rawC = (prof as { cohort_id?: string | null } | null)?.cohort_id
+        // Separate read: if cohort_id column is missing in a DB, a combined select can fail entirely.
+        try {
+          const { data: cohortRow } = await supabase
+            .from('profiles')
+            .select('cohort_id')
+            .eq('user_id', userId)
+            .maybeSingle()
+          const rawC = (cohortRow as { cohort_id?: string | null } | null)?.cohort_id
           cohortId = rawC != null && String(rawC).trim() !== '' ? String(rawC).trim() : null
+        } catch {
+          cohortId = null
         }
         // Fallback legacy app_user table
         if (!firstName) {

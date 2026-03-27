@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 type Row = {
   id: string
@@ -22,7 +23,7 @@ export function NextResultCard() {
     let mounted = true
     ;(async () => {
       try {
-        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' })
         if (!mounted) return
         if (r.ok) {
           const j = r.data

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 type Row = {
   id: string
@@ -25,7 +26,7 @@ export function DashboardHero() {
     ;(async () => {
       try {
         const [prog, sups] = await Promise.all([
-          dedupedJson<any>('/api/progress/loop', { cache: 'no-store' }),
+          dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' }),
           dedupedJson<any>('/api/supplements', { cache: 'no-store' }),
         ])
         if (!mounted) return

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DailyCheckinModal from '@/components/DailyCheckinModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 function trimCohortId(raw: unknown): string | null {
   if (raw == null) return null
@@ -150,7 +151,7 @@ export function CheckinLauncher({
     }
     ;(async () => {
       try {
-        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' })
         if (!r.ok) return
         const j = r.data || {}
         if (cancelled) return
@@ -178,6 +179,12 @@ export function CheckinLauncher({
   const today = new Date().toISOString().split('T')[0]
 
   const cohortIdHint = mePayload !== undefined ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
+
+  useEffect(() => {
+    try {
+      console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
+    } catch {}
+  }, [cohortIdHint, userId, open])
 
   return (
     <>

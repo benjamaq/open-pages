@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 
 export type CohortCheckinLayoutProps = {
   isOpen: boolean
@@ -52,6 +53,7 @@ export default function CohortCheckinLayout({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          local_date: getLocalDateYmd(),
           sleep_quality: sleepQuality,
           energy,
           sleep_onset_bucket: sleepOnsetBucket,

@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
+  const raw = body?.local_date
+  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+  return new Date().toISOString().slice(0, 10)
+}
+
+function ymdAddCalendarDays(ymd: string, deltaDays: number): string {
+  const parts = ymd.split('-').map(Number)
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return ymd
+  const [y, m, d] = parts
+  const ms = Date.UTC(y, m - 1, d) + deltaDays * 86400000
+  const t = new Date(ms)
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -42,7 +57,7 @@ export async function POST(request: NextRequest) {
       if (nwRaw !== undefined && nwRaw !== null && ![0, 1, 2].includes(Number(nwRaw))) {
         return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
       }
-      const localDate = new Date().toISOString().slice(0, 10)
+      const localDate = parseClientLocalDateYmd(cohortBody)
       const sleep_onset_bucket =
         sobRaw === undefined || sobRaw === null ? null : (Number(sobRaw) as 1 | 2 | 3 | 4)
       const night_wakes =
@@ -69,9 +84,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const todayStr = localDate
-        const yDate = new Date()
-        yDate.setDate(yDate.getDate() - 1)
-        const yesterdayStr = yDate.toISOString().slice(0, 10)
+        const yesterdayStr = ymdAddCalendarDays(localDate, -1)
         const { data: prof } = await supabase
           .from('profiles')
           .select('id,current_streak,last_checkin_date,first_activity_date')
@@ -117,6 +130,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     try { console.log('[checkin] received body:', body) } catch {}
     let { mood, energy, focus, sleep, stress, tags, supplement_intake } = body || {}
+    const localDate = parseClientLocalDateYmd(body || {})
 
     if (typeof energy !== 'number' || typeof focus !== 'number') {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -135,20 +149,6 @@ export async function POST(request: NextRequest) {
     const mood10 = typeof mood === 'number' ? clamp10(mood) : null
     try { console.log('[checkin] normalized (1-10):', { energy10, focus10, sleep10, mood10 }) } catch {}
 
-    const start = new Date()
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(start.getTime())
-    end.setDate(end.getDate() + 1)
-
-    // Check for existing same-day record
-    const { data: existing } = await supabase
-      .from('checkin')
-      .select('id, created_at')
-      .eq('user_id', user.id)
-      .gte('created_at', start.toISOString())
-      .lt('created_at', end.toISOString())
-      .maybeSingle()
-
     // Values that will be written to both daily_entries and checkin (may fallback to 1–5 if DB constraints require)
     let energyWrite = energy10
     let focusWrite = focus10
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       energy: energyWrite,
       focus: focusWrite,
       created_at: new Date().toISOString(),
-      day: new Date().toISOString().split('T')[0],
+      day: localDate,
     }
     if (typeof stress === 'string') {
       const s = String(stress).toLowerCase()
@@ -182,7 +182,6 @@ export async function POST(request: NextRequest) {
     // Mirror/update daily_entries for this date (store tags, signals, supplement_intake) and collect micro-wins
     const microWins: string[] = []
     try {
-      const localDate = new Date().toISOString().slice(0, 10)
       const normalizedTags: string[] = Array.isArray(tags)
         ? (tags as any[]).map((t) => String(t).toLowerCase()).filter(Boolean)
         : []
@@ -251,10 +250,8 @@ export async function POST(request: NextRequest) {
 
     // Update streak if profiles has columns; ignore if not present
     try {
-      const todayStr = new Date().toISOString().slice(0,10)
-      const yDate = new Date()
-      yDate.setDate(yDate.getDate() - 1)
-      const yesterdayStr = yDate.toISOString().slice(0,10)
+      const todayStr = localDate
+      const yesterdayStr = ymdAddCalendarDays(localDate, -1)
       const { data: prof } = await supabase
         .from('profiles')
         .select('id,current_streak,last_checkin_date,first_activity_date')

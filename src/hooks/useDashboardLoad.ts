@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 
 export type DashboardLoadData = {
   me: any
@@ -39,6 +40,9 @@ export function useDashboardLoad() {
           if (typeof window === 'undefined') return '/api/dashboard/load'
           const sp = new URLSearchParams(window.location.search || '')
           const pass = new URLSearchParams()
+          try {
+            pass.set('localToday', getLocalDateYmd())
+          } catch {}
           for (const k of ['debugSuppId', 'dbg', 'supp', 'nocache', 'force']) {
             const v = sp.get(k)
             if (v) pass.set(k, v)

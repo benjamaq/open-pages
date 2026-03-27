@@ -32,6 +32,8 @@ export async function GET(request: Request) {
     let debugSuppId: string | null = null
     let forceNoCache = false
     let dbg = false
+    /** Client calendar "today" (YYYY-MM-DD) from dashboard; avoids UTC/server date mismatch for hasCheckedInToday. */
+    let clientTodayKey: string | null = null
     try {
       const url = new URL(request.url)
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
@@ -46,6 +48,8 @@ export async function GET(request: Request) {
         url.searchParams.get('force') === '1' ||
         url.searchParams.has('__bust') ||
         url.searchParams.has('_bust')
+      const lt = url.searchParams.get('localToday') || url.searchParams.get('clientToday')
+      if (lt && /^\d{4}-\d{2}-\d{2}$/.test(lt)) clientTodayKey = lt
     } catch {}
     const TRACE_BUCKETS = Boolean(debugSuppId)
     if (dbg) forceNoCache = true
@@ -336,7 +340,7 @@ export async function GET(request: Request) {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    const todayKey = new Date().toISOString().slice(0,10)
+    const todayKey = clientTodayKey || new Date().toISOString().slice(0, 10)
     const getDayKey = (r: any) => {
       if (r?.day) return String(r.day).slice(0,10)
       if (r?.created_at) {

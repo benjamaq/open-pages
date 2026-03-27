@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { CheckinSuccessModal } from './checkin/CheckinSuccessModal'
 import type { UserContext } from '@/lib/types'
 
@@ -81,6 +82,7 @@ export function CheckinModal({ isOpen, onClose, onSuccess }: CheckinModalProps) 
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
+          local_date: getLocalDateYmd(),
           mood,
           energy,
           focus,

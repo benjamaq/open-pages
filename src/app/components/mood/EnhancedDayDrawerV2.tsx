@@ -13,7 +13,6 @@ import EnableRemindersModal from '@/components/onboarding/EnableRemindersModal';
 import SafeType from '@/components/elli/SafeType';
 import { TypingIndicator } from '@/components/elli/TypingIndicator';
 import { trackEvent } from '@/lib/analytics';
-
 type EnhancedDayDrawerV2Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -146,6 +145,7 @@ export default function EnhancedDayDrawerV2({ isOpen, onClose, date, userId, use
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          local_date: String(date).slice(0, 10),
           mood: simpleMood,
           energy: simpleEnergy,
           focus: simpleFocus,

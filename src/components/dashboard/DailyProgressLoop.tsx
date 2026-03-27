@@ -7,6 +7,7 @@ import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal from '@/components/billing/PaywallModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 type Row = {
   id: string
@@ -101,7 +102,7 @@ export function DailyProgressLoop({
 
     const refresh = async () => {
       try {
-        const r = await dedupedJson<any>('/api/progress/loop', { cache: 'no-store' })
+        const r = await dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' })
         if (!mounted) return
         if (r.ok) setData(r.data)
         else setData(null)

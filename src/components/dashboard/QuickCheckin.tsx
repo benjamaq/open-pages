@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { toast } from 'sonner'
 
 type Props = {
@@ -24,6 +25,7 @@ export default function QuickCheckin({ onComplete, inline = false }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          local_date: getLocalDateYmd(),
           mood,
           energy,
           focus

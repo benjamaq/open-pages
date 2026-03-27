@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import CohortCheckinLayout from '@/components/CohortCheckinLayout'
 
 // Constants for symptom tracking
@@ -508,6 +509,7 @@ useEffect(() => {
 
       // Save via BioStackr check-in API
       const payload = {
+        local_date: getLocalDateYmd(),
         mood: moodScore,
         energy: energyScore,
         focus: focusScore,

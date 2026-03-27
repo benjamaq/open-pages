@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { HEALTH_PRIORITIES } from '@/lib/types'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
 type Suggestion = { id: string; name: string }
 type Row = { id: string; name: string; daysOfData: number; requiredDays: number }
@@ -121,7 +122,7 @@ export function DashboardUnifiedPanel({
           settingsRes,
         ] = await Promise.all([
           dedupedJson<any>('/api/suggestions/dailySkip', { cache: 'no-store' }),
-          dedupedJson<any>('/api/progress/loop', { cache: 'no-store' }),
+          dedupedJson<any>(appendLocalTodayParam('/api/progress/loop'), { cache: 'no-store' }),
           dedupedJson<any>('/api/supplements', { cache: 'no-store' }),
           dedupedJson<any>('/api/effect/summary', { cache: 'no-store' }),
           dedupedJson<any>('/api/data/has-daily', { cache: 'no-store' }),
