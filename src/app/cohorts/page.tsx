@@ -74,7 +74,7 @@ export default function CohortsPage() {
         <div className="relative mx-auto max-w-7xl">
           <div className="max-w-2xl lg:max-w-2xl sm:text-left text-center">
             <h1 className="mb-4 sm:mb-6 text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
-              Your customers just proved your product works.
+              Prove your product does what you claim.
             </h1>
             {/* Proof strip — label + stat chips */}
             <div className="mb-6 sm:mb-8">
@@ -97,7 +97,7 @@ export default function CohortsPage() {
               </div>
             </div>
             <p className="mb-8 sm:mb-12 text-base sm:text-2xl text-neutral-200 leading-relaxed">
-              BioStackr runs 30-day real-world cohort studies using your existing customers — delivering the claim-ready evidence you need for Meta ads, landing pages, and retail buyers.
+              Measure the exact outcomes your product claims to improve, using real customer data, and turn that into claim-ready evidence for ads, landing pages, and retail.
             </p>
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4">
               <button
@@ -117,6 +117,56 @@ export default function CohortsPage() {
                 Download sample report
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 1b — Configurable outcomes */}
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-white">
+        <div className="relative mx-auto max-w-6xl">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-neutral-900 text-center mb-4 sm:mb-6">
+            Built around your product, not generic metrics
+          </h2>
+          <p className="text-center text-neutral-700 max-w-3xl mx-auto mb-10 sm:mb-14 text-base sm:text-lg leading-relaxed">
+            Every study is configured to measure the outcomes your product is designed to improve, not generic wellness scores.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card
+              className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-lg"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            >
+              <h3 className="text-xl font-bold text-black mb-3">Sleep</h3>
+              <ul className="text-neutral-700 text-base leading-relaxed space-y-2 list-disc pl-5">
+                <li>Sleep quality</li>
+                <li>Time to fall asleep</li>
+                <li>Night wake-ups</li>
+                <li>Morning energy</li>
+              </ul>
+            </Card>
+            <Card
+              className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-lg"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            >
+              <h3 className="text-xl font-bold text-black mb-3">Gut</h3>
+              <ul className="text-neutral-700 text-base leading-relaxed space-y-2 list-disc pl-5">
+                <li>Digestive comfort</li>
+                <li>Bloating</li>
+                <li>Energy after eating</li>
+                <li>Mood</li>
+              </ul>
+            </Card>
+            <Card
+              className="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-6 shadow-lg"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            >
+              <h3 className="text-xl font-bold text-black mb-3">Cognitive</h3>
+              <ul className="text-neutral-700 text-base leading-relaxed space-y-2 list-disc pl-5">
+                <li>Focus</li>
+                <li>Mental clarity</li>
+                <li>Mood stability</li>
+                <li>Energy</li>
+              </ul>
+            </Card>
           </div>
         </div>
       </section>
@@ -159,7 +209,10 @@ export default function CohortsPage() {
             <div className="rounded-2xl lg:rounded-l-none bg-[#faf9f7] p-6 sm:p-8 lg:p-10 flex flex-col justify-center" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
               <p className="text-xs font-semibold tracking-wider uppercase text-neutral-600 mb-4">After a BioStackr study</p>
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black leading-tight mb-4">
-                &ldquo;74% of participants reported better sleep in a verified 30-day customer study.&rdquo;
+                &ldquo;74% of participants reported better sleep within 21 days.&rdquo;
+              </p>
+              <p className="text-base text-neutral-700 leading-relaxed mb-4">
+                Based on real customer tracking across the cohort.
               </p>
               <p className="text-sm text-neutral-600 mb-2">47 participants · 30 days · 1,034 check-ins</p>
               <p className="text-lg font-semibold text-neutral-900 mb-2">Credible. Claim-ready. Yours.</p>
@@ -225,7 +278,7 @@ export default function CohortsPage() {
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white text-center mb-10 sm:mb-14">
-            30 Days of Tracking. Claim-Ready Evidence.
+            From customers to claim-ready evidence in 30 days
           </h2>
           {/* Pipeline bar — six phases */}
           <div className="mb-8 overflow-x-auto">
@@ -242,11 +295,11 @@ export default function CohortsPage() {
               <div className="space-y-0">
                 {[
                   { num: 1, title: 'You invite your customers', body: 'BioStackr provides the study invitation and enrollment page. You send it to your existing customer list.' },
-                  { num: 2, title: 'Participants are screened and enrolled', body: 'Interested customers apply through a BioStackr study page. Participants are reviewed and selected to form a qualified study cohort.' },
+                  { num: 2, title: 'We select high-quality customers to form a clean cohort', body: 'Interested customers apply through a BioStackr study page. We review and select participants so your data reflects the outcomes your product claims to improve.' },
                   { num: 3, title: 'You ship the product', body: 'BioStackr sends you the confirmed participant list. You ship a 30-day supply of the product being studied.' },
-                  { num: 4, title: 'Participants track daily outcomes', body: 'Participants complete simple daily check-ins for sleep, energy, and mood, paired with optional wearable data uploads (Oura, Apple Health, WHOOP) for objective physiological metrics. BioStackr manages reminders and compliance throughout.' },
-                  { num: 5, title: 'Cohort analysis', body: 'BioStackr runs full statistical analysis including effect sizes, confidence intervals and cohort outcome distributions.' },
-                  { num: 6, title: 'Evidence delivered', body: 'You receive an executive summary, full dataset report, and claim-ready marketing language — giving you the unarguable R&D assets you need for Meta ads and retail pitches within two weeks of study end.' },
+                  { num: 4, title: 'Customers track the exact outcomes your product claims to improve', body: 'Participants complete daily check-ins tailored to your study — not generic wellness scores — with optional wearable data (Oura, Apple Health, WHOOP) for objective metrics. BioStackr manages reminders and compliance throughout.' },
+                  { num: 5, title: 'Outcome analysis', body: 'BioStackr runs full statistical analysis on those outcomes: effect sizes, confidence intervals, and cohort-level distributions you can stand behind in marketing and retail.' },
+                  { num: 6, title: 'Claim-ready evidence delivered', body: 'You receive an executive summary, full dataset report, and claim-ready marketing language — evidence shaped around your product claims, ready for Meta ads and retail pitches within two weeks of study end.' },
                 ].map((step, i) => (
                 <div
                   key={step.num}
@@ -262,6 +315,38 @@ export default function CohortsPage() {
                 </div>
               ))}
               </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4b — Fit */}
+      <section className="relative py-14 sm:py-20 px-4 sm:px-6 bg-[#faf9f7] border-y border-neutral-200">
+        <div className="relative mx-auto max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 text-center mb-8">
+            Best suited for
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <p className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-4">Works best for</p>
+              <p className="text-neutral-700 text-base mb-4 leading-relaxed">
+                Products with measurable short-term outcomes:
+              </p>
+              <ul className="text-neutral-800 text-base leading-relaxed space-y-2 list-disc pl-5">
+                <li>Sleep</li>
+                <li>Energy</li>
+                <li>Focus</li>
+                <li>Recovery</li>
+                <li>Mood</li>
+                <li>Digestive comfort</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <p className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-4">Less suited for</p>
+              <ul className="text-neutral-800 text-base leading-relaxed space-y-2 list-disc pl-5">
+                <li>Blood markers</li>
+                <li>Long-term longevity claims</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -372,6 +457,20 @@ export default function CohortsPage() {
               </p>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Section 5b — Positioning before pricing */}
+      <section className="relative py-14 sm:py-20 px-4 sm:px-6 bg-white border-t border-neutral-200">
+        <div className="relative mx-auto max-w-3xl text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 mb-4">
+            The middle ground between testimonials and clinical trials
+          </h2>
+          <p className="text-neutral-700 text-base sm:text-lg leading-relaxed">
+            Clinical trials take years and cost hundreds of thousands.
+            Testimonials aren&apos;t trusted anymore.
+            BioStackr gives you real-world evidence in 21–30 days.
+          </p>
         </div>
       </section>
 
