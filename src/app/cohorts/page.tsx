@@ -407,7 +407,7 @@ export default function CohortsPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-neutral-200">
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal Study+</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal Study</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">15–25</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">21 days</td>
                   <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$5,000</td>
