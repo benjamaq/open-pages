@@ -320,9 +320,21 @@ export default function CohortsPage() {
       </section>
 
       {/* Section 4b — Fit */}
-      <section className="relative py-14 sm:py-20 px-4 sm:px-6 bg-[#faf9f7] border-y border-neutral-200">
+      <section
+        className="relative py-14 sm:py-20 px-4 sm:px-6 border-y border-neutral-200/40 overflow-hidden"
+        style={{
+          backgroundImage: "url('/new back.jpg')",
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/55" aria-hidden />
         <div className="relative mx-auto max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 text-center mb-8">
+          <h2
+            className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center mb-8"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}
+          >
             Best suited for
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -485,7 +497,7 @@ export default function CohortsPage() {
         }}
       >
         <div className="absolute inset-0 bg-black/55" />
-        <div className="relative mx-auto max-w-3xl">
+        <div className="relative mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white text-center mb-4">
             Beta pricing for early brand partners
           </h2>
@@ -494,7 +506,7 @@ export default function CohortsPage() {
           </p>
           <div className="rounded-2xl bg-[#faf9f7] p-6 sm:p-8 shadow-xl overflow-x-auto" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}>
             <p className="text-center font-bold text-neutral-900 text-base sm:text-lg mb-6">Everything included. No hidden costs.</p>
-            <table className="w-full min-w-[320px] text-sm sm:text-base">
+            <table className="w-full min-w-[360px] text-sm sm:text-base">
               <thead>
                 <tr className="border-b border-neutral-300">
                   <th className="text-left py-3 sm:py-4 text-xs sm:text-sm font-medium text-neutral-500">Study</th>
@@ -506,22 +518,22 @@ export default function CohortsPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-neutral-200">
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal Study</td>
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">10–15</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">10–15 (aim: 12)</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">21 days</td>
                   <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$5,000</td>
                   <td className="py-4 sm:py-5 text-right text-xs sm:text-sm text-neutral-500 hidden sm:table-cell">$12,500</td>
                 </tr>
                 <tr className="border-b border-neutral-200">
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Core Cohort</td>
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">30</td>
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">30 days</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal+</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">15–25 (aim: 20)</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">21 days</td>
                   <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$10,000</td>
                   <td className="py-4 sm:py-5 text-right text-xs sm:text-sm text-neutral-500 hidden sm:table-cell">$20,000</td>
                 </tr>
                 <tr>
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Flagship Cohort</td>
-                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">50</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Core</td>
+                  <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">30–50 (aim: 40)</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">30 days</td>
                   <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$18,000</td>
                   <td className="py-4 sm:py-5 text-right text-xs sm:text-sm text-neutral-500 hidden sm:table-cell">$32,000</td>
