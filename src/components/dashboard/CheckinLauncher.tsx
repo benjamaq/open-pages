@@ -5,6 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import DailyCheckinModal from '@/components/DailyCheckinModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 
+function trimCohortId(raw: unknown): string | null {
+  if (raw == null) return null
+  const s = String(raw).trim()
+  return s !== '' ? s : null
+}
+
 export function CheckinLauncher({
   mePayload,
   supplementsPayload,
@@ -28,6 +34,8 @@ export function CheckinLauncher({
     gear: []
   })
   const [currentEnergy, setCurrentEnergy] = useState<number>(5)
+  /** Set only when mePayload is undefined (standalone fetch). */
+  const [asyncCohortHint, setAsyncCohortHint] = useState<string | null | undefined>(undefined)
 
   useEffect(() => {
     const val = search.get('checkin')
@@ -60,6 +68,7 @@ export function CheckinLauncher({
         else if (data?.id) setUserId(String(data.id))
         if (data?.firstName) setUserName(String(data.firstName))
       } catch {}
+      setAsyncCohortHint(undefined)
       return () => { cancelled = true }
     }
     ;(async () => {
@@ -70,7 +79,10 @@ export function CheckinLauncher({
         if (cancelled) return
         if (data?.userId) setUserId(String(data.userId))
         if (data?.firstName) setUserName(String(data.firstName))
-      } catch {}
+        setAsyncCohortHint(trimCohortId(data?.cohortId))
+      } catch {
+        if (!cancelled) setAsyncCohortHint(null)
+      }
     })()
     return () => { cancelled = true }
   }, [mePayload])
@@ -165,6 +177,8 @@ export function CheckinLauncher({
 
   const today = new Date().toISOString().split('T')[0]
 
+  const cohortIdHint = mePayload !== undefined ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
+
   return (
     <>
       {open && (
@@ -178,6 +192,7 @@ export function CheckinLauncher({
           currentEnergy={currentEnergy}
           todayItems={todayItems}
           userId={userId || 'guest'}
+          cohortIdHint={cohortIdHint}
         />
       )}
     </>

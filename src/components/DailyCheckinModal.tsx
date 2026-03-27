@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
+import CohortCheckinLayout from '@/components/CohortCheckinLayout'
 
 // Constants for symptom tracking
 const coreSymptoms = [
@@ -76,6 +77,8 @@ interface DailyCheckinModalProps {
   todayItems: any
   userId: string
   profileSlug?: string
+  /** From /api/me (server session). Browser Supabase often cannot read profiles.cohort_id under RLS. */
+  cohortIdHint?: string | null
 }
 
 // Helper functions
@@ -83,6 +86,12 @@ const formatDate = (d: Date) =>
   d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 
 const isNum = (n: unknown): n is number => typeof n === 'number' && !Number.isNaN(n)
+
+function trimCohortId(raw: unknown): string | null {
+  if (raw == null) return null
+  const s = String(raw).trim()
+  return s !== '' ? s : null
+}
 
 function energyToColor(n: number) {
   if (n >= 8) return 'text-emerald-600'
@@ -200,7 +209,8 @@ export default function DailyCheckinModal({
   currentEnergy,
   todayItems,
   userId,
-  profileSlug
+  profileSlug,
+  cohortIdHint,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -223,6 +233,10 @@ export default function DailyCheckinModal({
   const [moodScore, setMoodScore] = useState<number>(5)
   const [customSymptomInput, setCustomSymptomInput] = useState('')
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
+  const [cohortIdFromClient, setCohortIdFromClient] = useState<string | null>(null)
+
+  const effectiveCohortId =
+    cohortIdHint !== undefined ? trimCohortId(cohortIdHint) : cohortIdFromClient
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -236,6 +250,34 @@ export default function DailyCheckinModal({
     { id: 'late_caffeine', label: 'Late caffeine' },
     { id: 'very_high_carbs', label: 'Very high carbs' },
   ]
+
+  // Cohort: prefer server hint (same session as /api/me). Browser anon select often returns no row under RLS.
+  useEffect(() => {
+    if (!isOpen || !userId || userId === 'guest') {
+      setCohortIdFromClient(null)
+      return
+    }
+    if (cohortIdHint !== undefined) {
+      setCohortIdFromClient(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const sb = createClient()
+        const { data } = await sb.from('profiles').select('cohort_id').eq('user_id', userId).maybeSingle()
+        if (cancelled) return
+        const raw = (data as { cohort_id?: string | null } | null)?.cohort_id
+        setCohortIdFromClient(trimCohortId(raw))
+      } catch {
+        if (!cancelled) setCohortIdFromClient(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, userId, cohortIdHint])
 
   // Load saved data when modal opens
 useEffect(() => {
@@ -878,6 +920,12 @@ useEffect(() => {
   }
 
   if (!isOpen) return null
+
+  if (effectiveCohortId) {
+    return (
+      <CohortCheckinLayout isOpen={isOpen} onClose={onClose} onEnergyUpdate={onEnergyUpdate} userId={userId} />
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">

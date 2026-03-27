@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     let userId: string | null = null
     let tier: string | null = null
     let pro_expires_at: string | null = null
+    let cohortId: string | null = null
 
     if (!authError && user) {
       email = user.email || null
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
         // Attempt primary profiles table first
         const { data: prof } = await supabase
           .from('profiles')
-          .select('first_name, display_name, full_name, tier, pro_expires_at')
+          .select('first_name, display_name, full_name, tier, pro_expires_at, cohort_id')
           .eq('user_id', userId)
           .maybeSingle()
         const fromProfiles =
@@ -60,6 +61,10 @@ export async function GET(request: Request) {
         if (fromProfiles) firstName = String(fromProfiles)
         tier = (prof as any)?.tier ?? null
         pro_expires_at = (prof as any)?.pro_expires_at ?? null
+        {
+          const rawC = (prof as { cohort_id?: string | null } | null)?.cohort_id
+          cohortId = rawC != null && String(rawC).trim() !== '' ? String(rawC).trim() : null
+        }
         // Fallback legacy app_user table
         if (!firstName) {
           const { data: profile } = await supabase
@@ -91,6 +96,7 @@ export async function GET(request: Request) {
       // These are used by client-side fallbacks for gating/nav when billing endpoint is unavailable.
       tier,
       pro_expires_at,
+      cohortId,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
