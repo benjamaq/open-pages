@@ -546,7 +546,7 @@ export default function CohortsPage() {
               <p>Beta pricing available to brands confirming within the current onboarding window.</p>
             </div>
             <p className="mt-8 pt-6 border-t border-neutral-200 text-base text-neutral-600">
-              Typical clinical validation: randomised trial $200,000–$2,000,000. BioStackr cohort study from $5,000.
+              Typical clinical trial: $500,000–$2,000,000. BioStackr study from $5,000.
             </p>
           </div>
         </div>
