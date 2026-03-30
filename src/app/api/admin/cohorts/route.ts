@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { countCohortConfirmedParticipants, countCohortPipelineParticipants } from '@/lib/cohortRecruitment'
+import {
+  cohortHealthStatusLabel,
+  countCohortConfirmedParticipants,
+  countCohortEnrollmentsLast24h,
+  countCohortStatusParticipants,
+} from '@/lib/cohortRecruitment'
 
 function adminDenied(req: NextRequest): NextResponse | null {
   if (process.env.NODE_ENV !== 'production') return null
@@ -23,7 +28,7 @@ export async function GET(request: NextRequest) {
     if (!cohortUuid) {
       const { data: cohorts, error } = await supabaseAdmin
         .from('cohorts')
-        .select('id, slug, brand_name, product_name, status, max_participants')
+        .select('id, slug, brand_name, product_name, status, max_participants, min_participants')
         .order('brand_name', { ascending: true })
       if (error) {
         console.error('[admin/cohorts] list:', error)
@@ -31,15 +36,32 @@ export async function GET(request: NextRequest) {
       }
       const base = cohorts || []
       const cohortsWithCounts = await Promise.all(
-        base.map(async (c: { id: string }) => {
-          const [confirmedCount, pipelineCount] = await Promise.all([
+        base.map(async (c: { id: string; max_participants?: number | null; min_participants?: number | null }) => {
+          const [appliedCount, confirmedCount, droppedCount, new24] = await Promise.all([
+            countCohortStatusParticipants(c.id, 'applied'),
             countCohortConfirmedParticipants(c.id),
-            countCohortPipelineParticipants(c.id),
+            countCohortStatusParticipants(c.id, 'dropped'),
+            countCohortEnrollmentsLast24h(c.id),
           ])
+          const maxP = c.max_participants != null ? Number(c.max_participants) : null
+          const confirmedPctOfMax =
+            maxP != null && Number.isFinite(maxP) && maxP > 0
+              ? Math.round((confirmedCount / maxP) * 1000) / 10
+              : null
+          const health = cohortHealthStatusLabel({
+            minParticipants: c.min_participants != null ? Number(c.min_participants) : null,
+            maxParticipants: maxP,
+            confirmedCount,
+            newEnrollmentsLast24h: new24,
+          })
           return {
             ...c,
+            applied_participant_count: appliedCount,
             confirmed_participant_count: confirmedCount,
-            pipeline_participant_count: pipelineCount,
+            dropped_participant_count: droppedCount,
+            confirmed_pct_of_max: confirmedPctOfMax,
+            new_enrollments_24h: new24,
+            health_status: health,
           }
         })
       )

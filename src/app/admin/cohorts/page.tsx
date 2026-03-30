@@ -12,8 +12,13 @@ type Cohort = {
   product_name: string
   status: string | null
   max_participants?: number | null
+  min_participants?: number | null
+  applied_participant_count?: number
   confirmed_participant_count?: number
-  pipeline_participant_count?: number
+  dropped_participant_count?: number
+  confirmed_pct_of_max?: number | null
+  new_enrollments_24h?: number
+  health_status?: string
 }
 
 type Participant = {
@@ -184,10 +189,9 @@ export default function AdminCohortsPage() {
         {!loading && cohorts.length > 0 && (
           <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-sm font-semibold text-gray-900">Cohort overview</h2>
+              <h2 className="text-sm font-semibold text-gray-900">Live metrics</h2>
               <p className="text-xs text-gray-600 mt-1">
-                Study landing closes to new applicants when <strong>confirmed</strong> reaches max. Pipeline = applied +
-                confirmed.
+                New apps = cohort_participants enrolled in the last 24h. Health labels are display-only.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -195,15 +199,24 @@ export default function AdminCohortsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium text-gray-600">Cohort</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Applied</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-600">Confirmed</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Max</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Pipeline</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Dropped</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Conf. % max</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">New 24h</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Min / max</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Health</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {cohorts.map((c) => {
+                    const applied = c.applied_participant_count ?? 0
                     const conf = c.confirmed_participant_count ?? 0
-                    const pipe = c.pipeline_participant_count ?? 0
+                    const dropped = c.dropped_participant_count ?? 0
+                    const pct = c.confirmed_pct_of_max
+                    const new24 = c.new_enrollments_24h ?? 0
+                    const health = c.health_status ?? '—'
+                    const min = c.min_participants
                     const max = c.max_participants
                     return (
                       <tr key={c.id}>
@@ -211,9 +224,17 @@ export default function AdminCohortsPage() {
                           {c.brand_name} · {c.product_name}
                           <div className="text-xs text-gray-500 font-mono">{c.slug}</div>
                         </td>
+                        <td className="px-3 py-2 text-right text-gray-900">{applied}</td>
                         <td className="px-3 py-2 text-right text-gray-900">{conf}</td>
-                        <td className="px-3 py-2 text-right text-gray-700">{max != null ? max : '—'}</td>
-                        <td className="px-3 py-2 text-right text-gray-700">{pipe}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{dropped}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">
+                          {pct != null ? `${pct}%` : '—'}
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-700">{new24}</td>
+                        <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                          {min != null ? min : '—'} / {max != null ? max : '—'}
+                        </td>
+                        <td className="px-3 py-2 text-gray-800">{health}</td>
                       </tr>
                     )
                   })}

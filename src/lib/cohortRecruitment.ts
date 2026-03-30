@@ -65,3 +65,33 @@ export async function countCohortEnrollmentsLast24h(cohortUuid: string): Promise
   }
   return typeof count === 'number' ? count : 0
 }
+
+/**
+ * Display-only health hint for admin (no automated actions).
+ * Precedence: Send wave 2 → On track → Watch → em dash.
+ */
+export function cohortHealthStatusLabel(input: {
+  minParticipants: number | null
+  maxParticipants: number | null
+  confirmedCount: number
+  newEnrollmentsLast24h: number
+}): string {
+  const minP = input.minParticipants
+  const maxP = input.maxParticipants
+  const conf = input.confirmedCount
+  const new24 = input.newEnrollmentsLast24h
+
+  const minOk = minP != null && Number.isFinite(Number(minP)) && Number(minP) > 0
+  const maxOk = maxP != null && Number.isFinite(Number(maxP)) && Number(maxP) > 0
+
+  if (minOk && conf < Number(minP) && new24 === 0) {
+    return 'Send wave 2'
+  }
+  if (maxOk && conf >= 0.5 * Number(maxP)) {
+    return 'On track'
+  }
+  if (maxOk && conf < 0.5 * Number(maxP) && new24 === 0) {
+    return 'Watch'
+  }
+  return '—'
+}
