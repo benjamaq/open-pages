@@ -205,6 +205,7 @@ function CohortSignupInner() {
         }
         const pr = await fetch('/api/profiles', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(apiBody),
         })
@@ -214,6 +215,18 @@ function CohortSignupInner() {
           setLoading(false)
           return
         }
+        // Belt-and-suspenders: when email confirmation is off, session exists — ensure cohort_id + participant via authed API.
+        try {
+          const { data: sessWrap } = await supabase.auth.getSession()
+          if (sessWrap?.session) {
+            await fetch('/api/cohort/complete-pending-enrollment', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cohort_slug: slug }),
+            })
+          }
+        } catch {}
         try {
           sessionStorage.removeItem(COHORT_QUALIFICATION_STORAGE_KEY)
         } catch {}
