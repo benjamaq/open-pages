@@ -16,6 +16,37 @@ async function sendCohortEnrollmentEmail(to: string) {
   })
 }
 
+/** `profileId` = public.profiles.id; `cohortSlug` = public.cohorts.slug (same as profiles.cohort_id text). */
+async function tryInsertCohortParticipant(profileId: string, cohortSlug: string | null) {
+  const slug = cohortSlug != null ? String(cohortSlug).trim() : ''
+  if (!slug || !profileId) return
+  try {
+    const { data: cohortRow, error: cohortErr } = await supabaseAdmin
+      .from('cohorts')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle()
+    if (cohortErr) {
+      console.error('[api/profiles] cohort lookup for participant:', cohortErr)
+      return
+    }
+    if (!cohortRow?.id) {
+      console.warn('[api/profiles] cohort slug not found for cohort_participants:', slug)
+      return
+    }
+    const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert({
+      user_id: profileId,
+      cohort_id: cohortRow.id,
+      status: 'applied',
+      enrolled_at: new Date().toISOString(),
+    } as any)
+    if (insErr?.code === '23505') return
+    if (insErr) console.error('[api/profiles] cohort_participants insert:', insErr)
+  } catch (e) {
+    console.error('[api/profiles] tryInsertCohortParticipant:', e)
+  }
+}
+
 function toSlugBase(input: string) {
   const base = (input || '').trim().toLowerCase()
   const cleaned = base
@@ -73,11 +104,16 @@ export async function POST(req: NextRequest) {
             const { error: updErr } = await supabaseAdmin.from('profiles').update(updatePayload as any).eq('user_id', user_id)
             if (updErr) {
               console.error('[api/profiles] update error:', updErr)
-            } else if (cohort_id != null && email) {
-              try {
-                await sendCohortEnrollmentEmail(email)
-              } catch (mailErr) {
-                console.error('[api/profiles] cohort welcome email failed:', mailErr)
+            } else {
+              if (cohort_id != null && email) {
+                try {
+                  await sendCohortEnrollmentEmail(email)
+                } catch (mailErr) {
+                  console.error('[api/profiles] cohort welcome email failed:', mailErr)
+                }
+              }
+              if (cohort_id != null) {
+                await tryInsertCohortParticipant(String((existing as any).id), cohort_id)
               }
             }
           }
@@ -143,12 +179,15 @@ export async function POST(req: NextRequest) {
             .from('profiles')
             .update({ cohort_id, updated_at: new Date().toISOString() } as any)
             .eq('user_id', user_id)
-          if (!raceUpdErr && email) {
-            try {
-              await sendCohortEnrollmentEmail(email)
-            } catch (mailErr) {
-              console.error('[api/profiles] cohort welcome email failed:', mailErr)
+          if (!raceUpdErr) {
+            if (email) {
+              try {
+                await sendCohortEnrollmentEmail(email)
+              } catch (mailErr) {
+                console.error('[api/profiles] cohort welcome email failed:', mailErr)
+              }
             }
+            await tryInsertCohortParticipant(String((existing as any).id), cohort_id)
           }
         }
         return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
@@ -163,6 +202,9 @@ export async function POST(req: NextRequest) {
       } catch (mailErr) {
         console.error('[api/profiles] cohort welcome email failed:', mailErr)
       }
+    }
+    if (cohort_id != null && data?.id) {
+      await tryInsertCohortParticipant(String(data.id), cohort_id)
     }
 
     return NextResponse.json({ ok: true, id: data?.id, slug: (data as any)?.slug })
