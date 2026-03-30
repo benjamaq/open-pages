@@ -521,7 +521,7 @@ export default function CohortsPage() {
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">Signal</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">10–15 (aim: 12)</td>
                   <td className="py-4 sm:py-5 text-neutral-900 text-sm sm:text-base">21 days</td>
-                  <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$5,000</td>
+                  <td className="py-4 sm:py-5 text-right font-bold text-black text-lg sm:text-xl">$7,500</td>
                   <td className="py-4 sm:py-5 text-right text-xs sm:text-sm text-neutral-500 hidden sm:table-cell">$12,500</td>
                 </tr>
                 <tr className="border-b border-neutral-200">
@@ -546,7 +546,7 @@ export default function CohortsPage() {
               <p>Beta pricing available to brands confirming within the current onboarding window.</p>
             </div>
             <p className="mt-8 pt-6 border-t border-neutral-200 text-base text-neutral-600">
-              Typical clinical trial: $500,000–$2,000,000. BioStackr study from $5,000.
+              Typical clinical trial: $500,000–$2,000,000. BioStackr study from $7,500.
             </p>
           </div>
         </div>

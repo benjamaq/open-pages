@@ -330,7 +330,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           <WhatYouReceive productName={productName} />
           <section className="bg-[#faf9f7] py-14 sm:py-20">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
-              <CohortQualificationSection cohortSlug={cohort.slug} cohortBrandName={brandName} />
+              <CohortQualificationSection
+                cohortSlug={cohort.slug}
+                cohortBrandName={brandName}
+                productName={productName}
+              />
             </div>
           </section>
         </>

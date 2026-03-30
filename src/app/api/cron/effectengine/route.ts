@@ -84,7 +84,7 @@ export async function POST() {
 
         // A) ON/OFF Cohen's d + bootstrap
         const d = cohenD(onVals, offVals)
-        const conf = bootstrapConfidence(onVals, offVals, 400)
+        const conf = bootstrapConfidence(onVals, offVals, 1000)
         const dir: 'positive' | 'negative' | 'neutral' = d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral'
 
         // B) Pre/Post mean delta

@@ -27,7 +27,7 @@ export function cohenD(onVals: Series, offVals: Series): number {
   return (muOn - muOff) / sp
 }
 
-export function bootstrapConfidence(onVals: Series, offVals: Series, samples = 500): number {
+export function bootstrapConfidence(onVals: Series, offVals: Series, samples = 1000): number {
   if (!onVals.length || !offVals.length) return 0
   const ds: number[] = []
   for (let i = 0; i < samples; i++) {

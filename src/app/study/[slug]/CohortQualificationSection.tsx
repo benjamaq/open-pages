@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   setCohortCookie,
@@ -15,14 +15,39 @@ const PRESCRIBE_EXIT =
 const CURRENT_PRODUCT_EXIT =
   'Thanks for your interest — this study needs participants with a clean baseline, which means not currently taking the product. We hope to include you in a future study.'
 
-const RUST = '#C84B2F'
+const BORDER_SUBTLE = '#d4cfc8'
+const BORDER_SELECTED = '#1a1a1a'
+
+const pillOuterClass =
+  'flex w-full flex-col gap-3 sm:flex-row sm:gap-3'
+
+function selectorButtonClass(selected: boolean): string {
+  const base =
+    'w-full rounded-[8px] px-5 py-3 text-left text-[14px] leading-snug font-normal transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2'
+  if (selected) {
+    return `${base} text-white`
+  }
+  return `${base} bg-white text-neutral-900`
+}
+
+function selectorButtonStyle(selected: boolean): CSSProperties {
+  return {
+    border: `1.5px solid ${selected ? BORDER_SELECTED : BORDER_SUBTLE}`,
+    padding: '12px 20px',
+    fontSize: 14,
+    background: selected ? BORDER_SELECTED : '#fff',
+    color: selected ? '#fff' : undefined,
+  }
+}
 
 export function CohortQualificationSection({
   cohortSlug,
   cohortBrandName,
+  productName,
 }: {
   cohortSlug: string
   cohortBrandName: string
+  productName: string
 }) {
   const router = useRouter()
   const [issue, setIssue] = useState('')
@@ -83,6 +108,8 @@ export function CohortQualificationSection({
     router.push('/signup/cohort')
   }
 
+  const productLabel = String(productName || '').trim() || 'this product'
+
   if (hardExit) {
     return (
       <section id="cohort-apply-form" className="scroll-mt-24">
@@ -105,24 +132,16 @@ export function CohortQualificationSection({
       <h2 className="text-center text-[22px] font-semibold text-neutral-900">Apply for a spot</h2>
 
       <div
-        className="mt-8 border-l-[3px] bg-white px-4 py-4 text-[14px] leading-relaxed text-neutral-600 sm:px-5"
-        style={{ borderColor: RUST }}
-      >
-        This study is designed to measure real outcomes — not collect opinions. We accept a limited number of
-        participants who meet our criteria. Applications are reviewed within 24 hours.
-      </div>
-
-      <div
-        className="mt-8 rounded-xl border bg-white"
+        className="mx-auto mt-8 max-w-[680px] rounded-xl border bg-white"
         style={{
           borderColor: '#e5e2dc',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           borderRadius: 12,
-          padding: 28,
+          padding: 40,
         }}
       >
-        <form onSubmit={onSubmit} className="space-y-8" noValidate>
-          <div>
+        <form onSubmit={onSubmit} className="block" noValidate>
+          <div className="mb-7">
             <label htmlFor="cohort-issue" className="block text-sm font-medium text-neutral-800">
               What is the main issue you&apos;re hoping this supplement will help with? Please be specific.
             </label>
@@ -134,7 +153,7 @@ export function CohortQualificationSection({
               <textarea
                 id="cohort-issue"
                 name="issue"
-                rows={2}
+                rows={4}
                 value={issue}
                 onChange={(e) => {
                   setIssue(e.target.value)
@@ -142,92 +161,109 @@ export function CohortQualificationSection({
                 }}
                 onBlur={() => setIssueTouched(true)}
                 placeholder="e.g. I wake up around 3am and can't get back to sleep."
-                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 pb-7 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                className="min-h-[100px] w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 pb-7 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
               />
               <p className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-[#888]">
                 Minimum 20 characters
               </p>
             </div>
+            <p className="mt-2 text-[12px] italic leading-relaxed" style={{ color: '#999' }}>
+              The more specific you are, the stronger your application. Vague answers are less likely to be selected.
+            </p>
             {issueTouched && issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
           </div>
 
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium text-neutral-800">Are you currently taking this product?</legend>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
-                <input
-                  type="radio"
-                  name="current_product"
-                  checked={currentProduct === 'no'}
-                  onChange={() => {
-                    setCurrentProduct('no')
-                    setCurrentProductError(false)
-                  }}
-                  className="text-neutral-900"
-                />
-                No
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
-                <input
-                  type="radio"
-                  name="current_product"
-                  checked={currentProduct === 'yes'}
-                  onChange={() => {
-                    setCurrentProduct('yes')
-                    setCurrentProductError(false)
-                  }}
-                  className="text-neutral-900"
-                />
-                Yes
-              </label>
+          <div className="mb-7">
+            <div className="text-sm font-medium text-neutral-800">
+              Are you currently taking {productLabel}?
             </div>
-            {currentProductError && <p className="text-sm text-red-600">Please answer this question to continue.</p>}
-          </fieldset>
-
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium text-neutral-800">
-              Are you currently taking any prescription medication for sleep?
-            </legend>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
-                <input
-                  type="radio"
-                  name="prescription_sleep"
-                  checked={prescription === 'no'}
-                  onChange={() => {
-                    setPrescription('no')
-                    setPrescError(false)
-                  }}
-                  className="text-neutral-900"
-                />
-                No
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
-                <input
-                  type="radio"
-                  name="prescription_sleep"
-                  checked={prescription === 'yes'}
-                  onChange={() => {
-                    setPrescription('yes')
-                    setPrescError(false)
-                  }}
-                  className="text-neutral-900"
-                />
-                Yes
-              </label>
+            <div className={pillOuterClass + ' mt-3'}>
+              <button
+                type="button"
+                className={selectorButtonClass(currentProduct === 'no')}
+                style={selectorButtonStyle(currentProduct === 'no')}
+                onClick={() => {
+                  setCurrentProduct('no')
+                  setCurrentProductError(false)
+                }}
+              >
+                No, I&apos;m not currently taking it
+              </button>
+              <button
+                type="button"
+                className={selectorButtonClass(currentProduct === 'yes')}
+                style={selectorButtonStyle(currentProduct === 'yes')}
+                onClick={() => {
+                  setCurrentProduct('yes')
+                  setCurrentProductError(false)
+                }}
+              >
+                Yes, I&apos;m currently taking it
+              </button>
             </div>
-            {prescError && <p className="text-sm text-red-600">Please answer this question to continue.</p>}
-          </fieldset>
+            {currentProductError && <p className="mt-2 text-sm text-red-600">Please answer this question to continue.</p>}
+          </div>
 
-          <div>
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-neutral-700">
+          <div className="mb-7">
+            <div className="text-sm font-medium text-neutral-800">
+              Are you currently taking prescription medication for sleep?
+            </div>
+            <div className={pillOuterClass + ' mt-3'}>
+              <button
+                type="button"
+                className={selectorButtonClass(prescription === 'no')}
+                style={selectorButtonStyle(prescription === 'no')}
+                onClick={() => {
+                  setPrescription('no')
+                  setPrescError(false)
+                }}
+              >
+                No
+              </button>
+              <button
+                type="button"
+                className={selectorButtonClass(prescription === 'yes')}
+                style={selectorButtonStyle(prescription === 'yes')}
+                onClick={() => {
+                  setPrescription('yes')
+                  setPrescError(false)
+                }}
+              >
+                Yes — this would disqualify me
+              </button>
+            </div>
+            {prescError && <p className="mt-2 text-sm text-red-600">Please answer this question to continue.</p>}
+          </div>
+
+          <div className="mb-7">
+            <label
+              htmlFor="cohort-commitment"
+              className="flex w-full cursor-pointer gap-3 rounded-[8px] p-4 text-left text-sm leading-relaxed text-neutral-800 transition-colors focus-within:ring-2 focus-within:ring-neutral-900 focus-within:ring-offset-2"
+              style={{
+                border: `1.5px solid ${commitment ? BORDER_SELECTED : BORDER_SUBTLE}`,
+                background: commitment ? '#f0f7ee' : '#fff',
+                padding: 16,
+              }}
+            >
               <input
+                id="cohort-commitment"
                 type="checkbox"
+                className="sr-only"
                 checked={commitment}
                 onChange={(e) => setCommitment(e.target.checked)}
-                className="mt-1 text-neutral-900"
                 required
               />
+              <span
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border text-sm font-semibold leading-none"
+                style={{
+                  borderColor: commitment ? BORDER_SELECTED : BORDER_SUBTLE,
+                  background: commitment ? 'rgba(255,255,255,0.6)' : '#fff',
+                  color: commitment ? BORDER_SELECTED : '#9ca3af',
+                }}
+                aria-hidden
+              >
+                {commitment ? '✓' : '☐'}
+              </span>
               <span>
                 I can complete a 30-second check-in each morning for 21 days, starting with 2 check-ins in the next 48
                 hours.
@@ -237,11 +273,11 @@ export function CohortQualificationSection({
 
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-full bg-neutral-900 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 sm:w-auto"
+            className="w-full rounded-[8px] bg-neutral-900 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
           >
             Submit my application
           </button>
-          <p className="text-center text-[13px] leading-relaxed text-neutral-500 sm:text-left">
+          <p className="mt-4 text-center text-[13px] leading-relaxed text-neutral-500 sm:text-left">
             Applications are reviewed within 24 hours. You&apos;ll receive a confirmation by email.
           </p>
         </form>

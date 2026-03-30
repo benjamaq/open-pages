@@ -4,7 +4,9 @@ import "./globals.css";
 import "@/lib/animations.css";
 import Script from "next/script";
 import { Analytics } from '@vercel/analytics/react'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import PWARegister from "./components/PWARegister";
+import GAPageView from "@/components/GAPageView";
 import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
@@ -47,6 +49,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://connect.facebook.net" />
         <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.facebook.com" />
@@ -58,33 +62,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v2.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-v2.png" />
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-BQJWCVNJH0"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-BQJWCVNJH0', {
-              page_title: document.title,
-              page_location: window.location.href
-            });
-            
-            // Send initial page view
-            gtag('event', 'page_view', {
-              page_title: document.title,
-              page_location: window.location.href,
-              page_path: window.location.pathname
-            });
-            
-            console.log('Google Analytics initialized with ID: G-BQJWCVNJH0');
-            console.log('GA Debug - Page loaded:', window.location.href);
-            console.log('GA Debug - DataLayer:', window.dataLayer);
-          `}
-        </Script>
+        {/* Google Analytics — @next/third-parties handles gtag.js + initial page_view; GAPageView handles route changes */}
+        <GoogleAnalytics gaId="G-BQJWCVNJH0" />
         {/* Meta Pixel shim (define fbq queue BEFORE loader to avoid race) */}
         <Script id="meta-pixel-shim" strategy="beforeInteractive">
           {`
@@ -118,6 +97,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased text-gray-900 min-h-screen leading-relaxed overflow-x-hidden" style={{ backgroundColor: '#FFFFFF' }}>
         <PostHogProvider>
+        <GAPageView />
         <AuthSessionHydrator />
         <Toaster position="top-center" richColors />
         <noscript>
