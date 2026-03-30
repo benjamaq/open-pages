@@ -7,7 +7,8 @@ import { StudyApplyCta } from './StudyApplyCta'
 import { CohortQualificationSection } from './CohortQualificationSection'
 
 const RUST = '#C84B2F'
-const HERO_BG = '#0f1117'
+/** Hero + trust footer panel; override image via CSS `--cohort-hero-bg: url(...)` on `:root` or a parent. */
+const DARK_PANEL_BG = '#1a1f2e'
 
 function SpotCounterCard({
   confirmed,
@@ -41,6 +42,11 @@ function SpotCounterCard({
           ) : null}
         </p>
       </div>
+      {maxNum != null ? (
+        <p className="mt-2 text-center text-xs text-white/65">
+          Up to <span className="font-semibold tabular-nums">{maxNum}</span> participant spots available
+        </p>
+      ) : null}
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/40">
         <div
           className="h-full rounded-full transition-[width]"
@@ -111,7 +117,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
             <p className="mt-1 text-[13px] text-neutral-500">Supplied by DoNotAge.</p>
             {/* Product image — replace with Image once asset arrives */}
             <div
-              className="mt-6 flex h-32 items-center justify-center rounded-md border border-dashed border-neutral-200 bg-neutral-50"
+              className="mt-6 flex max-h-[120px] min-h-[72px] items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-200 bg-neutral-50"
               style={{ borderColor: '#e5e2dc' }}
             >
               <span className="text-[11px] text-neutral-400">Product image</span>
@@ -161,7 +167,7 @@ function TrustFooter() {
     </div>
   )
   return (
-    <footer className="py-14 sm:py-16" style={{ background: HERO_BG }}>
+    <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-3">
           {col(
@@ -238,9 +244,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const brandName = String(cohort.brand_name || '')
 
   return (
-    <div className="min-h-screen text-neutral-900">
-      {/* Section 1 — Hero */}
-      <section className="w-full px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8" style={{ background: HERO_BG }}>
+    <div className="flex flex-1 flex-col text-neutral-900">
+      <div className="flex flex-1 flex-col">
+      {/* Section 1 — Hero — set --cohort-hero-bg when artwork image is ready */}
+      <section
+        className="w-full px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8"
+        style={{
+          backgroundColor: DARK_PANEL_BG,
+          backgroundImage: 'var(--cohort-hero-bg, none)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {/* DoNotAge logo — replace with Image once assets arrive */}
@@ -275,7 +291,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             <h1 className="mt-4 text-[32px] font-bold leading-tight text-white sm:text-[42px]">
               {productName}
             </h1>
-            <p className="mt-2 text-[18px] text-white/60 sm:text-[20px]">Customer Outcomes Study</p>
+            <p className="mt-2 text-[18px] text-white/60">Customer Outcomes Study</p>
             <div className="mx-auto mt-8 flex justify-center">
               <div className="h-px w-[60px]" style={{ background: RUST }} />
             </div>
@@ -294,7 +310,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             )}
 
-            <p className="mx-auto mt-10 max-w-[480px] text-center text-base leading-relaxed text-white">
+            <p className="mx-auto mt-10 max-w-[600px] text-center text-[18px] leading-relaxed text-white">
               {brandName ? `${brandName} is working with BioStackr` : 'BioStackr'} to measure what {productName}{' '}
               actually does in real customers. You have been selected as a potential participant.
             </p>
@@ -319,6 +335,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </section>
         </>
       ) : null}
+      </div>
 
       <TrustFooter />
     </div>

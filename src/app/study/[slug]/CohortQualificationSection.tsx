@@ -17,12 +17,6 @@ const CURRENT_PRODUCT_EXIT =
 
 const RUST = '#C84B2F'
 
-function wordCount(text: string): number {
-  const t = text.trim()
-  if (!t) return 0
-  return t.split(/\s+/).filter(Boolean).length
-}
-
 export function CohortQualificationSection({
   cohortSlug,
   cohortBrandName,
@@ -41,7 +35,7 @@ export function CohortQualificationSection({
   const [prescError, setPrescError] = useState(false)
   const [hardExit, setHardExit] = useState<string | null>(null)
 
-  const issueOk = wordCount(issue) >= 20
+  const issueOk = issue.trim().length >= 20
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -151,7 +145,7 @@ export function CohortQualificationSection({
                 className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 pb-7 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
               />
               <p className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-[#888]">
-                Minimum 20 words
+                Minimum 20 characters
               </p>
             </div>
             {issueTouched && issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
