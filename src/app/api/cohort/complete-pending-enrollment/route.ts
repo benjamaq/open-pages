@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: uErr.message }, { status: 500 })
     }
 
-    await upsertCohortParticipant(profileId, slug, null)
+    const enroll = await upsertCohortParticipant(profileId, slug, null)
+    if (!enroll.ok) {
+      return NextResponse.json({ error: enroll.error }, { status: 500 })
+    }
     await ensureCohortStudyStackItem(profileId, slug)
 
     return NextResponse.json({ ok: true, cohort_slug: slug })

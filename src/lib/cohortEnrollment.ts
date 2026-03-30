@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+export type CohortParticipantUpsertResult = { ok: true } | { ok: false; error: string }
+
 /** `profileId` = public.profiles.id; `cohortSlug` = public.cohorts.slug (same as profiles.cohort_id text). */
 export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: string) {
   const slug = String(cohortSlug || '').trim().toLowerCase()
@@ -40,13 +42,16 @@ export async function upsertCohortParticipant(
   profileId: string,
   cohortSlug: string | null,
   qualificationResponse?: string | null
-) {
-  const slug = cohortSlug != null ? String(cohortSlug).trim() : ''
-  if (!slug || !profileId) return
-  const q =
-    qualificationResponse != null && String(qualificationResponse).trim() !== ''
-      ? String(qualificationResponse).trim()
-      : null
+): Promise<CohortParticipantUpsertResult> {
+  const slug = cohortSlug != null ? String(cohortSlug).trim().toLowerCase() : ''
+  if (!profileId) {
+    return { ok: false, error: 'Missing profile id' }
+  }
+  if (!slug) {
+    return { ok: false, error: 'Missing cohort slug' }
+  }
+  const qRaw = qualificationResponse != null ? String(qualificationResponse).trim() : ''
+  const qualificationStored = qRaw !== '' ? qRaw : null
   try {
     const { data: cohortRow, error: cohortErr } = await supabaseAdmin
       .from('cohorts')
@@ -55,36 +60,44 @@ export async function upsertCohortParticipant(
       .maybeSingle()
     if (cohortErr) {
       console.error('[cohortEnrollment] cohort lookup:', cohortErr)
-      return
+      return { ok: false, error: cohortErr.message || 'Cohort lookup failed' }
     }
     if (!cohortRow?.id) {
       console.warn('[cohortEnrollment] cohort slug not found:', slug)
-      return
+      return { ok: false, error: `Cohort not found for slug: ${slug}` }
     }
     const cohortId = String((cohortRow as { id: string }).id)
-    const payload = {
+    const enrolledAt = new Date().toISOString()
+    const payload: Record<string, unknown> = {
       user_id: profileId,
       cohort_id: cohortId,
       status: 'applied',
-      enrolled_at: new Date().toISOString(),
+      enrolled_at: enrolledAt,
       currently_taking_product: false,
-      ...(q != null ? { qualification_response: q } : {}),
+      qualification_response: qualificationStored,
     }
-    const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert(payload as Record<string, unknown>)
-    if (!insErr) return
+    const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert(payload)
+    if (!insErr) return { ok: true }
     if (insErr.code === '23505') {
-      const updatePatch: Record<string, unknown> = { currently_taking_product: false }
-      if (q != null) updatePatch.qualification_response = q
+      const updatePatch: Record<string, unknown> = {
+        currently_taking_product: false,
+        qualification_response: qualificationStored,
+      }
       const { error: upErr } = await supabaseAdmin
         .from('cohort_participants')
-        .update(updatePatch as any)
+        .update(updatePatch as Record<string, unknown>)
         .eq('user_id', profileId)
         .eq('cohort_id', cohortId)
-      if (upErr) console.error('[cohortEnrollment] cohort_participants update:', upErr)
-      return
+      if (upErr) {
+        console.error('[cohortEnrollment] cohort_participants update:', upErr)
+        return { ok: false, error: upErr.message || 'Could not update cohort participant' }
+      }
+      return { ok: true }
     }
     console.error('[cohortEnrollment] cohort_participants insert:', insErr)
+    return { ok: false, error: insErr.message || 'Could not create cohort participant' }
   } catch (e) {
     console.error('[cohortEnrollment] upsertCohortParticipant:', e)
+    return { ok: false, error: e instanceof Error ? e.message : 'Cohort enrollment failed' }
   }
 }

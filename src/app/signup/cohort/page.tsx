@@ -282,6 +282,7 @@ function CohortSignupInner() {
               <label className="text-sm font-medium text-gray-800">Email</label>
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
@@ -313,6 +314,7 @@ function CohortSignupInner() {
               <div className="grid gap-4">
                 <input
                   type="text"
+                  autoComplete="address-line1"
                   value={shippingLine1}
                   onChange={(e) => setShippingLine1(e.target.value)}
                   placeholder="Street address"
@@ -321,6 +323,7 @@ function CohortSignupInner() {
                 />
                 <input
                   type="text"
+                  autoComplete="address-line2"
                   value={shippingLine2}
                   onChange={(e) => setShippingLine2(e.target.value)}
                   placeholder="Apt / suite (optional)"
@@ -329,6 +332,7 @@ function CohortSignupInner() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <input
                     type="text"
+                    autoComplete="address-level2"
                     value={shippingCity}
                     onChange={(e) => setShippingCity(e.target.value)}
                     placeholder="City"
@@ -337,6 +341,7 @@ function CohortSignupInner() {
                   />
                   <input
                     type="text"
+                    autoComplete="address-level1"
                     value={shippingRegion}
                     onChange={(e) => setShippingRegion(e.target.value)}
                     placeholder="State / region"
@@ -347,6 +352,7 @@ function CohortSignupInner() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <input
                     type="text"
+                    autoComplete="postal-code"
                     value={shippingPostal}
                     onChange={(e) => setShippingPostal(e.target.value)}
                     placeholder="Postal code"
@@ -355,6 +361,7 @@ function CohortSignupInner() {
                   />
                   <input
                     type="text"
+                    autoComplete="country-name"
                     value={shippingCountry}
                     onChange={(e) => setShippingCountry(e.target.value)}
                     placeholder="Country"

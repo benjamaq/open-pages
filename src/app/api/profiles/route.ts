@@ -3,6 +3,22 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
 
+/**
+ * Creates/updates `cohort_participants` via service role after the profile row exists.
+ * DB columns: `user_id` = public.profiles.id (not auth.users.id); `cohort_id` = public.cohorts.id UUID
+ * (resolved from the study slug — same text as profiles.cohort_id).
+ */
+async function enrollProfileInCohort(
+  profileId: string,
+  cohortSlug: string,
+  qualificationResponse: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const r = await upsertCohortParticipant(profileId, cohortSlug, qualificationResponse)
+  if (!r.ok) return r
+  await ensureCohortStudyStackItem(profileId, cohortSlug)
+  return { ok: true }
+}
+
 async function sendCohortEnrollmentEmail(to: string) {
   const safe = String(to || '').trim()
   if (!safe) return
@@ -48,7 +64,7 @@ export async function POST(req: NextRequest) {
     const cohort_id = (() => {
       const c = body?.cohort_id
       if (c == null) return null
-      const s = String(c).trim()
+      const s = String(c).trim().toLowerCase()
       return s !== '' ? s : null
     })()
     const qualification_response =
@@ -92,6 +108,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
       if (existing) {
         try {
+          let cohortEnrollmentDone = false
           const reminderEnabled = (existing as any)?.reminder_enabled
           const needsBackfill = reminderEnabled == null
           const tzToWrite = (existing as any)?.reminder_timezone || (existing as any)?.timezone || tz || 'UTC'
@@ -128,16 +145,40 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: updErr.message || 'Could not update profile cohort' }, { status: 500 })
               }
             } else {
-              if (cohort_id != null && email) {
-                try {
-                  await sendCohortEnrollmentEmail(email)
-                } catch (mailErr) {
-                  console.error('[api/profiles] cohort welcome email failed:', mailErr)
+              if (cohort_id != null) {
+                const enr = await enrollProfileInCohort(
+                  String((existing as any).id),
+                  cohort_id,
+                  qualification_response,
+                )
+                if (!enr.ok) {
+                  return NextResponse.json({ error: enr.error }, { status: 500 })
+                }
+                cohortEnrollmentDone = true
+                if (email) {
+                  try {
+                    await sendCohortEnrollmentEmail(email)
+                  } catch (mailErr) {
+                    console.error('[api/profiles] cohort welcome email failed:', mailErr)
+                  }
                 }
               }
-              if (cohort_id != null) {
-                await upsertCohortParticipant(String((existing as any).id), cohort_id, qualification_response)
-                await ensureCohortStudyStackItem(String((existing as any).id), cohort_id)
+            }
+          }
+          if (cohort_id != null && !cohortEnrollmentDone) {
+            const enr = await enrollProfileInCohort(
+              String((existing as any).id),
+              cohort_id,
+              qualification_response,
+            )
+            if (!enr.ok) {
+              return NextResponse.json({ error: enr.error }, { status: 500 })
+            }
+            if (email) {
+              try {
+                await sendCohortEnrollmentEmail(email)
+              } catch (mailErr) {
+                console.error('[api/profiles] cohort welcome email failed:', mailErr)
               }
             }
           }
@@ -224,6 +265,14 @@ export async function POST(req: NextRequest) {
             console.error('[api/profiles] race cohort update:', raceUpdErr)
             return NextResponse.json({ error: raceUpdErr.message || 'Could not set cohort on profile' }, { status: 500 })
           }
+          const enr = await enrollProfileInCohort(
+            String((existing as any).id),
+            cohort_id,
+            qualification_response,
+          )
+          if (!enr.ok) {
+            return NextResponse.json({ error: enr.error }, { status: 500 })
+          }
           if (email) {
             try {
               await sendCohortEnrollmentEmail(email)
@@ -231,8 +280,6 @@ export async function POST(req: NextRequest) {
               console.error('[api/profiles] cohort welcome email failed:', mailErr)
             }
           }
-          await upsertCohortParticipant(String((existing as any).id), cohort_id, qualification_response)
-          await ensureCohortStudyStackItem(String((existing as any).id), cohort_id)
         }
         return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
       }
@@ -240,16 +287,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    if (cohort_id != null && email) {
-      try {
-        await sendCohortEnrollmentEmail(email)
-      } catch (mailErr) {
-        console.error('[api/profiles] cohort welcome email failed:', mailErr)
-      }
-    }
     if (cohort_id != null && data?.id) {
-      await upsertCohortParticipant(String(data.id), cohort_id, qualification_response)
-      await ensureCohortStudyStackItem(String(data.id), cohort_id)
+      const enr = await enrollProfileInCohort(String(data.id), cohort_id, qualification_response)
+      if (!enr.ok) {
+        return NextResponse.json({ error: enr.error }, { status: 500 })
+      }
+      if (email) {
+        try {
+          await sendCohortEnrollmentEmail(email)
+        } catch (mailErr) {
+          console.error('[api/profiles] cohort welcome email failed:', mailErr)
+        }
+      }
     }
 
     return NextResponse.json({ ok: true, id: data?.id, slug: (data as any)?.slug })
