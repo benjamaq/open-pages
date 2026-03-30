@@ -82,6 +82,7 @@ function CohortSignupInner() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [existingAccountPath, setExistingAccountPath] = useState(false)
 
   useEffect(() => {
     const draft = readQualDraft()
@@ -109,6 +110,7 @@ function CohortSignupInner() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setExistingAccountPath(false)
     setLoading(true)
     const detectedTz = (() => {
       try {
@@ -144,7 +146,18 @@ function CohortSignupInner() {
         },
       })
       if (signErr) {
-        setError(signErr.message)
+        const em = String(signErr.message || '').toLowerCase()
+        if (
+          em.includes('already registered') ||
+          em.includes('already been registered') ||
+          em.includes('user already exists') ||
+          em.includes('email address is already registered')
+        ) {
+          setExistingAccountPath(true)
+          setError(null)
+        } else {
+          setError(signErr.message)
+        }
         setLoading(false)
         return
       }
@@ -254,7 +267,16 @@ function CohortSignupInner() {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium text-gray-800">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} required />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setExistingAccountPath(false)
+                }}
+                className={inputCls}
+                required
+              />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium text-gray-800">Password</label>
@@ -366,6 +388,17 @@ function CohortSignupInner() {
               </div>
             </fieldset>
 
+            {existingAccountPath && cohortSlug && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-medium">You already have a BioStackr account. Sign in to join this study.</p>
+                <Link
+                  href={`/login?join_cohort=1&redirect=${encodeURIComponent('/dashboard?checkin=1')}&cohort_slug=${encodeURIComponent(cohortSlug)}`}
+                  className="mt-3 inline-block font-semibold text-[#6A3F2B] hover:underline"
+                >
+                  Sign in to join this study →
+                </Link>
+              </div>
+            )}
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button
               type="submit"

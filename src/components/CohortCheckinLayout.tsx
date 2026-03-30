@@ -27,13 +27,13 @@ const ONSET_OPTIONS = [
 
 const WAKES_OPTIONS = [
   { value: 0 as const, label: 'None' },
-  { value: 1 as const, label: '1–2 times' },
+  { value: 1 as const, label: '1–2' },
   { value: 2 as const, label: '3 or more' },
 ]
 
 const SLIDER_LABELS: Record<string, string> = {
-  sleep_quality: "How would you rate last night's sleep?",
-  energy: 'How is your energy this morning?',
+  sleep_quality: 'Sleep quality last night (1–10)',
+  energy: 'Morning energy level (1–10)',
   mood: 'How is your mood?',
   focus: 'How is your focus?',
 }
@@ -137,7 +137,7 @@ export default function CohortCheckinLayout({
               const sleepOnsetBucket = values.sleep_onset_bucket ?? null
               return (
                 <div key={fieldKey} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-900">How long did it take you to fall asleep?</label>
+                  <label className="block text-sm font-medium text-gray-900">Time to fall asleep</label>
                   <p className="text-xs text-gray-500">Optional</p>
                   <div className="flex flex-wrap gap-2">
                     {ONSET_OPTIONS.map((o) => (
@@ -162,7 +162,7 @@ export default function CohortCheckinLayout({
               const nightWakes = values.night_wakes ?? null
               return (
                 <div key={fieldKey} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-900">How many times did you wake in the night?</label>
+                  <label className="block text-sm font-medium text-gray-900">Times woken in the night</label>
                   <p className="text-xs text-gray-500">Optional</p>
                   <div className="flex flex-wrap gap-2">
                     {WAKES_OPTIONS.map((o) => (

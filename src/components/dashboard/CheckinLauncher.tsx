@@ -6,6 +6,8 @@ import DailyCheckinModal from '@/components/DailyCheckinModal'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
+const PENDING_CHECKIN_KEY = 'bs_pending_checkin_intent'
+
 function trimCohortId(raw: unknown): string | null {
   if (raw == null) return null
   const s = String(raw).trim()
@@ -24,6 +26,7 @@ export function CheckinLauncher({
   const router = useRouter()
   const search = useSearchParams()
   const [open, setOpen] = useState(false)
+  const [showCohortWelcome, setShowCohortWelcome] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [userName, setUserName] = useState<string>('')
   const [todayItems, setTodayItems] = useState<any>({
@@ -32,23 +35,28 @@ export function CheckinLauncher({
     movement: [],
     mindfulness: [],
     food: [],
-    gear: []
+    gear: [],
   })
   const [currentEnergy, setCurrentEnergy] = useState<number>(5)
   /** Set only when mePayload is undefined (standalone fetch). */
   const [asyncCohortHint, setAsyncCohortHint] = useState<string | null | undefined>(undefined)
   const [asyncCheckinFields, setAsyncCheckinFields] = useState<string[] | null | undefined>(undefined)
+  const [asyncWelcomeRecommended, setAsyncWelcomeRecommended] = useState<boolean | undefined>(undefined)
+  const [asyncStudyProductName, setAsyncStudyProductName] = useState<string | null | undefined>(undefined)
+  const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
     const val = search.get('checkin')
     if (val === 'open' || val === '1') {
-      setOpen(true)
-      // Clean the URL right after opening
-      try { router.replace('/dashboard') } catch {}
+      try {
+        sessionStorage.setItem(PENDING_CHECKIN_KEY, '1')
+      } catch {}
+      try {
+        router.replace('/dashboard')
+      } catch {}
     }
   }, [search, router])
 
-  // Also support explicit event trigger: window.dispatchEvent(new Event('open:checkin:new'))
   useEffect(() => {
     const handler = () => setOpen(true)
     if (typeof window !== 'undefined') {
@@ -72,12 +80,20 @@ export function CheckinLauncher({
       } catch {}
       setAsyncCohortHint(undefined)
       setAsyncCheckinFields(undefined)
-      return () => { cancelled = true }
+      setAsyncWelcomeRecommended(undefined)
+      setAsyncStudyProductName(undefined)
+      setAsyncMeDone(false)
+      return () => {
+        cancelled = true
+      }
     }
     ;(async () => {
       try {
         const res = await dedupedJson<any>('/api/me', { cache: 'no-store', credentials: 'include' })
-        if (!res.ok) return
+        if (!res.ok) {
+          if (!cancelled) setAsyncMeDone(true)
+          return
+        }
         const data = res.data || {}
         if (cancelled) return
         if (data?.userId) setUserId(String(data.userId))
@@ -89,17 +105,55 @@ export function CheckinLauncher({
         } else {
           setAsyncCheckinFields(null)
         }
+        setAsyncWelcomeRecommended(Boolean((data as any)?.cohortCheckinWelcomeRecommended))
+        const pn = (data as any)?.cohortStudyProductName
+        setAsyncStudyProductName(typeof pn === 'string' && pn.trim() ? pn.trim() : null)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
           setAsyncCheckinFields(null)
+          setAsyncWelcomeRecommended(false)
+          setAsyncStudyProductName(null)
         }
+      } finally {
+        if (!cancelled) setAsyncMeDone(true)
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [mePayload])
 
-  // Load active supplements for today’s checklist
+  // Resolve ?checkin=1: welcome screen first (cohort, zero check-ins since enroll), else open modal.
+  useEffect(() => {
+    let pending = false
+    try {
+      pending = sessionStorage.getItem(PENDING_CHECKIN_KEY) === '1'
+    } catch {
+      pending = false
+    }
+    if (!pending) return
+
+    const fromDashboardMe = mePayload !== undefined
+    const ready = fromDashboardMe || asyncMeDone
+    if (!ready) return
+
+    const welcome = fromDashboardMe
+      ? Boolean((mePayload as any)?.cohortCheckinWelcomeRecommended)
+      : Boolean(asyncWelcomeRecommended)
+    const cid = fromDashboardMe ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
+
+    try {
+      sessionStorage.removeItem(PENDING_CHECKIN_KEY)
+    } catch {}
+
+    if (welcome && cid) {
+      setShowCohortWelcome(true)
+    } else {
+      setOpen(true)
+    }
+  }, [mePayload, asyncMeDone, asyncWelcomeRecommended, asyncCohortHint])
+
   useEffect(() => {
     let cancelled = false
     if (supplementsPayload !== undefined) {
@@ -109,12 +163,14 @@ export function CheckinLauncher({
           .filter((row: any) => row?.is_active !== false)
           .map((row: any) => ({
             id: String(row?.intake_id ?? row?.user_supplement_id ?? row?.id ?? row?.supplement_id ?? ''),
-            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement')
+            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement'),
           }))
           .filter((s: any) => s.id)
         setTodayItems((ti: any) => ({ ...ti, supplements }))
       } catch {}
-      return () => { cancelled = true }
+      return () => {
+        cancelled = true
+      }
     }
     ;(async () => {
       try {
@@ -126,16 +182,17 @@ export function CheckinLauncher({
           .filter((row: any) => row?.is_active !== false)
           .map((row: any) => ({
             id: String(row?.intake_id ?? row?.user_supplement_id ?? row?.id ?? row?.supplement_id ?? ''),
-            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement')
+            name: String(row?.name ?? row?.label ?? row?.canonical_name ?? 'Supplement'),
           }))
           .filter((s: any) => s.id)
         setTodayItems((ti: any) => ({ ...ti, supplements }))
       } catch {}
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [supplementsPayload])
 
-  // Load skip list from progress endpoint to surface "Skipping today" reminder
   useEffect(() => {
     let cancelled = false
     if (progressPayload !== undefined) {
@@ -158,7 +215,9 @@ export function CheckinLauncher({
           } catch {}
         }
       } catch {}
-      return () => { cancelled = true }
+      return () => {
+        cancelled = true
+      }
     }
     ;(async () => {
       try {
@@ -184,7 +243,9 @@ export function CheckinLauncher({
         }
       } catch {}
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [progressPayload])
 
   const today = new Date().toISOString().split('T')[0]
@@ -198,21 +259,62 @@ export function CheckinLauncher({
           : null) as string[] | null | undefined)
       : asyncCheckinFields
 
+  const cohortStudyProductName =
+    mePayload !== undefined
+      ? (typeof (mePayload as any)?.cohortStudyProductName === 'string'
+          ? String((mePayload as any).cohortStudyProductName).trim()
+          : null)
+      : asyncStudyProductName ?? null
+
+  const welcomeStudyTitle = cohortStudyProductName || 'study'
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
     } catch {}
   }, [cohortIdHint, userId, open])
 
+  const closeModal = () => {
+    setOpen(false)
+    try {
+      router.replace('/dashboard')
+    } catch {}
+  }
+
   return (
     <>
+      {showCohortWelcome && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cohort-welcome-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl">
+            <h2 id="cohort-welcome-title" className="text-xl font-semibold text-gray-900">
+              Welcome to the {welcomeStudyTitle} study
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              Your first check-in captures your baseline before the product arrives. It takes about 30 seconds. Complete
+              it now to secure your spot.
+            </p>
+            <button
+              type="button"
+              className="mt-6 w-full rounded-full bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+              onClick={() => {
+                setShowCohortWelcome(false)
+                setOpen(true)
+              }}
+            >
+              Start my first check-in
+            </button>
+          </div>
+        </div>
+      )}
       {open && (
         <DailyCheckinModal
           isOpen={true}
-          onClose={() => {
-            setOpen(false)
-            router.replace('/dashboard')
-          }}
+          onClose={closeModal}
           onEnergyUpdate={(n: number) => setCurrentEnergy(n)}
           currentEnergy={currentEnergy}
           todayItems={todayItems}
@@ -224,7 +326,3 @@ export function CheckinLauncher({
     </>
   )
 }
-
-
-
-

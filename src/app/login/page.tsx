@@ -1,13 +1,36 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { isInAppBrowser, openInSystemBrowser } from '@/lib/browser'
 
+function safeRedirect(raw: string | null): string {
+  const def = '/dashboard'
+  if (!raw || typeof raw !== 'string') return def
+  const t = raw.trim()
+  if (!t.startsWith('/') || t.startsWith('//')) return def
+  return t
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen grid place-items-center text-gray-600" style={{ backgroundImage: "url('/sign in.png?v=1')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          Loading…
+        </div>
+      }
+    >
+      <LoginInner />
+    </Suspense>
+  )
+}
+
+function LoginInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showAccessCode, setShowAccessCode] = useState(false)
@@ -27,24 +50,42 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      // Persist session explicitly for hostile webviews
       try {
         const session = data?.session
         if (session) {
           localStorage.setItem('supabase_session', JSON.stringify(session))
         }
       } catch {}
-      // Stash access code so AuthSessionHydrator can redeem after auth is established.
       if (accessCode.trim()) {
-        try { localStorage.setItem('bs_pending_access_code', accessCode.trim().toUpperCase()) } catch {}
+        try {
+          localStorage.setItem('bs_pending_access_code', accessCode.trim().toUpperCase())
+        } catch {}
       }
+
+      const joinCohort = searchParams.get('join_cohort') === '1'
+      const cohortSlugParam = searchParams.get('cohort_slug')
+      if (joinCohort) {
+        try {
+          await fetch('/api/cohort/complete-pending-enrollment', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(
+              cohortSlugParam && cohortSlugParam.trim() ? { cohort_slug: cohortSlugParam.trim().toLowerCase() } : {}
+            ),
+          })
+        } catch {
+          // Non-blocking: user can still open study flow from cookie
+        }
+      }
+
+      const next = safeRedirect(searchParams.get('redirect'))
+      setLoading(false)
+      router.push(next)
     } catch (err: any) {
       setError(err?.message || 'Auth client error. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
       setLoading(false)
-      return
     }
-    setLoading(false)
-    router.push('/dashboard')
   }
 
   return (
@@ -53,7 +94,7 @@ export default function LoginPage() {
       style={{
         backgroundImage: "url('/sign in.png?v=1')",
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
       }}
     >
       <div className="w-full max-w-[520px] rounded-2xl border border-gray-200 bg-white/95 p-8 sm:p-10 shadow-lg ring-1 ring-black/5">
@@ -63,6 +104,7 @@ export default function LoginPage() {
             <p className="mb-2">In‑app browsers can block secure login. Tap the ••• menu and choose “Open in Browser”.</p>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={openInSystemBrowser}
                 className="flex-1 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-amber-800"
               >
@@ -141,5 +183,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
-

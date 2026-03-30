@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +19,13 @@ export async function GET(request: Request) {
     let pro_expires_at: string | null = null
     let cohortId: string | null = null
     let checkinFields: string[] | null = null
+    let cohortCheckinWelcomeRecommended = false
+    let cohortStudyProductName: string | null = null
 
     if (!authError && user) {
       email = user.email || null
       userId = user.id
     } else {
-      // Fallback: try to read auth token from Supabase client cookie
       try {
         const all = (await cookies()).getAll()
         const tokenCookie = all.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
@@ -32,7 +35,6 @@ export async function GET(request: Request) {
           userId = parsed?.user?.id || parsed?.user?.sub || null
         }
       } catch {}
-      // Fallback: allow client to send localStorage token via header
       if (!email) {
         try {
           const hdr = request.headers.get('x-supabase-auth')
@@ -47,10 +49,9 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
     }
+
     try {
-      // Try common profile columns
       if (userId) {
-        // Attempt primary profiles table first
         const { data: prof } = await supabase
           .from('profiles')
           .select('first_name, display_name, full_name, tier, pro_expires_at')
@@ -63,37 +64,52 @@ export async function GET(request: Request) {
         if (fromProfiles) firstName = String(fromProfiles)
         tier = (prof as any)?.tier ?? null
         pro_expires_at = (prof as any)?.pro_expires_at ?? null
-        // Separate read: if cohort_id column is missing in a DB, a combined select can fail entirely.
+
+        // Cohort: use service role so RLS never hides cohort_id / participant rows from the app.
         try {
-          const { data: cohortRow } = await supabase
+          const { data: pAdmin } = await supabaseAdmin
             .from('profiles')
-            .select('cohort_id')
+            .select('id, cohort_id')
             .eq('user_id', userId)
             .maybeSingle()
-          const rawC = (cohortRow as { cohort_id?: string | null } | null)?.cohort_id
+          const rawC = (pAdmin as { cohort_id?: string | null } | null)?.cohort_id
           cohortId = rawC != null && String(rawC).trim() !== '' ? String(rawC).trim() : null
-        } catch {
-          cohortId = null
-        }
-        if (cohortId) {
-          try {
-            const { data: cdef } = await supabase
+          const profileId = (pAdmin as { id?: string } | null)?.id ? String((pAdmin as { id: string }).id) : null
+
+          if (cohortId && profileId) {
+            const { data: cdef } = await supabaseAdmin
               .from('cohorts')
-              .select('checkin_fields')
+              .select('id, checkin_fields, product_name')
               .eq('slug', cohortId)
               .maybeSingle()
             if (cdef != null && Array.isArray((cdef as { checkin_fields?: unknown }).checkin_fields)) {
               checkinFields = normalizeCohortCheckinFields(
                 (cdef as { checkin_fields: unknown }).checkin_fields
               )
-            } else {
-              checkinFields = null
             }
-          } catch {
-            checkinFields = null
+            const pn = (cdef as { product_name?: string | null } | null)?.product_name
+            cohortStudyProductName = pn != null && String(pn).trim() !== '' ? String(pn).trim() : null
+
+            const cohortUuid = (cdef as { id?: string } | null)?.id
+            if (cohortUuid) {
+              const { data: part } = await supabaseAdmin
+                .from('cohort_participants')
+                .select('enrolled_at')
+                .eq('user_id', profileId)
+                .eq('cohort_id', cohortUuid)
+                .maybeSingle()
+              const enrolledAt = (part as { enrolled_at?: string } | null)?.enrolled_at
+              if (enrolledAt) {
+                const n = await countDistinctDailyEntriesSince(userId, String(enrolledAt))
+                cohortCheckinWelcomeRecommended = n === 0
+              }
+            }
           }
+        } catch {
+          cohortId = null
+          checkinFields = null
         }
-        // Fallback legacy app_user table
+
         if (!firstName) {
           const { data: profile } = await supabase
             .from('app_user')
@@ -121,15 +137,14 @@ export async function GET(request: Request) {
       firstName: firstName || null,
       email,
       userId,
-      // These are used by client-side fallbacks for gating/nav when billing endpoint is unavailable.
       tier,
       pro_expires_at,
       cohortId,
       checkinFields,
+      cohortCheckinWelcomeRecommended,
+      cohortStudyProductName,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }
 }
-
-
