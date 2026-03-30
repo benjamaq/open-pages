@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email/resend'
+
+async function sendCohortEnrollmentEmail(to: string) {
+  const safe = String(to || '').trim()
+  if (!safe) return
+  const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
+  await sendEmail({
+    to: safe,
+    subject: "You're in — complete your first check-in now",
+    html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
+<p>You're in — complete your first check-in now to secure your spot.</p>
+<p><a href="${appBase}/dashboard" style="color:#6A3F2B;font-weight:600;">Open your dashboard</a></p>
+</body></html>`,
+  })
+}
 
 function toSlugBase(input: string) {
   const base = (input || '').trim().toLowerCase()
@@ -16,6 +31,8 @@ export async function POST(req: NextRequest) {
     const user_id = String(body?.user_id || '').trim()
     const name = String(body?.name || '').trim()
     const email = typeof body?.email === 'string' ? body.email : ''
+    const cohort_id = typeof body?.cohort_id === 'string' ? body.cohort_id.trim() || null : null
+    console.log('[api/profiles] request body:', { user_id, cohort_id, hasCohortInBody: 'cohort_id' in (body || {}) })
     const tz = (() => {
       const raw = String(body?.timezone || '').trim()
       return raw || 'UTC'
@@ -36,21 +53,33 @@ export async function POST(req: NextRequest) {
       if (existing) {
         try {
           const reminderEnabled = (existing as any)?.reminder_enabled
-          // Only backfill when the column is missing/NULL (do not override explicit user choice).
           const needsBackfill = reminderEnabled == null
+          const tzToWrite = (existing as any)?.reminder_timezone || (existing as any)?.timezone || tz || 'UTC'
+          const updatePayload: Record<string, unknown> = {
+            updated_at: new Date().toISOString(),
+          }
           if (needsBackfill) {
-            const tzToWrite = (existing as any)?.reminder_timezone || (existing as any)?.timezone || tz || 'UTC'
-            await supabaseAdmin
-              .from('profiles')
-              .update({
-                reminder_enabled: true,
-                reminder_time: (existing as any)?.reminder_time || '09:00',
-                reminder_timezone: (existing as any)?.reminder_timezone || tzToWrite,
-                reminder_timezone_autodetected: true,
-                timezone: (existing as any)?.timezone || tzToWrite,
-                updated_at: new Date().toISOString(),
-              } as any)
-              .eq('user_id', user_id)
+            updatePayload.reminder_enabled = true
+            updatePayload.reminder_time = (existing as any)?.reminder_time || '09:00'
+            updatePayload.reminder_timezone = (existing as any)?.reminder_timezone || tzToWrite
+            updatePayload.reminder_timezone_autodetected = true
+            updatePayload.timezone = (existing as any)?.timezone || tzToWrite
+          }
+          if (cohort_id != null) {
+            updatePayload.cohort_id = cohort_id
+          }
+          console.log('[api/profiles] existing profile - updatePayload:', updatePayload)
+          if (Object.keys(updatePayload).length > 1) {
+            const { error: updErr } = await supabaseAdmin.from('profiles').update(updatePayload as any).eq('user_id', user_id)
+            if (updErr) {
+              console.error('[api/profiles] update error:', updErr)
+            } else if (cohort_id != null && email) {
+              try {
+                await sendCohortEnrollmentEmail(email)
+              } catch (mailErr) {
+                console.error('[api/profiles] cohort welcome email failed:', mailErr)
+              }
+            }
           }
         } catch {}
         return NextResponse.json({ ok: true, id: existing.id, slug: (existing as any).slug })
@@ -77,25 +106,27 @@ export async function POST(req: NextRequest) {
 
     const now = new Date().toISOString()
 
+    const insertPayload: Record<string, unknown> = {
+      user_id,
+      display_name: name || (email ? email.split('@')[0] : 'User'),
+      slug: candidate,
+      public: true,
+      allow_stack_follow: true,
+      reminder_enabled: true,
+      reminder_time: '09:00',
+      reminder_timezone: tz,
+      reminder_timezone_autodetected: true,
+      timezone: tz,
+      created_at: now,
+      updated_at: now
+    }
+    if (cohort_id != null) {
+      insertPayload.cohort_id = cohort_id
+    }
+    console.log('[api/profiles] insert payload:', insertPayload)
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        user_id,
-        // NOTE: production `profiles` does not have a `first_name` column.
-        display_name: name || (email ? email.split('@')[0] : 'User'),
-        slug: candidate,
-        public: true,
-        allow_stack_follow: true,
-        // Daily email reminders ON by default for new users (user can disable in Settings).
-        reminder_enabled: true,
-        reminder_time: '09:00',
-        reminder_timezone: tz,
-        reminder_timezone_autodetected: true,
-        // Used by daily email cron for local-time windowing.
-        timezone: tz,
-        created_at: now,
-        updated_at: now
-      })
+      .insert(insertPayload as any)
       .select('id, slug')
       .single()
 
@@ -107,10 +138,31 @@ export async function POST(req: NextRequest) {
           .select('id, slug')
           .eq('user_id', user_id)
           .maybeSingle()
+        if (cohort_id != null && existing) {
+          const { error: raceUpdErr } = await supabaseAdmin
+            .from('profiles')
+            .update({ cohort_id, updated_at: new Date().toISOString() } as any)
+            .eq('user_id', user_id)
+          if (!raceUpdErr && email) {
+            try {
+              await sendCohortEnrollmentEmail(email)
+            } catch (mailErr) {
+              console.error('[api/profiles] cohort welcome email failed:', mailErr)
+            }
+          }
+        }
         return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
       }
       console.error('[api/profiles] insert error:', error.code, error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    if (cohort_id != null && email) {
+      try {
+        await sendCohortEnrollmentEmail(email)
+      } catch (mailErr) {
+        console.error('[api/profiles] cohort welcome email failed:', mailErr)
+      }
     }
 
     return NextResponse.json({ ok: true, id: data?.id, slug: (data as any)?.slug })

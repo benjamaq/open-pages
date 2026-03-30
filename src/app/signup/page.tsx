@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
 import { fireMetaEvent, attachAttributionToParams } from '@/lib/analytics'
+import { getCohortCookie, clearCohortCookie } from '@/lib/cohort'
 import Link from 'next/link'
 
 export default function SignupPage() {
@@ -209,34 +210,49 @@ function SignupInner() {
           const baseSlug = cleanEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
           const ts = Date.now().toString(36)
           const slug = `${baseSlug}-${ts}`
+          const upsertPayload: Record<string, unknown> = {
+            user_id: data.user.id,
+            display_name: cleanName,
+            slug,
+            public: true,
+            allow_stack_follow: true,
+            reminder_enabled: true,
+            reminder_time: '09:00',
+            reminder_timezone: detectedTz,
+            reminder_timezone_autodetected: true,
+            timezone: detectedTz,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
           await supabase
             .from('profiles')
-            .upsert({
-              user_id: data.user.id,
-              display_name: cleanName,
-              slug,
-              public: true,
-              allow_stack_follow: true,
-              // Daily email reminders ON by default for new users (user can disable in Settings).
-              reminder_enabled: true,
-              reminder_time: '09:00',
-              reminder_timezone: detectedTz,
-              reminder_timezone_autodetected: true,
-              timezone: detectedTz,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            } as any, { onConflict: 'user_id', ignoreDuplicates: false })
+            .upsert(upsertPayload as any, { onConflict: 'user_id', ignoreDuplicates: false })
         } catch (e) {
           // non-fatal
           console.warn('profiles upsert failed (anon client):', e)
         }
         // Service role bootstrap to bypass RLS in edge cases
         try {
-          await fetch('/api/profiles', {
+          const cohortFromCookie = getCohortCookie()
+          const apiBody: Record<string, unknown> = {
+            user_id: data.user.id,
+            name: cleanName,
+            email: cleanEmail,
+            timezone: detectedTz,
+          }
+          if (cohortFromCookie) {
+            apiBody.cohort_id = cohortFromCookie
+          }
+          const pr = await fetch('/api/profiles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: data.user.id, name: cleanName, email: cleanEmail, timezone: detectedTz })
+            body: JSON.stringify(apiBody),
           })
+          if (pr.ok && cohortFromCookie) {
+            try {
+              clearCohortCookie()
+            } catch {}
+          }
         } catch (e) {
           console.warn('profiles bootstrap failed:', e)
         }
