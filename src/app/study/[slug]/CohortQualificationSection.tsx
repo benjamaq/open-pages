@@ -7,6 +7,9 @@ import { setCohortCookie, COHORT_QUALIFICATION_STORAGE_KEY, type CohortQualifica
 const PRESCRIBE_EXIT =
   'Thanks for your interest — for this study we need participants not currently on prescription sleep medication. We hope to include you in a future study.'
 
+const CURRENT_PRODUCT_EXIT =
+  'Thanks for your interest — this study needs participants with a clean baseline, which means not currently taking the product. We hope to include you in a future study.'
+
 export function CohortQualificationSection({
   cohortSlug,
 }: {
@@ -15,9 +18,11 @@ export function CohortQualificationSection({
   const router = useRouter()
   const [issue, setIssue] = useState('')
   const [issueTouched, setIssueTouched] = useState(false)
+  const [currentProduct, setCurrentProduct] = useState<'yes' | 'no' | ''>('')
   const [prescription, setPrescription] = useState<'yes' | 'no' | ''>('')
   const [commitment, setCommitment] = useState(false)
   const [issueError, setIssueError] = useState<string | null>(null)
+  const [currentProductError, setCurrentProductError] = useState(false)
   const [prescError, setPrescError] = useState(false)
   const [hardExit, setHardExit] = useState<string | null>(null)
 
@@ -27,11 +32,20 @@ export function CohortQualificationSection({
     e.preventDefault()
     setHardExit(null)
     setIssueError(null)
+    setCurrentProductError(false)
     setPrescError(false)
 
     if (!issueOk) {
       setIssueError('Please be a little more specific — this helps us match you to the right study.')
       setIssueTouched(true)
+      return
+    }
+    if (currentProduct === '') {
+      setCurrentProductError(true)
+      return
+    }
+    if (currentProduct === 'yes') {
+      setHardExit(CURRENT_PRODUCT_EXIT)
       return
     }
     if (prescription === '') {
@@ -100,6 +114,39 @@ export function CohortQualificationSection({
             />
             {issueTouched && issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
           </div>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium text-neutral-800">Are you currently taking this product?</legend>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
+                <input
+                  type="radio"
+                  name="current_product"
+                  checked={currentProduct === 'no'}
+                  onChange={() => {
+                    setCurrentProduct('no')
+                    setCurrentProductError(false)
+                  }}
+                  className="text-neutral-900"
+                />
+                No
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-neutral-700">
+                <input
+                  type="radio"
+                  name="current_product"
+                  checked={currentProduct === 'yes'}
+                  onChange={() => {
+                    setCurrentProduct('yes')
+                    setCurrentProductError(false)
+                  }}
+                  className="text-neutral-900"
+                />
+                Yes
+              </label>
+            </div>
+            {currentProductError && <p className="text-sm text-red-600">Please answer this question to continue.</p>}
+          </fieldset>
 
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium text-neutral-800">

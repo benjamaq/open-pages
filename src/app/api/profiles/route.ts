@@ -90,19 +90,20 @@ async function upsertCohortParticipant(
       cohort_id: cohortId,
       status: 'applied',
       enrolled_at: new Date().toISOString(),
+      currently_taking_product: false,
       ...(q != null ? { qualification_response: q } : {}),
     }
     const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert(payload as any)
     if (!insErr) return
     if (insErr.code === '23505') {
-      if (q != null) {
-        const { error: upErr } = await supabaseAdmin
-          .from('cohort_participants')
-          .update({ qualification_response: q } as any)
-          .eq('user_id', profileId)
-          .eq('cohort_id', cohortId)
-        if (upErr) console.error('[api/profiles] cohort_participants qualification update:', upErr)
-      }
+      const updatePatch: Record<string, unknown> = { currently_taking_product: false }
+      if (q != null) updatePatch.qualification_response = q
+      const { error: upErr } = await supabaseAdmin
+        .from('cohort_participants')
+        .update(updatePatch as any)
+        .eq('user_id', profileId)
+        .eq('cohort_id', cohortId)
+      if (upErr) console.error('[api/profiles] cohort_participants update:', upErr)
       return
     }
     console.error('[api/profiles] cohort_participants insert:', insErr)
