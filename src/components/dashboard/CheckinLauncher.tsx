@@ -290,7 +290,7 @@ export function CheckinLauncher({
           aria-modal="true"
           aria-labelledby="cohort-welcome-title"
         >
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-2xl">
             <h2 id="cohort-welcome-title" className="text-xl font-semibold text-gray-900">
               Welcome to the {welcomeStudyTitle} study
             </h2>
@@ -321,6 +321,7 @@ export function CheckinLauncher({
           userId={userId || 'guest'}
           cohortIdHint={cohortIdHint}
           cohortCheckinFieldsHint={cohortCheckinFieldsHint}
+          cohortStudyProductName={cohortStudyProductName}
         />
       )}
     </>

@@ -84,9 +84,16 @@ export async function POST(request: NextRequest) {
       const night_wakes =
         nwRaw === undefined || nwRaw === null ? null : (Number(nwRaw) as 0 | 1 | 2)
 
+      const tagsRaw = (cohortBody as { tags?: unknown }).tags
+      const normalizedCohortTags: string[] = Array.isArray(tagsRaw)
+        ? (tagsRaw as unknown[]).map((t) => String(t).toLowerCase()).filter(Boolean)
+        : []
+      const finalCohortTags = normalizedCohortTags.includes('clean_day') ? [] : normalizedCohortTags
+
       const cohortDePayload: Record<string, unknown> = {
         user_id: user.id,
         local_date: localDate,
+        tags: finalCohortTags.length > 0 ? finalCohortTags : null,
       }
       const allCohortKeys = ['sleep_quality', 'energy', 'mood', 'focus', 'sleep_onset_bucket', 'night_wakes'] as const
       for (const k of allCohortKeys) {

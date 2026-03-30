@@ -51,8 +51,10 @@ function formatGateTimeRemaining(deadlineMs: number, nowMs: number): { line: str
 
 function SpotConfirmedCountdown({
   deadlineIso,
+  compact,
 }: {
   deadlineIso: string | null
+  compact?: boolean
 }) {
   const [display, setDisplay] = useState<{ line: string; sub: string }>({
     line: '—',
@@ -78,9 +80,19 @@ function SpotConfirmedCountdown({
 
   return (
     <div className="text-center flex-1 min-w-[100px]">
-      <div className="text-2xl font-semibold text-gray-900 tabular-nums">{display.line}</div>
-      <div className="text-xs font-medium text-gray-700 mt-1">Spot confirmed in</div>
-      <div className="text-[11px] text-gray-500 mt-0.5">{display.sub}</div>
+      <div
+        className={
+          compact
+            ? 'text-lg font-semibold text-gray-900 tabular-nums'
+            : 'text-2xl font-semibold text-gray-900 tabular-nums'
+        }
+      >
+        {display.line}
+      </div>
+      <div className={`font-medium text-gray-700 mt-1 ${compact ? 'text-[11px]' : 'text-xs'}`}>
+        Spot confirmed in
+      </div>
+      <div className={`text-gray-500 mt-0.5 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>{display.sub}</div>
     </div>
   )
 }
@@ -107,7 +119,6 @@ export default function CohortStudyDashboard({
   const progressPct = studyComplete ? 100 : Math.min(100, (currentDay / studyDays) * 100)
 
   const gateComplete = Math.min(2, Math.max(0, checkinCount))
-  const gateProgressPct = (gateComplete / 2) * 100
 
   const statCell = (value: number | string, label: string, sub: string) => (
     <div className="text-center flex-1 min-w-[100px]">
@@ -116,6 +127,59 @@ export default function CohortStudyDashboard({
       <div className="text-[11px] text-gray-500 mt-0.5">{sub}</div>
     </div>
   )
+
+  const statCellCompact = (value: number | string, label: string, sub: string) => (
+    <div className="text-center flex-1 min-w-[88px]">
+      <div className="text-lg font-semibold text-gray-900 tabular-nums">{value}</div>
+      <div className="text-[11px] font-medium text-gray-700 mt-0.5">{label}</div>
+      <div className="text-[10px] text-gray-500 mt-0.5">{sub}</div>
+    </div>
+  )
+
+  const gateDots = (
+    <span className="text-base text-gray-700 tabular-nums" aria-hidden>
+      {gateComplete >= 1 ? '●' : '○'}
+      {gateComplete >= 2 ? '●' : '○'}
+    </span>
+  )
+
+  /** Phase 1 hero: label line (e.g. "Check-in 2 of 2"), headline, sub, CTA or done-for-today */
+  const phase1Hero = (() => {
+    if (gateComplete >= 2) {
+      return {
+        label: '2 of 2 check-ins done',
+        headline: "You're almost confirmed",
+        sub: 'Your spot will be confirmed shortly.',
+        showCheckinCta: false,
+        doneBlock: false,
+      }
+    }
+    if (gateComplete === 1) {
+      if (hasCheckedInToday) {
+        return {
+          label: 'Check-in 2 of 2',
+          headline: 'Come back tomorrow morning',
+          sub: 'Complete your second check-in to confirm your spot in the study.',
+          showCheckinCta: false,
+          doneBlock: true,
+        }
+      }
+      return {
+        label: 'Check-in 2 of 2',
+        headline: 'Complete your second check-in',
+        sub: 'One more morning check-in confirms your spot in the study.',
+        showCheckinCta: true,
+        doneBlock: false,
+      }
+    }
+    return {
+      label: 'Check-in 1 of 2',
+      headline: 'Complete your first check-in',
+      sub: 'You have 48 hours to complete two check-ins and secure your place in the study.',
+      showCheckinCta: !hasCheckedInToday,
+      doneBlock: hasCheckedInToday,
+    }
+  })()
 
   return (
     <div className="space-y-6 max-w-xl mx-auto">
@@ -131,29 +195,29 @@ export default function CohortStudyDashboard({
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
         {!cohortConfirmed ? (
           <div>
-            <div className="text-3xl font-bold text-gray-900">Securing your spot</div>
-            <p className="mt-2 text-base font-medium text-gray-800">
-              Check-in {gateComplete} of 2 complete
-            </p>
-            <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-              Complete 2 check-ins within 48 hours to confirm your place in the study. Your 21-day tracking begins once
-              your spot is confirmed.
-            </p>
-            <div className="mt-5 flex gap-2" role="progressbar" aria-valuemin={0} aria-valuemax={2} aria-valuenow={gateComplete}>
-              <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-[width]"
-                  style={{ width: gateComplete >= 1 ? '100%' : '0%', backgroundColor: '#C84B2F' }}
-                />
+            <p className="text-xs font-medium text-gray-500">{phase1Hero.label}</p>
+            <div className="mt-3 border-t border-slate-200" />
+            <h2 className="mt-4 text-[26px] font-bold leading-snug text-gray-900">{phase1Hero.headline}</h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-gray-600">{phase1Hero.sub}</p>
+            {phase1Hero.doneBlock ? (
+              <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-left">
+                <div className="text-sm font-semibold text-emerald-900">
+                  <span className="text-emerald-700" aria-hidden>
+                    ✓{' '}
+                  </span>
+                  Done for today
+                </div>
+                <p className="mt-1 text-[14px] text-emerald-900/90">Come back tomorrow morning.</p>
               </div>
-              <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-[width]"
-                  style={{ width: gateComplete >= 2 ? '100%' : '0%', backgroundColor: '#C84B2F' }}
-                />
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-500">Progress: {gateComplete} of 2 filled</p>
+            ) : phase1Hero.showCheckinCta ? (
+              <button
+                type="button"
+                onClick={onOpenCheckin}
+                className="mt-6 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+              >
+                Check in now
+              </button>
+            ) : null}
           </div>
         ) : studyComplete ? (
           <div>
@@ -176,45 +240,66 @@ export default function CohortStudyDashboard({
         )}
       </section>
 
+      {!cohortConfirmed ? (
+        <section className="text-center px-1">
+          <p className="text-sm text-gray-800">
+            Progress: {gateComplete} of 2 <span className="inline-block min-w-[2.5rem]">{gateDots}</span>
+          </p>
+          <p className="mt-1 text-xs text-gray-500">48 hours to confirm your spot</p>
+        </section>
+      ) : null}
+
       <section>
-        {hasCheckedInToday ? (
-          <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
-            <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
-              <span className="text-emerald-700" aria-hidden="true">
-                ✓
-              </span>{' '}
-              Checked in today
+        {cohortConfirmed ? (
+          hasCheckedInToday ? (
+            <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
+              <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
+                <span className="text-emerald-700" aria-hidden="true">
+                  ✓
+                </span>{' '}
+                Checked in today
+              </div>
+              <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
+              <button
+                type="button"
+                className="mt-4 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
+                onClick={onOpenCheckin}
+              >
+                Edit today&apos;s check-in
+              </button>
             </div>
-            <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
-            <button
-              type="button"
-              className="mt-4 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
-              onClick={onOpenCheckin}
-            >
-              Edit today&apos;s check-in
-            </button>
-          </div>
-        ) : (
-          <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-5">
-            <div className="text-sm font-semibold text-amber-950">Today&apos;s check-in</div>
-            <p className="mt-2 text-sm text-gray-700">Complete your daily check-in to keep your streak going.</p>
-            <p className="mt-1 text-sm text-gray-600">It takes about 30 seconds.</p>
-            <button
-              type="button"
-              onClick={onOpenCheckin}
-              className="mt-4 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800"
-            >
-              Check in now
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-5">
+              <div className="text-sm font-semibold text-amber-950">Today&apos;s check-in</div>
+              <p className="mt-2 text-sm text-gray-700">Complete your daily check-in to keep your streak going.</p>
+              <p className="mt-1 text-sm text-gray-600">It takes about 30 seconds.</p>
+              <button
+                type="button"
+                onClick={onOpenCheckin}
+                className="mt-4 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800"
+              >
+                Check in now
+              </button>
+            </div>
+          )
+        ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap justify-center gap-6 sm:gap-8">
-        {statCell(checkinCount, 'Check-ins done', 'this study')}
-        {statCell(currentStreak, 'Current streak', 'day streak')}
-        {cohortConfirmed ? statCell(daysRemaining, 'Days remaining', 'days left') : (
-          <SpotConfirmedCountdown deadlineIso={complianceDeadlineIso} />
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 flex flex-wrap justify-center gap-5 sm:gap-6">
+        {cohortConfirmed ? (
+          <>
+            {statCell(checkinCount, 'Check-ins done', 'this study')}
+            {statCell(currentStreak, 'Current streak', 'day streak')}
+            {statCell(daysRemaining, 'Days remaining', 'days left')}
+          </>
+        ) : (
+          <>
+            {statCellCompact(checkinCount, 'Check-ins done', 'this study')}
+            {statCellCompact(currentStreak, 'Current streak', 'day streak')}
+            <div className="flex-1 min-w-[88px]">
+              <SpotConfirmedCountdown deadlineIso={complianceDeadlineIso} compact />
+            </div>
+          </>
         )}
       </section>
 

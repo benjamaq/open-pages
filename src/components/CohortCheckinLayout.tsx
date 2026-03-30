@@ -3,11 +3,25 @@
 /**
  * Cohort-only daily check-in UI. Fields come from public.cohorts.checkin_fields (via /api/me).
  * Standard users never see this component.
+ *
+ * Validation note: Slider fields (sleep_quality, energy, etc.) default to 5 and are always sent;
+ * optional bucket fields (sleep_onset_bucket, night_wakes) omit from the POST when unset.
+ * The API requires slider fields present in cohort checkin_fields — there is no “unanswered slider” bug.
  */
 
 import { useEffect, useMemo, useState } from 'react'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+
+/** Confound tags for daily_entries.tags (same ids as standard check-in). */
+const CONFOUND_TAGS: { id: string; label: string }[] = [
+  { id: 'alcohol', label: 'Alcohol' },
+  { id: 'poor_sleep', label: 'Poor sleep' },
+  { id: 'high_stress', label: 'High stress' },
+  { id: 'illness', label: 'Illness' },
+  { id: 'travel', label: 'Travel' },
+  { id: 'intense_exercise', label: 'Intense exercise' },
+]
 
 export type CohortCheckinLayoutProps = {
   isOpen: boolean
@@ -16,6 +30,8 @@ export type CohortCheckinLayoutProps = {
   userId: string
   /** From public.cohorts.checkin_fields; order preserved. */
   checkinFields?: string[] | null
+  /** Cohort product name from /api/me for modal title. */
+  cohortStudyProductName?: string | null
 }
 
 const ONSET_OPTIONS = [
@@ -64,11 +80,16 @@ export default function CohortCheckinLayout({
   onEnergyUpdate,
   userId: _userId,
   checkinFields: checkinFieldsProp,
+  cohortStudyProductName,
 }: CohortCheckinLayoutProps) {
   void _userId
 
+  const modalTitleProduct = String(cohortStudyProductName || '').trim() || 'Study'
+  const modalTitle = `${modalTitleProduct} · Daily Check-in`
+
   const fields = useMemo(() => normalizeCohortCheckinFields(checkinFieldsProp), [checkinFieldsProp])
   const [values, setValues] = useState<Record<string, number | null>>(() => buildInitialValues(fields))
+  const [selectedConfoundTags, setSelectedConfoundTags] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [saved, setSaved] = useState(false)
@@ -81,6 +102,7 @@ export default function CohortCheckinLayout({
     if (!isOpen) {
       setSaved(false)
       setMessage('')
+      setSelectedConfoundTags([])
     }
   }, [isOpen])
 
@@ -108,6 +130,9 @@ export default function CohortCheckinLayout({
         } else {
           body[f] = values[f] ?? 5
         }
+      }
+      if (selectedConfoundTags.length > 0) {
+        body.tags = [...selectedConfoundTags]
       }
       const res = await fetch('/api/checkin', {
         method: 'POST',
@@ -146,13 +171,13 @@ export default function CohortCheckinLayout({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
         <div className="sticky top-0 bg-white border-b px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Daily Check-in (study)</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{modalTitle}</h2>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Close">
             ×
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-5 sm:p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-5 sm:p-8">
           {saved ? (
             <div className="flex flex-col items-center justify-center text-center px-4 py-10 sm:py-14">
               <div style={{ color: '#639922', fontSize: '48px', lineHeight: 1 }} aria-hidden="true">
@@ -171,7 +196,7 @@ export default function CohortCheckinLayout({
             </div>
           ) : (
             <>
-              <p className="text-sm text-gray-600">Quick check-in for your cohort study. Takes about a minute.</p>
+              <p className="mb-8 text-sm text-gray-600">Quick check-in for your cohort study. Takes about a minute.</p>
 
               {fields.map((fieldKey) => {
                 if (fieldKey === 'sleep_onset_bucket') {
@@ -179,7 +204,7 @@ export default function CohortCheckinLayout({
                   const k = step
                   const sleepOnsetBucket = values.sleep_onset_bucket ?? null
                   return (
-                    <div key={fieldKey} className="space-y-2">
+                    <div key={fieldKey} className="mb-8 space-y-2">
                       <label className="block text-sm font-medium text-gray-900">
                         <StepPrefix n={k} />
                         Time to fall asleep
@@ -209,7 +234,7 @@ export default function CohortCheckinLayout({
                   const k = step
                   const nightWakes = values.night_wakes ?? null
                   return (
-                    <div key={fieldKey} className="space-y-2">
+                    <div key={fieldKey} className="mb-8 space-y-2">
                       <label className="block text-sm font-medium text-gray-900">
                         <StepPrefix n={k} />
                         Times woken in the night
@@ -240,7 +265,7 @@ export default function CohortCheckinLayout({
                   const label = SLIDER_LABELS[fieldKey] || fieldKey
                   const v = typeof values[fieldKey] === 'number' ? (values[fieldKey] as number) : 5
                   return (
-                    <div key={fieldKey} className="space-y-2">
+                    <div key={fieldKey} className="mb-8 space-y-2">
                       <label className="block text-sm font-medium text-gray-900">
                         <StepPrefix n={k} />
                         {label}
@@ -262,13 +287,40 @@ export default function CohortCheckinLayout({
                 return null
               })}
 
-              {message && <p className="text-sm text-gray-800">{message}</p>}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Anything unusual today? (optional)</h3>
+                <div className="flex flex-wrap gap-2">
+                  {CONFOUND_TAGS.map((factor) => (
+                    <button
+                      key={factor.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedConfoundTags((prev) =>
+                          prev.includes(factor.id) ? prev.filter((id) => id !== factor.id) : [...prev, factor.id]
+                        )
+                      }
+                      className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                        selectedConfoundTags.includes(factor.id)
+                          ? 'bg-gray-200 text-gray-900 border-gray-400'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {factor.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Optional — helps explain unusual days and protects your data.
+                </p>
+              </div>
+
+              {message && <p className="mb-4 text-sm text-gray-800">{message}</p>}
 
               <button
                 type="button"
                 onClick={handleCohortSubmit}
                 disabled={isSaving}
-                className="w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800 disabled:opacity-60"
+                className="mt-2 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800 disabled:opacity-60"
               >
                 {isSaving ? 'Saving…' : 'Save check-in'}
               </button>

@@ -82,6 +82,8 @@ interface DailyCheckinModalProps {
   cohortIdHint?: string | null
   /** From public.cohorts.checkin_fields via /api/me; null = use defaults; undefined = same as null for layout */
   cohortCheckinFieldsHint?: string[] | null
+  /** From /api/me; cohort check-in modal title */
+  cohortStudyProductName?: string | null
 }
 
 // Helper functions
@@ -215,6 +217,7 @@ export default function DailyCheckinModal({
   profileSlug,
   cohortIdHint,
   cohortCheckinFieldsHint,
+  cohortStudyProductName,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -939,6 +942,7 @@ useEffect(() => {
         onEnergyUpdate={onEnergyUpdate}
         userId={userId}
         checkinFields={cohortCheckinFieldsHint}
+        cohortStudyProductName={cohortStudyProductName}
       />
     )
   }
