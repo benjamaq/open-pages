@@ -4,6 +4,7 @@ import UpgradeButton from '@/components/billing/UpgradeButton'
 import DashboardAddSupplementGate from '@/components/dashboard/DashboardAddSupplementGate'
 import { CheckinEducationModal } from '@/components/dashboard/CheckinEducationModal'
 import { CheckinLauncher } from '@/components/dashboard/CheckinLauncher'
+import CohortStudyDashboard from '@/components/dashboard/CohortStudyDashboard'
 import { DailyProgressLoop } from '@/components/dashboard/DailyProgressLoop'
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel'
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
@@ -47,6 +48,9 @@ export function DashboardPageClient() {
   if (loading) return <DashboardSkeleton />
   if (error || !data) return <div className="p-6 text-sm text-gray-600">Failed to load dashboard.</div>
 
+  const me = (data as any)?.me as Record<string, unknown> | undefined
+  const showCohortStudy = Boolean(me?.cohortId && me?.cohortStudyIsActive)
+
   const spotBanner = (data as any)?.cohortSpotBanner as
     | { hoursRemaining: number; checkinsCompleted: number; enrolledAt: string }
     | null
@@ -88,7 +92,40 @@ export function DashboardPageClient() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="space-y-6">
-          {shouldShowWelcomeBack && (
+          {showCohortStudy ? (
+            <>
+              <CohortStudyDashboard
+                cohortId={String(me?.cohortId || '')}
+                brandName={typeof me?.cohortStudyBrandName === 'string' ? me.cohortStudyBrandName : ''}
+                productName={
+                  typeof me?.cohortStudyProductName === 'string' ? me.cohortStudyProductName : 'Study'
+                }
+                checkinCount={typeof me?.cohortCheckinCount === 'number' ? me.cohortCheckinCount : 0}
+                studyDays={
+                  typeof me?.cohortStudyDays === 'number' && me.cohortStudyDays > 0 ? me.cohortStudyDays : 21
+                }
+                startDateIso={typeof me?.cohortStartDate === 'string' ? me.cohortStartDate : null}
+                hasCheckedInToday={Boolean(me?.cohortHasCheckedInToday)}
+                currentStreak={typeof me?.cohortCurrentStreak === 'number' ? me.cohortCurrentStreak : 0}
+                currentDay={typeof me?.cohortStudyCurrentDay === 'number' ? me.cohortStudyCurrentDay : 1}
+                daysRemaining={typeof me?.cohortDaysRemaining === 'number' ? me.cohortDaysRemaining : 0}
+                studyComplete={Boolean(me?.cohortStudyComplete)}
+                studyEndDate={typeof me?.cohortStudyEndDate === 'string' ? me.cohortStudyEndDate : null}
+                onOpenCheckin={() => {
+                  try {
+                    window.dispatchEvent(new Event('open:checkin:new'))
+                  } catch {}
+                }}
+              />
+              <CheckinLauncher
+                mePayload={(data as any)?.me}
+                supplementsPayload={(data as any)?.supplements}
+                progressPayload={(data as any)?.progressLoop}
+              />
+            </>
+          ) : null}
+
+          {!showCohortStudy && shouldShowWelcomeBack && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-start justify-between gap-3">
               <div className="leading-snug">
                 <div className="font-semibold">Welcome back!</div>
@@ -115,7 +152,7 @@ export function DashboardPageClient() {
               </button>
             </div>
           )}
-          {spotBanner && spotBanner.checkinsCompleted < 2 && (
+          {!showCohortStudy && spotBanner && spotBanner.checkinsCompleted < 2 && (
             <div className="rounded-xl border border-[#6A3F2B]/30 bg-[#faf6f3] px-4 py-3 text-sm text-neutral-900">
               <div className="font-semibold text-[#6A3F2B]">
                 Complete your second check-in to secure your spot — due in{' '}
@@ -130,37 +167,45 @@ export function DashboardPageClient() {
               </p>
             </div>
           )}
-          <DashboardAddSupplementGate />
+          {!showCohortStudy ? <DashboardAddSupplementGate /> : null}
 
-          <div className="mb-2">
-            <PersonalHeader me={(data as any)?.me} progress={(data as any)?.progressLoop} isMember={isMember} />
-          </div>
+          {!showCohortStudy ? (
+            <div className="mb-2">
+              <PersonalHeader me={(data as any)?.me} progress={(data as any)?.progressLoop} isMember={isMember} />
+            </div>
+          ) : null}
 
-          <DashboardUnifiedPanel
-            suggestionsPayload={(data as any)?.dailySkip}
-            progressPayload={(data as any)?.progressLoop}
-            supplementsPayload={(data as any)?.supplements}
-            effectsPayload={(data as any)?.effectSummary}
-            hasDailyPayload={(data as any)?.hasDaily}
-            wearableStatusPayload={(data as any)?.wearableStatus}
-            settingsPayload={(data as any)?.settings}
-            isMember={isMember}
-          />
+          {!showCohortStudy ? (
+            <DashboardUnifiedPanel
+              suggestionsPayload={(data as any)?.dailySkip}
+              progressPayload={(data as any)?.progressLoop}
+              supplementsPayload={(data as any)?.supplements}
+              effectsPayload={(data as any)?.effectSummary}
+              hasDailyPayload={(data as any)?.hasDaily}
+              wearableStatusPayload={(data as any)?.wearableStatus}
+              settingsPayload={(data as any)?.settings}
+              isMember={isMember}
+            />
+          ) : null}
 
-          <DailyProgressLoop
-            progressPayload={(data as any)?.progressLoop}
-            isMember={isMember}
-            hasDailyPayload={(data as any)?.hasDaily}
-            mePayload={(data as any)?.me}
-          />
+          {!showCohortStudy ? (
+            <DailyProgressLoop
+              progressPayload={(data as any)?.progressLoop}
+              isMember={isMember}
+              hasDailyPayload={(data as any)?.hasDaily}
+              mePayload={(data as any)?.me}
+            />
+          ) : null}
 
-          <CheckinLauncher
-            mePayload={(data as any)?.me}
-            supplementsPayload={(data as any)?.supplements}
-            progressPayload={(data as any)?.progressLoop}
-          />
+          {!showCohortStudy ? (
+            <CheckinLauncher
+              mePayload={(data as any)?.me}
+              supplementsPayload={(data as any)?.supplements}
+              progressPayload={(data as any)?.progressLoop}
+            />
+          ) : null}
 
-          <CheckinEducationModal wearableStatusPayload={(data as any)?.wearableStatus} />
+          {!showCohortStudy ? <CheckinEducationModal wearableStatusPayload={(data as any)?.wearableStatus} /> : null}
         </div>
       </main>
     </div>

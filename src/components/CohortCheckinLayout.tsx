@@ -38,6 +38,17 @@ const SLIDER_LABELS: Record<string, string> = {
   focus: 'How is your focus?',
 }
 
+const STEP_SPAN_STYLE = {
+  fontSize: '11px',
+  fontWeight: 600 as const,
+  color: '#aaa',
+  marginRight: '6px',
+}
+
+function StepPrefix({ n }: { n: number }) {
+  return <span style={STEP_SPAN_STYLE}>{n}.</span>
+}
+
 function buildInitialValues(fieldList: string[]): Record<string, number | null> {
   const v: Record<string, number | null> = {}
   for (const f of fieldList) {
@@ -60,10 +71,24 @@ export default function CohortCheckinLayout({
   const [values, setValues] = useState<Record<string, number | null>>(() => buildInitialValues(fields))
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     setValues(buildInitialValues(fields))
   }, [fields.join('|')])
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSaved(false)
+      setMessage('')
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!saved) return
+    const t = setTimeout(() => onClose(), 4000)
+    return () => clearTimeout(t)
+  }, [saved, onClose])
 
   if (!isOpen) return null
 
@@ -102,22 +127,20 @@ export default function CohortCheckinLayout({
         if (first && typeof values[first] === 'number') headerEnergy = values[first] as number
       }
       onEnergyUpdate(headerEnergy)
-      setMessage('✅ Check-in saved successfully!')
       try {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('progress:refresh'))
         }
       } catch {}
-      setTimeout(() => {
-        setMessage('')
-        onClose()
-      }, 1200)
+      setSaved(true)
     } catch {
       setMessage('Failed to save check-in. Please try again.')
     } finally {
       setIsSaving(false)
     }
   }
+
+  let step = 0
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
@@ -130,92 +153,127 @@ export default function CohortCheckinLayout({
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-5 sm:p-8 space-y-6">
-          <p className="text-sm text-gray-600">Quick check-in for your cohort study. Takes about a minute.</p>
+          {saved ? (
+            <div className="flex flex-col items-center justify-center text-center px-4 py-10 sm:py-14">
+              <div style={{ color: '#639922', fontSize: '48px', lineHeight: 1 }} aria-hidden="true">
+                ✓
+              </div>
+              <h3 className="mt-6 text-[20px] font-semibold text-gray-900">You&apos;re done for today.</h3>
+              <p className="mt-3 text-sm text-gray-500">Your check-in has been saved.</p>
+              <p className="mt-2 text-sm text-gray-500">See you tomorrow — keep going, every day counts.</p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-8 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600">Quick check-in for your cohort study. Takes about a minute.</p>
 
-          {fields.map((fieldKey) => {
-            if (fieldKey === 'sleep_onset_bucket') {
-              const sleepOnsetBucket = values.sleep_onset_bucket ?? null
-              return (
-                <div key={fieldKey} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-900">Time to fall asleep</label>
-                  <p className="text-xs text-gray-500">Optional</p>
-                  <div className="flex flex-wrap gap-2">
-                    {ONSET_OPTIONS.map((o) => (
-                      <button
-                        key={o.value}
-                        type="button"
-                        onClick={() => setNum('sleep_onset_bucket', o.value)}
-                        className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
-                          sleepOnsetBucket === o.value
-                            ? 'border-gray-900 bg-gray-900 text-white'
-                            : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            }
-            if (fieldKey === 'night_wakes') {
-              const nightWakes = values.night_wakes ?? null
-              return (
-                <div key={fieldKey} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-900">Times woken in the night</label>
-                  <p className="text-xs text-gray-500">Optional</p>
-                  <div className="flex flex-wrap gap-2">
-                    {WAKES_OPTIONS.map((o) => (
-                      <button
-                        key={o.value}
-                        type="button"
-                        onClick={() => setNum('night_wakes', o.value)}
-                        className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
-                          nightWakes === o.value
-                            ? 'border-gray-900 bg-gray-900 text-white'
-                            : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            }
-            if (fieldKey === 'sleep_quality' || fieldKey === 'energy' || fieldKey === 'mood' || fieldKey === 'focus') {
-              const label = SLIDER_LABELS[fieldKey] || fieldKey
-              const v = typeof values[fieldKey] === 'number' ? (values[fieldKey] as number) : 5
-              return (
-                <div key={fieldKey} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-900">{label}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={v}
-                      onChange={(e) => setNum(fieldKey, Number(e.target.value))}
-                      className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
-                    />
-                    <span className="w-10 text-right text-sm font-medium text-gray-700">{v}/10</span>
-                  </div>
-                </div>
-              )
-            }
-            return null
-          })}
+              {fields.map((fieldKey) => {
+                if (fieldKey === 'sleep_onset_bucket') {
+                  step += 1
+                  const k = step
+                  const sleepOnsetBucket = values.sleep_onset_bucket ?? null
+                  return (
+                    <div key={fieldKey} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-900">
+                        <StepPrefix n={k} />
+                        Time to fall asleep
+                      </label>
+                      <p className="text-xs text-gray-500">Optional</p>
+                      <div className="flex flex-wrap gap-2">
+                        {ONSET_OPTIONS.map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => setNum('sleep_onset_bucket', o.value)}
+                            className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
+                              sleepOnsetBucket === o.value
+                                ? 'border-gray-900 bg-gray-900 text-white'
+                                : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+                if (fieldKey === 'night_wakes') {
+                  step += 1
+                  const k = step
+                  const nightWakes = values.night_wakes ?? null
+                  return (
+                    <div key={fieldKey} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-900">
+                        <StepPrefix n={k} />
+                        Times woken in the night
+                      </label>
+                      <p className="text-xs text-gray-500">Optional</p>
+                      <div className="flex flex-wrap gap-2">
+                        {WAKES_OPTIONS.map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => setNum('night_wakes', o.value)}
+                            className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
+                              nightWakes === o.value
+                                ? 'border-gray-900 bg-gray-900 text-white'
+                                : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+                if (fieldKey === 'sleep_quality' || fieldKey === 'energy' || fieldKey === 'mood' || fieldKey === 'focus') {
+                  step += 1
+                  const k = step
+                  const label = SLIDER_LABELS[fieldKey] || fieldKey
+                  const v = typeof values[fieldKey] === 'number' ? (values[fieldKey] as number) : 5
+                  return (
+                    <div key={fieldKey} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-900">
+                        <StepPrefix n={k} />
+                        {label}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min={1}
+                          max={10}
+                          value={v}
+                          onChange={(e) => setNum(fieldKey, Number(e.target.value))}
+                          className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
+                        />
+                        <span className="w-10 text-right text-sm font-medium text-gray-700">{v}/10</span>
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              })}
 
-          {message && <p className="text-sm text-gray-800">{message}</p>}
+              {message && <p className="text-sm text-gray-800">{message}</p>}
 
-          <button
-            type="button"
-            onClick={handleCohortSubmit}
-            disabled={isSaving}
-            className="w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800 disabled:opacity-60"
-          >
-            {isSaving ? 'Saving…' : 'Save check-in'}
-          </button>
+              <button
+                type="button"
+                onClick={handleCohortSubmit}
+                disabled={isSaving}
+                className="w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800 disabled:opacity-60"
+              >
+                {isSaving ? 'Saving…' : 'Save check-in'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

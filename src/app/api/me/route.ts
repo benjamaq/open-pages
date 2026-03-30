@@ -1,153 +1,278 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
-import { supabaseAdmin } from '@/lib/supabase/admin'
-import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { normalizeCohortCheckinFields } from "@/lib/cohortCheckinFields";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import {
+  countDistinctDailyEntriesSince,
+  consecutiveCheckinStreakFromYmds,
+  daysBetweenInclusiveUtcYmd,
+  fetchCohortCheckinYmdsSinceEnroll,
+} from "@/lib/cohortCheckinCount";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    let firstName: string | null = null
-    let email: string | null = null
-    let userId: string | null = null
-    let tier: string | null = null
-    let pro_expires_at: string | null = null
-    let cohortId: string | null = null
-    let checkinFields: string[] | null = null
-    let cohortCheckinWelcomeRecommended = false
-    let cohortStudyProductName: string | null = null
+    let firstName: string | null = null;
+    let email: string | null = null;
+    let userId: string | null = null;
+    let tier: string | null = null;
+    let pro_expires_at: string | null = null;
+    let cohortId: string | null = null;
+    let checkinFields: string[] | null = null;
+    let cohortCheckinWelcomeRecommended = false;
+    let cohortStudyProductName: string | null = null;
+    let cohortCheckinCount = 0;
+    let cohortStartDate: string | null = null;
+    let cohortStudyDays = 0;
+    let cohortCurrentStreak = 0;
+    let cohortStudyEndDate: string | null = null;
+    let cohortStudyIsActive = false;
+    let cohortHasCheckedInToday = false;
+    let cohortStudyBrandName: string | null = null;
+    let cohortStudyCurrentDay = 0;
+    let cohortDaysRemaining = 0;
+    let cohortStudyComplete = false;
 
     if (!authError && user) {
-      email = user.email || null
-      userId = user.id
+      email = user.email || null;
+      userId = user.id;
     } else {
       try {
-        const all = (await cookies()).getAll()
-        const tokenCookie = all.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
+        const all = (await cookies()).getAll();
+        const tokenCookie = all.find(
+          (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
+        );
         if (tokenCookie?.value) {
-          const parsed = JSON.parse(tokenCookie.value)
-          email = parsed?.user?.email || parsed?.email || null
-          userId = parsed?.user?.id || parsed?.user?.sub || null
+          const parsed = JSON.parse(tokenCookie.value);
+          email = parsed?.user?.email || parsed?.email || null;
+          userId = parsed?.user?.id || parsed?.user?.sub || null;
         }
       } catch {}
       if (!email) {
         try {
-          const hdr = request.headers.get('x-supabase-auth')
+          const hdr = request.headers.get("x-supabase-auth");
           if (hdr) {
-            const parsed = JSON.parse(hdr)
-            email = parsed?.user?.email || parsed?.email || null
-            userId = parsed?.user?.id || parsed?.user?.sub || null
+            const parsed = JSON.parse(hdr);
+            email = parsed?.user?.email || parsed?.email || null;
+            userId = parsed?.user?.id || parsed?.user?.sub || null;
           }
         } catch {}
       }
       if (!email) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 
     try {
       if (userId) {
         const { data: prof } = await supabase
-          .from('profiles')
-          .select('first_name, display_name, full_name, tier, pro_expires_at')
-          .eq('user_id', userId)
-          .maybeSingle()
+          .from("profiles")
+          .select("first_name, display_name, full_name, tier, pro_expires_at")
+          .eq("user_id", userId)
+          .maybeSingle();
         const fromProfiles =
           (prof as any)?.first_name ||
           (prof as any)?.display_name ||
-          ((prof as any)?.full_name ? String((prof as any)?.full_name).split(' ')[0] : null)
-        if (fromProfiles) firstName = String(fromProfiles)
-        tier = (prof as any)?.tier ?? null
-        pro_expires_at = (prof as any)?.pro_expires_at ?? null
+          ((prof as any)?.full_name
+            ? String((prof as any)?.full_name).split(" ")[0]
+            : null);
+        if (fromProfiles) firstName = String(fromProfiles);
+        tier = (prof as any)?.tier ?? null;
+        pro_expires_at = (prof as any)?.pro_expires_at ?? null;
 
         // Cohort: use service role so RLS never hides cohort_id / participant rows from the app.
         // Do not wrap in one broad try/catch — a failure in a downstream query must not wipe cohortId.
         try {
           const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
-            .from('profiles')
-            .select('id, cohort_id')
-            .eq('user_id', userId)
-            .maybeSingle()
+            .from("profiles")
+            .select("id, cohort_id")
+            .eq("user_id", userId)
+            .maybeSingle();
           if (pAdminErr) {
-            console.error('[api/me] supabaseAdmin profiles read:', pAdminErr.message)
+            console.error(
+              "[api/me] supabaseAdmin profiles read:",
+              pAdminErr.message,
+            );
           }
-          const rawC = (pAdmin as { cohort_id?: string | null } | null)?.cohort_id
-          cohortId = rawC != null && String(rawC).trim() !== '' ? String(rawC).trim() : null
-          const profileId = (pAdmin as { id?: string } | null)?.id ? String((pAdmin as { id: string }).id) : null
+          const rawC = (pAdmin as { cohort_id?: string | null } | null)
+            ?.cohort_id;
+          cohortId =
+            rawC != null && String(rawC).trim() !== ""
+              ? String(rawC).trim()
+              : null;
+          const profileId = (pAdmin as { id?: string } | null)?.id
+            ? String((pAdmin as { id: string }).id)
+            : null;
 
           if (cohortId && profileId) {
+            const todayYmd = new Date().toISOString().slice(0, 10);
             const { data: cdef, error: cdefErr } = await supabaseAdmin
-              .from('cohorts')
-              .select('id, checkin_fields, product_name')
-              .eq('slug', cohortId)
-              .maybeSingle()
-            if (cdefErr) {
-              console.error('[api/me] cohorts lookup:', cohortId, cdefErr.message)
-            }
-            if (cdef != null && Array.isArray((cdef as { checkin_fields?: unknown }).checkin_fields)) {
-              checkinFields = normalizeCohortCheckinFields(
-                (cdef as { checkin_fields: unknown }).checkin_fields
+              .from("cohorts")
+              .select(
+                "id, checkin_fields, product_name, brand_name, study_days, start_date, end_date",
               )
+              .eq("slug", cohortId)
+              .maybeSingle();
+            if (cdefErr) {
+              console.error(
+                "[api/me] cohorts lookup:",
+                cohortId,
+                cdefErr.message,
+              );
             }
-            const pn = (cdef as { product_name?: string | null } | null)?.product_name
-            cohortStudyProductName = pn != null && String(pn).trim() !== '' ? String(pn).trim() : null
+            if (
+              cdef != null &&
+              Array.isArray(
+                (cdef as { checkin_fields?: unknown }).checkin_fields,
+              )
+            ) {
+              checkinFields = normalizeCohortCheckinFields(
+                (cdef as { checkin_fields: unknown }).checkin_fields,
+              );
+            }
 
-            const cohortUuid = (cdef as { id?: string } | null)?.id
-            if (cohortUuid) {
-              try {
-                const { data: part, error: partErr } = await supabaseAdmin
-                  .from('cohort_participants')
-                  .select('enrolled_at')
-                  .eq('user_id', profileId)
-                  .eq('cohort_id', cohortUuid)
-                  .maybeSingle()
-                if (partErr) {
-                  console.error('[api/me] cohort_participants read:', partErr.message)
+            if (cdef != null) {
+              const pn = (cdef as { product_name?: string | null } | null)
+                ?.product_name;
+              cohortStudyProductName =
+                pn != null && String(pn).trim() !== ""
+                  ? String(pn).trim()
+                  : null;
+              const bn = (cdef as { brand_name?: string | null } | null)
+                ?.brand_name;
+              cohortStudyBrandName =
+                bn != null && String(bn).trim() !== ""
+                  ? String(bn).trim()
+                  : null;
+              const sd = (cdef as { study_days?: number | null } | null)
+                ?.study_days;
+              cohortStudyDays = typeof sd === "number" && sd > 0 ? sd : 21;
+              const endRaw = (cdef as { end_date?: string | null } | null)
+                ?.end_date;
+              cohortStudyEndDate =
+                endRaw != null && String(endRaw).trim() !== ""
+                  ? String(endRaw).slice(0, 10)
+                  : null;
+              cohortStudyIsActive =
+                !cohortStudyEndDate || cohortStudyEndDate >= todayYmd;
+
+              const cohortUuid = (cdef as { id?: string } | null)?.id;
+              const cohortStart = (
+                cdef as { start_date?: string | null } | null
+              )?.start_date;
+              if (cohortUuid) {
+                try {
+                  const { data: part, error: partErr } = await supabaseAdmin
+                    .from("cohort_participants")
+                    .select("enrolled_at")
+                    .eq("user_id", profileId)
+                    .eq("cohort_id", cohortUuid)
+                    .maybeSingle();
+                  if (partErr) {
+                    console.error(
+                      "[api/me] cohort_participants read:",
+                      partErr.message,
+                    );
+                  }
+                  const enrolledAt = (part as { enrolled_at?: string } | null)
+                    ?.enrolled_at;
+                  if (enrolledAt) {
+                    cohortStartDate = String(enrolledAt);
+                    const n = await countDistinctDailyEntriesSince(
+                      userId,
+                      String(enrolledAt),
+                    );
+                    cohortCheckinWelcomeRecommended = n === 0;
+                  } else {
+                    cohortCheckinWelcomeRecommended = true;
+                    if (
+                      cohortStart != null &&
+                      String(cohortStart).trim() !== ""
+                    ) {
+                      cohortStartDate = `${String(cohortStart).slice(0, 10)}T12:00:00.000Z`;
+                    }
+                  }
+
+                  const anchorIso = enrolledAt
+                    ? String(enrolledAt)
+                    : cohortStart != null && String(cohortStart).trim() !== ""
+                      ? `${String(cohortStart).slice(0, 10)}T00:00:00.000Z`
+                      : `${todayYmd}T00:00:00.000Z`;
+
+                  if (userId) {
+                    const [cnt, ymds] = await Promise.all([
+                      countDistinctDailyEntriesSince(userId, anchorIso),
+                      fetchCohortCheckinYmdsSinceEnroll(userId, anchorIso),
+                    ]);
+                    cohortCheckinCount = cnt;
+                    cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
+                      ymds,
+                      todayYmd,
+                    );
+                    cohortHasCheckedInToday = new Set(ymds).has(todayYmd);
+                  }
+
+                  const enrollYmd = enrolledAt
+                    ? String(enrolledAt).slice(0, 10)
+                    : cohortStart != null && String(cohortStart).trim() !== ""
+                      ? String(cohortStart).slice(0, 10)
+                      : todayYmd;
+                  cohortStudyCurrentDay = Math.max(
+                    1,
+                    daysBetweenInclusiveUtcYmd(enrollYmd, todayYmd) + 1,
+                  );
+                  cohortStudyComplete =
+                    cohortStudyCurrentDay >= cohortStudyDays;
+                  cohortDaysRemaining = Math.max(
+                    0,
+                    cohortStudyDays - cohortStudyCurrentDay,
+                  );
+                } catch (partCatch: unknown) {
+                  console.error(
+                    "[api/me] cohort participant welcome:",
+                    partCatch,
+                  );
+                  cohortCheckinWelcomeRecommended = true;
                 }
-                const enrolledAt = (part as { enrolled_at?: string } | null)?.enrolled_at
-                if (enrolledAt) {
-                  const n = await countDistinctDailyEntriesSince(userId, String(enrolledAt))
-                  cohortCheckinWelcomeRecommended = n === 0
-                } else {
-                  // profile has cohort_id but no participant row yet — still show first-check-in welcome.
-                  cohortCheckinWelcomeRecommended = true
-                }
-              } catch (partCatch: unknown) {
-                console.error('[api/me] cohort participant welcome:', partCatch)
-                cohortCheckinWelcomeRecommended = true
               }
             }
           }
         } catch (e: unknown) {
-          console.error('[api/me] cohort block unexpected:', e)
+          console.error("[api/me] cohort block unexpected:", e);
         }
 
         if (!firstName) {
           const { data: profile } = await supabase
-            .from('app_user')
-            .select('first_name, display_name, full_name')
-            .eq('id', userId)
-            .maybeSingle()
+            .from("app_user")
+            .select("first_name, display_name, full_name")
+            .eq("id", userId)
+            .maybeSingle();
           const fromProfile =
             (profile as any)?.first_name ||
             (profile as any)?.display_name ||
-            ((profile as any)?.full_name ? String((profile as any)?.full_name).split(' ')[0] : null)
-          if (fromProfile) firstName = String(fromProfile)
+            ((profile as any)?.full_name
+              ? String((profile as any)?.full_name).split(" ")[0]
+              : null);
+          if (fromProfile) firstName = String(fromProfile);
         }
       }
     } catch {}
 
     if (!firstName) {
-      const meta = (user as any)?.user_metadata || {}
+      const meta = (user as any)?.user_metadata || {};
       firstName =
-        meta.first_name || meta.name ||
-        (meta.full_name ? String(meta.full_name).split(' ')[0] : null) ||
-        (email ? String(email).split('@')[0] : null)
+        meta.first_name ||
+        meta.name ||
+        (meta.full_name ? String(meta.full_name).split(" ")[0] : null) ||
+        (email ? String(email).split("@")[0] : null);
     }
 
     return NextResponse.json({
@@ -160,8 +285,22 @@ export async function GET(request: Request) {
       checkinFields,
       cohortCheckinWelcomeRecommended,
       cohortStudyProductName,
-    })
+      cohortCheckinCount,
+      cohortStartDate,
+      cohortStudyDays,
+      cohortCurrentStreak,
+      cohortStudyEndDate,
+      cohortStudyIsActive,
+      cohortHasCheckedInToday,
+      cohortStudyBrandName,
+      cohortStudyCurrentDay,
+      cohortDaysRemaining,
+      cohortStudyComplete,
+    });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: e?.message || "Failed" },
+      { status: 500 },
+    );
   }
 }

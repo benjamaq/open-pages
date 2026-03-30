@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -74,32 +75,7 @@ export async function GET(request: NextRequest) {
       }
 
       const enrolledIso = String(p.enrolled_at)
-      const enrollYmd = enrolledIso.slice(0, 10)
-
-      const { data: byCreated, error: cErr } = await supabaseAdmin
-        .from('daily_entries')
-        .select('id')
-        .eq('user_id', authUid)
-        .gte('created_at', enrolledIso)
-      const { data: byDate, error: dErr } = await supabaseAdmin
-        .from('daily_entries')
-        .select('id')
-        .eq('user_id', authUid)
-        .gte('local_date', enrollYmd)
-
-      if (cErr || dErr) {
-        console.error('[cohort-compliance] count check-ins', p.id, cErr || dErr)
-        continue
-      }
-
-      const ids = new Set<string>()
-      for (const r of byCreated || []) {
-        if ((r as { id?: string }).id) ids.add(String((r as { id: string }).id))
-      }
-      for (const r of byDate || []) {
-        if ((r as { id?: string }).id) ids.add(String((r as { id: string }).id))
-      }
-      const n = ids.size
+      const n = await countDistinctDailyEntriesSince(authUid, enrolledIso)
       const enrolledMs = new Date(enrolledIso).getTime()
       const past48h = Number.isFinite(enrolledMs) && now - enrolledMs > 48 * 60 * 60 * 1000
 
