@@ -50,6 +50,7 @@ export async function updateSession(request: NextRequest) {
     if (
       path.startsWith('/login') ||
       path.startsWith('/signup') ||
+      path.startsWith('/study') ||
       path.startsWith('/api/') ||
       path.startsWith('/cohorts') ||
       path.startsWith('/sleep') ||
@@ -63,7 +64,7 @@ export async function updateSession(request: NextRequest) {
 
     // EXISTING SYSTEM: original guard & redirects to /auth/signin
     // Allow remaining public landing pages without auth
-    const publicPaths = ['/', '/u', '/checkin/quick-save', '/checkin/success', '/cohorts', '/sleep', '/sleep-v2', '/sleep-v3', '/pricing', '/faq', '/contact', '/biostackr']
+    const publicPaths = ['/', '/u', '/checkin/quick-save', '/checkin/success', '/cohorts', '/study', '/sleep', '/sleep-v2', '/sleep-v3', '/pricing', '/faq', '/contact', '/biostackr']
     const isPublic = publicPaths.some((p) => path === p || path.startsWith(p + '/')) || path.startsWith('/auth') || path.startsWith('/u/')
     if (!isPublic) {
       const url = request.nextUrl.clone()
