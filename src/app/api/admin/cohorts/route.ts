@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { countCohortConfirmedParticipants, countCohortPipelineParticipants } from '@/lib/cohortRecruitment'
 
 function adminDenied(req: NextRequest): NextResponse | null {
   if (process.env.NODE_ENV !== 'production') return null
@@ -22,13 +23,27 @@ export async function GET(request: NextRequest) {
     if (!cohortUuid) {
       const { data: cohorts, error } = await supabaseAdmin
         .from('cohorts')
-        .select('id, slug, brand_name, product_name, status')
+        .select('id, slug, brand_name, product_name, status, recruitment_closes_at, max_participants')
         .order('brand_name', { ascending: true })
       if (error) {
         console.error('[admin/cohorts] list:', error)
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
-      return NextResponse.json({ cohorts: cohorts || [] })
+      const base = cohorts || []
+      const cohortsWithCounts = await Promise.all(
+        base.map(async (c: { id: string }) => {
+          const [confirmedCount, pipelineCount] = await Promise.all([
+            countCohortConfirmedParticipants(c.id),
+            countCohortPipelineParticipants(c.id),
+          ])
+          return {
+            ...c,
+            confirmed_participant_count: confirmedCount,
+            pipeline_participant_count: pipelineCount,
+          }
+        })
+      )
+      return NextResponse.json({ cohorts: cohortsWithCounts })
     }
 
     const { data: parts, error: pErr } = await supabaseAdmin

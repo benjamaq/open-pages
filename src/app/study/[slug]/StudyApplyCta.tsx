@@ -1,8 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { setCohortCookie } from '@/lib/cohort'
-
 export function StudyApplyCta({
   cohortSlug,
   className = '',
@@ -12,20 +10,19 @@ export function StudyApplyCta({
 }) {
   const router = useRouter()
 
-  const goSignup = () => {
-    const slug = String(cohortSlug || '').trim()
+  const goApply = () => {
+    const slug = String(cohortSlug || '').trim().toLowerCase()
     if (!slug) {
       router.push('/signup')
       return
     }
-    setCohortCookie(slug)
-    router.push('/signup')
+    router.push(`/study/${encodeURIComponent(slug)}/apply`)
   }
 
   return (
     <button
       type="button"
-      onClick={goSignup}
+      onClick={goApply}
       className={
         className ||
         'inline-flex items-center justify-center rounded-full bg-neutral-900 px-8 py-3 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors'

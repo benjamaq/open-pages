@@ -5,7 +5,17 @@ import Link from 'next/link'
 
 const ADMIN_KEY_STORAGE = 'bs_admin_key'
 
-type Cohort = { id: string; slug: string; brand_name: string; product_name: string; status: string | null }
+type Cohort = {
+  id: string
+  slug: string
+  brand_name: string
+  product_name: string
+  status: string | null
+  recruitment_closes_at?: string | null
+  max_participants?: number | null
+  confirmed_participant_count?: number
+  pipeline_participant_count?: number
+}
 
 type Participant = {
   display_name: string | null
@@ -170,6 +180,57 @@ export default function AdminCohortsPage() {
 
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        )}
+
+        {!loading && cohorts.length > 0 && (
+          <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-sm font-semibold text-gray-900">Recruitment overview</h2>
+              <p className="text-xs text-gray-600 mt-1">
+                Confirmed vs cap (max). Pipeline = applied + confirmed (toward capacity).
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Cohort</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Recruitment closes</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Confirmed</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Max</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">Pipeline / max</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {cohorts.map((c) => {
+                    const conf = c.confirmed_participant_count ?? 0
+                    const pipe = c.pipeline_participant_count ?? 0
+                    const max = c.max_participants
+                    const closes = c.recruitment_closes_at
+                      ? new Date(c.recruitment_closes_at).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })
+                      : '—'
+                    return (
+                      <tr key={c.id}>
+                        <td className="px-3 py-2 text-gray-900">
+                          {c.brand_name} · {c.product_name}
+                          <div className="text-xs text-gray-500 font-mono">{c.slug}</div>
+                        </td>
+                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{closes}</td>
+                        <td className="px-3 py-2 text-right text-gray-900">{conf}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{max != null ? max : '—'}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">
+                          {max != null ? `${pipe} / ${max}` : `${pipe}`}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
