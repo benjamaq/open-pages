@@ -2,7 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { setCohortCookie, COHORT_QUALIFICATION_STORAGE_KEY, type CohortQualificationDraftV1 } from '@/lib/cohort'
+import {
+  setCohortCookie,
+  setCohortBrandCookie,
+  COHORT_QUALIFICATION_STORAGE_KEY,
+  type CohortQualificationDraftV1,
+} from '@/lib/cohort'
 
 const PRESCRIBE_EXIT =
   'Thanks for your interest — for this study we need participants not currently on prescription sleep medication. We hope to include you in a future study.'
@@ -12,8 +17,10 @@ const CURRENT_PRODUCT_EXIT =
 
 export function CohortQualificationSection({
   cohortSlug,
+  cohortBrandName,
 }: {
   cohortSlug: string
+  cohortBrandName: string
 }) {
   const router = useRouter()
   const [issue, setIssue] = useState('')
@@ -64,6 +71,7 @@ export function CohortQualificationSection({
       return
     }
     setCohortCookie(slug)
+    setCohortBrandCookie(cohortBrandName)
     try {
       const draft: CohortQualificationDraftV1 = { v: 1, cohortSlug: slug, issue: issue.trim() }
       sessionStorage.setItem(COHORT_QUALIFICATION_STORAGE_KEY, JSON.stringify(draft))

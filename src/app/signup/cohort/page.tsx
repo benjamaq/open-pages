@@ -10,9 +10,13 @@ import {
   getCohortCookie,
   setCohortCookie,
   clearCohortCookie,
+  getCohortBrandCookie,
   COHORT_QUALIFICATION_STORAGE_KEY,
   type CohortQualificationDraftV1,
 } from '@/lib/cohort'
+
+const inputCls =
+  'w-full rounded-md border border-gray-200 bg-white px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400'
 
 function readQualDraft(): CohortQualificationDraftV1 | null {
   try {
@@ -24,6 +28,30 @@ function readQualDraft(): CohortQualificationDraftV1 | null {
   } catch {
     return null
   }
+}
+
+/** Placeholder until real DoNotAge logo asset ships. */
+function DonotageLogoPlaceholder() {
+  return (
+    <div
+      className="inline-flex items-center gap-3 rounded-lg border border-white/25 bg-white/10 px-3 py-2 backdrop-blur-sm"
+      aria-label="DoNotAge (placeholder logo)"
+    >
+      <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white/90 text-sm font-bold tracking-tight text-slate-800">
+        DNA
+      </div>
+      <span className="text-lg font-semibold tracking-tight text-white drop-shadow-sm">DoNotAge</span>
+    </div>
+  )
+}
+
+function isDonotageBrandedStudy(slug: string | null, brandLabel: string | null): boolean {
+  if ((slug || '').toLowerCase() === 'donotage-suresleep') return true
+  const norm = (brandLabel || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '')
+  return norm === 'donotage'
 }
 
 export default function CohortSignupPage() {
@@ -39,6 +67,7 @@ function CohortSignupInner() {
   const [ready, setReady] = useState(false)
   const [cohortSlug, setCohortSlug] = useState<string | null>(null)
   const [qualificationIssue, setQualificationIssue] = useState<string>('')
+  const [cohortBrandLabel, setCohortBrandLabel] = useState<string | null>(null)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -67,8 +96,15 @@ function CohortSignupInner() {
     try {
       setCohortCookie(slug)
     } catch {}
+    try {
+      setCohortBrandLabel(getCohortBrandCookie())
+    } catch {
+      setCohortBrandLabel(null)
+    }
     setReady(true)
   }, [router])
+
+  const showDonotageLogo = isDonotageBrandedStudy(cohortSlug, cohortBrandLabel)
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -191,155 +227,162 @@ function CohortSignupInner() {
   }
 
   return (
-    <div
-      className="min-h-screen grid place-items-center p-6"
-      style={{
-        backgroundImage: "url('/sign in.png?v=1')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <div className="w-full max-w-[520px] rounded-2xl border border-gray-200 bg-white/95 p-8 sm:p-10 shadow-lg ring-1 ring-black/5">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900">Create your study account</h1>
-          <p className="mt-2 text-gray-600">Shipping and reminders — then your first check-in.</p>
-        </div>
-        <form onSubmit={onSubmit} className="mt-6 max-h-[70vh] space-y-4 overflow-y-auto pr-1">
-          <div className="grid gap-1">
-            <label className="text-sm text-gray-700">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              required
-            />
+    <div className="relative min-h-screen">
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/pill-bottle.png')" }}
+        aria-hidden
+      />
+      <div className="fixed inset-0 bg-black/40" aria-hidden />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[560px] flex-col justify-center px-5 py-10 sm:px-6">
+        {showDonotageLogo && (
+          <div className="mb-5 sm:mb-6">
+            <DonotageLogoPlaceholder />
           </div>
-          <div className="grid gap-1">
-            <label className="text-sm text-gray-700">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              required
-            />
+        )}
+        <div className="w-full rounded-2xl border border-white/20 bg-white p-8 shadow-xl sm:p-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-slate-900">You&apos;re almost in</h1>
+            <p className="mt-2 text-base text-gray-600 leading-snug">
+              Tell us where to send your product and when to remind you. Your first check-in takes 30 seconds.
+            </p>
           </div>
-          <div className="grid gap-1">
-            <label className="text-sm text-gray-700">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              required
-              minLength={8}
-            />
-          </div>
-
-          <div className="border-t border-gray-100 pt-4">
-            <p className="text-sm font-medium text-gray-800">Shipping address</p>
-            <div className="mt-3 grid gap-3">
+          <form onSubmit={onSubmit} className="mt-8 max-h-[min(72vh,760px)] space-y-6 overflow-y-auto pr-1">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-gray-800">Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-gray-800">Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} required />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-gray-800">Password</label>
               <input
-                type="text"
-                value={shippingLine1}
-                onChange={(e) => setShippingLine1(e.target.value)}
-                placeholder="Street address"
-                className="w-full rounded-md border px-3 py-2 text-sm"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputCls}
                 required
+                minLength={8}
               />
-              <input
-                type="text"
-                value={shippingLine2}
-                onChange={(e) => setShippingLine2(e.target.value)}
-                placeholder="Apt / suite (optional)"
-                className="w-full rounded-md border px-3 py-2 text-sm"
-              />
-              <div className="grid grid-cols-2 gap-2">
+              <p className="text-sm text-gray-500">At least 8 characters.</p>
+            </div>
+
+            <div className="space-y-4 border-t border-gray-100 pt-8">
+              <p className="text-sm font-medium text-gray-800">Shipping address</p>
+              <p className="text-sm leading-relaxed text-gray-500">
+                We need your address to send you the product before the study begins. Your details are never shared or
+                used for marketing.
+              </p>
+              <div className="grid gap-4">
                 <input
                   type="text"
-                  value={shippingCity}
-                  onChange={(e) => setShippingCity(e.target.value)}
-                  placeholder="City"
-                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={shippingLine1}
+                  onChange={(e) => setShippingLine1(e.target.value)}
+                  placeholder="Street address"
+                  className={inputCls}
                   required
                 />
                 <input
                   type="text"
-                  value={shippingRegion}
-                  onChange={(e) => setShippingRegion(e.target.value)}
-                  placeholder="State / region"
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                  required
+                  value={shippingLine2}
+                  onChange={(e) => setShippingLine2(e.target.value)}
+                  placeholder="Apt / suite (optional)"
+                  className={inputCls}
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={shippingPostal}
-                  onChange={(e) => setShippingPostal(e.target.value)}
-                  placeholder="Postal code"
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                  required
-                />
-                <input
-                  type="text"
-                  value={shippingCountry}
-                  onChange={(e) => setShippingCountry(e.target.value)}
-                  placeholder="Country"
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                  required
-                />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={shippingCity}
+                    onChange={(e) => setShippingCity(e.target.value)}
+                    placeholder="City"
+                    className={inputCls}
+                    required
+                  />
+                  <input
+                    type="text"
+                    value={shippingRegion}
+                    onChange={(e) => setShippingRegion(e.target.value)}
+                    placeholder="State / region"
+                    className={inputCls}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={shippingPostal}
+                    onChange={(e) => setShippingPostal(e.target.value)}
+                    placeholder="Postal code"
+                    className={inputCls}
+                    required
+                  />
+                  <input
+                    type="text"
+                    value={shippingCountry}
+                    onChange={(e) => setShippingCountry(e.target.value)}
+                    placeholder="Country"
+                    className={inputCls}
+                    required
+                  />
+                </div>
               </div>
             </div>
+
+            <fieldset className="space-y-4 border-t border-gray-100 pt-8">
+              <legend className="text-sm font-medium text-gray-800">When would you like your daily reminder?</legend>
+              <div className="mt-1 flex flex-col gap-3 text-base text-gray-700">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="radio"
+                    name="reminder"
+                    checked={reminderSlot === 'morning'}
+                    onChange={() => setReminderSlot('morning')}
+                    className="h-4 w-4"
+                  />
+                  Morning
+                </label>
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="radio"
+                    name="reminder"
+                    checked={reminderSlot === 'midday'}
+                    onChange={() => setReminderSlot('midday')}
+                    className="h-4 w-4"
+                  />
+                  Midday
+                </label>
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="radio"
+                    name="reminder"
+                    checked={reminderSlot === 'evening'}
+                    onChange={() => setReminderSlot('evening')}
+                    className="h-4 w-4"
+                  />
+                  Evening
+                </label>
+              </div>
+            </fieldset>
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-full bg-slate-900 px-4 py-3.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              {loading ? 'Creating…' : 'Create account & open check-in'}
+            </button>
+            <p className="text-center text-sm leading-relaxed text-gray-500">
+              Your data is kept private and used only for this study. We never sell or share your information.
+            </p>
+          </form>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <Link href={`/study/${encodeURIComponent(cohortSlug)}`} className="hover:underline" style={{ color: '#6A3F2B' }}>
+              ← Back to study
+            </Link>
           </div>
-
-          <fieldset className="border-t border-gray-100 pt-4">
-            <legend className="text-sm font-medium text-gray-800">When would you like your daily reminder?</legend>
-            <div className="mt-2 flex flex-col gap-2 text-sm text-gray-700">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="reminder"
-                  checked={reminderSlot === 'morning'}
-                  onChange={() => setReminderSlot('morning')}
-                />
-                Morning
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="reminder"
-                  checked={reminderSlot === 'midday'}
-                  onChange={() => setReminderSlot('midday')}
-                />
-                Midday
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="reminder"
-                  checked={reminderSlot === 'evening'}
-                  onChange={() => setReminderSlot('evening')}
-                />
-                Evening
-              </label>
-            </div>
-          </fieldset>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
-          >
-            {loading ? 'Creating…' : 'Create account & open check-in'}
-          </button>
-        </form>
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <Link href={`/study/${encodeURIComponent(cohortSlug)}`} className="hover:underline" style={{ color: '#6A3F2B' }}>
-            ← Back to study
-          </Link>
         </div>
       </div>
     </div>

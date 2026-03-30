@@ -136,7 +136,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             <div className="mt-10">
               <ScarcityLine confirmed={confirmedCount} max={maxP} />
             </div>
-            <CohortQualificationSection cohortSlug={cohort.slug} />
+            <CohortQualificationSection cohortSlug={cohort.slug} cohortBrandName={String(cohort.brand_name || '')} />
           </>
         )}
       </main>
