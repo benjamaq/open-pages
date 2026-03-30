@@ -239,8 +239,11 @@ export default function DailyCheckinModal({
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
   const [cohortIdFromClient, setCohortIdFromClient] = useState<string | null>(null)
 
+  // If server passes null (failed / missing in payload), still fall back to client profile.cohort_id under RLS.
+  const hintTrimmed =
+    cohortIdHint !== undefined && cohortIdHint !== null ? trimCohortId(cohortIdHint) : null
   const effectiveCohortId =
-    cohortIdHint !== undefined ? trimCohortId(cohortIdHint) : cohortIdFromClient
+    hintTrimmed != null && hintTrimmed !== '' ? hintTrimmed : cohortIdFromClient
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -255,13 +258,15 @@ export default function DailyCheckinModal({
     { id: 'very_high_carbs', label: 'Very high carbs' },
   ]
 
-  // Cohort: prefer server hint (same session as /api/me). Browser anon select often returns no row under RLS.
+  // Cohort: prefer server hint; when hint is null/empty, fetch profile.cohort_id from browser (may work under RLS).
   useEffect(() => {
     if (!isOpen || !userId || userId === 'guest') {
       setCohortIdFromClient(null)
       return
     }
-    if (cohortIdHint !== undefined) {
+    const serverResolved =
+      cohortIdHint !== undefined && cohortIdHint !== null && String(cohortIdHint).trim() !== ''
+    if (serverResolved) {
       setCohortIdFromClient(null)
       return
     }

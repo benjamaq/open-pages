@@ -27,7 +27,7 @@ const ONSET_OPTIONS = [
 
 const WAKES_OPTIONS = [
   { value: 0 as const, label: 'None' },
-  { value: 1 as const, label: '1–2' },
+  { value: 1 as const, label: '1–2 times' },
   { value: 2 as const, label: '3 or more' },
 ]
 

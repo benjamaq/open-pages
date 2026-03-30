@@ -66,22 +66,29 @@ export async function GET(request: Request) {
         pro_expires_at = (prof as any)?.pro_expires_at ?? null
 
         // Cohort: use service role so RLS never hides cohort_id / participant rows from the app.
+        // Do not wrap in one broad try/catch — a failure in a downstream query must not wipe cohortId.
         try {
-          const { data: pAdmin } = await supabaseAdmin
+          const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
             .from('profiles')
             .select('id, cohort_id')
             .eq('user_id', userId)
             .maybeSingle()
+          if (pAdminErr) {
+            console.error('[api/me] supabaseAdmin profiles read:', pAdminErr.message)
+          }
           const rawC = (pAdmin as { cohort_id?: string | null } | null)?.cohort_id
           cohortId = rawC != null && String(rawC).trim() !== '' ? String(rawC).trim() : null
           const profileId = (pAdmin as { id?: string } | null)?.id ? String((pAdmin as { id: string }).id) : null
 
           if (cohortId && profileId) {
-            const { data: cdef } = await supabaseAdmin
+            const { data: cdef, error: cdefErr } = await supabaseAdmin
               .from('cohorts')
               .select('id, checkin_fields, product_name')
               .eq('slug', cohortId)
               .maybeSingle()
+            if (cdefErr) {
+              console.error('[api/me] cohorts lookup:', cohortId, cdefErr.message)
+            }
             if (cdef != null && Array.isArray((cdef as { checkin_fields?: unknown }).checkin_fields)) {
               checkinFields = normalizeCohortCheckinFields(
                 (cdef as { checkin_fields: unknown }).checkin_fields
@@ -92,22 +99,32 @@ export async function GET(request: Request) {
 
             const cohortUuid = (cdef as { id?: string } | null)?.id
             if (cohortUuid) {
-              const { data: part } = await supabaseAdmin
-                .from('cohort_participants')
-                .select('enrolled_at')
-                .eq('user_id', profileId)
-                .eq('cohort_id', cohortUuid)
-                .maybeSingle()
-              const enrolledAt = (part as { enrolled_at?: string } | null)?.enrolled_at
-              if (enrolledAt) {
-                const n = await countDistinctDailyEntriesSince(userId, String(enrolledAt))
-                cohortCheckinWelcomeRecommended = n === 0
+              try {
+                const { data: part, error: partErr } = await supabaseAdmin
+                  .from('cohort_participants')
+                  .select('enrolled_at')
+                  .eq('user_id', profileId)
+                  .eq('cohort_id', cohortUuid)
+                  .maybeSingle()
+                if (partErr) {
+                  console.error('[api/me] cohort_participants read:', partErr.message)
+                }
+                const enrolledAt = (part as { enrolled_at?: string } | null)?.enrolled_at
+                if (enrolledAt) {
+                  const n = await countDistinctDailyEntriesSince(userId, String(enrolledAt))
+                  cohortCheckinWelcomeRecommended = n === 0
+                } else {
+                  // profile has cohort_id but no participant row yet — still show first-check-in welcome.
+                  cohortCheckinWelcomeRecommended = true
+                }
+              } catch (partCatch: unknown) {
+                console.error('[api/me] cohort participant welcome:', partCatch)
+                cohortCheckinWelcomeRecommended = true
               }
             }
           }
-        } catch {
-          cohortId = null
-          checkinFields = null
+        } catch (e: unknown) {
+          console.error('[api/me] cohort block unexpected:', e)
         }
 
         if (!firstName) {
