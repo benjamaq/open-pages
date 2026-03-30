@@ -1,3 +1,4 @@
+import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export type CohortSpotBanner = {
@@ -41,22 +42,7 @@ export async function getCohortSecondCheckinBanner(authUserId: string): Promise<
   if (partErr || !part || String(part.status) !== 'applied') return null
 
   const enrolledIso = String(part.enrolled_at)
-  const enrollYmd = enrolledIso.slice(0, 10)
-
-  const [{ data: byCreated }, { data: byDate }] = await Promise.all([
-    supabaseAdmin.from('daily_entries').select('user_id, local_date').eq('user_id', uid).gte('created_at', enrolledIso),
-    supabaseAdmin.from('daily_entries').select('user_id, local_date').eq('user_id', uid).gte('local_date', enrollYmd),
-  ])
-
-  const dayKeys = new Set<string>()
-  const add = (r: { user_id?: string | null; local_date?: string | null }) => {
-    const u = r.user_id != null ? String(r.user_id).trim() : ''
-    const ld = r.local_date != null ? String(r.local_date).slice(0, 10) : ''
-    if (u && /^\d{4}-\d{2}-\d{2}$/.test(ld)) dayKeys.add(`${u}|${ld}`)
-  }
-  for (const r of byCreated || []) add(r as { user_id?: string | null; local_date?: string | null })
-  for (const r of byDate || []) add(r as { user_id?: string | null; local_date?: string | null })
-  const n = dayKeys.size
+  const n = await countDistinctDailyEntriesSince(uid, enrolledIso)
   if (n >= 2) return null
 
   const enrolledMs = new Date(enrolledIso).getTime()

@@ -39,9 +39,9 @@ const SLIDER_LABELS: Record<string, string> = {
 }
 
 const STEP_SPAN_STYLE = {
-  fontSize: '11px',
+  fontSize: '14px',
   fontWeight: 600 as const,
-  color: '#aaa',
+  color: '#888',
   marginRight: '6px',
 }
 

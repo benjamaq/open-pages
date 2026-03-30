@@ -55,12 +55,25 @@ export function consecutiveCheckinStreakFromYmds(ymds: string[], todayYmd: strin
   return streak
 }
 
-/** Dedupe key: daily_entries PK is (user_id, local_date); there is no row `id` in many deployments. */
-function dailyEntryDayKey(r: { user_id?: string | null; local_date?: string | null }): string | null {
-  const u = r.user_id != null ? String(r.user_id).trim() : ''
+/** Same calendar-day resolution as fetchCohortCheckinYmdsSinceEnroll (local_date preferred, else created_at). */
+function effectiveDailyEntryYmd(r: { local_date?: string | null; created_at?: string | null }): string | null {
   const ld = r.local_date != null ? String(r.local_date).slice(0, 10) : ''
-  if (!u || !/^\d{4}-\d{2}-\d{2}$/.test(ld)) return null
-  return `${u}|${ld}`
+  if (/^\d{4}-\d{2}-\d{2}$/.test(ld)) return ld
+  const ca = r.created_at != null ? String(r.created_at) : ''
+  if (ca.length >= 10) return ca.slice(0, 10)
+  return null
+}
+
+/** Dedupe key; uses effective day so counts match streak / ymd-derived flags when local_date is odd or null. */
+function dailyEntryDayKey(r: {
+  user_id?: string | null
+  local_date?: string | null
+  created_at?: string | null
+}): string | null {
+  const u = r.user_id != null ? String(r.user_id).trim() : ''
+  const ymd = effectiveDailyEntryYmd(r)
+  if (!u || !ymd) return null
+  return `${u}|${ymd}`
 }
 
 /** Distinct daily_entries rows (by calendar day) since enrollment — aligned with fetchCohortCheckinYmdsSinceEnroll. */
@@ -69,16 +82,24 @@ export async function countDistinctDailyEntriesSince(authUserId: string, enrolle
   if (!uid || !enrolledIso) return 0
   const enrollYmd = enrolledIso.slice(0, 10)
   const [{ data: byCreated }, { data: byDate }] = await Promise.all([
-    supabaseAdmin.from('daily_entries').select('user_id, local_date').eq('user_id', uid).gte('created_at', enrolledIso),
-    supabaseAdmin.from('daily_entries').select('user_id, local_date').eq('user_id', uid).gte('local_date', enrollYmd),
+    supabaseAdmin
+      .from('daily_entries')
+      .select('user_id, local_date, created_at')
+      .eq('user_id', uid)
+      .gte('created_at', enrolledIso),
+    supabaseAdmin
+      .from('daily_entries')
+      .select('user_id, local_date, created_at')
+      .eq('user_id', uid)
+      .gte('local_date', enrollYmd),
   ])
   const keys = new Set<string>()
   for (const r of byCreated || []) {
-    const k = dailyEntryDayKey(r as { user_id?: string | null; local_date?: string | null })
+    const k = dailyEntryDayKey(r as { user_id?: string | null; local_date?: string | null; created_at?: string | null })
     if (k) keys.add(k)
   }
   for (const r of byDate || []) {
-    const k = dailyEntryDayKey(r as { user_id?: string | null; local_date?: string | null })
+    const k = dailyEntryDayKey(r as { user_id?: string | null; local_date?: string | null; created_at?: string | null })
     if (k) keys.add(k)
   }
   return keys.size

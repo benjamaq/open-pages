@@ -71,21 +71,27 @@ export function DashboardPageClient() {
             <a href="/dashboard" className="flex items-center">
               <img src="/BIOSTACKR LOGO 2.png" alt="Biostackr" className="h-7 sm:h-8 w-auto" />
             </a>
-            <a
-              href="/upload"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50"
-              title="Upload Wearable Data"
-            >
-              <span aria-hidden="true">⌚</span>
-              <span>Upload&nbsp;Wearable&nbsp;Data</span>
-            </a>
+            {!showCohortStudy ? (
+              <a
+                href="/upload"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50"
+                title="Upload Wearable Data"
+              >
+                <span aria-hidden="true">⌚</span>
+                <span>Upload&nbsp;Wearable&nbsp;Data</span>
+              </a>
+            ) : null}
           </div>
           <nav className="mt-2 flex items-center gap-4 sm:gap-6 text-sm text-slate-700 justify-start sm:justify-end">
             <a href="/dashboard" className="hover:underline">Dashboard</a>
-            <a href="/results" className="hover:underline">My Stack</a>
-            <a href="/settings" className="hover:underline">Settings</a>
+            {!showCohortStudy ? (
+              <>
+                <a href="/results" className="hover:underline">My Stack</a>
+                <a href="/settings" className="hover:underline">Settings</a>
+              </>
+            ) : null}
             <a href="/auth/signout" className="hover:underline">Log out</a>
-            <UpgradeButton compact isPro={isMember} />
+            {!showCohortStudy ? <UpgradeButton compact isPro={isMember} /> : null}
           </nav>
         </div>
       </header>
