@@ -15,6 +15,28 @@ const PRESCRIBE_EXIT =
 const CURRENT_PRODUCT_EXIT =
   'Thanks for your interest — this study needs participants with a clean baseline, which means not currently taking the product. We hope to include you in a future study.'
 
+const SLEEP_SCREENING_EXIT =
+  "Based on your answers, you may not be the right fit for this study. We're looking for participants who currently experience sleep difficulties. Thank you for your interest."
+
+const SLEEP_QUALITY_OPTIONS: { value: number; label: string }[] = [
+  { value: 1, label: '1–3 · Very poor' },
+  { value: 2, label: '4–5 · Poor' },
+  { value: 3, label: '6 · Below average' },
+  { value: 4, label: '7–8 · Good' },
+  { value: 5, label: '9–10 · Excellent' },
+]
+
+const SLEEP_ISSUE_OPTIONS = [
+  'Hard to fall asleep',
+  'Wake up during the night',
+  'Wake up too early',
+  "Don't feel rested in the morning",
+  'I sleep reasonably well',
+] as const
+
+/** Vertical stack for multi-option pill lists (mobile-friendly). */
+const multiPillOuterClass = 'flex w-full flex-col gap-3'
+
 const BORDER_SUBTLE = '#d4cfc8'
 const BORDER_SELECTED = '#1a1a1a'
 
@@ -52,10 +74,14 @@ export function CohortQualificationSection({
   const router = useRouter()
   const [issue, setIssue] = useState('')
   const [issueTouched, setIssueTouched] = useState(false)
+  const [sleepQuality, setSleepQuality] = useState<number | null>(null)
+  const [sleepIssue, setSleepIssue] = useState<string | null>(null)
   const [currentProduct, setCurrentProduct] = useState<'yes' | 'no' | ''>('')
   const [prescription, setPrescription] = useState<'yes' | 'no' | ''>('')
   const [commitment, setCommitment] = useState(false)
   const [issueError, setIssueError] = useState<string | null>(null)
+  const [sleepQualityError, setSleepQualityError] = useState(false)
+  const [sleepIssueError, setSleepIssueError] = useState(false)
   const [currentProductError, setCurrentProductError] = useState(false)
   const [prescError, setPrescError] = useState(false)
   const [hardExit, setHardExit] = useState<string | null>(null)
@@ -66,12 +92,22 @@ export function CohortQualificationSection({
     e.preventDefault()
     setHardExit(null)
     setIssueError(null)
+    setSleepQualityError(false)
+    setSleepIssueError(false)
     setCurrentProductError(false)
     setPrescError(false)
 
     if (!issueOk) {
       setIssueError('Please be a little more specific — this helps us match you to the right study.')
       setIssueTouched(true)
+      return
+    }
+    if (sleepQuality == null) {
+      setSleepQualityError(true)
+      return
+    }
+    if (!sleepIssue) {
+      setSleepIssueError(true)
       return
     }
     if (currentProduct === '') {
@@ -99,8 +135,14 @@ export function CohortQualificationSection({
     }
     setCohortCookie(slug)
     setCohortBrandCookie(cohortBrandName)
+    const sqLabel = SLEEP_QUALITY_OPTIONS.find((o) => o.value === sleepQuality)?.label ?? String(sleepQuality)
+    const combinedIssue = [
+      issue.trim(),
+      `Sleep quality (last month): ${sqLabel} [value=${sleepQuality}]`,
+      `Primary sleep issue: ${sleepIssue}`,
+    ].join('\n| ')
     try {
-      const draft: CohortQualificationDraftV1 = { v: 1, cohortSlug: slug, issue: issue.trim() }
+      const draft: CohortQualificationDraftV1 = { v: 1, cohortSlug: slug, issue: combinedIssue }
       sessionStorage.setItem(COHORT_QUALIFICATION_STORAGE_KEY, JSON.stringify(draft))
     } catch {
       // still proceed; signup page will redirect if draft missing
@@ -171,6 +213,65 @@ export function CohortQualificationSection({
               The more specific you are, the stronger your application. Vague answers are less likely to be selected.
             </p>
             {issueTouched && issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
+          </div>
+
+          <div className="mb-7">
+            <div className="text-sm font-medium text-neutral-800">
+              How would you rate your sleep quality over the last month?
+            </div>
+            <div className={`${multiPillOuterClass} mt-3`}>
+              {SLEEP_QUALITY_OPTIONS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={selectorButtonClass(sleepQuality === value)}
+                  style={selectorButtonStyle(sleepQuality === value)}
+                  onClick={() => {
+                    if (value === 4 || value === 5) {
+                      setHardExit(SLEEP_SCREENING_EXIT)
+                      return
+                    }
+                    setSleepQuality(value)
+                    setSleepQualityError(false)
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[13px] font-normal leading-snug text-[#888]">
+              We&apos;re looking for participants who currently struggle with sleep. This helps us measure real improvement.
+            </p>
+            {sleepQualityError && (
+              <p className="mt-2 text-sm text-red-600">Please select how you&apos;ve been sleeping overall.</p>
+            )}
+          </div>
+
+          <div className="mb-7">
+            <div className="text-sm font-medium text-neutral-800">What best describes your main sleep issue?</div>
+            <div className={`${multiPillOuterClass} mt-3`}>
+              {SLEEP_ISSUE_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className={selectorButtonClass(sleepIssue === opt)}
+                  style={selectorButtonStyle(sleepIssue === opt)}
+                  onClick={() => {
+                    if (opt === 'I sleep reasonably well') {
+                      setHardExit(SLEEP_SCREENING_EXIT)
+                      return
+                    }
+                    setSleepIssue(opt)
+                    setSleepIssueError(false)
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+            {sleepIssueError && (
+              <p className="mt-2 text-sm text-red-600">Please select the option that fits you best.</p>
+            )}
           </div>
 
           <div className="mb-7">

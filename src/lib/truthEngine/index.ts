@@ -341,17 +341,29 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
   
   // Map to metrics format (coerce to numbers)
   let debugExtractCount = 0
-  const metrics = (dailyRows || []).map((r: any) => ({
-    date: r.local_date,
-    subjective_energy: safeNum(r.energy),
-    subjective_mood: safeNum(r.mood),
-    sleep_quality: safeNum(r.sleep_quality),
-    focus: safeNum(r.focus),
-    _raw: { 
-      tags: Array.isArray((r as any)?.tags) ? (r as any).tags : [],
-      wearables: (r as any)?.wearables || null
+  const metrics = (dailyRows || []).map((r: any) => {
+    const subjective_energy = safeNum(r.energy)
+    const subjective_mood = safeNum(r.mood)
+    const focus = safeNum(r.focus)
+    return {
+      date: r.local_date,
+      subjective_energy,
+      subjective_mood,
+      sleep_quality: safeNum(r.sleep_quality),
+      focus,
+      // Aliases for callers that expect m.energy / m.mood (same values as DB columns)
+      energy: subjective_energy,
+      mood: subjective_mood,
+      _raw: {
+        tags: Array.isArray((r as any)?.tags) ? (r as any).tags : [],
+        wearables: (r as any)?.wearables || null,
+        // Priority 3 metric extraction reads _raw.{energy,mood,focus}; mirror check-in columns here.
+        energy: subjective_energy,
+        mood: subjective_mood,
+        focus,
+      },
     }
-  }))
+  })
   
   const inferredStart = (typeof inferredStartGlobal === 'string' && inferredStartGlobal) ? String(inferredStartGlobal).slice(0,10) : null
   console.log('[truth-engine][pre-classify]', {
@@ -524,18 +536,20 @@ export async function generateTruthReportForSupplement(userId: string, userSuppl
         const rhrVal = tryPick(rhrKeys)
         if (rhrVal != null) return rhrVal
       }
-      // Priority 3: subjective check-ins (energy, focus, mood) last
-      const subjEnergy = safeNum((m as any)._raw?.energy)
+      // Priority 3: subjective check-ins (energy, mood, focus) last — prefer _raw (populated from daily_entries), else top-level aliases
+      const subjEnergy = safeNum(
+        (m as any)._raw?.energy ?? (m as any).subjective_energy ?? (m as any).energy,
+      )
       if (subjEnergy != null) {
         if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:energy', metricValue: subjEnergy }) } catch {}; debugExtractCount++ }
         return subjEnergy
       }
-      const subjMood = safeNum((m as any)._raw?.mood)
+      const subjMood = safeNum((m as any)._raw?.mood ?? (m as any).subjective_mood ?? (m as any).mood)
       if (subjMood != null) {
         if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:mood', metricValue: subjMood }) } catch {}; debugExtractCount++ }
         return subjMood
       }
-      const subjFocus = safeNum((m as any)._raw?.focus)
+      const subjFocus = safeNum((m as any)._raw?.focus ?? (m as any).focus)
       if (subjFocus != null) {
         if (debugExtractCount < 10) { try { console.log('[truth-engine] metric extraction', { date: (m as any).date, primaryMetric, source: 'rawSubjective:focus', metricValue: subjFocus }) } catch {}; debugExtractCount++ }
         return subjFocus
