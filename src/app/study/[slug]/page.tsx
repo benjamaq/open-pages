@@ -1,11 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import {
-  countCohortPipelineParticipants,
-  isCohortCapacityFull,
-  isRecruitmentPastDeadline,
-} from '@/lib/cohortRecruitment'
+import { countCohortConfirmedParticipants, isCohortCapacityFull } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
 
 const FIELD_LABELS: Record<string, string> = {
@@ -32,25 +28,18 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const { data: cohort, error } = await supabaseAdmin
     .from('cohorts')
-    .select(
-      'slug, brand_name, product_name, study_days, checkin_fields, status, recruitment_closes_at, max_participants, id'
-    )
+    .select('slug, brand_name, product_name, study_days, checkin_fields, status, max_participants, id')
     .eq('slug', slug)
     .maybeSingle()
 
   if (error || !cohort) notFound()
 
   const cohortId = String((cohort as { id: string }).id)
-  const closesAt = (cohort as { recruitment_closes_at?: string | null }).recruitment_closes_at ?? null
   const maxP = (cohort as { max_participants?: number | null }).max_participants ?? null
 
-  const pipelineCount = await countCohortPipelineParticipants(cohortId)
-  const recruitmentClosed = isRecruitmentPastDeadline(closesAt)
-  const capacityFull = isCohortCapacityFull(maxP, pipelineCount)
-
-  const showClosedMessage =
-    recruitmentClosed || String(statusParam || '').toLowerCase() === 'closed'
-  const showFullMessage = !showClosedMessage && (capacityFull || String(statusParam || '').toLowerCase() === 'full')
+  const confirmedCount = await countCohortConfirmedParticipants(cohortId)
+  const capacityFull = isCohortCapacityFull(maxP, confirmedCount)
+  const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
 
   const studyDays = typeof cohort.study_days === 'number' ? cohort.study_days : 21
   const rawFields = Array.isArray(cohort.checkin_fields) ? cohort.checkin_fields : []
@@ -67,14 +56,6 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        {showClosedMessage && (
-          <div
-            className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-            role="status"
-          >
-            Applications for this study are now closed.
-          </div>
-        )}
         {showFullMessage && (
           <div
             className="mb-8 rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-3 text-sm text-neutral-900"
@@ -120,11 +101,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </ul>
         </section>
 
-        <div className="mt-10">
-          {!showClosedMessage && !showFullMessage ? (
-            <StudyApplyCta cohortSlug={cohort.slug} />
-          ) : null}
-        </div>
+        <div className="mt-10">{!showFullMessage ? <StudyApplyCta cohortSlug={cohort.slug} /> : null}</div>
         <p className="mt-6 text-xs text-neutral-500">
           After you sign up, we&apos;ll use your account email to confirm your spot. Complete your first check-in to stay
           enrolled.

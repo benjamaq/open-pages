@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (!cohortUuid) {
       const { data: cohorts, error } = await supabaseAdmin
         .from('cohorts')
-        .select('id, slug, brand_name, product_name, status, recruitment_closes_at, max_participants')
+        .select('id, slug, brand_name, product_name, status, max_participants')
         .order('brand_name', { ascending: true })
       if (error) {
         console.error('[admin/cohorts] list:', error)
