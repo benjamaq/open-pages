@@ -4,6 +4,15 @@
  */
 
 export const COHORT_COOKIE = 'bs_cohort'
+/** Session draft after passing the on-page qualification form (before /signup/cohort). */
+export const COHORT_QUALIFICATION_STORAGE_KEY = 'bs_cohort_qualification'
+export type CohortQualificationDraftV1 = {
+  v: 1
+  cohortSlug: string
+  /** Free-text main issue (stored in cohort_participants.qualification_response). */
+  issue: string
+}
+
 const COHORT_COOKIE_DAYS = 7
 
 export function setCohortCookie(slug: string): void {

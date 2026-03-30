@@ -47,6 +47,11 @@ export function DashboardPageClient() {
   if (loading) return <DashboardSkeleton />
   if (error || !data) return <div className="p-6 text-sm text-gray-600">Failed to load dashboard.</div>
 
+  const spotBanner = (data as any)?.cohortSpotBanner as
+    | { hoursRemaining: number; checkinsCompleted: number; enrolledAt: string }
+    | null
+    | undefined
+
   return (
     <div
       className="min-h-screen"
@@ -108,6 +113,21 @@ export function DashboardPageClient() {
               >
                 Dismiss
               </button>
+            </div>
+          )}
+          {spotBanner && spotBanner.checkinsCompleted < 2 && (
+            <div className="rounded-xl border border-[#6A3F2B]/30 bg-[#faf6f3] px-4 py-3 text-sm text-neutral-900">
+              <div className="font-semibold text-[#6A3F2B]">
+                Complete your second check-in to secure your spot — due in{' '}
+                {spotBanner.hoursRemaining > 1
+                  ? `${spotBanner.hoursRemaining} hours`
+                  : spotBanner.hoursRemaining === 1
+                    ? '1 hour'
+                    : 'under an hour'}
+              </div>
+              <p className="mt-2 text-neutral-700 leading-snug">
+                Once your second check-in is done, your spot is confirmed and your product will be on its way.
+              </p>
             </div>
           )}
           <DashboardAddSupplementGate />

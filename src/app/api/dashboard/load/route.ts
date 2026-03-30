@@ -12,6 +12,8 @@ import { GET as effectSummaryGET } from '@/app/api/effect/summary/route'
 import { GET as wearableStatusGET } from '@/app/api/user/wearable-status/route'
 import { GET as settingsGET } from '@/app/api/settings/route'
 import { GET as elliContextGET } from '@/app/api/elli/context/route'
+import { createClient } from '@/lib/supabase/server'
+import { getCohortSecondCheckinBanner } from '@/lib/cohortSpotBanner'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -74,6 +76,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  let cohortSpotBanner: Awaited<ReturnType<typeof getCohortSecondCheckinBanner>> = null
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const uid = user?.id ? String(user.id) : null
+    if (uid) cohortSpotBanner = await getCohortSecondCheckinBanner(uid)
+  } catch {
+    cohortSpotBanner = null
+  }
+
   return NextResponse.json(
     {
       me: me.data,
@@ -87,6 +99,7 @@ export async function GET(request: Request) {
       wearableStatus: wearableStatus.data,
       settings: settings.data,
       elliContext: elliContext.data,
+      cohortSpotBanner,
       _meta: {
         totalMs: Date.now() - t0,
         calls: {

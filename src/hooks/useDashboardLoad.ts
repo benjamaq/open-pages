@@ -16,6 +16,11 @@ export type DashboardLoadData = {
   wearableStatus: any
   settings: any
   elliContext: any
+  cohortSpotBanner?: {
+    hoursRemaining: number
+    checkinsCompleted: number
+    enrolledAt: string
+  } | null
 }
 
 export function useDashboardLoad() {

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { countCohortConfirmedParticipants, isCohortCapacityFull } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
+import { CohortQualificationSection } from './CohortQualificationSection'
 
 const FIELD_LABELS: Record<string, string> = {
   sleep_quality: 'Sleep quality',
@@ -11,6 +12,13 @@ const FIELD_LABELS: Record<string, string> = {
   focus: 'Focus',
   sleep_onset_bucket: 'How long it took to fall asleep',
   night_wakes: 'Night wake-ups',
+}
+
+function ScarcityLine({ confirmed, max }: { confirmed: number; max: number | null }) {
+  if (max != null && Number.isFinite(Number(max)) && Number(max) > 0) {
+    return <p className="text-sm text-neutral-600">{confirmed} of {max} confirmed spots filled</p>
+  }
+  return <p className="text-sm text-neutral-600">{confirmed} confirmed spots filled</p>
 }
 
 type Props = {
@@ -65,6 +73,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </div>
         )}
 
+        {!showFullMessage && (
+          <div className="mb-6">
+            <ScarcityLine confirmed={confirmedCount} max={maxP} />
+          </div>
+        )}
+
         <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Study invitation</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           {cohort.brand_name} · {cohort.product_name}
@@ -101,11 +115,20 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </ul>
         </section>
 
-        <div className="mt-10">{!showFullMessage ? <StudyApplyCta cohortSlug={cohort.slug} /> : null}</div>
+        <div className="mt-10">{!showFullMessage ? <StudyApplyCta /> : null}</div>
         <p className="mt-6 text-xs text-neutral-500">
           After you sign up, we&apos;ll use your account email to confirm your spot. Complete your first check-in to stay
           enrolled.
         </p>
+
+        {!showFullMessage && (
+          <>
+            <div className="mt-10">
+              <ScarcityLine confirmed={confirmedCount} max={maxP} />
+            </div>
+            <CohortQualificationSection cohortSlug={cohort.slug} />
+          </>
+        )}
       </main>
     </div>
   )

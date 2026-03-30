@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
         destination: '/pricing/pro',
         permanent: false,
       },
+      {
+        source: '/study/:slug/apply',
+        destination: '/study/:slug',
+        permanent: false,
+      },
     ];
   },
 };
