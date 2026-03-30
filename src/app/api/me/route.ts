@@ -40,6 +40,8 @@ export async function GET(request: Request) {
     let cohortStudyCurrentDay = 0;
     let cohortDaysRemaining = 0;
     let cohortStudyComplete = false;
+    let cohortConfirmed = false;
+    let cohortComplianceDeadlineIso: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -172,7 +174,7 @@ export async function GET(request: Request) {
                 try {
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
-                    .select("enrolled_at")
+                    .select("enrolled_at, confirmed_at")
                     .eq("user_id", profileId)
                     .eq("cohort_id", cohortUuid)
                     .maybeSingle();
@@ -184,8 +186,24 @@ export async function GET(request: Request) {
                   }
                   const enrolledAt = (part as { enrolled_at?: string } | null)
                     ?.enrolled_at;
+                  const confirmedAtRaw = (
+                    part as { confirmed_at?: string | null } | null
+                  )?.confirmed_at;
+                  cohortConfirmed =
+                    confirmedAtRaw != null &&
+                    String(confirmedAtRaw).trim() !== "";
+                  const confirmedAtIso = cohortConfirmed
+                    ? String(confirmedAtRaw).trim()
+                    : null;
+
                   if (enrolledAt) {
                     cohortStartDate = String(enrolledAt);
+                    const enrollMs = Date.parse(String(enrolledAt));
+                    if (Number.isFinite(enrollMs)) {
+                      cohortComplianceDeadlineIso = new Date(
+                        enrollMs + 48 * 60 * 60 * 1000,
+                      ).toISOString();
+                    }
                     const n = await countDistinctDailyEntriesSince(
                       userId,
                       String(enrolledAt),
@@ -201,40 +219,73 @@ export async function GET(request: Request) {
                     }
                   }
 
-                  const anchorIso = enrolledAt
+                  // Compliance gate metrics (today’s card, welcome, 2-of-2 count): always since enrollment.
+                  const complianceAnchorIso = enrolledAt
                     ? String(enrolledAt)
                     : cohortStart != null && String(cohortStart).trim() !== ""
                       ? `${String(cohortStart).slice(0, 10)}T00:00:00.000Z`
                       : `${todayYmd}T00:00:00.000Z`;
 
+                  // Study day counter (Day X of N): only after confirmation — anchor at confirmed_at.
+                  const studyAnchorIso =
+                    cohortConfirmed && confirmedAtIso
+                      ? confirmedAtIso
+                      : complianceAnchorIso;
+
                   if (userId) {
-                    const [cnt, ymds] = await Promise.all([
-                      countDistinctDailyEntriesSince(userId, anchorIso),
-                      fetchCohortCheckinYmdsSinceEnroll(userId, anchorIso),
+                    const [cntCompliance, ymdsCompliance] = await Promise.all([
+                      countDistinctDailyEntriesSince(
+                        userId,
+                        complianceAnchorIso,
+                      ),
+                      fetchCohortCheckinYmdsSinceEnroll(
+                        userId,
+                        complianceAnchorIso,
+                      ),
                     ]);
-                    cohortCheckinCount = cnt;
-                    cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
-                      ymds,
+                    cohortHasCheckedInToday = new Set(ymdsCompliance).has(
                       todayYmd,
                     );
-                    cohortHasCheckedInToday = new Set(ymds).has(todayYmd);
+
+                    if (cohortConfirmed) {
+                      const [cntStudy, ymdsStudy] = await Promise.all([
+                        countDistinctDailyEntriesSince(userId, studyAnchorIso),
+                        fetchCohortCheckinYmdsSinceEnroll(
+                          userId,
+                          studyAnchorIso,
+                        ),
+                      ]);
+                      cohortCheckinCount = cntStudy;
+                      cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
+                        ymdsStudy,
+                        todayYmd,
+                      );
+                    } else {
+                      cohortCheckinCount = cntCompliance;
+                      cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
+                        ymdsCompliance,
+                        todayYmd,
+                      );
+                    }
                   }
 
-                  const enrollYmd = enrolledAt
-                    ? String(enrolledAt).slice(0, 10)
-                    : cohortStart != null && String(cohortStart).trim() !== ""
-                      ? String(cohortStart).slice(0, 10)
-                      : todayYmd;
-                  cohortStudyCurrentDay = Math.max(
-                    1,
-                    daysBetweenInclusiveUtcYmd(enrollYmd, todayYmd) + 1,
-                  );
-                  cohortStudyComplete =
-                    cohortStudyCurrentDay >= cohortStudyDays;
-                  cohortDaysRemaining = Math.max(
-                    0,
-                    cohortStudyDays - cohortStudyCurrentDay,
-                  );
+                  if (cohortConfirmed) {
+                    const studyYmd = confirmedAtIso!.slice(0, 10);
+                    cohortStudyCurrentDay = Math.max(
+                      1,
+                      daysBetweenInclusiveUtcYmd(studyYmd, todayYmd) + 1,
+                    );
+                    cohortStudyComplete =
+                      cohortStudyCurrentDay >= cohortStudyDays;
+                    cohortDaysRemaining = Math.max(
+                      0,
+                      cohortStudyDays - cohortStudyCurrentDay,
+                    );
+                  } else {
+                    cohortStudyCurrentDay = 1;
+                    cohortStudyComplete = false;
+                    cohortDaysRemaining = cohortStudyDays;
+                  }
                 } catch (partCatch: unknown) {
                   console.error(
                     "[api/me] cohort participant welcome:",
@@ -296,6 +347,8 @@ export async function GET(request: Request) {
       cohortStudyCurrentDay,
       cohortDaysRemaining,
       cohortStudyComplete,
+      cohortConfirmed,
+      cohortComplianceDeadlineIso,
     });
   } catch (e: any) {
     return NextResponse.json(

@@ -102,6 +102,10 @@ export function DashboardPageClient() {
             <>
               <CohortStudyDashboard
                 cohortId={String(me?.cohortId || '')}
+                cohortConfirmed={Boolean(me?.cohortConfirmed)}
+                complianceDeadlineIso={
+                  typeof me?.cohortComplianceDeadlineIso === 'string' ? me.cohortComplianceDeadlineIso : null
+                }
                 brandName={typeof me?.cohortStudyBrandName === 'string' ? me.cohortStudyBrandName : ''}
                 productName={
                   typeof me?.cohortStudyProductName === 'string' ? me.cohortStudyProductName : 'Study'

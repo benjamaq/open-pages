@@ -1,7 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 export interface CohortStudyDashboardProps {
   cohortId: string
+  /** True when cohort_participants.confirmed_at is set — 21-day study is active. */
+  cohortConfirmed: boolean
+  /** ISO timestamp: enrollment + 48h; for compliance-gate countdown only. */
+  complianceDeadlineIso: string | null
   brandName: string
   productName: string
   checkinCount: number
@@ -24,8 +30,65 @@ function formatStudyEndDate(isoOrYmd: string | null): string {
   return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+function formatGateTimeRemaining(deadlineMs: number, nowMs: number): { line: string; sub: string } {
+  const left = deadlineMs - nowMs
+  if (left <= 0) {
+    return { line: '—', sub: 'Complete check-in 2 to confirm' }
+  }
+  const h = Math.floor(left / 3600000)
+  const m = Math.floor((left % 3600000) / 60000)
+  if (h >= 48) {
+    return { line: `${h}h`, sub: '48-hour confirmation window' }
+  }
+  if (h >= 1) {
+    return { line: `${h}h ${m}m`, sub: '48-hour confirmation window' }
+  }
+  if (m >= 1) {
+    return { line: `${m}m`, sub: '48-hour confirmation window' }
+  }
+  return { line: 'Under a minute', sub: '48-hour confirmation window' }
+}
+
+function SpotConfirmedCountdown({
+  deadlineIso,
+}: {
+  deadlineIso: string | null
+}) {
+  const [display, setDisplay] = useState<{ line: string; sub: string }>({
+    line: '—',
+    sub: '48-hour confirmation window',
+  })
+  useEffect(() => {
+    const tick = () => {
+      if (!deadlineIso) {
+        setDisplay({ line: '—', sub: 'Complete check-in 2 to confirm' })
+        return
+      }
+      const ms = Date.parse(deadlineIso)
+      if (!Number.isFinite(ms)) {
+        setDisplay({ line: '—', sub: 'Complete check-in 2 to confirm' })
+        return
+      }
+      setDisplay(formatGateTimeRemaining(ms, Date.now()))
+    }
+    tick()
+    const id = window.setInterval(tick, 30000)
+    return () => window.clearInterval(id)
+  }, [deadlineIso])
+
+  return (
+    <div className="text-center flex-1 min-w-[100px]">
+      <div className="text-2xl font-semibold text-gray-900 tabular-nums">{display.line}</div>
+      <div className="text-xs font-medium text-gray-700 mt-1">Spot confirmed in</div>
+      <div className="text-[11px] text-gray-500 mt-0.5">{display.sub}</div>
+    </div>
+  )
+}
+
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
+  cohortConfirmed,
+  complianceDeadlineIso,
   brandName,
   productName,
   checkinCount,
@@ -42,6 +105,9 @@ export default function CohortStudyDashboard({
   void _cohortId
   void _startDateIso
   const progressPct = studyComplete ? 100 : Math.min(100, (currentDay / studyDays) * 100)
+
+  const gateComplete = Math.min(2, Math.max(0, checkinCount))
+  const gateProgressPct = (gateComplete / 2) * 100
 
   const statCell = (value: number | string, label: string, sub: string) => (
     <div className="text-center flex-1 min-w-[100px]">
@@ -63,7 +129,33 @@ export default function CohortStudyDashboard({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-        {studyComplete ? (
+        {!cohortConfirmed ? (
+          <div>
+            <div className="text-3xl font-bold text-gray-900">Securing your spot</div>
+            <p className="mt-2 text-base font-medium text-gray-800">
+              Check-in {gateComplete} of 2 complete
+            </p>
+            <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+              Complete 2 check-ins within 48 hours to confirm your place in the study. Your 21-day tracking begins once
+              your spot is confirmed.
+            </p>
+            <div className="mt-5 flex gap-2" role="progressbar" aria-valuemin={0} aria-valuemax={2} aria-valuenow={gateComplete}>
+              <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-[width]"
+                  style={{ width: gateComplete >= 1 ? '100%' : '0%', backgroundColor: '#C84B2F' }}
+                />
+              </div>
+              <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-[width]"
+                  style={{ width: gateComplete >= 2 ? '100%' : '0%', backgroundColor: '#C84B2F' }}
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">Progress: {gateComplete} of 2 filled</p>
+          </div>
+        ) : studyComplete ? (
           <div>
             <div className="text-3xl font-bold text-gray-900">Study complete</div>
             <p className="mt-2 text-sm text-gray-600">Thank you for finishing the study. Your results will be shared when ready.</p>
@@ -121,7 +213,9 @@ export default function CohortStudyDashboard({
       <section className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap justify-center gap-6 sm:gap-8">
         {statCell(checkinCount, 'Check-ins done', 'this study')}
         {statCell(currentStreak, 'Current streak', 'day streak')}
-        {statCell(daysRemaining, 'Days remaining', 'days left')}
+        {cohortConfirmed ? statCell(daysRemaining, 'Days remaining', 'days left') : (
+          <SpotConfirmedCountdown deadlineIso={complianceDeadlineIso} />
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
