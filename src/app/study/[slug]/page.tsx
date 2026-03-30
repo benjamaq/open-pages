@@ -26,6 +26,8 @@ type Props = {
   searchParams: Promise<{ status?: string }>
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function StudyLandingPage({ params, searchParams }: Props) {
   const { slug: rawSlug } = await params
   const { status: statusParam } = await searchParams
@@ -34,13 +36,21 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     .toLowerCase()
   if (!slug) notFound()
 
+  // Select * so production DBs slightly behind on migrations (e.g. missing max_participants) still render.
   const { data: cohort, error } = await supabaseAdmin
     .from('cohorts')
-    .select('slug, brand_name, product_name, study_days, checkin_fields, status, max_participants, id')
+    .select('*')
     .eq('slug', slug)
     .maybeSingle()
 
-  if (error || !cohort) notFound()
+  if (error) {
+    console.error('[study] cohorts query failed', { slug, message: error.message, code: (error as { code?: string }).code })
+    notFound()
+  }
+  if (!cohort) {
+    console.warn('[study] no cohort row for slug', slug)
+    notFound()
+  }
 
   const cohortId = String((cohort as { id: string }).id)
   const maxP = (cohort as { max_participants?: number | null }).max_participants ?? null
