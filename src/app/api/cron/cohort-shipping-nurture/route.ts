@@ -1,0 +1,212 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { daysBetweenInclusiveUtcYmd } from '@/lib/cohortCheckinCount'
+import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
+import { sendShippingNurtureEmail, type ShippingNurtureStep } from '@/lib/cohortShippingNurture'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+
+export const dynamic = 'force-dynamic'
+
+function assertCron(request: NextRequest): NextResponse | null {
+  const url = new URL(request.url)
+  const header = request.headers.get('authorization') || ''
+  const vercelCron = request.headers.get('x-vercel-cron')
+  const param = url.searchParams.get('key') || ''
+  const secret = process.env.CRON_SECRET || ''
+  const okHeader = header === `Bearer ${secret}`
+  const okParam = param === secret && secret.length > 0
+  const okVercel = !!vercelCron
+  if (!secret && !okVercel) {
+    return NextResponse.json({ error: 'Missing CRON_SECRET' }, { status: 401 })
+  }
+  if (!okHeader && !okParam && !okVercel) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return null
+}
+
+type ParticipantRow = {
+  id: string
+  confirmed_at: string
+  user_id: string
+  cohort_id: string
+}
+
+function studyDayNumberFromConfirmed(confirmedIso: string, todayYmd: string): number | null {
+  const confirmYmd = String(confirmedIso || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(confirmYmd) || !/^\d{4}-\d{2}-\d{2}$/.test(todayYmd)) {
+    return null
+  }
+  return daysBetweenInclusiveUtcYmd(confirmYmd, todayYmd) + 1
+}
+
+function stepForStudyDay(day: number): ShippingNurtureStep | null {
+  if (day === 4) return 'day4'
+  if (day === 7) return 'day7'
+  if (day === 10) return 'day10'
+  return null
+}
+
+export async function GET(request: NextRequest) {
+  const denied = assertCron(request)
+  if (denied) return denied
+
+  const dry = new URL(request.url).searchParams.get('dry') === '1'
+  const todayYmd = new Date().toISOString().slice(0, 10)
+
+  try {
+    const { data: participants, error: pErr } = await supabaseAdmin
+      .from('cohort_participants')
+      .select('id, confirmed_at, user_id, cohort_id')
+      .eq('status', 'confirmed')
+      .not('confirmed_at', 'is', null)
+
+    if (pErr) {
+      console.error('[cohort-shipping-nurture] load participants:', pErr)
+      return NextResponse.json({ error: pErr.message }, { status: 500 })
+    }
+
+    const list = (participants || []) as ParticipantRow[]
+    if (list.length === 0) {
+      return NextResponse.json({ ok: true, processed: 0, sent: 0, skipped: 0, dry })
+    }
+
+    const partIds = list.map((p) => p.id)
+    const { data: sentRows, error: sErr } = await supabaseAdmin
+      .from('cohort_shipping_nurture_sent')
+      .select('cohort_participant_id, step')
+      .in('cohort_participant_id', partIds)
+
+    if (sErr) {
+      console.error('[cohort-shipping-nurture] load sent:', sErr)
+      return NextResponse.json({ error: sErr.message }, { status: 500 })
+    }
+
+    const sentKey = (participantId: string, step: string) => `${participantId}:${step}`
+    const already = new Set((sentRows || []).map((r: { cohort_participant_id: string; step: string }) => sentKey(r.cohort_participant_id, r.step)))
+
+    const cohortIds = [...new Set(list.map((p) => p.cohort_id))]
+    const cohortById: Record<string, { product_name?: string | null; brand_name?: string | null }> = {}
+    if (cohortIds.length > 0) {
+      const { data: cohortRows, error: cErr } = await supabaseAdmin
+        .from('cohorts')
+        .select('id, product_name, brand_name')
+        .in('id', cohortIds)
+      if (cErr) {
+        console.error('[cohort-shipping-nurture] cohorts:', cErr)
+        return NextResponse.json({ error: cErr.message }, { status: 500 })
+      }
+      for (const row of cohortRows || []) {
+        const r = row as { id: string; product_name?: string | null; brand_name?: string | null }
+        cohortById[r.id] = r
+      }
+    }
+
+    const profileIds = [...new Set(list.map((p) => p.user_id))]
+    const { data: profs, error: profErr } = await supabaseAdmin
+      .from('profiles')
+      .select('id, user_id')
+      .in('id', profileIds)
+
+    if (profErr) {
+      console.error('[cohort-shipping-nurture] profiles:', profErr)
+      return NextResponse.json({ error: profErr.message }, { status: 500 })
+    }
+
+    const authByProfileId = Object.fromEntries((profs || []).map((r: { id: string; user_id: string }) => [r.id, r.user_id]))
+
+    let sent = 0
+    let skipped = 0
+    const errors: string[] = []
+
+    for (const p of list) {
+      const day = studyDayNumberFromConfirmed(p.confirmed_at, todayYmd)
+      if (day == null) {
+        skipped += 1
+        continue
+      }
+      const step = stepForStudyDay(day)
+      if (!step) {
+        skipped += 1
+        continue
+      }
+      if (already.has(sentKey(p.id, step))) {
+        skipped += 1
+        continue
+      }
+
+      const authUid = authByProfileId[p.user_id]
+      if (!authUid) {
+        console.warn('[cohort-shipping-nurture] no auth user for profile', p.user_id)
+        skipped += 1
+        continue
+      }
+
+      const cohortRow = cohortById[p.cohort_id]
+      const { studyName, productName } = studyAndProductNamesFromCohortRow(cohortRow || null)
+      const brandName =
+        cohortRow?.brand_name != null && String(cohortRow.brand_name).trim() !== ''
+          ? String(cohortRow.brand_name).trim()
+          : 'DoNotAge'
+
+      const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
+      if (auErr || !auth?.user?.email) {
+        console.error('[cohort-shipping-nurture] no email', authUid, auErr?.message)
+        errors.push(`${p.id}:no-email`)
+        skipped += 1
+        continue
+      }
+      const to = String(auth.user.email).trim()
+      if (!to) {
+        skipped += 1
+        continue
+      }
+
+      if (dry) {
+        sent += 1
+        continue
+      }
+
+      const result = await sendShippingNurtureEmail({
+        to,
+        step,
+        studyName,
+        brandName,
+        productName,
+      })
+
+      if (!result.success) {
+        console.error('[cohort-shipping-nurture] send failed', p.id, step, result.error)
+        errors.push(`${p.id}:${step}:${result.error || 'send failed'}`)
+        continue
+      }
+
+      const { error: insErr } = await supabaseAdmin.from('cohort_shipping_nurture_sent').insert({
+        cohort_participant_id: p.id,
+        step,
+        sent_at: new Date().toISOString(),
+      } as Record<string, unknown>)
+
+      if (insErr) {
+        console.error('[cohort-shipping-nurture] log insert', p.id, step, insErr)
+        errors.push(`${p.id}:${step}:log`)
+        continue
+      }
+
+      sent += 1
+    }
+
+    return NextResponse.json({
+      ok: true,
+      processed: list.length,
+      sent,
+      skipped,
+      error_count: errors.length,
+      errors: errors.slice(0, 20),
+      dry,
+    })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Failed'
+    console.error('[cohort-shipping-nurture]', e)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}

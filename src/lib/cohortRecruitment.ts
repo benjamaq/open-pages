@@ -22,6 +22,25 @@ export async function countCohortPipelineParticipants(cohortUuid: string): Promi
   return typeof count === 'number' ? count : 0
 }
 
+/**
+ * Confirmed participants with ≥1 daily check-in on a calendar day after confirmed_at (UTC date).
+ * Requires DB function count_cohort_confirmed_activated_participants (shipping nurture migration).
+ */
+export async function countCohortConfirmedActivatedParticipants(cohortUuid: string): Promise<number> {
+  const id = String(cohortUuid || '').trim()
+  if (!id) return 0
+  const { data, error } = await supabaseAdmin.rpc('count_cohort_confirmed_activated_participants', {
+    p_cohort_id: id,
+  })
+  if (error) {
+    console.error('[cohortRecruitment] countCohortConfirmedActivatedParticipants:', error)
+    return 0
+  }
+  const raw = data as number | string | null | undefined
+  const n = typeof raw === 'number' ? raw : raw != null ? Number(raw) : 0
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0
+}
+
 export async function countCohortConfirmedParticipants(cohortUuid: string): Promise<number> {
   const { count, error } = await supabaseAdmin
     .from('cohort_participants')

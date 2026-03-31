@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   cohortHealthStatusLabel,
+  countCohortConfirmedActivatedParticipants,
   countCohortConfirmedParticipants,
   countCohortEnrollmentsLast24h,
   countCohortStatusParticipants,
@@ -38,11 +39,12 @@ export async function GET(request: NextRequest) {
       const base = cohorts || []
       const cohortsWithCounts = await Promise.all(
         base.map(async (c: { id: string; max_participants?: number | null; min_participants?: number | null }) => {
-          const [appliedCount, confirmedCount, droppedCount, new24] = await Promise.all([
+          const [appliedCount, confirmedCount, droppedCount, new24, activatedCount] = await Promise.all([
             countCohortStatusParticipants(c.id, 'applied'),
             countCohortConfirmedParticipants(c.id),
             countCohortStatusParticipants(c.id, 'dropped'),
             countCohortEnrollmentsLast24h(c.id),
+            countCohortConfirmedActivatedParticipants(c.id),
           ])
           const maxP = c.max_participants != null ? Number(c.max_participants) : null
           const confirmedPctOfMax =
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
             applied_participant_count: appliedCount,
             confirmed_participant_count: confirmedCount,
             dropped_participant_count: droppedCount,
+            activated_participant_count: activatedCount,
             confirmed_pct_of_max: confirmedPctOfMax,
             new_enrollments_24h: new24,
             health_status: health,

@@ -44,22 +44,22 @@ function SpotCounterCard({
       style={{ background: 'rgba(255,255,255,0.08)' }}
     >
       {remaining != null ? (
-        <p className="text-center text-[26px] font-bold leading-tight tracking-tight text-white sm:text-[34px]">
-          Only{' '}
+        <p className="text-center text-[18px] font-bold leading-snug text-white sm:text-[22px]">
+          <span className="tabular-nums text-white/95">{confirmed}</span>
+          <span className="text-white/80"> of </span>
+          <span className="tabular-nums text-white/95">{displayTotal}</span>
+          <span className="text-white/80"> spots filled</span>
+          <span className="mx-1.5 text-white/45 sm:mx-2" aria-hidden>
+            ·
+          </span>
           <span className="tabular-nums" style={{ color: RUST }}>
             {remaining}
-          </span>{' '}
-          spot{remaining === 1 ? '' : 's'} remaining
+          </span>
+          <span style={{ color: RUST }}> remaining</span>
         </p>
       ) : (
         <p className="text-center text-[22px] font-bold text-white sm:text-[28px]">Limited spots available</p>
       )}
-      {displayTotal != null ? (
-        <p className="mt-2 text-center text-[13px] text-white/70">
-          <span className="font-semibold tabular-nums text-white/85">{confirmed}</span> of{' '}
-          <span className="font-semibold tabular-nums text-white/85">{displayTotal}</span> early spots filled
-        </p>
-      ) : null}
       <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
         <div
           className="h-full rounded-full transition-[width] duration-500 ease-out"
