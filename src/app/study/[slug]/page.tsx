@@ -463,20 +463,25 @@ function IncentiveShelfCard({
   )
 }
 
-/** BioStackr reward card — logo above `bioshot` (`public/bioshot.png`, 1052×520). */
+/** BioStackr reward card — wordmark above `bioshot` (no multiply: must read on light gradient). */
 function BioStackrRewardPhoto() {
   return (
     <div className="flex min-h-[220px] w-full flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:gap-5 sm:px-4 sm:py-8">
-      <Link href="/" className="inline-flex shrink-0 bg-transparent opacity-90 transition-opacity hover:opacity-100">
-        <Image
-          src={BIOSTACKR_LOGO}
-          alt="BioStackr"
-          width={434}
-          height={135}
-          className="h-7 w-auto max-w-[188px] object-contain mix-blend-multiply contrast-[1.03] sm:h-8 sm:max-w-[210px]"
-        />
-        <span className="sr-only">BioStackr home</span>
-      </Link>
+      <div className="flex w-full shrink-0 justify-center px-1">
+        <Link
+          href="/"
+          className="inline-flex rounded-lg bg-white/95 px-3 py-2 shadow-sm ring-1 ring-neutral-200/70 transition-opacity hover:opacity-90"
+        >
+          <Image
+            src={BIOSTACKR_LOGO}
+            alt="BioStackr"
+            width={434}
+            height={135}
+            className="h-9 w-auto max-w-[min(220px,85vw)] object-contain sm:h-10 sm:max-w-[240px]"
+          />
+          <span className="sr-only">BioStackr home</span>
+        </Link>
+      </div>
       <Image
         src={BIOSTACKR_REWARD_SHOT}
         alt="BioStackr dashboard and outcomes"
