@@ -277,7 +277,7 @@ function CohortSignupInner() {
         {showDonotageLogo ? (
           <div className="mb-5 sm:mb-6">
             <NextImage
-              src="/DNA logo-white-png.png"
+              src="/DNA-logo-white.png"
               alt="DoNotAge.org"
               width={200}
               height={200}

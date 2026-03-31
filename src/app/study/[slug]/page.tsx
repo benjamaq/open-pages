@@ -11,6 +11,10 @@ const RUST = '#C84B2F'
 /** Hero + trust footer panel; override image via CSS `--cohort-hero-bg: url(...)` on `:root` or a parent. */
 const DARK_PANEL_BG = '#1a1f2e'
 
+const DNA_LOGO_WHITE = '/DNA-logo-white.png'
+const DNA_LOGO_BLACK = '/DNA-logo-black.png'
+const SURE_SLEEP_PRODUCT = '/suresleep-240x240.png'
+
 function HeroCohortStatusCard({
   confirmed,
   maxParticipants,
@@ -121,6 +125,20 @@ function IconHowResults() {
   )
 }
 
+function SectionDonotageLogoBlack({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex justify-center ${className}`}>
+      <Image
+        src={DNA_LOGO_BLACK}
+        alt="DoNotAge.org"
+        width={200}
+        height={200}
+        className="h-11 w-auto object-contain opacity-95 sm:h-12"
+      />
+    </div>
+  )
+}
+
 function HowItWorksSteps() {
   const steps = [
     {
@@ -142,6 +160,7 @@ function HowItWorksSteps() {
   return (
     <section className="bg-[#faf9f7] py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <SectionDonotageLogoBlack className="mb-8 sm:mb-10" />
         <h2 className="text-center text-[22px] font-bold text-neutral-900">How the study works</h2>
         <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-neutral-600 sm:text-[15px]">
           A structured 21-day study designed to measure real changes in real people.
@@ -163,10 +182,6 @@ function HowItWorksSteps() {
     </section>
   )
 }
-
-const DNA_LOGO_WHITE = '/DNA logo-white-png.png'
-/** SureSleep pack shot in `public` (240×240 artwork). */
-const SURE_SLEEP_PRODUCT = '/suresleep 240x240.png'
 
 /** Bottle silhouette — study supply card before live product photography. */
 function ProductBottleVisual() {
@@ -307,6 +322,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
   return (
     <section className="bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <SectionDonotageLogoBlack className="mb-6 sm:mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
           This is a structured study, not a survey.
         </p>
@@ -541,6 +557,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           <WhatYouReceive productName={productName} />
           <section className="bg-[#faf9f7] py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
+              <SectionDonotageLogoBlack className="mb-8 sm:mb-10" />
               <CohortQualificationSection
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
