@@ -25,6 +25,8 @@ const DNA_LOGO_BLACK = '/DNA-logo-black.png'
 const SURE_SLEEP_PRODUCT = '/suresleep-1280x1280.png'
 /** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
 const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
+/** Rewards card — BioStackr product/dashboard shot (`public/bioshot.png`). */
+const BIOSTACKR_REWARD_SHOT = '/bioshot.png'
 
 /** Subtle noise overlay when no `--cohort-hero-bg` photograph is set. */
 const HERO_GRAIN_BG = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>")`
@@ -292,10 +294,13 @@ function HowItWorksSteps() {
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <StudyLightSectionBrandRow />
-          <h2 className="text-center text-[17px] font-semibold tracking-tight text-neutral-600 sm:text-[18px]">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+            Structured steps, built for real outcomes.
+          </p>
+          <h2 className="mt-4 text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
             How the study works
           </h2>
-          <p className="mx-auto mt-2 max-w-3xl text-center text-[13px] leading-relaxed text-neutral-500/90 sm:text-[14px]">
+          <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
             A structured 21-day study designed to measure real changes in real people.
           </p>
           <div className="relative mt-10 md:mt-12">
@@ -344,7 +349,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[5.35rem] w-auto max-w-[min(100%,440px)] object-contain object-left contrast-[1.06] sm:h-[5.95rem] md:h-[6.35rem]"
+      className="h-[5.65rem] w-auto max-w-[min(100%,460px)] object-contain object-left contrast-[1.06] sm:h-[6.3rem] md:h-[6.75rem]"
       priority
     />
   )
@@ -362,7 +367,7 @@ function HeroBioStackrLogo() {
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-[4.35rem] w-auto max-w-[min(100%,380px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[4.85rem] md:h-[5.35rem]"
+        className="h-[3.75rem] w-auto max-w-[min(100%,340px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[4.25rem] md:h-[4.7rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -458,48 +463,18 @@ function IncentiveShelfCard({
   )
 }
 
-function BioStackrDashboardMock() {
+/** BioStackr reward card artwork — wide crop (`public/bioshot.png`, 1052×520). */
+function BioStackrRewardPhoto() {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-5 bg-gradient-to-b from-[#f4f6fa] to-[#e8ecf4] px-4 py-6 sm:py-8">
-      <Link href="/" className="inline-flex shrink-0">
-        <Image
-          src={BIOSTACKR_LOGO}
-          alt="BioStackr"
-          width={434}
-          height={135}
-          className="h-10 w-auto max-w-[240px] object-contain sm:h-11"
-        />
-        <span className="sr-only">BioStackr</span>
-      </Link>
-      <div
-        className="flex w-full max-w-[220px] flex-col rounded-lg border border-neutral-200/90 bg-white p-3 shadow-sm"
-        style={{ boxShadow: '0 4px 24px rgba(26,31,46,0.08)' }}
-      >
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Outcomes</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-        </div>
-        <div className="relative h-[72px] w-full">
-          <svg viewBox="0 0 200 72" className="h-full w-full" aria-hidden>
-            <line x1="8" y1="56" x2="192" y2="56" stroke="#e5e7eb" strokeWidth="1" />
-            <line x1="8" y1="36" x2="192" y2="36" stroke="#f3f4f6" strokeWidth="1" />
-            <line x1="8" y1="16" x2="192" y2="16" stroke="#f3f4f6" strokeWidth="1" />
-            <path
-              d="M 12 48 L 48 42 L 82 38 L 118 28 L 152 22 L 188 14"
-              fill="none"
-              stroke={RUST}
-              strokeWidth="2.25"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <div className="mt-2">
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold leading-tight text-emerald-900 ring-1 ring-emerald-200/80">
-            Improved sleep onset
-          </span>
-        </div>
-      </div>
+    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-6 sm:min-h-[260px] sm:px-4 sm:py-10">
+      <Image
+        src={BIOSTACKR_REWARD_SHOT}
+        alt="BioStackr dashboard and outcomes"
+        width={1052}
+        height={520}
+        sizes="(max-width: 768px) 90vw, 360px"
+        className="h-auto w-full max-h-[min(220px,42vw)] max-w-full object-contain object-center drop-shadow-md sm:max-h-[min(260px,38vw)]"
+      />
     </div>
   )
 }
@@ -538,7 +513,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
             footer="Completion reward"
           />
           <IncentiveShelfCard
-            visual={<BioStackrDashboardMock />}
+            visual={<BioStackrRewardPhoto />}
             title="3 months BioStackr Pro"
             body="Access your personal dashboard, track your outcomes, and see exactly how your stack performs over time."
             bodyExtra="Includes your personal study results and ongoing tracking."
