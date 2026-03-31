@@ -13,7 +13,8 @@ const DARK_PANEL_BG = '#1a1f2e'
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
-const SURE_SLEEP_PRODUCT = '/suresleep-240x240.png'
+/** Product pack shot in `public` (uploaded filename). */
+const SURE_SLEEP_PRODUCT = '/Sure Sleep-240-240.png'
 /** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
 const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
 
@@ -138,7 +139,7 @@ function SectionDonotageLogoBlack({ className = '' }: { className?: string }) {
         alt="DoNotAge.org"
         width={200}
         height={200}
-        className="h-11 w-auto object-contain opacity-95 sm:h-12"
+        className="h-16 w-auto object-contain opacity-95 sm:h-20 md:h-[5.5rem]"
       />
     </div>
   )
@@ -151,7 +152,7 @@ function StudyLightSectionBrandRow({ className = '' }: { className?: string }) {
       className={`mb-8 flex flex-col items-center gap-6 sm:mb-10 sm:flex-row sm:justify-center sm:gap-12 ${className}`}
     >
       <SectionDonotageLogoBlack className="!mb-0" />
-      <div className="hidden h-8 w-px shrink-0 bg-neutral-200 sm:block" aria-hidden />
+      <div className="hidden h-14 w-px shrink-0 bg-neutral-200 sm:block md:h-16" aria-hidden />
       <SectionBioStackrLogoLight className="!mb-0" />
     </div>
   )
@@ -201,31 +202,6 @@ function HowItWorksSteps() {
   )
 }
 
-/** Bottle silhouette — study supply card before live product photography. */
-function ProductBottleVisual() {
-  return (
-    <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center bg-white px-4">
-      <svg
-        width="56"
-        height="72"
-        viewBox="0 0 56 72"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0 text-neutral-400"
-        aria-hidden
-      >
-        <path
-          d="M28 4c-6 0-11 4-11 10v8c0 2 1 4 3 5v35a8 8 0 0016 0V27c2-1 3-3 3-5v-8c0-6-5-10-11-10z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        <path d="M20 22h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-      </svg>
-    </div>
-  )
-}
-
 function HeroDonotageLogo() {
   return (
     <Image
@@ -233,7 +209,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[68px] w-auto object-contain object-left sm:h-[76px]"
+      className="h-[100px] w-auto max-w-[min(100%,320px)] object-contain object-left sm:h-[120px] md:h-[140px]"
       priority
     />
   )
@@ -243,14 +219,14 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start sm:self-auto sm:mt-0.5"
+      className="inline-flex shrink-0 items-center self-start sm:self-center"
     >
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-7 w-auto brightness-125 contrast-100 sm:h-8"
+        className="h-12 w-auto max-w-[min(100%,280px)] brightness-125 contrast-100 sm:h-14 md:h-16"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -267,7 +243,7 @@ function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
           alt="BioStackr"
           width={434}
           height={135}
-          className="h-8 w-auto sm:h-9"
+          className="h-12 w-auto max-w-[280px] sm:h-14 md:h-16"
         />
         <span className="sr-only">BioStackr home</span>
       </Link>
@@ -275,15 +251,21 @@ function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
   )
 }
 
-function SureSleepPackVisual() {
+/** SureSleep pack / bottle artwork (`public/Sure Sleep-240-240.png`). */
+function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
+  const max =
+    larger === true
+      ? 'max-h-[min(300px,48vw)] sm:max-h-[320px]'
+      : 'max-h-[min(260px,44vw)] sm:max-h-[280px]'
   return (
-    <div className="flex h-full min-h-0 flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-8">
+    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-7 sm:min-h-[260px] sm:py-10">
       <Image
         src={SURE_SLEEP_PRODUCT}
-        alt="SureSleep — three-month supply from DoNotAge"
+        alt="SureSleep"
         width={240}
         height={240}
-        className="h-auto max-h-[240px] w-auto max-w-[240px] object-contain drop-shadow-sm"
+        sizes="(max-width: 768px) 75vw, 260px"
+        className={`h-auto w-auto ${max} max-w-full object-contain drop-shadow-md`}
       />
     </div>
   )
@@ -338,7 +320,17 @@ function IncentiveShelfCard({
 
 function BioStackrDashboardMock() {
   return (
-    <div className="flex h-full min-h-0 flex-1 items-stretch justify-center bg-gradient-to-b from-[#f4f6fa] to-[#e8ecf4] px-4 py-5">
+    <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-5 bg-gradient-to-b from-[#f4f6fa] to-[#e8ecf4] px-4 py-6 sm:py-8">
+      <Link href="/" className="inline-flex shrink-0">
+        <Image
+          src={BIOSTACKR_LOGO}
+          alt="BioStackr"
+          width={434}
+          height={135}
+          className="h-10 w-auto max-w-[240px] object-contain sm:h-11"
+        />
+        <span className="sr-only">BioStackr</span>
+      </Link>
       <div
         className="flex w-full max-w-[220px] flex-col rounded-lg border border-neutral-200/90 bg-white p-3 shadow-sm"
         style={{ boxShadow: '0 4px 24px rgba(26,31,46,0.08)' }}
@@ -388,14 +380,14 @@ function WhatYouReceive({ productName }: { productName: string }) {
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
-            visual={<ProductBottleVisual />}
+            visual={<SureSleepProductPhoto />}
             title={`${productName} for the full 21 days`}
             body="Delivered before the study begins so you can track real changes from day one."
             footer="Included for all confirmed participants"
           />
           <IncentiveShelfCard
             highlight
-            visual={<SureSleepPackVisual />}
+            visual={<SureSleepProductPhoto larger />}
             title="3 months of SureSleep from DoNotAge"
             body="A three-month supply of SureSleep (valued at £153) when you complete all 21 daily check-ins."
             tagline="Shipped by DoNotAge so you can keep the routine that worked for you in the study."
@@ -441,16 +433,16 @@ function TrustFooter() {
             alt="DoNotAge.org"
             width={160}
             height={160}
-            className="h-9 w-auto object-contain opacity-90 sm:h-10"
+            className="h-14 w-auto object-contain opacity-90 sm:h-16 md:h-[4.5rem]"
           />
-          <div className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" aria-hidden />
+          <div className="hidden h-14 w-px shrink-0 bg-white/20 sm:block md:h-16" aria-hidden />
           <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
             <Image
               src={BIOSTACKR_LOGO}
               alt="BioStackr"
               width={434}
               height={135}
-              className="h-7 w-auto brightness-125 sm:h-8"
+              className="h-11 w-auto max-w-[min(90vw,320px)] brightness-125 sm:h-12 md:h-14"
             />
             <span className="sr-only">BioStackr home</span>
           </Link>
