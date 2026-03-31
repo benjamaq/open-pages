@@ -15,7 +15,7 @@
     },
     {
       "path": "/api/cron/cohort-compliance",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }

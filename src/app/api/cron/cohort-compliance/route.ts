@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  sendComplianceConfirmedEmail,
+  studyAndProductNamesFromCohortRow,
+} from '@/lib/cohortComplianceConfirmed'
 import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -26,6 +30,7 @@ type ParticipantRow = {
   id: string
   enrolled_at: string
   user_id: string
+  cohort_id: string
 }
 
 export async function GET(request: NextRequest) {
@@ -37,7 +42,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: participants, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, enrolled_at, user_id')
+      .select('id, enrolled_at, user_id, cohort_id')
       .eq('status', 'applied')
 
     if (pErr) {
@@ -81,7 +86,7 @@ export async function GET(request: NextRequest) {
 
       if (n >= 2) {
         if (!dry) {
-          const { error: uErr } = await supabaseAdmin
+          const { data: confirmedRow, error: uErr } = await supabaseAdmin
             .from('cohort_participants')
             .update({
               status: 'confirmed',
@@ -89,8 +94,34 @@ export async function GET(request: NextRequest) {
             } as any)
             .eq('id', p.id)
             .eq('status', 'applied')
-          if (uErr) console.error('[cohort-compliance] confirm update', p.id, uErr)
-          else confirmed += 1
+            .select('id')
+            .maybeSingle()
+          if (uErr) {
+            console.error('[cohort-compliance] confirm update', p.id, uErr)
+          } else if (!confirmedRow) {
+            /* already confirmed (e.g. immediate check-in path won the race) */
+          } else {
+            confirmed += 1
+            let studyName = 'study'
+            let productName = 'product'
+            try {
+              const { data: cRow } = await supabaseAdmin
+                .from('cohorts')
+                .select('product_name, brand_name')
+                .eq('id', p.cohort_id)
+                .maybeSingle()
+              const names = studyAndProductNamesFromCohortRow(cRow as { product_name?: string | null; brand_name?: string | null } | null)
+              studyName = names.studyName
+              productName = names.productName
+            } catch (cohErr) {
+              console.error('[cohort-compliance] cohort lookup for email', p.cohort_id, cohErr)
+            }
+            await sendComplianceConfirmedEmail({
+              authUserId: authUid,
+              studyName,
+              productName,
+            })
+          }
         } else {
           confirmed += 1
         }

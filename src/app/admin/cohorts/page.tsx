@@ -13,6 +13,7 @@ type Cohort = {
   status: string | null
   max_participants?: number | null
   min_participants?: number | null
+  display_capacity?: number | null
   applied_participant_count?: number
   confirmed_participant_count?: number
   dropped_participant_count?: number
@@ -26,6 +27,7 @@ type Participant = {
   email: string
   enrolled_at: string
   confirmed_at: string | null
+  qualification_short?: boolean
 }
 
 function adminHeaders(): HeadersInit {
@@ -44,6 +46,7 @@ export default function AdminCohortsPage() {
   const [cohorts, setCohorts] = useState<Cohort[]>([])
   const [selectedId, setSelectedId] = useState<string>('')
   const [participants, setParticipants] = useState<Participant[]>([])
+  const [appliedParticipants, setAppliedParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingRows, setLoadingRows] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -90,6 +93,7 @@ export default function AdminCohortsPage() {
   const fetchParticipants = useCallback(async (cohortUuid: string) => {
     if (!cohortUuid) {
       setParticipants([])
+      setAppliedParticipants([])
       return
     }
     setLoadingRows(true)
@@ -102,13 +106,16 @@ export default function AdminCohortsPage() {
         const j = await res.json().catch(() => ({}))
         setError((j as { error?: string }).error || res.statusText)
         setParticipants([])
+        setAppliedParticipants([])
         return
       }
       const j = await res.json()
       setParticipants((j as { participants?: Participant[] }).participants || [])
+      setAppliedParticipants((j as { applied_participants?: Participant[] }).applied_participants || [])
     } catch (e: any) {
       setError(e?.message || 'Failed to load participants')
       setParticipants([])
+      setAppliedParticipants([])
     } finally {
       setLoadingRows(false)
     }
@@ -116,7 +123,10 @@ export default function AdminCohortsPage() {
 
   useEffect(() => {
     if (selectedId) fetchParticipants(selectedId)
-    else setParticipants([])
+    else {
+      setParticipants([])
+      setAppliedParticipants([])
+    }
   }, [selectedId, fetchParticipants])
 
   const downloadCsv = () => {
@@ -218,6 +228,7 @@ export default function AdminCohortsPage() {
                     const health = c.health_status ?? '—'
                     const min = c.min_participants
                     const max = c.max_participants
+                    const disp = c.display_capacity
                     return (
                       <tr key={c.id}>
                         <td className="px-3 py-2 text-gray-900">
@@ -233,6 +244,9 @@ export default function AdminCohortsPage() {
                         <td className="px-3 py-2 text-right text-gray-700">{new24}</td>
                         <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                           {min != null ? min : '—'} / {max != null ? max : '—'}
+                          {disp != null ? (
+                            <span className="block text-xs text-gray-500">Hero cap: {disp}</span>
+                          ) : null}
                         </td>
                         <td className="px-3 py-2 text-gray-800">{health}</td>
                       </tr>
@@ -270,51 +284,117 @@ export default function AdminCohortsPage() {
         </div>
 
         {selectedId && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-3">
-              <h2 className="text-lg font-medium text-gray-900">Confirmed participants</h2>
-              <button
-                type="button"
-                onClick={downloadCsv}
-                disabled={loadingRows || participants.length === 0}
-                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-              >
-                Download CSV
-              </button>
-            </div>
-            {loadingRows ? (
-              <div className="p-8 text-center text-gray-600">Loading…</div>
-            ) : participants.length === 0 ? (
-              <div className="p-8 text-center text-gray-600">No confirmed participants for this cohort yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confirmed</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {participants.map((p, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-3 text-sm text-gray-900">{p.display_name || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{p.email || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {p.enrolled_at ? new Date(p.enrolled_at).toLocaleString() : '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {p.confirmed_at ? new Date(p.confirmed_at).toLocaleString() : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <>
+            <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Applied participants</h2>
+                <p className="text-xs text-gray-600 mt-1">
+                  Yellow dot: stored qualification response under 60 characters (display-only flag).
+                </p>
               </div>
-            )}
-          </div>
+              {loadingRows ? (
+                <div className="p-8 text-center text-gray-600">Loading…</div>
+              ) : appliedParticipants.length === 0 ? (
+                <div className="p-8 text-center text-gray-600">No applied participants for this cohort.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {appliedParticipants.map((p, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <span className="inline-flex items-center gap-2">
+                              {p.qualification_short ? (
+                                <span
+                                  className="h-2 w-2 shrink-0 rounded-full bg-yellow-400"
+                                  title="Qualification response under 60 characters"
+                                  aria-label="Short qualification response"
+                                />
+                              ) : null}
+                              <span>{p.display_name || '—'}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{p.email || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {p.enrolled_at ? new Date(p.enrolled_at).toLocaleString() : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900">Confirmed participants</h2>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Same yellow-dot rule applies to qualification text length (display-only).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadCsv}
+                  disabled={loadingRows || participants.length === 0}
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                >
+                  Download CSV
+                </button>
+              </div>
+              {loadingRows ? (
+                <div className="p-8 text-center text-gray-600">Loading…</div>
+              ) : participants.length === 0 ? (
+                <div className="p-8 text-center text-gray-600">No confirmed participants for this cohort yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confirmed</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {participants.map((p, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <span className="inline-flex items-center gap-2">
+                              {p.qualification_short ? (
+                                <span
+                                  className="h-2 w-2 shrink-0 rounded-full bg-yellow-400"
+                                  title="Qualification response under 60 characters"
+                                  aria-label="Short qualification response"
+                                />
+                              ) : null}
+                              <span>{p.display_name || '—'}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{p.email || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {p.enrolled_at ? new Date(p.enrolled_at).toLocaleString() : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {p.confirmed_at ? new Date(p.confirmed_at).toLocaleString() : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

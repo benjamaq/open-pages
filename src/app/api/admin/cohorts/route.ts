@@ -6,6 +6,7 @@ import {
   countCohortEnrollmentsLast24h,
   countCohortStatusParticipants,
 } from '@/lib/cohortRecruitment'
+import { isQualificationResponseVisuallyShort } from '@/lib/qualificationFreeText'
 
 function adminDenied(req: NextRequest): NextResponse | null {
   if (process.env.NODE_ENV !== 'production') return null
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (!cohortUuid) {
       const { data: cohorts, error } = await supabaseAdmin
         .from('cohorts')
-        .select('id, slug, brand_name, product_name, status, max_participants, min_participants')
+        .select('id, slug, brand_name, product_name, status, max_participants, min_participants, display_capacity')
         .order('brand_name', { ascending: true })
       if (error) {
         console.error('[admin/cohorts] list:', error)
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     const { data: parts, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('enrolled_at, confirmed_at, user_id')
+      .select('enrolled_at, confirmed_at, user_id, qualification_response')
       .eq('cohort_id', cohortUuid)
       .eq('status', 'confirmed')
       .order('confirmed_at', { ascending: true })
@@ -99,27 +100,87 @@ export async function GET(request: NextRequest) {
     const profById = Object.fromEntries((profs || []).map((r: any) => [r.id, r]))
 
     const participants = await Promise.all(
-      list.map(async (p: { enrolled_at: string; confirmed_at: string | null; user_id: string }) => {
-        const prof = profById[p.user_id] as { display_name: string | null; user_id: string } | undefined
-        let email = ''
-        if (prof?.user_id) {
-          try {
-            const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
-            if (!auErr && data?.user?.email) email = String(data.user.email)
-          } catch {
-            /* ignore */
+      list.map(
+        async (p: {
+          enrolled_at: string
+          confirmed_at: string | null
+          user_id: string
+          qualification_response?: string | null
+        }) => {
+          const prof = profById[p.user_id] as { display_name: string | null; user_id: string } | undefined
+          let email = ''
+          if (prof?.user_id) {
+            try {
+              const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
+              if (!auErr && data?.user?.email) email = String(data.user.email)
+            } catch {
+              /* ignore */
+            }
           }
-        }
-        return {
-          display_name: prof?.display_name ?? null,
-          email,
-          enrolled_at: p.enrolled_at,
-          confirmed_at: p.confirmed_at,
-        }
-      })
+          const q = p.qualification_response != null ? String(p.qualification_response) : ''
+          return {
+            display_name: prof?.display_name ?? null,
+            email,
+            enrolled_at: p.enrolled_at,
+            confirmed_at: p.confirmed_at,
+            qualification_short: isQualificationResponseVisuallyShort(q),
+          }
+        },
+      )
     )
 
-    return NextResponse.json({ participants })
+    const { data: appliedRows, error: aErr } = await supabaseAdmin
+      .from('cohort_participants')
+      .select('enrolled_at, user_id, qualification_response')
+      .eq('cohort_id', cohortUuid)
+      .eq('status', 'applied')
+      .order('enrolled_at', { ascending: false })
+
+    if (aErr) {
+      console.error('[admin/cohorts] applied participants:', aErr)
+      return NextResponse.json({ error: aErr.message }, { status: 500 })
+    }
+
+    const appliedList = appliedRows || []
+    let applied_participants: typeof participants = []
+    if (appliedList.length > 0) {
+      const appliedProfileIds = appliedList.map((r: { user_id: string }) => r.user_id)
+      const { data: appliedProfs, error: apErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id, display_name, user_id')
+        .in('id', appliedProfileIds)
+      if (apErr) {
+        console.error('[admin/cohorts] applied profiles:', apErr)
+        return NextResponse.json({ error: apErr.message }, { status: 500 })
+      }
+      const apById = Object.fromEntries((appliedProfs || []).map((r: any) => [r.id, r]))
+      applied_participants = await Promise.all(
+        appliedList.map(
+          async (p: { enrolled_at: string; user_id: string; qualification_response?: string | null }) => {
+            const prof = apById[p.user_id] as { display_name: string | null; user_id: string } | undefined
+            let email = ''
+            if (prof?.user_id) {
+              try {
+                const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
+                if (!auErr && data?.user?.email) email = String(data.user.email)
+              } catch {
+                /* ignore */
+              }
+            }
+            const q = p.qualification_response != null ? String(p.qualification_response) : ''
+            return {
+              display_name: prof?.display_name ?? null,
+              email,
+              enrolled_at: p.enrolled_at,
+              confirmed_at: null as string | null,
+              qualification_short: isQualificationResponseVisuallyShort(q),
+            }
+          },
+        )
+      )
+    }
+
+    return NextResponse.json({ participants, applied_participants })
   } catch (e: any) {
     console.error('[admin/cohorts]', e)
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })

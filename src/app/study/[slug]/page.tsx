@@ -12,45 +12,63 @@ const DARK_PANEL_BG = '#1a1f2e'
 
 function SpotCounterCard({
   confirmed,
-  max,
+  maxParticipants,
+  displayCapacity,
   capacityFull,
 }: {
   confirmed: number
-  max: number | null
+  /** Real recruitment cap (enforcement); used as display denominator when displayCapacity unset. */
+  maxParticipants: number | null
+  /** Optional smaller hero cap for urgency; progress bar = confirmed / this (fallback: maxParticipants). */
+  displayCapacity: number | null
   capacityFull: boolean
 }) {
-  const maxNum = max != null && Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : null
-  const remaining =
-    maxNum != null ? Math.max(0, maxNum - confirmed) : null
+  const displayTotal =
+    displayCapacity != null && Number.isFinite(Number(displayCapacity)) && Number(displayCapacity) > 0
+      ? Math.floor(Number(displayCapacity))
+      : maxParticipants != null && Number.isFinite(Number(maxParticipants)) && Number(maxParticipants) > 0
+        ? Math.floor(Number(maxParticipants))
+        : null
+
+  const remaining = displayTotal != null ? Math.max(0, displayTotal - confirmed) : null
   const pct =
-    maxNum != null && maxNum > 0 ? Math.min(100, (confirmed / maxNum) * 100) : capacityFull ? 100 : 0
+    displayTotal != null && displayTotal > 0
+      ? Math.min(100, (confirmed / displayTotal) * 100)
+      : capacityFull
+        ? 100
+        : 0
 
   return (
     <div
-      className="mx-auto w-full max-w-md rounded-xl border border-white/20 px-5 py-4"
+      className="mx-auto w-full max-w-md rounded-xl border border-white/20 px-5 py-5 sm:px-6 sm:py-6"
       style={{ background: 'rgba(255,255,255,0.08)' }}
     >
-      <div className="flex items-start gap-2 text-left text-sm text-white/90">
-        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: RUST }} aria-hidden />
-        <p>
-          <span className="font-semibold tabular-nums">{confirmed}</span> confirmed spots filled
-          {remaining != null ? (
-            <>
-              {' '}
-              · <span className="font-semibold tabular-nums">{remaining}</span> remaining
-            </>
-          ) : null}
+      {remaining != null ? (
+        <p className="text-center text-[26px] font-bold leading-tight tracking-tight text-white sm:text-[34px]">
+          Only{' '}
+          <span className="tabular-nums" style={{ color: RUST }}>
+            {remaining}
+          </span>{' '}
+          spot{remaining === 1 ? '' : 's'} remaining
         </p>
-      </div>
-      {maxNum != null ? (
-        <p className="mt-2 text-center text-xs text-white/65">
-          Up to <span className="font-semibold tabular-nums">{maxNum}</span> participant spots available
+      ) : (
+        <p className="text-center text-[22px] font-bold text-white sm:text-[28px]">Limited spots available</p>
+      )}
+      {displayTotal != null ? (
+        <p className="mt-2 text-center text-[13px] text-white/70">
+          <span className="font-semibold tabular-nums text-white/85">{confirmed}</span> of{' '}
+          <span className="font-semibold tabular-nums text-white/85">{displayTotal}</span> early spots filled
         </p>
       ) : null}
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/40">
+      <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
         <div
-          className="h-full rounded-full transition-[width]"
+          className="h-full rounded-full transition-[width] duration-500 ease-out"
           style={{ width: `${pct}%`, background: RUST }}
+          aria-valuenow={Math.round(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={displayTotal != null ? `Study spots ${Math.round(pct)} percent filled` : 'Study capacity'}
+          role="progressbar"
         />
       </div>
     </div>
@@ -99,57 +117,126 @@ function HowItWorksSteps({ studyDays }: { studyDays: number }) {
   )
 }
 
+function StoreCreditIcon() {
+  return (
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="10" stroke={RUST} strokeWidth="1.5" />
+      <path
+        d="M8 10h8M8 14h5"
+        stroke={RUST}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.5 12.5c0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5.7-1.5 1.5-1.5 1.5.7 1.5 1.5z"
+        stroke={RUST}
+        strokeWidth="1.5"
+      />
+    </svg>
+  )
+}
+
+function BioStackrStudyIcon() {
+  return (
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 18V6l8-3 8 3v12l-8 3-8-3z"
+        stroke={RUST}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M12 9v11M8 7v6M16 7v6" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function WhatYouReceive({ productName }: { productName: string }) {
+  const headingProduct = `${productName} for the full 21 days`
+  const cards = [
+    {
+      key: 'product',
+      tag: 'Value: included',
+      title: headingProduct,
+      sub: 'Supplied by DoNotAge. Shipped before tracking begins.',
+      body: 'Your product arrives before the study starts so you can begin your baseline check-ins right away.',
+      visual: (
+        <div
+          className="mt-6 flex max-h-[120px] min-h-[88px] items-center justify-center overflow-hidden rounded-md border border-dashed bg-neutral-50"
+          style={{ borderColor: '#e5e2dc' }}
+        >
+          <span className="text-[11px] text-neutral-400">Product image</span>
+        </div>
+      ),
+    },
+    {
+      key: 'credit',
+      tag: 'On completion',
+      title: '£45–50 DoNotAge store credit',
+      sub: 'Awarded when you complete all 21 daily check-ins.',
+      body: `Use it on any DoNotAge product. A thank-you for helping us prove what ${productName} can do.`,
+      visual: (
+        <div
+          className="mt-6 flex min-h-[88px] items-center justify-center rounded-md border bg-neutral-50/80"
+          style={{ borderColor: '#e5e2dc' }}
+          aria-hidden
+        >
+          <StoreCreditIcon />
+        </div>
+      ),
+    },
+    {
+      key: 'pro',
+      tag: 'Value: included',
+      title: '3 months of BioStackr Pro',
+      sub: 'The supplement tracking platform running this study.',
+      body: 'Track your own supplement stack, see your personal results from this study, and keep tracking after it ends.',
+      visual: (
+        <div
+          className="mt-6 flex min-h-[88px] items-center justify-center rounded-md border bg-neutral-50/80"
+          style={{ borderColor: '#e5e2dc' }}
+          aria-hidden
+        >
+          <BioStackrStudyIcon />
+        </div>
+      ),
+    },
+  ]
+
   return (
     <section className="bg-white py-14 sm:py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-semibold text-neutral-900">What participants receive</h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <div
-            className="rounded-xl bg-white p-6 shadow-sm"
-            style={{ borderLeft: `2px solid ${RUST}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-          >
-            <div className="mb-3 h-px w-24" style={{ background: RUST }} />
-            <h3 className="text-[15px] font-semibold text-neutral-900">{productName} for the full 21 days</h3>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Shipped to you before tracking begins.
-            </p>
-            <p className="mt-1 text-[13px] text-neutral-500">Supplied by DoNotAge.</p>
-            {/* Product image — replace with Image once asset arrives */}
+        <p
+          className="mx-auto mt-4 max-w-xl text-center text-[13px] font-medium leading-snug sm:text-[14px]"
+          style={{ color: RUST }}
+        >
+          Every confirmed participant receives all three.
+        </p>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {cards.map((c, i) => (
             <div
-              className="mt-6 flex max-h-[120px] min-h-[72px] items-center justify-center overflow-hidden rounded-md border border-dashed border-neutral-200 bg-neutral-50"
+              key={c.key}
+              className="flex h-full flex-col rounded-xl border bg-white px-6 py-8"
               style={{ borderColor: '#e5e2dc' }}
             >
-              <span className="text-[11px] text-neutral-400">Product image</span>
+              <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">{c.title}</h3>
+              <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">{c.sub}</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{c.body}</p>
+              {c.visual}
+              <p
+                className="mt-4 text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: RUST }}
+              >
+                {c.tag}
+              </p>
             </div>
-          </div>
-          <div
-            className="rounded-xl bg-white p-6 shadow-sm"
-            style={{ borderLeft: `2px solid ${RUST}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-          >
-            <div className="mb-3 h-px w-24" style={{ background: RUST }} />
-            <h3 className="text-[15px] font-semibold text-neutral-900">£45–50 DoNotAge store credit</h3>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Awarded on completion of all 21 check-ins.
-            </p>
-            <p className="mt-1 text-[13px] text-neutral-500">Use on any product.</p>
-            <div
-              className="mt-6 flex h-32 items-center justify-center rounded-md border border-dashed bg-neutral-50"
-              style={{ borderColor: '#e5e2dc' }}
-              aria-hidden
-            >
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={RUST} strokeWidth="1.5" strokeLinecap="round">
-                <rect x="3" y="10" width="18" height="11" rx="1" />
-                <path d="M12 10V21" />
-                <path d="M3 10h18" />
-                <path d="M8 10c0-3 2.5-5 4-5s4 2 4 5" />
-              </svg>
-            </div>
-          </div>
+          ))}
         </div>
-        <p className="mx-auto mt-10 max-w-2xl text-center text-[13px] leading-relaxed text-neutral-600">
-          All participants also receive 3 months of BioStackr Pro — the supplement tracking platform running this
-          study. Value: included.
+        <p className="mx-auto mt-10 max-w-2xl text-center text-[14px] font-medium leading-relaxed text-neutral-800">
+          Combined value: over £90 — plus your personal study results, delivered privately at the end of the study.
         </p>
       </div>
     </section>
@@ -234,6 +321,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const cohortId = String((cohort as { id: string }).id)
   const maxP = (cohort as { max_participants?: number | null }).max_participants ?? null
+  const displayCap = (cohort as { display_capacity?: number | null }).display_capacity ?? null
 
   const confirmedCount = await countCohortConfirmedParticipants(cohortId)
   const capacityFull = isCohortCapacityFull(maxP, confirmedCount)
@@ -298,7 +386,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
             {!showFullMessage ? (
               <div className="mt-10">
-                <SpotCounterCard confirmed={confirmedCount} max={maxP} capacityFull={capacityFull} />
+                <SpotCounterCard
+                  confirmed={confirmedCount}
+                  maxParticipants={maxP}
+                  displayCapacity={displayCap}
+                  capacityFull={capacityFull}
+                />
               </div>
             ) : (
               <div

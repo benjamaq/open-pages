@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+import { tryImmediateCohortComplianceConfirm } from '@/lib/cohortComplianceConfirmed'
 
 function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
   const raw = body?.local_date
@@ -158,6 +159,24 @@ export async function POST(request: NextRequest) {
         } catch {
           /* ignore */
         }
+      }
+
+      try {
+        const { data: profForCompliance } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        const profileId = (profForCompliance as { id?: string } | null)?.id
+        if (profileId) {
+          await tryImmediateCohortComplianceConfirm({
+            authUserId: user.id,
+            profileId,
+            cohortSlug,
+          })
+        }
+      } catch (e) {
+        console.error('[checkin] cohort compliance confirm hook', e)
       }
 
       return NextResponse.json({ success: true, cohort: true })

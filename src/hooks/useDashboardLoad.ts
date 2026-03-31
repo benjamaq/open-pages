@@ -60,10 +60,11 @@ export function useDashboardLoad() {
           return '/api/dashboard/load'
         }
       })()
+      // TTL 0: cohort check-in counts and gate state must reflect daily_entries on every load (no stale dash bundle).
       const r = await dedupedJson<DashboardLoadData>(
         url,
         { credentials: 'include', cache: 'no-store' },
-        bypassCache ? 0 : 30000
+        0,
       )
       if (!r.ok) throw new Error('Dashboard load failed')
       const j = (r.data || null) as DashboardLoadData | null

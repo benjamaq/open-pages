@@ -14,6 +14,11 @@ import {
   COHORT_QUALIFICATION_STORAGE_KEY,
   type CohortQualificationDraftV1,
 } from '@/lib/cohort'
+import {
+  extractQualificationFreeText,
+  validateQualificationFreeText,
+  QUALIFICATION_FREETEXT_PRIMARY_ERROR,
+} from '@/lib/qualificationFreeText'
 
 const inputCls =
   'w-full rounded-md border border-gray-200 bg-white px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400'
@@ -123,6 +128,13 @@ function CohortSignupInner() {
     const issueText = qualificationIssue.trim() || String(readQualDraft()?.issue || '').trim()
     if (!slug || !issueText) {
       setError('Session expired. Go back to the study page to apply again.')
+      setLoading(false)
+      return
+    }
+
+    const freeForGate = extractQualificationFreeText(issueText)
+    if (!validateQualificationFreeText(freeForGate).ok) {
+      setError(QUALIFICATION_FREETEXT_PRIMARY_ERROR)
       setLoading(false)
       return
     }

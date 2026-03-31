@@ -12,6 +12,15 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Browser local calendar day from dashboard load (?localToday=YYYY-MM-DD); else UTC date (legacy callers). */
+function todayYmdForCohort(request: Request): string {
+  try {
+    const p = new URL(request.url).searchParams.get("localToday")?.trim();
+    if (p && /^\d{4}-\d{2}-\d{2}$/.test(p)) return p;
+  } catch {}
+  return new Date().toISOString().slice(0, 10);
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -115,7 +124,7 @@ export async function GET(request: Request) {
             : null;
 
           if (cohortId && profileId) {
-            const todayYmd = new Date().toISOString().slice(0, 10);
+            const todayYmd = todayYmdForCohort(request);
             const { data: cdef, error: cdefErr } = await supabaseAdmin
               .from("cohorts")
               .select(

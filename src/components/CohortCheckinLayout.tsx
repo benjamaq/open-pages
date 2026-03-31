@@ -155,6 +155,7 @@ export default function CohortCheckinLayout({
       try {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('progress:refresh'))
+          window.dispatchEvent(new Event('dashboard:refresh'))
         }
       } catch {}
       setSaved(true)
