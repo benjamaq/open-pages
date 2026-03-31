@@ -337,10 +337,6 @@ function HowItWorksSteps() {
   )
 }
 
-/** Shared hero mark height — DoNotAge + BioStackr read as one bar */
-const HERO_PARTNER_LOGO_H =
-  'h-[5rem] w-auto object-contain sm:h-[5.5rem] md:h-[6rem]'
-
 function HeroDonotageLogo() {
   return (
     <Image
@@ -348,7 +344,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className={`${HERO_PARTNER_LOGO_H} max-w-[min(100%,420px)] object-left contrast-[1.06]`}
+      className="h-[5.35rem] w-auto max-w-[min(100%,440px)] object-contain object-left contrast-[1.06] sm:h-[5.95rem] md:h-[6.35rem]"
       priority
     />
   )
@@ -366,7 +362,7 @@ function HeroBioStackrLogo() {
         alt="BioStackr"
         width={434}
         height={135}
-        className={`max-w-[min(100%,420px)] mix-blend-multiply contrast-[1.04] ${HERO_PARTNER_LOGO_H}`}
+        className="h-[4.35rem] w-auto max-w-[min(100%,380px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[4.85rem] md:h-[5.35rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
