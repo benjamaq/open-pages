@@ -26,7 +26,8 @@ AS $$
   SELECT COUNT(*)::bigint
   FROM cohort_participants cp
   INNER JOIN profiles pr ON pr.id = cp.user_id
-  WHERE cp.cohort_id = p_cohort_id
+  -- cohort_id may be uuid or text (uuid string) across environments; compare as text.
+  WHERE cp.cohort_id::text = p_cohort_id::text
     AND cp.status = 'confirmed'
     AND cp.confirmed_at IS NOT NULL
     AND EXISTS (
