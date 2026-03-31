@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -11,7 +10,7 @@ const RUST = '#C84B2F'
 /** Hero + trust footer panel; override image via CSS `--cohort-hero-bg: url(...)` on `:root` or a parent. */
 const DARK_PANEL_BG = '#1a1f2e'
 
-function SpotCounterCard({
+function HeroCohortStatusCard({
   confirmed,
   maxParticipants,
   displayCapacity,
@@ -20,7 +19,7 @@ function SpotCounterCard({
   confirmed: number
   /** Real recruitment cap (enforcement); used as display denominator when displayCapacity unset. */
   maxParticipants: number | null
-  /** Optional smaller hero cap for urgency; progress bar = confirmed / this (fallback: maxParticipants). */
+  /** Optional smaller hero cap for display; progress bar = confirmed / this (fallback: maxParticipants). */
   displayCapacity: number | null
   capacityFull: boolean
 }) {
@@ -31,7 +30,6 @@ function SpotCounterCard({
         ? Math.floor(Number(maxParticipants))
         : null
 
-  const remaining = displayTotal != null ? Math.max(0, displayTotal - confirmed) : null
   const pct =
     displayTotal != null && displayTotal > 0
       ? Math.min(100, (confirmed / displayTotal) * 100)
@@ -42,36 +40,47 @@ function SpotCounterCard({
   return (
     <div
       className="mx-auto w-full max-w-md rounded-xl border border-white/20 px-5 py-5 sm:px-6 sm:py-6"
-      style={{ background: 'rgba(255,255,255,0.08)' }}
+      style={{
+        background: 'rgba(255,255,255,0.08)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+      }}
     >
-      {remaining != null ? (
-        <p className="text-center text-[18px] font-bold leading-snug text-white sm:text-[22px]">
-          <span className="tabular-nums text-white/95">{confirmed}</span>
-          <span className="text-white/80"> of </span>
-          <span className="tabular-nums text-white/95">{displayTotal}</span>
-          <span className="text-white/80"> spots filled</span>
-          <span className="mx-1.5 text-white/45 sm:mx-2" aria-hidden>
-            ·
-          </span>
-          <span className="tabular-nums" style={{ color: RUST }}>
-            {remaining}
-          </span>
-          <span style={{ color: RUST }}> remaining</span>
+      <p className="text-center text-[17px] font-bold leading-snug text-white sm:text-[19px]">
+        {displayTotal != null ? (
+          <>
+            Limited cohort: <span className="tabular-nums text-white/95">{displayTotal}</span> participants
+          </>
+        ) : (
+          'Limited cohort'
+        )}
+      </p>
+      <p className="mt-2 text-center text-[14px] font-medium leading-relaxed text-white/75">
+        Applications reviewed within 24 hours
+      </p>
+      {displayTotal != null ? (
+        <p className="mt-2 text-center text-[12px] tabular-nums tracking-tight text-white/50">
+          {confirmed} of {displayTotal} places confirmed
         </p>
-      ) : (
-        <p className="text-center text-[22px] font-bold text-white sm:text-[28px]">Limited spots available</p>
-      )}
-      <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
-        <div
-          className="h-full rounded-full transition-[width] duration-500 ease-out"
-          style={{ width: `${pct}%`, background: RUST }}
-          aria-valuenow={Math.round(pct)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={displayTotal != null ? `Study spots ${Math.round(pct)} percent filled` : 'Study capacity'}
-          role="progressbar"
-        />
-      </div>
+      ) : null}
+      {displayTotal != null ? (
+        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
+          <div
+            className="h-full rounded-full transition-[width] duration-500 ease-out"
+            style={{
+              width: `${pct}%`,
+              background: RUST,
+              boxShadow: '0 0 16px rgba(200, 75, 47, 0.55), 0 0 4px rgba(200, 75, 47, 0.45)',
+            }}
+            aria-valuenow={Math.round(pct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={
+              displayTotal != null ? `Places confirmed ${Math.round(pct)} percent` : 'Study capacity'
+            }
+            role="progressbar"
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -130,9 +139,9 @@ function HowItWorksSteps() {
     },
   ]
   return (
-    <section className="bg-[#faf9f7] py-14 sm:py-20">
+    <section className="bg-[#faf9f7] py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <h2 className="text-center text-[22px] font-semibold text-neutral-900">How the study works</h2>
+        <h2 className="text-center text-[22px] font-bold text-neutral-900">How the study works</h2>
         <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-neutral-600 sm:text-[15px]">
           A structured 21-day study designed to measure real changes in real people.
         </p>
@@ -140,7 +149,7 @@ function HowItWorksSteps() {
           {steps.map((s) => (
             <div
               key={s.title}
-              className="flex h-full min-h-0 flex-col rounded-xl border bg-white px-6 py-8"
+              className="flex h-full min-h-0 flex-col rounded-xl border bg-white px-7 py-9"
               style={{ borderColor: '#e5e2dc' }}
             >
               <div className="mb-3 shrink-0">{s.icon}</div>
@@ -193,28 +202,82 @@ function DonotageLogoMark() {
 
 type IncentiveShelfCardProps = {
   visual: ReactNode
-  bold: string
-  muted: string
-  tag: string
+  title: string
+  body: string
+  bodyExtra?: string
+  tagline?: string
+  footer: string
+  /** Stronger border and shadow for the primary incentive card */
+  highlight?: boolean
 }
 
-function IncentiveShelfCard({ visual, bold, muted, tag }: IncentiveShelfCardProps) {
+function IncentiveShelfCard({
+  visual,
+  title,
+  body,
+  bodyExtra,
+  tagline,
+  footer,
+  highlight,
+}: IncentiveShelfCardProps) {
   return (
     <div
-      className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[420px]"
-      style={{ borderColor: '#e5e2dc' }}
+      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[448px] ${
+        highlight ? 'ring-2 ring-[#C84B2F]/20 shadow-[0_10px_40px_rgba(200,75,47,0.12)]' : ''
+      }`}
+      style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
       <div className="flex min-h-0 flex-[3] flex-col bg-neutral-50/30">{visual}</div>
-      <div className="flex flex-[2] flex-col justify-between px-5 pb-4 pt-4">
+      <div className="flex flex-[2] flex-col justify-between px-6 pb-6 pt-5">
         <div>
-          <h3 className="truncate text-[15px] font-bold leading-snug text-neutral-900" title={bold}>
-            {bold}
-          </h3>
-          <p className="mt-1.5 text-[13px] leading-snug text-neutral-500">{muted}</p>
+          <h3 className="text-[16px] font-extrabold leading-snug text-neutral-900">{title}</h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{body}</p>
+          {bodyExtra ? (
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{bodyExtra}</p>
+          ) : null}
+          {tagline ? (
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{tagline}</p>
+          ) : null}
         </div>
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
-          {tag}
+        <p className="mt-5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+          {footer}
         </p>
+      </div>
+    </div>
+  )
+}
+
+function BioStackrDashboardMock() {
+  return (
+    <div className="flex h-full min-h-0 flex-1 items-stretch justify-center bg-gradient-to-b from-[#f4f6fa] to-[#e8ecf4] px-4 py-5">
+      <div
+        className="flex w-full max-w-[220px] flex-col rounded-lg border border-neutral-200/90 bg-white p-3 shadow-sm"
+        style={{ boxShadow: '0 4px 24px rgba(26,31,46,0.08)' }}
+      >
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Outcomes</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+        </div>
+        <div className="relative h-[72px] w-full">
+          <svg viewBox="0 0 200 72" className="h-full w-full" aria-hidden>
+            <line x1="8" y1="56" x2="192" y2="56" stroke="#e5e7eb" strokeWidth="1" />
+            <line x1="8" y1="36" x2="192" y2="36" stroke="#f3f4f6" strokeWidth="1" />
+            <line x1="8" y1="16" x2="192" y2="16" stroke="#f3f4f6" strokeWidth="1" />
+            <path
+              d="M 12 48 L 48 42 L 82 38 L 118 28 L 152 22 L 188 14"
+              fill="none"
+              stroke={RUST}
+              strokeWidth="2.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <div className="mt-2">
+          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold leading-tight text-emerald-900 ring-1 ring-emerald-200/80">
+            Improved sleep onset
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -222,55 +285,58 @@ function IncentiveShelfCard({ visual, bold, muted, tag }: IncentiveShelfCardProp
 
 function WhatYouReceive({ productName }: { productName: string }) {
   return (
-    <section className="bg-white py-14 sm:py-20">
+    <section className="bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <h2 className="text-center text-[22px] font-semibold text-neutral-900">What participants receive</h2>
-        <p
-          className="mx-auto mt-4 max-w-xl text-center text-[13px] font-medium leading-snug sm:text-[14px]"
-          style={{ color: RUST }}
-        >
-          Every confirmed participant receives all three.
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+          This is a structured study, not a survey.
         </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-3 md:items-stretch">
+        <h2 className="mt-4 text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
+          What you receive as a participant
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
+          Confirmed participants receive the full study package below.
+        </p>
+        <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
             visual={<ProductBottleVisual />}
-            bold={`${productName} for 21 days`}
-            muted="Shipped to you before the study begins."
-            tag="VALUE: INCLUDED"
+            title={`${productName} for the full 21 days`}
+            body="Delivered before the study begins so you can track real changes from day one."
+            footer="Included for all confirmed participants"
           />
           <IncentiveShelfCard
+            highlight
             visual={
-              <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 py-6">
+              <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
                 <DonotageLogoMark />
-                <p className="text-[26px] font-bold leading-none sm:text-[28px]" style={{ color: RUST }}>
+                <p
+                  className="text-[36px] font-extrabold leading-none tabular-nums sm:text-[44px]"
+                  style={{ color: RUST }}
+                >
                   £45–50
                 </p>
               </div>
             }
-            bold="DoNotAge store credit"
-            muted="Yours when you complete all 21 check-ins."
-            tag="ON COMPLETION"
+            title="£45–50 DoNotAge store credit"
+            body="Awarded when you complete all 21 daily check-ins. Equivalent to one month's supply, to use on any product."
+            tagline="Continue with the product if it works for you, or explore the range."
+            footer="Completion reward"
           />
           <IncentiveShelfCard
-            visual={
-              <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 py-6">
-                <Image
-                  src="/brand/biostackr-logo.png"
-                  alt="BioStackr"
-                  width={180}
-                  height={44}
-                  className="h-11 w-auto max-w-[min(90%,180px)] object-contain object-center"
-                />
-              </div>
-            }
-            bold="3 months BioStackr Pro"
-            muted="Track your stack. See your personal study results."
-            tag="VALUE: INCLUDED"
+            visual={<BioStackrDashboardMock />}
+            title="3 months BioStackr Pro"
+            body="Access your personal dashboard, track your outcomes, and see exactly how your stack performs over time."
+            bodyExtra="Includes your personal study results and ongoing tracking."
+            footer="Included for all participants"
           />
         </div>
-        <p className="mx-auto mt-10 max-w-2xl text-center text-[13px] leading-relaxed text-neutral-500">
-          Combined value: over £90 — plus your personal results, delivered privately.
-        </p>
+        <div className="mx-auto mt-12 max-w-2xl space-y-2 text-center">
+          <p className="text-[15px] font-semibold leading-relaxed text-neutral-800">
+            Total value: £90+ plus your personal outcome report
+          </p>
+          <p className="text-[13px] leading-relaxed text-neutral-500">
+            A clear view of how your sleep responded over 21 days, based on your own data.
+          </p>
+        </div>
       </div>
     </section>
   )
@@ -304,7 +370,7 @@ function TrustFooter() {
               <path d="M7 16l4-4 4 4 6-6" />
             </svg>,
             'Statistical analysis',
-            "Cohen's d effect sizes and confidence intervals — the same method used in academic research."
+            "Cohen's d effect sizes and confidence intervals, the same method used in academic research."
           )}
           {col(
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -368,7 +434,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       <div className="flex flex-1 flex-col">
       {/* Section 1 — Hero — set --cohort-hero-bg when artwork image is ready */}
       <section
-        className="w-full px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8"
+        className="relative w-full overflow-hidden px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8"
         style={{
           backgroundColor: DARK_PANEL_BG,
           backgroundImage: 'var(--cohort-hero-bg, none)',
@@ -377,7 +443,15 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="mx-auto max-w-5xl">
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          aria-hidden
+          style={{
+            background:
+              'radial-gradient(ellipse 90% 75% at 50% 20%, transparent 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.52) 100%)',
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {/* DoNotAge logo — replace with Image once assets arrive */}
             <div
@@ -403,7 +477,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
           <div className="mx-auto mt-12 max-w-3xl text-center sm:mt-16">
             <p
-              className="text-[12px] font-semibold uppercase tracking-[0.12em]"
+              className="text-[11px] font-semibold uppercase tracking-[0.1em]"
               style={{ color: RUST }}
             >
               Private study invitation
@@ -411,14 +485,14 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             <h1 className="mt-4 text-[32px] font-bold leading-tight text-white sm:text-[42px]">
               {productName}
             </h1>
-            <p className="mt-2 text-[18px] text-white/60">Customer Outcomes Study</p>
+            <p className="mt-2 text-[17px] text-white/65 sm:text-[18px]">21-day customer outcomes study</p>
             <div className="mx-auto mt-8 flex justify-center">
               <div className="h-px w-[60px]" style={{ background: RUST }} />
             </div>
 
             {!showFullMessage ? (
               <div className="mt-10">
-                <SpotCounterCard
+                <HeroCohortStatusCard
                   confirmed={confirmedCount}
                   maxParticipants={maxP}
                   displayCapacity={displayCap}
@@ -435,10 +509,16 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             )}
 
-            <p className="mx-auto mt-10 max-w-[600px] text-center text-[18px] leading-relaxed text-white">
-              {brandName ? `${brandName} is working with BioStackr` : 'BioStackr'} to measure what {productName}{' '}
-              actually does in real customers. You have been selected as a potential participant.
-            </p>
+            <div className="mx-auto mt-10 max-w-[600px] space-y-4 text-center text-[17px] leading-relaxed text-white/95 sm:text-[18px]">
+              <p>
+                {brandName ? `${brandName} is working with BioStackr` : 'BioStackr'} to measure what {productName}{' '}
+                actually does in real customers.
+              </p>
+              <p className="text-white/90">
+                This is a structured 21-day study designed to capture measurable changes in sleep using daily tracking.
+              </p>
+              <p className="font-medium text-white">You have been invited to apply.</p>
+            </div>
 
             {!showFullMessage ? (
               <div className="mt-10 flex justify-center">
@@ -453,7 +533,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <>
           <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
-          <section className="bg-[#faf9f7] py-14 sm:py-20">
+          <section className="bg-[#faf9f7] py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
               <CohortQualificationSection
                 cohortSlug={cohort.slug}

@@ -28,7 +28,7 @@ export function StudyApplyCta({
 
   return (
     <button type="button" onClick={scrollToForm} className={merged}>
-      Submit my application
+      Apply for a place in the study
     </button>
   )
 }

@@ -20,10 +20,10 @@ function qualFailStorageKey(slug: string): string {
 }
 
 const PRESCRIBE_EXIT =
-  'Thanks for your interest — for this study we need participants not currently on prescription sleep medication. We hope to include you in a future study.'
+  'Thanks for your interest. For this study we need participants not currently on prescription sleep medication. We hope to include you in a future study.'
 
 const CURRENT_PRODUCT_EXIT =
-  'Thanks for your interest — this study needs participants with a clean baseline, which means not currently taking the product. We hope to include you in a future study.'
+  'Thanks for your interest. This study needs participants with a clean baseline, which means not currently taking the product. We hope to include you in a future study.'
 
 const SLEEP_SCREENING_EXIT =
   "Based on your answers, you may not be the right fit for this study. We're looking for participants who currently experience sleep difficulties. Thank you for your interest."
@@ -298,7 +298,13 @@ export function CohortQualificationSection({
 
   return (
     <section id="cohort-apply-form" className="scroll-mt-24">
-      <h2 className="text-center text-[22px] font-semibold text-neutral-900">Apply for a spot</h2>
+      <h2 className="text-center text-[22px] font-semibold text-neutral-900 sm:text-[24px]">
+        Apply for a place in the study
+      </h2>
+      <div className="mx-auto mt-6 max-w-[680px] space-y-2 text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
+        <p>This study is designed to measure real outcomes, not collect opinions.</p>
+        <p>We accept a limited number of participants who meet the criteria.</p>
+      </div>
 
       <div
         className="mx-auto mt-8 max-w-[680px] rounded-xl border bg-white"
@@ -306,11 +312,11 @@ export function CohortQualificationSection({
           borderColor: '#e5e2dc',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           borderRadius: 12,
-          padding: 40,
+          padding: 44,
         }}
       >
         <form onSubmit={onSubmit} className="block" noValidate>
-          <div className="mb-7">
+          <div className="mb-8">
             <label htmlFor="cohort-issue" className="block text-sm font-medium text-neutral-800">
               What is the main issue you&apos;re hoping this supplement will help with?
             </label>
@@ -320,10 +326,7 @@ export function CohortQualificationSection({
             <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
               e.g. I feel exhausted in the morning even when I&apos;ve been in bed for eight hours.
             </p>
-            <p className="mt-3 text-[13px] leading-snug text-neutral-600">
-              The more specific you are, the stronger your application.
-            </p>
-            <div className="relative mt-2">
+            <div className="relative mt-3">
               <textarea
                 id="cohort-issue"
                 name="issue"
@@ -346,15 +349,18 @@ export function CohortQualificationSection({
                 className="min-h-[100px] w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[#C84B2F] focus:outline-none focus:ring-1 focus:ring-[#C84B2F]"
               />
             </div>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              Be specific. Stronger answers are more likely to be selected.
+            </p>
             {issueThanks && !issueError && (
               <p className="mt-2 text-[13px] leading-relaxed text-emerald-700">
-                Thanks — this helps us match you to the right study.
+                Thanks. This helps us match you to the right study.
               </p>
             )}
             {issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
           </div>
 
-          <div className="mb-7">
+          <div className="mb-8">
             <div className="text-sm font-medium text-neutral-800">
               How would you rate your sleep quality over the last month?
             </div>
@@ -404,14 +410,14 @@ export function CohortQualificationSection({
               </div>
             </div>
             <p className="mt-3 text-[13px] leading-relaxed text-neutral-600">
-              We&apos;re looking for participants who currently experience sleep difficulties.
+              We prioritise participants currently experiencing sleep disruption.
             </p>
             {sleepQualityError && (
               <p className="mt-2 text-sm text-red-600">Please select how you&apos;ve been sleeping overall.</p>
             )}
           </div>
 
-          <div className="mb-7">
+          <div className="mb-8">
             <div className="text-sm font-medium text-neutral-800">What best describes your main sleep issue?</div>
             <div className="mt-3 flex flex-wrap gap-2">
               {SLEEP_ISSUE_OPTIONS.map((opt) => {
@@ -448,7 +454,7 @@ export function CohortQualificationSection({
             )}
           </div>
 
-          <div className="mb-7">
+          <div className="mb-8">
             <div className="text-sm font-medium text-neutral-800">
               Are you currently taking {productLabel}?
             </div>
@@ -479,7 +485,7 @@ export function CohortQualificationSection({
             {currentProductError && <p className="mt-2 text-sm text-red-600">Please answer this question to continue.</p>}
           </div>
 
-          <div className="mb-7">
+          <div className="mb-8">
             <div className="text-sm font-medium text-neutral-800">
               Are you currently taking prescription medication for sleep?
             </div>
@@ -504,13 +510,13 @@ export function CohortQualificationSection({
                   setPrescError(false)
                 }}
               >
-                Yes — this would disqualify me
+                Yes. This would disqualify me
               </button>
             </div>
             {prescError && <p className="mt-2 text-sm text-red-600">Please answer this question to continue.</p>}
           </div>
 
-          <div className="mb-7">
+          <div className="mb-8">
             <label
               htmlFor="cohort-commitment"
               className="flex w-full cursor-pointer items-start gap-4 rounded-[8px] p-4 text-left text-[15px] font-medium leading-relaxed text-neutral-800 transition-colors focus-within:ring-2 focus-within:ring-[#C84B2F] focus-within:ring-offset-2"
@@ -530,7 +536,7 @@ export function CohortQualificationSection({
                 required
               />
               <span>
-                I can complete a 30-second check-in each morning for 21 days, starting with 2 check-ins in the next 48
+                I can commit to a 30-second check-in each morning for 21 days, starting with 2 check-ins in the next 48
                 hours.
               </span>
             </label>
@@ -541,10 +547,10 @@ export function CohortQualificationSection({
             className="w-full rounded-[8px] px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C84B2F] focus-visible:ring-offset-2"
             style={{ background: RUST }}
           >
-            Apply for my spot
+            Submit application
           </button>
           <p className="mt-4 text-center text-[12px] leading-relaxed text-neutral-500 sm:text-left">
-            Your application is reviewed and you&apos;ll receive a confirmation by email.
+            Applications are reviewed within 24 hours. Selected participants receive confirmation by email.
           </p>
         </form>
       </div>

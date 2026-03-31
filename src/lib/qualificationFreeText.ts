@@ -3,13 +3,13 @@
  */
 
 export const QUALIFICATION_FREETEXT_PRIMARY_ERROR =
-  'Please tell us a bit more — one sentence describing your specific issue helps us match you to the right study.'
+  'Please tell us a bit more. One sentence describing your specific issue helps us match you to the right study.'
 
 export const QUALIFICATION_FREETEXT_RETRY_ERROR =
   'We need a little more detail to confirm your place. The examples above show the kind of answer that works well.'
 
 export const QUALIFICATION_WAITLIST_HEADLINE =
-  "Thanks for your interest — we'll keep you on the waitlist in case spots open up."
+  "Thanks for your interest. We'll keep you on the waitlist in case spots open up."
 
 const KEYBOARD_PATTERNS = ['asdf', 'qwerty', 'zxcv', '1234'] as const
 
