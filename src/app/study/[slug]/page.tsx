@@ -463,17 +463,27 @@ function IncentiveShelfCard({
   )
 }
 
-/** BioStackr reward card artwork — wide crop (`public/bioshot.png`, 1052×520). */
+/** BioStackr reward card — logo above `bioshot` (`public/bioshot.png`, 1052×520). */
 function BioStackrRewardPhoto() {
   return (
-    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-6 sm:min-h-[260px] sm:px-4 sm:py-10">
+    <div className="flex min-h-[220px] w-full flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:gap-5 sm:px-4 sm:py-8">
+      <Link href="/" className="inline-flex shrink-0 bg-transparent opacity-90 transition-opacity hover:opacity-100">
+        <Image
+          src={BIOSTACKR_LOGO}
+          alt="BioStackr"
+          width={434}
+          height={135}
+          className="h-7 w-auto max-w-[188px] object-contain mix-blend-multiply contrast-[1.03] sm:h-8 sm:max-w-[210px]"
+        />
+        <span className="sr-only">BioStackr home</span>
+      </Link>
       <Image
         src={BIOSTACKR_REWARD_SHOT}
         alt="BioStackr dashboard and outcomes"
         width={1052}
         height={520}
         sizes="(max-width: 768px) 90vw, 360px"
-        className="h-auto w-full max-h-[min(220px,42vw)] max-w-full object-contain object-center drop-shadow-md sm:max-h-[min(260px,38vw)]"
+        className="h-auto w-full max-h-[min(200px,40vw)] max-w-full object-contain object-center drop-shadow-md sm:max-h-[min(240px,36vw)]"
       />
     </div>
   )
@@ -508,7 +518,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
             highlight
             visual={<SureSleepProductPhoto larger />}
             title="3 months of SureSleep from DoNotAge"
-            body="A three-month supply of SureSleep (valued at £153) when you complete all 21 daily check-ins."
+            body="A three-month supply of SureSleep when you complete all 21 daily check-ins."
             tagline="Shipped by DoNotAge so you can keep the routine that worked for you in the study."
             footer="Completion reward"
           />
@@ -520,14 +530,9 @@ function WhatYouReceive({ productName }: { productName: string }) {
             footer="Included for all participants"
           />
         </div>
-        <div className="mx-auto mt-12 max-w-2xl space-y-2 text-center">
-          <p className="text-[15px] font-semibold leading-relaxed text-neutral-800">
-            Total package value: £153+ in DoNotAge product, BioStackr Pro, and your personal outcome report
-          </p>
-          <p className="text-[13px] leading-relaxed text-neutral-500">
-            A clear view of how your sleep responded over 21 days, based on your own data.
-          </p>
-        </div>
+        <p className="mx-auto mt-10 max-w-xl text-center text-[12px] leading-snug text-neutral-500 sm:mt-12 sm:text-[13px]">
+          Every confirmed participant receives all three.
+        </p>
       </div>
     </StudySurfaceLight>
   )
