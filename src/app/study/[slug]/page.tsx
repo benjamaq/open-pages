@@ -349,7 +349,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[5.65rem] w-auto max-w-[min(100%,460px)] object-contain object-left contrast-[1.06] sm:h-[6.3rem] md:h-[6.75rem]"
+      className="h-[6.25rem] w-auto max-w-[min(100%,500px)] object-contain object-left contrast-[1.06] sm:h-[7rem] md:h-[7.5rem]"
       priority
     />
   )
