@@ -8,8 +8,10 @@ import { StudyApplyCta } from './StudyApplyCta'
 import { CohortQualificationSection } from './CohortQualificationSection'
 
 const RUST = '#C84B2F'
-/** Hero + trust footer panel; override image via CSS `--cohort-hero-bg: url(...)` on `:root` or a parent. */
+/** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
+/** Clinical light hero background */
+const HERO_LIGHT_BG = '#FAFAFA'
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
@@ -95,43 +97,37 @@ function HeroCohortStatusCard({
         : 0
 
   return (
-    <div
-      className="study-hero-anchor mx-auto w-full max-w-lg rounded-2xl border border-white/25 px-8 py-7 sm:max-w-xl sm:px-9 sm:py-8"
-      style={{
-        background: 'rgba(255,255,255,0.14)',
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,0.14), 0 0 0 1px rgba(255,255,255,0.07), 0 28px 56px -10px rgba(0,0,0,0.55), 0 0 100px -12px rgba(200,75,47,0.22)',
-      }}
-    >
-      <p className="text-center text-[18px] font-bold leading-snug text-white sm:text-[20px]">
+    <div className="study-hero-anchor mx-auto w-full max-w-lg rounded-2xl border border-[#E5E5E5] bg-white px-8 py-7 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.1),0_4px_18px_rgba(0,0,0,0.06)] sm:max-w-xl sm:px-9 sm:py-8">
+      <p className="text-center text-[18px] font-bold leading-snug text-neutral-900 sm:text-[19px]">
         {displayTotal != null ? (
           <>
-            Limited cohort: <span className="tabular-nums text-white">{displayTotal}</span> participants
+            Limited cohort: <span className="tabular-nums">{displayTotal}</span> participants
           </>
         ) : (
           'Limited cohort'
         )}
       </p>
-      <p className="mt-2 text-center text-[15px] font-medium leading-relaxed text-white/78">
+      <p className="mt-2 text-center text-[14px] font-medium leading-relaxed text-neutral-500">
         Applications reviewed within 24 hours
       </p>
       {displayTotal != null ? (
-        <div className="mt-5 border-t border-white/18 pt-5">
-          <p className="mb-3 text-center text-[12px] tabular-nums tracking-tight text-white/52">
-            {confirmed} of {displayTotal} places confirmed
+        <div className="mt-5 border-t border-neutral-200 pt-5">
+          <p className="mb-3 text-center text-[14px] font-medium tabular-nums tracking-tight text-neutral-700 sm:text-[15px]">
+            {confirmed} / {displayTotal} places filled
           </p>
-          <div className="h-3.5 w-full overflow-hidden rounded-full bg-black/45 ring-1 ring-black/20">
+          <div className="h-[7px] w-full overflow-hidden rounded-full bg-neutral-200">
             <div
-              className="animate-study-hero-progress-fill h-full min-w-0 rounded-full transition-[width] duration-700 ease-out"
+              className="h-full min-w-0 rounded-full transition-[width] duration-1000 ease-out"
               style={{
                 width: `${pct}%`,
                 background: RUST,
+                boxShadow: '0 0 0 1px rgba(200,75,47,0.2)',
               }}
               aria-valuenow={Math.round(pct)}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label={
-                displayTotal != null ? `Places confirmed ${Math.round(pct)} percent` : 'Study capacity'
+                displayTotal != null ? `Places filled ${Math.round(pct)} percent` : 'Study capacity'
               }
               role="progressbar"
             />
@@ -185,20 +181,20 @@ function SectionDonotageLogoBlack({ className = '' }: { className?: string }) {
         alt="DoNotAge.org"
         width={200}
         height={200}
-        className="h-16 w-auto object-contain opacity-95 sm:h-20 md:h-[5.5rem]"
+        className="h-11 w-auto object-contain opacity-95 sm:h-12"
       />
     </div>
   )
 }
 
-/** Partner marks for light-background bands (clinical study landing). */
+/** Partner marks below hero (smaller than hero bar). */
 function StudyLightSectionBrandRow({ className = '' }: { className?: string }) {
   return (
     <div
-      className={`mb-8 flex flex-col items-center gap-6 sm:mb-10 sm:flex-row sm:justify-center sm:gap-12 ${className}`}
+      className={`mb-8 flex flex-col items-center gap-5 sm:mb-10 sm:flex-row sm:justify-center sm:gap-10 ${className}`}
     >
       <SectionDonotageLogoBlack className="!mb-0" />
-      <div className="hidden h-14 w-px shrink-0 bg-neutral-200 sm:block md:h-16" aria-hidden />
+      <div className="hidden h-10 w-px shrink-0 bg-neutral-200 sm:block sm:h-11" aria-hidden />
       <SectionBioStackrLogoLight className="!mb-0" />
     </div>
   )
@@ -311,11 +307,11 @@ function HowItWorksSteps() {
 function HeroDonotageLogo() {
   return (
     <Image
-      src={DNA_LOGO_WHITE}
+      src={DNA_LOGO_BLACK}
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[100px] w-auto max-w-[min(100%,320px)] object-contain object-left sm:h-[120px] md:h-[140px]"
+      className="h-10 w-auto max-w-[150px] object-contain object-left opacity-[0.88] sm:h-11 sm:max-w-[170px]"
       priority
     />
   )
@@ -325,14 +321,14 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start sm:self-center"
+      className="inline-flex shrink-0 items-center self-start opacity-[0.88] transition-opacity hover:opacity-100 sm:self-center"
     >
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-12 w-auto max-w-[min(100%,280px)] brightness-125 contrast-100 sm:h-14 md:h-16"
+        className="h-9 w-auto max-w-[min(100%,200px)] object-contain sm:h-10 sm:max-w-[220px]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -349,7 +345,7 @@ function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
           alt="BioStackr"
           width={434}
           height={135}
-          className="h-12 w-auto max-w-[280px] sm:h-14 md:h-16"
+          className="h-8 w-auto max-w-[200px] object-contain sm:h-9 sm:max-w-[220px]"
         />
         <span className="sr-only">BioStackr home</span>
       </Link>
@@ -626,63 +622,45 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const productName = String(cohort.product_name || 'Study product')
   const brandName = String(cohort.brand_name || '')
+  const brandDisplay = brandName.trim() || 'DoNotAge'
 
   return (
     <div className="flex flex-1 flex-col text-neutral-900">
       <div className="flex flex-1 flex-col">
-      {/* Hero: optional art via `--cohort-hero-bg`; default depth from orbs + grain. */}
       <section
-        className="relative w-full overflow-hidden px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8"
+        className="relative w-full overflow-hidden border-b border-neutral-200/80 bg-[#FAFAFA] px-4 pb-12 pt-6 sm:px-6 sm:pb-14 sm:pt-8"
         style={{
-          backgroundColor: DARK_PANEL_BG,
-          backgroundImage: 'var(--cohort-hero-bg, none)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
+          backgroundColor: HERO_LIGHT_BG,
         }}
       >
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-          <div
-            className="absolute -top-28 left-1/2 h-[min(420px,55vw)] w-[min(520px,90vw)] -translate-x-1/2 rounded-full opacity-[0.13] blur-3xl"
-            style={{ background: RUST }}
-          />
-          <div
-            className="absolute -bottom-40 -right-4 h-72 w-72 rounded-full opacity-[0.09] blur-3xl sm:h-96 sm:w-96"
-            style={{ background: '#5e6e94' }}
-          />
-          <div className="absolute inset-0 opacity-[0.5]" style={{ backgroundImage: HERO_GRAIN_BG }} />
-        </div>
         <div
           className="pointer-events-none absolute inset-0 z-0"
           aria-hidden
           style={{
             background:
-              'radial-gradient(ellipse 90% 75% at 50% 20%, transparent 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.52) 100%)',
+              'radial-gradient(ellipse 100% 70% at 50% -30%, rgba(0,0,0,0.045) 0%, transparent 50%), radial-gradient(ellipse 80% 50% at 50% 120%, rgba(0,0,0,0.02) 0%, transparent 45%)',
           }}
         />
         <div className="relative z-10 mx-auto max-w-5xl">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
             <HeroDonotageLogo />
             <HeroBioStackrLogo />
           </div>
 
-          <div className="mx-auto mt-12 max-w-3xl text-center sm:mt-16">
-            <p
-              className="text-[11px] font-semibold uppercase tracking-[0.1em]"
-              style={{ color: RUST }}
-            >
+          <div className="mx-auto mt-8 max-w-2xl text-center sm:mt-10">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500 sm:text-[11px]">
               Private study invitation
             </p>
-            <h1 className="mt-4 text-[32px] font-bold leading-tight text-white sm:text-[42px]">
+            <h1 className="mt-3 text-[30px] font-bold leading-[1.15] tracking-tight text-neutral-900 sm:text-[40px]">
               {productName}
             </h1>
-            <p className="mt-2 text-[17px] text-white/65 sm:text-[18px]">21-day customer outcomes study</p>
-            <div className="mx-auto mt-8 flex justify-center">
-              <div className="h-px w-[60px]" style={{ background: RUST }} />
-            </div>
+            <p className="mt-1.5 text-[13px] font-medium text-neutral-500 sm:text-[14px]">by {brandDisplay}</p>
+            <p className="mt-3 text-[15px] font-normal leading-snug text-neutral-600 sm:text-[16px]">
+              21-day customer outcomes study
+            </p>
 
             {!showFullMessage ? (
-              <div className="mt-6 sm:mt-7">
+              <div className="mt-5 sm:mt-6">
                 <HeroCohortStatusCard
                   confirmed={confirmedCount}
                   maxParticipants={maxP}
@@ -692,28 +670,29 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             ) : (
               <div
-                className="mx-auto mt-10 max-w-md rounded-xl border border-white/20 px-5 py-4 text-center text-sm text-white/80"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
+                className="mx-auto mt-6 max-w-lg rounded-2xl border border-[#E5E5E5] bg-white px-6 py-4 text-center text-[15px] font-medium text-neutral-600 shadow-md"
                 role="status"
               >
                 This study is now full.
               </div>
             )}
 
-            <div className="mx-auto mt-5 max-w-[600px] space-y-3 text-center text-[17px] leading-relaxed text-white/95 sm:mt-6 sm:text-[18px]">
+            <div className="mx-auto mt-4 max-w-xl space-y-2.5 text-center text-[15px] leading-relaxed text-neutral-800 sm:mt-5 sm:text-[16px]">
               <p>
-                {brandName ? `${brandName} is working with BioStackr` : 'BioStackr'} to measure what {productName}{' '}
-                actually does in real customers.
+                {brandDisplay} is working with BioStackr to measure how {productName} performs in real customers.
               </p>
-              <p className="text-white/90">
-                This is a structured 21-day study designed to capture measurable changes in sleep using daily tracking.
+              <p className="text-neutral-700">
+                This 21-day study tracks measurable changes in sleep using simple daily check-ins.
               </p>
-              <p className="font-medium text-white">You have been invited to apply.</p>
+              <p className="font-medium text-neutral-900">You&apos;ve been invited to apply.</p>
             </div>
 
             {!showFullMessage ? (
-              <div className="mt-6 flex justify-center sm:mt-7">
-                <StudyApplyCta variant="hero" />
+              <div className="mt-4 flex flex-col items-center sm:mt-5">
+                <StudyApplyCta variant="heroLight" />
+                <p className="mt-3 max-w-md px-2 text-center text-[11px] font-medium leading-snug text-neutral-500 sm:text-[12px]">
+                  Limited availability — applications reviewed within 24 hours
+                </p>
               </div>
             ) : null}
           </div>
