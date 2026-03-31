@@ -76,19 +76,57 @@ function SpotCounterCard({
   )
 }
 
-function HowItWorksSteps({ studyDays }: { studyDays: number }) {
+function IconHowApply() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 11a4 4 0 100-8 4 4 0 000 8z"
+        stroke={RUST}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M4 21a8 8 0 0116 0" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconHowCheckin() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="4" y="5" width="16" height="15" rx="2" stroke={RUST} strokeWidth="1.5" />
+      <path d="M8 3v4M16 3v4M4 11h16" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9 15l2 2 4-4" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function IconHowResults() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 19V5" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M4 19h16" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M7 15l3-4 3 2 4-6" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function HowItWorksSteps() {
   const steps = [
     {
-      title: 'Apply today',
-      body: `Selected participants complete a short application. We confirm your spot within 24 hours.`,
+      icon: <IconHowApply />,
+      title: 'Apply for your spot',
+      line: 'A short application. Confirmed within 24 hours.',
     },
     {
-      title: 'Track daily',
-      body: `30 seconds each morning for ${studyDays} days. No wearable required.`,
+      icon: <IconHowCheckin />,
+      title: 'Check in each morning',
+      line: '30 seconds. Four questions. No wearable needed.',
     },
     {
-      title: 'Get your result',
-      body: `Your personal before and after — delivered privately at the end of the study.`,
+      icon: <IconHowResults />,
+      title: 'Get your personal results',
+      line: 'Your before and after, delivered privately.',
     },
   ]
   return (
@@ -96,20 +134,15 @@ function HowItWorksSteps({ studyDays }: { studyDays: number }) {
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-semibold text-neutral-900">How the study works</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {steps.map((s, i) => (
+          {steps.map((s) => (
             <div
               key={s.title}
-              className="rounded-xl border bg-white px-6 py-8"
+              className="rounded-xl border bg-white px-6 py-7"
               style={{ borderColor: '#e5e2dc' }}
             >
-              <span
-                className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide"
-                style={{ borderColor: RUST, color: RUST, background: 'rgba(200, 75, 47, 0.06)' }}
-              >
-                Step {i + 1}
-              </span>
-              <h3 className="mt-4 text-[15px] font-semibold text-neutral-900">{s.title}</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{s.body}</p>
+              <div className="mb-1">{s.icon}</div>
+              <h3 className="text-[15px] font-bold leading-snug text-neutral-900">{s.title}</h3>
+              <p className="mt-2 text-[13px] leading-snug text-neutral-600">{s.line}</p>
             </div>
           ))}
         </div>
@@ -118,16 +151,10 @@ function HowItWorksSteps({ studyDays }: { studyDays: number }) {
   )
 }
 
-/** Fixed height for incentive card media row (logos / product shot). */
-const INCENTIVE_MEDIA_H = 'h-[148px]'
-
-/** Placeholder product silhouette — swap container for real DoNotAge photography when available. */
-function SureSleepProductPlaceholder({ productName }: { productName: string }) {
+/** Bottle silhouette only — swap for product photo when available. */
+function ProductBottleVisual() {
   return (
-    <div
-      className={`flex w-full ${INCENTIVE_MEDIA_H} flex-col items-center justify-center rounded-lg border bg-white px-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]`}
-      style={{ borderColor: '#eae8e4' }}
-    >
+    <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center bg-white px-4">
       <svg
         width="56"
         height="72"
@@ -145,15 +172,11 @@ function SureSleepProductPlaceholder({ productName }: { productName: string }) {
         />
         <path d="M20 22h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
       </svg>
-      <span className="mt-2 max-w-[200px] text-center text-[12px] font-semibold leading-tight text-neutral-700">
-        {productName}
-      </span>
     </div>
   )
 }
 
-/** Same treatment as hero &quot;Brand logo&quot; — light-card variant. */
-function DonotageLogoPlaceholderLight() {
+function DonotageLogoMark() {
   return (
     <div
       className="flex h-11 min-w-[120px] max-w-[180px] items-center justify-center rounded-md border bg-white px-4 shadow-sm"
@@ -165,9 +188,36 @@ function DonotageLogoPlaceholderLight() {
   )
 }
 
-function WhatYouReceive({ productName }: { productName: string }) {
-  const headingProduct = `${productName} for the full 21 days`
+type IncentiveShelfCardProps = {
+  visual: ReactNode
+  bold: string
+  muted: string
+  tag: string
+}
 
+function IncentiveShelfCard({ visual, bold, muted, tag }: IncentiveShelfCardProps) {
+  return (
+    <div
+      className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[420px]"
+      style={{ borderColor: '#e5e2dc' }}
+    >
+      <div className="flex min-h-0 flex-[3] flex-col bg-neutral-50/30">{visual}</div>
+      <div className="flex flex-[2] flex-col justify-between px-5 pb-4 pt-4">
+        <div>
+          <h3 className="truncate text-[15px] font-bold leading-snug text-neutral-900" title={bold}>
+            {bold}
+          </h3>
+          <p className="mt-1.5 text-[13px] leading-snug text-neutral-500">{muted}</p>
+        </div>
+        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+          {tag}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function WhatYouReceive({ productName }: { productName: string }) {
   return (
     <section className="bg-white py-14 sm:py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -178,100 +228,45 @@ function WhatYouReceive({ productName }: { productName: string }) {
         >
           Every confirmed participant receives all three.
         </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {/* Card 01 — product */}
-          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
-            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
-              01
-            </div>
-            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">{headingProduct}</h3>
-            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
-              Supplied by DoNotAge. Shipped before tracking begins.
-            </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Your product arrives before the study starts so you can begin your baseline check-ins right away.
-            </p>
-            <div className="mt-6 flex flex-col">
-              <SureSleepProductPlaceholder productName={productName} />
-              <p className="mt-2 text-center text-[11px] leading-snug text-neutral-500">Supplied and shipped by DoNotAge.</p>
-            </div>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
-              Value: included
-            </p>
-          </div>
-
-          {/* Card 02 — store credit */}
-          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
-            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
-              02
-            </div>
-            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">£45–50 DoNotAge store credit</h3>
-            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
-              Awarded when you complete all 21 daily check-ins.
-            </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Use it on any DoNotAge product. A thank-you for helping us prove what {productName} can do.
-            </p>
-            <div
-              className={`mt-6 flex ${INCENTIVE_MEDIA_H} flex-col items-center justify-center gap-3 rounded-lg border bg-[#faf9f7] px-4`}
-              style={{ borderColor: '#e5e2dc' }}
-            >
-              <DonotageLogoPlaceholderLight />
-              <p className="text-center text-[20px] font-bold leading-tight sm:text-[22px]" style={{ color: RUST }}>
-                £45–50 store credit
-              </p>
-            </div>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
-              On completion
-            </p>
-          </div>
-
-          {/* Card 03 — BioStackr Pro */}
-          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
-            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
-              03
-            </div>
-            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">3 months of BioStackr Pro</h3>
-            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
-              The supplement tracking platform running this study.
-            </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Track your own supplement stack, see your personal results from this study, and keep tracking after it
-              ends.
-            </p>
-            <div
-              className={`mt-6 flex ${INCENTIVE_MEDIA_H} flex-col items-center justify-center gap-2 rounded-lg border bg-[#faf9f7] px-3 py-2`}
-              style={{ borderColor: '#e5e2dc' }}
-            >
-              <Image
-                src="/brand/biostackr-logo.png"
-                alt="BioStackr"
-                width={160}
-                height={32}
-                className="h-8 w-auto max-w-[min(100%,152px)] object-contain object-center"
-              />
-              <ul className="w-full max-w-[220px] space-y-0.5 text-[11px] leading-snug text-neutral-600">
-                <li className="flex gap-2">
-                  <span className="text-neutral-400" aria-hidden>
-                    •
-                  </span>
-                  <span>Track your supplement stack</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-neutral-400" aria-hidden>
-                    •
-                  </span>
-                  <span>See your personal study results</span>
-                </li>
-              </ul>
-            </div>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
-              Value: included
-            </p>
-          </div>
+        <div className="mt-10 grid gap-6 md:grid-cols-3 md:items-stretch">
+          <IncentiveShelfCard
+            visual={<ProductBottleVisual />}
+            bold={`${productName} for 21 days`}
+            muted="Shipped to you before the study begins."
+            tag="VALUE: INCLUDED"
+          />
+          <IncentiveShelfCard
+            visual={
+              <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 py-6">
+                <DonotageLogoMark />
+                <p className="text-[26px] font-bold leading-none sm:text-[28px]" style={{ color: RUST }}>
+                  £45–50
+                </p>
+              </div>
+            }
+            bold="DoNotAge store credit"
+            muted="Yours when you complete all 21 check-ins."
+            tag="ON COMPLETION"
+          />
+          <IncentiveShelfCard
+            visual={
+              <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 py-6">
+                <Image
+                  src="/brand/biostackr-logo.png"
+                  alt="BioStackr"
+                  width={180}
+                  height={44}
+                  className="h-11 w-auto max-w-[min(90%,180px)] object-contain object-center"
+                />
+              </div>
+            }
+            bold="3 months BioStackr Pro"
+            muted="Track your stack. See your personal study results."
+            tag="VALUE: INCLUDED"
+          />
         </div>
-        <p className="mx-auto mt-10 max-w-2xl text-center text-[14px] font-medium leading-relaxed text-neutral-800">
-          Combined value: over £90 — plus your personal study results, delivered privately at the end of the study.
+        <p className="mx-auto mt-10 max-w-2xl text-center text-[13px] leading-relaxed text-neutral-500">
+          Combined value: over £90 — plus your personal results, delivered privately.
         </p>
       </div>
     </section>
@@ -362,7 +357,6 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const capacityFull = isCohortCapacityFull(maxP, confirmedCount)
   const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
 
-  const studyDays = typeof cohort.study_days === 'number' ? cohort.study_days : 21
   const productName = String(cohort.product_name || 'Study product')
   const brandName = String(cohort.brand_name || '')
 
@@ -454,7 +448,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
       {!showFullMessage ? (
         <>
-          <HowItWorksSteps studyDays={studyDays} />
+          <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
           <section className="bg-[#faf9f7] py-14 sm:py-20">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
