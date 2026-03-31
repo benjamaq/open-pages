@@ -10,8 +10,8 @@ import { CohortQualificationSection } from './CohortQualificationSection'
 const RUST = '#C84B2F'
 /** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
-/** Clinical light hero background */
-const HERO_LIGHT_BG = '#FAFAFA'
+/** Hero + upper study stack — pure white for continuous surface with logos */
+const HERO_LIGHT_BG = '#FFFFFF'
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
@@ -30,12 +30,18 @@ function StudySurfaceLight({
   children,
   className = '',
   gradientClass = 'from-neutral-50/85 via-[#faf9f7] to-neutral-100/45',
+  /** Solid white, no noise — use with lower sections when avoiding tint shifts */
+  continuous = false,
 }: {
   children: ReactNode
   className?: string
   /** Tailwind gradient stops for `bg-gradient-to-b`. */
   gradientClass?: string
+  continuous?: boolean
 }) {
+  if (continuous) {
+    return <div className={`relative bg-white ${className}`}>{children}</div>
+  }
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <div
@@ -116,17 +122,17 @@ function HeroCohortStatusCard({
           )}
         </p>
         {displayTotal != null ? (
-          <p className="mt-3 text-center text-[22px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-3.5 sm:text-[28px]">
+          <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
             {confirmed} of {displayTotal} places filled
           </p>
         ) : null}
         <p
-          className={`text-center text-[12px] font-medium leading-relaxed text-neutral-500 sm:text-[13px] ${displayTotal != null ? 'mt-2.5' : 'mt-2'}`}
+          className={`text-center text-[12px] font-medium leading-relaxed text-neutral-600 sm:text-[13px] ${displayTotal != null ? 'mt-3' : 'mt-2'}`}
         >
           Applications reviewed within 24 hours
         </p>
         {displayTotal != null ? (
-          <div className="mt-5 w-full overflow-hidden rounded-full bg-neutral-300 ring-1 ring-neutral-400/25">
+          <div className="mt-6 w-full overflow-hidden rounded-full bg-neutral-300 ring-1 ring-neutral-400/25">
             <div
               className="h-[9px] min-w-0 rounded-full transition-[width] duration-1000 ease-out sm:h-[10px]"
               style={{
@@ -265,9 +271,8 @@ function HowItWorksSteps() {
   )
 
   return (
-    <section className="pt-20 sm:pt-24 md:pt-28">
-      <StudySurfaceLight className="pb-16 sm:pb-24">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+    <section className="border-t border-neutral-200/50 bg-white pt-12 pb-16 sm:pt-14 sm:pb-24 md:pt-16">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <StudyLightSectionBrandRow />
           <h2 className="text-center text-[17px] font-semibold tracking-tight text-neutral-600 sm:text-[18px]">
             How the study works
@@ -309,8 +314,7 @@ function HowItWorksSteps() {
               ))}
             </div>
           </div>
-        </div>
-      </StudySurfaceLight>
+      </div>
     </section>
   )
 }
@@ -322,7 +326,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-24 w-auto max-w-[min(100%,280px)] object-contain object-left opacity-[0.86] sm:h-28 sm:max-w-[320px] md:h-32"
+      className="h-[4.35rem] w-auto max-w-[min(100%,240px)] object-contain object-left contrast-[1.06] sm:h-20 sm:max-w-[260px] md:h-[5.35rem] md:max-w-[280px]"
       priority
     />
   )
@@ -332,14 +336,15 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start opacity-[0.86] transition-opacity hover:opacity-100 sm:self-center"
+      className="inline-flex shrink-0 items-center self-start transition-opacity hover:opacity-95 sm:self-center"
     >
+      {/* multiply helps white bounding box in raster logo blend into #FFFFFF page */}
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-[4.25rem] w-auto max-w-[min(100%,380px)] object-contain sm:h-[4.85rem] md:h-[5.35rem]"
+        className="h-[4.5rem] w-auto max-w-[min(100%,400px)] object-contain mix-blend-multiply contrast-[1.02] sm:h-[5.15rem] md:h-[5.65rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -479,7 +484,7 @@ function BioStackrDashboardMock() {
 
 function WhatYouReceive({ productName }: { productName: string }) {
   return (
-    <StudySurfaceLight className="py-16 sm:py-24" gradientClass="from-white via-neutral-50/35 to-[#f6f5f3]">
+    <StudySurfaceLight continuous className="border-t border-neutral-200/50 py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -639,17 +644,14 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     <div className="flex flex-1 flex-col text-neutral-900">
       <div className="flex flex-1 flex-col">
       <section
-        className="relative w-full overflow-hidden border-b border-neutral-200/80 bg-[#FAFAFA] px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
-        style={{
-          backgroundColor: HERO_LIGHT_BG,
-        }}
+        className="relative w-full overflow-hidden bg-white px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
+        style={{ backgroundColor: HERO_LIGHT_BG }}
       >
         <div
           className="pointer-events-none absolute inset-0 z-0"
           aria-hidden
           style={{
-            background:
-              'radial-gradient(ellipse 100% 70% at 50% -30%, rgba(0,0,0,0.045) 0%, transparent 50%), radial-gradient(ellipse 80% 50% at 50% 120%, rgba(0,0,0,0.02) 0%, transparent 45%)',
+            background: 'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,0,0,0.018) 0%, transparent 52%)',
           }}
         />
         <div className="relative z-10 mx-auto max-w-5xl">
@@ -659,14 +661,16 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </div>
 
           <div className="mx-auto mt-11 max-w-2xl text-center sm:mt-14 md:mt-16">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500 sm:text-[11px]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-neutral-600 sm:text-[12px]">
               Private study invitation
             </p>
-            <h1 className="mt-1.5 text-[34px] font-bold leading-[1.12] tracking-tight text-neutral-900 sm:mt-2 sm:text-[44px] md:text-[48px]">
-              {productName}
-            </h1>
-            <p className="mt-1 text-[12px] font-medium text-neutral-500 sm:text-[13px]">by {brandDisplay}</p>
-            <p className="mt-1.5 text-[14px] font-normal leading-snug text-neutral-500 sm:text-[15px]">
+            <div className="mt-2 flex flex-col items-center">
+              <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight text-neutral-900 sm:text-[44px] md:text-[48px]">
+                {productName}
+              </h1>
+              <p className="mt-0.5 text-[14px] font-semibold text-neutral-700 sm:text-[15px]">by {brandDisplay}</p>
+            </div>
+            <p className="mt-2 text-[13px] font-normal leading-snug text-neutral-600 sm:mt-2.5 sm:text-[14px]">
               21-day customer outcomes study
             </p>
 
@@ -692,19 +696,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             )}
 
-            <div className="mx-auto mt-3 max-w-xl space-y-2 text-center text-[15px] leading-relaxed text-neutral-800 sm:mt-3.5 sm:text-[16px]">
-              <p>
+            <div className="mx-auto mt-3 max-w-xl space-y-1.5 text-center text-[17px] leading-[1.48] text-neutral-800 sm:mt-3.5 sm:text-[17px]">
+              <p className="font-medium text-neutral-800">
                 {brandDisplay} is working with BioStackr to measure how {productName} performs in real customers.
               </p>
               <p className="text-neutral-700">
-                Track measurable changes in sleep over 21 days using simple daily check-ins.
+                Track measurable changes in your sleep over 21 days with simple daily check-ins.
               </p>
             </div>
 
             {!showFullMessage ? (
-              <div className="mt-3 flex flex-col items-center sm:mt-3.5">
+              <div className="mt-4 flex flex-col items-center sm:mt-5">
                 <StudyApplyCta variant="heroLight" />
-                <p className="mt-2.5 max-w-md px-2 text-center text-[11px] font-medium leading-snug text-neutral-500 sm:mt-3 sm:text-[12px]">
+                <p className="mt-2 max-w-md px-2 text-center text-[12px] font-medium leading-snug text-neutral-600 sm:text-[13px]">
                   Limited availability — applications reviewed within 24 hours
                 </p>
               </div>
@@ -717,7 +721,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <>
           <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
-          <StudySurfaceLight className="py-16 sm:py-24">
+          <StudySurfaceLight continuous className="border-t border-neutral-200/50 py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
               <StudyLightSectionBrandRow />
               <CohortQualificationSection
