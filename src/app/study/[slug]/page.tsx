@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -20,6 +20,52 @@ const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
 
 /** Subtle noise overlay when no `--cohort-hero-bg` photograph is set. */
 const HERO_GRAIN_BG = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>")`
+
+/** Faint noise for light study sections (white / warm gray). */
+const STUDY_LIGHT_NOISE = HERO_GRAIN_BG
+
+function StudySurfaceLight({
+  children,
+  className = '',
+  gradientClass = 'from-neutral-50/85 via-[#faf9f7] to-neutral-100/45',
+}: {
+  children: ReactNode
+  className?: string
+  /** Tailwind gradient stops for `bg-gradient-to-b`. */
+  gradientClass?: string
+}) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.32]"
+        style={{ backgroundImage: STUDY_LIGHT_NOISE }}
+        aria-hidden
+      />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-b ${gradientClass}`}
+        aria-hidden
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
+}
+
+function StepRowConnector() {
+  return (
+    <div className="flex w-9 shrink-0 select-none flex-col items-center justify-center self-stretch pt-14 text-neutral-300/90 sm:w-11 sm:pt-16">
+      <svg width="36" height="20" viewBox="0 0 36 20" fill="none" aria-hidden className="sm:w-10">
+        <path
+          d="M2 10h22M22 6l6 4-6 4"
+          stroke="currentColor"
+          strokeWidth="1.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.85"
+        />
+      </svg>
+    </div>
+  )
+}
 
 function HeroCohortStatusCard({
   confirmed,
@@ -50,46 +96,46 @@ function HeroCohortStatusCard({
 
   return (
     <div
-      className="mx-auto w-full max-w-md rounded-xl border border-white/20 px-5 py-5 sm:px-6 sm:py-6"
+      className="study-hero-anchor mx-auto w-full max-w-lg rounded-2xl border border-white/25 px-8 py-7 sm:max-w-xl sm:px-9 sm:py-8"
       style={{
-        background: 'rgba(255,255,255,0.08)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        background: 'rgba(255,255,255,0.14)',
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.14), 0 0 0 1px rgba(255,255,255,0.07), 0 28px 56px -10px rgba(0,0,0,0.55), 0 0 100px -12px rgba(200,75,47,0.22)',
       }}
     >
-      <p className="text-center text-[17px] font-bold leading-snug text-white sm:text-[19px]">
+      <p className="text-center text-[18px] font-bold leading-snug text-white sm:text-[20px]">
         {displayTotal != null ? (
           <>
-            Limited cohort: <span className="tabular-nums text-white/95">{displayTotal}</span> participants
+            Limited cohort: <span className="tabular-nums text-white">{displayTotal}</span> participants
           </>
         ) : (
           'Limited cohort'
         )}
       </p>
-      <p className="mt-2 text-center text-[14px] font-medium leading-relaxed text-white/75">
+      <p className="mt-2 text-center text-[15px] font-medium leading-relaxed text-white/78">
         Applications reviewed within 24 hours
       </p>
       {displayTotal != null ? (
-        <p className="mt-2 text-center text-[12px] tabular-nums tracking-tight text-white/50">
-          {confirmed} of {displayTotal} places confirmed
-        </p>
-      ) : null}
-      {displayTotal != null ? (
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
-          <div
-            className="h-full rounded-full transition-[width] duration-500 ease-out"
-            style={{
-              width: `${pct}%`,
-              background: RUST,
-              boxShadow: '0 0 16px rgba(200, 75, 47, 0.55), 0 0 4px rgba(200, 75, 47, 0.45)',
-            }}
-            aria-valuenow={Math.round(pct)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={
-              displayTotal != null ? `Places confirmed ${Math.round(pct)} percent` : 'Study capacity'
-            }
-            role="progressbar"
-          />
+        <div className="mt-5 border-t border-white/18 pt-5">
+          <p className="mb-3 text-center text-[12px] tabular-nums tracking-tight text-white/52">
+            {confirmed} of {displayTotal} places confirmed
+          </p>
+          <div className="h-3.5 w-full overflow-hidden rounded-full bg-black/45 ring-1 ring-black/20">
+            <div
+              className="animate-study-hero-progress-fill h-full min-w-0 rounded-full transition-[width] duration-700 ease-out"
+              style={{
+                width: `${pct}%`,
+                background: RUST,
+              }}
+              aria-valuenow={Math.round(pct)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={
+                displayTotal != null ? `Places confirmed ${Math.round(pct)} percent` : 'Study capacity'
+              }
+              role="progressbar"
+            />
+          </div>
         </div>
       ) : null}
     </div>
@@ -98,7 +144,7 @@ function HeroCohortStatusCard({
 
 function IconHowApply() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M12 11a4 4 0 100-8 4 4 0 000 8z"
         stroke={RUST}
@@ -113,7 +159,7 @@ function IconHowApply() {
 
 function IconHowCheckin() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="4" y="5" width="16" height="15" rx="2" stroke={RUST} strokeWidth="1.5" />
       <path d="M8 3v4M16 3v4M4 11h16" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
       <path d="M9 15l2 2 4-4" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -123,7 +169,7 @@ function IconHowCheckin() {
 
 function IconHowResults() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M4 19V5" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
       <path d="M4 19h16" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
       <path d="M7 15l3-4 3 2 4-6" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -161,43 +207,103 @@ function StudyLightSectionBrandRow({ className = '' }: { className?: string }) {
 function HowItWorksSteps() {
   const steps = [
     {
+      step: 'STEP 1',
       icon: <IconHowApply />,
       title: 'Apply for a place in the study',
       line: 'A short application to assess fit. Selected participants are confirmed within 24 hours.',
+      emphasis: 'light' as const,
     },
     {
+      step: 'STEP 2',
       icon: <IconHowCheckin />,
       title: 'Track your results daily',
       line: 'A 30-second morning check-in capturing measurable changes across key outcomes. No wearable required.',
+      emphasis: 'strong' as const,
     },
     {
+      step: 'STEP 3',
       icon: <IconHowResults />,
       title: 'See what actually changed for you',
       line: 'A personal outcome report showing how your sleep responded over 21 days, built from your own tracked data.',
+      emphasis: 'medium' as const,
     },
   ]
-  return (
-    <section className="bg-[#faf9f7] py-16 sm:py-24">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <StudyLightSectionBrandRow />
-        <h2 className="text-center text-[22px] font-bold text-neutral-900">How the study works</h2>
-        <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-neutral-600 sm:text-[15px]">
-          A structured 21-day study designed to measure real changes in real people.
-        </p>
-        <div className="mt-10 grid gap-8 md:grid-cols-3 md:items-stretch">
-          {steps.map((s) => (
-            <div
-              key={s.title}
-              className="flex h-full min-h-0 flex-col rounded-xl border bg-white px-7 py-9"
-              style={{ borderColor: '#e5e2dc' }}
-            >
-              <div className="mb-3 shrink-0">{s.icon}</div>
-              <h3 className="text-[15px] font-extrabold leading-snug text-neutral-900">{s.title}</h3>
-              <p className="mt-3 text-[13px] leading-relaxed text-neutral-600">{s.line}</p>
-            </div>
-          ))}
-        </div>
+
+  const cardClass = (emphasis: 'light' | 'medium' | 'strong') => {
+    const base =
+      'flex h-full min-h-0 flex-col rounded-xl border px-7 py-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg'
+    if (emphasis === 'light') {
+      return `${base} border-neutral-200/70 bg-white/75 shadow-sm hover:shadow-md`
+    }
+    if (emphasis === 'strong') {
+      return `${base} z-[1] border-neutral-200 bg-white shadow-[0_12px_40px_-8px_rgba(26,31,46,0.18)] ring-1 ring-neutral-900/[0.06] hover:shadow-[0_20px_48px_-10px_rgba(26,31,46,0.22)]`
+    }
+    return `${base} border-neutral-200/90 bg-white/95 shadow-md hover:shadow-xl`
+  }
+
+  const renderCard = (s: (typeof steps)[0]) => (
+    <div key={s.title} className={cardClass(s.emphasis)}>
+      <div className="mb-4 flex h-[3.5rem] w-[3.5rem] shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/[0.12] sm:h-16 sm:w-16">
+        {s.icon}
       </div>
+      <p
+        className="text-[11px] font-semibold tracking-[0.2em] text-neutral-400/90 sm:text-[12px]"
+        style={{ fontVariant: 'small-caps' }}
+      >
+        {s.step}
+      </p>
+      <h3 className="mt-2 text-[17px] font-bold leading-snug text-neutral-900 sm:text-[18px]">{s.title}</h3>
+      <p className="mt-3 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{s.line}</p>
+    </div>
+  )
+
+  return (
+    <section className="pt-20 sm:pt-24 md:pt-28">
+      <StudySurfaceLight className="pb-16 sm:pb-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <StudyLightSectionBrandRow />
+          <h2 className="text-center text-[17px] font-semibold tracking-tight text-neutral-600 sm:text-[18px]">
+            How the study works
+          </h2>
+          <p className="mx-auto mt-2 max-w-3xl text-center text-[13px] leading-relaxed text-neutral-500/90 sm:text-[14px]">
+            A structured 21-day study designed to measure real changes in real people.
+          </p>
+          <div className="relative mt-10 md:mt-12">
+            <div
+              className="pointer-events-none absolute left-[6%] right-[6%] top-[3.25rem] hidden h-px bg-gradient-to-r from-transparent via-neutral-200/85 to-transparent md:block"
+              aria-hidden
+            />
+            <div className="hidden items-stretch md:flex md:justify-center">
+              {steps.map((s, i) => (
+                <Fragment key={s.title}>
+                  <div className="flex min-w-0 flex-1 basis-0 max-w-[21rem] flex-col">{renderCard(s)}</div>
+                  {i < steps.length - 1 ? <StepRowConnector /> : null}
+                </Fragment>
+              ))}
+            </div>
+            <div className="flex flex-col gap-8 md:hidden">
+              {steps.map((s) => (
+                <Fragment key={s.title}>
+                  {renderCard(s)}
+                  {s.step !== 'STEP 3' ? (
+                    <div className="flex justify-center text-neutral-300">
+                      <svg width="20" height="28" viewBox="0 0 20 28" fill="none" aria-hidden>
+                        <path
+                          d="M10 2v20M6 18l4 4 4-4"
+                          stroke="currentColor"
+                          strokeWidth="1.25"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  ) : null}
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </StudySurfaceLight>
     </section>
   )
 }
@@ -301,13 +407,13 @@ function IncentiveShelfCard({
       <div className="flex min-h-0 flex-[3] flex-col bg-neutral-50/30">{visual}</div>
       <div className="flex flex-[2] flex-col justify-between px-6 pb-6 pt-5">
         <div>
-          <h3 className="text-[16px] font-extrabold leading-snug text-neutral-900">{title}</h3>
-          <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{body}</p>
+          <h3 className="text-[17px] font-bold leading-snug text-neutral-900">{title}</h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{body}</p>
           {bodyExtra ? (
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{bodyExtra}</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{bodyExtra}</p>
           ) : null}
           {tagline ? (
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{tagline}</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
           ) : null}
         </div>
         <p className="mt-5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
@@ -366,7 +472,7 @@ function BioStackrDashboardMock() {
 
 function WhatYouReceive({ productName }: { productName: string }) {
   return (
-    <section className="bg-white py-16 sm:py-24">
+    <StudySurfaceLight className="py-16 sm:py-24" gradientClass="from-white via-neutral-50/35 to-[#f6f5f3]">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -410,7 +516,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
           </p>
         </div>
       </div>
-    </section>
+    </StudySurfaceLight>
   )
 }
 
@@ -576,7 +682,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             </div>
 
             {!showFullMessage ? (
-              <div className="mt-10">
+              <div className="mt-6 sm:mt-7">
                 <HeroCohortStatusCard
                   confirmed={confirmedCount}
                   maxParticipants={maxP}
@@ -594,7 +700,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             )}
 
-            <div className="mx-auto mt-10 max-w-[600px] space-y-4 text-center text-[17px] leading-relaxed text-white/95 sm:text-[18px]">
+            <div className="mx-auto mt-5 max-w-[600px] space-y-3 text-center text-[17px] leading-relaxed text-white/95 sm:mt-6 sm:text-[18px]">
               <p>
                 {brandName ? `${brandName} is working with BioStackr` : 'BioStackr'} to measure what {productName}{' '}
                 actually does in real customers.
@@ -606,7 +712,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             </div>
 
             {!showFullMessage ? (
-              <div className="mt-10 flex justify-center">
+              <div className="mt-6 flex justify-center sm:mt-7">
                 <StudyApplyCta variant="hero" />
               </div>
             ) : null}
@@ -618,7 +724,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <>
           <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
-          <section className="bg-[#faf9f7] py-16 sm:py-24">
+          <StudySurfaceLight className="py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
               <StudyLightSectionBrandRow />
               <CohortQualificationSection
@@ -628,7 +734,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 cohortCapacityFull={capacityFull}
               />
             </div>
-          </section>
+          </StudySurfaceLight>
         </>
       ) : null}
       </div>

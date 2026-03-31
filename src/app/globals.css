@@ -68,4 +68,20 @@
 	}
 }
 
-
+/* Study landing (/study/[slug]): hero progress fill subtle “live” glow */
+@keyframes study-hero-progress-glow {
+	0%,
+	100% {
+		box-shadow:
+			0 0 14px rgba(200, 75, 47, 0.55),
+			0 0 4px rgba(200, 75, 47, 0.45);
+	}
+	50% {
+		box-shadow:
+			0 0 26px rgba(200, 75, 47, 0.78),
+			0 0 10px rgba(200, 75, 47, 0.55);
+	}
+}
+.animate-study-hero-progress-fill {
+	animation: study-hero-progress-glow 2.5s ease-in-out infinite;
+}
