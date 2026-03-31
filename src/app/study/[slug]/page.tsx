@@ -97,31 +97,42 @@ function HeroCohortStatusCard({
         : 0
 
   return (
-    <div className="study-hero-anchor mx-auto w-full max-w-lg rounded-2xl border border-[#E5E5E5] bg-white px-8 py-7 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.1),0_4px_18px_rgba(0,0,0,0.06)] sm:max-w-xl sm:px-9 sm:py-8">
-      <p className="text-center text-[18px] font-bold leading-snug text-neutral-900 sm:text-[19px]">
+    <div
+      className="study-hero-anchor relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-[#E5E5E5] px-9 py-9 shadow-[0_20px_56px_-14px_rgba(0,0,0,0.14),0_6px_24px_rgba(0,0,0,0.07),0_0_0_1px_rgba(200,75,47,0.07)] sm:max-w-2xl sm:px-11 sm:py-11"
+      style={{ background: '#F2F2F2' }}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[45%] rounded-t-2xl bg-gradient-to-b from-white/65 via-white/20 to-transparent"
+        aria-hidden
+      />
+      <div className="relative z-10">
+        <p className="text-center text-[19px] font-bold leading-snug text-neutral-900 sm:text-[21px]">
+          {displayTotal != null ? (
+            <>
+              Limited cohort: <span className="tabular-nums">{displayTotal}</span> participants
+            </>
+          ) : (
+            'Limited cohort'
+          )}
+        </p>
         {displayTotal != null ? (
-          <>
-            Limited cohort: <span className="tabular-nums">{displayTotal}</span> participants
-          </>
-        ) : (
-          'Limited cohort'
-        )}
-      </p>
-      <p className="mt-2 text-center text-[14px] font-medium leading-relaxed text-neutral-500">
-        Applications reviewed within 24 hours
-      </p>
-      {displayTotal != null ? (
-        <div className="mt-5 border-t border-neutral-200 pt-5">
-          <p className="mb-3 text-center text-[14px] font-medium tabular-nums tracking-tight text-neutral-700 sm:text-[15px]">
-            {confirmed} / {displayTotal} places filled
+          <p className="mt-3 text-center text-[22px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-3.5 sm:text-[28px]">
+            {confirmed} of {displayTotal} places filled
           </p>
-          <div className="h-[7px] w-full overflow-hidden rounded-full bg-neutral-200">
+        ) : null}
+        <p
+          className={`text-center text-[12px] font-medium leading-relaxed text-neutral-500 sm:text-[13px] ${displayTotal != null ? 'mt-2.5' : 'mt-2'}`}
+        >
+          Applications reviewed within 24 hours
+        </p>
+        {displayTotal != null ? (
+          <div className="mt-5 w-full overflow-hidden rounded-full bg-neutral-300 ring-1 ring-neutral-400/25">
             <div
-              className="h-full min-w-0 rounded-full transition-[width] duration-1000 ease-out"
+              className="h-[9px] min-w-0 rounded-full transition-[width] duration-1000 ease-out sm:h-[10px]"
               style={{
                 width: `${pct}%`,
-                background: RUST,
-                boxShadow: '0 0 0 1px rgba(200,75,47,0.2)',
+                background: `linear-gradient(180deg, #d95938 0%, ${RUST} 55%, #a33d24 100%)`,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
               }}
               aria-valuenow={Math.round(pct)}
               aria-valuemin={0}
@@ -132,8 +143,8 @@ function HeroCohortStatusCard({
               role="progressbar"
             />
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -311,7 +322,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-10 w-auto max-w-[150px] object-contain object-left opacity-[0.88] sm:h-11 sm:max-w-[170px]"
+      className="h-24 w-auto max-w-[min(100%,280px)] object-contain object-left opacity-[0.86] sm:h-28 sm:max-w-[320px] md:h-32"
       priority
     />
   )
@@ -321,14 +332,14 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start opacity-[0.88] transition-opacity hover:opacity-100 sm:self-center"
+      className="inline-flex shrink-0 items-center self-start opacity-[0.86] transition-opacity hover:opacity-100 sm:self-center"
     >
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-9 w-auto max-w-[min(100%,200px)] object-contain sm:h-10 sm:max-w-[220px]"
+        className="h-[4.25rem] w-auto max-w-[min(100%,380px)] object-contain sm:h-[4.85rem] md:h-[5.35rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -628,7 +639,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     <div className="flex flex-1 flex-col text-neutral-900">
       <div className="flex flex-1 flex-col">
       <section
-        className="relative w-full overflow-hidden border-b border-neutral-200/80 bg-[#FAFAFA] px-4 pb-12 pt-6 sm:px-6 sm:pb-14 sm:pt-8"
+        className="relative w-full overflow-hidden border-b border-neutral-200/80 bg-[#FAFAFA] px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
         style={{
           backgroundColor: HERO_LIGHT_BG,
         }}
@@ -642,25 +653,25 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           }}
         />
         <div className="relative z-10 mx-auto max-w-5xl">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
             <HeroDonotageLogo />
             <HeroBioStackrLogo />
           </div>
 
-          <div className="mx-auto mt-8 max-w-2xl text-center sm:mt-10">
+          <div className="mx-auto mt-11 max-w-2xl text-center sm:mt-14 md:mt-16">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500 sm:text-[11px]">
               Private study invitation
             </p>
-            <h1 className="mt-3 text-[30px] font-bold leading-[1.15] tracking-tight text-neutral-900 sm:text-[40px]">
+            <h1 className="mt-1.5 text-[34px] font-bold leading-[1.12] tracking-tight text-neutral-900 sm:mt-2 sm:text-[44px] md:text-[48px]">
               {productName}
             </h1>
-            <p className="mt-1.5 text-[13px] font-medium text-neutral-500 sm:text-[14px]">by {brandDisplay}</p>
-            <p className="mt-3 text-[15px] font-normal leading-snug text-neutral-600 sm:text-[16px]">
+            <p className="mt-1 text-[12px] font-medium text-neutral-500 sm:text-[13px]">by {brandDisplay}</p>
+            <p className="mt-1.5 text-[14px] font-normal leading-snug text-neutral-500 sm:text-[15px]">
               21-day customer outcomes study
             </p>
 
             {!showFullMessage ? (
-              <div className="mt-5 sm:mt-6">
+              <div className="mt-4 sm:mt-5">
                 <HeroCohortStatusCard
                   confirmed={confirmedCount}
                   maxParticipants={maxP}
@@ -670,27 +681,30 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </div>
             ) : (
               <div
-                className="mx-auto mt-6 max-w-lg rounded-2xl border border-[#E5E5E5] bg-white px-6 py-4 text-center text-[15px] font-medium text-neutral-600 shadow-md"
+                className="relative mx-auto mt-4 max-w-2xl overflow-hidden rounded-2xl border border-[#E5E5E5] bg-[#F2F2F2] px-8 py-5 text-center text-[16px] font-semibold text-neutral-700 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] sm:mt-5 sm:py-6"
                 role="status"
               >
-                This study is now full.
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/55 to-transparent"
+                  aria-hidden
+                />
+                <span className="relative z-10">This study is now full.</span>
               </div>
             )}
 
-            <div className="mx-auto mt-4 max-w-xl space-y-2.5 text-center text-[15px] leading-relaxed text-neutral-800 sm:mt-5 sm:text-[16px]">
+            <div className="mx-auto mt-3 max-w-xl space-y-2 text-center text-[15px] leading-relaxed text-neutral-800 sm:mt-3.5 sm:text-[16px]">
               <p>
                 {brandDisplay} is working with BioStackr to measure how {productName} performs in real customers.
               </p>
               <p className="text-neutral-700">
-                This 21-day study tracks measurable changes in sleep using simple daily check-ins.
+                Track measurable changes in sleep over 21 days using simple daily check-ins.
               </p>
-              <p className="font-medium text-neutral-900">You&apos;ve been invited to apply.</p>
             </div>
 
             {!showFullMessage ? (
-              <div className="mt-4 flex flex-col items-center sm:mt-5">
+              <div className="mt-3 flex flex-col items-center sm:mt-3.5">
                 <StudyApplyCta variant="heroLight" />
-                <p className="mt-3 max-w-md px-2 text-center text-[11px] font-medium leading-snug text-neutral-500 sm:text-[12px]">
+                <p className="mt-2.5 max-w-md px-2 text-center text-[11px] font-medium leading-snug text-neutral-500 sm:mt-3 sm:text-[12px]">
                   Limited availability — applications reviewed within 24 hours
                 </p>
               </div>
