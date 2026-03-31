@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { countCohortConfirmedParticipants, isCohortCapacityFull } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
@@ -163,7 +164,11 @@ function HowItWorksSteps() {
   )
 }
 
-/** Bottle silhouette only — swap for product photo when available. */
+const DNA_LOGO_WHITE = '/DNA logo-white-png.png'
+/** SureSleep pack shot in `public` (240×240 artwork). */
+const SURE_SLEEP_PRODUCT = '/suresleep 240x240.png'
+
+/** Bottle silhouette — study supply card before live product photography. */
 function ProductBottleVisual() {
   return (
     <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center bg-white px-4">
@@ -188,14 +193,29 @@ function ProductBottleVisual() {
   )
 }
 
-function DonotageLogoMark() {
+function HeroDonotageLogo() {
   return (
-    <div
-      className="flex h-11 min-w-[120px] max-w-[180px] items-center justify-center rounded-md border bg-white px-4 shadow-sm"
-      style={{ borderColor: '#e5e2dc' }}
-      aria-label="DoNotAge"
-    >
-      <span className="text-[13px] font-semibold tracking-tight text-neutral-800">DoNotAge</span>
+    <Image
+      src={DNA_LOGO_WHITE}
+      alt="DoNotAge.org"
+      width={200}
+      height={200}
+      className="h-[68px] w-auto object-contain object-left sm:h-[76px]"
+      priority
+    />
+  )
+}
+
+function SureSleepPackVisual() {
+  return (
+    <div className="flex h-full min-h-0 flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-8">
+      <Image
+        src={SURE_SLEEP_PRODUCT}
+        alt="SureSleep — three-month supply from DoNotAge"
+        width={240}
+        height={240}
+        className="h-auto max-h-[240px] w-auto max-w-[240px] object-contain drop-shadow-sm"
+      />
     </div>
   )
 }
@@ -305,20 +325,10 @@ function WhatYouReceive({ productName }: { productName: string }) {
           />
           <IncentiveShelfCard
             highlight
-            visual={
-              <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
-                <DonotageLogoMark />
-                <p
-                  className="text-[36px] font-extrabold leading-none tabular-nums sm:text-[44px]"
-                  style={{ color: RUST }}
-                >
-                  £45–50
-                </p>
-              </div>
-            }
-            title="£45–50 DoNotAge store credit"
-            body="Awarded when you complete all 21 daily check-ins. Equivalent to one month's supply, to use on any product."
-            tagline="Continue with the product if it works for you, or explore the range."
+            visual={<SureSleepPackVisual />}
+            title="3 months of SureSleep from DoNotAge"
+            body="A three-month supply of SureSleep (valued at £153) when you complete all 21 daily check-ins."
+            tagline="Shipped by DoNotAge so you can keep the routine that worked for you in the study."
             footer="Completion reward"
           />
           <IncentiveShelfCard
@@ -331,7 +341,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
         </div>
         <div className="mx-auto mt-12 max-w-2xl space-y-2 text-center">
           <p className="text-[15px] font-semibold leading-relaxed text-neutral-800">
-            Total value: £90+ plus your personal outcome report
+            Total package value: £153+ in DoNotAge product, BioStackr Pro, and your personal outcome report
           </p>
           <p className="text-[13px] leading-relaxed text-neutral-500">
             A clear view of how your sleep responded over 21 days, based on your own data.
@@ -355,6 +365,15 @@ function TrustFooter() {
   return (
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="mb-10 flex justify-center sm:mb-12">
+          <Image
+            src={DNA_LOGO_WHITE}
+            alt="DoNotAge.org"
+            width={160}
+            height={160}
+            className="h-9 w-auto object-contain opacity-90 sm:h-10"
+          />
+        </div>
         <div className="grid gap-10 sm:grid-cols-3">
           {col(
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -453,20 +472,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         />
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-            {/* DoNotAge logo — replace with Image once assets arrive */}
-            <div
-              style={{
-                width: 120,
-                height: 40,
-                background: 'rgba(255,255,255,0.15)',
-                borderRadius: 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Brand logo</span>
-            </div>
+            <HeroDonotageLogo />
             <Link
               href="/"
               className="text-sm font-medium tracking-wide text-white/60 transition-colors hover:text-white/90 sm:mt-1 sm:text-right"
@@ -539,6 +545,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
                 productName={productName}
+                cohortCapacityFull={capacityFull}
               />
             </div>
           </section>

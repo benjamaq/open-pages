@@ -44,14 +44,14 @@ export async function sendComplianceConfirmedEmail(params: {
 
     const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
 <p>You completed both check-ins and your spot in the <strong>${study}</strong> study is confirmed.</p>
-<p>DoNotAge will be dispatching your <strong>${product}</strong> shortly. While you wait, please do not add any new supplements to your routine — we need a clean baseline.</p>
+<p>DoNotAge will be dispatching your <strong>${product}</strong> shortly. While you wait, please do not add any new supplements to your routine. We need a clean baseline.</p>
 <p>Your daily check-ins begin the morning after your product arrives. You will receive a reminder each morning at your preferred time. Each check-in takes about 30 seconds.</p>
 <p>Thank you for being part of this.</p>
 </body></html>`
 
     const r = await sendEmail({
       to,
-      subject: "You're confirmed — your product is on its way",
+      subject: 'Confirmed: your product is on its way',
       html,
     })
     if (!r.success) {

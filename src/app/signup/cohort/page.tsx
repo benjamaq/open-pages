@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
@@ -273,11 +274,18 @@ function CohortSignupInner() {
       />
       <div className="fixed inset-0 bg-black/40" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[560px] flex-col justify-center px-5 py-10 sm:px-6">
-        {showDonotageLogo && (
+        {showDonotageLogo ? (
           <div className="mb-5 sm:mb-6">
-            <DonotageLogoPlaceholder />
+            <NextImage
+              src="/DNA logo-white-png.png"
+              alt="DoNotAge.org"
+              width={200}
+              height={200}
+              className="h-14 w-auto object-contain object-left drop-shadow sm:h-16"
+              priority
+            />
           </div>
-        )}
+        ) : null}
         <div className="w-full rounded-2xl border border-white/20 bg-white p-8 shadow-xl sm:p-10">
           <div className="text-center">
             <h1 className="text-2xl font-semibold text-slate-900">You&apos;re almost in</h1>

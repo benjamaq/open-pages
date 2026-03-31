@@ -29,6 +29,7 @@ type Participant = {
   enrolled_at: string
   confirmed_at: string | null
   qualification_short?: boolean
+  at_risk?: boolean
 }
 
 function adminHeaders(): HeadersInit {
@@ -346,7 +347,8 @@ export default function AdminCohortsPage() {
                 <div>
                   <h2 className="text-lg font-medium text-gray-900">Confirmed participants</h2>
                   <p className="text-xs text-gray-600 mt-1">
-                    Same yellow-dot rule applies to qualification text length (display-only).
+                    Yellow dot: short qualification. Yellow row + &quot;At risk&quot;: no check-in on the last two UTC
+                    days during the active study.
                   </p>
                 </div>
                 <button
@@ -375,7 +377,7 @@ export default function AdminCohortsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {participants.map((p, i) => (
-                        <tr key={i}>
+                        <tr key={i} className={p.at_risk ? 'bg-yellow-50' : undefined}>
                           <td className="px-4 py-3 text-sm text-gray-900">
                             <span className="inline-flex items-center gap-2">
                               {p.qualification_short ? (
@@ -384,6 +386,14 @@ export default function AdminCohortsPage() {
                                   title="Qualification response under 60 characters"
                                   aria-label="Short qualification response"
                                 />
+                              ) : null}
+                              {p.at_risk ? (
+                                <span
+                                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-yellow-200 text-yellow-900"
+                                  title="No check-in on the last two UTC days during the study"
+                                >
+                                  At risk
+                                </span>
                               ) : null}
                               <span>{p.display_name || '—'}</span>
                             </span>

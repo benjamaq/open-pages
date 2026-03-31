@@ -33,7 +33,7 @@ function formatStudyEndDate(isoOrYmd: string | null): string {
 function formatGateTimeRemaining(deadlineMs: number, nowMs: number): { line: string; sub: string } {
   const left = deadlineMs - nowMs
   if (left <= 0) {
-    return { line: '—', sub: 'Complete check-in 2 to confirm' }
+    return { line: '0h', sub: 'Complete check-in 2 to confirm' }
   }
   const h = Math.floor(left / 3600000)
   const m = Math.floor((left % 3600000) / 60000)
@@ -57,18 +57,18 @@ function SpotConfirmedCountdown({
   compact?: boolean
 }) {
   const [display, setDisplay] = useState<{ line: string; sub: string }>({
-    line: '—',
+    line: '…',
     sub: '48-hour confirmation window',
   })
   useEffect(() => {
     const tick = () => {
       if (!deadlineIso) {
-        setDisplay({ line: '—', sub: 'Complete check-in 2 to confirm' })
+        setDisplay({ line: '…', sub: 'Complete check-in 2 to confirm' })
         return
       }
       const ms = Date.parse(deadlineIso)
       if (!Number.isFinite(ms)) {
-        setDisplay({ line: '—', sub: 'Complete check-in 2 to confirm' })
+        setDisplay({ line: '…', sub: 'Complete check-in 2 to confirm' })
         return
       }
       setDisplay(formatGateTimeRemaining(ms, Date.now()))
@@ -97,6 +97,119 @@ function SpotConfirmedCountdown({
   )
 }
 
+function StudySupportModal({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) {
+  const [reason, setReason] = useState<'missed_checkin' | 'next_steps' | 'study_question' | ''>('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      setReason('')
+      setBusy(false)
+      setDone(false)
+      setErr(null)
+    }
+  }, [open])
+
+  if (!open) return null
+
+  const submit = async () => {
+    if (!reason) {
+      setErr('Choose an option.')
+      return
+    }
+    setBusy(true)
+    setErr(null)
+    try {
+      const res = await fetch('/api/cohort/support-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setErr(String((j as { error?: string }).error || 'Could not send.'))
+        setBusy(false)
+        return
+      }
+      setDone(true)
+    } catch {
+      setErr('Something went wrong.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-4 bg-black/40"
+      role="dialog"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-start gap-3">
+          <h3 className="text-lg font-semibold text-gray-900">Message support</h3>
+          <button type="button" className="text-sm text-gray-500 hover:text-gray-800" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        <p className="mt-2 text-sm text-gray-600">Choose one option. We email the study team with your account details.</p>
+        {done ? (
+          <p className="mt-4 text-sm text-emerald-800 font-medium">Sent. We will reply by email when we can.</p>
+        ) : (
+          <>
+            <div className="mt-4 space-y-2">
+              {(
+                [
+                  ['missed_checkin', 'I missed a check-in'],
+                  ['next_steps', "I'm unsure what to do next"],
+                  ['study_question', 'I have a question about the study'],
+                ] as const
+              ).map(([val, label]) => (
+                <label
+                  key={val}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm ${
+                    reason === val ? 'border-gray-900 bg-gray-50' : 'border-slate-200'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="support-reason"
+                    checked={reason === val}
+                    onChange={() => {
+                      setReason(val)
+                      setErr(null)
+                    }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={submit}
+              className="mt-4 w-full rounded-xl bg-gray-900 text-white py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-60"
+            >
+              {busy ? 'Sending…' : 'Send message'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
   cohortConfirmed,
@@ -116,6 +229,7 @@ export default function CohortStudyDashboard({
 }: CohortStudyDashboardProps) {
   void _cohortId
   void _startDateIso
+  const [supportOpen, setSupportOpen] = useState(false)
   const progressPct = studyComplete ? 100 : Math.min(100, (currentDay / studyDays) * 100)
 
   const gateComplete = Math.min(2, Math.max(0, checkinCount))
@@ -153,11 +267,11 @@ export default function CohortStudyDashboard({
     }
     if (gateComplete === 1) {
       const subLong =
-        'You completed your first check-in. Complete this one and your place in the study is confirmed. Your product will then be on its way.'
+        'Good start. Complete one more check-in tomorrow to confirm your place and trigger product shipment.'
       if (hasCheckedInToday) {
         return {
           label: 'Check-in 2 of 2',
-          headline: 'Welcome back — one more check-in to secure your spot',
+          headline: 'One more check-in to confirm your place',
           sub: '',
           showCheckinCta: false,
           doneBlock: true,
@@ -166,7 +280,7 @@ export default function CohortStudyDashboard({
       }
       return {
         label: 'Check-in 2 of 2',
-        headline: 'Welcome back — one more check-in to secure your spot',
+        headline: 'One more check-in to confirm your place',
         sub: subLong,
         showCheckinCta: true,
         doneBlock: false,
@@ -175,8 +289,8 @@ export default function CohortStudyDashboard({
     }
     return {
       label: 'Check-in 1 of 2',
-      headline: 'Complete your first check-in',
-      sub: 'You have 48 hours to complete two check-ins and secure your place in the study.',
+      headline: 'Secure your place: first check-in',
+      sub: 'Your place is reserved for 48 hours. Complete your first two check-ins to secure your spot and trigger product shipment.',
       showCheckinCta: !hasCheckedInToday,
       doneBlock: hasCheckedInToday,
       ctaLabel: 'Check in now',
@@ -187,6 +301,7 @@ export default function CohortStudyDashboard({
 
   return (
     <div className="space-y-6 max-w-xl mx-auto">
+      <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
         <h1 className="text-2xl font-semibold text-gray-900 leading-tight">
           <span className="block text-xs font-medium text-gray-500 mb-1.5 tracking-wide">{studyNameLabel}</span>
@@ -219,7 +334,7 @@ export default function CohortStudyDashboard({
           <div>
             <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your spot is confirmed</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-              You are in the study. Your product will be dispatched shortly. Your daily check-ins begin when it arrives — you
+              You are in the study. Your product will be dispatched shortly. Your daily check-ins begin when it arrives. You
               will receive a reminder each morning. Keep your supplement routine as it is until then.
             </p>
           </div>
@@ -312,7 +427,7 @@ export default function CohortStudyDashboard({
             {statCellCompact(currentStreak, 'Current streak', 'day streak')}
             {showInterimSpotConfirmed ? (
               <div className="text-center flex-1 min-w-[88px]">
-                <div className="text-lg font-semibold text-gray-900 tabular-nums">—</div>
+                <div className="text-lg font-semibold text-gray-900 tabular-nums">…</div>
                 <div className="text-[11px] font-medium text-gray-700 mt-0.5">Window</div>
                 <div className="text-[10px] text-gray-500 mt-0.5">complete</div>
               </div>
@@ -341,10 +456,13 @@ export default function CohortStudyDashboard({
       <footer className="text-xs text-gray-500 leading-relaxed pb-8">
         <p>This study is run by BioStackr on behalf of {brandName || 'the study partner'}.</p>
         <p className="mt-2">
-          Questions? Contact{' '}
-          <a href="mailto:ben@biostackr.io" className="text-gray-700 underline underline-offset-2">
-            ben@biostackr.io
-          </a>
+          <button
+            type="button"
+            onClick={() => setSupportOpen(true)}
+            className="text-gray-800 underline underline-offset-2 hover:text-gray-950 font-medium"
+          >
+            Need help?
+          </button>
         </p>
         <p className="mt-2">
           Stack locked during study · unlocks automatically on {formatStudyEndDate(studyEndDate)}

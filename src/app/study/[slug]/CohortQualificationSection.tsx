@@ -75,10 +75,12 @@ export function CohortQualificationSection({
   cohortSlug,
   cohortBrandName,
   productName,
+  cohortCapacityFull = false,
 }: {
   cohortSlug: string
   cohortBrandName: string
   productName: string
+  cohortCapacityFull?: boolean
 }) {
   const router = useRouter()
   const [issue, setIssue] = useState('')
@@ -99,6 +101,7 @@ export function CohortQualificationSection({
   const [waitlistBusy, setWaitlistBusy] = useState(false)
   const [waitlistDone, setWaitlistDone] = useState(false)
   const [waitlistErr, setWaitlistErr] = useState<string | null>(null)
+  const [showCapacityWaitlist, setShowCapacityWaitlist] = useState(false)
 
   const slugNorm = String(cohortSlug || '').trim().toLowerCase()
 
@@ -182,8 +185,7 @@ export function CohortQualificationSection({
       router.push('/signup/cohort')
       return
     }
-    setCohortCookie(slug)
-    setCohortBrandCookie(cohortBrandName)
+
     const sqOpt = SLEEP_QUALITY_OPTIONS.find((o) => o.value === sleepQuality)
     const sqLabel = sqOpt ? `${sqOpt.range} ${sqOpt.quality}` : String(sleepQuality)
     const combinedIssue = [
@@ -191,11 +193,19 @@ export function CohortQualificationSection({
       `Sleep quality (last month): ${sqLabel} [value=${sleepQuality}]`,
       `Primary sleep issue: ${sleepIssue}`,
     ].join('\n| ')
+
+    if (cohortCapacityFull) {
+      setShowCapacityWaitlist(true)
+      return
+    }
+
+    setCohortCookie(slug)
+    setCohortBrandCookie(cohortBrandName)
     try {
       const draft: CohortQualificationDraftV1 = { v: 1, cohortSlug: slug, issue: combinedIssue }
       sessionStorage.setItem(COHORT_QUALIFICATION_STORAGE_KEY, JSON.stringify(draft))
     } catch {
-      // still proceed; signup page will redirect if draft missing
+      /* still proceed; signup page will redirect if draft missing */
     }
     router.push('/signup/cohort')
   }
@@ -243,6 +253,57 @@ export function CohortQualificationSection({
           }}
         >
           <p className="text-sm text-neutral-700 leading-relaxed">{hardExit}</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (showCapacityWaitlist) {
+    return (
+      <section id="cohort-apply-form" className="scroll-mt-24">
+        <div
+          className="mx-auto max-w-[680px] rounded-xl border bg-white px-6 py-8 sm:px-8"
+          style={{
+            borderColor: '#e5e2dc',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            borderRadius: 12,
+          }}
+        >
+          <h2 className="text-[20px] font-bold text-neutral-900">This cohort is currently full</h2>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+            New places are limited. You can join the waitlist in case a spot opens.
+          </p>
+          {waitlistDone ? (
+            <p className="mt-4 text-sm text-neutral-600 leading-relaxed">
+              We have saved your email and may reach out if capacity changes.
+            </p>
+          ) : (
+            <form onSubmit={onWaitlistSubmit} className="mt-6 space-y-3">
+              <label htmlFor="waitlist-email-capacity" className="block text-sm font-medium text-neutral-800">
+                Email address
+              </label>
+              <input
+                id="waitlist-email-capacity"
+                type="email"
+                autoComplete="email"
+                value={waitlistEmail}
+                onChange={(e) => {
+                  setWaitlistEmail(e.target.value)
+                  setWaitlistErr(null)
+                }}
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                placeholder="you@example.com"
+              />
+              {waitlistErr && <p className="text-sm text-red-600">{waitlistErr}</p>}
+              <button
+                type="submit"
+                disabled={waitlistBusy}
+                className="w-full rounded-[8px] bg-neutral-900 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+              >
+                {waitlistBusy ? 'Saving…' : 'Join waitlist'}
+              </button>
+            </form>
+          )}
         </div>
       </section>
     )

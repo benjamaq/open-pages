@@ -8,6 +8,7 @@ import {
   countCohortStatusParticipants,
 } from '@/lib/cohortRecruitment'
 import { isQualificationResponseVisuallyShort } from '@/lib/qualificationFreeText'
+import { cohortConfirmedParticipantAtRisk } from '@/lib/cohortAdminAtRisk'
 
 function adminDenied(req: NextRequest): NextResponse | null {
   if (process.env.NODE_ENV !== 'production') return null
@@ -72,6 +73,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ cohorts: cohortsWithCounts })
     }
 
+    const { data: cMeta, error: cMetaErr } = await supabaseAdmin
+      .from('cohorts')
+      .select('study_days, end_date')
+      .eq('id', cohortUuid)
+      .maybeSingle()
+    if (cMetaErr) {
+      console.error('[admin/cohorts] cohort meta:', cMetaErr)
+      return NextResponse.json({ error: cMetaErr.message }, { status: 500 })
+    }
+    const studyDaysN =
+      typeof (cMeta as { study_days?: number } | null)?.study_days === 'number' &&
+      Number((cMeta as { study_days: number }).study_days) > 0
+        ? Number((cMeta as { study_days: number }).study_days)
+        : 21
+    const endRaw = (cMeta as { end_date?: string | null } | null)?.end_date
+    const cohortEndYmd =
+      endRaw != null && String(endRaw).trim() !== '' ? String(endRaw).slice(0, 10) : null
+
     const { data: parts, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
       .select('enrolled_at, confirmed_at, user_id, qualification_response')
@@ -121,12 +140,22 @@ export async function GET(request: NextRequest) {
             }
           }
           const q = p.qualification_response != null ? String(p.qualification_response) : ''
+          let atRisk = false
+          if (prof?.user_id && p.confirmed_at) {
+            atRisk = await cohortConfirmedParticipantAtRisk({
+              authUserId: String(prof.user_id),
+              confirmedAtIso: String(p.confirmed_at),
+              studyDays: studyDaysN,
+              cohortEndYmd,
+            })
+          }
           return {
             display_name: prof?.display_name ?? null,
             email,
             enrolled_at: p.enrolled_at,
             confirmed_at: p.confirmed_at,
             qualification_short: isQualificationResponseVisuallyShort(q),
+            at_risk: atRisk,
           }
         },
       )
@@ -177,6 +206,7 @@ export async function GET(request: NextRequest) {
               enrolled_at: p.enrolled_at,
               confirmed_at: null as string | null,
               qualification_short: isQualificationResponseVisuallyShort(q),
+              at_risk: false,
             }
           },
         )

@@ -30,10 +30,11 @@ async function sendCohortEnrollmentEmail(to: string) {
   const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
   await sendEmail({
     to: safe,
-    subject: "You're in — complete your first check-in now",
+    subject: 'Your study place is reserved: first two check-ins within 48 hours',
     html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
-<p>You're in — complete your first check-in now to secure your spot.</p>
-<p><a href="${appBase}/dashboard?checkin=1" style="color:#6A3F2B;font-weight:600;">Open check-in</a></p>
+<p>Your place is reserved for 48 hours.</p>
+<p>Complete your first two check-ins to secure your spot and trigger product shipment.</p>
+<p><a href="${appBase}/dashboard?checkin=1" style="color:#C84B2F;font-weight:600;">Open dashboard</a></p>
 </body></html>`,
   })
 }
