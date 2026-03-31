@@ -271,7 +271,7 @@ function HowItWorksSteps() {
   )
 
   return (
-    <section className="border-t border-neutral-200/50 bg-white pt-12 pb-16 sm:pt-14 sm:pb-24 md:pt-16">
+    <section className="bg-white pt-12 pb-16 sm:pt-14 sm:pb-24 md:pt-16">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <StudyLightSectionBrandRow />
           <h2 className="text-center text-[17px] font-semibold tracking-tight text-neutral-600 sm:text-[18px]">
@@ -326,7 +326,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[4.35rem] w-auto max-w-[min(100%,240px)] object-contain object-left contrast-[1.06] sm:h-20 sm:max-w-[260px] md:h-[5.35rem] md:max-w-[280px]"
+      className="h-[4.85rem] w-auto max-w-[min(100%,255px)] object-contain object-left contrast-[1.06] sm:h-[5.35rem] sm:max-w-[275px] md:h-[5.85rem] md:max-w-[300px]"
       priority
     />
   )
@@ -336,15 +336,15 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start transition-opacity hover:opacity-95 sm:self-center"
+      className="inline-flex shrink-0 items-center self-start bg-transparent transition-opacity hover:opacity-95 sm:self-center"
     >
-      {/* multiply helps white bounding box in raster logo blend into #FFFFFF page */}
+      {/* multiply: white padding in raster blends into page #FFFFFF */}
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-[4.5rem] w-auto max-w-[min(100%,400px)] object-contain mix-blend-multiply contrast-[1.02] sm:h-[5.15rem] md:h-[5.65rem]"
+        className="h-[5rem] w-auto max-w-[min(100%,420px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[5.5rem] md:h-[6rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -355,13 +355,16 @@ function HeroBioStackrLogo() {
 function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
   return (
     <div className={`flex justify-center ${className}`}>
-      <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
+      <Link
+        href="/"
+        className="inline-flex bg-transparent opacity-95 transition-opacity hover:opacity-100"
+      >
         <Image
           src={BIOSTACKR_LOGO}
           alt="BioStackr"
           width={434}
           height={135}
-          className="h-8 w-auto max-w-[200px] object-contain sm:h-9 sm:max-w-[220px]"
+          className="h-8 w-auto max-w-[200px] object-contain mix-blend-multiply contrast-[1.02] sm:h-9 sm:max-w-[220px]"
         />
         <span className="sr-only">BioStackr home</span>
       </Link>
@@ -409,11 +412,12 @@ function IncentiveShelfCard({
   footer,
   highlight,
 }: IncentiveShelfCardProps) {
+  const depth = highlight
+    ? 'ring-2 ring-[#C84B2F]/20 shadow-[0_10px_40px_rgba(200,75,47,0.12)]'
+    : 'shadow-[0_12px_40px_-8px_rgba(26,31,46,0.16)] ring-1 ring-neutral-900/[0.06] transition-shadow duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_48px_-10px_rgba(26,31,46,0.2)]'
   return (
     <div
-      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[448px] ${
-        highlight ? 'ring-2 ring-[#C84B2F]/20 shadow-[0_10px_40px_rgba(200,75,47,0.12)]' : ''
-      }`}
+      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[448px] ${depth}`}
       style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
       <div className="flex min-h-0 flex-[3] flex-col bg-neutral-50/30">{visual}</div>
@@ -484,7 +488,7 @@ function BioStackrDashboardMock() {
 
 function WhatYouReceive({ productName }: { productName: string }) {
   return (
-    <StudySurfaceLight continuous className="border-t border-neutral-200/50 py-16 sm:py-24">
+    <StudySurfaceLight continuous className="py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -641,19 +645,15 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const brandDisplay = brandName.trim() || 'DoNotAge'
 
   return (
-    <div className="flex flex-1 flex-col text-neutral-900">
-      <div className="flex flex-1 flex-col">
+    <div
+      className="flex flex-1 flex-col bg-white text-neutral-900"
+      style={{ backgroundColor: HERO_LIGHT_BG }}
+    >
+      <div className="flex flex-1 flex-col bg-white" style={{ backgroundColor: HERO_LIGHT_BG }}>
       <section
-        className="relative w-full overflow-hidden bg-white px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
+        className="relative w-full overflow-hidden px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
         style={{ backgroundColor: HERO_LIGHT_BG }}
       >
-        <div
-          className="pointer-events-none absolute inset-0 z-0"
-          aria-hidden
-          style={{
-            background: 'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,0,0,0.018) 0%, transparent 52%)',
-          }}
-        />
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
             <HeroDonotageLogo />
@@ -661,14 +661,14 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </div>
 
           <div className="mx-auto mt-11 max-w-2xl text-center sm:mt-14 md:mt-16">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-neutral-600 sm:text-[12px]">
+            <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-neutral-800 sm:text-[13px]">
               Private study invitation
             </p>
             <div className="mt-2 flex flex-col items-center">
               <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight text-neutral-900 sm:text-[44px] md:text-[48px]">
                 {productName}
               </h1>
-              <p className="mt-0.5 text-[14px] font-semibold text-neutral-700 sm:text-[15px]">by {brandDisplay}</p>
+              <p className="mt-0.5 text-[15px] font-semibold text-neutral-900 sm:text-[16px]">by {brandDisplay}</p>
             </div>
             <p className="mt-2 text-[13px] font-normal leading-snug text-neutral-600 sm:mt-2.5 sm:text-[14px]">
               21-day customer outcomes study
@@ -721,7 +721,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <>
           <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
-          <StudySurfaceLight continuous className="border-t border-neutral-200/50 py-16 sm:py-24">
+          <StudySurfaceLight continuous className="py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
               <StudyLightSectionBrandRow />
               <CohortQualificationSection
