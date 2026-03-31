@@ -115,34 +115,37 @@ function HowItWorksSteps() {
   const steps = [
     {
       icon: <IconHowApply />,
-      title: 'Apply for your spot',
-      line: 'A short application. Confirmed within 24 hours.',
+      title: 'Apply for a place in the study',
+      line: 'A short application to assess fit. Selected participants are confirmed within 24 hours.',
     },
     {
       icon: <IconHowCheckin />,
-      title: 'Check in each morning',
-      line: '30 seconds. Four questions. No wearable needed.',
+      title: 'Track your results daily',
+      line: 'A 30-second morning check-in capturing measurable changes across key outcomes. No wearable required.',
     },
     {
       icon: <IconHowResults />,
-      title: 'Get your personal results',
-      line: 'Your before and after, delivered privately.',
+      title: 'See what actually changed for you',
+      line: 'A personal outcome report showing how your sleep responded over 21 days, built from your own tracked data.',
     },
   ]
   return (
     <section className="bg-[#faf9f7] py-14 sm:py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-semibold text-neutral-900">How the study works</h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-neutral-600 sm:text-[15px]">
+          A structured 21-day study designed to measure real changes in real people.
+        </p>
+        <div className="mt-10 grid gap-8 md:grid-cols-3 md:items-stretch">
           {steps.map((s) => (
             <div
               key={s.title}
-              className="rounded-xl border bg-white px-6 py-7"
+              className="flex h-full min-h-0 flex-col rounded-xl border bg-white px-6 py-8"
               style={{ borderColor: '#e5e2dc' }}
             >
-              <div className="mb-1">{s.icon}</div>
-              <h3 className="text-[15px] font-bold leading-snug text-neutral-900">{s.title}</h3>
-              <p className="mt-2 text-[13px] leading-snug text-neutral-600">{s.line}</p>
+              <div className="mb-3 shrink-0">{s.icon}</div>
+              <h3 className="text-[15px] font-extrabold leading-snug text-neutral-900">{s.title}</h3>
+              <p className="mt-3 text-[13px] leading-relaxed text-neutral-600">{s.line}</p>
             </div>
           ))}
         </div>
