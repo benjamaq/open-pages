@@ -14,6 +14,11 @@ const DARK_PANEL_BG = '#1a1f2e'
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
 const SURE_SLEEP_PRODUCT = '/suresleep-240x240.png'
+/** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
+const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
+
+/** Subtle noise overlay when no `--cohort-hero-bg` photograph is set. */
+const HERO_GRAIN_BG = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>")`
 
 function HeroCohortStatusCard({
   confirmed,
@@ -139,6 +144,19 @@ function SectionDonotageLogoBlack({ className = '' }: { className?: string }) {
   )
 }
 
+/** Partner marks for light-background bands (clinical study landing). */
+function StudyLightSectionBrandRow({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`mb-8 flex flex-col items-center gap-6 sm:mb-10 sm:flex-row sm:justify-center sm:gap-12 ${className}`}
+    >
+      <SectionDonotageLogoBlack className="!mb-0" />
+      <div className="hidden h-8 w-px shrink-0 bg-neutral-200 sm:block" aria-hidden />
+      <SectionBioStackrLogoLight className="!mb-0" />
+    </div>
+  )
+}
+
 function HowItWorksSteps() {
   const steps = [
     {
@@ -160,7 +178,7 @@ function HowItWorksSteps() {
   return (
     <section className="bg-[#faf9f7] py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <SectionDonotageLogoBlack className="mb-8 sm:mb-10" />
+        <StudyLightSectionBrandRow />
         <h2 className="text-center text-[22px] font-bold text-neutral-900">How the study works</h2>
         <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-relaxed text-neutral-600 sm:text-[15px]">
           A structured 21-day study designed to measure real changes in real people.
@@ -218,6 +236,42 @@ function HeroDonotageLogo() {
       className="h-[68px] w-auto object-contain object-left sm:h-[76px]"
       priority
     />
+  )
+}
+
+function HeroBioStackrLogo() {
+  return (
+    <Link
+      href="/"
+      className="inline-flex shrink-0 items-center self-start sm:self-auto sm:mt-0.5"
+    >
+      <Image
+        src={BIOSTACKR_LOGO}
+        alt="BioStackr"
+        width={434}
+        height={135}
+        className="h-7 w-auto brightness-125 contrast-100 sm:h-8"
+        priority
+      />
+      <span className="sr-only">BioStackr home</span>
+    </Link>
+  )
+}
+
+function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex justify-center ${className}`}>
+      <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
+        <Image
+          src={BIOSTACKR_LOGO}
+          alt="BioStackr"
+          width={434}
+          height={135}
+          className="h-8 w-auto sm:h-9"
+        />
+        <span className="sr-only">BioStackr home</span>
+      </Link>
+    </div>
   )
 }
 
@@ -322,7 +376,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
   return (
     <section className="bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <SectionDonotageLogoBlack className="mb-6 sm:mb-8" />
+        <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
           This is a structured study, not a survey.
         </p>
@@ -381,7 +435,7 @@ function TrustFooter() {
   return (
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="mb-10 flex justify-center sm:mb-12">
+        <div className="mb-10 flex flex-col items-center justify-center gap-8 sm:mb-12 sm:flex-row sm:gap-14">
           <Image
             src={DNA_LOGO_WHITE}
             alt="DoNotAge.org"
@@ -389,6 +443,17 @@ function TrustFooter() {
             height={160}
             className="h-9 w-auto object-contain opacity-90 sm:h-10"
           />
+          <div className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" aria-hidden />
+          <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
+            <Image
+              src={BIOSTACKR_LOGO}
+              alt="BioStackr"
+              width={434}
+              height={135}
+              className="h-7 w-auto brightness-125 sm:h-8"
+            />
+            <span className="sr-only">BioStackr home</span>
+          </Link>
         </div>
         <div className="grid gap-10 sm:grid-cols-3">
           {col(
@@ -467,7 +532,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   return (
     <div className="flex flex-1 flex-col text-neutral-900">
       <div className="flex flex-1 flex-col">
-      {/* Section 1 — Hero — set --cohort-hero-bg when artwork image is ready */}
+      {/* Hero: optional art via `--cohort-hero-bg`; default depth from orbs + grain. */}
       <section
         className="relative w-full overflow-hidden px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-8"
         style={{
@@ -478,6 +543,17 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           backgroundRepeat: 'no-repeat',
         }}
       >
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+          <div
+            className="absolute -top-28 left-1/2 h-[min(420px,55vw)] w-[min(520px,90vw)] -translate-x-1/2 rounded-full opacity-[0.13] blur-3xl"
+            style={{ background: RUST }}
+          />
+          <div
+            className="absolute -bottom-40 -right-4 h-72 w-72 rounded-full opacity-[0.09] blur-3xl sm:h-96 sm:w-96"
+            style={{ background: '#5e6e94' }}
+          />
+          <div className="absolute inset-0 opacity-[0.5]" style={{ backgroundImage: HERO_GRAIN_BG }} />
+        </div>
         <div
           className="pointer-events-none absolute inset-0 z-0"
           aria-hidden
@@ -487,14 +563,9 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           }}
         />
         <div className="relative z-10 mx-auto max-w-5xl">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <HeroDonotageLogo />
-            <Link
-              href="/"
-              className="text-sm font-medium tracking-wide text-white/60 transition-colors hover:text-white/90 sm:mt-1 sm:text-right"
-            >
-              BioStackr
-            </Link>
+            <HeroBioStackrLogo />
           </div>
 
           <div className="mx-auto mt-12 max-w-3xl text-center sm:mt-16">
@@ -557,7 +628,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           <WhatYouReceive productName={productName} />
           <section className="bg-[#faf9f7] py-16 sm:py-24">
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
-              <SectionDonotageLogoBlack className="mb-8 sm:mb-10" />
+              <StudyLightSectionBrandRow />
               <CohortQualificationSection
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
