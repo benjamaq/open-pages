@@ -10,13 +10,19 @@ import { CohortQualificationSection } from './CohortQualificationSection'
 const RUST = '#C84B2F'
 /** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
-/** Hero + upper study stack — pure white for continuous surface with logos */
+/** Section 1 (hero) & section 3 — matches BioStackr logo white */
 const HERO_LIGHT_BG = '#FFFFFF'
+/** Section 2 — slightly darker band vs hero */
+const STUDY_SECTION_BAND_BG = '#F2F3F5'
+/** Section 4 — same family as band, a touch more off-white */
+const STUDY_SECTION_QUAL_BG = '#E9E8E5'
+/** Light divider between study stripes */
+const STUDY_STRIPE_DIVIDER = 'border-b border-neutral-200/80'
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
-/** Product pack shot: `public/suresleep-240x240.png` */
-const SURE_SLEEP_PRODUCT = '/suresleep-240x240.png'
+/** Product pack shot: add `public/suresleep-1280x1280.png` (square source for crisp cards). */
+const SURE_SLEEP_PRODUCT = '/suresleep-1280x1280.png'
 /** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
 const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
 
@@ -30,17 +36,26 @@ function StudySurfaceLight({
   children,
   className = '',
   gradientClass = 'from-neutral-50/85 via-[#faf9f7] to-neutral-100/45',
-  /** Solid white, no noise — use with lower sections when avoiding tint shifts */
+  /** Solid surface, no noise — optional `surfaceColor` overrides default white */
   continuous = false,
+  surfaceColor,
 }: {
   children: ReactNode
   className?: string
   /** Tailwind gradient stops for `bg-gradient-to-b`. */
   gradientClass?: string
   continuous?: boolean
+  surfaceColor?: string
 }) {
   if (continuous) {
-    return <div className={`relative bg-white ${className}`}>{children}</div>
+    return (
+      <div
+        className={`relative ${surfaceColor ? '' : 'bg-white'} ${className}`}
+        style={surfaceColor ? { backgroundColor: surfaceColor } : undefined}
+      >
+        {children}
+      </div>
+    )
   }
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -271,7 +286,10 @@ function HowItWorksSteps() {
   )
 
   return (
-    <section className="bg-white pt-12 pb-16 sm:pt-14 sm:pb-24 md:pt-16">
+    <section
+      className={`pt-12 pb-16 sm:pt-14 sm:pb-24 md:pt-16 ${STUDY_STRIPE_DIVIDER}`}
+      style={{ backgroundColor: STUDY_SECTION_BAND_BG }}
+    >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <StudyLightSectionBrandRow />
           <h2 className="text-center text-[17px] font-semibold tracking-tight text-neutral-600 sm:text-[18px]">
@@ -319,6 +337,10 @@ function HowItWorksSteps() {
   )
 }
 
+/** Shared hero mark height — DoNotAge + BioStackr read as one bar */
+const HERO_PARTNER_LOGO_H =
+  'h-[5rem] w-auto object-contain sm:h-[5.5rem] md:h-[6rem]'
+
 function HeroDonotageLogo() {
   return (
     <Image
@@ -326,7 +348,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[4.85rem] w-auto max-w-[min(100%,255px)] object-contain object-left contrast-[1.06] sm:h-[5.35rem] sm:max-w-[275px] md:h-[5.85rem] md:max-w-[300px]"
+      className={`${HERO_PARTNER_LOGO_H} max-w-[min(100%,420px)] object-left contrast-[1.06]`}
       priority
     />
   )
@@ -338,13 +360,13 @@ function HeroBioStackrLogo() {
       href="/"
       className="inline-flex shrink-0 items-center self-start bg-transparent transition-opacity hover:opacity-95 sm:self-center"
     >
-      {/* multiply: white padding in raster blends into page #FFFFFF */}
+      {/* multiply: white padding in raster blends into light surfaces */}
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-[5rem] w-auto max-w-[min(100%,420px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[5.5rem] md:h-[6rem]"
+        className={`max-w-[min(100%,420px)] mix-blend-multiply contrast-[1.04] ${HERO_PARTNER_LOGO_H}`}
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -372,7 +394,7 @@ function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
   )
 }
 
-/** SureSleep pack / bottle artwork (`public/suresleep-240x240.png`). */
+/** SureSleep pack / bottle artwork (`public/suresleep-1280x1280.png`). */
 function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
   const max =
     larger === true
@@ -383,9 +405,9 @@ function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
       <Image
         src={SURE_SLEEP_PRODUCT}
         alt="SureSleep"
-        width={240}
-        height={240}
-        sizes="(max-width: 768px) 75vw, 260px"
+        width={1280}
+        height={1280}
+        sizes="(max-width: 768px) 75vw, 320px"
         className={`h-auto w-auto ${max} max-w-full object-contain drop-shadow-md`}
       />
     </div>
@@ -488,7 +510,11 @@ function BioStackrDashboardMock() {
 
 function WhatYouReceive({ productName }: { productName: string }) {
   return (
-    <StudySurfaceLight continuous className="py-16 sm:py-24">
+    <StudySurfaceLight
+      continuous
+      surfaceColor={HERO_LIGHT_BG}
+      className={`py-16 sm:py-24 ${STUDY_STRIPE_DIVIDER}`}
+    >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -645,13 +671,10 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const brandDisplay = brandName.trim() || 'DoNotAge'
 
   return (
-    <div
-      className="flex flex-1 flex-col bg-white text-neutral-900"
-      style={{ backgroundColor: HERO_LIGHT_BG }}
-    >
-      <div className="flex flex-1 flex-col bg-white" style={{ backgroundColor: HERO_LIGHT_BG }}>
+    <div className="flex flex-1 flex-col text-neutral-900">
+      <div className="flex flex-1 flex-col">
       <section
-        className="relative w-full overflow-hidden px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14"
+        className={`relative w-full overflow-hidden px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14 ${STUDY_STRIPE_DIVIDER}`}
         style={{ backgroundColor: HERO_LIGHT_BG }}
       >
         <div className="relative z-10 mx-auto max-w-5xl">
@@ -660,11 +683,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             <HeroBioStackrLogo />
           </div>
 
-          <div className="mx-auto mt-11 max-w-2xl text-center sm:mt-14 md:mt-16">
+          <div className="mx-auto mt-12 max-w-2xl text-center sm:mt-16 md:mt-[4.25rem]">
             <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-neutral-800 sm:text-[13px]">
               Private study invitation
             </p>
-            <div className="mt-2 flex flex-col items-center">
+            <div className="mt-4 flex flex-col items-center">
               <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight text-neutral-900 sm:text-[44px] md:text-[48px]">
                 {productName}
               </h1>
@@ -708,7 +731,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             {!showFullMessage ? (
               <div className="mt-4 flex flex-col items-center sm:mt-5">
                 <StudyApplyCta variant="heroLight" />
-                <p className="mt-2 max-w-md px-2 text-center text-[12px] font-medium leading-snug text-neutral-600 sm:text-[13px]">
+                <p className="mt-4 max-w-md px-2 text-center text-[12px] font-medium leading-snug text-neutral-600 sm:mt-5 sm:text-[13px]">
                   Limited availability — applications reviewed within 24 hours
                 </p>
               </div>
@@ -721,7 +744,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <>
           <HowItWorksSteps />
           <WhatYouReceive productName={productName} />
-          <StudySurfaceLight continuous className="py-16 sm:py-24">
+          <StudySurfaceLight
+            continuous
+            surfaceColor={STUDY_SECTION_QUAL_BG}
+            className="py-16 sm:py-24"
+          >
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
               <StudyLightSectionBrandRow />
               <CohortQualificationSection
