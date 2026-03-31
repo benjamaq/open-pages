@@ -6,6 +6,10 @@ export interface CohortStudyDashboardProps {
   cohortId: string
   /** True when cohort_participants.confirmed_at is set — 21-day study is active. */
   cohortConfirmed: boolean
+  /** Confirmed shipment slot but participant has not tapped "start my study" yet. */
+  cohortAwaitingStudyStart?: boolean
+  /** After successful start-study API: refresh dashboard + open first check-in. */
+  onAfterStudyStarted?: () => void
   /** ISO timestamp: enrollment + 48h; for compliance-gate countdown only. */
   complianceDeadlineIso: string | null
   brandName: string
@@ -93,6 +97,95 @@ function SpotConfirmedCountdown({
         Spot confirmed in
       </div>
       <div className={`text-gray-500 mt-0.5 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>{display.sub}</div>
+    </div>
+  )
+}
+
+function ProductArrivedModal({
+  open,
+  onClose,
+  onComplete,
+}: {
+  open: boolean
+  onClose: () => void
+  onComplete: (choice: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => Promise<void>
+}) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      setBusy(false)
+      setErr(null)
+    }
+  }, [open])
+
+  if (!open) return null
+
+  const pick = async (choice: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => {
+    setBusy(true)
+    setErr(null)
+    try {
+      await onComplete(choice)
+      onClose()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-end justify-center sm:items-center p-4 bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-arrived-title"
+      onClick={(e) => {
+        if (!busy && e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-5 sm:p-6">
+        <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
+          When did your product arrive?
+        </h3>
+        <p className="mt-2 text-sm text-gray-600">Optional — helps our records. Skip if you prefer.</p>
+        {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
+        <div className="mt-4 grid gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => pick('today')}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => pick('yesterday')}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Yesterday
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => pick('few_days_ago')}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+          >
+            A few days ago
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => pick('skip')}
+            className="w-full rounded-xl border border-dashed border-slate-300 px-4 py-3 text-center text-sm font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Skip
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -213,6 +306,8 @@ function StudySupportModal({
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
   cohortConfirmed,
+  cohortAwaitingStudyStart = false,
+  onAfterStudyStarted,
   complianceDeadlineIso,
   brandName,
   productName,
@@ -230,9 +325,14 @@ export default function CohortStudyDashboard({
   void _cohortId
   void _startDateIso
   const [supportOpen, setSupportOpen] = useState(false)
-  const progressPct = studyComplete ? 100 : Math.min(100, (currentDay / studyDays) * 100)
+  const [productArrivedOpen, setProductArrivedOpen] = useState(false)
+  const progressPct =
+    studyComplete ? 100 : currentDay <= 0 ? 0 : Math.min(100, (currentDay / studyDays) * 100)
 
-  const gateComplete = Math.min(2, Math.max(0, checkinCount))
+  /** While awaiting product, API reports study check-ins as 0 — gate UI must stay complete. */
+  const gateComplete = cohortAwaitingStudyStart
+    ? 2
+    : Math.min(2, Math.max(0, checkinCount))
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
   const complianceGateSatisfied = gateComplete >= 2
   const studyNameLabel = brandName ? `${brandName} · ${productName}` : productName
@@ -299,8 +399,26 @@ export default function CohortStudyDashboard({
 
   const showInterimSpotConfirmed = complianceGateSatisfied && !cohortConfirmed
 
+  const startStudyApi = async (productArrived: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => {
+    const res = await fetch('/api/cohort/start-study', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productArrived }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(String((j as { error?: string }).error || 'Could not start study'))
+    }
+    onAfterStudyStarted?.()
+  }
+
   return (
     <div className="space-y-6 max-w-xl mx-auto">
+      <ProductArrivedModal
+        open={productArrivedOpen}
+        onClose={() => setProductArrivedOpen(false)}
+        onComplete={startStudyApi}
+      />
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
         <h1 className="text-2xl font-semibold text-gray-900 leading-tight">
@@ -310,7 +428,23 @@ export default function CohortStudyDashboard({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-        {cohortConfirmed ? (
+        {cohortAwaitingStudyStart ? (
+          <div>
+            <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your product is on the way</h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
+              As soon as it arrives, come back here and use the button below to start your study. Your 21 days begin the day
+              you confirm—then complete your first check-in right away.
+            </p>
+            <button
+              type="button"
+              onClick={() => setProductArrivedOpen(true)}
+              className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
+              style={{ backgroundColor: '#C84B2F' }}
+            >
+              My product has arrived — start my study
+            </button>
+          </div>
+        ) : cohortConfirmed ? (
           studyComplete ? (
             <div>
               <div className="text-3xl font-bold text-gray-900">Study complete</div>
@@ -369,7 +503,7 @@ export default function CohortStudyDashboard({
         ) : null}
       </section>
 
-      {!cohortConfirmed && !showInterimSpotConfirmed ? (
+      {!cohortConfirmed && !showInterimSpotConfirmed && !cohortAwaitingStudyStart ? (
         <section className="text-center px-1">
           <p className="text-sm text-gray-800">
             Progress: {gateComplete} of 2 <span className="inline-block min-w-[2.5rem]">{gateDots}</span>
@@ -379,7 +513,7 @@ export default function CohortStudyDashboard({
       ) : null}
 
       <section>
-        {cohortConfirmed ? (
+        {cohortConfirmed && !cohortAwaitingStudyStart ? (
           hasCheckedInToday ? (
             <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
               <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
@@ -415,7 +549,11 @@ export default function CohortStudyDashboard({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 flex flex-wrap justify-center gap-5 sm:gap-6">
-        {cohortConfirmed ? (
+        {cohortAwaitingStudyStart ? (
+          <p className="w-full text-center text-sm text-gray-600 py-2">
+            Your study stats will appear here after you start—once your product has arrived.
+          </p>
+        ) : cohortConfirmed ? (
           <>
             {statCell(checkinCount, 'Check-ins done', 'this study')}
             {statCell(currentStreak, 'Current streak', 'day streak')}

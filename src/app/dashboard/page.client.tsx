@@ -103,6 +103,17 @@ export function DashboardPageClient() {
               <CohortStudyDashboard
                 cohortId={String(me?.cohortId || '')}
                 cohortConfirmed={Boolean(me?.cohortConfirmed)}
+                cohortAwaitingStudyStart={Boolean(me?.cohortAwaitingStudyStart)}
+                onAfterStudyStarted={() => {
+                  try {
+                    window.dispatchEvent(new Event('dashboard:refresh'))
+                    window.setTimeout(() => {
+                      try {
+                        window.dispatchEvent(new Event('open:checkin:new'))
+                      } catch {}
+                    }, 450)
+                  } catch {}
+                }}
                 complianceDeadlineIso={
                   typeof me?.cohortComplianceDeadlineIso === 'string' ? me.cohortComplianceDeadlineIso : null
                 }

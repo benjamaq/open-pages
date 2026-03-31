@@ -208,6 +208,40 @@ async function handler(req: NextRequest) {
       } catch (e) {
         console.warn('[daily-cron] Pref filter skipped due to error:', (e as any)?.message)
       }
+
+      // Cohort participants waiting for product: no daily study reminders until they start on dashboard.
+      try {
+        const pidList = scopedProfiles
+          .map((p) => p.profile_id)
+          .filter((id): id is string => Boolean(id))
+        if (pidList.length > 0) {
+          const { data: awaitingRows, error: awErr } = await supabaseAdmin
+            .from('cohort_participants')
+            .select('user_id')
+            .eq('status', 'confirmed')
+            .not('confirmed_at', 'is', null)
+            .is('study_started_at', null)
+            .in('user_id', pidList)
+          if (awErr) {
+            console.warn('[daily-cron] cohort awaiting skip lookup:', awErr.message)
+          } else {
+            const awaitingProfiles = new Set(
+              ((awaitingRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
+            )
+            const beforeAwait = scopedProfiles.length
+            scopedProfiles = scopedProfiles.filter(
+              (p) => !p.profile_id || !awaitingProfiles.has(String(p.profile_id)),
+            )
+            // eslint-disable-next-line no-console
+            console.log('[daily-cron] Cohort awaiting product filter:', {
+              before: beforeAwait,
+              after: scopedProfiles.length,
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('[daily-cron] cohort awaiting filter skipped:', (e as any)?.message)
+      }
     }
 
     // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues

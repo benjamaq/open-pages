@@ -29,6 +29,7 @@ type ParticipantRow = {
   confirmed_at: string
   user_id: string
   cohort_id: string
+  study_started_at?: string | null
 }
 
 function studyDayNumberFromConfirmed(confirmedIso: string, todayYmd: string): number | null {
@@ -56,9 +57,10 @@ export async function GET(request: NextRequest) {
   try {
     const { data: participants, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, confirmed_at, user_id, cohort_id')
+      .select('id, confirmed_at, user_id, cohort_id, study_started_at')
       .eq('status', 'confirmed')
       .not('confirmed_at', 'is', null)
+      .is('study_started_at', null)
 
     if (pErr) {
       console.error('[cohort-shipping-nurture] load participants:', pErr)

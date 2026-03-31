@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     const { data: parts, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('enrolled_at, confirmed_at, user_id, qualification_response')
+      .select('enrolled_at, confirmed_at, study_started_at, user_id, qualification_response')
       .eq('cohort_id', cohortUuid)
       .eq('status', 'confirmed')
       .order('confirmed_at', { ascending: true })
@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
         async (p: {
           enrolled_at: string
           confirmed_at: string | null
+          study_started_at?: string | null
           user_id: string
           qualification_response?: string | null
         }) => {
@@ -141,10 +142,14 @@ export async function GET(request: NextRequest) {
           }
           const q = p.qualification_response != null ? String(p.qualification_response) : ''
           let atRisk = false
-          if (prof?.user_id && p.confirmed_at) {
+          const studyAnchor =
+            p.study_started_at != null && String(p.study_started_at).trim() !== ''
+              ? String(p.study_started_at).trim()
+              : null
+          if (prof?.user_id && studyAnchor) {
             atRisk = await cohortConfirmedParticipantAtRisk({
               authUserId: String(prof.user_id),
-              confirmedAtIso: String(p.confirmed_at),
+              confirmedAtIso: studyAnchor,
               studyDays: studyDaysN,
               cohortEndYmd,
             })

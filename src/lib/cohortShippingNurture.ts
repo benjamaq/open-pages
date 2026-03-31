@@ -40,17 +40,17 @@ export function shippingNurtureBodyHtml(
   switch (step) {
     case 'day4':
       paragraphs = [
-        `Your spot in the <strong>${study}</strong> study is confirmed and your product is being dispatched by <strong>${brand}</strong>. While you wait, here is what happens next: your product arrives in the next few days. The morning after it arrives, open BioStackr and complete your first daily check-in. That is the moment your study officially begins. You will get a reminder from us on that day. Nothing to do until then.`,
+        `Your spot in the <strong>${study}</strong> study is confirmed and your product is being dispatched by <strong>${brand}</strong>. When your product arrives, open your BioStackr dashboard and tap <strong>My product has arrived — start my study</strong>. Your 21 days begin that day—complete your first check-in right after. Until it arrives, there is nothing you need to do.`,
       ]
       break
     case 'day7':
       paragraphs = [
-        `Your <strong>${product}</strong> should be arriving any day now. When it does, your 21-day study begins the next morning. Your daily check-in takes 30 seconds and you will get a reminder at your preferred time each day. If you have any questions before you start, reply to this email.`,
+        `Your <strong>${product}</strong> should be arriving any day now. When it arrives, open your BioStackr dashboard and use <strong>My product has arrived — start my study</strong>, then complete your first check-in. Daily check-ins take about 30 seconds; reminders start the morning after you start. Questions? Reply to this email.`,
       ]
       break
     case 'day10':
       paragraphs = [
-        `If your <strong>${product}</strong> has arrived, your study is about to begin. Complete your first check-in tomorrow morning to get started. If your product has not arrived yet, please reply and we will look into it.`,
+        `If your <strong>${product}</strong> has arrived, open the dashboard and tap <strong>My product has arrived — start my study</strong>, then complete your first check-in. If it has not arrived yet, reply to this email and we will look into it.`,
       ]
       break
     default:

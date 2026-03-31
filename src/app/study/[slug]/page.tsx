@@ -535,9 +535,15 @@ function WhatYouReceive({ productName }: { productName: string }) {
             footer="Included for all participants"
           />
         </div>
-        <p className="mx-auto mt-10 max-w-xl text-center text-[12px] leading-snug text-neutral-500 sm:mt-12 sm:text-[13px]">
-          Every confirmed participant receives all three.
-        </p>
+        <div className="mx-auto mt-10 max-w-xl space-y-2 text-center sm:mt-12">
+          <p className="text-[12px] leading-snug text-neutral-500 sm:text-[13px]">
+            Every confirmed participant receives all three.
+          </p>
+          <p className="text-[15px] font-semibold tracking-tight text-neutral-900 sm:text-[16px]">Total value: €200+</p>
+          <p className="text-[12px] leading-snug text-neutral-500 sm:text-[13px]">
+            Includes full product supply, completion reward, and BioStackr Pro access.
+          </p>
+        </div>
       </div>
     </StudySurfaceLight>
   )

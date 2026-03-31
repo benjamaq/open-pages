@@ -51,6 +51,7 @@ export async function GET(request: Request) {
     let cohortStudyComplete = false;
     let cohortConfirmed = false;
     let cohortComplianceDeadlineIso: string | null = null;
+    let cohortAwaitingStudyStart = false;
 
     if (!authError && user) {
       email = user.email || null;
@@ -183,7 +184,7 @@ export async function GET(request: Request) {
                 try {
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
-                    .select("enrolled_at, confirmed_at")
+                    .select("enrolled_at, confirmed_at, study_started_at")
                     .eq("user_id", profileId)
                     .eq("cohort_id", cohortUuid)
                     .maybeSingle();
@@ -204,6 +205,17 @@ export async function GET(request: Request) {
                   const confirmedAtIso = cohortConfirmed
                     ? String(confirmedAtRaw).trim()
                     : null;
+                  const studyStartedRaw = (
+                    part as { study_started_at?: string | null } | null
+                  )?.study_started_at;
+                  const studyStartedAtIso =
+                    studyStartedRaw != null &&
+                    String(studyStartedRaw).trim() !== ""
+                      ? String(studyStartedRaw).trim()
+                      : null;
+                  cohortAwaitingStudyStart = Boolean(
+                    cohortConfirmed && !studyStartedAtIso,
+                  );
 
                   if (enrolledAt) {
                     cohortStartDate = String(enrolledAt);
@@ -235,12 +247,6 @@ export async function GET(request: Request) {
                       ? `${String(cohortStart).slice(0, 10)}T00:00:00.000Z`
                       : `${todayYmd}T00:00:00.000Z`;
 
-                  // Study day counter (Day X of N): only after confirmation — anchor at confirmed_at.
-                  const studyAnchorIso =
-                    cohortConfirmed && confirmedAtIso
-                      ? confirmedAtIso
-                      : complianceAnchorIso;
-
                   if (userId) {
                     const [cntCompliance, ymdsCompliance] = await Promise.all([
                       countDistinctDailyEntriesSince(
@@ -252,16 +258,15 @@ export async function GET(request: Request) {
                         complianceAnchorIso,
                       ),
                     ]);
-                    cohortHasCheckedInToday = new Set(ymdsCompliance).has(
-                      todayYmd,
-                    );
-
-                    if (cohortConfirmed) {
+                    if (cohortConfirmed && studyStartedAtIso) {
                       const [cntStudy, ymdsStudy] = await Promise.all([
-                        countDistinctDailyEntriesSince(userId, studyAnchorIso),
+                        countDistinctDailyEntriesSince(
+                          userId,
+                          studyStartedAtIso,
+                        ),
                         fetchCohortCheckinYmdsSinceEnroll(
                           userId,
-                          studyAnchorIso,
+                          studyStartedAtIso,
                         ),
                       ]);
                       cohortCheckinCount = cntStudy;
@@ -269,7 +274,17 @@ export async function GET(request: Request) {
                         ymdsStudy,
                         todayYmd,
                       );
+                      cohortHasCheckedInToday = new Set(ymdsStudy).has(
+                        todayYmd,
+                      );
+                    } else if (cohortConfirmed && cohortAwaitingStudyStart) {
+                      cohortCheckinCount = 0;
+                      cohortCurrentStreak = 0;
+                      cohortHasCheckedInToday = false;
                     } else {
+                      cohortHasCheckedInToday = new Set(ymdsCompliance).has(
+                        todayYmd,
+                      );
                       cohortCheckinCount = cntCompliance;
                       cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
                         ymdsCompliance,
@@ -278,8 +293,8 @@ export async function GET(request: Request) {
                     }
                   }
 
-                  if (cohortConfirmed) {
-                    const studyYmd = confirmedAtIso!.slice(0, 10);
+                  if (cohortConfirmed && studyStartedAtIso) {
+                    const studyYmd = studyStartedAtIso.slice(0, 10);
                     cohortStudyCurrentDay = Math.max(
                       1,
                       daysBetweenInclusiveUtcYmd(studyYmd, todayYmd) + 1,
@@ -290,6 +305,10 @@ export async function GET(request: Request) {
                       0,
                       cohortStudyDays - cohortStudyCurrentDay,
                     );
+                  } else if (cohortConfirmed && cohortAwaitingStudyStart) {
+                    cohortStudyCurrentDay = 0;
+                    cohortStudyComplete = false;
+                    cohortDaysRemaining = cohortStudyDays;
                   } else {
                     cohortStudyCurrentDay = 1;
                     cohortStudyComplete = false;
@@ -358,6 +377,7 @@ export async function GET(request: Request) {
       cohortStudyComplete,
       cohortConfirmed,
       cohortComplianceDeadlineIso,
+      cohortAwaitingStudyStart,
     });
   } catch (e: any) {
     return NextResponse.json(
