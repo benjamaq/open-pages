@@ -13,8 +13,8 @@ const DARK_PANEL_BG = '#1a1f2e'
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
-/** Product pack shot in `public` (uploaded filename). */
-const SURE_SLEEP_PRODUCT = '/Sure Sleep-240-240.png'
+/** Product pack shot: `public/suresleep-240x240.png` */
+const SURE_SLEEP_PRODUCT = '/suresleep-240x240.png'
 /** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
 const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
 
@@ -251,7 +251,7 @@ function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
   )
 }
 
-/** SureSleep pack / bottle artwork (`public/Sure Sleep-240-240.png`). */
+/** SureSleep pack / bottle artwork (`public/suresleep-240x240.png`). */
 function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
   const max =
     larger === true
