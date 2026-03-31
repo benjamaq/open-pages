@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -78,17 +79,14 @@ function SpotCounterCard({
 function HowItWorksSteps({ studyDays }: { studyDays: number }) {
   const steps = [
     {
-      n: '01',
       title: 'Apply today',
       body: `Selected participants complete a short application. We confirm your spot within 24 hours.`,
     },
     {
-      n: '02',
       title: 'Track daily',
       body: `30 seconds each morning for ${studyDays} days. No wearable required.`,
     },
     {
-      n: '03',
       title: 'Get your result',
       body: `Your personal before and after — delivered privately at the end of the study.`,
     },
@@ -98,15 +96,18 @@ function HowItWorksSteps({ studyDays }: { studyDays: number }) {
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-semibold text-neutral-900">How the study works</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {steps.map((s) => (
+          {steps.map((s, i) => (
             <div
-              key={s.n}
+              key={s.title}
               className="rounded-xl border bg-white px-6 py-8"
               style={{ borderColor: '#e5e2dc' }}
             >
-              <div className="text-left text-[48px] font-bold leading-none tabular-nums" style={{ color: RUST }}>
-                {s.n}
-              </div>
+              <span
+                className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide"
+                style={{ borderColor: RUST, color: RUST, background: 'rgba(200, 75, 47, 0.06)' }}
+              >
+                Step {i + 1}
+              </span>
               <h3 className="mt-4 text-[15px] font-semibold text-neutral-900">{s.title}</h3>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{s.body}</p>
             </div>
@@ -117,90 +118,55 @@ function HowItWorksSteps({ studyDays }: { studyDays: number }) {
   )
 }
 
-function StoreCreditIcon() {
+/** Fixed height for incentive card media row (logos / product shot). */
+const INCENTIVE_MEDIA_H = 'h-[148px]'
+
+/** Placeholder product silhouette — swap container for real DoNotAge photography when available. */
+function SureSleepProductPlaceholder({ productName }: { productName: string }) {
   return (
-    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="10" stroke={RUST} strokeWidth="1.5" />
-      <path
-        d="M8 10h8M8 14h5"
-        stroke={RUST}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.5 12.5c0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5.7-1.5 1.5-1.5 1.5.7 1.5 1.5z"
-        stroke={RUST}
-        strokeWidth="1.5"
-      />
-    </svg>
+    <div
+      className={`flex w-full ${INCENTIVE_MEDIA_H} flex-col items-center justify-center rounded-lg border bg-white px-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]`}
+      style={{ borderColor: '#eae8e4' }}
+    >
+      <svg
+        width="56"
+        height="72"
+        viewBox="0 0 56 72"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="shrink-0 text-neutral-400"
+        aria-hidden
+      >
+        <path
+          d="M28 4c-6 0-11 4-11 10v8c0 2 1 4 3 5v35a8 8 0 0016 0V27c2-1 3-3 3-5v-8c0-6-5-10-11-10z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        <path d="M20 22h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      </svg>
+      <span className="mt-2 max-w-[200px] text-center text-[12px] font-semibold leading-tight text-neutral-700">
+        {productName}
+      </span>
+    </div>
   )
 }
 
-function BioStackrStudyIcon() {
+/** Same treatment as hero &quot;Brand logo&quot; — light-card variant. */
+function DonotageLogoPlaceholderLight() {
   return (
-    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M4 18V6l8-3 8 3v12l-8 3-8-3z"
-        stroke={RUST}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M12 9v11M8 7v6M16 7v6" stroke={RUST} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <div
+      className="flex h-11 min-w-[120px] max-w-[180px] items-center justify-center rounded-md border bg-white px-4 shadow-sm"
+      style={{ borderColor: '#e5e2dc' }}
+      aria-label="DoNotAge"
+    >
+      <span className="text-[13px] font-semibold tracking-tight text-neutral-800">DoNotAge</span>
+    </div>
   )
 }
 
 function WhatYouReceive({ productName }: { productName: string }) {
   const headingProduct = `${productName} for the full 21 days`
-  const cards = [
-    {
-      key: 'product',
-      tag: 'Value: included',
-      title: headingProduct,
-      sub: 'Supplied by DoNotAge. Shipped before tracking begins.',
-      body: 'Your product arrives before the study starts so you can begin your baseline check-ins right away.',
-      visual: (
-        <div
-          className="mt-6 flex max-h-[120px] min-h-[88px] items-center justify-center overflow-hidden rounded-md border border-dashed bg-neutral-50"
-          style={{ borderColor: '#e5e2dc' }}
-        >
-          <span className="text-[11px] text-neutral-400">Product image</span>
-        </div>
-      ),
-    },
-    {
-      key: 'credit',
-      tag: 'On completion',
-      title: '£45–50 DoNotAge store credit',
-      sub: 'Awarded when you complete all 21 daily check-ins.',
-      body: `Use it on any DoNotAge product. A thank-you for helping us prove what ${productName} can do.`,
-      visual: (
-        <div
-          className="mt-6 flex min-h-[88px] items-center justify-center rounded-md border bg-neutral-50/80"
-          style={{ borderColor: '#e5e2dc' }}
-          aria-hidden
-        >
-          <StoreCreditIcon />
-        </div>
-      ),
-    },
-    {
-      key: 'pro',
-      tag: 'Value: included',
-      title: '3 months of BioStackr Pro',
-      sub: 'The supplement tracking platform running this study.',
-      body: 'Track your own supplement stack, see your personal results from this study, and keep tracking after it ends.',
-      visual: (
-        <div
-          className="mt-6 flex min-h-[88px] items-center justify-center rounded-md border bg-neutral-50/80"
-          style={{ borderColor: '#e5e2dc' }}
-          aria-hidden
-        >
-          <BioStackrStudyIcon />
-        </div>
-      ),
-    },
-  ]
 
   return (
     <section className="bg-white py-14 sm:py-20">
@@ -213,27 +179,96 @@ function WhatYouReceive({ productName }: { productName: string }) {
           Every confirmed participant receives all three.
         </p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {cards.map((c, i) => (
+          {/* Card 01 — product */}
+          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
+            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
+              01
+            </div>
+            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">{headingProduct}</h3>
+            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
+              Supplied by DoNotAge. Shipped before tracking begins.
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              Your product arrives before the study starts so you can begin your baseline check-ins right away.
+            </p>
+            <div className="mt-6 flex flex-col">
+              <SureSleepProductPlaceholder productName={productName} />
+              <p className="mt-2 text-center text-[11px] leading-snug text-neutral-500">Supplied and shipped by DoNotAge.</p>
+            </div>
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+              Value: included
+            </p>
+          </div>
+
+          {/* Card 02 — store credit */}
+          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
+            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
+              02
+            </div>
+            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">£45–50 DoNotAge store credit</h3>
+            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
+              Awarded when you complete all 21 daily check-ins.
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              Use it on any DoNotAge product. A thank-you for helping us prove what {productName} can do.
+            </p>
             <div
-              key={c.key}
-              className="flex h-full flex-col rounded-xl border bg-white px-6 py-8"
+              className={`mt-6 flex ${INCENTIVE_MEDIA_H} flex-col items-center justify-center gap-3 rounded-lg border bg-[#faf9f7] px-4`}
               style={{ borderColor: '#e5e2dc' }}
             >
-              <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
-                {String(i + 1).padStart(2, '0')}
-              </div>
-              <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">{c.title}</h3>
-              <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">{c.sub}</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">{c.body}</p>
-              {c.visual}
-              <p
-                className="mt-4 text-[11px] font-semibold uppercase tracking-wide"
-                style={{ color: RUST }}
-              >
-                {c.tag}
+              <DonotageLogoPlaceholderLight />
+              <p className="text-center text-[20px] font-bold leading-tight sm:text-[22px]" style={{ color: RUST }}>
+                £45–50 store credit
               </p>
             </div>
-          ))}
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+              On completion
+            </p>
+          </div>
+
+          {/* Card 03 — BioStackr Pro */}
+          <div className="flex h-full flex-col rounded-xl border bg-white px-6 py-8" style={{ borderColor: '#e5e2dc' }}>
+            <div className="text-left text-[40px] font-bold leading-none tabular-nums sm:text-[48px]" style={{ color: RUST }}>
+              03
+            </div>
+            <h3 className="mt-4 text-[15px] font-semibold leading-snug text-neutral-900">3 months of BioStackr Pro</h3>
+            <p className="mt-2 text-[13px] font-medium leading-relaxed text-neutral-700">
+              The supplement tracking platform running this study.
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              Track your own supplement stack, see your personal results from this study, and keep tracking after it
+              ends.
+            </p>
+            <div
+              className={`mt-6 flex ${INCENTIVE_MEDIA_H} flex-col items-center justify-center gap-2 rounded-lg border bg-[#faf9f7] px-3 py-2`}
+              style={{ borderColor: '#e5e2dc' }}
+            >
+              <Image
+                src="/brand/biostackr-logo.png"
+                alt="BioStackr"
+                width={160}
+                height={32}
+                className="h-8 w-auto max-w-[min(100%,152px)] object-contain object-center"
+              />
+              <ul className="w-full max-w-[220px] space-y-0.5 text-[11px] leading-snug text-neutral-600">
+                <li className="flex gap-2">
+                  <span className="text-neutral-400" aria-hidden>
+                    •
+                  </span>
+                  <span>Track your supplement stack</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-neutral-400" aria-hidden>
+                    •
+                  </span>
+                  <span>See your personal study results</span>
+                </li>
+              </ul>
+            </div>
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+              Value: included
+            </p>
+          </div>
         </div>
         <p className="mx-auto mt-10 max-w-2xl text-center text-[14px] font-medium leading-relaxed text-neutral-800">
           Combined value: over £90 — plus your personal study results, delivered privately at the end of the study.
