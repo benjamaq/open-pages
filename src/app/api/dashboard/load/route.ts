@@ -77,6 +77,7 @@ export async function GET(request: Request) {
   }
 
   let cohortSpotBanner: Awaited<ReturnType<typeof getCohortSecondCheckinBanner>> = null
+  const tBanner0 = Date.now()
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -84,6 +85,49 @@ export async function GET(request: Request) {
     if (uid) cohortSpotBanner = await getCohortSecondCheckinBanner(uid)
   } catch {
     cohortSpotBanner = null
+  }
+  const cohortSpotBannerMs = Date.now() - tBanner0
+  const totalMs = Date.now() - t0
+
+  const callsMs = {
+    me: me.ms,
+    billingInfo: billingInfo.ms,
+    paymentsStatus: paymentsStatus.ms,
+    supplements: supplements.ms,
+    progressLoop: progressLoop.ms,
+    hasDaily: hasDaily.ms,
+    dailySkip: dailySkip.ms,
+    effectSummary: effectSummary.ms,
+    wearableStatus: wearableStatus.ms,
+    settings: settings.ms,
+    elliContext: elliContext.ms,
+  }
+
+  try {
+    console.log(
+      '[dashboard/load]',
+      JSON.stringify({
+        totalMs,
+        cohortSpotBannerMs,
+        authOk: me.status !== 401 && progressLoop.status !== 401,
+        callsMs,
+        statuses: {
+          me: me.status,
+          billingInfo: billingInfo.status,
+          paymentsStatus: paymentsStatus.status,
+          supplements: supplements.status,
+          progressLoop: progressLoop.status,
+          hasDaily: hasDaily.status,
+          dailySkip: dailySkip.status,
+          effectSummary: effectSummary.status,
+          wearableStatus: wearableStatus.status,
+          settings: settings.status,
+          elliContext: elliContext.status,
+        },
+      }),
+    )
+  } catch {
+    /* ignore logging failures */
   }
 
   return NextResponse.json(
@@ -101,7 +145,9 @@ export async function GET(request: Request) {
       elliContext: elliContext.data,
       cohortSpotBanner,
       _meta: {
-        totalMs: Date.now() - t0,
+        totalMs,
+        cohortSpotBannerMs,
+        callsMs,
         calls: {
           me,
           billingInfo,

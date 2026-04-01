@@ -17,11 +17,16 @@ async function enrollProfileInCohort(
   profileId: string,
   cohortSlug: string,
   qualificationResponse: string | null,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true } | { ok: false; error: string; code?: 'COHORT_FULL' }> {
   const r = await upsertCohortParticipant(profileId, cohortSlug, qualificationResponse)
   if (!r.ok) return r
   await ensureCohortStudyStackItem(profileId, cohortSlug)
   return { ok: true }
+}
+
+function jsonEnrollmentError(enr: { ok: false; error: string; code?: string }) {
+  const status = enr.code === 'COHORT_FULL' ? 409 : 500
+  return NextResponse.json({ error: enr.error, code: enr.code }, { status })
 }
 
 async function sendCohortEnrollmentEmail(to: string) {
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest) {
     }
 
     // If profile already exists, do not create a duplicate.
-    // But backfill reminder defaults if legacy/trigger-created rows are missing them.
+    // Cohort enrollment runs before setting profiles.cohort_id so a full cohort does not leave a misleading profile row.
     try {
       const { data: existing } = await supabaseAdmin
         .from('profiles')
@@ -121,10 +126,26 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
       if (existing) {
         try {
-          let cohortEnrollmentDone = false
           const reminderEnabled = (existing as any)?.reminder_enabled
           const needsBackfill = reminderEnabled == null
           const tzToWrite = (existing as any)?.reminder_timezone || (existing as any)?.timezone || tz || 'UTC'
+
+          if (cohort_id != null) {
+            const enr = await enrollProfileInCohort(
+              String((existing as any).id),
+              cohort_id,
+              qualification_response,
+            )
+            if (!enr.ok) return jsonEnrollmentError(enr)
+            if (email) {
+              try {
+                await sendCohortEnrollmentEmail(email)
+              } catch (mailErr) {
+                console.error('[api/profiles] cohort welcome email failed:', mailErr)
+              }
+            }
+          }
+
           const updatePayload: Record<string, unknown> = {
             updated_at: new Date().toISOString(),
           }
@@ -154,55 +175,15 @@ export async function POST(req: NextRequest) {
             const { error: updErr } = await supabaseAdmin.from('profiles').update(updatePayload as any).eq('user_id', user_id)
             if (updErr) {
               console.error('[api/profiles] update error:', updErr)
-              if (cohort_id != null) {
-                return NextResponse.json({ error: updErr.message || 'Could not update profile cohort' }, { status: 500 })
-              }
-            } else {
-              if (cohort_id != null) {
-                const enr = await enrollProfileInCohort(
-                  String((existing as any).id),
-                  cohort_id,
-                  qualification_response,
-                )
-                if (!enr.ok) {
-                  return NextResponse.json({ error: enr.error }, { status: 500 })
-                }
-                cohortEnrollmentDone = true
-                if (email) {
-                  try {
-                    await sendCohortEnrollmentEmail(email)
-                  } catch (mailErr) {
-                    console.error('[api/profiles] cohort welcome email failed:', mailErr)
-                  }
-                }
-              }
-            }
-          }
-          if (cohort_id != null && !cohortEnrollmentDone) {
-            const enr = await enrollProfileInCohort(
-              String((existing as any).id),
-              cohort_id,
-              qualification_response,
-            )
-            if (!enr.ok) {
-              return NextResponse.json({ error: enr.error }, { status: 500 })
-            }
-            if (email) {
-              try {
-                await sendCohortEnrollmentEmail(email)
-              } catch (mailErr) {
-                console.error('[api/profiles] cohort welcome email failed:', mailErr)
-              }
+              return NextResponse.json({ error: updErr.message || 'Could not update profile' }, { status: 500 })
             }
           }
         } catch (inner: unknown) {
           console.error('[api/profiles] existing profile branch:', inner)
-          if (cohort_id != null) {
-            return NextResponse.json(
-              { error: inner instanceof Error ? inner.message : 'Profile update failed' },
-              { status: 500 },
-            )
-          }
+          return NextResponse.json(
+            { error: inner instanceof Error ? inner.message : 'Profile update failed' },
+            { status: 500 },
+          )
         }
         return NextResponse.json({ ok: true, id: existing.id, slug: (existing as any).slug })
       }
@@ -242,9 +223,6 @@ export async function POST(req: NextRequest) {
       created_at: now,
       updated_at: now,
     }
-    if (cohort_id != null) {
-      insertPayload.cohort_id = cohort_id
-    }
     if (Object.keys(shippingPatch).length > 0) {
       Object.assign(insertPayload, shippingPatch)
     }
@@ -267,6 +245,12 @@ export async function POST(req: NextRequest) {
           if (!existing?.id) {
             return NextResponse.json({ error: 'Profile not found after signup; cannot set cohort' }, { status: 500 })
           }
+          const enr = await enrollProfileInCohort(
+            String((existing as any).id),
+            cohort_id,
+            qualification_response,
+          )
+          if (!enr.ok) return jsonEnrollmentError(enr)
           const raceUpd: Record<string, unknown> = { cohort_id, updated_at: new Date().toISOString() }
           if (reminderFromSlot != null) raceUpd.reminder_time = reminderFromSlot
           if (Object.keys(shippingPatch).length > 0) Object.assign(raceUpd, shippingPatch)
@@ -277,14 +261,6 @@ export async function POST(req: NextRequest) {
           if (raceUpdErr) {
             console.error('[api/profiles] race cohort update:', raceUpdErr)
             return NextResponse.json({ error: raceUpdErr.message || 'Could not set cohort on profile' }, { status: 500 })
-          }
-          const enr = await enrollProfileInCohort(
-            String((existing as any).id),
-            cohort_id,
-            qualification_response,
-          )
-          if (!enr.ok) {
-            return NextResponse.json({ error: enr.error }, { status: 500 })
           }
           if (email) {
             try {
@@ -302,8 +278,14 @@ export async function POST(req: NextRequest) {
 
     if (cohort_id != null && data?.id) {
       const enr = await enrollProfileInCohort(String(data.id), cohort_id, qualification_response)
-      if (!enr.ok) {
-        return NextResponse.json({ error: enr.error }, { status: 500 })
+      if (!enr.ok) return jsonEnrollmentError(enr)
+      const { error: setCohortErr } = await supabaseAdmin
+        .from('profiles')
+        .update({ cohort_id, updated_at: new Date().toISOString() } as any)
+        .eq('id', data.id)
+      if (setCohortErr) {
+        console.error('[api/profiles] set cohort_id after enroll:', setCohortErr)
+        return NextResponse.json({ error: setCohortErr.message || 'Could not attach cohort to profile' }, { status: 500 })
       }
       if (email) {
         try {

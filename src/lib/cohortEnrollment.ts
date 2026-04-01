@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-export type CohortParticipantUpsertResult = { ok: true } | { ok: false; error: string }
+export type CohortParticipantUpsertResult =
+  | { ok: true }
+  | { ok: false; error: string; code?: 'COHORT_FULL' }
 
 /** `profileId` = public.profiles.id; `cohortSlug` = public.cohorts.slug (same as profiles.cohort_id text). */
 export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: string) {
@@ -32,7 +34,10 @@ export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: 
       schedule_days: [0, 1, 2, 3, 4, 5, 6],
       created_at: new Date().toISOString(),
     } as any)
-    if (insErr) console.error('[cohortEnrollment] stack_items insert:', insErr)
+    if (insErr) {
+      if (insErr.code === '23505') return
+      console.error('[cohortEnrollment] stack_items insert:', insErr)
+    }
   } catch (e) {
     console.error('[cohortEnrollment] ensureCohortStudyStackItem:', e)
   }
@@ -78,6 +83,17 @@ export async function upsertCohortParticipant(
     }
     const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert(payload)
     if (!insErr) return { ok: true }
+    if (
+      insErr.code === '23514' ||
+      (insErr.message && insErr.message.includes('COHORT_FULL')) ||
+      (typeof insErr.details === 'string' && insErr.details.includes('COHORT_FULL'))
+    ) {
+      return {
+        ok: false,
+        error: 'This study has reached enrollment capacity.',
+        code: 'COHORT_FULL',
+      }
+    }
     if (insErr.code === '23505') {
       const updatePatch: Record<string, unknown> = {
         currently_taking_product: false,
