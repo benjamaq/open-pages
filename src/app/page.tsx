@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Check, Clock, ChevronLeft, ChevronRight } from "lucide-react"
@@ -49,13 +48,11 @@ export default function Page() {
             BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
           </p>
           <div className="flex flex-col items-center justify-center">
-            <Link href="/signup">
-              <Button
-                size="lg"
-                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-7 py-5 text-base font-semibold transition-all whitespace-nowrap"
-              >
-                Test My Supplements
-              </Button>
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-black px-7 py-5 text-base font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 h-12 min-h-[48px]"
+            >
+              Test My Supplements
             </Link>
             <p className="mt-3 text-sm text-neutral-500 text-center">Free to start · No credit card required</p>
           </div>
@@ -91,13 +88,11 @@ export default function Page() {
               BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
             </p>
             <div className="flex flex-col items-start gap-3">
-              <Link href="/signup">
-                <Button
-                  size="lg"
-                  className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all whitespace-nowrap"
-                >
-                  Test My Supplements
-                </Button>
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-full bg-black px-8 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
+              >
+                Test My Supplements
               </Link>
               <p className="text-sm text-neutral-500">Free to start · No credit card required</p>
             </div>
@@ -114,13 +109,12 @@ export default function Page() {
               Run real-world cohort studies with your customers. Claim-ready evidence for Meta ads, retail, and landing pages.
             </p>
           </div>
-          <Link href="/cohorts">
-            <Button
-              variant="outline"
-              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black rounded-full px-6 py-3 font-semibold whitespace-nowrap shrink-0"
-            >
-              For Brands →
-            </Button>
+          <Link
+            href="/cohorts"
+            prefetch={false}
+            className="inline-flex items-center justify-center rounded-full font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black touch-manipulation bg-transparent border-2 border-white text-white hover:bg-white hover:text-black px-6 py-3 whitespace-nowrap shrink-0 h-10 sm:h-11"
+          >
+            For Brands →
           </Link>
         </div>
       </section>
@@ -194,13 +188,11 @@ export default function Page() {
           </div>
 
           <div className="mt-8 flex justify-center">
-            <Link href="/signup">
-              <Button
-                size="lg"
-                className="bg-black text-white hover:bg-neutral-800 hover:scale-105 rounded-full px-8 py-6 text-lg font-semibold transition-all whitespace-nowrap"
-              >
-                Test What You&apos;re Actually Taking
-              </Button>
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-black px-8 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
+            >
+              Test What You&apos;re Actually Taking
             </Link>
           </div>
         </div>
@@ -280,10 +272,11 @@ export default function Page() {
             </div>
             <p className="mt-4 text-sm text-neutral-600 text-center">Ready to find out which ones actually work?</p>
             <div className="mt-4">
-              <Link href="/signup">
-                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-3 font-semibold whitespace-nowrap">
-                  Start My Analysis
-                </Button>
+              <Link
+                href="/signup"
+                className="inline-flex w-full items-center justify-center rounded-full bg-black py-3 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[44px]"
+              >
+                Start My Analysis
               </Link>
             </div>
           </div>
@@ -587,10 +580,11 @@ export default function Page() {
           </p>
 
           <div className="mt-8">
-            <Link href="/signup">
-              <Button size="lg" className="bg-black hover:bg-neutral-800 text-white rounded-full px-8 py-4 text-base font-semibold whitespace-nowrap">
-                Upload My Data & Get Started
-              </Button>
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-black px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[48px]"
+            >
+              Upload My Data & Get Started
             </Link>
           </div>
         </div>
@@ -794,10 +788,11 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href="/signup?plan=free">
-                <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold whitespace-nowrap">
-                  Start Free
-                </Button>
+              <Link
+                href="/signup?plan=free"
+                className="inline-flex w-full items-center justify-center rounded-full bg-neutral-900 py-6 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
+              >
+                Start Free
               </Link>
             </Card>
 
@@ -866,10 +861,11 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link href={`/signup?plan=premium&period=${billingPeriod}`}>
-                <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold whitespace-nowrap">
-                  Get Answers
-                </Button>
+              <Link
+                href={`/signup?plan=premium&period=${billingPeriod}`}
+                className="inline-flex w-full items-center justify-center rounded-full bg-black py-6 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
+              >
+                Get Answers
               </Link>
             </Card>
           </div>
@@ -893,13 +889,11 @@ export default function Page() {
           <p className="mb-10 text-xl text-neutral-200 leading-relaxed">
             You&apos;ve spent years building your stack. Spend two minutes testing it.
           </p>
-          <Link href="/signup">
-            <Button
-              size="lg"
-              className="bg-transparent border-2 border-white text-white hover:bg-white/10 hover:scale-105 rounded-full px-12 py-6 text-lg font-semibold transition-all whitespace-nowrap"
-            >
-              Test My Supplements
-            </Button>
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center rounded-full border-2 border-white bg-transparent px-12 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-white/10 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50 min-h-[52px]"
+          >
+            Test My Supplements
           </Link>
           <p className="mt-4 text-sm text-neutral-200">Free. No credit card required.</p>
         </div>

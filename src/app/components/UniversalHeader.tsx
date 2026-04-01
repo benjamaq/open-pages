@@ -64,11 +64,11 @@ export default function UniversalHeader() {
             {!isAuthed ? (
               <>
                 {pathname?.startsWith('/cohorts') ? (
-                  <Link href="/" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                  <Link href="/" prefetch={false} className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap touch-manipulation">
                     For Individuals
                   </Link>
                 ) : (
-                  <Link href="/cohorts" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                  <Link href="/cohorts" prefetch={false} className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap touch-manipulation">
                     For Brands
                   </Link>
                 )}
@@ -82,11 +82,11 @@ export default function UniversalHeader() {
             ) : (
               <>
                 {pathname?.startsWith('/cohorts') ? (
-                  <Link href="/" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                  <Link href="/" prefetch={false} className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap touch-manipulation">
                     For Individuals
                   </Link>
                 ) : (
-                  <Link href="/cohorts" className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap">
+                  <Link href="/cohorts" prefetch={false} className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-800 hover:text-black hover:bg-neutral-100 whitespace-nowrap touch-manipulation">
                     For Brands
                   </Link>
                 )}

@@ -35,6 +35,31 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/checkin/magic')) {
     return NextResponse.next()
   }
+
+  // Anonymous visitors: skip Supabase session refresh on public marketing pages.
+  // No auth cookies → nothing to refresh; avoids an extra network round-trip on / and /cohorts.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
+  if (!hasAuthCookie) {
+    const isAnonMarketing =
+      pathname === '/' ||
+      pathname === '/cohorts' ||
+      pathname.startsWith('/cohorts/') ||
+      pathname === '/pricing' ||
+      pathname.startsWith('/pricing/') ||
+      pathname === '/faq' ||
+      pathname.startsWith('/faq/') ||
+      pathname === '/contact' ||
+      pathname.startsWith('/contact/') ||
+      pathname === '/biostackr' ||
+      pathname.startsWith('/biostackr/') ||
+      /^\/sleep(-v[23])?(\/|$)/.test(pathname)
+    if (isAnonMarketing) {
+      return NextResponse.next()
+    }
+  }
+
   // Let the App Router handle routing for the root (/) and all other paths
   return await updateSession(request)
 }

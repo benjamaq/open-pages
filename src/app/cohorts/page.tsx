@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ArrowRight } from 'lucide-react'
@@ -54,24 +55,25 @@ export default function CohortsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Section 1 — Hero */}
-      <section
-        className="relative pt-20 sm:pt-36 pb-12 sm:pb-28 px-4 sm:px-6 overflow-hidden w-full min-h-[420px] sm:min-h-[680px] lg:min-h-[750px]"
-        style={{
-          backgroundImage: "url('/amber.png')",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundColor: "#1a1a1a",
-        }}
-      >
+      <section className="relative pt-20 sm:pt-36 pb-12 sm:pb-28 px-4 sm:px-6 overflow-hidden w-full min-h-[420px] sm:min-h-[680px] lg:min-h-[750px] bg-[#1a1a1a]">
+        <Image
+          src="/amber.png"
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          quality={75}
+          className="object-cover object-center"
+        />
         {/* Gradient overlay: stronger on left for text, image shows through on right */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 z-[1]"
           style={{
             background: 'linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.25) 100%)',
           }}
         />
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative z-[2] mx-auto max-w-7xl">
           <div className="max-w-2xl lg:max-w-2xl sm:text-left text-center">
             <h1 className="mb-4 sm:mb-6 text-3xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
               Prove your product does what you claim.

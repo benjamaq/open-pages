@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
-import NextImage from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
@@ -36,30 +35,6 @@ function readQualDraft(): CohortQualificationDraftV1 | null {
   }
 }
 
-/** Placeholder until real DoNotAge logo asset ships. */
-function DonotageLogoPlaceholder() {
-  return (
-    <div
-      className="inline-flex items-center gap-3 rounded-lg border border-white/25 bg-white/10 px-3 py-2 backdrop-blur-sm"
-      aria-label="DoNotAge (placeholder logo)"
-    >
-      <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white/90 text-sm font-bold tracking-tight text-slate-800">
-        DNA
-      </div>
-      <span className="text-lg font-semibold tracking-tight text-white drop-shadow-sm">DoNotAge</span>
-    </div>
-  )
-}
-
-function isDonotageBrandedStudy(slug: string | null, brandLabel: string | null): boolean {
-  if ((slug || '').toLowerCase() === 'donotage-suresleep') return true
-  const norm = (brandLabel || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, '')
-  return norm === 'donotage'
-}
-
 export default function CohortSignupPage() {
   return (
     <Suspense fallback={<div className="min-h-screen grid place-items-center text-neutral-600">Loading…</div>}>
@@ -73,7 +48,6 @@ function CohortSignupInner() {
   const [ready, setReady] = useState(false)
   const [cohortSlug, setCohortSlug] = useState<string | null>(null)
   const [qualificationIssue, setQualificationIssue] = useState<string>('')
-  const [cohortBrandLabel, setCohortBrandLabel] = useState<string | null>(null)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -103,15 +77,8 @@ function CohortSignupInner() {
     try {
       setCohortCookie(slug)
     } catch {}
-    try {
-      setCohortBrandLabel(getCohortBrandCookie())
-    } catch {
-      setCohortBrandLabel(null)
-    }
     setReady(true)
   }, [router])
-
-  const showDonotageLogo = isDonotageBrandedStudy(cohortSlug, cohortBrandLabel)
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -274,18 +241,6 @@ function CohortSignupInner() {
       />
       <div className="fixed inset-0 bg-black/40" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[560px] flex-col justify-center px-5 py-10 sm:px-6">
-        {showDonotageLogo ? (
-          <div className="mb-5 sm:mb-6">
-            <NextImage
-              src="/DNA-logo-white.png"
-              alt="DoNotAge.org"
-              width={200}
-              height={200}
-              className="h-14 w-auto object-contain object-left drop-shadow sm:h-16"
-              priority
-            />
-          </div>
-        ) : null}
         <div className="w-full rounded-2xl border border-white/20 bg-white p-8 shadow-xl sm:p-10">
           <div className="text-center">
             <h1 className="text-2xl font-semibold text-slate-900">You&apos;re almost in</h1>
