@@ -7,12 +7,16 @@ WHERE user_id IN (
   SELECT id FROM auth.users WHERE email LIKE 'loadtest+%@biostackr.io'
 );
 
+-- user_id may reference profiles.id (repo) or auth.users.id (some deployments)
 DELETE FROM public.cohort_participants
 WHERE user_id IN (
   SELECT p.id
   FROM public.profiles p
   JOIN auth.users u ON u.id = p.user_id
   WHERE u.email LIKE 'loadtest+%@biostackr.io'
+)
+OR user_id IN (
+  SELECT id FROM auth.users WHERE email LIKE 'loadtest+%@biostackr.io'
 );
 
 DELETE FROM public.profiles

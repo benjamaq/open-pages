@@ -8,7 +8,12 @@
 --
 -- Schema notes:
 --   daily_entries: sleep_quality, energy, mood, focus, sleep_onset_bucket, night_wakes (no outcomes JSONB).
---   daily_entries.user_id = auth.users.id; cohort_participants.user_id = profiles.id.
+--   daily_entries.user_id = auth.users.id.
+--   cohort_participants.user_id: repo migrations reference public.profiles(id). If your DB references
+--   auth.users(id), Postgres reports missing keys as table "users". The DO block below reads
+--   cohort_participants_user_id_fkey and inserts auth id or profiles.id accordingly.
+--   Raw INSERT into auth.users may not run handle_new_user_profiles (e.g. trigger missing in SQL Editor);
+--   we INSERT profiles … ON CONFLICT DO NOTHING so UPDATE / enrollment always have rows.
 
 BEGIN;
 
@@ -75,6 +80,33 @@ WHERE u.email LIKE 'loadtest+%@biostackr.io'
     SELECT 1 FROM auth.identities i WHERE i.user_id = u.id AND i.provider = 'email'
   );
 
+-- Mirror handle_new_user_profiles so profiles exist even when signup trigger did not run.
+INSERT INTO public.profiles (
+  user_id,
+  slug,
+  display_name,
+  public,
+  reminder_enabled,
+  reminder_time,
+  timezone
+)
+SELECT
+  u.id,
+  'user-' || replace(u.id::text, '-', ''),
+  coalesce(
+    u.raw_user_meta_data->>'name',
+    u.raw_user_meta_data->>'full_name',
+    nullif(split_part(coalesce(u.email, ''), '@', 1), ''),
+    'User'
+  ),
+  true,
+  true,
+  '09:00',
+  'UTC'
+FROM auth.users u
+WHERE u.email LIKE 'loadtest+%@biostackr.io'
+ON CONFLICT (user_id) DO NOTHING;
+
 UPDATE public.profiles p
 SET
   cohort_id = 'donotage-suresleep',
@@ -92,9 +124,23 @@ WHERE p.user_id = u.id
 DO $$
 DECLARE
   r RECORD;
+  v_confrel oid;
+  v_use_auth_uid boolean;
 BEGIN
+  SELECT c.confrelid
+  INTO v_confrel
+  FROM pg_constraint c
+  WHERE c.conname = 'cohort_participants_user_id_fkey'
+    AND c.contype = 'f'
+  LIMIT 1;
+
+  v_use_auth_uid := (v_confrel IS NOT NULL AND v_confrel = to_regclass('auth.users')::oid);
+
   FOR r IN
-    SELECT p.id AS profile_id, c.id AS cohort_uuid
+    SELECT
+      u.id AS auth_id,
+      p.id AS profile_id,
+      c.id AS cohort_uuid
     FROM public.profiles p
     JOIN auth.users u ON u.id = p.user_id
     JOIN public.cohorts c ON c.slug = 'donotage-suresleep'
@@ -110,7 +156,7 @@ BEGIN
       qualification_response
     )
     VALUES (
-      r.profile_id,
+      CASE WHEN v_use_auth_uid THEN r.auth_id ELSE r.profile_id END,
       r.cohort_uuid,
       'confirmed',
       now() - interval '5 days',
