@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (!cohortUuid) {
       const { data: cohorts, error } = await supabaseAdmin
         .from('cohorts')
-        .select('id, slug, brand_name, product_name, status, max_participants, min_participants, display_capacity')
+        .select('id, slug, brand_name, product_name, status, max_participants, display_capacity')
         .order('brand_name', { ascending: true })
       if (error) {
         console.error('[admin/cohorts] list:', error)
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       }
       const base = cohorts || []
       const cohortsWithCounts = await Promise.all(
-        base.map(async (c: { id: string; max_participants?: number | null; min_participants?: number | null }) => {
+        base.map(async (c: { id: string; max_participants?: number | null }) => {
           const [appliedCount, confirmedCount, droppedCount, new24, activatedCount] = await Promise.all([
             countCohortStatusParticipants(c.id, 'applied'),
             countCohortConfirmedParticipants(c.id),
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
               ? Math.round((confirmedCount / maxP) * 1000) / 10
               : null
           const health = cohortHealthStatusLabel({
-            minParticipants: c.min_participants != null ? Number(c.min_participants) : null,
+            minParticipants: null,
             maxParticipants: maxP,
             confirmedCount,
             newEnrollmentsLast24h: new24,
