@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { persistAdminKeyToCookie } from '@/lib/adminSession'
 
 const ADMIN_KEY_STORAGE = 'bs_admin_key'
 
@@ -63,7 +64,10 @@ export default function AdminCohortsPage() {
   const saveKey = () => {
     try {
       const v = adminKey.trim()
-      if (v) sessionStorage.setItem(ADMIN_KEY_STORAGE, v)
+      if (v) {
+        sessionStorage.setItem(ADMIN_KEY_STORAGE, v)
+        persistAdminKeyToCookie(v)
+      }
     } catch {}
   }
 

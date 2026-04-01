@@ -1,0 +1,46 @@
+# POST cohort check-ins against production/staging.
+#
+# Setup:
+#   1. Sign in as a real user who has profiles.cohort_id set (same cohort as check-in fields on server).
+#   2. In browser DevTools → Application → Cookies (e.g. www.biostackr.io), copy the FULL Cookie header
+#      value for requests, OR copy all Supabase cookies joined as "name=value; name2=value2".
+#   3. Export for Artillery:
+#        export CHECKIN_SESSION_COOKIE='sb-xxxx-auth-token=...; sb-xxxx-auth-token.0=...; ...'
+#      Use the exact cookie string your browser sends on /api/checkin POST.
+#   4. Set local_date to today's date in the user's timezone (YYYY-MM-DD) or the API may write the wrong day.
+#
+# Run:
+#   CHECKIN_SESSION_COOKIE='...' \\
+#   CHECKIN_LOCAL_DATE=$(date +%Y-%m-%d) \\
+#   npx artillery@latest run scripts/loadtest/artillery.yml
+#
+# Override host: CHECKIN_TARGET=https://staging.example.com npx artillery ...
+
+config:
+  target: "https://www.biostackr.io"
+  http:
+    timeout: 45
+  variables:
+    cookie: "{{ $env.CHECKIN_SESSION_COOKIE }}"
+    localDate: "{{ $env.CHECKIN_LOCAL_DATE }}"
+  phases:
+    - duration: 30
+      arrivalRate: 2
+      name: cohort-checkin-steady
+
+scenarios:
+  - name: cohort-checkin-post
+    flow:
+      - post:
+          url: "/api/checkin"
+          headers:
+            Content-Type: "application/json"
+            Cookie: "{{ cookie }}"
+          json:
+            local_date: "{{ localDate }}"
+            sleep_quality: 7
+            energy: 7
+            mood: 7
+            focus: 7
+            sleep_onset_bucket: 2
+            night_wakes: 1

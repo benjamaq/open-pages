@@ -15,6 +15,23 @@ export async function middleware(request: NextRequest) {
   } catch {}
 
   const { pathname } = request.nextUrl
+
+  // Admin UI: block /admin/* except /admin/cohorts (key entry). Requires cookie set when saving key there.
+  const adminApiKey = process.env.ADMIN_API_KEY || ''
+  if (process.env.NODE_ENV === 'production' && adminApiKey) {
+    const isAdminKeyEntry =
+      pathname === '/admin/cohorts' || pathname.startsWith('/admin/cohorts/')
+    if (pathname.startsWith('/admin') && !isAdminKeyEntry) {
+      const cookieKey = request.cookies.get('bs_admin_key')?.value || ''
+      if (cookieKey !== adminApiKey) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/'
+        url.search = ''
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   // Static assets: serve directly without auth (PDF sample report, etc.)
   if (/\.(?:pdf|svg|png|jpg|jpeg|gif|webp)$/i.test(pathname)) {
     return NextResponse.next()
