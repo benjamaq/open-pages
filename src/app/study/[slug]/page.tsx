@@ -207,33 +207,6 @@ function IconHowResults() {
   )
 }
 
-function SectionDonotageLogoBlack({ className = '' }: { className?: string }) {
-  return (
-    <div className={`flex justify-center ${className}`}>
-      <Image
-        src={DNA_LOGO_BLACK}
-        alt="DoNotAge.org"
-        width={200}
-        height={200}
-        className="h-11 w-auto object-contain opacity-95 sm:h-12"
-      />
-    </div>
-  )
-}
-
-/** Partner marks below hero (smaller than hero bar). */
-function StudyLightSectionBrandRow({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`mb-8 flex flex-col items-center gap-5 sm:mb-10 sm:flex-row sm:justify-center sm:gap-10 ${className}`}
-    >
-      <SectionDonotageLogoBlack className="!mb-0" />
-      <div className="hidden h-10 w-px shrink-0 bg-neutral-200 sm:block sm:h-11" aria-hidden />
-      <SectionBioStackrLogoLight className="!mb-0" />
-    </div>
-  )
-}
-
 function HowItWorksSteps() {
   const steps = [
     {
@@ -293,7 +266,6 @@ function HowItWorksSteps() {
       style={{ backgroundColor: STUDY_SECTION_BAND_BG }}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <StudyLightSectionBrandRow />
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
             Structured steps, built for real outcomes.
           </p>
@@ -349,7 +321,7 @@ function HeroDonotageLogo() {
       alt="DoNotAge.org"
       width={200}
       height={200}
-      className="h-[6.25rem] w-auto max-w-[min(100%,500px)] object-contain object-left contrast-[1.06] sm:h-[7rem] md:h-[7.5rem]"
+      className="h-[7.75rem] w-auto max-w-[min(100%,560px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] md:h-[9.5rem]"
       priority
     />
   )
@@ -372,26 +344,6 @@ function HeroBioStackrLogo() {
       />
       <span className="sr-only">BioStackr home</span>
     </Link>
-  )
-}
-
-function SectionBioStackrLogoLight({ className = '' }: { className?: string }) {
-  return (
-    <div className={`flex justify-center ${className}`}>
-      <Link
-        href="/"
-        className="inline-flex bg-transparent opacity-95 transition-opacity hover:opacity-100"
-      >
-        <Image
-          src={BIOSTACKR_LOGO}
-          alt="BioStackr"
-          width={434}
-          height={135}
-          className="h-8 w-auto max-w-[200px] object-contain mix-blend-multiply contrast-[1.02] sm:h-9 sm:max-w-[220px]"
-        />
-        <span className="sr-only">BioStackr home</span>
-      </Link>
-    </div>
   )
 }
 
@@ -502,7 +454,6 @@ function WhatYouReceive({ productName }: { productName: string }) {
       className={`py-16 sm:py-24 ${STUDY_STRIPE_DIVIDER}`}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <StudyLightSectionBrandRow className="!mb-6 sm:!mb-8" />
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
           This is a structured study, not a survey.
         </p>
@@ -535,13 +486,17 @@ function WhatYouReceive({ productName }: { productName: string }) {
             footer="Included for all participants"
           />
         </div>
-        <div className="mx-auto mt-10 max-w-xl space-y-2 text-center sm:mt-12">
-          <p className="text-[12px] leading-snug text-neutral-500 sm:text-[13px]">
-            Every confirmed participant receives all three.
+        <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-neutral-200/90 bg-neutral-50 px-5 py-6 text-center shadow-sm sm:mt-12 sm:px-8 sm:py-8">
+          <p className="text-[13px] font-semibold text-neutral-800 sm:text-[14px]">
+            Every confirmed participant receives all three rewards.
           </p>
-          <p className="text-[15px] font-semibold tracking-tight text-neutral-900 sm:text-[16px]">Total value: €200+</p>
-          <p className="text-[12px] leading-snug text-neutral-500 sm:text-[13px]">
-            Includes full product supply, completion reward, and BioStackr Pro access.
+          <p className="mt-3 text-[24px] font-bold tabular-nums tracking-tight text-neutral-900 sm:text-[28px]">
+            €200+{' '}
+            <span className="text-[15px] font-semibold text-neutral-700 sm:text-base">combined package value</span>
+          </p>
+          <p className="mt-3 text-[12px] leading-relaxed text-neutral-600 sm:text-[13px]">
+            Illustrative total for the three study outcomes together when you complete all 21 days — not a single-product
+            price or checkout total.
           </p>
         </div>
       </div>
@@ -716,6 +671,16 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             </div>
 
             {!showFullMessage ? (
+              <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
+                Finish the full study and the three rewards you earn are worth over{' '}
+                <span className="whitespace-nowrap" style={{ color: RUST }}>
+                  €200+
+                </span>{' '}
+                combined — the full package, not a per-item retail price.
+              </p>
+            ) : null}
+
+            {!showFullMessage ? (
               <div className="mt-4 flex flex-col items-center sm:mt-5">
                 <StudyApplyCta variant="heroLight" />
                 <p className="mt-4 max-w-md px-2 text-center text-[12px] font-medium leading-snug text-neutral-600 sm:mt-5 sm:text-[13px]">
@@ -737,7 +702,6 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             className="py-16 sm:py-24"
           >
             <div className="mx-auto max-w-3xl px-4 sm:px-6">
-              <StudyLightSectionBrandRow />
               <CohortQualificationSection
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
