@@ -90,12 +90,12 @@ export async function countCohortEnrollmentsLast24h(cohortUuid: string): Promise
  * Precedence: Send wave 2 → On track → Watch → em dash.
  */
 export function cohortHealthStatusLabel(input: {
-  minParticipants: number | null
+  minParticipants?: number | null
   maxParticipants: number | null
   confirmedCount: number
   newEnrollmentsLast24h: number
 }): string {
-  const minP = input.minParticipants
+  const minP = input.minParticipants ?? null
   const maxP = input.maxParticipants
   const conf = input.confirmedCount
   const new24 = input.newEnrollmentsLast24h

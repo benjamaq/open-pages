@@ -13,7 +13,6 @@ type Cohort = {
   product_name: string
   status: string | null
   max_participants?: number | null
-  min_participants?: number | null
   display_capacity?: number | null
   applied_participant_count?: number
   confirmed_participant_count?: number
@@ -57,7 +56,10 @@ export default function AdminCohortsPage() {
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(ADMIN_KEY_STORAGE) || ''
-      if (saved) setAdminKey(saved)
+      if (saved) {
+        setAdminKey(saved)
+        persistAdminKeyToCookie(saved)
+      }
     } catch {}
   }, [])
 
@@ -225,7 +227,7 @@ export default function AdminCohortsPage() {
                     <th className="px-3 py-2 text-right font-medium text-gray-600">Dropped</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-600">Conf. % max</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-600">New 24h</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Min / max</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">Max / hero cap</th>
                     <th className="px-3 py-2 text-left font-medium text-gray-600">Health</th>
                   </tr>
                 </thead>
@@ -238,7 +240,6 @@ export default function AdminCohortsPage() {
                     const new24 = c.new_enrollments_24h ?? 0
                     const activated = c.activated_participant_count ?? 0
                     const health = c.health_status ?? '—'
-                    const min = c.min_participants
                     const max = c.max_participants
                     const disp = c.display_capacity
                     return (
@@ -256,7 +257,7 @@ export default function AdminCohortsPage() {
                         </td>
                         <td className="px-3 py-2 text-right text-gray-700">{new24}</td>
                         <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                          {min != null ? min : '—'} / {max != null ? max : '—'}
+                          {max != null ? max : '—'}
                           {disp != null ? (
                             <span className="block text-xs text-gray-500">Hero cap: {disp}</span>
                           ) : null}

@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
               ? Math.round((confirmedCount / maxP) * 1000) / 10
               : null
           const health = cohortHealthStatusLabel({
-            minParticipants: null,
             maxParticipants: maxP,
             confirmedCount,
             newEnrollmentsLast24h: new24,
