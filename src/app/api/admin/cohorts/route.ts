@@ -10,6 +10,14 @@ import {
 import { isQualificationResponseVisuallyShort } from '@/lib/qualificationFreeText'
 import { cohortConfirmedParticipantAtRisk } from '@/lib/cohortAdminAtRisk'
 
+/** Recruitment cap shown to users / capacity trigger: display_capacity when set, else max_participants */
+function effectiveCohortCapacity(displayCapacity: unknown, maxParticipants: unknown): number | null {
+  const d = displayCapacity != null ? Number(displayCapacity) : NaN
+  if (Number.isFinite(d)) return d
+  const m = maxParticipants != null ? Number(maxParticipants) : NaN
+  return Number.isFinite(m) ? m : null
+}
+
 function adminDenied(req: NextRequest): NextResponse | null {
   if (process.env.NODE_ENV !== 'production') return null
   const key = req.headers.get('x-admin-key')
@@ -39,7 +47,12 @@ export async function GET(request: NextRequest) {
       }
       const base = cohorts || []
       const cohortsWithCounts = await Promise.all(
-        base.map(async (c: { id: string; max_participants?: number | null }) => {
+        base.map(
+          async (c: {
+            id: string
+            max_participants?: number | null
+            display_capacity?: number | null
+          }) => {
           const [appliedCount, confirmedCount, droppedCount, new24, activatedCount] = await Promise.all([
             countCohortStatusParticipants(c.id, 'applied'),
             countCohortConfirmedParticipants(c.id),
@@ -47,13 +60,11 @@ export async function GET(request: NextRequest) {
             countCohortEnrollmentsLast24h(c.id),
             countCohortConfirmedActivatedParticipants(c.id),
           ])
-          const maxP = c.max_participants != null ? Number(c.max_participants) : null
+          const cap = effectiveCohortCapacity(c.display_capacity, c.max_participants)
           const confirmedPctOfMax =
-            maxP != null && Number.isFinite(maxP) && maxP > 0
-              ? Math.round((confirmedCount / maxP) * 1000) / 10
-              : null
+            cap != null && cap > 0 ? Math.round((confirmedCount / cap) * 1000) / 10 : null
           const health = cohortHealthStatusLabel({
-            maxParticipants: maxP,
+            maxParticipants: cap,
             confirmedCount,
             newEnrollmentsLast24h: new24,
           })
@@ -67,7 +78,8 @@ export async function GET(request: NextRequest) {
             new_enrollments_24h: new24,
             health_status: health,
           }
-        })
+        },
+        )
       )
       return NextResponse.json({ cohorts: cohortsWithCounts })
     }
