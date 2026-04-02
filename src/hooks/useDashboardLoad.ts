@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * Loads the dashboard bundle via GET /api/dashboard/load (not /api/me in the browser).
+ * That route runs /api/me on the server and merges billing, supplements, progress, etc.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'

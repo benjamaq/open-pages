@@ -13,7 +13,7 @@ import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUs
 
 export const dynamic = "force-dynamic";
 
-/** First name for UI: prefer profiles.first_name, else first token of full_name, else first token of display_name. */
+/** First name for UI: first token of full_name, else display_name (profiles may omit first_name column). */
 function profileWelcomeFirstNameFromRow(prof: unknown): string | null {
   if (!prof || typeof prof !== "object") return null;
   const p = prof as Record<string, unknown>;
@@ -76,6 +76,8 @@ export async function GET(request: Request) {
     let profileWelcomeFirstName: string | null = null;
     /** True when this user should see the cohort study dashboard (/dashboard), not the B2C stack dashboard. */
     let showCohortStudyDashboard = false;
+    /** Set when we load cohort_participants (debug / logging); null if not in cohort participant path. */
+    let cohortParticipantStatus: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -111,12 +113,12 @@ export async function GET(request: Request) {
       if (userId) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("first_name, display_name, full_name, tier, pro_expires_at")
+          .select("display_name, full_name, tier, pro_expires_at")
           .eq("user_id", userId)
           .maybeSingle();
         profileWelcomeFirstName = profileWelcomeFirstNameFromRow(prof);
         const fromProfiles =
-          (prof as any)?.first_name ||
+          profileWelcomeFirstName ||
           (prof as any)?.display_name ||
           ((prof as any)?.full_name
             ? String((prof as any)?.full_name).split(" ")[0]
@@ -130,7 +132,7 @@ export async function GET(request: Request) {
         try {
           const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
             .from("profiles")
-            .select("id, cohort_id, first_name, display_name, full_name")
+            .select("id, cohort_id, display_name, full_name")
             .eq("user_id", userId)
             .maybeSingle();
           if (pAdminErr) {
@@ -227,6 +229,7 @@ export async function GET(request: Request) {
                       "[api/me] cohort_participants read:",
                       partErr.message,
                     );
+                    cohortParticipantStatus = `(participant query error: ${partErr.message})`;
                   }
                   const enrolledAt = (part as { enrolled_at?: string } | null)
                     ?.enrolled_at;
@@ -238,6 +241,11 @@ export async function GET(request: Request) {
                   )
                     .trim()
                     .toLowerCase();
+                  if (!partErr) {
+                    cohortParticipantStatus = part
+                      ? participantStatus || "(status empty)"
+                      : "(no participant row)";
+                  }
                   if (participantStatus === "dropped") {
                     showCohortStudyDashboard = false;
                   } else if (
@@ -421,6 +429,14 @@ export async function GET(request: Request) {
         (email ? String(email).split("@")[0] : null);
     }
 
+    // TEMP: remove after cohort dashboard routing is verified (check Vercel/server logs).
+    console.log("[api/me] cohort routing debug", {
+      email,
+      cohortId,
+      cohortParticipantStatus,
+      showCohortStudyDashboard,
+    });
+
     return NextResponse.json({
       firstName: firstName || null,
       profileWelcomeFirstName,
@@ -448,6 +464,7 @@ export async function GET(request: Request) {
       cohortAwaitingStudyStart,
       cohortStudyStartedAtIso,
       showCohortStudyDashboard,
+      cohortParticipantStatus,
     });
   } catch (e: any) {
     return NextResponse.json(

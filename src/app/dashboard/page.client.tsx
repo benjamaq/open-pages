@@ -13,7 +13,7 @@ import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
-function DashboardSkeleton() {
+export function DashboardSkeleton() {
   return (
     <div className="animate-pulse space-y-6 p-6">
       <div className="h-8 bg-gray-200 rounded w-1/3" />
