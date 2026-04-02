@@ -11,6 +11,7 @@ import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
 import { captureAttributionClient } from '@/lib/attribution'
 import AuthSessionHydrator from "./components/AuthSessionHydrator";
+import MagicLinkAuthErrorHandler from "@/components/MagicLinkAuthErrorHandler";
 import { PostHogProvider } from "./providers";
 import { Toaster } from 'sonner'
 
@@ -99,6 +100,7 @@ export default function RootLayout({
         <PostHogProvider>
         <GAPageView />
         <AuthSessionHydrator />
+        <MagicLinkAuthErrorHandler />
         <Toaster position="top-center" richColors />
         <noscript>
           <img height="1" width="1" style={{ display: 'none' }} src="https://www.facebook.com/tr?id=704287959370274&ev=PageView&noscript=1" />
