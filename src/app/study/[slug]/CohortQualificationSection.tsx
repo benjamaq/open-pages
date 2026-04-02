@@ -157,6 +157,10 @@ export function CohortQualificationSection({
       setSleepIssueError(true)
       return
     }
+    if (sleepIssue === 'I sleep reasonably well') {
+      setHardExit(SLEEP_SCREENING_EXIT)
+      return
+    }
     if (currentProduct === '') {
       setCurrentProductError(true)
       return
@@ -484,10 +488,6 @@ export function CohortQualificationSection({
                     key={opt}
                     type="button"
                     onClick={() => {
-                      if (opt === 'I sleep reasonably well') {
-                        setHardExit(SLEEP_SCREENING_EXIT)
-                        return
-                      }
                       setSleepIssue(opt)
                       setSleepIssueError(false)
                     }}
