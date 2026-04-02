@@ -1,4 +1,4 @@
-import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -44,7 +44,7 @@ export async function getCohortSecondCheckinBanner(authUserId: string): Promise<
   if (partErr || !part || String(part.status) !== 'applied') return null
 
   const enrolledIso = String(part.enrolled_at)
-  const n = await countDistinctDailyEntriesSince(uid, enrolledIso)
+  const n = await countDistinctDailyEntriesSinceForUserIds(userKeys, enrolledIso)
   if (n >= 2) return null
 
   const enrolledMs = new Date(enrolledIso).getTime()

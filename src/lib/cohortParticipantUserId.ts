@@ -45,7 +45,7 @@ export async function fetchProfilesByCohortParticipantUserIds(
   return map
 }
 
-/** Auth UUID for daily_entries / check-in counts; always profiles.user_id */
+/** Canonical auth UUID (`profiles.user_id`) for Auth admin / email. `daily_entries.user_id` may match `profiles.id` instead — count check-ins with `cohortParticipantUserIdCandidatesSync` + `countDistinctDailyEntriesSinceForUserIds`. */
 export function authUserIdFromCohortParticipantProfileMap(
   cpUserId: string,
   map: Map<string, CohortProfileIdRow>,

@@ -3,8 +3,11 @@ import {
   sendComplianceConfirmedEmail,
   studyAndProductNamesFromCohortRow,
 } from '@/lib/cohortComplianceConfirmed'
-import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
-import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
+import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
+import {
+  cohortParticipantUserIdCandidatesSync,
+  fetchProfilesByCohortParticipantUserIds,
+} from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -63,14 +66,16 @@ export async function GET(request: NextRequest) {
     const now = Date.now()
 
     for (const p of list) {
-      const authUid = authUserIdFromCohortParticipantProfileMap(p.user_id, profMap)
-      if (!authUid) {
+      const row = profMap.get(p.user_id)
+      if (!row) {
         console.warn('[cohort-compliance] no profile for cohort participant user_id', p.user_id)
         continue
       }
+      const entryUserIds = cohortParticipantUserIdCandidatesSync(row.id, row.user_id)
+      const authUid = row.user_id
 
       const enrolledIso = String(p.enrolled_at)
-      const n = await countDistinctDailyEntriesSince(authUid, enrolledIso)
+      const n = await countDistinctDailyEntriesSinceForUserIds(entryUserIds, enrolledIso)
       const enrolledMs = new Date(enrolledIso).getTime()
       const past48h = Number.isFinite(enrolledMs) && now - enrolledMs > 48 * 60 * 60 * 1000
 

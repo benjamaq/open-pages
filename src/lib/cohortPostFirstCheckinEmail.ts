@@ -1,4 +1,4 @@
-import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -56,7 +56,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       .maybeSingle()
     if (pErr || !part?.id || !part.enrolled_at) return
 
-    const n = await countDistinctDailyEntriesSince(opts.authUserId, String(part.enrolled_at))
+    const n = await countDistinctDailyEntriesSinceForUserIds(userKeys, String(part.enrolled_at))
     if (n !== 1) return
 
     const { data: claimed, error: claimErr } = await supabaseAdmin

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
+import {
+  cohortParticipantUserIdCandidatesSync,
+  fetchProfilesByCohortParticipantUserIds,
+} from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortGateReminderEmail } from '@/lib/cohortGateReminderEmail'
-import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,10 +64,12 @@ export async function GET(request: NextRequest) {
       const age = now - enrolledMs
       if (age < ms24 || age >= ms48) continue
 
-      const authUid = authUserIdFromCohortParticipantProfileMap(p.user_id, profMap)
-      if (!authUid) continue
+      const row = profMap.get(p.user_id)
+      if (!row) continue
+      const entryUserIds = cohortParticipantUserIdCandidatesSync(row.id, row.user_id)
+      const authUid = row.user_id
 
-      const n = await countDistinctDailyEntriesSince(authUid, String(p.enrolled_at))
+      const n = await countDistinctDailyEntriesSinceForUserIds(entryUserIds, String(p.enrolled_at))
       if (n >= 1) continue
 
       if (dry) {

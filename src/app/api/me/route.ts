@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 import { normalizeCohortCheckinFields } from "@/lib/cohortCheckinFields";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
-  countDistinctDailyEntriesSince,
+  countDistinctDailyEntriesSinceForUserIds,
   consecutiveCheckinStreakFromYmds,
   daysBetweenInclusiveUtcYmd,
-  fetchCohortCheckinYmdsSinceEnroll,
+  fetchCohortCheckinYmdsSinceEnrollForUserIds,
 } from "@/lib/cohortCheckinCount";
 import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
 
@@ -230,8 +230,8 @@ export async function GET(request: Request) {
                         enrollMs + 48 * 60 * 60 * 1000,
                       ).toISOString();
                     }
-                    const n = await countDistinctDailyEntriesSince(
-                      userId,
+                    const n = await countDistinctDailyEntriesSinceForUserIds(
+                      cpUserIds,
                       String(enrolledAt),
                     );
                     cohortCheckinWelcomeRecommended = n === 0;
@@ -254,23 +254,23 @@ export async function GET(request: Request) {
 
                   if (userId) {
                     const [cntCompliance, ymdsCompliance] = await Promise.all([
-                      countDistinctDailyEntriesSince(
-                        userId,
+                      countDistinctDailyEntriesSinceForUserIds(
+                        cpUserIds,
                         complianceAnchorIso,
                       ),
-                      fetchCohortCheckinYmdsSinceEnroll(
-                        userId,
+                      fetchCohortCheckinYmdsSinceEnrollForUserIds(
+                        cpUserIds,
                         complianceAnchorIso,
                       ),
                     ]);
                     if (cohortConfirmed && studyStartedAtIso) {
                       const [cntStudy, ymdsStudy] = await Promise.all([
-                        countDistinctDailyEntriesSince(
-                          userId,
+                        countDistinctDailyEntriesSinceForUserIds(
+                          cpUserIds,
                           studyStartedAtIso,
                         ),
-                        fetchCohortCheckinYmdsSinceEnroll(
-                          userId,
+                        fetchCohortCheckinYmdsSinceEnrollForUserIds(
+                          cpUserIds,
                           studyStartedAtIso,
                         ),
                       ]);
