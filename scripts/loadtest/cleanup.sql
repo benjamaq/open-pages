@@ -2,6 +2,11 @@
 
 BEGIN;
 
+DELETE FROM public.dashboard_cache
+WHERE user_id IN (
+  SELECT id FROM auth.users WHERE email LIKE 'loadtest+%@biostackr.io'
+);
+
 DELETE FROM public.daily_entries
 WHERE user_id IN (
   SELECT id FROM auth.users WHERE email LIKE 'loadtest+%@biostackr.io'
