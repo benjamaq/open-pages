@@ -11,9 +11,9 @@ export type CohortStartStudyBody = {
 
 export interface CohortStudyDashboardProps {
   cohortId: string
-  /** True when cohort_participants.confirmed_at is set — 21-day study is active. */
+  /** True when cohort_participants.status is `confirmed` and confirmed_at is set (compliance gate cleared in DB). */
   cohortConfirmed: boolean
-  /** Confirmed shipment slot but participant has not tapped "start my study" yet. */
+  /** Confirmed participant only: waiting for product / first study night (not for `applied` / gate). */
   cohortAwaitingStudyStart?: boolean
   /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
   cohortStudyStartedAtIso?: string | null
@@ -472,8 +472,11 @@ export default function CohortStudyDashboard({
   const progressPct =
     studyComplete ? 100 : currentDay <= 0 ? 0 : Math.min(100, (currentDay / studyDays) * 100)
 
-  /** While awaiting product, API reports study check-ins as 0 — gate UI must stay complete. */
-  const gateComplete = cohortAwaitingStudyStart
+  /** Product-shipment holding is only after DB confirmation — never for `applied` / compliance phase. */
+  const awaitingProductHolding = Boolean(cohortConfirmed && cohortAwaitingStudyStart)
+
+  /** While awaiting product (confirmed only), API reports study check-ins as 0 — gate UI must show complete. */
+  const gateComplete = awaitingProductHolding
     ? 2
     : Math.min(2, Math.max(0, checkinCount))
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
@@ -587,7 +590,7 @@ export default function CohortStudyDashboard({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-        {cohortAwaitingStudyStart ? (
+        {awaitingProductHolding ? (
           <div>
             {pendingFirstStudyNight ? (
               <>
@@ -689,7 +692,7 @@ export default function CohortStudyDashboard({
         ) : null}
       </section>
 
-      {!cohortConfirmed && !showInterimSpotConfirmed && !cohortAwaitingStudyStart ? (
+      {!cohortConfirmed && !showInterimSpotConfirmed && !awaitingProductHolding ? (
         <section className="text-center px-1">
           <p className="text-sm text-gray-800">
             Progress: {gateComplete} of 2 <span className="inline-block min-w-[2.5rem]">{gateDots}</span>
@@ -735,7 +738,7 @@ export default function CohortStudyDashboard({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 flex flex-wrap justify-center gap-5 sm:gap-6">
-        {cohortAwaitingStudyStart ? (
+        {awaitingProductHolding ? (
           <p className="w-full text-center text-sm text-gray-600 py-2">
             {pendingFirstStudyNight
               ? 'Your study stats will appear after your first night and check-in tomorrow.'

@@ -190,7 +190,7 @@ export async function GET(request: Request) {
                   );
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
-                    .select("enrolled_at, confirmed_at, study_started_at")
+                    .select("enrolled_at, confirmed_at, study_started_at, status")
                     .in("user_id", cpUserIds)
                     .eq("cohort_id", cohortUuid)
                     .maybeSingle();
@@ -205,7 +205,14 @@ export async function GET(request: Request) {
                   const confirmedAtRaw = (
                     part as { confirmed_at?: string | null } | null
                   )?.confirmed_at;
+                  const participantStatus = String(
+                    (part as { status?: string | null } | null)?.status || "",
+                  )
+                    .trim()
+                    .toLowerCase();
+                  // Shipment / post-gate UX requires status confirmed — not only confirmed_at (can diverge if data is inconsistent).
                   cohortConfirmed =
+                    participantStatus === "confirmed" &&
                     confirmedAtRaw != null &&
                     String(confirmedAtRaw).trim() !== "";
                   const confirmedAtIso = cohortConfirmed
