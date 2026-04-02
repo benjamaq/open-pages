@@ -2,11 +2,12 @@
  * Cohort qualification free-text validation (study landing + /api/profiles). No external APIs.
  */
 
+/** Generic copy so applicants cannot infer how to pad past validators. */
 export const QUALIFICATION_FREETEXT_PRIMARY_ERROR =
-  'Please tell us a bit more. One sentence describing your specific issue helps us match you to the right study.'
+  "Your response doesn't meet our study criteria."
 
 export const QUALIFICATION_FREETEXT_RETRY_ERROR =
-  'We need a little more detail to confirm your place. The examples above show the kind of answer that works well.'
+  "Your response doesn't meet our study criteria."
 
 export const QUALIFICATION_WAITLIST_HEADLINE =
   "Thanks for your interest. We'll keep you on the waitlist in case spots open up."
