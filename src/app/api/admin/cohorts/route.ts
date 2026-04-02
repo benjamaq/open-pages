@@ -9,6 +9,10 @@ import {
 } from '@/lib/cohortRecruitment'
 import { isQualificationResponseVisuallyShort } from '@/lib/qualificationFreeText'
 import { cohortConfirmedParticipantAtRisk } from '@/lib/cohortAdminAtRisk'
+import {
+  authUserIdForParticipant,
+  fetchProfilesForCohortParticipantUserIds,
+} from '@/lib/adminCohortParticipantProfiles'
 
 /** Recruitment cap shown to users / capacity trigger: display_capacity when set, else max_participants */
 function effectiveCohortCapacity(displayCapacity: unknown, maxParticipants: unknown): number | null {
@@ -119,18 +123,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ participants: [] })
     }
 
-    const profileIds = list.map((p: { user_id: string }) => p.user_id)
-    const { data: profs, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id, display_name, user_id')
-      .in('id', profileIds)
-
-    if (profErr) {
-      console.error('[admin/cohorts] profiles:', profErr)
-      return NextResponse.json({ error: profErr.message }, { status: 500 })
+    const participantUserIds = list.map((p: { user_id: string }) => p.user_id)
+    const { map: profByParticipantId, error: profLookupErr } =
+      await fetchProfilesForCohortParticipantUserIds(participantUserIds)
+    if (profLookupErr) {
+      console.error('[admin/cohorts] profiles:', profLookupErr)
+      return NextResponse.json({ error: profLookupErr.message }, { status: 500 })
     }
-
-    const profById = Object.fromEntries((profs || []).map((r: any) => [r.id, r]))
 
     const participants = await Promise.all(
       list.map(
@@ -141,11 +140,12 @@ export async function GET(request: NextRequest) {
           user_id: string
           qualification_response?: string | null
         }) => {
-          const prof = profById[p.user_id] as { display_name: string | null; user_id: string } | undefined
+          const prof = profByParticipantId.get(p.user_id)
+          const authUid = authUserIdForParticipant(prof, p.user_id)
           let email = ''
-          if (prof?.user_id) {
+          if (authUid) {
             try {
-              const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
+              const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
               if (!auErr && data?.user?.email) email = String(data.user.email)
             } catch {
               /* ignore */
@@ -157,9 +157,9 @@ export async function GET(request: NextRequest) {
             p.study_started_at != null && String(p.study_started_at).trim() !== ''
               ? String(p.study_started_at).trim()
               : null
-          if (prof?.user_id && studyAnchor) {
+          if (authUid && studyAnchor) {
             atRisk = await cohortConfirmedParticipantAtRisk({
-              authUserId: String(prof.user_id),
+              authUserId: String(authUid),
               confirmedAtIso: studyAnchor,
               studyDays: studyDaysN,
               cohortEndYmd,
@@ -172,9 +172,15 @@ export async function GET(request: NextRequest) {
             confirmed_at: p.confirmed_at,
             qualification_short: isQualificationResponseVisuallyShort(q),
             at_risk: atRisk,
+            shipping_address_line1: prof?.shipping_address_line1 ?? null,
+            shipping_address_line2: prof?.shipping_address_line2 ?? null,
+            shipping_city: prof?.shipping_city ?? null,
+            shipping_region: prof?.shipping_region ?? null,
+            shipping_postal_code: prof?.shipping_postal_code ?? null,
+            shipping_country: prof?.shipping_country ?? null,
           }
         },
-      )
+      ),
     )
 
     const { data: appliedRows, error: aErr } = await supabaseAdmin
@@ -192,24 +198,22 @@ export async function GET(request: NextRequest) {
     const appliedList = appliedRows || []
     let applied_participants: typeof participants = []
     if (appliedList.length > 0) {
-      const appliedProfileIds = appliedList.map((r: { user_id: string }) => r.user_id)
-      const { data: appliedProfs, error: apErr } = await supabaseAdmin
-        .from('profiles')
-        .select('id, display_name, user_id')
-        .in('id', appliedProfileIds)
+      const appliedUserIds = appliedList.map((r: { user_id: string }) => r.user_id)
+      const { map: appliedProfMap, error: apErr } =
+        await fetchProfilesForCohortParticipantUserIds(appliedUserIds)
       if (apErr) {
         console.error('[admin/cohorts] applied profiles:', apErr)
         return NextResponse.json({ error: apErr.message }, { status: 500 })
       }
-      const apById = Object.fromEntries((appliedProfs || []).map((r: any) => [r.id, r]))
       applied_participants = await Promise.all(
         appliedList.map(
           async (p: { enrolled_at: string; user_id: string; qualification_response?: string | null }) => {
-            const prof = apById[p.user_id] as { display_name: string | null; user_id: string } | undefined
+            const prof = appliedProfMap.get(p.user_id)
+            const authUid = authUserIdForParticipant(prof, p.user_id)
             let email = ''
-            if (prof?.user_id) {
+            if (authUid) {
               try {
-                const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
+                const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
                 if (!auErr && data?.user?.email) email = String(data.user.email)
               } catch {
                 /* ignore */
@@ -223,9 +227,15 @@ export async function GET(request: NextRequest) {
               confirmed_at: null as string | null,
               qualification_short: isQualificationResponseVisuallyShort(q),
               at_risk: false,
+              shipping_address_line1: prof?.shipping_address_line1 ?? null,
+              shipping_address_line2: prof?.shipping_address_line2 ?? null,
+              shipping_city: prof?.shipping_city ?? null,
+              shipping_region: prof?.shipping_region ?? null,
+              shipping_postal_code: prof?.shipping_postal_code ?? null,
+              shipping_country: prof?.shipping_country ?? null,
             }
           },
-        )
+        ),
       )
     }
 

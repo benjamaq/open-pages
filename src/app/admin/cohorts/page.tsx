@@ -30,6 +30,12 @@ type Participant = {
   confirmed_at: string | null
   qualification_short?: boolean
   at_risk?: boolean
+  shipping_address_line1?: string | null
+  shipping_address_line2?: string | null
+  shipping_city?: string | null
+  shipping_region?: string | null
+  shipping_postal_code?: string | null
+  shipping_country?: string | null
 }
 
 function adminHeaders(): HeadersInit {
@@ -331,6 +337,11 @@ export default function AdminCohortsPage() {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Postcode</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
                       </tr>
                     </thead>
@@ -350,6 +361,13 @@ export default function AdminCohortsPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-700">{p.email || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px]">
+                            {[p.shipping_address_line1, p.shipping_address_line2].filter(Boolean).join(', ') || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_city || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_region || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_postal_code || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_country || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {p.enrolled_at ? new Date(p.enrolled_at).toLocaleString() : '—'}
                           </td>
@@ -390,6 +408,11 @@ export default function AdminCohortsPage() {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Postcode</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confirmed</th>
                       </tr>
@@ -418,6 +441,13 @@ export default function AdminCohortsPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-700">{p.email || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px]">
+                            {[p.shipping_address_line1, p.shipping_address_line2].filter(Boolean).join(', ') || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_city || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_region || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_postal_code || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{p.shipping_country || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {p.enrolled_at ? new Date(p.enrolled_at).toLocaleString() : '—'}
                           </td>

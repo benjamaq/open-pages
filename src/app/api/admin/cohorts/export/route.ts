@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { authUserIdForParticipant, fetchProfilesForCohortParticipantUserIds } from '@/lib/adminCohortParticipantProfiles'
 
 const CSV_HEADERS = [
   'First Name',
@@ -83,39 +84,23 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const profileIds = list.map((p: { user_id: string }) => p.user_id)
-    const { data: profs, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select(
-        'id, display_name, user_id, shipping_address_line1, shipping_address_line2, shipping_city, shipping_region, shipping_postal_code, shipping_country',
-      )
-      .in('id', profileIds)
-
+    const participantUids = list.map((p: { user_id: string }) => p.user_id)
+    const { map: profByParticipantId, error: profErr } =
+      await fetchProfilesForCohortParticipantUserIds(participantUids)
     if (profErr) {
       return NextResponse.json({ error: profErr.message }, { status: 500 })
     }
 
-    type ProfileRow = {
-      display_name: string | null
-      user_id: string
-      shipping_address_line1?: string | null
-      shipping_address_line2?: string | null
-      shipping_city?: string | null
-      shipping_region?: string | null
-      shipping_postal_code?: string | null
-      shipping_country?: string | null
-    }
-    const profById = Object.fromEntries((profs || []).map((r: ProfileRow & { id: string }) => [r.id, r]))
-
     const rows: string[] = [headerRow]
     for (const p of list) {
-      const prof = profById[(p as { user_id: string }).user_id] as ProfileRow | undefined
+      const prof = profByParticipantId.get((p as { user_id: string }).user_id)
+      const authUid = authUserIdForParticipant(prof, (p as { user_id: string }).user_id)
       let email = ''
       let phone = ''
       let meta: Record<string, unknown> | undefined
-      if (prof?.user_id) {
+      if (authUid) {
         try {
-          const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(prof.user_id)
+          const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
           if (!auErr && data?.user) {
             const u = data.user
             if (u.email) email = String(u.email)
