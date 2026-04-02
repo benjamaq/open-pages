@@ -1,4 +1,5 @@
 import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export type CohortSpotBanner = {
@@ -33,10 +34,11 @@ export async function getCohortSecondCheckinBanner(authUserId: string): Promise<
     .maybeSingle()
   if (cErr || !cohort?.id) return null
 
+  const userKeys = cohortParticipantUserIdCandidatesSync(profileId, uid)
   const { data: part, error: partErr } = await supabaseAdmin
     .from('cohort_participants')
     .select('id, status, enrolled_at')
-    .eq('user_id', profileId)
+    .in('user_id', userKeys)
     .eq('cohort_id', cohort.id)
     .maybeSingle()
   if (partErr || !part || String(part.status) !== 'applied') return null

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { daysBetweenInclusiveUtcYmd } from '@/lib/cohortCheckinCount'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 import { sendShippingNurtureEmail, type ShippingNurtureStep } from '@/lib/cohortShippingNurture'
+import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -103,18 +104,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const profileIds = [...new Set(list.map((p) => p.user_id))]
-    const { data: profs, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id, user_id')
-      .in('id', profileIds)
-
-    if (profErr) {
-      console.error('[cohort-shipping-nurture] profiles:', profErr)
-      return NextResponse.json({ error: profErr.message }, { status: 500 })
-    }
-
-    const authByProfileId = Object.fromEntries((profs || []).map((r: { id: string; user_id: string }) => [r.id, r.user_id]))
+    const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
 
     let sent = 0
     let skipped = 0
@@ -136,7 +126,7 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      const authUid = authByProfileId[p.user_id]
+      const authUid = authUserIdFromCohortParticipantProfileMap(p.user_id, profMap)
       if (!authUid) {
         console.warn('[cohort-shipping-nurture] no auth user for profile', p.user_id)
         skipped += 1

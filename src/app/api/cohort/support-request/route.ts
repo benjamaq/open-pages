@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 
@@ -61,10 +62,11 @@ export async function POST(request: NextRequest) {
       const { data: cRow } = await supabaseAdmin.from('cohorts').select('id').eq('slug', cohortSlug).maybeSingle()
       const cid = cRow && (cRow as { id?: string }).id ? String((cRow as { id: string }).id) : ''
       if (cid) {
+        const cpKeys = cohortParticipantUserIdCandidatesSync(profileId, user.id)
         const { data: pRow } = await supabaseAdmin
           .from('cohort_participants')
           .select('status')
-          .eq('user_id', profileId)
+          .in('user_id', cpKeys)
           .eq('cohort_id', cid)
           .maybeSingle()
         participantStatus =

@@ -1,4 +1,5 @@
 import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -83,10 +84,11 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       .maybeSingle()
     if (cErr || !cohort?.id) return
 
+    const userKeys = cohortParticipantUserIdCandidatesSync(opts.profileId, opts.authUserId)
     const { data: part, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
       .select('id, enrolled_at')
-      .eq('user_id', opts.profileId)
+      .in('user_id', userKeys)
       .eq('cohort_id', cohort.id)
       .eq('status', 'applied')
       .maybeSingle()

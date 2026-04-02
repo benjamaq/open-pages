@@ -10,8 +10,7 @@ import {
 
 /**
  * Creates/updates `cohort_participants` via service role after the profile row exists.
- * DB columns: `user_id` = public.profiles.id (not auth.users.id); `cohort_id` = public.cohorts.id UUID
- * (resolved from the study slug — same text as profiles.cohort_id).
+ * `user_id` must match the FK (repo: public.profiles.id; some DBs: auth.users.id) — resolved in upsertCohortParticipant.
  */
 async function enrollProfileInCohort(
   profileId: string,

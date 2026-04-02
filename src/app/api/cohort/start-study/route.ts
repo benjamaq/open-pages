@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortStudyStartEmail } from '@/lib/cohortStudyStartEmail'
 
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 400 })
     }
     const profileId = String((prof as { id: string }).id)
+    const cpUserIds = cohortParticipantUserIdCandidatesSync(profileId, user.id)
     const cohortSlug =
       (prof as { cohort_id?: string | null }).cohort_id != null
         ? String((prof as { cohort_id: string }).cohort_id).trim()
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest) {
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
       .select('id, status, confirmed_at, study_started_at')
-      .eq('user_id', profileId)
+      .in('user_id', cpUserIds)
       .eq('cohort_id', cohortUuid)
       .maybeSingle()
 

@@ -4,6 +4,7 @@ import {
   studyAndProductNamesFromCohortRow,
 } from '@/lib/cohortComplianceConfirmed'
 import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
+import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -55,27 +56,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, processed: 0, confirmed: 0, dropped: 0, dry })
     }
 
-    const profileIds = [...new Set(list.map((p) => p.user_id))]
-    const { data: profs, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id, user_id')
-      .in('id', profileIds)
-
-    if (profErr) {
-      console.error('[cohort-compliance] profiles:', profErr)
-      return NextResponse.json({ error: profErr.message }, { status: 500 })
-    }
-
-    const authByProfileId = Object.fromEntries((profs || []).map((r: any) => [r.id, r.user_id as string]))
+    const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
 
     let confirmed = 0
     let dropped = 0
     const now = Date.now()
 
     for (const p of list) {
-      const authUid = authByProfileId[p.user_id]
+      const authUid = authUserIdFromCohortParticipantProfileMap(p.user_id, profMap)
       if (!authUid) {
-        console.warn('[cohort-compliance] no auth user for profile', p.user_id)
+        console.warn('[cohort-compliance] no profile for cohort participant user_id', p.user_id)
         continue
       }
 

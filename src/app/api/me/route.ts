@@ -9,6 +9,7 @@ import {
   daysBetweenInclusiveUtcYmd,
   fetchCohortCheckinYmdsSinceEnroll,
 } from "@/lib/cohortCheckinCount";
+import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
 
 export const dynamic = "force-dynamic";
 
@@ -182,10 +183,14 @@ export async function GET(request: Request) {
               )?.start_date;
               if (cohortUuid) {
                 try {
+                  const cpUserIds = cohortParticipantUserIdCandidatesSync(
+                    profileId,
+                    userId,
+                  );
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
                     .select("enrolled_at, confirmed_at, study_started_at")
-                    .eq("user_id", profileId)
+                    .in("user_id", cpUserIds)
                     .eq("cohort_id", cohortUuid)
                     .maybeSingle();
                   if (partErr) {

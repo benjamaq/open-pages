@@ -215,23 +215,37 @@ async function handler(req: NextRequest) {
           .map((p) => p.profile_id)
           .filter((id): id is string => Boolean(id))
         if (pidList.length > 0) {
+          const { data: profForCp } = await supabaseAdmin
+            .from('profiles')
+            .select('id, user_id')
+            .in('id', pidList)
+          const cpUserIdKeys = new Set<string>(pidList)
+          for (const row of profForCp || []) {
+            const r = row as { id: string; user_id: string }
+            cpUserIdKeys.add(r.id)
+            cpUserIdKeys.add(r.user_id)
+          }
           const { data: awaitingRows, error: awErr } = await supabaseAdmin
             .from('cohort_participants')
             .select('user_id')
             .eq('status', 'confirmed')
             .not('confirmed_at', 'is', null)
             .is('study_started_at', null)
-            .in('user_id', pidList)
+            .in('user_id', [...cpUserIdKeys])
           if (awErr) {
             console.warn('[daily-cron] cohort awaiting skip lookup:', awErr.message)
           } else {
-            const awaitingProfiles = new Set(
+            const awaitingCpUserIds = new Set(
               ((awaitingRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
             )
             const beforeAwait = scopedProfiles.length
-            scopedProfiles = scopedProfiles.filter(
-              (p) => !p.profile_id || !awaitingProfiles.has(String(p.profile_id)),
-            )
+            scopedProfiles = scopedProfiles.filter((p) => {
+              if (!p.profile_id) return true
+              const pid = String(p.profile_id)
+              const uid = String((p as { user_id?: string }).user_id || '')
+              if (awaitingCpUserIds.has(pid) || (uid && awaitingCpUserIds.has(uid))) return false
+              return true
+            })
             // eslint-disable-next-line no-console
             console.log('[daily-cron] Cohort awaiting product filter:', {
               before: beforeAwait,

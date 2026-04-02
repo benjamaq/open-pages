@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortGateReminderEmail } from '@/lib/cohortGateReminderEmail'
 import { countDistinctDailyEntriesSince } from '@/lib/cohortCheckinCount'
@@ -50,18 +51,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, sent: 0, dry })
     }
 
-    const profileIds = [...new Set(list.map((p) => p.user_id))]
-    const { data: profs, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id, user_id')
-      .in('id', profileIds)
-
-    if (profErr) {
-      console.error('[cohort-gate-reminder] profiles', profErr)
-      return NextResponse.json({ error: profErr.message }, { status: 500 })
-    }
-
-    const authByProfileId = Object.fromEntries((profs || []).map((r: { id: string; user_id: string }) => [r.id, r.user_id]))
+    const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
 
     let sent = 0
     for (const p of list) {
@@ -71,7 +61,7 @@ export async function GET(request: NextRequest) {
       const age = now - enrolledMs
       if (age < ms24 || age >= ms48) continue
 
-      const authUid = authByProfileId[p.user_id]
+      const authUid = authUserIdFromCohortParticipantProfileMap(p.user_id, profMap)
       if (!authUid) continue
 
       const n = await countDistinctDailyEntriesSince(authUid, String(p.enrolled_at))

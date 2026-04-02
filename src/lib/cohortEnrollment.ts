@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { cohortParticipantUserIdCandidatesForProfile } from '@/lib/cohortParticipantUserId'
 
 export type CohortParticipantUpsertResult =
   | { ok: true }
@@ -73,45 +74,72 @@ export async function upsertCohortParticipant(
     }
     const cohortId = String((cohortRow as { id: string }).id)
     const enrolledAt = new Date().toISOString()
-    const payload: Record<string, unknown> = {
-      user_id: profileId,
+    const candidates = await cohortParticipantUserIdCandidatesForProfile(profileId)
+    if (candidates.length === 0) {
+      return { ok: false, error: 'Could not resolve profile for cohort enrollment' }
+    }
+
+    const basePayload = {
       cohort_id: cohortId,
-      status: 'applied',
+      status: 'applied' as const,
       enrolled_at: enrolledAt,
       currently_taking_product: false,
       qualification_response: qualificationStored,
     }
-    const { error: insErr } = await supabaseAdmin.from('cohort_participants').insert(payload)
-    if (!insErr) return { ok: true }
-    if (
-      insErr.code === '23514' ||
-      (insErr.message && insErr.message.includes('COHORT_FULL')) ||
-      (typeof insErr.details === 'string' && insErr.details.includes('COHORT_FULL'))
-    ) {
-      return {
-        ok: false,
-        error: 'This study has reached enrollment capacity.',
-        code: 'COHORT_FULL',
-      }
-    }
-    if (insErr.code === '23505') {
-      const updatePatch: Record<string, unknown> = {
-        currently_taking_product: false,
-        qualification_response: qualificationStored,
-      }
-      const { error: upErr } = await supabaseAdmin
+
+    let conflicted = false
+    let lastFkMessage: string | null = null
+
+    for (const uid of candidates) {
+      const { error: insErr } = await supabaseAdmin
         .from('cohort_participants')
-        .update(updatePatch as Record<string, unknown>)
-        .eq('user_id', profileId)
-        .eq('cohort_id', cohortId)
-      if (upErr) {
-        console.error('[cohortEnrollment] cohort_participants update:', upErr)
-        return { ok: false, error: upErr.message || 'Could not update cohort participant' }
+        .insert({ ...basePayload, user_id: uid })
+      if (!insErr) return { ok: true }
+      if (
+        insErr.code === '23514' ||
+        (insErr.message && insErr.message.includes('COHORT_FULL')) ||
+        (typeof insErr.details === 'string' && insErr.details.includes('COHORT_FULL'))
+      ) {
+        return {
+          ok: false,
+          error: 'This study has reached enrollment capacity.',
+          code: 'COHORT_FULL',
+        }
       }
-      return { ok: true }
+      if (insErr.code === '23505') {
+        conflicted = true
+        break
+      }
+      if (insErr.code === '23503') {
+        lastFkMessage = insErr.message
+        continue
+      }
+      console.error('[cohortEnrollment] cohort_participants insert:', insErr)
+      return { ok: false, error: insErr.message || 'Could not create cohort participant' }
     }
-    console.error('[cohortEnrollment] cohort_participants insert:', insErr)
-    return { ok: false, error: insErr.message || 'Could not create cohort participant' }
+
+    const updatePatch: Record<string, unknown> = {
+      currently_taking_product: false,
+      qualification_response: qualificationStored,
+    }
+    if (conflicted) {
+      for (const uid of candidates) {
+        const { error: upErr } = await supabaseAdmin
+          .from('cohort_participants')
+          .update(updatePatch as Record<string, unknown>)
+          .eq('user_id', uid)
+          .eq('cohort_id', cohortId)
+        if (!upErr) return { ok: true }
+      }
+      console.error('[cohortEnrollment] cohort_participants update: no row matched candidates')
+      return { ok: false, error: 'Could not update cohort participant' }
+    }
+
+    if (lastFkMessage) {
+      console.error('[cohortEnrollment] cohort_participants insert:', lastFkMessage)
+      return { ok: false, error: lastFkMessage || 'Could not create cohort participant' }
+    }
+    return { ok: false, error: 'Could not create cohort participant' }
   } catch (e) {
     console.error('[cohortEnrollment] upsertCohortParticipant:', e)
     return { ok: false, error: e instanceof Error ? e.message : 'Cohort enrollment failed' }
