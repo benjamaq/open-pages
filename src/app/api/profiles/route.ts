@@ -46,6 +46,17 @@ function trimOpt(v: unknown): string | null {
   return s !== '' ? s : null
 }
 
+/** Cohort/B2C signup sends `name`; persist to profiles so dashboard welcome is not stuck on email prefix. */
+function displayNameAndFirstNameFromBodyName(rawName: string): {
+  display_name: string
+  first_name: string
+} | null {
+  const n = String(rawName || '').trim()
+  if (!n) return null
+  const first = n.split(/\s+/)[0] || n
+  return { display_name: n, first_name: first }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
@@ -150,11 +161,16 @@ export async function POST(req: NextRequest) {
           if (Object.keys(shippingPatch).length > 0) {
             Object.assign(updatePayload, shippingPatch)
           }
+          const nameFields = displayNameAndFirstNameFromBodyName(name)
+          if (nameFields) {
+            Object.assign(updatePayload, nameFields)
+          }
           const shouldPatchProfile =
             needsBackfill ||
             cohort_id != null ||
             reminderFromSlot != null ||
-            Object.keys(shippingPatch).length > 0
+            Object.keys(shippingPatch).length > 0 ||
+            nameFields != null
           console.log('[api/profiles] existing profile - updatePayload:', updatePayload, 'shouldPatch:', shouldPatchProfile)
           if (shouldPatchProfile) {
             const { error: updErr } = await supabaseAdmin.from('profiles').update(updatePayload as any).eq('user_id', user_id)
@@ -194,9 +210,10 @@ export async function POST(req: NextRequest) {
 
     const now = new Date().toISOString()
 
+    const displayName = name || (email ? email.split('@')[0] : 'User')
     const insertPayload: Record<string, unknown> = {
       user_id,
-      display_name: name || (email ? email.split('@')[0] : 'User'),
+      display_name: displayName,
       slug: candidate,
       public: true,
       allow_stack_follow: true,
@@ -207,6 +224,10 @@ export async function POST(req: NextRequest) {
       timezone: tz,
       created_at: now,
       updated_at: now,
+    }
+    const insertNameFields = displayNameAndFirstNameFromBodyName(name)
+    if (insertNameFields) {
+      insertPayload.first_name = insertNameFields.first_name
     }
     if (Object.keys(shippingPatch).length > 0) {
       Object.assign(insertPayload, shippingPatch)
@@ -226,6 +247,7 @@ export async function POST(req: NextRequest) {
           .select('id, slug')
           .eq('user_id', user_id)
           .maybeSingle()
+        const raceNameFields = displayNameAndFirstNameFromBodyName(name)
         if (cohort_id != null) {
           if (!existing?.id) {
             return NextResponse.json({ error: 'Profile not found after signup; cannot set cohort' }, { status: 500 })
@@ -239,6 +261,7 @@ export async function POST(req: NextRequest) {
           const raceUpd: Record<string, unknown> = { cohort_id, updated_at: new Date().toISOString() }
           if (reminderFromSlot != null) raceUpd.reminder_time = reminderFromSlot
           if (Object.keys(shippingPatch).length > 0) Object.assign(raceUpd, shippingPatch)
+          if (raceNameFields) Object.assign(raceUpd, raceNameFields)
           const { error: raceUpdErr } = await supabaseAdmin
             .from('profiles')
             .update(raceUpd as any)
@@ -257,6 +280,15 @@ export async function POST(req: NextRequest) {
             } catch (mailErr) {
               console.error('[api/profiles] cohort welcome email failed:', mailErr)
             }
+          }
+        } else if (raceNameFields && existing?.id) {
+          const { error: nameOnlyErr } = await supabaseAdmin
+            .from('profiles')
+            .update({ ...raceNameFields, updated_at: new Date().toISOString() } as any)
+            .eq('user_id', user_id)
+          if (nameOnlyErr) {
+            console.error('[api/profiles] race display_name update:', nameOnlyErr)
+            return NextResponse.json({ error: nameOnlyErr.message || 'Could not update profile name' }, { status: 500 })
           }
         }
         return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
