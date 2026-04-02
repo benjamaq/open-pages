@@ -1,5 +1,6 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
+import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
 import {
   escapeHtml,
   firstNameFromAuthUser,
@@ -44,6 +45,8 @@ export async function sendComplianceConfirmedEmail(params: {
     const brand = escapeHtml(String(params.brandName ?? '').trim() || 'DoNotAge')
     const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
 
+    const dashboardHref = await resolveCohortDashboardEmailHref(to)
+
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
       `<p style="margin:0 0 16px;">You're in. Your place in the <strong>${study}</strong> study is now confirmed.</p>` +
@@ -58,7 +61,7 @@ export async function sendComplianceConfirmedEmail(params: {
       `<p style="margin:0 0 20px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
       `<p style="margin:0;">Thank you for being part of this.</p>`
 
-    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml })
+    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml, dashboardHref })
 
     const r = await sendEmail({
       to,

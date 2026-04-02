@@ -31,9 +31,38 @@ function cohortEmailPublicLogoUrls(appBase: string): { donotage: string; biostac
   }
 }
 
+/** Shared CTA for simple (non-shell) cohort emails — magic or plain `dashboardHref`. */
+export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
+  const href = escapeHtml(dashboardHref)
+  return (
+    `<p style="margin:28px 0 0;text-align:center;">` +
+    `<a href="${href}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
+    `</p>` +
+    `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
+    `Use this link on your phone — you won&apos;t need to enter your password again.` +
+    `</p>`
+  )
+}
+
 /** Table-based shell: works in Gmail mobile + desktop. */
-export function wrapCohortTransactionalEmailHtml(opts: { appBase: string; innerHtml: string }): string {
+export function wrapCohortTransactionalEmailHtml(opts: {
+  appBase: string
+  innerHtml: string
+  /** Magic link from `resolveCohortDashboardEmailHref`, or plain dashboard URL fallback. */
+  dashboardHref: string
+}): string {
   const { donotage, biostackr } = cohortEmailPublicLogoUrls(opts.appBase)
+  const dash = escapeHtml(opts.dashboardHref)
+  const dashboardRow = `<tr>
+          <td style="padding:18px 22px 8px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-top:1px solid #eee;background:#ffffff;">
+            <p style="margin:0;text-align:center;">
+              <a href="${dash}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>
+            </p>
+            <p style="margin:10px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">
+              Use this link on your phone — you won&apos;t need to enter your password again.
+            </p>
+          </td>
+        </tr>`
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,6 +94,7 @@ export function wrapCohortTransactionalEmailHtml(opts: { appBase: string; innerH
 ${opts.innerHtml}
           </td>
         </tr>
+        ${dashboardRow}
         <tr>
           <td style="padding:20px 22px 26px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;line-height:1.55;color:#4b5563;border-top:1px solid #eee;background:#fafaf9;">
             <strong style="color:#1a1a1a;">DoNotAge × BioStackr</strong><br />

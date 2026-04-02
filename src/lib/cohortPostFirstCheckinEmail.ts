@@ -1,5 +1,6 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
+import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
 import {
   escapeHtml,
   firstNameFromAuthUser,
@@ -72,6 +73,8 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       String((cohort as { product_name?: string | null }).product_name || 'SureSleep').trim() || 'SureSleep',
     )
 
+    const dashboardHref = await resolveCohortDashboardEmailHref(to)
+
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
       `<p style="margin:0 0 16px;">You've completed your first check-in — you're one step away from securing your place.</p>` +
@@ -86,7 +89,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       `<a href="${escapeHtml(checkinUrl)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in</a>` +
       `</p>`
 
-    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml })
+    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml, dashboardHref })
 
     const r = await sendEmail({
       to,

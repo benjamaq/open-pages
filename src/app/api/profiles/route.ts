@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
-import { cohortParticipantDashboardCheckinUrl } from '@/lib/cohortPostFirstCheckinEmail'
+import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
+import { cohortEmailDashboardCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
 import { extractQualificationFreeText, validateQualificationFreeText } from '@/lib/qualificationFreeText'
 
@@ -28,15 +29,15 @@ function jsonEnrollmentError(enr: { ok: false; error: string; code?: string }) {
 async function sendCohortEnrollmentEmail(to: string) {
   const safe = String(to || '').trim()
   if (!safe) return
-  const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
-  const dashUrl = cohortParticipantDashboardCheckinUrl(appBase)
+  const dashboardHref = await resolveCohortDashboardEmailHref(safe)
+  const cta = cohortEmailDashboardCtaHtml(dashboardHref)
   await sendEmail({
     to: safe,
     subject: 'Your study place is reserved: first two check-ins within 48 hours',
     html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
 <p>Your place is reserved for 48 hours.</p>
 <p>Complete your first two check-ins to secure your spot and trigger product shipment.</p>
-<p><a href="${dashUrl}" style="color:#C84B2F;font-weight:600;">Open cohort dashboard</a></p>
+${cta}
 </body></html>`,
   })
 }

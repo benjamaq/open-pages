@@ -1,3 +1,5 @@
+import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
+import { cohortEmailDashboardCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 
 function escapeHtml(s: string): string {
@@ -27,8 +29,8 @@ function wrapHtml(bodyHtml: string): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">${bodyHtml}</body></html>`
 }
 
-/** studyName e.g. DoNotAge SureSleep; brandName, productName from cohorts row. */
-export function shippingNurtureBodyHtml(
+/** Inner HTML only (no document wrapper). */
+export function shippingNurtureInnerHtml(
   step: ShippingNurtureStep,
   params: { studyName: string; brandName: string; productName: string },
 ): string {
@@ -57,8 +59,15 @@ export function shippingNurtureBodyHtml(
       paragraphs = ['']
   }
 
-  const inner = paragraphs.map((p) => `<p>${p}</p>`).join('')
-  return wrapHtml(inner)
+  return paragraphs.map((p) => `<p>${p}</p>`).join('')
+}
+
+/** studyName e.g. DoNotAge SureSleep; brandName, productName from cohorts row. */
+export function shippingNurtureBodyHtml(
+  step: ShippingNurtureStep,
+  params: { studyName: string; brandName: string; productName: string },
+): string {
+  return wrapHtml(shippingNurtureInnerHtml(step, params))
 }
 
 export async function sendShippingNurtureEmail(params: {
@@ -71,10 +80,12 @@ export async function sendShippingNurtureEmail(params: {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
   const subject = shippingNurtureSubject(params.step)
-  const html = shippingNurtureBodyHtml(params.step, {
+  const inner = shippingNurtureInnerHtml(params.step, {
     studyName: params.studyName,
     brandName: params.brandName,
     productName: params.productName,
   })
+  const dashboardHref = await resolveCohortDashboardEmailHref(to)
+  const html = wrapHtml(inner + cohortEmailDashboardCtaHtml(dashboardHref))
   return sendEmail({ to, subject, html })
 }
