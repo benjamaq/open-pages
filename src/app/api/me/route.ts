@@ -113,7 +113,7 @@ export async function GET(request: Request) {
       if (userId) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("display_name, full_name, tier, pro_expires_at")
+          .select("id, cohort_id, display_name, full_name, tier, pro_expires_at")
           .eq("user_id", userId)
           .maybeSingle();
         profileWelcomeFirstName = profileWelcomeFirstNameFromRow(prof);
@@ -151,9 +151,30 @@ export async function GET(request: Request) {
             rawC != null && String(rawC).trim() !== ""
               ? String(rawC).trim()
               : null;
-          const profileId = (pAdmin as { id?: string } | null)?.id
+          let profileId = (pAdmin as { id?: string } | null)?.id
             ? String((pAdmin as { id: string }).id)
             : null;
+
+          if (
+            (cohortId == null || cohortId === "") &&
+            prof &&
+            typeof prof === "object"
+          ) {
+            const rawProfC = (prof as { cohort_id?: unknown }).cohort_id;
+            if (rawProfC != null && String(rawProfC).trim() !== "") {
+              cohortId = String(rawProfC).trim();
+            }
+          }
+          if (
+            (profileId == null || profileId === "") &&
+            prof &&
+            typeof prof === "object"
+          ) {
+            const rawId = (prof as { id?: unknown }).id;
+            if (rawId != null && String(rawId).trim() !== "") {
+              profileId = String(rawId).trim();
+            }
+          }
 
           if (cohortId && profileId) {
             const todayYmd = todayYmdForCohort(request);
@@ -401,6 +422,17 @@ export async function GET(request: Request) {
           }
         } catch (e: unknown) {
           console.error("[api/me] cohort block unexpected:", e);
+        }
+
+        if (
+          (cohortId == null || String(cohortId).trim() === "") &&
+          prof &&
+          typeof prof === "object"
+        ) {
+          const rawC = (prof as { cohort_id?: unknown }).cohort_id;
+          if (rawC != null && String(rawC).trim() !== "") {
+            cohortId = String(rawC).trim();
+          }
         }
 
         if (!firstName) {
