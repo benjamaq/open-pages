@@ -111,11 +111,25 @@ export async function GET(request: Request) {
 
     try {
       if (userId) {
-        const { data: prof } = await supabase
+        const {
+          data: prof,
+          error: profSelectErr,
+        } = await supabase
           .from("profiles")
           .select("id, cohort_id, display_name, full_name, tier, pro_expires_at")
           .eq("user_id", userId)
           .maybeSingle();
+        // TEMP: remove after cohortId null investigation (check server logs, not browser).
+        console.log("[api/me] profiles select raw (user Supabase client)", {
+          userId,
+          selectError: profSelectErr?.message ?? null,
+          selectErrorCode: profSelectErr?.code ?? null,
+          cohort_id:
+            prof && typeof prof === "object"
+              ? (prof as { cohort_id?: unknown }).cohort_id
+              : null,
+          rawProf: prof,
+        });
         profileWelcomeFirstName = profileWelcomeFirstNameFromRow(prof);
         const fromProfiles =
           profileWelcomeFirstName ||
