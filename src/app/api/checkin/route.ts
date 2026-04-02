@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 import { tryImmediateCohortComplianceConfirm } from '@/lib/cohortComplianceConfirmed'
+import { trySendCohortPostFirstCheckinEmail } from '@/lib/cohortPostFirstCheckinEmail'
 
 function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
   const raw = body?.local_date
@@ -170,6 +171,11 @@ export async function POST(request: NextRequest) {
         const profileId = (profForCompliance as { id?: string } | null)?.id
         if (profileId) {
           await tryImmediateCohortComplianceConfirm({
+            authUserId: user.id,
+            profileId,
+            cohortSlug,
+          })
+          await trySendCohortPostFirstCheckinEmail({
             authUserId: user.id,
             profileId,
             cohortSlug,

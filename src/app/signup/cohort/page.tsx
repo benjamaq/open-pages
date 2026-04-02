@@ -225,7 +225,7 @@ function CohortSignupInner() {
       clearDraft()
     } catch {}
     await new Promise(r => setTimeout(r, 400))
-    router.push('/dashboard?checkin=1')
+    router.push('/dashboard?checkin=1#cohort-study-dashboard')
   }
 
   if (!ready || !cohortSlug) {
@@ -387,7 +387,7 @@ function CohortSignupInner() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
                 <p className="font-medium">You already have a BioStackr account. Sign in to join this study.</p>
                 <Link
-                  href={`/login?join_cohort=1&redirect=${encodeURIComponent('/dashboard?checkin=1')}&cohort_slug=${encodeURIComponent(cohortSlug)}`}
+                  href={`/login?join_cohort=1&redirect=${encodeURIComponent('/dashboard?checkin=1#cohort-study-dashboard')}&cohort_slug=${encodeURIComponent(cohortSlug)}`}
                   className="mt-3 inline-block font-semibold text-[#6A3F2B] hover:underline"
                 >
                   Sign in to join this study →

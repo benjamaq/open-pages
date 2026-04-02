@@ -413,7 +413,7 @@ export default function CohortStudyDashboard({
   }
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto">
+    <div id="cohort-study-dashboard" className="space-y-6 max-w-xl mx-auto">
       <ProductArrivedModal
         open={productArrivedOpen}
         onClose={() => setProductArrivedOpen(false)}

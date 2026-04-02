@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
+import { cohortParticipantDashboardCheckinUrl } from '@/lib/cohortPostFirstCheckinEmail'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
 import {
   extractQualificationFreeText,
@@ -32,13 +33,14 @@ async function sendCohortEnrollmentEmail(to: string) {
   const safe = String(to || '').trim()
   if (!safe) return
   const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
+  const dashUrl = cohortParticipantDashboardCheckinUrl(appBase)
   await sendEmail({
     to: safe,
     subject: 'Your study place is reserved: first two check-ins within 48 hours',
     html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
 <p>Your place is reserved for 48 hours.</p>
 <p>Complete your first two check-ins to secure your spot and trigger product shipment.</p>
-<p><a href="${appBase}/dashboard?checkin=1" style="color:#C84B2F;font-weight:600;">Open dashboard</a></p>
+<p><a href="${dashUrl}" style="color:#C84B2F;font-weight:600;">Open cohort dashboard</a></p>
 </body></html>`,
   })
 }
