@@ -34,7 +34,7 @@ type Participant = {
 
 function adminHeaders(): HeadersInit {
   const headers: HeadersInit = {}
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  if (typeof window !== 'undefined') {
     try {
       const k = sessionStorage.getItem(ADMIN_KEY_STORAGE) || ''
       if (k) headers['x-admin-key'] = k
@@ -142,10 +142,10 @@ export default function AdminCohortsPage() {
     saveKey()
     const url = `/api/admin/cohorts/export?cohort_uuid=${encodeURIComponent(selectedId)}`
     const h = new Headers()
-    if (process.env.NODE_ENV === 'production') {
+    try {
       const k = sessionStorage.getItem(ADMIN_KEY_STORAGE) || adminKey.trim()
       if (k) h.set('x-admin-key', k)
-    }
+    } catch {}
     fetch(url, { headers: h })
       .then((r) => {
         if (!r.ok) throw new Error(r.statusText)
@@ -287,14 +287,28 @@ export default function AdminCohortsPage() {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={fetchCohorts}
-            className="mt-3 text-sm text-blue-600 hover:underline"
-            disabled={loading}
-          >
-            Reload cohort list
-          </button>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={fetchCohorts}
+              className="text-sm text-blue-600 hover:underline"
+              disabled={loading}
+            >
+              Reload cohort list
+            </button>
+            <button
+              type="button"
+              onClick={downloadCsv}
+              disabled={!selectedId || loading}
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export shipping CSV
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            CSV includes confirmed participants: name, email, shipping address from profiles, and phone from auth when
+            set.
+          </p>
         </div>
 
         {selectedId && (
@@ -359,8 +373,8 @@ export default function AdminCohortsPage() {
                 <button
                   type="button"
                   onClick={downloadCsv}
-                  disabled={loadingRows || participants.length === 0}
-                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                  disabled={loadingRows}
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Download CSV
                 </button>
