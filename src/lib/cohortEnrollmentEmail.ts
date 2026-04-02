@@ -1,4 +1,4 @@
-import { resolveCohortDashboardCheckinEmailHref } from '@/lib/cohortEmailMagicLink'
+import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
 import {
   COHORT_EMAIL_MAGIC_LINK_HINT,
   escapeHtml,
@@ -10,7 +10,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 
 /**
- * Immediate enrollment email when a cohort participant creates their account (profiles POST + cohort).
+ * Immediate enrollment email when a cohort participant joins (profiles POST + cohort, or first cohort attach).
+ * Uses shared DoNotAge × BioStackr transactional shell: dual logos, rust CTA, footer (brief item 8).
  */
 export async function sendCohortEnrollmentEmail(params: {
   to: string
@@ -46,8 +47,17 @@ export async function sendCohortEnrollmentEmail(params: {
   const studyEsc = escapeHtml(studyLabel)
   const productEsc = escapeHtml(productLabel)
 
-  const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
-  const checkinHref = await resolveCohortDashboardCheckinEmailHref(to)
+  const appBase = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://www.biostackr.com'
+  ).replace(/\/$/, '')
+  const { href: checkinHref, isMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
+  const hintHtml = isMagic
+    ? `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">${escapeHtml(
+        COHORT_EMAIL_MAGIC_LINK_HINT,
+      )}</p>`
+    : ''
 
   const subject = "You're in — complete your first check-in"
 
@@ -62,9 +72,7 @@ export async function sendCohortEnrollmentEmail(params: {
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(checkinHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
     `</p>` +
-    `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
-    escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +
-    `</p>`
+    hintHtml
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,

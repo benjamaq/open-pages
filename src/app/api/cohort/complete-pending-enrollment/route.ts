@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
+import { sendCohortEnrollmentEmail } from '@/lib/cohortEnrollmentEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,13 +41,18 @@ export async function POST(req: NextRequest) {
 
     const { data: prof, error: pErr } = await supabaseAdmin
       .from('profiles')
-      .select('id')
+      .select('id, cohort_id')
       .eq('user_id', user.id)
       .maybeSingle()
     if (pErr || !prof?.id) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 400 })
     }
     const profileId = String(prof.id)
+    const priorCohort =
+      (prof as { cohort_id?: string | null }).cohort_id != null
+        ? String((prof as { cohort_id: string }).cohort_id).trim()
+        : ''
+    const firstCohortAttach = priorCohort === ''
 
     const { error: uErr } = await supabaseAdmin
       .from('profiles')
@@ -61,6 +67,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: enroll.error }, { status: 500 })
     }
     await ensureCohortStudyStackItem(profileId, slug)
+
+    if (firstCohortAttach) {
+      const em = String(user.email || '').trim()
+      if (em) {
+        try {
+          await sendCohortEnrollmentEmail({ to: em, authUserId: user.id, cohortSlug: slug })
+        } catch (mailErr) {
+          console.error('[complete-pending-enrollment] cohort enrollment email failed:', mailErr)
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true, cohort_slug: slug })
   } catch (e: unknown) {
