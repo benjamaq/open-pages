@@ -97,7 +97,9 @@ function CohortSignupInner() {
     }
 
     const freeForGate = extractQualificationFreeText(issueText)
-    if (!validateQualificationFreeText(freeForGate).ok) {
+    const qualCheck = validateQualificationFreeText(freeForGate)
+    if (!qualCheck.ok) {
+      setError(qualCheck.error)
       setLoading(false)
       return
     }
@@ -185,11 +187,7 @@ function CohortSignupInner() {
           body: JSON.stringify(apiBody),
         })
         if (!pr.ok) {
-          const j = (await pr.json().catch(() => ({}))) as { error?: string; code?: string }
-          if (j.code === 'QUALIFICATION_INVALID') {
-            setLoading(false)
-            return
-          }
+          const j = (await pr.json().catch(() => ({}))) as { error?: string }
           setError(String(j.error || 'Could not save your profile. Try again or contact support.'))
           setLoading(false)
           return

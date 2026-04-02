@@ -2,15 +2,19 @@
  * Cohort qualification free-text validation (study landing + /api/profiles). No external APIs.
  */
 
-/** Generic copy so applicants cannot infer how to pad past validators. */
-export const QUALIFICATION_FREETEXT_PRIMARY_ERROR =
-  "Your response doesn't meet our study criteria."
-
-export const QUALIFICATION_FREETEXT_RETRY_ERROR =
-  "Your response doesn't meet our study criteria."
+/**
+ * Single user-facing copy for every failed check. Never add rule-specific or hinting messages —
+ * applicants must not be able to infer how to pass validation.
+ */
+export const QUALIFICATION_FREETEXT_ERROR =
+  "Your response doesn't meet our study criteria." as const
 
 export const QUALIFICATION_WAITLIST_HEADLINE =
   "Thanks for your interest. We'll keep you on the waitlist in case spots open up."
+
+export type QualificationFreeTextResult =
+  | { ok: true }
+  | { ok: false; error: typeof QUALIFICATION_FREETEXT_ERROR }
 
 const KEYBOARD_PATTERNS = ['asdf', 'qwerty', 'zxcv', '1234'] as const
 
@@ -41,38 +45,42 @@ export function extractQualificationFreeText(stored: string | null | undefined):
   return (idx >= 0 ? s.slice(0, idx) : s).trim()
 }
 
-export function validateQualificationFreeText(response: string): { ok: true } | { ok: false } {
+function reject(): { ok: false; error: typeof QUALIFICATION_FREETEXT_ERROR } {
+  return { ok: false, error: QUALIFICATION_FREETEXT_ERROR }
+}
+
+export function validateQualificationFreeText(response: string): QualificationFreeTextResult {
   const trimmed = String(response || '').trim()
 
   if (trimmed.length < 20) {
-    return { ok: false }
+    return reject()
   }
 
   const tokens = trimmed.split(/\s+/).filter(Boolean)
   const wordsLen2Plus = tokens.filter((w) => w.length >= 2).length
   if (wordsLen2Plus < 4) {
-    return { ok: false }
+    return reject()
   }
 
   if (/^(.)\1{4,}$/i.test(trimmed)) {
-    return { ok: false }
+    return reject()
   }
 
   const lower = trimmed.toLowerCase()
   for (const frag of KEYBOARD_FRAGMENTS) {
     if (lower.includes(frag)) {
-      return { ok: false }
+      return reject()
     }
   }
 
   for (const ph of BANNED_PHRASES) {
     if (lower.includes(ph)) {
-      return { ok: false }
+      return reject()
     }
   }
 
   if (/\b(free|idk|test|na)\b/i.test(trimmed)) {
-    return { ok: false }
+    return reject()
   }
 
   const fillerStop = new Set([
@@ -102,7 +110,7 @@ export function validateQualificationFreeText(response: string): { ok: true } | 
     }
   }
   if (meaningful.size <= 2) {
-    return { ok: false }
+    return reject()
   }
 
   return { ok: true }

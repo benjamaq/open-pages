@@ -8,7 +8,10 @@ import {
   COHORT_QUALIFICATION_STORAGE_KEY,
   type CohortQualificationDraftV1,
 } from '@/lib/cohort'
-import { validateQualificationFreeText, QUALIFICATION_WAITLIST_HEADLINE } from '@/lib/qualificationFreeText'
+import {
+  validateQualificationFreeText,
+  QUALIFICATION_WAITLIST_HEADLINE,
+} from '@/lib/qualificationFreeText'
 
 function qualFailStorageKey(slug: string): string {
   return `bs_cohort_qual_fails_${String(slug || '').trim().toLowerCase()}`
@@ -85,6 +88,7 @@ export function CohortQualificationSection({
   const [prescription, setPrescription] = useState<'yes' | 'no' | ''>('')
   const [commitment, setCommitment] = useState(false)
   const [issueThanks, setIssueThanks] = useState(false)
+  const [issueError, setIssueError] = useState<string | null>(null)
   const [sleepQualityError, setSleepQualityError] = useState(false)
   const [sleepIssueError, setSleepIssueError] = useState(false)
   const [currentProductError, setCurrentProductError] = useState(false)
@@ -112,6 +116,7 @@ export function CohortQualificationSection({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setHardExit(null)
+    setIssueError(null)
     setSleepQualityError(false)
     setSleepIssueError(false)
     setCurrentProductError(false)
@@ -120,6 +125,7 @@ export function CohortQualificationSection({
     const textCheck = validateQualificationFreeText(issue.trim())
     if (!textCheck.ok) {
       setIssueThanks(false)
+      setIssueError(textCheck.error)
       let n = 0
       try {
         n = parseInt(sessionStorage.getItem(qualFailStorageKey(slugNorm)) || '0', 10) || 0
@@ -134,6 +140,7 @@ export function CohortQualificationSection({
       }
       if (n >= 3) {
         setWaitlistMode(true)
+        setIssueError(null)
       }
       return
     }
@@ -384,6 +391,7 @@ export function CohortQualificationSection({
                 onChange={(e) => {
                   setIssue(e.target.value)
                   setIssueThanks(false)
+                  setIssueError(null)
                 }}
                 onBlur={() => {
                   const t = issue.trim()
@@ -400,11 +408,12 @@ export function CohortQualificationSection({
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
               Be specific. Stronger answers are more likely to be selected.
             </p>
-            {issueThanks && (
+            {issueThanks && !issueError && (
               <p className="mt-2 text-[13px] leading-relaxed text-emerald-700">
                 Thanks. This helps us match you to the right study.
               </p>
             )}
+            {issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
           </div>
 
           <div className="mb-8">

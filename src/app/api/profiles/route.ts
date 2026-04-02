@@ -80,8 +80,9 @@ export async function POST(req: NextRequest) {
 
     if (cohort_id != null && qualification_response) {
       const free = extractQualificationFreeText(qualification_response)
-      if (!validateQualificationFreeText(free).ok) {
-        return NextResponse.json({ code: 'QUALIFICATION_INVALID' }, { status: 400 })
+      const qual = validateQualificationFreeText(free)
+      if (!qual.ok) {
+        return NextResponse.json({ error: qual.error }, { status: 400 })
       }
     }
     const reminder_slot = String(body?.reminder_slot || '').toLowerCase()
