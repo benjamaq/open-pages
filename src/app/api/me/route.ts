@@ -13,7 +13,7 @@ import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUs
 
 export const dynamic = "force-dynamic";
 
-/** First name for UI: first token of full_name, else display_name (profiles may omit first_name column). */
+/** First name for UI: optional first_name / full_name on row if present; else first token of display_name (production profiles use display_name only). */
 function profileWelcomeFirstNameFromRow(prof: unknown): string | null {
   if (!prof || typeof prof !== "object") return null;
   const p = prof as Record<string, unknown>;
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
           error: profSelectErr,
         } = await supabase
           .from("profiles")
-          .select("id, cohort_id, display_name, full_name, tier, pro_expires_at")
+          .select("id, cohort_id, display_name, tier, pro_expires_at")
           .eq("user_id", userId)
           .maybeSingle();
         // TEMP: remove after cohortId null investigation (check server logs, not browser).
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
         try {
           const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
             .from("profiles")
-            .select("id, cohort_id, display_name, full_name")
+            .select("id, cohort_id, display_name")
             .eq("user_id", userId)
             .maybeSingle();
           if (pAdminErr) {
