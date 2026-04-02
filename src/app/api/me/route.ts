@@ -111,6 +111,14 @@ export async function GET(request: Request) {
 
     try {
       if (userId) {
+        /*
+         * public.profiles — only .select() columns that exist in the target DB; PostgREST errors on
+         * unknown columns and breaks /api/me (including cohortId).
+         *
+         * Confirmed columns: id, user_id, cohort_id, display_name, tier, pro_expires_at,
+         * first_name (20260416120000_profiles_first_name.sql).
+         * Do not select full_name — it does not exist.
+         */
         const {
           data: prof,
           error: profSelectErr,
