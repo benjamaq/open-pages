@@ -443,6 +443,21 @@ export default function CohortStudyDashboard({
             >
               My product has arrived — start my study
             </button>
+            <div className="mt-8 border-t border-slate-200 pt-8">
+              <h3 className="text-lg font-semibold text-gray-900">How to take {productName}</h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
+                Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it consistently
+                each evening as part of a wind-down routine.
+              </p>
+              <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-gray-600">
+                <li>One scoop per day — do not exceed the recommended dose</li>
+                <li>Take 45–60 minutes before bed</li>
+                <li>Avoid caffeine or stimulants in the evening hours</li>
+                <li>
+                  {productName} is non-habit-forming and safe for daily use
+                </li>
+              </ul>
+            </div>
           </div>
         ) : cohortConfirmed ? (
           studyComplete ? (
