@@ -4,7 +4,11 @@ import { createClient } from '../../../../lib/supabase/server'
 // POST /api/waitlist/signup - Add email to waitlist
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const body = await request.json()
+    const email = body?.email
+    const sourceRaw = typeof body?.source === 'string' ? body.source.trim().toLowerCase() : 'website'
+    const source =
+      sourceRaw === 'b2c_capacity' || sourceRaw === 'website' ? sourceRaw : 'website'
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
       .insert([
         {
           email: email.toLowerCase().trim(),
-          source: 'website'
+          source,
         }
       ] as any)
       .select()

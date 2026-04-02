@@ -74,6 +74,8 @@ export async function GET(request: Request) {
     let cohortAwaitingStudyStart = false;
     let cohortStudyStartedAtIso: string | null = null;
     let profileWelcomeFirstName: string | null = null;
+    /** True when this user should see the cohort study dashboard (/dashboard), not the B2C stack dashboard. */
+    let showCohortStudyDashboard = false;
 
     if (!authError && user) {
       email = user.email || null;
@@ -179,6 +181,7 @@ export async function GET(request: Request) {
             }
 
             if (cdef != null) {
+              showCohortStudyDashboard = true;
               const pn = (cdef as { product_name?: string | null } | null)
                 ?.product_name;
               cohortStudyProductName =
@@ -235,6 +238,16 @@ export async function GET(request: Request) {
                   )
                     .trim()
                     .toLowerCase();
+                  if (participantStatus === "dropped") {
+                    showCohortStudyDashboard = false;
+                  } else if (
+                    participantStatus &&
+                    !["applied", "confirmed", "completed"].includes(
+                      participantStatus,
+                    )
+                  ) {
+                    showCohortStudyDashboard = false;
+                  }
                   // Shipment / post-gate UX requires status confirmed — not only confirmed_at (can diverge if data is inconsistent).
                   cohortConfirmed =
                     participantStatus === "confirmed" &&
@@ -434,6 +447,7 @@ export async function GET(request: Request) {
       cohortComplianceDeadlineIso,
       cohortAwaitingStudyStart,
       cohortStudyStartedAtIso,
+      showCohortStudyDashboard,
     });
   } catch (e: any) {
     return NextResponse.json(

@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { clearDraft } from '@/lib/onboarding/draft'
 import { fireMetaEvent, attachAttributionToParams } from '@/lib/analytics'
 import { getCohortCookie, clearCohortCookie } from '@/lib/cohort'
+import { useB2cCapacityModal } from '@/app/components/B2cCapacityProvider'
+import { B2cCapacityWaitlistPanel } from '@/app/components/B2cCapacityWaitlistPanel'
 import Link from 'next/link'
 
 export default function SignupPage() {
@@ -20,6 +22,9 @@ export default function SignupPage() {
 function SignupInner() {
   const router = useRouter()
   const params = useSearchParams()
+  const { atCapacity: b2cCapacityGate } = useB2cCapacityModal()
+  const [b2cGateReady, setB2cGateReady] = useState(!b2cCapacityGate)
+  const [hasCohortCookie, setHasCohortCookie] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,6 +32,34 @@ function SignupInner() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!b2cCapacityGate) return
+    setHasCohortCookie(Boolean(getCohortCookie()))
+    setB2cGateReady(true)
+  }, [b2cCapacityGate])
+
+  if (b2cCapacityGate && !b2cGateReady) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-neutral-50 text-sm text-neutral-600">
+        Loading…
+      </div>
+    )
+  }
+
+  if (b2cCapacityGate && b2cGateReady && !hasCohortCookie) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-neutral-50">
+        <B2cCapacityWaitlistPanel variant="page" showNavLinks headingId="b2c-signup-waitlist-heading" />
+        <p className="mt-8 text-sm text-neutral-600">
+          Already have an account?{' '}
+          <Link className="text-[#6A3F2B] underline" href="/login">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    )
+  }
 
   // Promo code UX:
   // - Visible by default (no toggle)

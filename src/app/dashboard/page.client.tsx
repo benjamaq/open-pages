@@ -9,7 +9,9 @@ import { DailyProgressLoop } from '@/components/dashboard/DailyProgressLoop'
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel'
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
 import { useDashboardLoad } from '@/hooks/useDashboardLoad'
-import { useMemo, useState } from 'react'
+import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/cohortDashboardDeepLink'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 
 function DashboardSkeleton() {
   return (
@@ -27,6 +29,7 @@ function DashboardSkeleton() {
 
 export function DashboardPageClient() {
   const { data, loading, error } = useDashboardLoad()
+  const searchParams = useSearchParams()
 
   const isMember = Boolean((data as any)?.billingInfo?.isPaid) || Boolean((data as any)?.paymentsStatus?.is_member)
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false)
@@ -45,11 +48,28 @@ export function DashboardPageClient() {
     return !dismissed && !hasToday && typeof daysSince === 'number' && daysSince >= 2
   }, [data, bannerDismissed])
 
+  useEffect(() => {
+    if (loading || error || !data) return
+    const showCohort = Boolean((data as any)?.me?.showCohortStudyDashboard)
+    const deepLinkCohort =
+      searchParams.get(COHORT_DASHBOARD_VIEW_QUERY) === COHORT_DASHBOARD_VIEW_VALUE
+    if (!deepLinkCohort || !showCohort) return
+    const t = window.setTimeout(() => {
+      try {
+        document.getElementById('cohort-study-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch {}
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [loading, error, data, searchParams])
+
   if (loading) return <DashboardSkeleton />
   if (error || !data) return <div className="p-6 text-sm text-gray-600">Failed to load dashboard.</div>
 
   const me = (data as any)?.me as Record<string, unknown> | undefined
-  const showCohortStudy = Boolean(me?.cohortId && me?.cohortStudyIsActive)
+  const showCohortStudy = Boolean(me?.showCohortStudyDashboard)
+  const cohortCheckinFields = Array.isArray(me?.checkinFields)
+    ? (me.checkinFields as string[])
+    : null
 
   const spotBanner = (data as any)?.cohortSpotBanner as
     | { hoursRemaining: number; checkinsCompleted: number; enrolledAt: string }
@@ -67,32 +87,47 @@ export function DashboardPageClient() {
     >
       <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between">
-            <a href="/dashboard" className="flex items-center">
-              <img src="/BIOSTACKR LOGO 2.png" alt="Biostackr" className="h-7 sm:h-8 w-auto" />
-            </a>
-            {!showCohortStudy ? (
-              <a
-                href="/upload"
-                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50"
-                title="Upload Wearable Data"
-              >
-                <span aria-hidden="true">⌚</span>
-                <span>Upload&nbsp;Wearable&nbsp;Data</span>
+          {showCohortStudy ? (
+            <div className="flex items-center justify-between gap-4">
+              <a href="/dashboard" className="flex items-center shrink-0" aria-label="BioStackr home">
+                <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-7 sm:h-8 w-auto" />
               </a>
-            ) : null}
-          </div>
-          <nav className="mt-2 flex items-center gap-4 sm:gap-6 text-sm text-slate-700 justify-start sm:justify-end">
-            <a href="/dashboard" className="hover:underline">Dashboard</a>
-            {!showCohortStudy ? (
-              <>
-                <a href="/results" className="hover:underline">My Stack</a>
-                <a href="/settings" className="hover:underline">Settings</a>
-              </>
-            ) : null}
-            <a href="/auth/signout" className="hover:underline">Log out</a>
-            {!showCohortStudy ? <UpgradeButton compact isPro={isMember} /> : null}
-          </nav>
+              <a href="/auth/signout" className="text-sm text-slate-700 hover:underline whitespace-nowrap">
+                Log out
+              </a>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <a href="/dashboard" className="flex items-center">
+                  <img src="/BIOSTACKR LOGO 2.png" alt="Biostackr" className="h-7 sm:h-8 w-auto" />
+                </a>
+                <a
+                  href="/upload"
+                  className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-slate-50"
+                  title="Upload Wearable Data"
+                >
+                  <span aria-hidden="true">⌚</span>
+                  <span>Upload&nbsp;Wearable&nbsp;Data</span>
+                </a>
+              </div>
+              <nav className="mt-2 flex items-center gap-4 sm:gap-6 text-sm text-slate-700 justify-start sm:justify-end flex-wrap">
+                <a href="/dashboard" className="hover:underline">
+                  Dashboard
+                </a>
+                <a href="/results" className="hover:underline">
+                  My Stack
+                </a>
+                <a href="/settings" className="hover:underline">
+                  Settings
+                </a>
+                <a href="/auth/signout" className="hover:underline">
+                  Log out
+                </a>
+                <UpgradeButton compact isPro={isMember} />
+              </nav>
+            </>
+          )}
         </div>
       </header>
 
@@ -102,6 +137,7 @@ export function DashboardPageClient() {
             <>
               <CohortStudyDashboard
                 cohortId={String(me?.cohortId || '')}
+                checkinFields={cohortCheckinFields}
                 welcomeFirstName={
                   typeof me?.profileWelcomeFirstName === 'string' && me.profileWelcomeFirstName.trim()
                     ? me.profileWelcomeFirstName.trim()

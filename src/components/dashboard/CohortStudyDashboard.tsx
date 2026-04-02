@@ -1,6 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  cohortCheckinFieldLabel,
+  DEFAULT_COHORT_CHECKIN_FIELDS,
+} from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 
 export type CohortStartStudyBody = {
@@ -11,6 +15,8 @@ export type CohortStartStudyBody = {
 
 export interface CohortStudyDashboardProps {
   cohortId: string
+  /** Cohort check-in dimensions from `/api/me` (cohorts.checkin_fields). */
+  checkinFields?: string[] | null
   /** Shown as "Welcome back, …" — prefer `profiles` via /api/me `profileWelcomeFirstName`. */
   welcomeFirstName?: string | null
   /** True when cohort_participants.status is `confirmed` and confirmed_at is set (compliance gate cleared in DB). */
@@ -35,14 +41,6 @@ export interface CohortStudyDashboardProps {
   studyComplete: boolean
   studyEndDate: string | null
   onOpenCheckin: () => void
-}
-
-function formatStudyEndDate(isoOrYmd: string | null): string {
-  if (!isoOrYmd) return 'the study end date'
-  const s = isoOrYmd.slice(0, 10)
-  const t = Date.parse(`${s}T12:00:00Z`)
-  if (!Number.isFinite(t)) return isoOrYmd
-  return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function formatGateTimeRemaining(deadlineMs: number, nowMs: number): { line: string; sub: string } {
@@ -449,6 +447,7 @@ function StudySupportModal({
 
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
+  checkinFields: checkinFieldsProp = null,
   welcomeFirstName = null,
   cohortConfirmed,
   cohortAwaitingStudyStart = false,
@@ -461,15 +460,17 @@ export default function CohortStudyDashboard({
   studyDays,
   startDateIso: _startDateIso,
   hasCheckedInToday,
-  currentStreak,
+  currentStreak: _currentStreak,
   currentDay,
   daysRemaining,
   studyComplete,
-  studyEndDate,
+  studyEndDate: _studyEndDate,
   onOpenCheckin,
 }: CohortStudyDashboardProps) {
   void _cohortId
   void _startDateIso
+  void _currentStreak
+  void _studyEndDate
   const [supportOpen, setSupportOpen] = useState(false)
   const [productArrivedOpen, setProductArrivedOpen] = useState(false)
   const progressPct =
@@ -490,21 +491,13 @@ export default function CohortStudyDashboard({
       ? welcomeFirstName.trim()
       : 'there'
 
-  const statCell = (value: number | string, label: string, sub: string) => (
-    <div className="text-center flex-1 min-w-[100px]">
-      <div className="text-2xl font-semibold text-gray-900 tabular-nums">{value}</div>
-      <div className="text-xs font-medium text-gray-700 mt-1">{label}</div>
-      <div className="text-[11px] text-gray-500 mt-0.5">{sub}</div>
-    </div>
-  )
-
-  const statCellCompact = (value: number | string, label: string, sub: string) => (
-    <div className="text-center flex-1 min-w-[88px]">
-      <div className="text-lg font-semibold text-gray-900 tabular-nums">{value}</div>
-      <div className="text-[11px] font-medium text-gray-700 mt-0.5">{label}</div>
-      <div className="text-[10px] text-gray-500 mt-0.5">{sub}</div>
-    </div>
-  )
+  const measureItems = useMemo(() => {
+    const raw =
+      Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
+        ? checkinFieldsProp
+        : DEFAULT_COHORT_CHECKIN_FIELDS
+    return raw.map((k) => cohortCheckinFieldLabel(k))
+  }, [checkinFieldsProp])
 
   const gateDots = (
     <span className="text-base text-gray-700 tabular-nums" aria-hidden>
@@ -627,21 +620,12 @@ export default function CohortStudyDashboard({
                 </button>
               </>
             )}
-            <div className={`mt-8 border-t border-slate-200 pt-8 ${pendingFirstStudyNight ? 'mt-6' : ''}`}>
-              <h3 className="text-lg font-semibold text-gray-900">How to take {productName}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it consistently
-                each evening as part of a wind-down routine.
+            {!pendingFirstStudyNight ? (
+              <p className="mt-4 text-sm text-gray-600">
+                Follow the directions on your product packaging. When it arrives, confirm below to start your {studyDays}-day
+                study window.
               </p>
-              <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-gray-600">
-                <li>One scoop per day — do not exceed the recommended dose</li>
-                <li>Take 45–60 minutes before bed</li>
-                <li>Avoid caffeine or stimulants in the evening hours</li>
-                <li>
-                  {productName} is non-habit-forming and safe for daily use
-                </li>
-              </ul>
-            </div>
+            ) : null}
           </div>
         ) : cohortConfirmed ? (
           studyComplete ? (
@@ -703,11 +687,18 @@ export default function CohortStudyDashboard({
       </section>
 
       {!cohortConfirmed && !showInterimSpotConfirmed && !awaitingProductHolding ? (
-        <section className="text-center px-1">
-          <p className="text-sm text-gray-800">
-            Progress: {gateComplete} of 2 <span className="inline-block min-w-[2.5rem]">{gateDots}</span>
-          </p>
-          <p className="mt-1 text-xs text-gray-500">48 hours to confirm your spot</p>
+        <section className="text-center px-1 space-y-3">
+          <div>
+            <p className="text-sm text-gray-800">
+              Progress: {gateComplete} of 2 <span className="inline-block min-w-[2.5rem]">{gateDots}</span>
+            </p>
+            <p className="mt-1 text-xs text-gray-500">48 hours to confirm your spot</p>
+          </div>
+          {complianceDeadlineIso && gateComplete < 2 ? (
+            <div className="flex justify-center">
+              <SpotConfirmedCountdown deadlineIso={complianceDeadlineIso} compact />
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -747,54 +738,21 @@ export default function CohortStudyDashboard({
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 flex flex-wrap justify-center gap-5 sm:gap-6">
-        {awaitingProductHolding ? (
-          <p className="w-full text-center text-sm text-gray-600 py-2">
-            {pendingFirstStudyNight
-              ? 'Your study stats will appear after your first night and check-in tomorrow.'
-              : 'Your study stats will appear here after you start—once your product has arrived.'}
-          </p>
-        ) : cohortConfirmed ? (
-          <>
-            {statCell(checkinCount, 'Check-ins done', 'this study')}
-            {statCell(currentStreak, 'Current streak', 'day streak')}
-            {statCell(daysRemaining, 'Days remaining', 'days left')}
-          </>
-        ) : (
-          <>
-            {statCellCompact(checkinCount, 'Check-ins done', 'this study')}
-            {statCellCompact(currentStreak, 'Current streak', 'day streak')}
-            {showInterimSpotConfirmed ? (
-              <div className="text-center flex-1 min-w-[88px]">
-                <div className="text-lg font-semibold text-gray-900 tabular-nums">…</div>
-                <div className="text-[11px] font-medium text-gray-700 mt-0.5">Window</div>
-                <div className="text-[10px] text-gray-500 mt-0.5">complete</div>
-              </div>
-            ) : (
-              <div className="flex-1 min-w-[88px]">
-                <SpotConfirmedCountdown deadlineIso={complianceDeadlineIso} compact />
-              </div>
-            )}
-          </>
-        )}
-      </section>
-
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-gray-900">What we&apos;re measuring</h2>
         <ol className="mt-3 space-y-2 text-sm text-gray-700 list-decimal list-inside">
-          <li>Sleep quality</li>
-          <li>Morning energy</li>
-          <li>Time to fall asleep</li>
-          <li>Times woken in the night</li>
+          {measureItems.map((label) => (
+            <li key={label}>{label}</li>
+          ))}
         </ol>
         <p className="mt-4 text-sm text-gray-600">
-          Your data matures over {studyDays} days. Results are delivered at the end of the study.
+          We track this over {studyDays} days; results are shared when the study ends.
         </p>
       </section>
 
       <footer className="text-xs text-gray-500 leading-relaxed pb-8">
-        <p>This study is run by BioStackr on behalf of {brandName || 'the study partner'}.</p>
-        <p className="mt-2">
+        <p>
+          Study partner: {brandName || 'your brand'}.{' '}
           <button
             type="button"
             onClick={() => setSupportOpen(true)}
@@ -802,9 +760,6 @@ export default function CohortStudyDashboard({
           >
             Need help?
           </button>
-        </p>
-        <p className="mt-2">
-          Stack locked during study · unlocks automatically on {formatStudyEndDate(studyEndDate)}
         </p>
       </footer>
     </div>

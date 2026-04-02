@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "@/lib/animations.css";
@@ -9,6 +10,8 @@ import PWARegister from "./components/PWARegister";
 import GAPageView from "@/components/GAPageView";
 import PWAInstallFab from "./components/PWAInstallFab";
 import HeaderGate from "./components/HeaderGate";
+import { B2cCapacityProvider } from "./components/B2cCapacityProvider";
+import { readB2cAtCapacityFromProcessEnv } from "@/lib/b2cCapacityGate";
 import { captureAttributionClient } from '@/lib/attribution'
 import AuthSessionHydrator from "./components/AuthSessionHydrator";
 import MagicLinkAuthErrorHandler from "@/components/MagicLinkAuthErrorHandler";
@@ -42,11 +45,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection()
+  const b2cAtCapacity = readB2cAtCapacityFromProcessEnv()
   return (
     <html lang="en" className={inter.variable}>
       <head>
@@ -109,10 +114,12 @@ export default function RootLayout({
         {/* Hide PWA header on shared link pages and desktop by default via CSS hook */}
         {/* PWA header temporarily disabled to satisfy Next.js Server Component constraints */}
         <PWAInstallFab />
-        <div className="flex flex-col min-h-screen">
-          <HeaderGate />
-          {children}
-        </div>
+        <B2cCapacityProvider atCapacity={b2cAtCapacity}>
+          <div className="flex flex-col min-h-screen">
+            <HeaderGate />
+            {children}
+          </div>
+        </B2cCapacityProvider>
         <Script id="pwa-marker" strategy="afterInteractive">
           {`
             console.log('🔎 PWA marker: data-pwa-client =', document.body?.getAttribute('data-pwa-client'));

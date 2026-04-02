@@ -1,8 +1,12 @@
+import {
+  COHORT_DASHBOARD_VIEW_QUERY,
+  COHORT_DASHBOARD_VIEW_VALUE,
+} from '@/lib/cohortDashboardDeepLink'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
  * Absolute URL passed to Supabase `generateLink` as `redirectTo` (must be in project redirect allow-list).
- * Lands on main dashboard with cohort panel hash.
+ * Query param survives redirects; hash does not.
  */
 export function cohortDashboardRedirectToAbsoluteUrl(): string {
   const appBase = (
@@ -10,7 +14,7 @@ export function cohortDashboardRedirectToAbsoluteUrl(): string {
     process.env.NEXT_PUBLIC_SITE_URL ||
     'https://www.biostackr.com'
   ).replace(/\/$/, '')
-  return `${appBase}/dashboard#cohort-study-dashboard`
+  return `${appBase}/dashboard?${COHORT_DASHBOARD_VIEW_QUERY}=${COHORT_DASHBOARD_VIEW_VALUE}`
 }
 
 /** Opens cohort dashboard with check-in launcher (must match auth redirect allow-list). */
@@ -20,7 +24,7 @@ export function cohortDashboardCheckinRedirectToAbsoluteUrl(): string {
     process.env.NEXT_PUBLIC_SITE_URL ||
     'https://www.biostackr.com'
   ).replace(/\/$/, '')
-  return `${appBase}/dashboard?checkin=1#cohort-study-dashboard`
+  return `${appBase}/dashboard?${COHORT_DASHBOARD_VIEW_QUERY}=${COHORT_DASHBOARD_VIEW_VALUE}&checkin=1`
 }
 
 /**

@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { B2cGatedIndividualCta } from '@/app/components/B2cGatedIndividualCta'
 import { isInAppBrowser, openInSystemBrowser } from '@/lib/browser'
 
 function safeRedirect(raw: string | null): string {
@@ -175,9 +176,9 @@ function LoginInner() {
         </form>
         <div className="mt-4 text-sm text-gray-600 text-center">
           Don’t have an account?{' '}
-          <Link className="hover:underline" href="/signup" style={{ color: '#6A3F2B' }}>
+          <B2cGatedIndividualCta className="hover:underline inline" href="/signup" style={{ color: '#6A3F2B' }}>
             Create one
-          </Link>
+          </B2cGatedIndividualCta>
         </div>
       </div>
     </div>

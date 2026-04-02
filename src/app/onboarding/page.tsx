@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { useB2cCapacityModal } from '@/app/components/B2cCapacityProvider'
+import { B2cCapacityWaitlistPanel } from '@/app/components/B2cCapacityWaitlistPanel'
 import { toast } from 'sonner'
 import { HEALTH_PRIORITIES } from '@/lib/types'
 import OnboardingProgressBar from '@/components/onboarding/OnboardingProgressBar'
@@ -154,6 +158,29 @@ function extractShortSupplementName(fullTitle: string, fallback: string) {
 export default function OnboardingPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const { atCapacity: b2cCapacityGate } = useB2cCapacityModal()
+  const [b2cOnboardingReady, setB2cOnboardingReady] = useState(!b2cCapacityGate)
+  const [b2cOnboardingBlocked, setB2cOnboardingBlocked] = useState(false)
+
+  useEffect(() => {
+    if (!b2cCapacityGate) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase.auth.getUser()
+        if (cancelled) return
+        setB2cOnboardingBlocked(!data?.user)
+      } catch {
+        if (!cancelled) setB2cOnboardingBlocked(true)
+      } finally {
+        if (!cancelled) setB2cOnboardingReady(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [b2cCapacityGate])
 
   // Fire Meta Pixel CompleteRegistration when landing from signup (justSignedUp set before redirect)
   useEffect(() => {
@@ -512,6 +539,28 @@ export default function OnboardingPage() {
       } catch {}
     }
     return { ok: true as const, id: String(created.id) }
+  }
+
+  if (b2cCapacityGate && !b2cOnboardingReady) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-neutral-50 text-sm text-neutral-600">
+        Loading…
+      </div>
+    )
+  }
+
+  if (b2cCapacityGate && b2cOnboardingBlocked) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-neutral-50">
+        <B2cCapacityWaitlistPanel variant="page" showNavLinks headingId="b2c-onboarding-waitlist-heading" />
+        <p className="mt-8 text-sm text-neutral-600">
+          Already started?{' '}
+          <Link className="text-[#6A3F2B] underline" href="/login">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    )
   }
 
   return (

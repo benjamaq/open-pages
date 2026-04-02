@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { B2cGatedIndividualCta } from "@/app/components/B2cGatedIndividualCta"
 
 export default function PricingPage() {
   return (
@@ -27,11 +27,12 @@ export default function PricingPage() {
               <li>Daily check-ins</li>
               <li>Basic insights</li>
             </ul>
-            <Link href="/signup?plan=free">
-              <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
-                Start Free
-              </Button>
-            </Link>
+            <B2cGatedIndividualCta
+              href="/signup?plan=free"
+              className="inline-flex w-full items-center justify-center rounded-full bg-neutral-900 hover:bg-neutral-800 text-white py-6 font-semibold"
+            >
+              Start Free
+            </B2cGatedIndividualCta>
           </div>
           <div className="bg-white rounded-2xl border-2 border-black shadow-lg p-8 relative">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -47,11 +48,12 @@ export default function PricingPage() {
               <li>Full statistical analysis</li>
               <li>Complete verdict reports</li>
             </ul>
-            <Link href="/signup?plan=premium">
-              <Button className="w-full bg-black hover:bg-neutral-800 text-white rounded-full py-6 font-semibold">
-                Get Answers
-              </Button>
-            </Link>
+            <B2cGatedIndividualCta
+              href="/signup?plan=premium"
+              className="inline-flex w-full items-center justify-center rounded-full bg-black hover:bg-neutral-800 text-white py-6 font-semibold"
+            >
+              Get Answers
+            </B2cGatedIndividualCta>
           </div>
         </div>
       </main>

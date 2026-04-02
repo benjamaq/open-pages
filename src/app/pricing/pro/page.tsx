@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { B2cGatedIndividualCta } from '@/app/components/B2cGatedIndividualCta'
 import { createClient } from '../../../lib/supabase/client'
 import { PromoRedeemer } from '@/components/billing/PromoRedeemer'
 
@@ -167,12 +168,12 @@ export default function ProPricingPage() {
             </div>
 
             <div className="mt-8">
-              <Link
+              <B2cGatedIndividualCta
                 href={getCtaHref()}
-                className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
+                className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center inline-flex items-center justify-center"
               >
                 {getCtaText()}
-              </Link>
+              </B2cGatedIndividualCta>
               <div className="mt-3">
                 <PromoRedeemer compact />
               </div>

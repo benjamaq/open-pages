@@ -1,5 +1,6 @@
 'use client'
 
+import { B2cGatedIndividualCta } from '@/app/components/B2cGatedIndividualCta'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Sora, Inter } from 'next/font/google'
 
@@ -113,12 +114,12 @@ export default function BioStackrLandingPage() {
               </button>
             ))}
           </nav>
-          <a
+          <B2cGatedIndividualCta
             href="/onboarding"
             className="inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition"
           >
             Test My Supplements
-          </a>
+          </B2cGatedIndividualCta>
         </div>
       </header>
 
@@ -140,9 +141,9 @@ export default function BioStackrLandingPage() {
               <p>Start with one supplement. Or test your whole stack.</p>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-3">
-              <a href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
+              <B2cGatedIndividualCta href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
                 Test My Supplements
-              </a>
+              </B2cGatedIndividualCta>
               <div className="text-sm text-[var(--text-muted-light)]">Free to start. Upload data from any wearable — or just check in daily.</div>
             </div>
           </div>
@@ -261,9 +262,9 @@ export default function BioStackrLandingPage() {
               <p className="mt-2 text-[var(--text-dark)]">
                 <span className="font-semibold">€{animLowYear.toLocaleString()}–€{animHighYear.toLocaleString()}/year</span> on supplements that aren't doing anything.
               </p>
-              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-[var(--bg-dark)] px-5 text-sm font-semibold text-white shadow hover:shadow-lg hover:scale-[1.02] transition">
+              <B2cGatedIndividualCta href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-[var(--bg-dark)] px-5 text-sm font-semibold text-white shadow hover:shadow-lg hover:scale-[1.02] transition">
                 Find out which ones matter →
-              </a>
+              </B2cGatedIndividualCta>
             </div>
           </div>
         </section>
@@ -328,7 +329,7 @@ export default function BioStackrLandingPage() {
                 <li>• Basic insights</li>
                 <li>• Upload wearable data (optional)</li>
               </ul>
-              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg">Start Free</a>
+              <B2cGatedIndividualCta href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg">Start Free</B2cGatedIndividualCta>
             </div>
             <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition bg-gradient-to-br from-[#2b2b2b] to-[#3a2f5e] border border-white/10">
               <h3 className="text-xl font-semibold">Pro — <span className="text-[var(--text-muted-light)]">$149/year</span></h3>
@@ -338,7 +339,7 @@ export default function BioStackrLandingPage() {
                 <li>• Stack economics (what you're wasting)</li>
                 <li>• Priority analysis</li>
               </ul>
-              <a href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition">Get Answers</a>
+              <B2cGatedIndividualCta href="/onboarding" className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-[var(--bg-dark)] shadow hover:shadow-lg hover:scale-[1.02] transition">Get Answers</B2cGatedIndividualCta>
               <p className="mt-2 text-xs text-[var(--text-muted-light)]">Billed yearly. Cancel anytime.</p>
             </div>
           </div>
@@ -351,9 +352,9 @@ export default function BioStackrLandingPage() {
             <h2 className="text-3xl font-bold relative z-10">Your stack deserves a reality check.</h2>
             <div className="mt-4 space-y-4 text-white/90 relative z-10">
               <p>You&apos;ve spent years building your stack. Spend two minutes testing it.</p>
-              <a href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
+              <B2cGatedIndividualCta href="/onboarding" className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[var(--bg-dark)] shadow-md hover:shadow-lg hover:scale-[1.02] transition">
                 Test My Supplements
-              </a>
+              </B2cGatedIndividualCta>
               <p className="text-sm text-[var(--text-muted-light)]">Free. No credit card required.</p>
             </div>
           </div>

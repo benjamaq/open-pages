@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, Clock, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { B2cGatedIndividualCta } from "@/app/components/B2cGatedIndividualCta"
 import { createClient } from "@/lib/supabase/client"
 
 export default function Page() {
@@ -48,12 +49,12 @@ export default function Page() {
             BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
           </p>
           <div className="flex flex-col items-center justify-center">
-            <Link
+            <B2cGatedIndividualCta
               href="/signup"
               className="inline-flex items-center justify-center rounded-full bg-black px-7 py-5 text-base font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 h-12 min-h-[48px]"
             >
               Test My Supplements
-            </Link>
+            </B2cGatedIndividualCta>
             <p className="mt-3 text-sm text-neutral-500 text-center">Free to start · No credit card required</p>
           </div>
           {/* Full‑bleed hero image below text */}
@@ -88,12 +89,12 @@ export default function Page() {
               BioStackr analyses your supplements against your real health data and tells you exactly what to keep and what to drop. Connect your wearable for instant results — or log at your own pace.
             </p>
             <div className="flex flex-col items-start gap-3">
-              <Link
+              <B2cGatedIndividualCta
                 href="/signup"
                 className="inline-flex items-center justify-center rounded-full bg-black px-8 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
               >
                 Test My Supplements
-              </Link>
+              </B2cGatedIndividualCta>
               <p className="text-sm text-neutral-500">Free to start · No credit card required</p>
             </div>
           </div>
@@ -188,12 +189,12 @@ export default function Page() {
           </div>
 
           <div className="mt-8 flex justify-center">
-            <Link
+            <B2cGatedIndividualCta
               href="/signup"
               className="inline-flex items-center justify-center rounded-full bg-black px-8 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
             >
               Test What You&apos;re Actually Taking
-            </Link>
+            </B2cGatedIndividualCta>
           </div>
         </div>
       </section>
@@ -272,12 +273,12 @@ export default function Page() {
             </div>
             <p className="mt-4 text-sm text-neutral-600 text-center">Ready to find out which ones actually work?</p>
             <div className="mt-4">
-              <Link
+              <B2cGatedIndividualCta
                 href="/signup"
                 className="inline-flex w-full items-center justify-center rounded-full bg-black py-3 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[44px]"
               >
                 Start My Analysis
-              </Link>
+              </B2cGatedIndividualCta>
             </div>
           </div>
         </div>
@@ -580,12 +581,12 @@ export default function Page() {
           </p>
 
           <div className="mt-8">
-            <Link
+            <B2cGatedIndividualCta
               href="/signup"
               className="inline-flex items-center justify-center rounded-full bg-black px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[48px]"
             >
               Upload My Data & Get Started
-            </Link>
+            </B2cGatedIndividualCta>
           </div>
         </div>
       </section>
@@ -788,12 +789,12 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link
+              <B2cGatedIndividualCta
                 href="/signup?plan=free"
                 className="inline-flex w-full items-center justify-center rounded-full bg-neutral-900 py-6 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
               >
                 Start Free
-              </Link>
+              </B2cGatedIndividualCta>
             </Card>
 
             {/* Pro Tier */}
@@ -861,12 +862,12 @@ export default function Page() {
                 </li>
               </ul>
 
-              <Link
+              <B2cGatedIndividualCta
                 href={`/signup?plan=premium&period=${billingPeriod}`}
                 className="inline-flex w-full items-center justify-center rounded-full bg-black py-6 font-semibold text-white transition-colors hover:bg-neutral-800 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 min-h-[52px]"
               >
                 Get Answers
-              </Link>
+              </B2cGatedIndividualCta>
             </Card>
           </div>
         </div>
@@ -889,12 +890,12 @@ export default function Page() {
           <p className="mb-10 text-xl text-neutral-200 leading-relaxed">
             You&apos;ve spent years building your stack. Spend two minutes testing it.
           </p>
-          <Link
+          <B2cGatedIndividualCta
             href="/signup"
             className="inline-flex items-center justify-center rounded-full border-2 border-white bg-transparent px-12 py-6 text-lg font-semibold text-white transition-all hover:scale-105 hover:bg-white/10 whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50 min-h-[52px]"
           >
             Test My Supplements
-          </Link>
+          </B2cGatedIndividualCta>
           <p className="mt-4 text-sm text-neutral-200">Free. No credit card required.</p>
         </div>
       </section>

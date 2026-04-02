@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DailyCheckinModal from '@/components/DailyCheckinModal'
+import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/cohortDashboardDeepLink'
 import { dedupedJson } from '@/lib/utils/dedupedJson'
 import { appendLocalTodayParam } from '@/lib/utils/localDateYmd'
 
@@ -52,7 +53,13 @@ export function CheckinLauncher({
         sessionStorage.setItem(PENDING_CHECKIN_KEY, '1')
       } catch {}
       try {
-        router.replace('/dashboard')
+        const cohortView =
+          search.get(COHORT_DASHBOARD_VIEW_QUERY) === COHORT_DASHBOARD_VIEW_VALUE
+        router.replace(
+          cohortView
+            ? `/dashboard?${COHORT_DASHBOARD_VIEW_QUERY}=${COHORT_DASHBOARD_VIEW_VALUE}`
+            : '/dashboard',
+        )
       } catch {}
     }
   }, [search, router])

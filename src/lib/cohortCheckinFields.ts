@@ -30,3 +30,18 @@ export function normalizeCohortCheckinFields(raw: unknown): string[] {
   }
   return out.length > 0 ? out : [...DEFAULT_COHORT_CHECKIN_FIELDS]
 }
+
+const LABELS: Record<string, string> = {
+  sleep_quality: 'Sleep quality',
+  energy: 'Morning energy',
+  mood: 'Mood',
+  focus: 'Focus',
+  sleep_onset_bucket: 'Time to fall asleep',
+  night_wakes: 'Times woken in the night',
+}
+
+/** Human label for cohort check-in field keys (dashboard copy). */
+export function cohortCheckinFieldLabel(key: string): string {
+  const k = String(key || '').trim()
+  return LABELS[k] || k.replace(/_/g, ' ')
+}
