@@ -1,5 +1,6 @@
 import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
 import {
+  COHORT_EMAIL_CTA_LINK_ATTRS,
   COHORT_EMAIL_MAGIC_LINK_HINT,
   escapeHtml,
   firstNameFromAuthUser,
@@ -70,7 +71,7 @@ export async function sendCohortEnrollmentEmail(params: {
     `<p style="margin:0 0 16px;">Both check-ins need to be done within 48 hours. Anyone who doesn&apos;t complete both is quietly removed — we only ship to people who&apos;ve already shown they&apos;ll follow through.</p>` +
     `<p style="margin:0 0 22px;">It takes about 30 seconds.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${escapeHtml(checkinHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
+    `<a href="${escapeHtml(checkinHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
     `</p>` +
     hintHtml
 

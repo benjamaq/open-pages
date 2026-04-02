@@ -1,3 +1,5 @@
+import { COHORT_EMAIL_CTA_LINK_ATTRS } from '@/lib/cohortTransactionalEmailHtml'
+
 export type DailyReminderEmailParams = {
   firstName: string
   supplementCount: number
@@ -51,7 +53,7 @@ export function renderDailyReminderEmail(params: DailyReminderEmailParams): stri
               </div>
               
               <div style="margin-bottom:24px;">
-                <a href="${esc(checkinUrl)}" style="display:inline-block; background:#3A2F2A; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:14px;">Check In Now</a>
+                <a href="${esc(checkinUrl)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block; background:#3A2F2A; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:14px;">Check In Now</a>
                 ${hintBlock}
               </div>
 

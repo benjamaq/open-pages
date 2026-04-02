@@ -10,6 +10,7 @@ import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPa
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
 import { useDashboardLoad } from '@/hooks/useDashboardLoad'
 import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/cohortDashboardDeepLink'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -30,6 +31,23 @@ export function DashboardSkeleton() {
 export function DashboardPageClient() {
   const { data, loading, error } = useDashboardLoad()
   const searchParams = useSearchParams()
+
+  const redirectAfterLogin = useMemo(() => {
+    const qs = searchParams.toString()
+    return qs ? `/dashboard?${qs}` : '/dashboard'
+  }, [searchParams])
+
+  const loginHref = `/login?redirect=${encodeURIComponent(redirectAfterLogin)}`
+
+  /** If magic link landed on /dashboard with ?code= (legacy or preview), finish PKCE via callback. */
+  const pkceResumeHref = useMemo(() => {
+    const code = searchParams.get('code')
+    if (!code) return null
+    const p = new URLSearchParams(searchParams.toString())
+    p.delete('code')
+    const nextPath = `/dashboard${p.toString() ? `?${p.toString()}` : ''}`
+    return `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(nextPath)}`
+  }, [searchParams])
 
   const isMember = Boolean((data as any)?.billingInfo?.isPaid) || Boolean((data as any)?.paymentsStatus?.is_member)
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false)
@@ -65,9 +83,42 @@ export function DashboardPageClient() {
   if (loading) return <DashboardSkeleton />
   if (error || !data) {
     return (
-      <div className="p-6 text-sm text-gray-600">
-        <p>Failed to load dashboard.</p>
-        {error ? <p className="mt-2 text-xs text-gray-500">{error}</p> : null}
+      <div className="min-h-[50vh] flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+          <h1 className="text-lg font-semibold text-slate-900">We couldn&apos;t load your dashboard</h1>
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+            This often happens if the link opened inside an email preview or a small window where sign-in
+            didn&apos;t finish. Open the link in your normal browser tab, or sign in below.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {pkceResumeHref ? (
+              <Link
+                href={pkceResumeHref}
+                className="inline-flex justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Finish signing in
+              </Link>
+            ) : null}
+            <Link
+              href={loginHref}
+              className="inline-flex justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+            >
+              Sign in
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  window.location.reload()
+                } catch {}
+              }}
+              className="inline-flex justify-center rounded-full border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Reload page
+            </button>
+          </div>
+          {error ? <p className="mt-6 text-left text-xs text-slate-500 break-words">{error}</p> : null}
+        </div>
       </div>
     )
   }

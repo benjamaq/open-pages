@@ -1,5 +1,6 @@
 import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
 import {
+  COHORT_EMAIL_CTA_LINK_ATTRS,
   COHORT_EMAIL_MAGIC_LINK_HINT,
   escapeHtml,
   firstNameFromAuthUser,
@@ -48,7 +49,7 @@ export async function sendCohortStudyStartEmail(params: {
     `<p style="margin:0 0 16px;">You're doing something most people never do — actually measuring whether what they're taking is working.</p>` +
     `<p style="margin:0 0 20px;">Let's see what ${productEsc} does for you.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${escapeHtml(dashboardHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
+    `<a href="${escapeHtml(dashboardHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
     `</p>` +
     `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
     escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +

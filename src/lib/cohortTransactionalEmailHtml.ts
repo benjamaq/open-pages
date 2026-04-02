@@ -6,6 +6,13 @@
 /** Helper line under dashboard CTAs in cohort transactional emails. */
 export const COHORT_EMAIL_MAGIC_LINK_HINT = 'This link logs you straight in — no password needed.'
 
+/**
+ * Open CTAs in the topmost window so Gmail / in-app “preview” panes don’t trap auth in an iframe
+ * or isolated context where session cookies don’t match a full-tab sign-in.
+ * (Prefer over target="_blank" for email links that must complete PKCE / cookie auth.)
+ */
+export const COHORT_EMAIL_CTA_LINK_ATTRS = ' target="_top" rel="noopener noreferrer"'
+
 export function escapeHtml(s: string): string {
   return String(s || '')
     .replace(/&/g, '&amp;')
@@ -39,7 +46,7 @@ export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
   const href = escapeHtml(dashboardHref)
   return (
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${href}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
+    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
     `</p>` +
     `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
     escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +
@@ -63,7 +70,7 @@ export function wrapCohortTransactionalEmailHtml(opts: {
        : `<tr>
           <td style="padding:18px 22px 8px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-top:1px solid #eee;background:#ffffff;">
             <p style="margin:0;text-align:center;">
-              <a href="${dash}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>
+              <a href="${dash}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>
             </p>
             <p style="margin:10px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">
               ${escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT)}
