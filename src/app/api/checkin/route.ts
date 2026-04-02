@@ -170,19 +170,22 @@ export async function POST(request: NextRequest) {
           .maybeSingle()
         const profileId = (profForCompliance as { id?: string } | null)?.id
         if (profileId) {
+          const postFirst = await trySendCohortPostFirstCheckinEmail({
+            authUserId: user.id,
+            profileId,
+            cohortSlug,
+          })
+          console.log('[checkin] trySendCohortPostFirstCheckinEmail', postFirst)
           await tryImmediateCohortComplianceConfirm({
             authUserId: user.id,
             profileId,
             cohortSlug,
           })
-          await trySendCohortPostFirstCheckinEmail({
-            authUserId: user.id,
-            profileId,
-            cohortSlug,
-          })
+        } else {
+          console.log('[checkin] cohort hooks skipped: no profileId for user', user.id)
         }
       } catch (e) {
-        console.error('[checkin] cohort compliance confirm hook', e)
+        console.error('[checkin] cohort compliance / post-first-email hook', e)
       }
 
       return NextResponse.json({ success: true, cohort: true })

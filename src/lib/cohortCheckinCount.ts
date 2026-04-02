@@ -33,6 +33,7 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
   const uids = uniqueNonEmptyUserIds(userIds)
   if (uids.length === 0 || !enrolledIso) return []
   const enrollYmd = enrolledIso.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(enrollYmd)) return []
   const [{ data: byCreated }, { data: byDate }] = await Promise.all([
     supabaseAdmin
       .from('daily_entries')
@@ -46,9 +47,10 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
       .gte('local_date', enrollYmd),
   ])
   const ymds = new Set<string>()
+  /** Only calendar days on/after enrollment; avoids counting legacy rows tied to created_at after enroll but local_date before enroll. */
   const addRow = (r: { local_date?: string | null; created_at?: string | null }) => {
     const ymd = effectiveDailyEntryYmd(r)
-    if (ymd) ymds.add(ymd)
+    if (ymd && ymd >= enrollYmd) ymds.add(ymd)
   }
   for (const r of byCreated || []) addRow(r as { local_date?: string | null; created_at?: string | null })
   for (const r of byDate || []) addRow(r as { local_date?: string | null; created_at?: string | null })
