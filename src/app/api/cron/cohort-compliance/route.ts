@@ -3,7 +3,7 @@ import {
   sendComplianceConfirmedEmail,
   studyAndProductNamesFromCohortRow,
 } from '@/lib/cohortComplianceConfirmed'
-import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
+import { fetchCohortCheckinYmdsSinceEnrollForUserIds } from '@/lib/cohortCheckinCount'
 import {
   cohortParticipantUserIdCandidatesSync,
   fetchProfilesByCohortParticipantUserIds,
@@ -59,6 +59,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, processed: 0, confirmed: 0, dropped: 0, dry })
     }
 
+    console.log('[cohort-compliance] start', {
+      appliedCount: list.length,
+      dry,
+      participantIds: list.map((x) => x.id),
+    })
+
     const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
 
     let confirmed = 0
@@ -68,16 +74,42 @@ export async function GET(request: NextRequest) {
     for (const p of list) {
       const row = profMap.get(p.user_id)
       if (!row) {
-        console.warn('[cohort-compliance] no profile for cohort participant user_id', p.user_id)
+        console.warn('[cohort-compliance] skip: no profile for cohort_participants.user_id', {
+          cohortParticipantId: p.id,
+          cohortParticipantsUserId: p.user_id,
+        })
         continue
       }
       const entryUserIds = cohortParticipantUserIdCandidatesSync(row.id, row.user_id)
       const authUid = row.user_id
 
-      const enrolledIso = String(p.enrolled_at)
-      const n = await countDistinctDailyEntriesSinceForUserIds(entryUserIds, enrolledIso)
+      const enrolledIso = String(p.enrolled_at ?? '').trim()
+      if (!enrolledIso || enrolledIso === 'null') {
+        console.warn('[cohort-compliance] skip: missing enrolled_at', { cohortParticipantId: p.id })
+        continue
+      }
+      const enrollYmd = enrolledIso.slice(0, 10)
+      const ymds = await fetchCohortCheckinYmdsSinceEnrollForUserIds(entryUserIds, enrolledIso)
+      const n = ymds.length
       const enrolledMs = new Date(enrolledIso).getTime()
       const past48h = Number.isFinite(enrolledMs) && now - enrolledMs > 48 * 60 * 60 * 1000
+
+      console.log('[cohort-compliance] participant', {
+        cohortParticipantId: p.id,
+        cohortId: p.cohort_id,
+        cohortParticipantsUserId: p.user_id,
+        profileId: row.id,
+        profileAuthUserId: row.user_id,
+        entryUserIdsForDailyEntries: entryUserIds,
+        enrolledAt: enrolledIso,
+        enrollYmdUsedForLocalDateFilter: enrollYmd,
+        distinctCheckinDaysSinceEnroll: n,
+        checkinYmds: ymds.sort(),
+        past48hSinceEnrolledAt: past48h,
+        dry,
+        branch:
+          n >= 2 ? 'confirm_candidate' : past48h ? 'drop_candidate' : 'no_action_wait_window',
+      })
 
       if (n >= 2) {
         if (!dry) {
@@ -92,10 +124,14 @@ export async function GET(request: NextRequest) {
             .select('id')
             .maybeSingle()
           if (uErr) {
-            console.error('[cohort-compliance] confirm update', p.id, uErr)
+            console.error('[cohort-compliance] confirm UPDATE failed', { cohortParticipantId: p.id, uErr })
           } else if (!confirmedRow) {
-            /* already confirmed (e.g. immediate check-in path won the race) */
+            console.warn(
+              '[cohort-compliance] confirm UPDATE returned 0 rows (not applied or race — check status / RLS)',
+              { cohortParticipantId: p.id },
+            )
           } else {
+            console.log('[cohort-compliance] confirmed', { cohortParticipantId: p.id })
             confirmed += 1
             let studyName = 'study'
             let productName = 'product'
@@ -122,7 +158,7 @@ export async function GET(request: NextRequest) {
         }
       } else if (n < 2 && past48h) {
         if (!dry) {
-          const { error: uErr } = await supabaseAdmin
+          const { data: dropRows, error: uErr } = await supabaseAdmin
             .from('cohort_participants')
             .update({
               status: 'dropped',
@@ -130,8 +166,18 @@ export async function GET(request: NextRequest) {
             } as any)
             .eq('id', p.id)
             .eq('status', 'applied')
-          if (uErr) console.error('[cohort-compliance] drop update', p.id, uErr)
-          else dropped += 1
+            .select('id')
+          if (uErr) {
+            console.error('[cohort-compliance] drop UPDATE failed', { cohortParticipantId: p.id, uErr })
+          } else {
+            const droppedN = (dropRows as { id?: string }[] | null)?.length ?? 0
+            if (droppedN === 0) {
+              console.warn('[cohort-compliance] drop UPDATE returned 0 rows', { cohortParticipantId: p.id })
+            } else {
+              console.log('[cohort-compliance] dropped', { cohortParticipantId: p.id })
+            }
+            dropped += droppedN > 0 ? 1 : 0
+          }
         } else {
           dropped += 1
         }
