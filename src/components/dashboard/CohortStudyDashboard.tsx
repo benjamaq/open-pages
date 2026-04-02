@@ -11,6 +11,8 @@ export type CohortStartStudyBody = {
 
 export interface CohortStudyDashboardProps {
   cohortId: string
+  /** Shown as "Welcome back, …" — prefer `profiles` via /api/me `profileWelcomeFirstName`. */
+  welcomeFirstName?: string | null
   /** True when cohort_participants.status is `confirmed` and confirmed_at is set (compliance gate cleared in DB). */
   cohortConfirmed: boolean
   /** Confirmed participant only: waiting for product / first study night (not for `applied` / gate). */
@@ -447,6 +449,7 @@ function StudySupportModal({
 
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
+  welcomeFirstName = null,
   cohortConfirmed,
   cohortAwaitingStudyStart = false,
   cohortStudyStartedAtIso = null,
@@ -482,6 +485,10 @@ export default function CohortStudyDashboard({
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
   const complianceGateSatisfied = gateComplete >= 2
   const studyNameLabel = brandName ? `${brandName} · ${productName}` : productName
+  const welcomeName =
+    typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
+      ? welcomeFirstName.trim()
+      : 'there'
 
   const statCell = (value: number | string, label: string, sub: string) => (
     <div className="text-center flex-1 min-w-[100px]">
@@ -583,6 +590,9 @@ export default function CohortStudyDashboard({
       />
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
+        <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+          Welcome back, {welcomeName}
+        </p>
         <h1 className="text-2xl font-semibold text-gray-900 leading-tight">
           <span className="block text-xs font-medium text-gray-500 mb-1.5 tracking-wide">{studyNameLabel}</span>
           {productName} study

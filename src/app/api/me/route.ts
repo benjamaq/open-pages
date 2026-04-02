@@ -13,6 +13,25 @@ import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUs
 
 export const dynamic = "force-dynamic";
 
+/** First name for UI: prefer profiles.first_name, else first token of full_name, else first token of display_name. */
+function profileWelcomeFirstNameFromRow(prof: unknown): string | null {
+  if (!prof || typeof prof !== "object") return null;
+  const p = prof as Record<string, unknown>;
+  const fn = p.first_name;
+  if (fn != null && String(fn).trim() !== "") return String(fn).trim();
+  const full = p.full_name;
+  if (full != null && String(full).trim() !== "") {
+    const w = String(full).trim().split(/\s+/)[0];
+    return w || null;
+  }
+  const disp = p.display_name;
+  if (disp != null && String(disp).trim() !== "") {
+    const w = String(disp).trim().split(/\s+/)[0];
+    return w || null;
+  }
+  return null;
+}
+
 /** Browser local calendar day from dashboard load (?localToday=YYYY-MM-DD); else UTC date (legacy callers). */
 function todayYmdForCohort(request: Request): string {
   try {
@@ -54,6 +73,7 @@ export async function GET(request: Request) {
     let cohortComplianceDeadlineIso: string | null = null;
     let cohortAwaitingStudyStart = false;
     let cohortStudyStartedAtIso: string | null = null;
+    let profileWelcomeFirstName: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -92,6 +112,7 @@ export async function GET(request: Request) {
           .select("first_name, display_name, full_name, tier, pro_expires_at")
           .eq("user_id", userId)
           .maybeSingle();
+        profileWelcomeFirstName = profileWelcomeFirstNameFromRow(prof);
         const fromProfiles =
           (prof as any)?.first_name ||
           (prof as any)?.display_name ||
@@ -107,7 +128,7 @@ export async function GET(request: Request) {
         try {
           const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
             .from("profiles")
-            .select("id, cohort_id")
+            .select("id, cohort_id, first_name, display_name, full_name")
             .eq("user_id", userId)
             .maybeSingle();
           if (pAdminErr) {
@@ -115,6 +136,10 @@ export async function GET(request: Request) {
               "[api/me] supabaseAdmin profiles read:",
               pAdminErr.message,
             );
+          }
+          if (!profileWelcomeFirstName && pAdmin) {
+            profileWelcomeFirstName =
+              profileWelcomeFirstNameFromRow(pAdmin);
           }
           const rawC = (pAdmin as { cohort_id?: string | null } | null)
             ?.cohort_id;
@@ -385,6 +410,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       firstName: firstName || null,
+      profileWelcomeFirstName,
       email,
       userId,
       tier,

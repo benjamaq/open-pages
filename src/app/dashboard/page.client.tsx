@@ -102,6 +102,11 @@ export function DashboardPageClient() {
             <>
               <CohortStudyDashboard
                 cohortId={String(me?.cohortId || '')}
+                welcomeFirstName={
+                  typeof me?.profileWelcomeFirstName === 'string' && me.profileWelcomeFirstName.trim()
+                    ? me.profileWelcomeFirstName.trim()
+                    : null
+                }
                 cohortConfirmed={Boolean(me?.cohortConfirmed)}
                 cohortAwaitingStudyStart={Boolean(me?.cohortAwaitingStudyStart)}
                 cohortStudyStartedAtIso={
