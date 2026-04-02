@@ -70,7 +70,13 @@ export function useDashboardLoad() {
         { credentials: 'include', cache: 'no-store' },
         0,
       )
-      if (!r.ok) throw new Error('Dashboard load failed')
+      if (!r.ok) {
+        throw new Error(
+          r.status === 401
+            ? 'Dashboard load failed (signed out — open the email link again or sign in)'
+            : `Dashboard load failed (HTTP ${r.status})`,
+        )
+      }
       const j = (r.data || null) as DashboardLoadData | null
       if (!j) throw new Error('Dashboard load failed')
       setData(j)

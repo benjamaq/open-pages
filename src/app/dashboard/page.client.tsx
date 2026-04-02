@@ -63,7 +63,14 @@ export function DashboardPageClient() {
   }, [loading, error, data, searchParams])
 
   if (loading) return <DashboardSkeleton />
-  if (error || !data) return <div className="p-6 text-sm text-gray-600">Failed to load dashboard.</div>
+  if (error || !data) {
+    return (
+      <div className="p-6 text-sm text-gray-600">
+        <p>Failed to load dashboard.</p>
+        {error ? <p className="mt-2 text-xs text-gray-500">{error}</p> : null}
+      </div>
+    )
+  }
 
   const me = (data as any)?.me as Record<string, unknown> | undefined
   const showCohortStudy = Boolean(me?.showCohortStudyDashboard)

@@ -161,8 +161,8 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       `<p style="margin:28px 0 0;text-align:center;">` +
       `<a href="${escapeHtml(checkinHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
       `</p>` +
-      `<p style="margin:14px 0 0;text-align:center;">` +
-      `<a href="${escapeHtml(dashboardHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
+      `<p style="margin:18px 0 0;text-align:center;">` +
+      `<a href="${escapeHtml(dashboardHref)}" style="display:inline-block;background:#ffffff;color:#6A3F2B !important;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:15px;border:2px solid #C84B2F;">Go to your dashboard →</a>` +
       `</p>` +
       `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
       escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +
