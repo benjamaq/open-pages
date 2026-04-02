@@ -14,11 +14,7 @@ import {
   COHORT_QUALIFICATION_STORAGE_KEY,
   type CohortQualificationDraftV1,
 } from '@/lib/cohort'
-import {
-  extractQualificationFreeText,
-  validateQualificationFreeText,
-  QUALIFICATION_FREETEXT_PRIMARY_ERROR,
-} from '@/lib/qualificationFreeText'
+import { extractQualificationFreeText, validateQualificationFreeText } from '@/lib/qualificationFreeText'
 
 const inputCls =
   'w-full rounded-md border border-gray-200 bg-white px-4 py-3.5 text-base text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400'
@@ -102,7 +98,6 @@ function CohortSignupInner() {
 
     const freeForGate = extractQualificationFreeText(issueText)
     if (!validateQualificationFreeText(freeForGate).ok) {
-      setError(QUALIFICATION_FREETEXT_PRIMARY_ERROR)
       setLoading(false)
       return
     }
@@ -190,8 +185,12 @@ function CohortSignupInner() {
           body: JSON.stringify(apiBody),
         })
         if (!pr.ok) {
-          const j = await pr.json().catch(() => ({} as { error?: string }))
-          setError(String((j as any)?.error || 'Could not save your profile. Try again or contact support.'))
+          const j = (await pr.json().catch(() => ({}))) as { error?: string; code?: string }
+          if (j.code === 'QUALIFICATION_INVALID') {
+            setLoading(false)
+            return
+          }
+          setError(String(j.error || 'Could not save your profile. Try again or contact support.'))
           setLoading(false)
           return
         }

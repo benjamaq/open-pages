@@ -3,11 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { cohortParticipantDashboardCheckinUrl } from '@/lib/cohortPostFirstCheckinEmail'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
-import {
-  extractQualificationFreeText,
-  validateQualificationFreeText,
-  QUALIFICATION_FREETEXT_PRIMARY_ERROR,
-} from '@/lib/qualificationFreeText'
+import { extractQualificationFreeText, validateQualificationFreeText } from '@/lib/qualificationFreeText'
 
 /**
  * Creates/updates `cohort_participants` via service role after the profile row exists.
@@ -85,7 +81,7 @@ export async function POST(req: NextRequest) {
     if (cohort_id != null && qualification_response) {
       const free = extractQualificationFreeText(qualification_response)
       if (!validateQualificationFreeText(free).ok) {
-        return NextResponse.json({ error: QUALIFICATION_FREETEXT_PRIMARY_ERROR }, { status: 400 })
+        return NextResponse.json({ code: 'QUALIFICATION_INVALID' }, { status: 400 })
       }
     }
     const reminder_slot = String(body?.reminder_slot || '').toLowerCase()
