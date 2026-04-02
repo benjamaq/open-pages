@@ -165,6 +165,7 @@ function CohortSignupInner() {
       } catch {}
 
       {
+        // Full name → profiles.display_name and first token → profiles.first_name (see /api/profiles POST).
         const apiBody: Record<string, unknown> = {
           user_id: data.user.id,
           name: cleanName,
