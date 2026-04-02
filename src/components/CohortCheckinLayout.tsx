@@ -13,10 +13,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 
-/** Confound tags for daily_entries.tags (same ids as standard check-in). */
+/**
+ * Confound tags for cohort daily_entries.tags.
+ * Omit poor_sleep here: sleep quality is the study outcome; B2C check-in still offers it in DailyCheckinModal.
+ */
 const CONFOUND_TAGS: { id: string; label: string }[] = [
   { id: 'alcohol', label: 'Alcohol' },
-  { id: 'poor_sleep', label: 'Poor sleep' },
   { id: 'high_stress', label: 'High stress' },
   { id: 'illness', label: 'Illness' },
   { id: 'travel', label: 'Travel' },
