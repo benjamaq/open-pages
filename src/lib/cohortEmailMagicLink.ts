@@ -59,6 +59,56 @@ export function cohortDashboardCheckinDirectAbsoluteUrl(): string {
   return `${appBaseNormalized()}${cohortDashboardCheckinNextPath()}`
 }
 
+function logGenerateLinkRedirectDebug(actionLink: string | null | undefined, expectedRedirectTo: string) {
+  const link = typeof actionLink === 'string' ? actionLink : ''
+  let verifyRedirectTo: string | null = null
+  try {
+    const u = new URL(link)
+    verifyRedirectTo = u.searchParams.get('redirect_to')
+  } catch {
+    /* action_link may be malformed in edge cases */
+  }
+  let decoded = verifyRedirectTo
+  if (decoded) {
+    try {
+      decoded = decodeURIComponent(decoded.replace(/\+/g, '%20'))
+    } catch {
+      /* keep raw */
+    }
+    try {
+      if (decoded.includes('%')) decoded = decodeURIComponent(decoded)
+    } catch {
+      /* single pass enough */
+    }
+  }
+  console.log(
+    '[cohortEmailMagicLink] generateLink result',
+    JSON.stringify({
+      expectedRedirectTo,
+      actionLinkHost: (() => {
+        try {
+          return new URL(link).hostname
+        } catch {
+          return null
+        }
+      })(),
+      verifyRedirectToDecodedPreview: decoded ? decoded.slice(0, 240) : null,
+      actionLinkEmbedsCallbackPath: Boolean(decoded?.includes('/auth/callback')),
+      actionLinkLength: link.length,
+    }),
+  )
+  if (
+    expectedRedirectTo.includes('/auth/callback') &&
+    decoded &&
+    !decoded.includes('/auth/callback')
+  ) {
+    console.warn(
+      '[cohortEmailMagicLink] Supabase verify redirect_to is not /auth/callback — allow-list may be rewriting to Site URL (dashboard). Check Auth → URL configuration.',
+      { decodedPreview: decoded.slice(0, 320), expectedRedirectTo },
+    )
+  }
+}
+
 /**
  * Passwordless sign-in link (Supabase Auth magic link). Safe to put in email `href`;
  * opens session on tap and then redirects to the cohort dashboard.
@@ -71,6 +121,15 @@ export async function generateCohortEmailMagicLinkUrl(
   if (!em) return null
   const to = String(redirectTo || '').trim()
   if (!to) return null
+
+  console.log(
+    '[cohortEmailMagicLink] generateLink request',
+    JSON.stringify({
+      redirectTo: to,
+      emailDomain: em.includes('@') ? em.split('@')[1] : '(no domain)',
+    }),
+  )
+
   try {
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
@@ -78,13 +137,25 @@ export async function generateCohortEmailMagicLinkUrl(
       options: { redirectTo: to },
     })
     if (error) {
-      console.error('[cohortEmailMagicLink] generateLink:', error.message)
+      console.error(
+        '[cohortEmailMagicLink] generateLink error',
+        JSON.stringify({
+          redirectTo: to,
+          message: error.message,
+          name: (error as { name?: string }).name,
+        }),
+      )
       return null
     }
     const link = data?.properties?.action_link
-    return typeof link === 'string' && link.length > 0 ? link : null
+    if (typeof link !== 'string' || link.length === 0) {
+      console.error('[cohortEmailMagicLink] generateLink missing action_link', { redirectTo: to })
+      return null
+    }
+    logGenerateLinkRedirectDebug(link, to)
+    return link
   } catch (e) {
-    console.error('[cohortEmailMagicLink]', e)
+    console.error('[cohortEmailMagicLink] generateLink exception', { redirectTo: to, err: String(e) })
     return null
   }
 }
@@ -95,8 +166,11 @@ export async function generateCohortDashboardMagicLinkUrl(email: string): Promis
 
 /** Prefer magic link; use plain dashboard URL if generation fails (user may need to sign in). */
 export async function resolveCohortDashboardEmailHref(email: string): Promise<string> {
-  const magic = await generateCohortDashboardMagicLinkUrl(email)
-  return magic ?? cohortDashboardDirectAbsoluteUrl()
+  const attempted = cohortDashboardRedirectToAbsoluteUrl()
+  const magic = await generateCohortEmailMagicLinkUrl(email, attempted)
+  if (magic) return magic
+  console.warn('[cohortEmailMagicLink] dashboard href fallback (not magic)', { attemptedRedirectTo: attempted })
+  return cohortDashboardDirectAbsoluteUrl()
 }
 
 export async function resolveCohortDashboardCheckinEmailHref(email: string): Promise<string> {
@@ -112,5 +186,9 @@ export async function resolveCohortDashboardCheckinEmailHrefWithMeta(email: stri
   const redirectForMagic = cohortDashboardCheckinRedirectToAbsoluteUrl()
   const magic = await generateCohortEmailMagicLinkUrl(email, redirectForMagic)
   if (magic) return { href: magic, isMagic: true }
+  console.warn('[cohortEmailMagicLink] checkin href fallback (not magic)', {
+    attemptedRedirectTo: redirectForMagic,
+    directHref: cohortDashboardCheckinDirectAbsoluteUrl(),
+  })
   return { href: cohortDashboardCheckinDirectAbsoluteUrl(), isMagic: false }
 }
