@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
+import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
+import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
 
 function stackToLines(list: string[]): string {
   const emojiFor = (item: string) => {
@@ -24,7 +26,10 @@ export async function GET(req: NextRequest) {
     const readinessScore = Number(url.searchParams.get('readinessScore') || 60)
     const readinessEmoji = url.searchParams.get('readinessEmoji') || '💧'
     const readinessMessage = url.searchParams.get('readinessMessage') || 'Take it steady — light activity today'
-    const checkInUrl = url.searchParams.get('checkInUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dashboard?checkin=open`
+    const checkInOverride = url.searchParams.get('checkInUrl')
+    const { href: defaultCheckinHref, isMagic: defaultIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
+    const checkInUrl = checkInOverride || defaultCheckinHref
+    const linkHint = checkInOverride ? null : defaultIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null
     const optOutUrl = url.searchParams.get('optOutUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
     const supplements = (url.searchParams.getAll('supplement') || [])
     const supplementList = supplements.length ? supplements : ['Magnesium', 'Omega-3', 'Sauna Protocol']
@@ -35,6 +40,7 @@ export async function GET(req: NextRequest) {
       supplementCount: Math.max(1, supplementList.length),
       progressPercent: readinessScore,
       checkinUrl: checkInUrl,
+      linkHint,
       energy: pain,
       focus: mood,
       sleep
@@ -64,7 +70,10 @@ export async function POST(req: NextRequest) {
     const readinessEmoji = body.readinessEmoji || '💧'
     const readinessMessage = body.readinessMessage || 'Take it steady — light activity today'
     const supplements: string[] = body.supplementList || ['Magnesium', 'Omega-3', 'Sauna Protocol']
-    const checkInUrl = body.checkInUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/dashboard?checkin=open`
+    const checkInOverride = body.checkInUrl as string | undefined
+    const { href: defaultCheckinHref, isMagic: defaultIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
+    const checkInUrl = checkInOverride || defaultCheckinHref
+    const linkHint = checkInOverride ? null : defaultIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null
     const optOutUrl = body.optOutUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
 
     const html = renderV3Reminder({
@@ -72,6 +81,7 @@ export async function POST(req: NextRequest) {
       supplementCount: Math.max(1, supplements.length),
       progressPercent: readinessScore,
       checkinUrl: checkInUrl,
+      linkHint,
       energy: pain,
       focus: mood,
       sleep

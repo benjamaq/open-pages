@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import crypto from 'crypto'
+import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
+import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
@@ -294,7 +295,6 @@ async function handler(req: NextRequest) {
       console.log('[daily-cron] Using sender:', sender, '(env:', process.env.RESEND_FROM || '(unset)', ')')
     } catch {}
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
-    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'
 
     // Time window filter: send when user's local time matches their reminder_time.
     const now = new Date()
@@ -426,12 +426,9 @@ async function handler(req: NextRequest) {
           } catch {}
         }
 
-        // Generate magic token
-        const rawToken = crypto.randomBytes(32).toString('hex')
-        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
-        const expiresAt = new Date(Date.now() + 24*60*60*1000).toISOString()
-        await supabaseAdmin.from('magic_checkin_tokens').insert({ user_id: p.user_id, token_hash: tokenHash, expires_at: expiresAt })
-        const magicUrl = `${base}/api/checkin/magic?token=${rawToken}`
+        const { href: checkinHref, isMagic: checkinIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(
+          email!,
+        )
 
         // Greeting priority:
         // 1) profiles.display_name (first token)
@@ -508,7 +505,8 @@ async function handler(req: NextRequest) {
           firstName: firstName || 'there',
           supplementCount,
           progressPercent,
-          checkinUrl: `${base}/dashboard?checkin=open`,
+          checkinUrl: checkinHref,
+          linkHint: checkinIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
           ...(energy != null ? { energy } : {}),
           ...(focus  != null ? { focus }  : {}),
           ...(sleep  != null ? { sleep }  : {}),

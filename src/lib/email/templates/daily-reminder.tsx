@@ -3,6 +3,8 @@ export type DailyReminderEmailParams = {
   supplementCount: number
   progressPercent: number
   checkinUrl: string
+  /** Shown under the CTA when href is a Supabase magic link (passwordless). */
+  linkHint?: string | null
   // Optional daily metrics to display (Energy/Focus/Sleep/Mood on 1–10 scale)
   energy?: number
   focus?: number
@@ -18,7 +20,11 @@ function esc(s: any): string {
 }
 
 export function renderDailyReminderEmail(params: DailyReminderEmailParams): string {
-  const { firstName, checkinUrl } = params
+  const { firstName, checkinUrl, linkHint } = params
+  const hintBlock =
+    linkHint != null && String(linkHint).trim() !== ''
+      ? `<div style="font-size:12px;color:#6b7280;line-height:1.45;margin-top:12px;">${esc(linkHint)}</div>`
+      : ''
 
   return `
 <!DOCTYPE html>
@@ -44,8 +50,9 @@ export function renderDailyReminderEmail(params: DailyReminderEmailParams): stri
                 Time for your daily check-in. Three sliders, ten seconds.
               </div>
               
-              <div style="margin-bottom:30px;">
+              <div style="margin-bottom:24px;">
                 <a href="${esc(checkinUrl)}" style="display:inline-block; background:#3A2F2A; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:14px;">Check In Now</a>
+                ${hintBlock}
               </div>
 
               <div style="font-size:14px; color:#374151; line-height:1.6; margin-bottom:18px;">

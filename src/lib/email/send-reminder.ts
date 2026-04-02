@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { renderDailyReminderEmail } from './templates/daily-reminder'
+import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
+import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
 
 type Options = {
   emailOverride?: string
@@ -11,7 +13,6 @@ type Options = {
 export async function sendReminderToUser(userId: string, opts?: Options) {
   const dry = Boolean(opts?.dry)
   const preview = Boolean(opts?.preview)
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ''
   // Profile (safe columns only)
   const { data: prof } = await supabaseAdmin
     .from('profiles')
@@ -61,11 +62,13 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     const totalW = percs.reduce((s, x) => s + x.weight, 0)
     progressPercent = totalW > 0 ? Math.round(percs.reduce((s, x) => s + (x.pct * x.weight), 0) / totalW) : 0
   } catch {}
+  const { href: checkinHref, isMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(recipientEmail)
   const html = renderDailyReminderEmail({
     firstName: firstName || 'there',
     supplementCount,
     progressPercent,
-    checkinUrl: `${baseUrl}/dashboard?checkin=open`,
+    checkinUrl: checkinHref,
+    linkHint: isMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
   })
   const subject = `Quick check-in — 10 seconds`
   if (dry || preview) {

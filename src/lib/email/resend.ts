@@ -203,7 +203,8 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
   try {
     // Lazy import to avoid circular deps at module load
     const { renderDailyReminderEmail } = await import('@/lib/email/templates/daily-reminder')
-    const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
+    const { resolveCohortDashboardCheckinEmailHrefWithMeta } = await import('@/lib/cohortEmailMagicLink')
+    const { COHORT_EMAIL_MAGIC_LINK_HINT } = await import('@/lib/cohortTransactionalEmailHtml')
     const supplementCount =
       (Array.isArray(data.supplements) ? data.supplements.length : 0) +
       (Array.isArray(data.protocols) ? data.protocols.length : 0) +
@@ -211,11 +212,14 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
       (Array.isArray(data.mindfulness) ? data.mindfulness.length : 0)
     // Until we plumb real stack clarity here, default to 0
     const progressPercent = 0
+    const emailAddr = String(data.userEmail || '').trim()
+    const { href: checkinHref, isMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(emailAddr)
     const html = renderDailyReminderEmail({
       firstName: data.userName || 'there',
       supplementCount: Math.max(1, supplementCount),
       progressPercent,
-      checkinUrl: `${base}/dashboard?checkin=open`,
+      checkinUrl: checkinHref,
+      linkHint: isMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
     })
     return sendEmail({
       to: data.userEmail,

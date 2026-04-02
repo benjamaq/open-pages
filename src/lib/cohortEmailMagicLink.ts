@@ -64,6 +64,17 @@ export async function resolveCohortDashboardEmailHref(email: string): Promise<st
 }
 
 export async function resolveCohortDashboardCheckinEmailHref(email: string): Promise<string> {
-  const magic = await generateCohortEmailMagicLinkUrl(email, cohortDashboardCheckinRedirectToAbsoluteUrl())
-  return magic ?? cohortDashboardCheckinRedirectToAbsoluteUrl()
+  const { href } = await resolveCohortDashboardCheckinEmailHrefWithMeta(email)
+  return href
+}
+
+/** Check-in deep link for email: magic when `generateLink` succeeds, else plain dashboard URL. */
+export async function resolveCohortDashboardCheckinEmailHrefWithMeta(email: string): Promise<{
+  href: string
+  isMagic: boolean
+}> {
+  const redirect = cohortDashboardCheckinRedirectToAbsoluteUrl()
+  const magic = await generateCohortEmailMagicLinkUrl(email, redirect)
+  if (magic) return { href: magic, isMagic: true }
+  return { href: redirect, isMagic: false }
 }
