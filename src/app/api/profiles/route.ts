@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { sendEmail } from '@/lib/email/resend'
-import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
-import { cohortEmailDashboardCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
 import { ensureCohortStudyStackItem, upsertCohortParticipant } from '@/lib/cohortEnrollment'
+import { sendCohortEnrollmentEmail } from '@/lib/cohortEnrollmentEmail'
 import { extractQualificationFreeText, validateQualificationFreeText } from '@/lib/qualificationFreeText'
 
 /**
@@ -24,22 +22,6 @@ async function enrollProfileInCohort(
 function jsonEnrollmentError(enr: { ok: false; error: string; code?: string }) {
   const status = enr.code === 'COHORT_FULL' ? 409 : 500
   return NextResponse.json({ error: enr.error, code: enr.code }, { status })
-}
-
-async function sendCohortEnrollmentEmail(to: string) {
-  const safe = String(to || '').trim()
-  if (!safe) return
-  const dashboardHref = await resolveCohortDashboardEmailHref(safe)
-  const cta = cohortEmailDashboardCtaHtml(dashboardHref)
-  await sendEmail({
-    to: safe,
-    subject: 'Your study place is reserved: first two check-ins within 48 hours',
-    html: `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
-<p>Your place is reserved for 48 hours.</p>
-<p>Complete your first two check-ins to secure your spot and trigger product shipment.</p>
-${cta}
-</body></html>`,
-  })
 }
 
 function reminderSlotToTime(slot: string): string {
@@ -138,7 +120,11 @@ export async function POST(req: NextRequest) {
             if (!enr.ok) return jsonEnrollmentError(enr)
             if (email) {
               try {
-                await sendCohortEnrollmentEmail(email)
+                await sendCohortEnrollmentEmail({
+                  to: email,
+                  authUserId: user_id,
+                  cohortSlug: cohort_id,
+                })
               } catch (mailErr) {
                 console.error('[api/profiles] cohort welcome email failed:', mailErr)
               }
@@ -263,7 +249,11 @@ export async function POST(req: NextRequest) {
           }
           if (email) {
             try {
-              await sendCohortEnrollmentEmail(email)
+              await sendCohortEnrollmentEmail({
+                to: email,
+                authUserId: user_id,
+                cohortSlug: cohort_id,
+              })
             } catch (mailErr) {
               console.error('[api/profiles] cohort welcome email failed:', mailErr)
             }
@@ -288,7 +278,11 @@ export async function POST(req: NextRequest) {
       }
       if (email) {
         try {
-          await sendCohortEnrollmentEmail(email)
+          await sendCohortEnrollmentEmail({
+            to: email,
+            authUserId: user_id,
+            cohortSlug: cohort_id,
+          })
         } catch (mailErr) {
           console.error('[api/profiles] cohort welcome email failed:', mailErr)
         }

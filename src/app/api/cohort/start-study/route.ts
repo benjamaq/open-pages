@@ -18,15 +18,27 @@ function ymdAddDays(ymd: string, delta: number): string {
   return `${yy}-${mm}-${dd}`
 }
 
-function productArrivedDate(choice: ArrivalChoice): string | null {
-  const today = new Date().toISOString().slice(0, 10)
+function utcNoonIso(ymd: string): string {
+  return `${ymd}T12:00:00.000Z`
+}
+
+/** Yesterday through five days ago (inclusive), for "when did you first take it". */
+function validFirstDoseYmds(todayYmd: string): string[] {
+  const out: string[] = []
+  for (let i = 1; i <= 5; i++) {
+    out.push(ymdAddDays(todayYmd, -i))
+  }
+  return out
+}
+
+function productArrivedAtForChoice(choice: ArrivalChoice, todayYmd: string, firstDoseYmd: string | null): string | null {
   switch (choice) {
     case 'today':
-      return today
+      return todayYmd
     case 'yesterday':
-      return ymdAddDays(today, -1)
+      return ymdAddDays(todayYmd, -1)
     case 'few_days_ago':
-      return ymdAddDays(today, -3)
+      return firstDoseYmd
     case 'skip':
     default:
       return null
@@ -34,8 +46,12 @@ function productArrivedDate(choice: ArrivalChoice): string | null {
 }
 
 /**
- * Confirmed participant: product arrived → start 21-day study clock + first check-in.
- * Body: { productArrived?: 'today' | 'yesterday' | 'few_days_ago' | 'skip' }
+ * Confirmed participant: product arrived → start 21-day study clock (+ optional first check-in).
+ * Body: {
+ *   productArrived?: 'today' | 'yesterday' | 'few_days_ago' | 'skip'
+ *   tookProductLastNight?: boolean  // required when productArrived === 'yesterday'
+ *   firstDoseYmd?: string          // YYYY-MM-DD, required when productArrived === 'few_days_ago'
+ * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -52,6 +68,25 @@ export async function POST(request: NextRequest) {
     const raw = body?.productArrived
     const choice: ArrivalChoice =
       raw === 'today' || raw === 'yesterday' || raw === 'few_days_ago' || raw === 'skip' ? raw : 'skip'
+
+    const calRaw = typeof body?.calendarTodayYmd === 'string' ? String(body.calendarTodayYmd).trim() : ''
+    const todayYmd =
+      calRaw && /^\d{4}-\d{2}-\d{2}$/.test(calRaw) ? calRaw : new Date().toISOString().slice(0, 10)
+    const tookLastNight = body?.tookProductLastNight
+    const firstDoseRaw =
+      typeof body?.firstDoseYmd === 'string' ? String(body.firstDoseYmd).trim().slice(0, 10) : ''
+
+    if (choice === 'yesterday') {
+      if (tookLastNight !== true && tookLastNight !== false) {
+        return NextResponse.json({ error: 'tookProductLastNight required for yesterday' }, { status: 400 })
+      }
+    }
+    if (choice === 'few_days_ago') {
+      const allowed = new Set(validFirstDoseYmds(todayYmd))
+      if (!firstDoseRaw || !allowed.has(firstDoseRaw)) {
+        return NextResponse.json({ error: 'firstDoseYmd must be one of the last 5 days before today' }, { status: 400 })
+      }
+    }
 
     const { data: prof, error: pErr } = await supabaseAdmin
       .from('profiles')
@@ -106,10 +141,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Study already started' }, { status: 400 })
     }
 
-    const nowIso = new Date().toISOString()
-    const arrived = productArrivedDate(choice)
+    let studyStartedIso: string
+    let openCheckin = false
+    const firstDoseYmd = choice === 'few_days_ago' ? firstDoseRaw : null
+
+    switch (choice) {
+      case 'today':
+        studyStartedIso = utcNoonIso(ymdAddDays(todayYmd, 1))
+        openCheckin = false
+        break
+      case 'yesterday':
+        if (tookLastNight === true) {
+          studyStartedIso = utcNoonIso(ymdAddDays(todayYmd, -1))
+          openCheckin = true
+        } else {
+          studyStartedIso = utcNoonIso(todayYmd)
+          openCheckin = false
+        }
+        break
+      case 'few_days_ago':
+        studyStartedIso = utcNoonIso(firstDoseYmd!)
+        openCheckin = true
+        break
+      case 'skip':
+      default:
+        studyStartedIso = new Date().toISOString()
+        openCheckin = true
+        break
+    }
+
+    const arrived = productArrivedAtForChoice(choice, todayYmd, firstDoseYmd)
     const patch: Record<string, unknown> = {
-      study_started_at: nowIso,
+      study_started_at: studyStartedIso,
     }
     if (arrived) {
       patch.product_arrived_at = arrived
@@ -127,14 +190,15 @@ export async function POST(request: NextRequest) {
     }
 
     const email = String(user.email || '').trim()
-    if (email) {
-      const r = await sendCohortStudyStartEmail({ to: email, productName })
+    const sendStartEmail = choice !== 'today'
+    if (email && sendStartEmail) {
+      const r = await sendCohortStudyStartEmail({ to: email, authUserId: user.id, productName })
       if (!r.success) {
         console.warn('[cohort/start-study] email', r.error)
       }
     }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, openCheckin })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Failed'
     console.error('[cohort/start-study]', e)

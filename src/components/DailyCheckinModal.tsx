@@ -1113,7 +1113,9 @@ useEffect(() => {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Optional — helps explain unusual days.</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Tag anything that might have affected your sleep — we&apos;ll exclude these days from your results.
+                </p>
               </div>
 
               {/* Exercise removed per spec */}

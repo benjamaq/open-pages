@@ -53,6 +53,7 @@ export async function GET(request: Request) {
     let cohortConfirmed = false;
     let cohortComplianceDeadlineIso: string | null = null;
     let cohortAwaitingStudyStart = false;
+    let cohortStudyStartedAtIso: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -218,8 +219,16 @@ export async function GET(request: Request) {
                     String(studyStartedRaw).trim() !== ""
                       ? String(studyStartedRaw).trim()
                       : null;
+                  cohortStudyStartedAtIso = studyStartedAtIso;
+                  const studyStartYmd = studyStartedAtIso
+                    ? studyStartedAtIso.slice(0, 10)
+                    : null;
+                  const studyClockHasBegun = Boolean(
+                    studyStartYmd != null && studyStartYmd <= todayYmd,
+                  );
                   cohortAwaitingStudyStart = Boolean(
-                    cohortConfirmed && !studyStartedAtIso,
+                    cohortConfirmed &&
+                      (!studyStartedAtIso || !studyClockHasBegun),
                   );
 
                   if (enrolledAt) {
@@ -263,7 +272,11 @@ export async function GET(request: Request) {
                         complianceAnchorIso,
                       ),
                     ]);
-                    if (cohortConfirmed && studyStartedAtIso) {
+                    if (
+                      cohortConfirmed &&
+                      studyStartedAtIso &&
+                      studyClockHasBegun
+                    ) {
                       const [cntStudy, ymdsStudy] = await Promise.all([
                         countDistinctDailyEntriesSinceForUserIds(
                           cpUserIds,
@@ -298,7 +311,11 @@ export async function GET(request: Request) {
                     }
                   }
 
-                  if (cohortConfirmed && studyStartedAtIso) {
+                  if (
+                    cohortConfirmed &&
+                    studyStartedAtIso &&
+                    studyClockHasBegun
+                  ) {
                     const studyYmd = studyStartedAtIso.slice(0, 10);
                     cohortStudyCurrentDay = Math.max(
                       1,
@@ -383,6 +400,7 @@ export async function GET(request: Request) {
       cohortConfirmed,
       cohortComplianceDeadlineIso,
       cohortAwaitingStudyStart,
+      cohortStudyStartedAtIso,
     });
   } catch (e: any) {
     return NextResponse.json(

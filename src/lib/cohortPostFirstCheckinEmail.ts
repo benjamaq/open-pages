@@ -1,19 +1,17 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
-import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
 import {
+  resolveCohortDashboardCheckinEmailHref,
+  resolveCohortDashboardEmailHref,
+} from '@/lib/cohortEmailMagicLink'
+import {
+  COHORT_EMAIL_MAGIC_LINK_HINT,
   escapeHtml,
   firstNameFromAuthUser,
   wrapCohortTransactionalEmailHtml,
 } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-
-/** Deep-link opens cohort dashboard check-in flow (see CheckinLauncher + CohortStudyDashboard id). */
-export function cohortParticipantDashboardCheckinUrl(appBaseRaw: string): string {
-  const appBase = String(appBaseRaw || 'https://www.biostackr.io').replace(/\/$/, '')
-  return `${appBase}/dashboard?checkin=1#cohort-study-dashboard`
-}
 
 /**
  * After first distinct compliance check-in (n === 1): send nudge for second check-in.
@@ -68,12 +66,12 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
 
     const first = escapeHtml(firstNameFromAuthUser(auth.user))
     const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
-    const checkinUrl = cohortParticipantDashboardCheckinUrl(appBase)
     const productLabel = escapeHtml(
       String((cohort as { product_name?: string | null }).product_name || 'SureSleep').trim() || 'SureSleep',
     )
 
     const dashboardHref = await resolveCohortDashboardEmailHref(to)
+    const checkinHref = await resolveCohortDashboardCheckinEmailHref(to)
 
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -83,13 +81,24 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       `<li style="margin:0 0 8px;">Your ${productLabel} supply will be dispatched</li>` +
       `<li style="margin:0 0 8px;">Your 21-day tracking begins</li>` +
       `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
-      `<li style="margin:0;">Your completion reward is locked in</li>` +
+      `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} plus three months of BioStackr Pro</li>` +
       `</ul>` +
       `<p style="margin:28px 0 0;text-align:center;">` +
-      `<a href="${escapeHtml(checkinUrl)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in</a>` +
+      `<a href="${escapeHtml(checkinHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
+      `</p>` +
+      `<p style="margin:14px 0 0;text-align:center;">` +
+      `<a href="${escapeHtml(dashboardHref)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Go to your dashboard →</a>` +
+      `</p>` +
+      `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
+      escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +
       `</p>`
 
-    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml, dashboardHref })
+    const html = wrapCohortTransactionalEmailHtml({
+      appBase,
+      innerHtml,
+      dashboardHref,
+      omitDashboardRow: true,
+    })
 
     const r = await sendEmail({
       to,

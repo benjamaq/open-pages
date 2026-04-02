@@ -1,6 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
+
+export type CohortStartStudyBody = {
+  productArrived: 'today' | 'yesterday' | 'few_days_ago' | 'skip'
+  tookProductLastNight?: boolean
+  firstDoseYmd?: string
+}
 
 export interface CohortStudyDashboardProps {
   cohortId: string
@@ -8,8 +15,10 @@ export interface CohortStudyDashboardProps {
   cohortConfirmed: boolean
   /** Confirmed shipment slot but participant has not tapped "start my study" yet. */
   cohortAwaitingStudyStart?: boolean
-  /** After successful start-study API: refresh dashboard + open first check-in. */
-  onAfterStudyStarted?: () => void
+  /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
+  cohortStudyStartedAtIso?: string | null
+  /** After successful start-study API: refresh already fired from caller; optionally open check-in. */
+  onAfterStudyStarted?: (opts?: { openCheckin?: boolean }) => void
   /** ISO timestamp: enrollment + 48h; for compliance-gate countdown only. */
   complianceDeadlineIso: string | null
   brandName: string
@@ -101,39 +110,83 @@ function SpotConfirmedCountdown({
   )
 }
 
+function ymdAddDaysLocal(ymd: string, delta: number): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  dt.setDate(dt.getDate() + delta)
+  const yy = dt.getFullYear()
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const dd = String(dt.getDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
+function lastFiveFirstDoseChoices(todayYmd: string): string[] {
+  const out: string[] = []
+  for (let i = 1; i <= 5; i++) {
+    out.push(ymdAddDaysLocal(todayYmd, -i))
+  }
+  return out
+}
+
+function formatChoiceYmd(ymd: string): string {
+  const [Y, M, D] = ymd.split('-').map(Number)
+  const dt = new Date(Y, M - 1, D)
+  if (Number.isNaN(dt.getTime())) return ymd
+  return dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
 function ProductArrivedModal({
   open,
   onClose,
-  onComplete,
+  productName,
+  onSubmit,
+  onFlowFinished,
 }: {
   open: boolean
   onClose: () => void
-  onComplete: (choice: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => Promise<void>
+  productName: string
+  onSubmit: (body: CohortStartStudyBody) => Promise<{ openCheckin: boolean }>
+  onFlowFinished: (openCheckin: boolean) => void
 }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [screen, setScreen] = useState<'arrival' | 'yesterday-followup' | 'few-days' | 'success'>('arrival')
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
       setBusy(false)
       setErr(null)
+      setScreen('arrival')
+      setSuccessMsg(null)
     }
   }, [open])
 
   if (!open) return null
 
-  const pick = async (choice: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => {
+  const todayYmd = getLocalDateYmd()
+  const fewDaysChoices = lastFiveFirstDoseChoices(todayYmd)
+
+  const finishWithApi = async (body: CohortStartStudyBody, successMessage?: string) => {
     setBusy(true)
     setErr(null)
     try {
-      await onComplete(choice)
+      const { openCheckin } = await onSubmit(body)
+      if (successMessage) {
+        setSuccessMsg(successMessage)
+        setScreen('success')
+        return
+      }
       onClose()
+      onFlowFinished(openCheckin)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
       setBusy(false)
     }
   }
+
+  const successView = screen === 'success' && successMsg
 
   return (
     <div
@@ -146,45 +199,134 @@ function ProductArrivedModal({
       }}
     >
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-5 sm:p-6">
-        <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
-          When did your product arrive?
-        </h3>
-        <p className="mt-2 text-sm text-gray-600">Optional — helps our records. Skip if you prefer.</p>
-        {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
-        <div className="mt-4 grid gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => pick('today')}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => pick('yesterday')}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Yesterday
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => pick('few_days_ago')}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
-          >
-            A few days ago
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => pick('skip')}
-            className="w-full rounded-xl border border-dashed border-slate-300 px-4 py-3 text-center text-sm font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Skip
-          </button>
-        </div>
+        {successView ? (
+          <>
+            <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
+              You&apos;re set
+            </h3>
+            <p className="mt-3 text-sm text-gray-700 leading-relaxed">{successMsg}</p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                onClose()
+                onFlowFinished(false)
+              }}
+              className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+              style={{ backgroundColor: '#C84B2F' }}
+            >
+              Done
+            </button>
+          </>
+        ) : screen === 'yesterday-followup' ? (
+          <>
+            <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
+              Did you take {productName} last night?
+            </h3>
+            {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
+            <div className="mt-4 grid gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  finishWithApi({ productArrived: 'yesterday', tookProductLastNight: true }, undefined)
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  finishWithApi(
+                    { productArrived: 'yesterday', tookProductLastNight: false },
+                    'No problem. Take it tonight and come back tomorrow morning.',
+                  )
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+              >
+                No
+              </button>
+            </div>
+          </>
+        ) : screen === 'few-days' ? (
+          <>
+            <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
+              When did you first take it?
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              We&apos;ll count your days from when you first took it so you don&apos;t lose any data.
+            </p>
+            {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
+            <div className="mt-4 grid gap-2">
+              {fewDaysChoices.map((ymd) => (
+                <button
+                  key={ymd}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => finishWithApi({ productArrived: 'few_days_ago', firstDoseYmd: ymd }, undefined)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {formatChoiceYmd(ymd)}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
+              When did your product arrive?
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">Optional — helps our records. Skip if you prefer.</p>
+            {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
+            <div className="mt-4 grid gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  finishWithApi(
+                    { productArrived: 'today' },
+                    `Perfect. Take ${productName} tonight about 45 minutes before bed. Come back tomorrow morning for your first check-in.`,
+                  )
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setErr(null)
+                  setScreen('yesterday-followup')
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Yesterday
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setErr(null)
+                  setScreen('few-days')
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
+              >
+                A few days ago
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => finishWithApi({ productArrived: 'skip' }, undefined)}
+                className="w-full rounded-xl border border-dashed border-slate-300 px-4 py-3 text-center text-sm font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Skip
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -307,6 +449,7 @@ export default function CohortStudyDashboard({
   cohortId: _cohortId,
   cohortConfirmed,
   cohortAwaitingStudyStart = false,
+  cohortStudyStartedAtIso = null,
   onAfterStudyStarted,
   complianceDeadlineIso,
   brandName,
@@ -399,17 +542,31 @@ export default function CohortStudyDashboard({
 
   const showInterimSpotConfirmed = complianceGateSatisfied && !cohortConfirmed
 
-  const startStudyApi = async (productArrived: 'today' | 'yesterday' | 'few_days_ago' | 'skip') => {
+  const localTodayYmd = getLocalDateYmd()
+  const studyStartYmd =
+    cohortStudyStartedAtIso != null && String(cohortStudyStartedAtIso).trim() !== ''
+      ? String(cohortStudyStartedAtIso).trim().slice(0, 10)
+      : null
+  const pendingFirstStudyNight = Boolean(studyStartYmd && studyStartYmd > localTodayYmd)
+
+  const startStudyApi = async (body: CohortStartStudyBody) => {
     const res = await fetch('/api/cohort/start-study', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productArrived }),
+      body: JSON.stringify({ ...body, calendarTodayYmd: getLocalDateYmd() }),
     })
     const j = await res.json().catch(() => ({}))
     if (!res.ok) {
       throw new Error(String((j as { error?: string }).error || 'Could not start study'))
     }
-    onAfterStudyStarted?.()
+    try {
+      window.dispatchEvent(new Event('dashboard:refresh'))
+    } catch {}
+    return { openCheckin: Boolean((j as { openCheckin?: boolean }).openCheckin) }
+  }
+
+  const onArrivalFlowFinished = (openCheckin: boolean) => {
+    onAfterStudyStarted?.({ openCheckin })
   }
 
   return (
@@ -417,7 +574,9 @@ export default function CohortStudyDashboard({
       <ProductArrivedModal
         open={productArrivedOpen}
         onClose={() => setProductArrivedOpen(false)}
-        onComplete={startStudyApi}
+        productName={productName}
+        onSubmit={startStudyApi}
+        onFlowFinished={onArrivalFlowFinished}
       />
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
@@ -430,20 +589,32 @@ export default function CohortStudyDashboard({
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
         {cohortAwaitingStudyStart ? (
           <div>
-            <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your product is on the way</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-              As soon as it arrives, come back here and use the button below to start your study. Your 21 days begin the day
-              you confirm—then complete your first check-in right away.
-            </p>
-            <button
-              type="button"
-              onClick={() => setProductArrivedOpen(true)}
-              className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
-              style={{ backgroundColor: '#C84B2F' }}
-            >
-              My product has arrived — start my study
-            </button>
-            <div className="mt-8 border-t border-slate-200 pt-8">
+            {pendingFirstStudyNight ? (
+              <>
+                <h2 className="text-[26px] font-bold leading-snug text-gray-900">First night</h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                  Perfect. Take {productName} tonight about 45 minutes before bed. Come back tomorrow morning for your first
+                  check-in.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your product is on the way</h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
+                  As soon as it arrives, come back here and use the button below to start your study. Your 21 days begin the
+                  day you confirm—then complete your first check-in right away.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setProductArrivedOpen(true)}
+                  className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
+                  style={{ backgroundColor: '#C84B2F' }}
+                >
+                  My product has arrived — start my study
+                </button>
+              </>
+            )}
+            <div className={`mt-8 border-t border-slate-200 pt-8 ${pendingFirstStudyNight ? 'mt-6' : ''}`}>
               <h3 className="text-lg font-semibold text-gray-900">How to take {productName}</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
                 Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it consistently
@@ -566,7 +737,9 @@ export default function CohortStudyDashboard({
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 flex flex-wrap justify-center gap-5 sm:gap-6">
         {cohortAwaitingStudyStart ? (
           <p className="w-full text-center text-sm text-gray-600 py-2">
-            Your study stats will appear here after you start—once your product has arrived.
+            {pendingFirstStudyNight
+              ? 'Your study stats will appear after your first night and check-in tomorrow.'
+              : 'Your study stats will appear here after you start—once your product has arrived.'}
           </p>
         ) : cohortConfirmed ? (
           <>

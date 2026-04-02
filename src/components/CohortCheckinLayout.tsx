@@ -311,7 +311,7 @@ export default function CohortCheckinLayout({
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Optional — helps explain unusual days and protects your data.
+                  Tag anything that might have affected your sleep — we&apos;ll exclude these days from your results.
                 </p>
               </div>
 
