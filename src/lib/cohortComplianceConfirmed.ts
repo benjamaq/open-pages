@@ -1,18 +1,15 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
+import {
+  escapeHtml,
+  firstNameFromAuthUser,
+  wrapCohortTransactionalEmailHtml,
+} from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-function escapeHtml(s: string): string {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 export function studyAndProductNamesFromCohortRow(
-  cRow: { product_name?: string | null; brand_name?: string | null } | null | undefined
+  cRow: { product_name?: string | null; brand_name?: string | null } | null | undefined,
 ): { studyName: string; productName: string } {
   let studyName = 'study'
   let productName = 'product'
@@ -30,6 +27,7 @@ export async function sendComplianceConfirmedEmail(params: {
   authUserId: string
   studyName: string
   productName: string
+  brandName?: string | null
 }): Promise<void> {
   try {
     const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(params.authUserId)
@@ -40,15 +38,27 @@ export async function sendComplianceConfirmedEmail(params: {
     const to = String(auth.user.email).trim()
     if (!to) return
 
+    const first = escapeHtml(firstNameFromAuthUser(auth.user))
     const study = escapeHtml(params.studyName)
     const product = escapeHtml(params.productName)
+    const brand = escapeHtml(String(params.brandName ?? '').trim() || 'DoNotAge')
+    const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
 
-    const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
-<p>You completed both check-ins and your spot in the <strong>${study}</strong> study is confirmed.</p>
-<p>DoNotAge will be dispatching your <strong>${product}</strong> shortly. While you wait, please do not add any new supplements to your routine. We need a clean baseline.</p>
-<p>Your daily check-ins begin the morning after your product arrives. You will receive a reminder each morning at your preferred time. Each check-in takes about 30 seconds.</p>
-<p>Thank you for being part of this.</p>
-</body></html>`
+    const innerHtml =
+      `<p style="margin:0 0 16px;">Hi ${first},</p>` +
+      `<p style="margin:0 0 16px;">You're in. Your place in the <strong>${study}</strong> study is now confirmed.</p>` +
+      `<p style="margin:0 0 20px;"><strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly.</p>` +
+      `<p style="margin:0 0 6px;"><strong>Before your product arrives</strong></p>` +
+      `<p style="margin:0 0 18px;">Keep your routine stable. Please don't introduce any new supplements. We want a clean baseline.</p>` +
+      `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +
+      `<p style="margin:0 0 18px;">Start taking ${product} the next morning and complete your first daily check-in.</p>` +
+      `<p style="margin:0 0 6px;"><strong>During the study</strong></p>` +
+      `<p style="margin:0 0 18px;">You'll receive a short check-in each morning — takes about 30 seconds.</p>` +
+      `<p style="margin:0 0 6px;"><strong>At the end of 21 days</strong></p>` +
+      `<p style="margin:0 0 20px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
+      `<p style="margin:0;">Thank you for being part of this.</p>`
+
+    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml })
 
     const r = await sendEmail({
       to,
@@ -115,12 +125,14 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
     if (!updated) return
 
     const { studyName, productName } = studyAndProductNamesFromCohortRow(
-      cohort as { product_name?: string | null; brand_name?: string | null }
+      cohort as { product_name?: string | null; brand_name?: string | null },
     )
+    const brandName = (cohort as { brand_name?: string | null }).brand_name
     await sendComplianceConfirmedEmail({
       authUserId: opts.authUserId,
       studyName,
       productName,
+      brandName,
     })
   } catch (e) {
     console.error('[checkin] cohort compliance confirm', e)

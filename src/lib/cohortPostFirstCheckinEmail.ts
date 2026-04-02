@@ -1,24 +1,12 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
+import {
+  escapeHtml,
+  firstNameFromAuthUser,
+  wrapCohortTransactionalEmailHtml,
+} from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-
-function escapeHtml(s: string): string {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-function firstNameFromAuthUser(user: { user_metadata?: Record<string, unknown> | null; email?: string | null }): string {
-  const m = user.user_metadata || {}
-  if (typeof m.first_name === 'string' && m.first_name.trim()) return m.first_name.trim()
-  if (typeof m.name === 'string' && m.name.trim()) return m.name.trim().split(/\s+/)[0] || 'there'
-  if (typeof m.full_name === 'string' && m.full_name.trim()) return m.full_name.trim().split(/\s+/)[0] || 'there'
-  const em = user.email ? String(user.email).split('@')[0] : ''
-  return em || 'there'
-}
 
 /** Deep-link opens cohort dashboard check-in flow (see CheckinLauncher + CohortStudyDashboard id). */
 export function cohortParticipantDashboardCheckinUrl(appBaseRaw: string): string {
@@ -41,7 +29,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
   try {
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id')
+      .select('id, product_name')
       .eq('slug', slug)
       .maybeSingle()
     if (cErr || !cohort?.id) return
@@ -78,25 +66,27 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
     if (!to) return
 
     const first = escapeHtml(firstNameFromAuthUser(auth.user))
-    const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.io').replace(/\/$/, '')
+    const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
     const checkinUrl = cohortParticipantDashboardCheckinUrl(appBase)
+    const productLabel = escapeHtml(
+      String((cohort as { product_name?: string | null }).product_name || 'SureSleep').trim() || 'SureSleep',
+    )
 
-    const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1a1a1a;padding:24px;max-width:560px;">
-<p>Hi ${first},</p>
-<p>Thanks for joining the SureSleep study with DoNotAge -- great to have you in.</p>
-<p>You've completed your first check-in, so you're now one step away from securing your place.</p>
-<p>Complete your second check-in tomorrow and you'll be fully confirmed in the study. From there:</p>
-<p style="margin:16px 0;">- Your SureSleep supply will be dispatched<br>
-- You'll begin your 21-day tracking<br>
-- You'll receive your personal results at the end<br>
-- And your completion reward is locked in</p>
-<p>This is where it starts to get interesting.</p>
-<p>Complete your next check-in here: <a href="${checkinUrl}" style="color:#C84B2F;font-weight:600;">${escapeHtml(checkinUrl)}</a></p>
-<p style="margin-top:24px;color:#444;font-size:14px;">DoNotAge x BioStackr<br>
-Running a real-world customer outcomes study<br>
-Your data stays private and is only used in anonymised analysis<br>
-BIOSTACKR</p>
-</body></html>`
+    const innerHtml =
+      `<p style="margin:0 0 16px;">Hi ${first},</p>` +
+      `<p style="margin:0 0 16px;">You've completed your first check-in — you're one step away from securing your place.</p>` +
+      `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
+      `<ul style="margin:0 0 20px;padding-left:20px;">` +
+      `<li style="margin:0 0 8px;">Your ${productLabel} supply will be dispatched</li>` +
+      `<li style="margin:0 0 8px;">Your 21-day tracking begins</li>` +
+      `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
+      `<li style="margin:0;">Your completion reward is locked in</li>` +
+      `</ul>` +
+      `<p style="margin:28px 0 0;text-align:center;">` +
+      `<a href="${escapeHtml(checkinUrl)}" style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in</a>` +
+      `</p>`
+
+    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml })
 
     const r = await sendEmail({
       to,

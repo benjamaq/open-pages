@@ -135,6 +135,7 @@ export async function GET(request: NextRequest) {
             confirmed += 1
             let studyName = 'study'
             let productName = 'product'
+            let brandName: string | null = null
             try {
               const { data: cRow } = await supabaseAdmin
                 .from('cohorts')
@@ -144,6 +145,7 @@ export async function GET(request: NextRequest) {
               const names = studyAndProductNamesFromCohortRow(cRow as { product_name?: string | null; brand_name?: string | null } | null)
               studyName = names.studyName
               productName = names.productName
+              brandName = (cRow as { brand_name?: string | null } | null)?.brand_name ?? null
             } catch (cohErr) {
               console.error('[cohort-compliance] cohort lookup for email', p.cohort_id, cohErr)
             }
@@ -151,6 +153,7 @@ export async function GET(request: NextRequest) {
               authUserId: authUid,
               studyName,
               productName,
+              brandName,
             })
           }
         } else {

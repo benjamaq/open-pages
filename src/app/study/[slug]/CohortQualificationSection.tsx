@@ -414,7 +414,7 @@ export function CohortQualificationSection({
             </p>
             {issueThanks && !issueError && (
               <p className="mt-2 text-[13px] leading-relaxed text-emerald-700">
-                Thanks. This helps us match you to the right study.
+                Thanks — this helps us understand your situation.
               </p>
             )}
             {issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
