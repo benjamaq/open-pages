@@ -22,6 +22,11 @@ function utcNoonIso(ymd: string): string {
   return `${ymd}T12:00:00.000Z`
 }
 
+/** Start of calendar day in UTC (00:00:00). Used when first study day must include morning check-ins the next day. */
+function utcStartOfDayIso(ymd: string): string {
+  return `${ymd}T00:00:00.000Z`
+}
+
 /** Yesterday through five days ago (inclusive), for "when did you first take it". */
 function validFirstDoseYmds(todayYmd: string): string[] {
   const out: string[] = []
@@ -147,15 +152,17 @@ export async function POST(request: NextRequest) {
 
     switch (choice) {
       case 'today':
-        studyStartedIso = utcNoonIso(ymdAddDays(todayYmd, 1))
+        studyStartedIso = utcStartOfDayIso(ymdAddDays(todayYmd, 1))
         openCheckin = false
         break
       case 'yesterday':
         if (tookLastNight === true) {
-          studyStartedIso = utcNoonIso(ymdAddDays(todayYmd, -1))
+          // First dose was last night; Day 1 of the 21-day window is today's check-in day (not yesterday), so anchor the clock to today 00:00 UTC.
+          studyStartedIso = utcStartOfDayIso(todayYmd)
           openCheckin = true
         } else {
-          studyStartedIso = utcNoonIso(todayYmd)
+          // Same as `today`: first dose is tonight — study clock is next calendar day from 00:00 UTC so morning check-ins count as Day 1.
+          studyStartedIso = utcStartOfDayIso(ymdAddDays(todayYmd, 1))
           openCheckin = false
         }
         break
@@ -190,7 +197,9 @@ export async function POST(request: NextRequest) {
     }
 
     const email = String(user.email || '').trim()
-    const sendStartEmail = choice !== 'today'
+    const firstNightDeferPath =
+      choice === 'today' || (choice === 'yesterday' && tookLastNight === false)
+    const sendStartEmail = !firstNightDeferPath
     if (email && sendStartEmail) {
       const r = await sendCohortStudyStartEmail({ to: email, authUserId: user.id, productName })
       if (!r.success) {
