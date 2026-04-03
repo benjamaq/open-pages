@@ -5,6 +5,22 @@ import {
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
+ * Cohort magic-link `redirectTo` for Supabase `generateLink`:
+ *
+ * 1. **Query shape** — Build with `new URL` + `searchParams.set('next', path)` so paths like
+ *    `/dashboard?view=cohort` become `.../auth/callback?next=%2Fdashboard%3Fview%3Dcohort`, not a malformed
+ *    second `?` in the outer URL.
+ *
+ * 2. **Site URL** — Supabase Auth “Site URL” (and allow-listed redirect URLs) must match this app’s public
+ *    origin **including host** (e.g. `https://www.biostackr.com` vs apex). Set `NEXT_PUBLIC_APP_URL` to the same
+ *    canonical URL users use in the browser.
+ *
+ * 3. **Email template** — In Supabase Dashboard → Auth → Email templates (magic link / confirm), the link must
+ *    use **`{{ .RedirectTo }}`** (or equivalent that forwards the redirect we pass). If the template hard-codes
+ *    **`{{ .SiteURL }}`** only, the message goes to the Site URL root and ignores `redirectTo`.
+ */
+
+/**
  * Path + query for cohort dashboard (leading slash). Used as `next` after /auth/callback.
  */
 function cohortDashboardNextPath(): string {
@@ -15,6 +31,26 @@ function cohortDashboardCheckinNextPath(): string {
   return `${cohortDashboardNextPath()}&checkin=1`
 }
 
+function appBaseNormalized(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://www.biostackr.com'
+  ).replace(/\/$/, '')
+}
+
+/**
+ * Absolute `/auth/callback?next=…` for Supabase `generateLink` `redirectTo`.
+ * `nextPath` may include query (`/dashboard?view=cohort`); it is encoded as a single param.
+ */
+function cohortAuthCallbackRedirectAbsoluteUrl(nextPathWithQuery: string): string {
+  const base = appBaseNormalized()
+  const path = nextPathWithQuery.startsWith('/') ? nextPathWithQuery : `/${nextPathWithQuery}`
+  const u = new URL('/auth/callback', base)
+  u.searchParams.set('next', path)
+  return u.toString()
+}
+
 /**
  * Absolute URL for Supabase `generateLink` `redirectTo` (allow-list in Supabase Auth).
  *
@@ -22,32 +58,12 @@ function cohortDashboardCheckinNextPath(): string {
  * redirect leaves the code unused → no cookies → `/api/dashboard/load` returns 401 (“Failed to load dashboard”).
  */
 export function cohortDashboardRedirectToAbsoluteUrl(): string {
-  const appBase = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.biostackr.com'
-  ).replace(/\/$/, '')
-  const next = encodeURIComponent(cohortDashboardNextPath())
-  return `${appBase}/auth/callback?next=${next}`
+  return cohortAuthCallbackRedirectAbsoluteUrl(cohortDashboardNextPath())
 }
 
 /** After magic link verify, lands on cohort dashboard with check-in launcher. */
 export function cohortDashboardCheckinRedirectToAbsoluteUrl(): string {
-  const appBase = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.biostackr.com'
-  ).replace(/\/$/, '')
-  const next = encodeURIComponent(cohortDashboardCheckinNextPath())
-  return `${appBase}/auth/callback?next=${next}`
-}
-
-function appBaseNormalized(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.biostackr.com'
-  ).replace(/\/$/, '')
+  return cohortAuthCallbackRedirectAbsoluteUrl(cohortDashboardCheckinNextPath())
 }
 
 /** Plain dashboard URL when no PKCE code (e.g. magic generation failed — user can sign in). */
