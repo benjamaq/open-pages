@@ -10,6 +10,7 @@ import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPa
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
 import { useDashboardLoad } from '@/hooks/useDashboardLoad'
 import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/cohortDashboardDeepLink'
+import { CohortResendLoginLinkForm } from '@/components/cohort/CohortResendLoginLinkForm'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -116,6 +117,14 @@ export function DashboardPageClient() {
             >
               Reload page
             </button>
+          </div>
+          <div className="mt-8 border-t border-slate-200 pt-6 text-left">
+            <CohortResendLoginLinkForm
+              idPrefix="dash-error-cohort-login"
+              heading="Resend login link"
+              lead="If an older study email link expired, enter the email you used for the study and we will send a fresh one."
+              submitLabel="Send me a new login link"
+            />
           </div>
           {error ? <p className="mt-6 text-left text-xs text-slate-500 break-words">{error}</p> : null}
         </div>

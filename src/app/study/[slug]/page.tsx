@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { countCohortConfirmedParticipants, isCohortCapacityFull } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
+import { StudyCohortFullWaitlist } from './StudyCohortFullWaitlist'
 import { CohortQualificationSection } from './CohortQualificationSection'
 
 const RUST = '#C84B2F'
@@ -18,6 +19,18 @@ const STUDY_SECTION_BAND_BG = '#F2F3F5'
 const STUDY_SECTION_QUAL_BG = '#E9E8E5'
 /** Light divider between study stripes */
 const STUDY_STRIPE_DIVIDER = 'border-b border-neutral-200/80'
+
+/** Coerce DB / PostgREST cap fields (sometimes string) for hero + capacity checks. */
+function readPositiveCap(raw: unknown): number | null {
+  if (raw == null) return null
+  if (typeof raw === 'bigint') {
+    const n = Number(raw)
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : null
+  }
+  const n = typeof raw === 'number' ? raw : Number(String(raw).trim())
+  if (!Number.isFinite(n) || n <= 0) return null
+  return Math.floor(n)
+}
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
@@ -96,28 +109,42 @@ function HeroCohortStatusCard({
   confirmed,
   maxParticipants,
   displayCapacity,
-  capacityFull,
 }: {
   confirmed: number
-  /** Real recruitment cap (enforcement); used as display denominator when displayCapacity unset. */
+  /** Backend cap; with displayCapacity drives proportional hero fill (confirmed/max → slice of display slots). */
   maxParticipants: number | null
-  /** Optional smaller hero cap for display; progress bar = confirmed / this (fallback: maxParticipants). */
+  /** Public cohort size shown in hero (e.g. 25); fill is scaled: round((confirmed/max)*display). */
   displayCapacity: number | null
-  capacityFull: boolean
 }) {
-  const displayTotal =
+  const c = Math.max(0, Math.floor(Number(confirmed)))
+  const maxP =
+    maxParticipants != null && Number.isFinite(Number(maxParticipants)) && Number(maxParticipants) > 0
+      ? Math.floor(Number(maxParticipants))
+      : null
+  const disp =
     displayCapacity != null && Number.isFinite(Number(displayCapacity)) && Number(displayCapacity) > 0
       ? Math.floor(Number(displayCapacity))
-      : maxParticipants != null && Number.isFinite(Number(maxParticipants)) && Number(maxParticipants) > 0
-        ? Math.floor(Number(maxParticipants))
-        : null
+      : null
+
+  let displayTotal: number | null = null
+  let displayedFilled: number | null = null
+
+  if (maxP != null && disp != null) {
+    displayTotal = disp
+    const ratio = Math.min(1, Math.max(0, c / maxP))
+    displayedFilled = Math.round(ratio * disp)
+  } else if (disp != null) {
+    displayTotal = disp
+    displayedFilled = Math.min(disp, c)
+  } else if (maxP != null) {
+    displayTotal = maxP
+    displayedFilled = Math.min(maxP, c)
+  }
 
   const pct =
-    displayTotal != null && displayTotal > 0
-      ? Math.min(100, (confirmed / displayTotal) * 100)
-      : capacityFull
-        ? 100
-        : 0
+    displayTotal != null && displayTotal > 0 && displayedFilled != null
+      ? Math.min(100, (displayedFilled / displayTotal) * 100)
+      : 0
 
   return (
     <div
@@ -140,7 +167,7 @@ function HeroCohortStatusCard({
         </p>
         {displayTotal != null ? (
           <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
-            {confirmed} of {displayTotal} places filled
+            {displayedFilled ?? c} of {displayTotal} places filled
           </p>
         ) : null}
         <p
@@ -601,10 +628,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   }
 
   const cohortId = String((cohort as { id: string }).id)
-  const maxP = (cohort as { max_participants?: number | null }).max_participants ?? null
-  const displayCap = (cohort as { display_capacity?: number | null }).display_capacity ?? null
+  const cohortRow = cohort as Record<string, unknown>
+  const maxP = readPositiveCap(cohortRow.max_participants)
+  const displayCap = readPositiveCap(cohortRow.display_capacity)
+
+  if (displayCap != null && maxP == null) {
+    console.warn(
+      '[study] cohort has display_capacity but max_participants missing — hero cannot scale proportionally; set cohorts.max_participants (see migration 20260430150000). slug=',
+      slug,
+    )
+  }
 
   const confirmedCount = await countCohortConfirmedParticipants(cohortId)
+  /** Hide application only at real cap (max_participants); hero uses proportional display vs display_capacity. */
   const capacityFull = isCohortCapacityFull(maxP, confirmedCount)
   const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
 
@@ -645,19 +681,24 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                   confirmed={confirmedCount}
                   maxParticipants={maxP}
                   displayCapacity={displayCap}
-                  capacityFull={capacityFull}
                 />
               </div>
             ) : (
               <div
-                className="relative mx-auto mt-4 max-w-2xl overflow-hidden rounded-2xl border border-[#E5E5E5] bg-[#F2F2F2] px-8 py-5 text-center text-[16px] font-semibold text-neutral-700 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] sm:mt-5 sm:py-6"
+                className="relative mx-auto mt-4 flex max-w-2xl flex-col items-center overflow-hidden rounded-2xl border border-[#E5E5E5] bg-[#F2F2F2] px-8 py-6 text-center text-neutral-700 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] sm:mt-5 sm:py-8"
                 role="status"
               >
                 <div
                   className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/55 to-transparent"
                   aria-hidden
                 />
-                <span className="relative z-10">This study is now full.</span>
+                <span className="relative z-10 text-[17px] font-semibold text-neutral-900 sm:text-[18px]">
+                  This study is now full.
+                </span>
+                <p className="relative z-10 mx-auto mt-3 max-w-lg text-[14px] font-normal leading-relaxed text-neutral-700 sm:text-[15px]">
+                  Leave your email and we&apos;ll contact you if a spot opens or when we run our next study.
+                </p>
+                <StudyCohortFullWaitlist cohortSlug={slug} />
               </div>
             )}
 

@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
+import { CohortResendLoginLinkForm } from '@/components/cohort/CohortResendLoginLinkForm'
 import { B2cGatedIndividualCta } from '@/app/components/B2cGatedIndividualCta'
 import { isInAppBrowser, openInSystemBrowser } from '@/lib/browser'
 
@@ -174,6 +174,15 @@ function LoginInner() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <div className="mt-8 border-t border-slate-200 pt-6">
+          <CohortResendLoginLinkForm
+            idPrefix="login-cohort-magic"
+            heading="Get a magic link instead of password"
+            lead="SureSleep study participants can log in without a password. We will email you a link that opens your dashboard."
+            submitLabel="Email me a login link"
+            className="text-center"
+          />
+        </div>
         <div className="mt-4 text-sm text-gray-600 text-center">
           Don’t have an account?{' '}
           <B2cGatedIndividualCta className="hover:underline inline" href="/signup" style={{ color: '#6A3F2B' }}>

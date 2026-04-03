@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { STUDY_COHORT_FULL_WAITLIST_SOURCE } from '@/lib/studyCohortFullWaitlistSource'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -8,16 +9,25 @@ function normEmail(s: string): string {
 }
 
 /**
- * Public: join study waitlist after qualification free-text gate (no account).
- * Body: { cohort_slug: string, email: string }
+ * Public: join study waitlist (no account).
+ * Body: { cohort_slug: string, email: string, source?: string }
+ * When source is set, must match STUDY_COHORT_FULL_WAITLIST_SOURCE (cohort-full capture).
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
     const slugRaw = body?.cohort_slug
     const emailRaw = body?.email
+    const sourceRaw = body?.source
     const slug = typeof slugRaw === 'string' ? slugRaw.trim().toLowerCase() : ''
     const email = typeof emailRaw === 'string' ? normEmail(emailRaw) : ''
+    let source: string | null = null
+    if (sourceRaw !== undefined && sourceRaw !== null && sourceRaw !== '') {
+      if (typeof sourceRaw !== 'string' || sourceRaw !== STUDY_COHORT_FULL_WAITLIST_SOURCE) {
+        return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
+      }
+      source = STUDY_COHORT_FULL_WAITLIST_SOURCE
+    }
     if (!slug || !email || !EMAIL_RE.test(email)) {
       return NextResponse.json({ error: 'Invalid cohort or email' }, { status: 400 })
     }
@@ -32,9 +42,9 @@ export async function POST(request: NextRequest) {
     }
 
     const cohortId = String((cohort as { id: string }).id)
-    const { error: insErr } = await supabaseAdmin
-      .from('study_waitlist')
-      .insert({ cohort_id: cohortId, email } as Record<string, unknown>)
+    const row: Record<string, unknown> = { cohort_id: cohortId, email }
+    if (source) row.source = source
+    const { error: insErr } = await supabaseAdmin.from('study_waitlist').insert(row)
 
     if (insErr) {
       if (insErr.code === '23505') {

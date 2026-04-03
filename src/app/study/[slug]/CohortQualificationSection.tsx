@@ -12,6 +12,7 @@ import {
   validateQualificationFreeText,
   QUALIFICATION_WAITLIST_HEADLINE,
 } from '@/lib/qualificationFreeText'
+import { STUDY_COHORT_FULL_WAITLIST_SOURCE } from '@/lib/studyCohortFullWaitlistSource'
 
 function qualFailStorageKey(slug: string): string {
   return `bs_cohort_qual_fails_${String(slug || '').trim().toLowerCase()}`
@@ -224,7 +225,11 @@ export function CohortQualificationSection({
       const res = await fetch('/api/study-waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cohort_slug: slugNorm, email: em }),
+        body: JSON.stringify({
+          cohort_slug: slugNorm,
+          email: em,
+          ...(showCapacityWaitlist ? { source: STUDY_COHORT_FULL_WAITLIST_SOURCE } : {}),
+        }),
       })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -268,9 +273,9 @@ export function CohortQualificationSection({
             borderRadius: 12,
           }}
         >
-          <h2 className="text-[20px] font-bold text-neutral-900">This cohort is currently full</h2>
+          <h2 className="text-[20px] font-bold text-neutral-900">This study is now full</h2>
           <p className="mt-3 text-sm leading-relaxed text-neutral-700">
-            New places are limited. You can join the waitlist in case a spot opens.
+            Leave your email and we&apos;ll contact you if a spot opens or when we run our next study.
           </p>
           {waitlistDone ? (
             <p className="mt-4 text-sm text-neutral-600 leading-relaxed">
