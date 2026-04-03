@@ -59,6 +59,33 @@ export function cohortDashboardCheckinDirectAbsoluteUrl(): string {
   return `${appBaseNormalized()}${cohortDashboardCheckinNextPath()}`
 }
 
+/** redirectTo we send to Supabase admin generateLink (must be allow-listed; should be …/auth/callback?next=…). */
+function logGenerateLinkRedirectToInput(redirectTo: string): void {
+  const to = String(redirectTo || '').trim()
+  const hasCallbackPath = to.includes('/auth/callback')
+  const hasNextParam = /[?&]next=/.test(to)
+  const looksLikeDirectDashboard =
+    /\/dashboard\b/.test(to) && !hasCallbackPath
+
+  console.log(
+    '[cohortEmailMagicLink] generateLink redirectTo (exact)',
+    JSON.stringify({
+      redirectTo: to,
+      redirectToLength: to.length,
+      hasAuthCallbackInPath: hasCallbackPath,
+      hasNextQueryParam: hasNextParam,
+      looksLikeDirectDashboardUrl: looksLikeDirectDashboard,
+    }),
+  )
+
+  if (!hasCallbackPath || !hasNextParam) {
+    console.warn(
+      '[cohortEmailMagicLink] generateLink redirectTo should contain /auth/callback and a next= param — otherwise Supabase may use Site URL and users land on the homepage.',
+      { redirectTo: to },
+    )
+  }
+}
+
 function logGenerateLinkRedirectDebug(actionLink: string | null | undefined, expectedRedirectTo: string) {
   const link = typeof actionLink === 'string' ? actionLink : ''
   let verifyRedirectTo: string | null = null
@@ -121,6 +148,8 @@ export async function generateCohortEmailMagicLinkUrl(
   if (!em) return null
   const to = String(redirectTo || '').trim()
   if (!to) return null
+
+  logGenerateLinkRedirectToInput(to)
 
   console.log(
     '[cohortEmailMagicLink] generateLink request',

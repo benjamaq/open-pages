@@ -618,6 +618,23 @@ export default function CohortStudyDashboard({
                 >
                   My product has arrived — start my study
                 </button>
+                {/* TODO: “How to take …” dosing copy is placeholder pending Dan Wild confirmation. */}
+                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                  <h3 className="text-[15px] font-semibold text-gray-900">How to take {productName}</h3>
+                  <div className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-gray-700">
+                    <p>
+                      Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it
+                      consistently each evening as part of a wind-down routine.
+                    </p>
+                    <p>
+                      One scoop per day — do not exceed the recommended dose. Take 45–60 minutes before bed. Avoid caffeine or
+                      stimulants in the evening hours.
+                    </p>
+                    <p>
+                      {productName} is non-habit-forming and safe for daily use.
+                    </p>
+                  </div>
+                </div>
               </>
             )}
             {!pendingFirstStudyNight ? (
