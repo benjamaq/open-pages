@@ -14,12 +14,10 @@ import {
   fetchProfilesForCohortParticipantUserIds,
 } from '@/lib/adminCohortParticipantProfiles'
 
-/** Recruitment cap shown to users / capacity trigger: display_capacity when set, else max_participants */
-function effectiveCohortCapacity(displayCapacity: unknown, maxParticipants: unknown): number | null {
-  const d = displayCapacity != null ? Number(displayCapacity) : NaN
-  if (Number.isFinite(d)) return d
+/** Operational hard cap (must match DB trigger): max_participants only. display_capacity is landing-page only. */
+function cohortOperationalCap(maxParticipants: unknown): number | null {
   const m = maxParticipants != null ? Number(maxParticipants) : NaN
-  return Number.isFinite(m) ? m : null
+  return Number.isFinite(m) && m > 0 ? Math.floor(m) : null
 }
 
 function adminDenied(req: NextRequest): NextResponse | null {
@@ -64,7 +62,7 @@ export async function GET(request: NextRequest) {
             countCohortEnrollmentsLast24h(c.id),
             countCohortConfirmedActivatedParticipants(c.id),
           ])
-          const cap = effectiveCohortCapacity(c.display_capacity, c.max_participants)
+          const cap = cohortOperationalCap(c.max_participants)
           const confirmedPctOfMax =
             cap != null && cap > 0 ? Math.round((confirmedCount / cap) * 1000) / 10 : null
           const health = cohortHealthStatusLabel({
