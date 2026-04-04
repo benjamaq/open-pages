@@ -1,6 +1,7 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   escapeHtml,
@@ -137,7 +138,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
     }
 
     const first = escapeHtml(firstNameFromAuthUser(auth.user))
-    const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
+    const appBase = cohortEmailPublicOrigin()
     const productLabel = escapeHtml(
       String((cohort as { product_name?: string | null }).product_name || 'SureSleep').trim() || 'SureSleep',
     )

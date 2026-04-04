@@ -2,6 +2,7 @@ import {
   cohortDashboardStudyCheckinPath,
   cohortDashboardStudyPath,
 } from '@/lib/cohortDashboardDeepLink'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
@@ -27,11 +28,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  */
 
 function appBaseNormalized(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.biostackr.com'
-  ).replace(/\/$/, '')
+  return cohortEmailPublicOrigin()
 }
 
 /** OAuth-style callback on our origin (GET handled in `app/auth/callback/route.ts`). */

@@ -1,6 +1,7 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   cohortEmailCheckInCtaHtml,
   escapeHtml,
@@ -44,7 +45,7 @@ export async function sendComplianceConfirmedEmail(params: {
     const study = escapeHtml(params.studyName)
     const product = escapeHtml(params.productName)
     const brand = escapeHtml(String(params.brandName ?? '').trim() || 'DoNotAge')
-    const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
+    const appBase = cohortEmailPublicOrigin()
     const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
 
     const innerHtml =

@@ -1,4 +1,5 @@
 import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   escapeHtml,
@@ -28,7 +29,7 @@ export async function sendCohortStudyStartEmail(params: {
   }
   const first = escapeHtml(firstNameFromAuthUser(auth?.user ?? { email: to }))
 
-  const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
+  const appBase = cohortEmailPublicOrigin()
   const dashboardHref = cohortEmailCheckInLandingAbsoluteUrl()
 
   const innerHtml =

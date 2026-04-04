@@ -1,6 +1,6 @@
 /**
  * Shared HTML layout for DoNotAge × BioStackr cohort transactional emails (Resend).
- * Image URLs must be absolute — uses NEXT_PUBLIC_APP_URL (or biostackr.io fallback).
+ * Image URLs must be absolute — callers should pass `appBase` from `cohortEmailPublicOrigin()`.
  */
 
 /** Helper line under dashboard CTAs in cohort transactional emails. */

@@ -129,6 +129,80 @@ export async function getAuthUserByEmailAdminListUsers(
   return null
 }
 
+/**
+ * Server-only: resolve Supabase Auth user by email when `auth.users` is not readable via PostgREST.
+ * Tries PostgREST first, then GoTrue admin listUsers (same pattern as daily-reminder force path).
+ */
+export async function resolveAuthUserByEmailForServer(
+  emailNorm: string,
+  adminClient: SupabaseClient,
+  options?: { maxListUserPages?: number; debug?: boolean },
+): Promise<{ id: string; email: string } | null> {
+  const dbg = options?.debug === true
+  const maxPages = options?.maxListUserPages ?? 50
+  const fromRest = await getAuthUserByEmailNorm(emailNorm, adminClient, dbg)
+  if (fromRest) return fromRest
+  // eslint-disable-next-line no-console
+  console.warn('[auth-resolve] PostgREST auth.users returned no row; using auth.admin.listUsers', {
+    normalizedEmail: normalizeLoginLinkRequestEmail(emailNorm),
+  })
+  const fromList = await getAuthUserByEmailAdminListUsers(adminClient, emailNorm, {
+    maxPages,
+    forceEmailDebug: dbg,
+  })
+  if (fromList) return fromList
+
+  // eslint-disable-next-line no-console
+  console.warn('[auth-resolve] listUsers found no user (or listUsers failed); trying DB RPC', {
+    normalizedEmail: normalizeLoginLinkRequestEmail(emailNorm),
+    maxPagesScanned: maxPages,
+  })
+
+  // GoTrue listUsers can fail with "Database error finding users" while Postgres can still read auth.users.
+  // Same SECURITY DEFINER RPC as daily-reminder force path: email → auth user iff cohort_participants row exists.
+  try {
+    const normalized = normalizeLoginLinkRequestEmail(emailNorm)
+    const { data: rpcData, error: rpcErr } = await (adminClient as SupabaseClient).rpc(
+      'cron_resolve_auth_user_for_force_reminder',
+      { target_email: normalized },
+    )
+    if (rpcErr) {
+      // eslint-disable-next-line no-console
+      console.error('[auth-resolve] cron_resolve_auth_user_for_force_reminder RPC error', {
+        message: rpcErr.message,
+        code: (rpcErr as { code?: string }).code,
+        details: (rpcErr as { details?: string }).details,
+        hint: (rpcErr as { hint?: string }).hint,
+      })
+      return null
+    }
+    const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData
+    const rec = rpcRow as Record<string, unknown> | undefined
+    const idRaw = rec?.auth_user_id
+    const mailRaw = rec?.canonical_email
+    const id = idRaw != null && String(idRaw).length > 0 ? String(idRaw) : null
+    const mail = mailRaw != null && String(mailRaw).length > 0 ? String(mailRaw) : null
+    if (id && mail) {
+      // eslint-disable-next-line no-console
+      console.log('[auth-resolve] RPC resolved auth user for cohort email', {
+        authUserId: id,
+        emailDomain: mail.includes('@') ? mail.split('@')[1] : undefined,
+      })
+      return { id, email: mail }
+    }
+    // eslint-disable-next-line no-console
+    console.warn('[auth-resolve] RPC returned no row (email not in auth or not enrolled in cohort)', {
+      normalizedEmail: normalized,
+    })
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[auth-resolve] RPC cohort resolve exception', {
+      err: e instanceof Error ? e.message : String(e),
+    })
+  }
+  return null
+}
+
 export async function getProfileIdForAuthUser(authUserId: string): Promise<string | null> {
   const { data } = await supabaseAdmin.from('profiles').select('id').eq('user_id', authUserId).maybeSingle()
   return data && typeof (data as { id?: string }).id === 'string' ? String((data as { id: string }).id) : null

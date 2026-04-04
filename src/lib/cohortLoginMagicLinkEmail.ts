@@ -1,5 +1,6 @@
 import { generateCohortEmailMagicLinkUrl } from '@/lib/cohortEmailMagicLink'
 import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   COHORT_EMAIL_MAGIC_LINK_HINT,
@@ -36,11 +37,7 @@ export async function sendCohortParticipantLoginMagicLinkEmail(
   const href = String(magicHref || '').trim()
   if (!href) return { success: false, error: 'no link' }
 
-  const appBase = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.biostackr.com'
-  ).replace(/\/$/, '')
+  const appBase = cohortEmailPublicOrigin()
 
   const innerHtml =
     '<p style="margin:0 0 16px;">Hi,</p>' +
