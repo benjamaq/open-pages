@@ -22,6 +22,15 @@ function uniqueNonEmptyUserIds(userIds: string[]): string[] {
   return [...new Set(userIds.map((u) => String(u || '').trim()).filter(Boolean))]
 }
 
+export type FetchCohortCheckinYmdsOptions = {
+  /**
+   * When set (e.g. `cohort_participants.study_started_at`), rows must have `created_at >=` this instant.
+   * Required for study-phase metrics: `local_date >= study start day` alone still includes compliance check-ins
+   * submitted earlier the same calendar day before the study clock starts.
+   */
+  minCreatedAtIso?: string
+}
+
 /**
  * Distinct calendar days with a qualifying check-in since enrollment.
  * Pass both `profiles.id` and `profiles.user_id` when `daily_entries.user_id` may match either shape.
@@ -29,28 +38,42 @@ function uniqueNonEmptyUserIds(userIds: string[]): string[] {
 export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
   userIds: string[],
   enrolledIso: string,
+  options?: FetchCohortCheckinYmdsOptions,
 ): Promise<string[]> {
   const uids = uniqueNonEmptyUserIds(userIds)
   if (uids.length === 0 || !enrolledIso) return []
   const enrollYmd = enrolledIso.slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(enrollYmd)) return []
-  const [{ data: byCreated }, { data: byDate }] = await Promise.all([
-    supabaseAdmin
-      .from('daily_entries')
-      .select('local_date, created_at')
-      .in('user_id', uids)
-      .gte('created_at', enrolledIso),
-    supabaseAdmin
-      .from('daily_entries')
-      .select('local_date, created_at')
-      .in('user_id', uids)
-      .gte('local_date', enrollYmd),
-  ])
+  const minCreated = String(options?.minCreatedAtIso || '').trim()
+  const createdLower = minCreated || enrolledIso
+
+  const byCreatedQ = supabaseAdmin
+    .from('daily_entries')
+    .select('local_date, created_at')
+    .in('user_id', uids)
+    .gte('created_at', createdLower)
+
+  let byDateQ = supabaseAdmin
+    .from('daily_entries')
+    .select('local_date, created_at')
+    .in('user_id', uids)
+    .gte('local_date', enrollYmd)
+
+  if (minCreated) {
+    byDateQ = byDateQ.gte('created_at', minCreated)
+  }
+
+  const [{ data: byCreated }, { data: byDate }] = await Promise.all([byCreatedQ, byDateQ])
   const ymds = new Set<string>()
-  /** Only calendar days on/after enrollment; avoids counting legacy rows tied to created_at after enroll but local_date before enroll. */
+  /** Only calendar days on/after enrollment; optional `minCreatedAtIso` ties rows to study clock start. */
   const addRow = (r: { local_date?: string | null; created_at?: string | null }) => {
     const ymd = effectiveDailyEntryYmd(r)
-    if (ymd && ymd >= enrollYmd) ymds.add(ymd)
+    if (!ymd || ymd < enrollYmd) return
+    if (minCreated) {
+      const ca = r.created_at != null ? String(r.created_at) : ''
+      if (!ca || ca < minCreated) return
+    }
+    ymds.add(ymd)
   }
   for (const r of byCreated || []) addRow(r as { local_date?: string | null; created_at?: string | null })
   for (const r of byDate || []) addRow(r as { local_date?: string | null; created_at?: string | null })
@@ -58,10 +81,14 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
 }
 
 /** Distinct calendar days with a qualifying check-in since enrollment (for streak / today flags). */
-export async function fetchCohortCheckinYmdsSinceEnroll(authUserId: string, enrolledIso: string): Promise<string[]> {
+export async function fetchCohortCheckinYmdsSinceEnroll(
+  authUserId: string,
+  enrolledIso: string,
+  options?: FetchCohortCheckinYmdsOptions,
+): Promise<string[]> {
   const uid = String(authUserId || '').trim()
   if (!uid || !enrolledIso) return []
-  return fetchCohortCheckinYmdsSinceEnrollForUserIds([uid], enrolledIso)
+  return fetchCohortCheckinYmdsSinceEnrollForUserIds([uid], enrolledIso, options)
 }
 
 /** Consecutive calendar days with a check-in, counting backward from today (or yesterday if none today). */
@@ -93,14 +120,19 @@ function effectiveDailyEntryYmd(r: { local_date?: string | null; created_at?: st
 export async function countDistinctDailyEntriesSinceForUserIds(
   userIds: string[],
   enrolledIso: string,
+  options?: FetchCohortCheckinYmdsOptions,
 ): Promise<number> {
-  const ymds = await fetchCohortCheckinYmdsSinceEnrollForUserIds(userIds, enrolledIso)
+  const ymds = await fetchCohortCheckinYmdsSinceEnrollForUserIds(userIds, enrolledIso, options)
   return ymds.length
 }
 
 /** Distinct calendar days since enrollment for a single `daily_entries.user_id`. */
-export async function countDistinctDailyEntriesSince(authUserId: string, enrolledIso: string): Promise<number> {
+export async function countDistinctDailyEntriesSince(
+  authUserId: string,
+  enrolledIso: string,
+  options?: FetchCohortCheckinYmdsOptions,
+): Promise<number> {
   const uid = String(authUserId || '').trim()
   if (!uid || !enrolledIso) return 0
-  return countDistinctDailyEntriesSinceForUserIds([uid], enrolledIso)
+  return countDistinctDailyEntriesSinceForUserIds([uid], enrolledIso, options)
 }

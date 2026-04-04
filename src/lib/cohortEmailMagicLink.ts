@@ -5,8 +5,25 @@ import {
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
- * Cohort magic links use `auth.admin.generateLink` **without** `redirectTo`, then `hashed_token` + our own
- * `/auth/callback?token_hash=…&type=magiclink&next=…` URL for Next.js / SSR (avoids Supabase verify redirect issues).
+ * Cohort magic links use `auth.admin.generateLink` **without** `redirectTo`, then `properties.hashed_token` to build
+ * `/auth/callback?token_hash=…&type=magiclink&next=…`. Never put Supabase `action_link` verify URLs in email HTML.
+ *
+ * **Inventory — every “dashboard” / “check-in” CTA must flow through `generateCohortEmailMagicLinkUrl` (or
+ * `generateCohortDashboardMagicLinkUrl` / `cohortTransactional*MagicHref`, which wrap it):**
+ * - `cohortComplianceConfirmed.ts` — dashboard
+ * - `cohortStudyStartEmail.ts` — dashboard
+ * - `cohortShippingNurture.ts` — dashboard
+ * - `cohortGateReminderEmail.ts` — dashboard
+ * - `cohortEnrollmentEmail.ts` — first check-in (`cohortDashboardStudyCheckinPath`)
+ * - `cohortPostFirstCheckinEmail.ts` — check-in + dashboard
+ * - `cohortLoginMagicLinkEmail.ts` — login / resend magic link (dashboard)
+ * - Daily check-in emails (cohort check-in deep link): `sendDailyReminder` (`resend.ts`), `send-reminder.ts`,
+ *   `send-daily` notification route, `send-daily-emails` cron, `test-daily-reminder` admin — via
+ *   `cohortTransactionalCheckinMagicHref` → `cohortDashboardStudyCheckinPath`.
+ * - `api/reminders/send` (legacy profile reminders): stable `cohortEmailCheckInLandingAbsoluteUrl()` CTA.
+ *   so non-cohort users are not sent to `view=cohort`.
+ *
+ * Template `daily-reminder.tsx` only renders `checkinUrl` from those callers — do not hardcode dashboard URLs there.
  */
 
 function appBaseNormalized(): string {
@@ -97,6 +114,10 @@ export async function generateCohortEmailMagicLinkUrl(
     }
 
     const emailLink = buildCohortMagicLinkOnOrigin(tokenHash, dest)
+    if (!emailLink.includes('token_hash=')) {
+      console.error('[cohortEmailMagicLink] internal: built URL missing token_hash param')
+      return null
+    }
     console.log(
       '[cohortEmailMagicLink] built email link (our origin)',
       JSON.stringify({
@@ -122,26 +143,29 @@ export async function generateCohortDashboardMagicLinkUrl(email: string): Promis
   return generateCohortEmailMagicLinkUrl(email, cohortDashboardStudyPath())
 }
 
-export async function resolveCohortDashboardEmailHref(email: string): Promise<string> {
-  const magic = await generateCohortEmailMagicLinkUrl(email, cohortDashboardStudyPath())
+/**
+ * Resend cohort emails: always use hashed_token `/auth/callback?...` from `generateCohortEmailMagicLinkUrl`.
+ * Never use Supabase `action_link` / project verify URLs in transactional HTML.
+ */
+export async function cohortTransactionalDashboardMagicHref(email: string, context: string): Promise<string> {
+  const magic = await generateCohortDashboardMagicLinkUrl(email)
   if (magic) return magic
-  console.warn('[cohortEmailMagicLink] dashboard href fallback (not magic)')
+  console.error(`[cohortEmailMagicLink] ${context}: dashboard magic link failed; using plain URL`, {
+    emailDomain: email.includes('@') ? email.split('@')[1] : '?',
+  })
   return cohortDashboardDirectAbsoluteUrl()
 }
 
-export async function resolveCohortDashboardCheckinEmailHref(email: string): Promise<string> {
-  const { href } = await resolveCohortDashboardCheckinEmailHrefWithMeta(email)
-  return href
-}
-
-export async function resolveCohortDashboardCheckinEmailHrefWithMeta(email: string): Promise<{
-  href: string
-  isMagic: boolean
-}> {
+export async function cohortTransactionalCheckinMagicHref(
+  email: string,
+  context: string,
+): Promise<{ href: string; isMagic: boolean }> {
   const magic = await generateCohortEmailMagicLinkUrl(email, cohortDashboardStudyCheckinPath())
-  if (magic) return { href: magic, isMagic: true }
-  console.warn('[cohortEmailMagicLink] checkin href fallback (not magic)', {
-    directHref: cohortDashboardCheckinDirectAbsoluteUrl(),
+  if (magic) {
+    return { href: magic, isMagic: true }
+  }
+  console.error(`[cohortEmailMagicLink] ${context}: checkin magic link failed; using plain URL`, {
+    emailDomain: email.includes('@') ? email.split('@')[1] : '?',
   })
   return { href: cohortDashboardCheckinDirectAbsoluteUrl(), isMagic: false }
 }

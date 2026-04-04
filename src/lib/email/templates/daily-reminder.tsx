@@ -5,7 +5,7 @@ export type DailyReminderEmailParams = {
   supplementCount: number
   progressPercent: number
   checkinUrl: string
-  /** Shown under the CTA when href is a Supabase magic link (passwordless). */
+  /** Optional line under the CTA (cohort daily emails use stable `/check-in`; hint usually omitted). */
   linkHint?: string | null
   // Optional daily metrics to display (Energy/Focus/Sleep/Mood on 1–10 scale)
   energy?: number

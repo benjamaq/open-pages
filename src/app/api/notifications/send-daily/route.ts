@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
-import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { Resend } from 'resend'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
@@ -223,14 +222,13 @@ async function handleSend() {
             console.log('[email] User ID:', profile.user_id)
             console.log('[email] Metrics returned:', JSON.stringify(latest))
           } catch {}
-          const em = String(userEmail || '').trim()
-          const { href: checkinHref, isMagic: checkinIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(em)
+          const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
           const html = renderV3Reminder({
             firstName: userName || 'there',
             supplementCount: Math.max(1, supplementCount),
             progressPercent,
             checkinUrl: checkinHref,
-            linkHint: checkinIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
+            linkHint: null,
             ...(latest?.energy != null ? { energy: latest.energy } : {}),
             ...(latest?.focus != null ? { focus: latest.focus } : {}),
             ...(latest?.sleep != null ? { sleep: latest.sleep } : {}),

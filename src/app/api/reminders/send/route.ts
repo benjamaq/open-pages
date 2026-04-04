@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,10 +22,6 @@ function isNowAt(timeHHmm: string, tz: string | null): boolean {
   } catch {
     return false
   }
-}
-
-function b64url(input: string) {
-  return Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
 
 async function buildEmailHTML({
@@ -111,12 +108,16 @@ export async function POST(req: NextRequest) {
         .eq('user_id', userId)
         .eq('local_date', yKey)
         .maybeSingle()
-      // Build a token (userId|day|exp) -> base64url; HMAC would require a shared secret; keep simple time-limited token
-      const payload = JSON.stringify({ u: userId, d: today, y: y || null, exp: Date.now() + 24*60*60*1000 })
-      const token = b64url(payload)
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ''
-      const checkinUrl = `${baseUrl || ''}/dashboard?checkin=open`
-      const quickUrl = `${baseUrl || ''}/api/checkin/quick-save?token=${token}`
+      let recipientEmail: string | null = null
+      if (!dry) {
+        const { data: authRowEarly } = await supabaseAdmin.auth.admin.getUserById(userId)
+        recipientEmail = (authRowEarly?.user?.email as string) || ''
+        if (!recipientEmail) {
+          skipped.push({ userId, reason: 'no_email' })
+          continue
+        }
+      }
+      const checkinUrl = cohortEmailCheckInLandingAbsoluteUrl()
       // Optional stack
       const { data: us } = await supabaseAdmin
         .from('user_supplement')
@@ -131,10 +132,7 @@ export async function POST(req: NextRequest) {
         stack,
       })
       if (!dry) {
-        // Fetch email from auth
-        const { data: authRow } = await supabaseAdmin.auth.admin.getUserById(userId)
-        const to = (authRow?.user?.email as string) || ''
-        if (!to) { skipped.push({ userId, reason: 'no_email' }); continue }
+        const to = recipientEmail!
         await sendEmail({ to, subject: 'Daily check‑in', html })
         await supabaseAdmin
           .from('profiles')

@@ -1,4 +1,5 @@
-import { generateCohortDashboardMagicLinkUrl } from '@/lib/cohortEmailMagicLink'
+import { generateCohortEmailMagicLinkUrl } from '@/lib/cohortEmailMagicLink'
+import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   COHORT_EMAIL_MAGIC_LINK_HINT,
@@ -67,9 +68,9 @@ export async function sendFreshCohortLoginMagicLinkForParticipantEmail(
   const em = String(authCanonicalEmail || '').trim()
   if (!em) return 'Invalid email'
 
-  const magic = await generateCohortDashboardMagicLinkUrl(em)
+  const magic = await generateCohortEmailMagicLinkUrl(em, cohortDashboardStudyPath())
   if (!magic) {
-    console.error('[cohortLoginMagicLink] generateCohortDashboardMagicLinkUrl failed', {
+    console.error('[cohortLoginMagicLink] generateCohortEmailMagicLinkUrl failed', {
       domain: em.includes('@') ? em.split('@')[1] : '(none)',
     })
     return 'Could not create login link'

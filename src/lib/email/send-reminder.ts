@@ -1,8 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { renderDailyReminderEmail } from './templates/daily-reminder'
-import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
-import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 
 type Options = {
   emailOverride?: string
@@ -62,13 +61,13 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     const totalW = percs.reduce((s, x) => s + x.weight, 0)
     progressPercent = totalW > 0 ? Math.round(percs.reduce((s, x) => s + (x.pct * x.weight), 0) / totalW) : 0
   } catch {}
-  const { href: checkinHref, isMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(recipientEmail)
+  const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
   const html = renderDailyReminderEmail({
     firstName: firstName || 'there',
     supplementCount,
     progressPercent,
     checkinUrl: checkinHref,
-    linkHint: isMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
+    linkHint: null,
   })
   const subject = `Quick check-in — 10 seconds`
   if (dry || preview) {

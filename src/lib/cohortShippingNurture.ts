@@ -1,5 +1,5 @@
-import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
-import { cohortEmailDashboardCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortEmailCheckInCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 
 function escapeHtml(s: string): string {
@@ -85,7 +85,7 @@ export async function sendShippingNurtureEmail(params: {
     brandName: params.brandName,
     productName: params.productName,
   })
-  const dashboardHref = await resolveCohortDashboardEmailHref(to)
-  const html = wrapHtml(inner + cohortEmailDashboardCtaHtml(dashboardHref))
+  const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const html = wrapHtml(inner + cohortEmailCheckInCtaHtml(checkInHref))
   return sendEmail({ to, subject, html })
 }

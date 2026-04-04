@@ -1,7 +1,8 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
-import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import {
+  cohortEmailCheckInCtaHtml,
   escapeHtml,
   firstNameFromAuthUser,
   wrapCohortTransactionalEmailHtml,
@@ -44,8 +45,7 @@ export async function sendComplianceConfirmedEmail(params: {
     const product = escapeHtml(params.productName)
     const brand = escapeHtml(String(params.brandName ?? '').trim() || 'DoNotAge')
     const appBase = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.biostackr.com').replace(/\/$/, '')
-
-    const dashboardHref = await resolveCohortDashboardEmailHref(to)
+    const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
 
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -59,9 +59,15 @@ export async function sendComplianceConfirmedEmail(params: {
       `<p style="margin:0 0 18px;">You'll receive a short check-in reminder each morning — takes about 30 seconds.</p>` +
       `<p style="margin:0 0 18px;">At the end of 21 days, you'll receive a clear breakdown of what actually changed for you.</p>` +
       `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} plus three months of BioStackr Pro — is locked in from today.</p>` +
-      `<p style="margin:0;">Thank you for being part of this.</p>`
+      `<p style="margin:0;">Thank you for being part of this.</p>` +
+      cohortEmailCheckInCtaHtml(checkInHref)
 
-    const html = wrapCohortTransactionalEmailHtml({ appBase, innerHtml, dashboardHref })
+    const html = wrapCohortTransactionalEmailHtml({
+      appBase,
+      innerHtml,
+      dashboardHref: checkInHref,
+      omitDashboardRow: true,
+    })
 
     const r = await sendEmail({
       to,

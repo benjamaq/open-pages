@@ -1,12 +1,12 @@
-import { resolveCohortDashboardEmailHref } from '@/lib/cohortEmailMagicLink'
-import { cohortEmailDashboardCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortEmailCheckInCtaHtml } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 
 export async function sendCohortGateReminderEmail(to: string) {
   const safe = String(to || '').trim()
   if (!safe) return { success: false as const, error: 'no email' }
-  const dashboardHref = await resolveCohortDashboardEmailHref(safe)
-  const cta = cohortEmailDashboardCtaHtml(dashboardHref)
+  const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const cta = cohortEmailCheckInCtaHtml(checkInHref)
   return sendEmail({
     to: safe,
     subject: 'Your study spot is still reserved',

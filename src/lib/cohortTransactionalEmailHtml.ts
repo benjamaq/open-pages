@@ -41,7 +41,7 @@ function cohortEmailPublicLogoUrls(appBase: string): { donotage: string; biostac
   }
 }
 
-/** Shared CTA for simple (non-shell) cohort emails — magic or plain `dashboardHref`. */
+/** Shared CTA for simple (non-shell) cohort emails (legacy magic-link dashboards — prefer `cohortEmailCheckInCtaHtml`). */
 export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
   const href = escapeHtml(dashboardHref)
   return (
@@ -54,11 +54,21 @@ export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
   )
 }
 
+/** Stable /check-in landing link for cohort emails (no per-email magic URL). */
+export function cohortEmailCheckInCtaHtml(absoluteCheckInUrl: string): string {
+  const href = escapeHtml(absoluteCheckInUrl)
+  return (
+    `<p style="margin:28px 0 0;text-align:center;">` +
+    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Continue to your check-in →</a>` +
+    `</p>`
+  )
+}
+
 /** Table-based shell: works in Gmail mobile + desktop. */
 export function wrapCohortTransactionalEmailHtml(opts: {
   appBase: string
   innerHtml: string
-  /** Magic link from `resolveCohortDashboardEmailHref`, or plain dashboard URL fallback. */
+  /** Footer / shell link — e.g. stable `cohortEmailCheckInLandingAbsoluteUrl()` for cohort emails. */
   dashboardHref: string
   /** Set true when innerHtml already includes the dashboard button + hint (e.g. post-check-in 1). */
   omitDashboardRow?: boolean

@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
-import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
@@ -426,9 +425,7 @@ async function handler(req: NextRequest) {
           } catch {}
         }
 
-        const { href: checkinHref, isMagic: checkinIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(
-          email!,
-        )
+        const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
 
         // Greeting priority:
         // 1) profiles.display_name (first token)
@@ -506,7 +503,7 @@ async function handler(req: NextRequest) {
           supplementCount,
           progressPercent,
           checkinUrl: checkinHref,
-          linkHint: checkinIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null,
+          linkHint: null,
           ...(energy != null ? { energy } : {}),
           ...(focus  != null ? { focus }  : {}),
           ...(sleep  != null ? { sleep }  : {}),

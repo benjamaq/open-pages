@@ -1,7 +1,6 @@
-import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
-  COHORT_EMAIL_MAGIC_LINK_HINT,
   escapeHtml,
   firstNameFromAuthUser,
   wrapCohortTransactionalEmailHtml,
@@ -53,12 +52,7 @@ export async function sendCohortEnrollmentEmail(params: {
     process.env.NEXT_PUBLIC_SITE_URL ||
     'https://www.biostackr.com'
   ).replace(/\/$/, '')
-  const { href: checkinHref, isMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
-  const hintHtml = isMagic
-    ? `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">${escapeHtml(
-        COHORT_EMAIL_MAGIC_LINK_HINT,
-      )}</p>`
-    : ''
+  const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
 
   const subject = "You're in — complete your first check-in"
 
@@ -72,8 +66,7 @@ export async function sendCohortEnrollmentEmail(params: {
     `<p style="margin:0 0 22px;">It takes about 30 seconds.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(checkinHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
-    `</p>` +
-    hintHtml
+    `</p>`
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,

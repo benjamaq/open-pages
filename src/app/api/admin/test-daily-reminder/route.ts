@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { resolveCohortDashboardCheckinEmailHrefWithMeta } from '@/lib/cohortEmailMagicLink'
-import { COHORT_EMAIL_MAGIC_LINK_HINT } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 
 function stackToLines(list: string[]): string {
   const emojiFor = (item: string) => {
@@ -27,9 +26,9 @@ export async function GET(req: NextRequest) {
     const readinessEmoji = url.searchParams.get('readinessEmoji') || '💧'
     const readinessMessage = url.searchParams.get('readinessMessage') || 'Take it steady — light activity today'
     const checkInOverride = url.searchParams.get('checkInUrl')
-    const { href: defaultCheckinHref, isMagic: defaultIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
+    const defaultCheckinHref = cohortEmailCheckInLandingAbsoluteUrl()
     const checkInUrl = checkInOverride || defaultCheckinHref
-    const linkHint = checkInOverride ? null : defaultIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null
+    const linkHint = null
     const optOutUrl = url.searchParams.get('optOutUrl') || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
     const supplements = (url.searchParams.getAll('supplement') || [])
     const supplementList = supplements.length ? supplements : ['Magnesium', 'Omega-3', 'Sauna Protocol']
@@ -71,9 +70,9 @@ export async function POST(req: NextRequest) {
     const readinessMessage = body.readinessMessage || 'Take it steady — light activity today'
     const supplements: string[] = body.supplementList || ['Magnesium', 'Omega-3', 'Sauna Protocol']
     const checkInOverride = body.checkInUrl as string | undefined
-    const { href: defaultCheckinHref, isMagic: defaultIsMagic } = await resolveCohortDashboardCheckinEmailHrefWithMeta(to)
+    const defaultCheckinHref = cohortEmailCheckInLandingAbsoluteUrl()
     const checkInUrl = checkInOverride || defaultCheckinHref
-    const linkHint = checkInOverride ? null : defaultIsMagic ? COHORT_EMAIL_MAGIC_LINK_HINT : null
+    const linkHint = null
     const optOutUrl = body.optOutUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3009'}/settings/notifications`
 
     const html = renderV3Reminder({

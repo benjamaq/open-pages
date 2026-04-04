@@ -373,14 +373,19 @@ export async function GET(request: Request) {
                       studyStartedAtIso &&
                       studyClockHasBegun
                     ) {
+                      const studyEntryOpts = {
+                        minCreatedAtIso: studyStartedAtIso,
+                      } as const;
                       const [cntStudy, ymdsStudy] = await Promise.all([
                         countDistinctDailyEntriesSinceForUserIds(
                           cpUserIds,
                           studyStartedAtIso,
+                          studyEntryOpts,
                         ),
                         fetchCohortCheckinYmdsSinceEnrollForUserIds(
                           cpUserIds,
                           studyStartedAtIso,
+                          studyEntryOpts,
                         ),
                       ]);
                       cohortCheckinCount = cntStudy;

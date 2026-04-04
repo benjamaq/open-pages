@@ -637,12 +637,6 @@ export default function CohortStudyDashboard({
                 </div>
               </>
             )}
-            {!pendingFirstStudyNight ? (
-              <p className="mt-4 text-sm text-gray-600">
-                Follow the directions on your product packaging. When it arrives, confirm below to start your {studyDays}-day
-                study window.
-              </p>
-            ) : null}
           </div>
         ) : cohortConfirmed ? (
           studyComplete ? (
