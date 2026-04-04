@@ -11,7 +11,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
-import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+import {
+  cohortCheckinFieldDescription,
+  isCohortCheckinSliderField,
+  normalizeCohortCheckinFields,
+} from '@/lib/cohortCheckinFields'
 
 /**
  * Confound tags for cohort daily_entries.tags.
@@ -54,6 +58,8 @@ const SLIDER_LABELS: Record<string, string> = {
   energy: 'Morning energy level (1–10)',
   mood: 'How is your mood?',
   focus: 'How is your focus?',
+  mental_clarity: 'Mental clarity',
+  calmness: 'Calmness',
 }
 
 const STEP_SPAN_STYLE = {
@@ -150,7 +156,7 @@ export default function CohortCheckinLayout({
       let headerEnergy = 5
       if (fields.includes('energy') && typeof values.energy === 'number') headerEnergy = values.energy
       else {
-        const first = fields.find((f) => ['sleep_quality', 'mood', 'focus'].includes(f))
+        const first = fields.find((f) => isCohortCheckinSliderField(f) && f !== 'energy')
         if (first && typeof values[first] === 'number') headerEnergy = values[first] as number
       }
       onEnergyUpdate(headerEnergy)
@@ -262,10 +268,11 @@ export default function CohortCheckinLayout({
                     </div>
                   )
                 }
-                if (fieldKey === 'sleep_quality' || fieldKey === 'energy' || fieldKey === 'mood' || fieldKey === 'focus') {
+                if (isCohortCheckinSliderField(fieldKey)) {
                   step += 1
                   const k = step
                   const label = SLIDER_LABELS[fieldKey] || fieldKey
+                  const desc = cohortCheckinFieldDescription(fieldKey)
                   const v = typeof values[fieldKey] === 'number' ? (values[fieldKey] as number) : 5
                   return (
                     <div key={fieldKey} className="mb-8 space-y-2">
@@ -273,6 +280,7 @@ export default function CohortCheckinLayout({
                         <StepPrefix n={k} />
                         {label}
                       </label>
+                      {desc ? <p className="text-xs text-gray-500">{desc}</p> : null}
                       <div className="flex items-center gap-2">
                         <input
                           type="range"

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+import {
+  COHORT_CHECKIN_SLIDER_FIELD_KEYS,
+  COHORT_CHECKIN_UPSERT_KEYS,
+  normalizeCohortCheckinFields,
+} from '@/lib/cohortCheckinFields'
 import { tryImmediateCohortComplianceConfirm } from '@/lib/cohortComplianceConfirmed'
 import { trySendCohortPostFirstCheckinEmail } from '@/lib/cohortPostFirstCheckinEmail'
 
@@ -61,8 +65,7 @@ export async function POST(request: NextRequest) {
       } catch {
         /* use default fields */
       }
-      const sliderKeys = ['sleep_quality', 'energy', 'mood', 'focus'] as const
-      for (const k of sliderKeys) {
+      for (const k of COHORT_CHECKIN_SLIDER_FIELD_KEYS) {
         if (!checkinFields.includes(k)) continue
         if (clamp10(cohortBody[k]) == null) {
           return NextResponse.json({ error: `Missing required cohort field: ${k}` }, { status: 400 })
@@ -97,8 +100,7 @@ export async function POST(request: NextRequest) {
         local_date: localDate,
         tags: finalCohortTags.length > 0 ? finalCohortTags : null,
       }
-      const allCohortKeys = ['sleep_quality', 'energy', 'mood', 'focus', 'sleep_onset_bucket', 'night_wakes'] as const
-      for (const k of allCohortKeys) {
+      for (const k of COHORT_CHECKIN_UPSERT_KEYS) {
         if (!checkinFields.includes(k)) {
           cohortDePayload[k] = null
           continue
