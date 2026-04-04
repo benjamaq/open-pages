@@ -218,7 +218,6 @@ export default function CohortCheckinLayout({
                         <StepPrefix n={k} />
                         Time to fall asleep
                       </label>
-                      <p className="text-xs text-gray-500">Optional</p>
                       <div className="flex flex-wrap gap-2">
                         {ONSET_OPTIONS.map((o) => (
                           <button
@@ -248,7 +247,6 @@ export default function CohortCheckinLayout({
                         <StepPrefix n={k} />
                         Times woken in the night
                       </label>
-                      <p className="text-xs text-gray-500">Optional</p>
                       <div className="flex flex-wrap gap-2">
                         {WAKES_OPTIONS.map((o) => (
                           <button
@@ -299,7 +297,7 @@ export default function CohortCheckinLayout({
               })}
 
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Anything unusual today? (optional)</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Anything unusual today?</h3>
                 <div className="flex flex-wrap gap-2">
                   {CONFOUND_TAGS.map((factor) => (
                     <button

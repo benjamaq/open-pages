@@ -39,7 +39,7 @@ export async function sendCohortStudyStartEmail(params: {
     `<p style="margin:0 0 16px;">Mix one scoop with water and take it 45–60 minutes before bed tonight. Take it consistently every evening — this is what gives the study its signal.</p>` +
     `<p style="margin:0 0 16px;">If you miss a night, just pick up again the next evening. Don't double up.</p>` +
     `<p style="margin:0 0 6px;"><strong>Your morning check-in</strong></p>` +
-    `<p style="margin:0 0 16px;">Each morning you'll get a reminder to complete a short check-in — it takes about 30 seconds. Four simple questions about how you slept. Complete it before midday while the night is still fresh.</p>` +
+    `<p style="margin:0 0 16px;">Each morning you'll get a reminder to complete a short check-in — takes about 30 seconds. Four simple questions about how you slept. Complete it before midday while the night is still fresh.</p>` +
     `<p style="margin:0 0 6px;"><strong>If life gets in the way</strong></p>` +
     `<p style="margin:0 0 16px;">Some nights won't be typical — a late night out, illness, travel, a big workout. On those mornings, complete your check-in as normal but use the "Anything unusual today?" tags to note what happened. We exclude those days from the analysis so your results stay clean. Keep taking ${productEsc} unless you're unwell.</p>` +
     `<p style="margin:0 0 6px;"><strong>If you're unwell</strong></p>` +

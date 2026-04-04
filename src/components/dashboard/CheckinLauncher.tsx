@@ -273,7 +273,7 @@ export function CheckinLauncher({
           : null)
       : asyncStudyProductName ?? null
 
-  const welcomeStudyTitle = cohortStudyProductName || 'study'
+  const welcomeStudyTitle = cohortStudyProductName || 'SureSleep'
 
   useEffect(() => {
     try {
@@ -302,8 +302,8 @@ export function CheckinLauncher({
               Welcome to the {welcomeStudyTitle} study
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-gray-600">
-              Your first check-in captures your baseline before the product arrives. It takes about 30 seconds. Complete
-              it now to secure your spot.
+              You&apos;re in. Before your product arrives, we need your first quick check-in to capture your baseline.
+              Takes about 30 seconds.
             </p>
             <button
               type="button"

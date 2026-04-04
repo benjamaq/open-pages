@@ -47,7 +47,7 @@ export function shippingNurtureInnerHtml(
       break
     case 'day7':
       paragraphs = [
-        `Your <strong>${product}</strong> should be arriving any day now. When it arrives, open your BioStackr dashboard and use <strong>My product has arrived — start my study</strong>, then complete your first check-in. Daily check-ins take about 30 seconds; reminders start the morning after you start. Questions? Reply to this email.`,
+        `Your <strong>${product}</strong> should be arriving any day now. When it arrives, open your BioStackr dashboard and use <strong>My product has arrived — start my study</strong>, then complete your first check-in. Takes about 30 seconds per check-in; reminders start the morning after you start. Questions? Reply to this email.`,
       ]
       break
     case 'day10':

@@ -151,15 +151,12 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
       `<ul style="margin:0 0 20px;padding-left:20px;">` +
       `<li style="margin:0 0 8px;">Your ${productLabel} supply will be dispatched</li>` +
-      `<li style="margin:0 0 8px;">Your 21-day tracking begins</li>` +
+      `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
       `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
       `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} plus three months of BioStackr Pro</li>` +
       `</ul>` +
-      `<p style="margin:28px 0 0;text-align:center;">` +
+      `<p style="margin:28px 0 8px;text-align:center;">` +
       `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
-      `</p>` +
-      `<p style="margin:18px 0 0;text-align:center;">` +
-      `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#ffffff;color:#6A3F2B !important;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:15px;border:2px solid #C84B2F;">Continue to your check-in →</a>` +
       `</p>`
 
     const html = wrapCohortTransactionalEmailHtml({
