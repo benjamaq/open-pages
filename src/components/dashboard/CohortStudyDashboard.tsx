@@ -716,7 +716,7 @@ export default function CohortStudyDashboard({
       ) : null}
 
       <section>
-        {cohortConfirmed && !cohortAwaitingStudyStart ? (
+        {cohortConfirmed && !cohortAwaitingStudyStart && !studyComplete ? (
           hasCheckedInToday ? (
             <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
               <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
