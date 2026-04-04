@@ -117,6 +117,15 @@ async function handler(req: NextRequest) {
     let forceResolvedEmail: string | undefined
     // If forcing to a specific email, resolve that user immediately and bypass all filters
     if (authorizedForce && (filterEmail || forceUserId)) {
+      // eslint-disable-next-line no-console
+      console.log('[force-email-debug] force block entered', {
+        rawEmailParam: rawEmail ?? null,
+        filterEmailAfterNormalize: filterEmail ?? null,
+        forceUserId: forceUserId ?? null,
+        forceFlag,
+        hasAuth,
+        authorizedForce,
+      })
       let targetUserId: string | undefined
       try {
         const adminApi = (supabaseAdmin as any).auth?.admin
@@ -140,11 +149,15 @@ async function handler(req: NextRequest) {
           console.log('[daily-cron] Force targeting user (by user_id):', { user_id: forceUserId, email: byId?.user?.email })
         } else if (filterEmail) {
           // supabase-js v2 has no auth.admin.getUserByEmail — use auth.users ilike + lowercase (see getAuthUserByEmailNorm).
+          // Pass route-scoped admin client so resolution matches this request's Supabase instance.
           console.log('[force] Resolving email via getAuthUserByEmailNorm:', filterEmail)
-          const authPair = await getAuthUserByEmailNorm(filterEmail)
-          try {
-            console.log('[force] getAuthUserByEmailNorm result:', { ok: !!authPair?.id, id: authPair?.id, email: authPair?.email })
-          } catch {}
+          const authPair = await getAuthUserByEmailNorm(filterEmail, supabaseAdmin, true)
+          // eslint-disable-next-line no-console
+          console.log('[force-email-debug] getAuthUserByEmailNorm return to cron', {
+            ok: !!authPair?.id,
+            id: authPair?.id ?? null,
+            email: authPair?.email ?? null,
+          })
           if (authPair?.id) {
             targetUserId = authPair.id
             forceResolvedEmail = authPair.email
@@ -161,9 +174,19 @@ async function handler(req: NextRequest) {
           }
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('[force-email-debug] Force branch try/catch', {
+          message: (e as any)?.message,
+          stack: e instanceof Error ? e.stack : undefined,
+        })
         console.warn('[daily-cron] Force email lookup failed:', (e as any)?.message)
       }
       if (!targetUserId) {
+        // eslint-disable-next-line no-console
+        console.error('[force-email-debug] RETURN target_email_not_found (no targetUserId after force resolution)', {
+          filterEmail: filterEmail ?? null,
+          forceUserId: forceUserId ?? null,
+        })
         console.error('[daily-cron] Target not found in force lookup:', { email: filterEmail, user_id: forceUserId })
         return NextResponse.json({ ok: false, error: 'target_email_not_found', email: filterEmail, user_id: forceUserId })
       }

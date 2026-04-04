@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -15,21 +16,56 @@ export function isValidLoginLinkRequestEmail(email: string): boolean {
 /** auth.users row (id + canonical email) from case-insensitive email match, or null. */
 export async function getAuthUserByEmailNorm(
   emailNorm: string,
+  adminClient?: SupabaseClient,
+  /** When true (daily-reminder force path only), log normalized email + PostgREST error payload. */
+  forceEmailDebug?: boolean,
 ): Promise<{ id: string; email: string } | null> {
   const em = normalizeLoginLinkRequestEmail(emailNorm)
-  if (!em) return null
+  if (!em) {
+    if (forceEmailDebug) {
+      // eslint-disable-next-line no-console
+      console.log('[force-email-debug] getAuthUserByEmailNorm: empty after normalize', { raw: emailNorm })
+    }
+    return null
+  }
+  const sb = (adminClient ?? supabaseAdmin) as SupabaseClient
   try {
-    const { data: authUser } = await (supabaseAdmin as any)
+    const { data: authUser, error: authErr } = await (sb as any)
       .schema('auth')
       .from('users')
       .select('id, email')
       .ilike('email', em)
       .maybeSingle()
     const row = authUser as { id?: string; email?: string } | null
+    if (forceEmailDebug) {
+      // eslint-disable-next-line no-console
+      console.log('[force-email-debug] getAuthUserByEmailNorm query done', {
+        normalizedEmail: em,
+        hasRow: !!(row?.id && row?.email),
+        rowId: row?.id ?? null,
+        rowEmail: row?.email ?? null,
+        supabaseError: authErr
+          ? {
+              message: authErr.message,
+              code: (authErr as { code?: string }).code,
+              details: (authErr as { details?: string }).details,
+              hint: (authErr as { hint?: string }).hint,
+            }
+          : null,
+      })
+    }
     if (row?.id && row?.email) {
       return { id: String(row.id), email: String(row.email) }
     }
   } catch (e) {
+    if (forceEmailDebug) {
+      // eslint-disable-next-line no-console
+      console.warn('[force-email-debug] getAuthUserByEmailNorm exception', {
+        normalizedEmail: em,
+        err: String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      })
+    }
     console.warn('[cohortLoginLinkEligibility] auth.users lookup', String(e))
   }
   return null
