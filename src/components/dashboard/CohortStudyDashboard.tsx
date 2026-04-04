@@ -399,7 +399,9 @@ function StudySupportModal({
         </div>
         <p className="mt-2 text-sm text-gray-600">Choose one option. We email the study team with your account details.</p>
         {done ? (
-          <p className="mt-4 text-sm text-emerald-800 font-medium">Sent. We will reply by email when we can.</p>
+          <p className="mt-4 text-sm text-emerald-800 font-medium">
+            Thanks for reaching out. We&apos;ll get back to you shortly.
+          </p>
         ) : (
           <>
             <div className="mt-4 space-y-2">
@@ -723,7 +725,17 @@ export default function CohortStudyDashboard({
                 </span>{' '}
                 Checked in today
               </div>
-              <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
+              {currentDay === 1 ? (
+                <>
+                  <p className="mt-2 text-sm font-semibold text-gray-900">First one&apos;s done.</p>
+                  <p className="mt-2 text-sm text-gray-700">
+                    Come back tomorrow morning after you wake up. Every check-in makes your results more meaningful — for you
+                    and for the study.
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
+              )}
               <button
                 type="button"
                 className="mt-4 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
@@ -734,9 +746,19 @@ export default function CohortStudyDashboard({
             </div>
           ) : (
             <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-5">
-              <div className="text-sm font-semibold text-amber-950">Today&apos;s check-in</div>
-              <p className="mt-2 text-sm text-gray-700">Complete your daily check-in to keep your streak going.</p>
-              <p className="mt-1 text-sm text-gray-600">It takes about 30 seconds.</p>
+              {currentDay === 1 ? (
+                <>
+                  <div className="text-sm font-semibold text-amber-950">Day 1 — you&apos;re in.</div>
+                  <p className="mt-2 text-sm text-gray-700">
+                    This is where it begins. A quick 30-second check-in each morning is all it takes. You&apos;ve got this.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-sm font-semibold text-amber-950">Time for today&apos;s check-in.</div>
+                  <p className="mt-2 text-sm text-gray-700">30 seconds. Same questions. Keep the streak going.</p>
+                </>
+              )}
               <button
                 type="button"
                 onClick={onOpenCheckin}
