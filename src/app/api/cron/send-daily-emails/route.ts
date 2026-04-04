@@ -175,6 +175,31 @@ async function handler(req: NextRequest) {
               email: authPair?.email ?? null,
             })
           }
+          if (!authPair?.id && filterEmail) {
+            const { data: rpcData, error: rpcErr } = await supabaseAdmin.rpc(
+              'cron_resolve_auth_user_for_force_reminder',
+              { target_email: filterEmail },
+            )
+            const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData
+            const rpcRec = rpcRow as Record<string, unknown> | undefined
+            const rpcIdRaw = rpcRec?.auth_user_id
+            const rpcEmailRaw = rpcRec?.canonical_email
+            const rpcId =
+              rpcIdRaw != null && String(rpcIdRaw).length > 0 ? String(rpcIdRaw) : null
+            const rpcEmail =
+              rpcEmailRaw != null && String(rpcEmailRaw).length > 0 ? String(rpcEmailRaw) : null
+            // eslint-disable-next-line no-console
+            console.log('[daily-cron] force email: DB RPC cron_resolve_auth_user_for_force_reminder', {
+              rpcErr: rpcErr
+                ? { message: rpcErr.message, code: rpcErr.code, details: rpcErr.details, hint: rpcErr.hint }
+                : null,
+              auth_user_id: rpcId,
+              canonical_email: rpcEmail,
+            })
+            if (!rpcErr && rpcId && rpcEmail) {
+              authPair = { id: rpcId, email: rpcEmail }
+            }
+          }
           if (authPair?.id) {
             targetUserId = authPair.id
             forceResolvedEmail = authPair.email
