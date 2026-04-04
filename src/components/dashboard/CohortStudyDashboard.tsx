@@ -344,13 +344,12 @@ function StudySupportModal({
   const [done, setDone] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  // Reset whenever visibility changes so a stale `done` from a prior open cannot skip the form.
   useEffect(() => {
-    if (!open) {
-      setReason('')
-      setBusy(false)
-      setDone(false)
-      setErr(null)
-    }
+    setReason('')
+    setBusy(false)
+    setDone(false)
+    setErr(null)
   }, [open])
 
   if (!open) return null
