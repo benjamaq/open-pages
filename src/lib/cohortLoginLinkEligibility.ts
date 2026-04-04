@@ -71,6 +71,64 @@ export async function getAuthUserByEmailNorm(
   return null
 }
 
+/**
+ * Resolve auth user by email via GoTrue `GET /auth/v1/admin/users` (paginated).
+ * Use when PostgREST cannot read `auth.users` (schema often not exposed on Supabase API).
+ * Server-only; pass a service-role Supabase client.
+ */
+export async function getAuthUserByEmailAdminListUsers(
+  adminClient: SupabaseClient,
+  rawEmail: string,
+  options?: { maxPages?: number; forceEmailDebug?: boolean },
+): Promise<{ id: string; email: string } | null> {
+  const target = normalizeLoginLinkRequestEmail(rawEmail)
+  if (!target) return null
+  const maxPages = Math.max(1, Math.min(options?.maxPages ?? 50, 200))
+  const dbg = options?.forceEmailDebug === true
+  let page: number | null = 1
+  let scanned = 0
+  while (page != null && scanned < maxPages) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 1000 })
+    scanned++
+    if (error || !data?.users) {
+      if (dbg) {
+        // eslint-disable-next-line no-console
+        console.log('[force-email-debug] auth.admin.listUsers', {
+          page,
+          pagesScanned: scanned,
+          err: error ? error.message : null,
+          batch: 0,
+          nextPage: null,
+        })
+      }
+      if (dbg && error) {
+        // eslint-disable-next-line no-console
+        console.warn('[force-email-debug] listUsers aborted', { message: error.message })
+      }
+      break
+    }
+    const pageData = data as { users: { id: string; email?: string }[]; nextPage: number | null }
+    if (dbg) {
+      // eslint-disable-next-line no-console
+      console.log('[force-email-debug] auth.admin.listUsers', {
+        page,
+        pagesScanned: scanned,
+        err: null,
+        batch: pageData.users.length,
+        nextPage: pageData.nextPage ?? null,
+      })
+    }
+    const hit = pageData.users.find(
+      (u) => typeof u.email === 'string' && normalizeLoginLinkRequestEmail(u.email) === target,
+    )
+    if (hit?.id && hit.email) {
+      return { id: String(hit.id), email: String(hit.email) }
+    }
+    page = pageData.nextPage ?? null
+  }
+  return null
+}
+
 export async function getProfileIdForAuthUser(authUserId: string): Promise<string | null> {
   const { data } = await supabaseAdmin.from('profiles').select('id').eq('user_id', authUserId).maybeSingle()
   return data && typeof (data as { id?: string }).id === 'string' ? String((data as { id: string }).id) : null

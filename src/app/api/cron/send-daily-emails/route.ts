@@ -8,7 +8,10 @@ import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
-import { getAuthUserByEmailNorm } from '@/lib/cohortLoginLinkEligibility'
+import {
+  getAuthUserByEmailAdminListUsers,
+  getAuthUserByEmailNorm,
+} from '@/lib/cohortLoginLinkEligibility'
 
 /** Decode email query param: trim, fix `+` lost as space in unencoded query strings. */
 function normalizeForceEmailQuery(raw: string): string {
@@ -151,13 +154,27 @@ async function handler(req: NextRequest) {
           // supabase-js v2 has no auth.admin.getUserByEmail — use auth.users ilike + lowercase (see getAuthUserByEmailNorm).
           // Pass route-scoped admin client so resolution matches this request's Supabase instance.
           console.log('[force] Resolving email via getAuthUserByEmailNorm:', filterEmail)
-          const authPair = await getAuthUserByEmailNorm(filterEmail, supabaseAdmin, true)
+          let authPair = await getAuthUserByEmailNorm(filterEmail, supabaseAdmin, true)
           // eslint-disable-next-line no-console
           console.log('[force-email-debug] getAuthUserByEmailNorm return to cron', {
             ok: !!authPair?.id,
             id: authPair?.id ?? null,
             email: authPair?.email ?? null,
           })
+          if (!authPair?.id) {
+            // PostgREST often cannot read auth.users; GoTrue admin listUsers does.
+            console.log('[daily-cron] force email: PostgREST/auth.users miss — trying auth.admin.listUsers')
+            authPair = await getAuthUserByEmailAdminListUsers(supabaseAdmin, filterEmail, {
+              maxPages: 50,
+              forceEmailDebug: true,
+            })
+            // eslint-disable-next-line no-console
+            console.log('[force-email-debug] getAuthUserByEmailAdminListUsers return', {
+              ok: !!authPair?.id,
+              id: authPair?.id ?? null,
+              email: authPair?.email ?? null,
+            })
+          }
           if (authPair?.id) {
             targetUserId = authPair.id
             forceResolvedEmail = authPair.email
