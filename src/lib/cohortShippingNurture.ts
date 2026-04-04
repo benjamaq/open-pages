@@ -42,17 +42,17 @@ export function shippingNurtureInnerHtml(
   switch (step) {
     case 'day4':
       paragraphs = [
-        `Your spot in the <strong>${study}</strong> study is confirmed and your product is being dispatched by <strong>${brand}</strong>. When your product arrives, open your BioStackr dashboard and tap <strong>My product has arrived — start my study</strong>. Your 21 days begin that day—complete your first check-in right after. Until it arrives, there is nothing you need to do.`,
+        `Your spot in the <strong>${study}</strong> study is confirmed and your product is being dispatched by <strong>${brand}</strong>. When your product arrives, open your BioStackr dashboard and tap <strong>My product has arrived</strong>. Your 21 days start that day—complete your first check-in right after. Until it arrives, there is nothing you need to do.`,
       ]
       break
     case 'day7':
       paragraphs = [
-        `Your <strong>${product}</strong> should be arriving any day now. When it arrives, open your BioStackr dashboard and use <strong>My product has arrived — start my study</strong>, then complete your first check-in. Takes about 30 seconds per check-in; reminders start the morning after you start. Questions? Reply to this email.`,
+        `Your <strong>${product}</strong> should be arriving any day now. When it arrives, open your BioStackr dashboard and use <strong>My product has arrived</strong>, then complete your first check-in. Takes about 30 seconds per check-in; reminders start the morning after you start. Questions? Reply to this email.`,
       ]
       break
     case 'day10':
       paragraphs = [
-        `If your <strong>${product}</strong> has arrived, open the dashboard and tap <strong>My product has arrived — start my study</strong>, then complete your first check-in. If it has not arrived yet, reply to this email and we will look into it.`,
+        `If your <strong>${product}</strong> has arrived, open the dashboard and tap <strong>My product has arrived</strong>, then complete your first check-in. If it has not arrived yet, reply to this email and we will look into it.`,
       ]
       break
     default:

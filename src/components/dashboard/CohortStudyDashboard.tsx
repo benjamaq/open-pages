@@ -607,9 +607,12 @@ export default function CohortStudyDashboard({
             ) : (
               <>
                 <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your product is on the way</h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
+                  You&apos;re confirmed — your product will be shipped shortly.
+                </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                  As soon as it arrives, come back here and use the button below to start your study. Your 21 days begin the
-                  day you confirm—then complete your first check-in right away.
+                  When it arrives, come back here and start your study. Your 21-day study begins when you confirm your product
+                  has arrived—then complete your first check-in right away.
                 </p>
                 <button
                   type="button"
@@ -617,7 +620,7 @@ export default function CohortStudyDashboard({
                   className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
                   style={{ backgroundColor: '#C84B2F' }}
                 >
-                  My product has arrived — start my study
+                  My product has arrived
                 </button>
                 {/* TODO: “How to take …” dosing copy is placeholder pending Dan Wild confirmation. */}
                 <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
@@ -663,7 +666,7 @@ export default function CohortStudyDashboard({
           <div>
             <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your spot is confirmed</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-              You are in the study. Your product will be dispatched shortly. Your daily check-ins begin when it arrives. You
+              You are in the study. Your product will be dispatched shortly. Your daily check-ins start when it arrives. You
               will receive a reminder each morning. Keep your supplement routine as it is until then.
             </p>
           </div>

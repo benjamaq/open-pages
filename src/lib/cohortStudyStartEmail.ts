@@ -1,4 +1,4 @@
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
@@ -21,7 +21,7 @@ export async function sendCohortStudyStartEmail(params: {
 
   const product = String(params.productName || 'SureSleep').trim() || 'SureSleep'
   const productEsc = escapeHtml(product)
-  const subject = `Your 21-day ${product} study begins today`
+  const subject = `Your 21-day ${product} study starts today`
 
   const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUserId)
   if (auErr || !auth?.user) {
@@ -30,7 +30,7 @@ export async function sendCohortStudyStartEmail(params: {
   const first = escapeHtml(firstNameFromAuthUser(auth?.user ?? { email: to }))
 
   const appBase = cohortEmailPublicOrigin()
-  const dashboardHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const dashboardHref = `${appBase}${cohortDashboardStudyPath()}`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -49,7 +49,7 @@ export async function sendCohortStudyStartEmail(params: {
     `<p style="margin:0 0 16px;">You're doing something most people never do — actually measuring whether what they're taking is working.</p>` +
     `<p style="margin:0 0 20px;">Let's see what ${productEsc} does for you.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${escapeHtml(dashboardHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Continue to your check-in →</a>` +
+    `<a href="${escapeHtml(dashboardHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">View your study dashboard →</a>` +
     `</p>`
 
   const html = wrapCohortTransactionalEmailHtml({
