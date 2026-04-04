@@ -8,6 +8,17 @@ import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
+import { getAuthUserByEmailNorm } from '@/lib/cohortLoginLinkEligibility'
+
+/** Decode email query param: trim, fix `+` lost as space in unencoded query strings. */
+function normalizeForceEmailQuery(raw: string): string {
+  let s = String(raw || '').trim()
+  const at = s.indexOf('@')
+  if (at > 0 && s.slice(0, at).includes(' ')) {
+    s = s.slice(0, at).replace(/\s+/g, '+') + s.slice(at)
+  }
+  return s
+}
 
 type ProfileRow = {
   user_id: string;
@@ -34,8 +45,10 @@ async function handler(req: NextRequest) {
   const dryParam = url.searchParams.get('dry')
   const rawEmail = url.searchParams.get('email') || undefined
   const forceUserId = url.searchParams.get('user_id') || undefined
-  // Normalize email query (strip accidental quotes)
-  const filterEmail = rawEmail ? rawEmail.replace(/^"+|"+$/g, '') : undefined
+  // Normalize email query (strip accidental quotes, restore + addresses when + was sent unencoded)
+  const filterEmail = rawEmail
+    ? normalizeForceEmailQuery(rawEmail.replace(/^"+|"+$/g, ''))
+    : undefined
   const dryRun = dryParam === '1'
   const forceFlag = url.searchParams.get('force') === '1'
   // Allow force when explicitly targeting an email, even without auth header (scoped to that user only)
@@ -100,6 +113,8 @@ async function handler(req: NextRequest) {
       reminder_timezone: p.reminder_timezone,
     }))
 
+    /** Canonical auth email when force-targeting by `email=` (for Resend). */
+    let forceResolvedEmail: string | undefined
     // If forcing to a specific email, resolve that user immediately and bypass all filters
     if (authorizedForce && (filterEmail || forceUserId)) {
       let targetUserId: string | undefined
@@ -111,6 +126,7 @@ async function handler(req: NextRequest) {
           const { data: byId } = await adminApi.getUserById(forceUserId)
           try { console.log('[force] getUserById result:', { ok: !!byId?.user, id: byId?.user?.id, email: byId?.user?.email }) } catch {}
           targetUserId = byId?.user?.id as string | undefined
+          if (byId?.user?.email) forceResolvedEmail = String(byId.user.email)
           // Lookup profile
           const { data: profRow } = await supabaseAdmin
             .from('profiles')
@@ -122,56 +138,30 @@ async function handler(req: NextRequest) {
           const profile_id = (profRow as any)?.id
           scopedProfiles = [{ user_id: forceUserId, display_name, timezone, profile_id }]
           console.log('[daily-cron] Force targeting user (by user_id):', { user_id: forceUserId, email: byId?.user?.email })
-        } else if (filterEmail && adminApi?.getUserByEmail) {
-          // Else force by email via admin API
-          console.log('[force] Looking up email:', filterEmail)
-          const { data: byEmail } = await adminApi.getUserByEmail(filterEmail)
-          try { console.log('[force] getUserByEmail result:', { ok: !!byEmail?.user, id: byEmail?.user?.id, email: byEmail?.user?.email }) } catch {}
-          if (byEmail?.user?.id) {
-            targetUserId = byEmail.user.id as string
-            // Try to get an existing profile for display/timezone
+        } else if (filterEmail) {
+          // supabase-js v2 has no auth.admin.getUserByEmail — use auth.users ilike + lowercase (see getAuthUserByEmailNorm).
+          console.log('[force] Resolving email via getAuthUserByEmailNorm:', filterEmail)
+          const authPair = await getAuthUserByEmailNorm(filterEmail)
+          try {
+            console.log('[force] getAuthUserByEmailNorm result:', { ok: !!authPair?.id, id: authPair?.id, email: authPair?.email })
+          } catch {}
+          if (authPair?.id) {
+            targetUserId = authPair.id
+            forceResolvedEmail = authPair.email
             const { data: profRow } = await supabaseAdmin
               .from('profiles')
               .select('id, user_id, display_name, timezone')
               .eq('user_id', targetUserId)
               .maybeSingle()
-            const display_name = (profRow as any)?.display_name || (byEmail.user?.user_metadata?.name as string) || (filterEmail.split('@')[0] || 'there')
+            const display_name = (profRow as any)?.display_name || (filterEmail.split('@')[0] || 'there')
             const timezone = (profRow as any)?.timezone || 'UTC'
             const profile_id = (profRow as any)?.id
             scopedProfiles = [{ user_id: targetUserId, display_name, timezone, profile_id }]
-            console.log('[daily-cron] Force targeting user (direct):', { user_id: targetUserId, email: filterEmail })
+            console.log('[daily-cron] Force targeting user (by email):', { user_id: targetUserId, email: authPair.email })
           }
         }
       } catch (e) {
         console.warn('[daily-cron] Force email lookup failed:', (e as any)?.message)
-      }
-      // Fallback: direct query to auth.users via schema if admin API failed
-      if (!targetUserId && filterEmail) {
-        try {
-          console.log('[force] Fallback querying auth.users by email:', filterEmail)
-          const { data: authUser } = await (supabaseAdmin as any)
-            .schema('auth')
-            .from('users')
-            .select('id, email, raw_user_meta_data')
-            .eq('email', filterEmail)
-            .maybeSingle()
-          try { console.log('[force] auth.users query result:', { ok: !!authUser?.id, id: authUser?.id, email: authUser?.email }) } catch {}
-          if (authUser?.id) {
-            targetUserId = String(authUser.id)
-            const { data: profRow } = await supabaseAdmin
-              .from('profiles')
-              .select('id, user_id, display_name, timezone')
-              .eq('user_id', targetUserId)
-              .maybeSingle()
-            const display_name = (profRow as any)?.display_name || (authUser?.raw_user_meta_data?.name as string) || (filterEmail.split('@')[0] || 'there')
-            const timezone = (profRow as any)?.timezone || 'UTC'
-            const profile_id = (profRow as any)?.id
-            scopedProfiles = [{ user_id: targetUserId, display_name, timezone, profile_id }]
-            console.log('[daily-cron] Force targeting user (auth.users fallback):', { user_id: targetUserId, email: filterEmail })
-          }
-        } catch (e) {
-          console.warn('[daily-cron] auth.users fallback lookup failed:', (e as any)?.message)
-        }
       }
       if (!targetUserId) {
         console.error('[daily-cron] Target not found in force lookup:', { email: filterEmail, user_id: forceUserId })
@@ -282,9 +272,9 @@ async function handler(req: NextRequest) {
     if (authorizedForce && filterEmail) {
       const forcedId = scopedProfiles[0]?.user_id
       if (forcedId) {
-        emailMap.set(forcedId, filterEmail)
+        emailMap.set(forcedId, forceResolvedEmail || filterEmail)
         scopedProfiles = scopedProfiles.filter(p => p.user_id === forcedId)
-        console.log('[daily-cron] Force scoped to user:', { user_id: forcedId, email: filterEmail })
+        console.log('[daily-cron] Force scoped to user:', { user_id: forcedId, email: forceResolvedEmail || filterEmail })
       }
     }
     const resend = new Resend(process.env.RESEND_API_KEY!)
@@ -339,7 +329,7 @@ async function handler(req: NextRequest) {
       try {
         const email = emailMap.get(p.user_id)
         if (!email) { results.push({ user_id: p.user_id, skip: 'no email', stage: 'email-lookup' }); continue }
-        if (filterEmail && email !== filterEmail) { continue }
+        if (filterEmail && email.toLowerCase() !== filterEmail.toLowerCase()) { continue }
 
         // Engagement filter: Only send to active users (recent activity OR at least 1 active supplement)
         if (!bypassAll) {
