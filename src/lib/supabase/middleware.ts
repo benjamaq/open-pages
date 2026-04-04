@@ -57,7 +57,9 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/pricing') ||
       path.startsWith('/faq') ||
       path.startsWith('/contact') ||
-      path.startsWith('/biostackr')
+      path.startsWith('/biostackr') ||
+      path === '/check-in' ||
+      path.startsWith('/check-in/')
     ) {
       return supabaseResponse
     }
