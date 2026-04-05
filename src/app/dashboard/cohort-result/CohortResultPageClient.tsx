@@ -12,6 +12,24 @@ type ApiOk = {
   brand_name: string | null
 }
 
+/** API usually returns JSON object; normalize if `result_json` is ever double-encoded as a string. */
+function normalizeResultJson(raw: unknown): Record<string, unknown> {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>
+  }
+  if (typeof raw === 'string') {
+    try {
+      const p = JSON.parse(raw) as unknown
+      if (p && typeof p === 'object' && !Array.isArray(p)) {
+        return p as Record<string, unknown>
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return {}
+}
+
 export default function CohortResultPageClient() {
   const [state, setState] = useState<'loading' | 'ready' | 'not_ready' | 'error'>('loading')
   const [payload, setPayload] = useState<ApiOk | null>(null)
@@ -34,10 +52,7 @@ export default function CohortResultPageClient() {
           return
         }
         setPayload({
-          result_json:
-            j.result_json && typeof j.result_json === 'object'
-              ? (j.result_json as Record<string, unknown>)
-              : {},
+          result_json: normalizeResultJson(j.result_json),
           result_version: typeof j.result_version === 'number' ? j.result_version : 1,
           published_at: String(j.published_at || ''),
           product_name: j.product_name ?? null,

@@ -23,8 +23,73 @@ function stringListField(j: Record<string, unknown>, key: string): string[] {
   return v.filter((x): x is string => typeof x === 'string' && x.trim() !== '').map((s) => s.trim())
 }
 
+function normalizeResultRecord(raw: Record<string, unknown> | null | unknown): Record<string, unknown> {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw as Record<string, unknown>
+  if (typeof raw === 'string') {
+    try {
+      const p = JSON.parse(raw) as unknown
+      if (p && typeof p === 'object' && !Array.isArray(p)) {
+        return p as Record<string, unknown>
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return {}
+}
+
+/** Prefer new keys; fall back to older result_json shapes. */
+function parseResultSections(
+  j: Record<string, unknown>,
+  productName: string | null,
+): {
+  verdictHeadline: string
+  bulletPoints: string[]
+  explanation: string | null
+  /** True when payload had at least one substantive field (not just fallbacks). */
+  hasStructuredContent: boolean
+} {
+  const verdictRaw = stringField(j, 'verdict') || stringField(j, 'title')
+
+  const bulletPoints = (() => {
+    const next = stringListField(j, 'bullet_points')
+    if (next.length) return next
+    const hi = stringListField(j, 'highlights')
+    if (hi.length) return hi
+    return stringListField(j, 'bullets')
+  })()
+
+  const explanation =
+    stringField(j, 'explanation') ||
+    stringField(j, 'summary') ||
+    stringField(j, 'overview') ||
+    null
+
+  const hasStructuredContent = Boolean(
+    verdictRaw ||
+      stringListField(j, 'bullet_points').length > 0 ||
+      stringField(j, 'explanation') ||
+      stringField(j, 'summary') ||
+      stringField(j, 'overview') ||
+      stringListField(j, 'highlights').length > 0 ||
+      stringListField(j, 'bullets').length > 0,
+  )
+
+  const verdictHeadline =
+    verdictRaw ||
+    (productName ? `Your ${productName} study — personal outcome` : 'Your personal study outcome')
+
+  return {
+    verdictHeadline,
+    bulletPoints,
+    explanation,
+    hasStructuredContent,
+  }
+}
+
 /**
  * Participant-only cohort result layout + PDF export (not TruthReportView).
+ * `result_json` shape: { verdict, bullet_points[], explanation } (+ legacy keys supported).
  */
 export default function CohortParticipantResultView({
   payload,
@@ -33,14 +98,11 @@ export default function CohortParticipantResultView({
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [downloading, setDownloading] = useState(false)
-  const j = payload.result_json && typeof payload.result_json === 'object' ? payload.result_json : {}
-  const title =
-    stringField(j, 'title') ||
-    (payload.product_name ? `Your ${payload.product_name} study summary` : 'Your study summary')
-  const summary = stringField(j, 'summary') || stringField(j, 'overview')
-  const highlights = stringListField(j, 'highlights').length
-    ? stringListField(j, 'highlights')
-    : stringListField(j, 'bullets')
+  const j = normalizeResultRecord(payload.result_json)
+  const { verdictHeadline, bulletPoints, explanation, hasStructuredContent } = parseResultSections(
+    j,
+    payload.product_name,
+  )
 
   const partnerLine = [payload.brand_name, 'BioStackr'].filter(Boolean).join(' × ')
   const publishedLabel = (() => {
@@ -109,30 +171,47 @@ export default function CohortParticipantResultView({
         {partnerLine ? (
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{partnerLine}</p>
         ) : null}
-        <h1 className="mt-2 text-2xl font-bold text-slate-900 leading-tight">{title}</h1>
         {publishedLabel ? (
           <p className="mt-2 text-sm text-slate-600">Published {publishedLabel}</p>
         ) : null}
-        <p className="mt-1 text-xs text-slate-500">Summary v{payload.result_version}</p>
+        <p className="mt-1 text-xs text-slate-500">Personal summary · v{payload.result_version}</p>
 
-        {summary ? <p className="mt-6 text-base leading-relaxed text-slate-800">{summary}</p> : null}
+        {hasStructuredContent ? (
+          <>
+            <header className="mt-8 border-t border-slate-100 pt-8">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#C84B2F]">Verdict</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900 leading-snug">
+                {verdictHeadline}
+              </h1>
+            </header>
 
-        {highlights.length > 0 ? (
-          <div className="mt-6">
-            <h2 className="text-sm font-semibold text-slate-900">Highlights</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-800">
-              {highlights.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+            {bulletPoints.length > 0 ? (
+              <section className="mt-10">
+                <h2 className="text-base font-semibold text-slate-900">What changed</h2>
+                <ul className="mt-4 list-disc space-y-3 pl-5 text-[15px] leading-relaxed text-slate-800">
+                  {bulletPoints.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
-        {!summary && highlights.length === 0 ? (
-          <p className="mt-6 text-sm text-slate-600">
-            Additional detail will appear here once your result payload includes a written summary or bullet points.
+            {explanation ? (
+              <section className="mt-10">
+                <h2 className="text-base font-semibold text-slate-900">What this means</h2>
+                <p className="mt-4 text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
+                  {explanation}
+                </p>
+              </section>
+            ) : null}
+          </>
+        ) : (
+          <p className="mt-8 text-sm leading-relaxed text-slate-600 border-t border-slate-100 pt-8">
+            Your personal outcome summary will appear here once it includes a <strong>verdict</strong> (clear headline),{' '}
+            <strong>bullet_points</strong> (what changed in your check-ins), and an <strong>explanation</strong> (what
+            that means for you in plain English).
           </p>
-        ) : null}
+        )}
       </div>
     </div>
   )
