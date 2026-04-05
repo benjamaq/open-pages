@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
 import {
   cohortCheckinFieldLabel,
   DEFAULT_COHORT_CHECKIN_FIELDS,
@@ -39,6 +41,8 @@ export interface CohortStudyDashboardProps {
   currentDay: number
   daysRemaining: number
   studyComplete: boolean
+  /** Personal result published for this user (cohort_participant_results). */
+  cohortParticipantResultPublished?: boolean
   studyEndDate: string | null
   onOpenCheckin: () => void
 }
@@ -465,6 +469,7 @@ export default function CohortStudyDashboard({
   currentDay,
   daysRemaining,
   studyComplete,
+  cohortParticipantResultPublished = false,
   studyEndDate: _studyEndDate,
   onOpenCheckin,
 }: CohortStudyDashboardProps) {
@@ -647,7 +652,31 @@ export default function CohortStudyDashboard({
           studyComplete ? (
             <div>
               <div className="text-3xl font-bold text-gray-900">Study complete</div>
-              <p className="mt-2 text-sm text-gray-600">Thank you for finishing the study. Your results will be shared when ready.</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                Thank you — your study window is finished. You do not need to complete any more check-ins for this
+                study.
+              </p>
+              <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                Your personal results are being prepared. When they are ready, they will appear on your dashboard and
+                we will email you.
+              </p>
+              {cohortParticipantResultPublished ? (
+                <Link
+                  href={cohortParticipantResultPath()}
+                  className="mt-6 inline-flex w-full justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 sm:w-auto"
+                  style={{ backgroundColor: '#C84B2F' }}
+                >
+                  View your personal results
+                </Link>
+              ) : (
+                <p className="mt-4 text-sm text-gray-600">
+                  Results will show here when ready:{' '}
+                  <Link href={cohortParticipantResultPath()} className="font-medium text-gray-900 underline">
+                    open your results page
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
           ) : (
             <>

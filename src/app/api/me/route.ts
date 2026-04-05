@@ -73,6 +73,9 @@ export async function GET(request: Request) {
     let cohortComplianceDeadlineIso: string | null = null;
     let cohortAwaitingStudyStart = false;
     let cohortStudyStartedAtIso: string | null = null;
+    /** Set when cron marks study complete (DB); overrides day-count preview. */
+    let cohortStudyPersistedComplete = false;
+    let cohortParticipantResultPublished = false;
     let profileWelcomeFirstName: string | null = null;
     /** True when this user should see the cohort study dashboard (/dashboard), not the B2C stack dashboard. */
     let showCohortStudyDashboard = false;
@@ -263,7 +266,9 @@ export async function GET(request: Request) {
                   );
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
-                    .select("enrolled_at, confirmed_at, study_started_at, status")
+                    .select(
+                      "enrolled_at, confirmed_at, study_started_at, study_completed_at, status",
+                    )
                     .in("user_id", cpUserIds)
                     .eq("cohort_id", cohortUuid)
                     .maybeSingle();
@@ -299,9 +304,10 @@ export async function GET(request: Request) {
                   ) {
                     showCohortStudyDashboard = false;
                   }
-                  // Shipment / post-gate UX requires status confirmed — not only confirmed_at (can diverge if data is inconsistent).
+                  // Shipment / post-gate UX: confirmed or completed with a cleared gate (confirmed_at).
                   cohortConfirmed =
-                    participantStatus === "confirmed" &&
+                    (participantStatus === "confirmed" ||
+                      participantStatus === "completed") &&
                     confirmedAtRaw != null &&
                     String(confirmedAtRaw).trim() !== "";
                   const confirmedAtIso = cohortConfirmed
@@ -316,6 +322,13 @@ export async function GET(request: Request) {
                       ? String(studyStartedRaw).trim()
                       : null;
                   cohortStudyStartedAtIso = studyStartedAtIso;
+                  const studyCompletedRaw = (
+                    part as { study_completed_at?: string | null } | null
+                  )?.study_completed_at;
+                  cohortStudyPersistedComplete =
+                    participantStatus === "completed" ||
+                    (studyCompletedRaw != null &&
+                      String(studyCompletedRaw).trim() !== "");
                   const studyStartYmd = studyStartedAtIso
                     ? studyStartedAtIso.slice(0, 10)
                     : null;
@@ -423,6 +436,7 @@ export async function GET(request: Request) {
                       daysBetweenInclusiveUtcYmd(studyYmd, todayYmd) + 1,
                     );
                     cohortStudyComplete =
+                      cohortStudyPersistedComplete ||
                       cohortStudyCurrentDay >= cohortStudyDays;
                     cohortDaysRemaining = Math.max(
                       0,
@@ -430,12 +444,35 @@ export async function GET(request: Request) {
                     );
                   } else if (cohortConfirmed && cohortAwaitingStudyStart) {
                     cohortStudyCurrentDay = 0;
-                    cohortStudyComplete = false;
+                    cohortStudyComplete = cohortStudyPersistedComplete;
                     cohortDaysRemaining = cohortStudyDays;
                   } else {
                     cohortStudyCurrentDay = 1;
-                    cohortStudyComplete = false;
+                    cohortStudyComplete = cohortStudyPersistedComplete;
                     cohortDaysRemaining = cohortStudyDays;
+                  }
+
+                  if (userId && cohortUuid) {
+                    try {
+                      const { data: resRow } = await supabaseAdmin
+                        .from("cohort_participant_results")
+                        .select("published_at, status")
+                        .eq("cohort_id", cohortUuid)
+                        .eq("user_id", userId)
+                        .maybeSingle();
+                      const pAt = (resRow as { published_at?: string | null } | null)
+                        ?.published_at;
+                      const st = String(
+                        (resRow as { status?: string | null } | null)?.status ||
+                          "",
+                      ).toLowerCase();
+                      cohortParticipantResultPublished =
+                        st === "published" &&
+                        pAt != null &&
+                        String(pAt).trim() !== "";
+                    } catch {
+                      cohortParticipantResultPublished = false;
+                    }
                   }
                 } catch (partCatch: unknown) {
                   console.error(
@@ -522,6 +559,8 @@ export async function GET(request: Request) {
       cohortComplianceDeadlineIso,
       cohortAwaitingStudyStart,
       cohortStudyStartedAtIso,
+      cohortStudyPersistedComplete,
+      cohortParticipantResultPublished,
       showCohortStudyDashboard,
       cohortParticipantStatus,
     });
