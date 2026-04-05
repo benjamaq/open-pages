@@ -10,6 +10,7 @@ import {
 } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 
 export type CohortPostFirstCheckinEmailResult = {
   sent: boolean
@@ -50,7 +51,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
   try {
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name')
+      .select('id, product_name, brand_name')
       .eq('slug', slug)
       .maybeSingle()
     if (cErr || !cohort?.id) {
@@ -139,21 +140,26 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
 
     const first = escapeHtml(firstNameFromAuthUser(auth.user))
     const appBase = cohortEmailPublicOrigin()
-    const productLabel = escapeHtml(
-      String((cohort as { product_name?: string | null }).product_name || 'SureSleep').trim() || 'SureSleep',
+    const { studyName, productName } = studyAndProductNamesFromCohortRow(
+      cohort as { product_name?: string | null; brand_name?: string | null },
+    )
+    const studyEsc = escapeHtml(studyName)
+    const productLabel = escapeHtml(productName)
+    const partnerBrand = escapeHtml(
+      String((cohort as { brand_name?: string | null }).brand_name || 'DoNotAge').trim() || 'DoNotAge',
     )
 
     const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
 
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-      `<p style="margin:0 0 16px;">You've completed your first check-in — you're one step away from securing your place.</p>` +
+      `<p style="margin:0 0 16px;">You've completed your first baseline check-in for the <strong>${studyEsc}</strong> study on <strong>BioStackr</strong> — one step away from securing your place with <strong>${partnerBrand}</strong>.</p>` +
       `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
       `<ul style="margin:0 0 20px;padding-left:20px;">` +
-      `<li style="margin:0 0 8px;">Your ${productLabel} supply will be dispatched</li>` +
+      `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>` +
       `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
       `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
-      `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} plus three months of BioStackr Pro</li>` +
+      `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>` +
       `</ul>` +
       `<p style="margin:28px 0 8px;text-align:center;">` +
       `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +

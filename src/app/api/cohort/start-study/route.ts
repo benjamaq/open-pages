@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     const { data: cohortRow, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name')
+      .select('id, product_name, brand_name')
       .eq('slug', cohortSlug)
       .maybeSingle()
     if (cErr || !cohortRow?.id) {
@@ -124,6 +124,9 @@ export async function POST(request: NextRequest) {
       (cohortRow as { product_name?: string | null }).product_name != null
         ? String((cohortRow as { product_name: string }).product_name).trim()
         : 'Study product'
+    const partnerBrandName = String(
+      (cohortRow as { brand_name?: string | null }).brand_name ?? '',
+    ).trim()
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
@@ -201,7 +204,12 @@ export async function POST(request: NextRequest) {
       choice === 'today' || (choice === 'yesterday' && tookLastNight === false)
     const sendStartEmail = !firstNightDeferPath
     if (email && sendStartEmail) {
-      const r = await sendCohortStudyStartEmail({ to: email, authUserId: user.id, productName })
+      const r = await sendCohortStudyStartEmail({
+        to: email,
+        authUserId: user.id,
+        productName,
+        partnerBrandName: partnerBrandName || null,
+      })
       if (!r.success) {
         console.warn('[cohort/start-study] email', r.error)
       }

@@ -50,17 +50,16 @@ export async function sendComplianceConfirmedEmail(params: {
 
     const innerHtml =
       `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-      `<p style="margin:0 0 16px;">You're in. Your place in the <strong>${study}</strong> study is confirmed.</p>` +
-      `<p style="margin:0 0 20px;"><strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly.</p>` +
+      `<p style="margin:0 0 20px;">You're in. Your place in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly — <strong>BioStackr</strong> runs the study platform and your check-ins.</p>` +
       `<p style="margin:0 0 6px;"><strong>Before it arrives</strong></p>` +
       `<p style="margin:0 0 18px;">Keep your routine stable — no new supplements. We want a clean baseline.</p>` +
       `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +
       `<p style="margin:0 0 18px;">Take ${product} in the evening (45 minutes before bed).<br />Complete your first check-in the next morning.</p>` +
       `<p style="margin:0 0 6px;"><strong>During the study</strong></p>` +
-      `<p style="margin:0 0 18px;">You'll get a short daily reminder. Each check-in takes ~30 seconds.</p>` +
+      `<p style="margin:0 0 18px;">You'll get a short daily reminder from <strong>BioStackr</strong>. Each check-in takes ~30 seconds.</p>` +
       `<p style="margin:0 0 6px;"><strong>At the end</strong></p>` +
       `<p style="margin:0 0 18px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
-      `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} plus three months of BioStackr Pro — is locked in from today.</p>` +
+      `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>` +
       `<p style="margin:0;">Thank you for being part of this.</p>` +
       cohortEmailDashboardCtaHtml(dashboardStudyHref)
 

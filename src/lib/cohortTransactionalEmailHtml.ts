@@ -3,6 +3,9 @@
  * Image URLs must be absolute — callers should pass `appBase` from `cohortEmailPublicOrigin()`.
  */
 
+/** Canonical partner × platform line for headers, footers, and reference in copy (Unicode ×). */
+export const COHORT_EMAIL_BRAND_LINE = 'DoNotAge × BioStackr'
+
 /** Helper line under dashboard CTAs in cohort transactional emails. */
 export const COHORT_EMAIL_MAGIC_LINK_HINT = 'This link logs you straight in — no password needed.'
 
@@ -114,6 +117,13 @@ export function wrapCohortTransactionalEmailHtml(opts: {
           </td>
         </tr>
         <tr>
+          <td style="padding:12px 22px 16px;border-bottom:1px solid #e8e4de;background:#ffffff;text-align:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+            <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#1a1a1a;">${escapeHtml(
+              COHORT_EMAIL_BRAND_LINE,
+            )}</span>
+          </td>
+        </tr>
+        <tr>
           <td style="padding:26px 22px 8px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.65;color:#1a1a1a;">
 ${opts.innerHtml}
           </td>
@@ -121,7 +131,7 @@ ${opts.innerHtml}
         ${dashboardRow}
         <tr>
           <td style="padding:20px 22px 26px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;line-height:1.55;color:#4b5563;border-top:1px solid #eee;background:#fafaf9;">
-            <strong style="color:#1a1a1a;">DoNotAge × BioStackr</strong><br />
+            <strong style="color:#1a1a1a;">${escapeHtml(COHORT_EMAIL_BRAND_LINE)}</strong><br />
             Running a real-world customer outcomes study.<br />
             Your data stays private and is only used in anonymised analysis.
           </td>
