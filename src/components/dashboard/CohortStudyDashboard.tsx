@@ -660,6 +660,19 @@ export default function CohortStudyDashboard({
                 Your personal results are being prepared. When they are ready, they will appear on your dashboard and
                 we will email you.
               </p>
+              <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-5 sm:px-5">
+                <h3 className="text-base font-semibold text-gray-900">Your rewards</h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                  You&apos;ve unlocked:
+                </p>
+                <ul className="mt-2 list-disc pl-5 text-[15px] leading-relaxed text-gray-800 space-y-1">
+                  <li>3 months of BioStackr Pro</li>
+                  <li>A 3-month supply of SureSleep</li>
+                </ul>
+                <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
+                  We&apos;ll send full details with your results.
+                </p>
+              </div>
               {cohortParticipantResultPublished ? (
                 <Link
                   href={cohortParticipantResultPath()}

@@ -52,8 +52,10 @@ export async function sendCohortResultReadyEmail(params: {
     `<a href="${escapeHtml(resultHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">View your results →</a>` +
     `</p>`
 
-  const rewardsHeading =
-    `<p style="margin:0;padding-top:20px;border-top:1px solid #e8e4de;font-size:13px;font-weight:600;color:#1a1a1a;">Your rewards</p>`
+  const rewardsSectionOpen =
+    `<div style="margin:32px 0 0;padding:24px 20px 20px;border-top:2px solid #e5e7eb;background:#f8fafc;border-radius:0 0 8px 8px;">` +
+    `<p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#C84B2F;text-transform:uppercase;letter-spacing:0.08em;">Study rewards</p>` +
+    `<p style="margin:0 0 18px;font-size:18px;font-weight:700;color:#111827;line-height:1.25;">Your rewards</p>`
 
   const bioBlock = proAlready
     ? `<div style="margin:20px 0 0;">` +
@@ -75,13 +77,15 @@ export async function sendCohortResultReadyEmail(params: {
         `</div>`
 
   const sureBlock =
-    `<div style="margin:28px 0 0;padding-top:22px;border-top:1px solid #eee;">` +
+    `<div style="margin:24px 0 0;padding:18px 0 0;border-top:1px solid #e2e8f0;">` +
     `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">DoNotAge SureSleep</p>` +
     `<p style="margin:0;color:#374151;font-size:15px;line-height:1.6;">You&apos;ll receive a 3-month supply of SureSleep.</p>` +
-    `<p style="margin:12px 0 0;color:#374151;font-size:15px;line-height:1.6;">We&apos;ll ship it to the address you provided during signup.</p>` +
+    `<p style="margin:12px 0 0;color:#374151;font-size:15px;line-height:1.6;">We&apos;ll ship it to the address you provided during signup. No action needed in the app — watch for delivery updates by email.</p>` +
     `</div>`
 
-  const innerHtml = intro + resultsCta + rewardsHeading + bioBlock + sureBlock
+  const rewardsSectionClose = `</div>`
+
+  const innerHtml = intro + resultsCta + rewardsSectionOpen + bioBlock + sureBlock + rewardsSectionClose
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,

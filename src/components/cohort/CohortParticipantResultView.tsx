@@ -162,7 +162,7 @@ export default function CohortParticipantResultView({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3 pb-1">
         <button
           type="button"
           onClick={handleDownloadPdf}
@@ -225,12 +225,15 @@ export default function CohortParticipantResultView({
 
       {rewards ? (
         <section
-          className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm text-slate-900"
+          className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8 shadow-sm text-slate-900 ring-1 ring-slate-200/60"
           aria-label="Your rewards"
         >
-          <h2 className="text-lg font-semibold text-slate-900">Your rewards</h2>
+          <header className="border-b border-slate-200/90 pb-5 sm:pb-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#C84B2F]">Study rewards</p>
+            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your rewards</h2>
+          </header>
 
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">BioStackr Pro</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
               You&apos;ve unlocked 3 months of BioStackr Pro.
@@ -251,7 +254,7 @@ export default function CohortParticipantResultView({
             )}
           </div>
 
-          <div className="mt-10 pt-10 border-t border-slate-100">
+          <div className="mt-5 sm:mt-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">DoNotAge SureSleep</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
               You&apos;ll receive a 3-month supply of SureSleep.
