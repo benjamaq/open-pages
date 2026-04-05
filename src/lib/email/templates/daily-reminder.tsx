@@ -1,4 +1,8 @@
-import { COHORT_EMAIL_CTA_LINK_ATTRS } from '@/lib/cohortTransactionalEmailHtml'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import {
+  COHORT_EMAIL_CTA_LINK_ATTRS,
+  wrapCohortTransactionalEmailHtml,
+} from '@/lib/cohortTransactionalEmailHtml'
 
 export type DailyReminderEmailParams = {
   firstName: string
@@ -14,65 +18,42 @@ export type DailyReminderEmailParams = {
   mood?: number
 }
 
-function esc(s: any): string {
+function esc(s: unknown): string {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 }
 
-export function renderDailyReminderEmail(params: DailyReminderEmailParams): string {
+/** Inner body only (no shell) — for tests or custom wrappers. */
+export function renderDailyReminderInnerHtml(params: DailyReminderEmailParams): string {
   const { firstName, checkinUrl, linkHint } = params
   const hintBlock =
     linkHint != null && String(linkHint).trim() !== ''
       ? `<div style="font-size:12px;color:#6b7280;line-height:1.45;margin-top:12px;">${esc(linkHint)}</div>`
       : ''
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick check-in</title>
-</head>
-<body style="margin:0; padding:0; background-color:#f5f5f0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f5f0;">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:500px; background-color:#ffffff; border-radius:12px;">
-          <tr>
-            <td style="padding: 40px; text-align:left;">
-              
-              <div style="font-size:18px; font-weight:600; color:#1a1a1a; margin-bottom:14px;">
-                Hey ${esc(firstName || 'there')},
-              </div>
-              
-              <div style="font-size:16px; color:#1a1a1a; line-height:1.6; margin-bottom:22px;">
-                Time for your daily check-in. Three sliders, ten seconds.
-              </div>
-              
-              <div style="margin-bottom:24px;">
-                <a href="${esc(checkinUrl)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block; background:#3A2F2A; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:14px;">Check In Now</a>
-                ${hintBlock}
-              </div>
-
-              <div style="font-size:14px; color:#374151; line-height:1.6; margin-bottom:18px;">
-                Missed yesterday? No problem. Just pick up today. A few missed days won't affect your results.
-              </div>
-              
-              <div style="font-size:14px; color:#1a1a1a;">
-                — BioStackr
-              </div>
-              
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim()
+  return (
+    `<p style="margin:0 0 16px;font-size:18px;font-weight:600;color:#1a1a1a;">Hey ${esc(firstName || 'there')},</p>` +
+    `<p style="margin:0 0 22px;font-size:16px;color:#1a1a1a;line-height:1.65;">Time for your daily check-in. Three sliders, ten seconds.</p>` +
+    `<p style="margin:0 0 24px;">` +
+    `<a href="${esc(checkinUrl)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;">Check In Now</a>` +
+    hintBlock +
+    `</p>` +
+    `<p style="margin:0 0 18px;font-size:14px;color:#374151;line-height:1.6;">Missed yesterday? No problem. Just pick up today. A few missed days won't affect your results.</p>` +
+    `<p style="margin:0;font-size:14px;color:#1a1a1a;">— BioStackr</p>`
+  )
 }
 
+/** Full HTML: shared cohort transactional shell (dual logos, DoNotAge × BioStackr) + daily reminder body. */
+export function renderDailyReminderEmail(params: DailyReminderEmailParams): string {
+  const innerHtml = renderDailyReminderInnerHtml(params)
+  const appBase = cohortEmailPublicOrigin()
+  const dashboardHref = String(params.checkinUrl || '').trim() || `${appBase.replace(/\/$/, '')}/check-in`
+  return wrapCohortTransactionalEmailHtml({
+    appBase,
+    innerHtml,
+    dashboardHref,
+    omitDashboardRow: true,
+  })
+}
