@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRef, useState } from 'react'
 
 export type CohortParticipantResultPayload = {
@@ -8,6 +9,12 @@ export type CohortParticipantResultPayload = {
   published_at: string
   product_name: string | null
   brand_name: string | null
+}
+
+export type CohortParticipantResultRewards = {
+  pro_claimed: boolean
+  pro_claim_token: string | null
+  pro_has_claim_row: boolean
 }
 
 function stringField(j: Record<string, unknown>, key: string): string | null {
@@ -93,8 +100,10 @@ function parseResultSections(
  */
 export default function CohortParticipantResultView({
   payload,
+  rewards,
 }: {
   payload: CohortParticipantResultPayload
+  rewards?: CohortParticipantResultRewards | null
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [downloading, setDownloading] = useState(false)
@@ -213,6 +222,46 @@ export default function CohortParticipantResultView({
           </p>
         )}
       </div>
+
+      {rewards ? (
+        <section
+          className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm text-slate-900"
+          aria-label="Your rewards"
+        >
+          <h2 className="text-lg font-semibold text-slate-900">Your rewards</h2>
+
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">BioStackr Pro</h3>
+            <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
+              You&apos;ve unlocked 3 months of BioStackr Pro.
+            </p>
+            {rewards.pro_claimed ? (
+              <p className="mt-4 text-sm text-slate-600">Your Pro access is already active on this account.</p>
+            ) : rewards.pro_claim_token ? (
+              <Link
+                href={`/claim?token=${encodeURIComponent(rewards.pro_claim_token)}`}
+                className="mt-4 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95"
+              >
+                Claim your Pro access
+              </Link>
+            ) : (
+              <p className="mt-4 text-sm text-slate-600">
+                Your claim link is in your study emails, or refresh this page if you just finished claiming.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-10 pt-10 border-t border-slate-100">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">DoNotAge SureSleep</h3>
+            <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
+              You&apos;ll receive a 3-month supply of SureSleep.
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-slate-700">
+              We&apos;ll ship it to the address you provided during signup.
+            </p>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

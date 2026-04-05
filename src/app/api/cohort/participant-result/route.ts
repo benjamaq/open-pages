@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export async function GET() {
 
     const { data: prof, error: pErr } = await supabaseAdmin
       .from('profiles')
-      .select('cohort_id')
+      .select('id, cohort_id')
       .eq('user_id', user.id)
       .maybeSingle()
     if (pErr) {
@@ -80,12 +81,53 @@ export async function GET() {
         ? String((cdef as { brand_name: string }).brand_name).trim()
         : null
 
+    const profileId =
+      prof && typeof (prof as { id?: unknown }).id === 'string'
+        ? String((prof as { id: string }).id).trim()
+        : ''
+    const cpUserIds = cohortParticipantUserIdCandidatesSync(profileId, user.id)
+
+    let pro_reward: {
+      has_row: boolean
+      claimed: boolean
+      claim_token: string | null
+    } = { has_row: false, claimed: false, claim_token: null }
+
+    const { data: cpRow } = await supabaseAdmin
+      .from('cohort_participants')
+      .select('id')
+      .eq('cohort_id', cohortUuid)
+      .in('user_id', cpUserIds)
+      .maybeSingle()
+
+    const cpId = (cpRow as { id?: string } | null)?.id
+    if (cpId) {
+      const { data: claimRow } = await supabaseAdmin
+        .from('cohort_reward_claims')
+        .select('token, claimed_at')
+        .eq('cohort_participant_id', cpId)
+        .maybeSingle()
+      const cl = claimRow as { token?: string; claimed_at?: string | null } | null
+      if (cl) {
+        const claimed = cl.claimed_at != null && String(cl.claimed_at).trim() !== ''
+        pro_reward = {
+          has_row: true,
+          claimed,
+          claim_token:
+            !claimed && cl.token != null && String(cl.token).trim() !== ''
+              ? String(cl.token).trim()
+              : null,
+        }
+      }
+    }
+
     return NextResponse.json({
       result_json: (row as { result_json: unknown }).result_json,
       result_version: (row as { result_version: number }).result_version,
       published_at: publishedAt,
       product_name: productName,
       brand_name: brandName,
+      pro_reward,
     })
   } catch (e: unknown) {
     console.error('[participant-result]', e)

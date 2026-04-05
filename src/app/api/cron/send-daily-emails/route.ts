@@ -307,6 +307,32 @@ async function handler(req: NextRequest) {
               after: scopedProfiles.length,
             })
           }
+
+          const { data: studyDoneRows, error: sdErr } = await supabaseAdmin
+            .from('cohort_participants')
+            .select('user_id')
+            .not('study_completed_at', 'is', null)
+            .in('user_id', [...cpUserIdKeys])
+          if (sdErr) {
+            console.warn('[daily-cron] cohort study-completed skip lookup:', sdErr.message)
+          } else {
+            const completedCpUserIds = new Set(
+              ((studyDoneRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
+            )
+            const beforeDone = scopedProfiles.length
+            scopedProfiles = scopedProfiles.filter((p) => {
+              if (!p.profile_id) return true
+              const pid = String(p.profile_id)
+              const uid = String((p as { user_id?: string }).user_id || '')
+              if (completedCpUserIds.has(pid) || (uid && completedCpUserIds.has(uid))) return false
+              return true
+            })
+            // eslint-disable-next-line no-console
+            console.log('[daily-cron] Cohort study completed filter:', {
+              before: beforeDone,
+              after: scopedProfiles.length,
+            })
+          }
         }
       } catch (e) {
         console.warn('[daily-cron] cohort awaiting filter skipped:', (e as any)?.message)

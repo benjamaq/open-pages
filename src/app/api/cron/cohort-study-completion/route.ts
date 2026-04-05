@@ -8,6 +8,8 @@ import {
   authUserIdFromCohortParticipantProfileMap,
 } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { ensureCohortRewardClaimToken } from '@/lib/cohortRewardClaimDb'
+import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 
 export const dynamic = 'force-dynamic'
 
@@ -119,6 +121,14 @@ async function processCompletionPass(dry: boolean) {
     if (!updated) continue
     completed++
 
+    const rewardToken = await ensureCohortRewardClaimToken(String(updated.id))
+    const rewardClaimAbsoluteUrl = rewardToken
+      ? `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
+      : null
+    if (!rewardToken) {
+      console.warn('[cohort-study-completion] no reward claim token for participant', updated.id)
+    }
+
     if (updated.completion_email_sent_at) continue
 
     const authId = authUserIdFromCohortParticipantProfileMap(row.user_id, profMap)
@@ -142,6 +152,7 @@ async function processCompletionPass(dry: boolean) {
       authUserId: authId,
       productName,
       partnerBrandName: cdef?.brand_name ?? null,
+      rewardClaimAbsoluteUrl,
     })
     if (!send.success) {
       errors.push(`${row.id} email: ${send.error || 'send failed'}`)
@@ -221,11 +232,27 @@ async function processResultReadyEmails(dry: boolean) {
         ? String(cMeta.product_name).trim()
         : null) || 'your study'
 
+    let rewardClaimAbsoluteUrl: string | null = null
+    let proRewardAlreadyClaimed = false
+    const { data: claimRow } = await supabaseAdmin
+      .from('cohort_reward_claims')
+      .select('token, claimed_at')
+      .eq('cohort_participant_id', (cp as { id: string }).id)
+      .maybeSingle()
+    const cr = claimRow as { token?: string; claimed_at?: string | null } | null
+    if (cr?.claimed_at) {
+      proRewardAlreadyClaimed = true
+    } else if (cr?.token && String(cr.token).trim() !== '') {
+      rewardClaimAbsoluteUrl = `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(String(cr.token).trim())}`
+    }
+
     const mail = await sendCohortResultReadyEmail({
       to: email,
       authUserId: r.user_id,
       productName,
       partnerBrandName: cMeta?.brand_name ?? null,
+      rewardClaimAbsoluteUrl,
+      proRewardAlreadyClaimed,
     })
     if (!mail.success) {
       errors.push(`result ${r.cohort_id}/${r.user_id}: ${mail.error}`)

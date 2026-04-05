@@ -2,7 +2,7 @@
 
 import CohortParticipantResultView from '@/components/cohort/CohortParticipantResultView'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type ApiOk = {
   result_json: Record<string, unknown>
@@ -10,6 +10,11 @@ type ApiOk = {
   published_at: string
   product_name: string | null
   brand_name: string | null
+  pro_reward?: {
+    has_row: boolean
+    claimed: boolean
+    claim_token: string | null
+  }
 }
 
 /** API usually returns JSON object; normalize if `result_json` is ever double-encoded as a string. */
@@ -35,41 +40,76 @@ export default function CohortResultPageClient() {
   const [payload, setPayload] = useState<ApiOk | null>(null)
   const [errMsg, setErrMsg] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch('/api/cohort/participant-result', { credentials: 'include', cache: 'no-store' })
-        const j = (await res.json().catch(() => ({}))) as ApiOk & { error?: string }
-        if (cancelled) return
-        if (res.status === 404) {
-          setState('not_ready')
-          return
-        }
-        if (!res.ok) {
-          setState('error')
-          setErrMsg(String((j as { error?: string }).error || 'Could not load results'))
-          return
-        }
-        setPayload({
-          result_json: normalizeResultJson(j.result_json),
-          result_version: typeof j.result_version === 'number' ? j.result_version : 1,
-          published_at: String(j.published_at || ''),
-          product_name: j.product_name ?? null,
-          brand_name: j.brand_name ?? null,
-        })
-        setState('ready')
-      } catch {
-        if (!cancelled) {
-          setState('error')
-          setErrMsg('Could not load results')
-        }
+  const loadResult = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cohort/participant-result', { credentials: 'include', cache: 'no-store' })
+      const j = (await res.json().catch(() => ({}))) as ApiOk & { error?: string }
+      if (res.status === 404) {
+        setState('not_ready')
+        setPayload(null)
+        return
       }
-    })()
-    return () => {
-      cancelled = true
+      if (!res.ok) {
+        setState('error')
+        setErrMsg(String((j as { error?: string }).error || 'Could not load results'))
+        setPayload(null)
+        return
+      }
+      setPayload({
+        result_json: normalizeResultJson(j.result_json),
+        result_version: typeof j.result_version === 'number' ? j.result_version : 1,
+        published_at: String(j.published_at || ''),
+        product_name: j.product_name ?? null,
+        brand_name: j.brand_name ?? null,
+        pro_reward: j.pro_reward,
+      })
+      setState('ready')
+      setErrMsg(null)
+    } catch {
+      setState('error')
+      setErrMsg('Could not load results')
+      setPayload(null)
     }
   }, [])
+
+  useEffect(() => {
+    void loadResult()
+  }, [loadResult])
+
+  useEffect(() => {
+    const onRefresh = () => {
+      void loadResult()
+    }
+    try {
+      window.addEventListener('dashboard:refresh', onRefresh)
+    } catch {
+      /* ignore */
+    }
+    const onVis = () => {
+      try {
+        if (document.visibilityState === 'visible') void loadResult()
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      document.addEventListener('visibilitychange', onVis)
+    } catch {
+      /* ignore */
+    }
+    return () => {
+      try {
+        window.removeEventListener('dashboard:refresh', onRefresh)
+      } catch {
+        /* ignore */
+      }
+      try {
+        document.removeEventListener('visibilitychange', onVis)
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [loadResult])
 
   return (
     <div
@@ -128,6 +168,11 @@ export default function CohortResultPageClient() {
               published_at: payload.published_at,
               product_name: payload.product_name,
               brand_name: payload.brand_name,
+            }}
+            rewards={{
+              pro_claimed: Boolean(payload.pro_reward?.claimed),
+              pro_claim_token: payload.pro_reward?.claim_token ?? null,
+              pro_has_claim_row: Boolean(payload.pro_reward?.has_row),
             }}
           />
         ) : null}

@@ -367,7 +367,22 @@ function SignupInner() {
     }
     // Allow Meta pixel to flush before client-side navigation
     await new Promise(r => setTimeout(r, 500))
-    router.push('/onboarding')
+    const claimOrPostSignupRedirect = (() => {
+      try {
+        const r = params.get('redirect')
+        if (!r || typeof r !== 'string') return null
+        const t = r.trim()
+        if (!t.startsWith('/claim') || t.startsWith('//')) return null
+        return t
+      } catch {
+        return null
+      }
+    })()
+    if (claimOrPostSignupRedirect) {
+      router.push(claimOrPostSignupRedirect)
+    } else {
+      router.push('/onboarding')
+    }
   }
 
   return (
