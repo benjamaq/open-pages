@@ -192,9 +192,9 @@ export default function CohortCheckinLayout({
               <div style={{ color: '#639922', fontSize: '48px', lineHeight: 1 }} aria-hidden="true">
                 ✓
               </div>
-              <h3 className="mt-6 text-[20px] font-semibold text-gray-900">You&apos;re done for today.</h3>
+              <h3 className="mt-6 text-[20px] font-semibold text-gray-900">Done for today.</h3>
               <p className="mt-3 text-sm text-gray-500">Your check-in has been saved.</p>
-              <p className="mt-2 text-sm text-gray-500">See you tomorrow — keep going, every day counts.</p>
+              <p className="mt-3 text-sm text-gray-500">Come back tomorrow morning.</p>
               <button
                 type="button"
                 onClick={onClose}

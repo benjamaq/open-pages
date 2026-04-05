@@ -202,7 +202,7 @@ function ProductArrivedModal({
         {successView ? (
           <>
             <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
-              You&apos;re set
+              All set
             </h3>
             <p className="mt-3 text-sm text-gray-700 leading-relaxed">{successMsg}</p>
             <button
@@ -241,7 +241,7 @@ function ProductArrivedModal({
                 onClick={() =>
                   finishWithApi(
                     { productArrived: 'yesterday', tookProductLastNight: false },
-                    'No problem. Take it tonight and come back tomorrow morning.',
+                    'No problem. Take it tonight, then check in tomorrow morning.',
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
@@ -256,7 +256,7 @@ function ProductArrivedModal({
               When did you first take it?
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              We&apos;ll count your days from when you first took it so you don&apos;t lose any data.
+              Pick the first evening you took it. Your study days are counted from that date.
             </p>
             {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
             <div className="mt-4 grid gap-2">
@@ -278,7 +278,7 @@ function ProductArrivedModal({
             <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">
               When did your product arrive?
             </h3>
-            <p className="mt-2 text-sm text-gray-600">Optional — helps our records. Skip if you prefer.</p>
+            <p className="mt-2 text-sm text-gray-600">Optional. Skip if you prefer.</p>
             {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
             <div className="mt-4 grid gap-2">
               <button
@@ -287,7 +287,7 @@ function ProductArrivedModal({
                 onClick={() =>
                   finishWithApi(
                     { productArrived: 'today' },
-                    `Perfect. Take ${productName} tonight about 45 minutes before bed. Come back tomorrow morning for your first check-in.`,
+                    `Take ${productName} tonight, about 45 minutes before bed. Check in tomorrow morning.`,
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
@@ -600,8 +600,7 @@ export default function CohortStudyDashboard({
               <>
                 <h2 className="text-[26px] font-bold leading-snug text-gray-900">First night</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                  Perfect. Take {productName} tonight about 45 minutes before bed. Come back tomorrow morning for your first
-                  check-in.
+                  Take {productName} tonight, about 45 minutes before bed. Check in tomorrow morning.
                 </p>
               </>
             ) : (
@@ -611,8 +610,10 @@ export default function CohortStudyDashboard({
                   You&apos;re confirmed — your product will be shipped shortly.
                 </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                  When it arrives, come back here and start your study. Your 21-day study begins when you confirm your product
-                  has arrived—then complete your first check-in right away.
+                  Your 21-day study begins when you confirm your product has arrived.
+                </p>
+                <p className="mt-2 text-[15px] leading-relaxed text-gray-600">
+                  When it arrives, come back here and tap the button below, then complete your first check-in.
                 </p>
                 <button
                   type="button"
@@ -730,10 +731,7 @@ export default function CohortStudyDashboard({
               {currentDay === 1 ? (
                 <>
                   <p className="mt-2 text-sm font-semibold text-gray-900">First one&apos;s done.</p>
-                  <p className="mt-2 text-sm text-gray-700">
-                    Come back tomorrow morning after you wake up. Every check-in makes your results more meaningful — for you
-                    and for the study.
-                  </p>
+                  <p className="mt-2 text-sm text-gray-700">Come back tomorrow morning after you wake up.</p>
                 </>
               ) : (
                 <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
@@ -752,7 +750,7 @@ export default function CohortStudyDashboard({
                 <>
                   <div className="text-sm font-semibold text-amber-950">Day 1 — you&apos;re in.</div>
                   <p className="mt-2 text-sm text-gray-700">
-                    This is where it begins. A quick 30-second check-in each morning is all it takes. You&apos;ve got this.
+                    A quick morning check-in each day — about 30 seconds. You&apos;ve got this.
                   </p>
                 </>
               ) : (
