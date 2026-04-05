@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRef, useState } from 'react'
 
 export type CohortParticipantResultPayload = {
@@ -107,6 +106,9 @@ export default function CohortParticipantResultView({
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [downloading, setDownloading] = useState(false)
+  const [claimBusy, setClaimBusy] = useState(false)
+  const [claimErr, setClaimErr] = useState<string | null>(null)
+  const [claimedOnPage, setClaimedOnPage] = useState(false)
   const j = normalizeResultRecord(payload.result_json)
   const { verdictHeadline, bulletPoints, explanation, hasStructuredContent } = parseResultSections(
     j,
@@ -157,6 +159,44 @@ export default function CohortParticipantResultView({
       alert('PDF export failed. Please try again.')
     } finally {
       setDownloading(false)
+    }
+  }
+
+  const proClaimed = Boolean(rewards?.pro_claimed || claimedOnPage)
+
+  async function claimProOnThisAccount() {
+    const token = rewards?.pro_claim_token?.trim()
+    if (!token) return
+    setClaimErr(null)
+    setClaimBusy(true)
+    try {
+      const res = await fetch('/api/cohort/claim-reward', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string
+        ok?: boolean
+        already_claimed?: boolean
+      }
+      if (!res.ok) {
+        setClaimErr(String(j.error || 'Could not activate Pro'))
+        return
+      }
+      if (j.ok || j.already_claimed) {
+        setClaimedOnPage(true)
+        try {
+          window.dispatchEvent(new Event('dashboard:refresh'))
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch {
+      setClaimErr('Something went wrong.')
+    } finally {
+      setClaimBusy(false)
     }
   }
 
@@ -235,21 +275,26 @@ export default function CohortParticipantResultView({
 
           <div className="mt-6 sm:mt-8 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">BioStackr Pro</h3>
-            <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
-              You&apos;ve unlocked 3 months of BioStackr Pro.
-            </p>
-            {rewards.pro_claimed ? (
-              <p className="mt-4 text-sm text-slate-600">Your Pro access is already active on this account.</p>
+            {proClaimed ? (
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
+                Your Pro access is already active on this account.
+              </p>
             ) : rewards.pro_claim_token ? (
-              <Link
-                href={`/claim?token=${encodeURIComponent(rewards.pro_claim_token)}`}
-                className="mt-4 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95"
-              >
-                Claim your Pro access
-              </Link>
+              <>
+                <button
+                  type="button"
+                  disabled={claimBusy}
+                  onClick={() => void claimProOnThisAccount()}
+                  className="mt-4 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                >
+                  {claimBusy ? 'Activating…' : 'Claim your 3 months of BioStackr Pro'}
+                </button>
+                {claimErr ? <p className="mt-3 text-sm text-red-600">{claimErr}</p> : null}
+              </>
             ) : (
               <p className="mt-4 text-sm text-slate-600">
-                Your claim link is in your study emails, or refresh this page if you just finished claiming.
+                Your study reward will appear here when it is ready. Refresh the page in a moment, or contact support if
+                this persists.
               </p>
             )}
           </div>
@@ -257,10 +302,7 @@ export default function CohortParticipantResultView({
           <div className="mt-5 sm:mt-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">DoNotAge SureSleep</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
-              You&apos;ll receive a 3-month supply of SureSleep.
-            </p>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-700">
-              We&apos;ll ship it to the address you provided during signup.
+              Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
             </p>
           </div>
         </section>
