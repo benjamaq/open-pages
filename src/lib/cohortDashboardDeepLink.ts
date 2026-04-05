@@ -10,3 +10,8 @@ export function cohortDashboardStudyPath(): string {
 export function cohortDashboardStudyCheckinPath(): string {
   return `${cohortDashboardStudyPath()}&checkin=1`
 }
+
+/** Authenticated page: one participant’s cohort result only (RLS + API scoped). */
+export function cohortParticipantResultPath(): string {
+  return '/dashboard/cohort-result'
+}
