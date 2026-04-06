@@ -483,8 +483,8 @@ export async function GET(request: Request) {
       cleanDatesSet = new Set(Array.from(distinctCheckinDays))
     }
 
-    // Days with at least one subjective rating — excludes wearable-only / empty daily_entries shells
-    // that still occupy a calendar local_date (those were falsely marking B2C users "checked in").
+    // Days with a real user check-in — NOT wearable/CSV rows that only set sleep_quality (see
+    // upload/universal Apple Health / WHOOP paths). Those share local_date but never set energy/focus/mood.
     const explicitDailyCheckinDays = new Set<string>()
     try {
       for (const e of entries365 || []) {
@@ -492,24 +492,24 @@ export async function GET(request: Request) {
         if (!dKey) continue
         const energy = (e as any)?.energy
         const focus = (e as any)?.focus
-        const mood = (e as any)?.mood
-        const sleepQ = (e as any)?.sleep_quality
-        const sleep = (e as any)?.sleep
+        const moodRaw = (e as any)?.mood
         const mentalClarity = (e as any)?.mental_clarity
         const calmness = (e as any)?.calmness
         const onset = (e as any)?.sleep_onset_bucket
         const wakes = (e as any)?.night_wakes
-        const hasAnyRating =
-          typeof energy === 'number' ||
-          typeof focus === 'number' ||
-          typeof mood === 'number' ||
-          typeof sleepQ === 'number' ||
-          typeof sleep === 'number' ||
+        const hasB2cSliders =
+          typeof energy === 'number' && typeof focus === 'number'
+        const hasCohortStudyFields =
           typeof mentalClarity === 'number' ||
           typeof calmness === 'number' ||
           typeof onset === 'number' ||
           typeof wakes === 'number'
-        if (hasAnyRating) explicitDailyCheckinDays.add(dKey)
+        const hasMoodAnswer =
+          typeof moodRaw === 'number' ||
+          (typeof moodRaw === 'string' && moodRaw.trim() !== '')
+        if (hasB2cSliders || hasCohortStudyFields || hasMoodAnswer) {
+          explicitDailyCheckinDays.add(dKey)
+        }
       }
     } catch {}
 
