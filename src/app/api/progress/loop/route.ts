@@ -227,11 +227,19 @@ export async function GET(request: Request) {
               }
             }
           } catch {}
-          // `hasCheckedInToday` is per calendar day; cache must not serve a different `localToday` than the request.
+          // `hasCheckedInToday` is per calendar day. Never serve legacy payloads without `_computedForLocalToday`,
+          // and never serve a payload computed for a different `localToday` when the client sends one.
           let cacheStaleWrongLocalDay = false
-          if (clientTodayKey != null) {
-            const cachedFor = (cached as { payload?: { _computedForLocalToday?: string } })?.payload?._computedForLocalToday
-            if (cachedFor !== clientTodayKey) cacheStaleWrongLocalDay = true
+          let cacheStaleReason: 'missing_day_key' | 'local_today_mismatch' | null = null
+          const cachedForRaw = (cached as { payload?: { _computedForLocalToday?: string } })?.payload?._computedForLocalToday
+          const cachedFor = typeof cachedForRaw === 'string' ? cachedForRaw.trim() : ''
+          const cacheDayOk = /^\d{4}-\d{2}-\d{2}$/.test(cachedFor)
+          if (!cacheDayOk) {
+            cacheStaleWrongLocalDay = true
+            cacheStaleReason = 'missing_day_key'
+          } else if (clientTodayKey != null && cachedFor !== clientTodayKey) {
+            cacheStaleWrongLocalDay = true
+            cacheStaleReason = 'local_today_mismatch'
           }
           if (!cacheStaleDueToNewSupp && !cacheStaleWrongLocalDay) {
             if (dbg) {
@@ -248,10 +256,14 @@ export async function GET(request: Request) {
             })
           }
           try {
-            console.log(
-              'CACHE MISS',
-              cacheStaleDueToNewSupp ? '(new supplement added)' : cacheStaleWrongLocalDay ? '(localToday mismatch)' : '',
-            )
+            const why = cacheStaleDueToNewSupp
+              ? '(new supplement added)'
+              : cacheStaleReason === 'missing_day_key'
+                ? '(legacy cache, no _computedForLocalToday)'
+                : cacheStaleWrongLocalDay
+                  ? '(localToday mismatch)'
+                  : ''
+            console.log('CACHE MISS', why)
           } catch {}
         } else {
           try { console.log('CACHE MISS', { versionOk, cachedV, expectedV: DASHBOARD_CACHE_VERSION }) } catch {}
