@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRef, useState } from 'react'
 
 export type CohortParticipantResultPayload = {
@@ -200,8 +201,11 @@ export default function CohortParticipantResultView({
     }
   }
 
+  const showJustClaimedSuccess = Boolean(claimedOnPage)
+  const showAlreadyClaimedSteady = proClaimed && !claimedOnPage
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 sm:space-y-10 lg:space-y-12">
       <div className="flex flex-wrap items-center justify-end gap-3 pb-1">
         <button
           type="button"
@@ -265,43 +269,74 @@ export default function CohortParticipantResultView({
 
       {rewards ? (
         <section
-          className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8 shadow-sm text-slate-900 ring-1 ring-slate-200/60"
+          className="mt-20 sm:mt-28 lg:mt-32 rounded-3xl border border-slate-200/95 bg-gradient-to-b from-slate-200/35 via-slate-100 to-white px-5 py-9 sm:px-10 sm:py-12 text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-300/50"
           aria-label="Your rewards"
         >
-          <header className="border-b border-slate-200/90 pb-5 sm:pb-6">
+          <header className="max-w-2xl pb-9 sm:pb-11 border-b border-slate-200/85">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#C84B2F]">Study rewards</p>
-            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your rewards</h2>
+            <h2 className="mt-3 text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Your rewards</h2>
           </header>
 
-          <div className="mt-6 sm:mt-8 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">BioStackr Pro</h3>
-            {proClaimed ? (
-              <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
-                Your Pro access is already active on this account.
-              </p>
-            ) : rewards.pro_claim_token ? (
-              <>
-                <button
-                  type="button"
-                  disabled={claimBusy}
-                  onClick={() => void claimProOnThisAccount()}
-                  className="mt-4 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+          <div className="mt-9 sm:mt-11 rounded-2xl border border-slate-200/90 bg-white p-7 sm:p-9 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.08)] border-l-[4px] border-l-[#C84B2F]">
+            {showJustClaimedSuccess ? (
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                  Your reward has been applied
+                </h3>
+                <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
+                  You now have BioStackr Pro for 3 months on this account.
+                </p>
+                <p className="mt-5 text-[15px] font-semibold text-slate-900">You can now:</p>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-800">
+                  <li>Add supplements to your stack</li>
+                  <li>Track your results</li>
+                  <li>See what&apos;s actually working for you</li>
+                </ul>
+                <Link
+                  href="/dashboard"
+                  className="mt-8 inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
                 >
-                  {claimBusy ? 'Activating…' : 'Claim your 3 months of BioStackr Pro'}
-                </button>
-                {claimErr ? <p className="mt-3 text-sm text-red-600">{claimErr}</p> : null}
-              </>
+                  Go to your dashboard
+                </Link>
+              </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-600">
-                Your study reward will appear here when it is ready. Refresh the page in a moment, or contact support if
-                this persists.
-              </p>
+              <>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">BioStackr Pro</h3>
+                {showAlreadyClaimedSteady ? (
+                  <div className="mt-5 space-y-3 text-[15px] leading-relaxed text-slate-800">
+                    <p>Your BioStackr Pro access is now active.</p>
+                    <p>You can start using Pro features immediately.</p>
+                  </div>
+                ) : rewards.pro_claim_token ? (
+                  <>
+                    <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
+                      You&apos;ve unlocked 3 months of BioStackr Pro.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={claimBusy}
+                      onClick={() => void claimProOnThisAccount()}
+                      className="mt-5 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                    >
+                      {claimBusy ? 'Activating…' : 'Claim your Pro access'}
+                    </button>
+                    {claimErr ? <p className="mt-3 text-sm text-red-600">{claimErr}</p> : null}
+                  </>
+                ) : (
+                  <p className="mt-5 text-sm text-slate-600">
+                    Your reward details will appear here when they are ready. Try refreshing the page, or contact support
+                    if this continues.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
-          <div className="mt-5 sm:mt-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">DoNotAge SureSleep</h3>
-            <p className="mt-3 text-[15px] leading-relaxed text-slate-800">
+          <div className="mt-5 sm:mt-6 rounded-xl border border-dashed border-slate-300/80 bg-slate-50/95 px-4 py-4 sm:px-5 sm:py-5">
+            <h3 className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+              DoNotAge SureSleep
+            </h3>
+            <p className="mt-2 text-[13px] sm:text-sm leading-relaxed text-slate-600">
               Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
             </p>
           </div>

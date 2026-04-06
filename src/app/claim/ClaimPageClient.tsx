@@ -112,7 +112,7 @@ export default function ClaimPageClient() {
         <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
           <h1 className="text-lg font-semibold text-slate-900">Missing link</h1>
           <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-            Use the claim link from your study completion email (it includes a token in the URL).
+            Use a valid claim link, or open your results page while signed in with your study account.
           </p>
           <Link
             href={cohortDashboardStudyPath()}
@@ -139,8 +139,8 @@ export default function ClaimPageClient() {
         <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
           <h1 className="text-lg font-semibold text-slate-900">Link not valid</h1>
           <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-            This reward link is invalid or expired. If you finished your study recently, check your email for the latest
-            link or contact support.
+            This reward link isn&apos;t valid anymore. Try opening your results while signed in, or contact support if
+            you need help.
           </p>
           <Link href="/dashboard" className="mt-6 inline-block text-sm font-semibold text-[#C84B2F] underline">
             Go to your dashboard
@@ -235,7 +235,7 @@ export default function ClaimPageClient() {
           onClick={() => void onClaim()}
           className="mt-8 w-full rounded-xl bg-[#C84B2F] px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
         >
-          {busy ? 'Claiming…' : 'Claim reward'}
+          {busy ? 'Activating…' : 'Claim your Pro access'}
         </button>
       </div>
     </div>

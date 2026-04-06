@@ -670,7 +670,7 @@ export default function CohortStudyDashboard({
                   <li>A 3-month supply of SureSleep</li>
                 </ul>
                 <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
-                  We&apos;ll send full details with your results.
+                  You&apos;ll receive full details with your results.
                 </p>
               </div>
               {cohortParticipantResultPublished ? (
