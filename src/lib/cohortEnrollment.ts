@@ -70,6 +70,52 @@ async function resolveHandoffCheckinIgnoreLocalDate(
   return clientYmd
 }
 
+async function listProfileIdsForUser(userId: string): Promise<string[]> {
+  const uid = String(userId || '').trim()
+  if (!uid) return []
+  const { data: rows } = await supabaseAdmin.from('profiles').select('id').eq('user_id', uid)
+  return (rows || [])
+    .map((r) => String((r as { id?: string }).id || '').trim())
+    .filter(Boolean)
+}
+
+/**
+ * Same tie-break as /api/progress/loop: profile with the most stack_items
+ * (profiles ordered newest first; keeps first among ties).
+ */
+export async function pickPrimaryProfileIdByStackCount(userId: string): Promise<string | null> {
+  const uid = String(userId || '').trim()
+  if (!uid) return null
+  const { data: rows } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('user_id', uid)
+    .order('created_at', { ascending: false })
+  const ids = (rows || [])
+    .map((r) => String((r as { id?: string }).id || '').trim())
+    .filter(Boolean)
+  if (ids.length === 0) return null
+  if (ids.length === 1) return ids[0]
+  let best = ids[0]
+  let bestCount = -1
+  for (const id of ids) {
+    try {
+      const { count } = await supabaseAdmin
+        .from('stack_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', id)
+      const c = Number(count || 0)
+      if (c > bestCount) {
+        bestCount = c
+        best = id
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return best
+}
+
 export type CohortHandoffRepairParams = {
   profileId: string
   userId: string
@@ -81,11 +127,10 @@ export type CohortHandoffRepairParams = {
 export async function needsCohortStudyStackRepair(
   params: CohortHandoffRepairParams,
 ): Promise<boolean> {
-  const profileId = String(params.profileId || '').trim()
   const userId = String(params.userId || '').trim()
   let productName = String(params.productName || '').trim()
   const cohortSlug = String(params.cohortSlug || '').trim().toLowerCase()
-  if (!profileId || !userId || !cohortSlug) return false
+  if (!userId || !cohortSlug) return false
   try {
     if (!productName) {
       const { data: cohort } = await supabaseAdmin
@@ -99,10 +144,13 @@ export async function needsCohortStudyStackRepair(
     }
     if (!productName) return false
 
+    const profileIds = await listProfileIdsForUser(userId)
+    if (profileIds.length === 0) return false
+
     const { data: stacks } = await supabaseAdmin
       .from('stack_items')
       .select('id,name,user_supplement_id')
-      .eq('profile_id', profileId)
+      .in('profile_id', profileIds)
     const { data: supps } = await supabaseAdmin
       .from('user_supplement')
       .select('id,name,is_active')
@@ -297,12 +345,12 @@ export async function runCohortMainProductHandoffCleanup(params: {
   productName: string
   clientTodayYmd: string
 }): Promise<void> {
-  const profileId = String(params.profileId || '').trim()
+  const primaryProfileId = String(params.profileId || '').trim()
   const userId = String(params.userId || '').trim()
   const slug = String(params.cohortSlug || '').trim().toLowerCase()
   let productName = String(params.productName || '').trim()
   const clientYmd = String(params.clientTodayYmd || '').trim()
-  if (!profileId || !userId || !slug || !clientYmd || !/^\d{4}-\d{2}-\d{2}$/.test(clientYmd)) {
+  if (!userId || !slug || !clientYmd || !/^\d{4}-\d{2}-\d{2}$/.test(clientYmd)) {
     return
   }
   try {
@@ -332,20 +380,27 @@ export async function runCohortMainProductHandoffCleanup(params: {
       }
     }
 
-    const { data: stacks } = await supabaseAdmin
-      .from('stack_items')
-      .select('id,name,user_supplement_id')
-      .eq('profile_id', profileId)
-    for (const row of stacks || []) {
-      const sid = String((row as { id?: string }).id || '')
-      if (!sid) continue
-      const nm = String((row as { name?: string }).name || '')
-      const usid = (row as { user_supplement_id?: string | null }).user_supplement_id
-      const usKey = usid ? String(usid) : ''
-      const hitName = displayNameMatchesCohortStudyProduct(nm, productName, slug)
-      const hitUs = usKey && matchingUsIds.has(usKey)
-      if (!hitName && !hitUs) continue
-      await supabaseAdmin.from('stack_items').delete().eq('id', sid)
+    const profileIdsForUser = [
+      ...new Set(
+        [...(await listProfileIdsForUser(userId)), primaryProfileId].filter(Boolean),
+      ),
+    ]
+    for (const pid of profileIdsForUser) {
+      const { data: stacks } = await supabaseAdmin
+        .from('stack_items')
+        .select('id,name,user_supplement_id')
+        .eq('profile_id', pid)
+      for (const row of stacks || []) {
+        const sid = String((row as { id?: string }).id || '')
+        if (!sid) continue
+        const nm = String((row as { name?: string }).name || '')
+        const usid = (row as { user_supplement_id?: string | null }).user_supplement_id
+        const usKey = usid ? String(usid) : ''
+        const hitName = displayNameMatchesCohortStudyProduct(nm, productName, slug)
+        const hitUs = usKey && matchingUsIds.has(usKey)
+        if (!hitName && !hitUs) continue
+        await supabaseAdmin.from('stack_items').delete().eq('id', sid)
+      }
     }
 
     for (const id of matchingUsIds) {
@@ -361,13 +416,14 @@ export async function runCohortMainProductHandoffCleanup(params: {
       }
     }
 
-    await supabaseAdmin
-      .from('profiles')
-      .update({
-        cohort_study_stack_cleaned_at: new Date().toISOString(),
-        cohort_handoff_checkin_ignore_local_date: ignoreYmd,
-      } as Record<string, unknown>)
-      .eq('id', profileId)
+    const cleanedAt = new Date().toISOString()
+    const profilePatch = {
+      cohort_study_stack_cleaned_at: cleanedAt,
+      cohort_handoff_checkin_ignore_local_date: ignoreYmd,
+    } as Record<string, unknown>
+    for (const pid of profileIdsForUser) {
+      await supabaseAdmin.from('profiles').update(profilePatch).eq('id', pid)
+    }
   } catch (e) {
     console.error('[cohortEnrollment] runCohortMainProductHandoffCleanup:', e)
   }

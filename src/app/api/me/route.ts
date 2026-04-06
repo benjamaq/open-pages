@@ -12,6 +12,7 @@ import {
 import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
 import {
   needsCohortStudyStackRepair,
+  pickPrimaryProfileIdByStackCount,
   runCohortMainProductHandoffCleanup,
 } from "@/lib/cohortEnrollment";
 
@@ -205,6 +206,13 @@ export async function GET(request: Request) {
             if (rawId != null && String(rawId).trim() !== "") {
               profileId = String(rawId).trim();
             }
+          }
+
+          // Align with /api/progress/loop: cohort stack + handoff cleanup must target the same profile
+          // when duplicate profile rows exist (maybeSingle() is ambiguous or fails).
+          if (cohortId && userId) {
+            const picked = await pickPrimaryProfileIdByStackCount(userId as string);
+            if (picked) profileId = picked;
           }
 
           if (cohortId && profileId) {
@@ -522,13 +530,27 @@ export async function GET(request: Request) {
                     showCohortStudyDashboard = false;
                   }
 
-                  const cohortStackAlreadyCleaned = Boolean(
-                    (
-                      pAdmin as {
-                        cohort_study_stack_cleaned_at?: string | null;
-                      } | null
-                    )?.cohort_study_stack_cleaned_at,
-                  );
+                  let cohortStackAlreadyCleaned = false;
+                  try {
+                    const { data: cleanProfRows } = await supabaseAdmin
+                      .from("profiles")
+                      .select("cohort_study_stack_cleaned_at")
+                      .eq("user_id", userId as string);
+                    cohortStackAlreadyCleaned = Boolean(
+                      (cleanProfRows || []).some(
+                        (r: { cohort_study_stack_cleaned_at?: string | null }) =>
+                          r.cohort_study_stack_cleaned_at,
+                      ),
+                    );
+                  } catch {
+                    cohortStackAlreadyCleaned = Boolean(
+                      (
+                        pAdmin as {
+                          cohort_study_stack_cleaned_at?: string | null;
+                        } | null
+                      )?.cohort_study_stack_cleaned_at,
+                    );
+                  }
                   let cohortHandoffNeedsRepair = false;
                   if (
                     cohortStackAlreadyCleaned &&

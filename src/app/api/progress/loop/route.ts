@@ -2531,10 +2531,16 @@ export async function GET(request: Request) {
         if (st === 'inactive' || st === 'paused') return false
         return true
       }).map((r: any) => ({ id: String(r.id), name: String(r.name || 'Supplement') }))
+      const daysLeft = Math.max(0, baselineDaysNeeded - totalDistinctDays)
+      const postCohortHandoff = Boolean(
+        (profile as { cohort_study_stack_cleaned_at?: string | null } | null)?.cohort_study_stack_cleaned_at,
+      )
       rotation.action = {
         headline: "TODAY'S ACTION",
         primary: 'Take your supplements as normal.',
-        note: `We\'re establishing your baseline. Rotation starts in ${Math.max(0, baselineDaysNeeded - totalDistinctDays)} day(s).`,
+        note: postCohortHandoff
+          ? `Ease into your BioStackr Pro routine. Rotation starts in ${daysLeft} day(s).`
+          : `We\'re establishing your baseline. Rotation starts in ${daysLeft} day(s).`,
         take: takeAllActive,
       }
     } else if (groupEntries.length > 0) {
