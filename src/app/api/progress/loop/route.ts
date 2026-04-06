@@ -11,9 +11,10 @@ import {
   dailyEntryHasCohortStudyCheckinFields,
   dailyEntryIsExplicitUserCheckin,
 } from '@/lib/explicitDailyCheckin'
+import { displayNameMatchesCohortStudyProduct } from '@/lib/cohortEnrollment'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
-const DASHBOARD_CACHE_VERSION = 1
+const DASHBOARD_CACHE_VERSION = 2
 
   type SupplementProgress = {
   id: string
@@ -150,6 +151,29 @@ export async function GET(request: Request) {
           .maybeSingle()
         if (adminProfile) profileId = (adminProfile as any).id
       } catch {}
+    }
+
+    if (profileId) {
+      const { data: profTruth } = await supabaseAdmin
+        .from('profiles')
+        .select(
+          'cohort_handoff_checkin_ignore_local_date,cohort_study_stack_cleaned_at,cohort_id',
+        )
+        .eq('id', profileId)
+        .maybeSingle()
+      if (profTruth && profile) {
+        const t = profTruth as {
+          cohort_handoff_checkin_ignore_local_date?: string | null
+          cohort_study_stack_cleaned_at?: string | null
+          cohort_id?: string | null
+        }
+        profile = {
+          ...profile,
+          cohort_handoff_checkin_ignore_local_date: t.cohort_handoff_checkin_ignore_local_date ?? null,
+          cohort_study_stack_cleaned_at: t.cohort_study_stack_cleaned_at ?? null,
+          cohort_id: t.cohort_id ?? (profile as { cohort_id?: string | null }).cohort_id ?? null,
+        }
+      }
     }
 
     if (dbg) {
@@ -351,6 +375,40 @@ export async function GET(request: Request) {
         try { debugTrace.steps.push({ step: 'fallback_user_supplement', count: (items || []).length }) } catch {}
       }
     }
+
+    try {
+      const handoffCleaned = Boolean(
+        (profile as { cohort_study_stack_cleaned_at?: string | null } | null)?.cohort_study_stack_cleaned_at,
+      )
+      const cohortSlug = String(
+        (profile as { cohort_id?: string | null } | null)?.cohort_id || '',
+      ).trim()
+      if (handoffCleaned && cohortSlug && items && items.length > 0) {
+        const { data: cMeta } = await supabaseAdmin
+          .from('cohorts')
+          .select('product_name')
+          .eq('slug', cohortSlug)
+          .maybeSingle()
+        const pn = String(
+          (cMeta as { product_name?: string | null } | null)?.product_name || '',
+        ).trim()
+        if (pn) {
+          const before = (items || []).length
+          items = (items || []).filter((it: any) => {
+            const nm = String(it?.name || '')
+            return !displayNameMatchesCohortStudyProduct(nm, pn, cohortSlug)
+          })
+          if (VERBOSE && before !== (items || []).length) {
+            try {
+              console.log('[progress/loop] handoff filter removed cohort-shaped items', {
+                before,
+                after: (items || []).length,
+              })
+            } catch {}
+          }
+        }
+      }
+    } catch {}
 
     // Debug: show exactly what items the dashboard is building cards from.
     // This is the fastest way to catch "missing supplement" issues (Issue 1).

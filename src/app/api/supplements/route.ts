@@ -5,6 +5,7 @@ import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { isProActive } from '@/lib/entitlements/pro'
 import { HEALTH_PRIORITIES } from '@/lib/types'
+import { displayNameMatchesCohortStudyProduct } from '@/lib/cohortEnrollment'
 
 export async function GET() {
   const supabase = await createClient()
@@ -36,10 +37,47 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+    let rows: any[] = data || []
+    try {
+      const { data: handoffProf } = await supabaseAdmin
+        .from('profiles')
+        .select('cohort_id, cohort_study_stack_cleaned_at')
+        .eq('user_id', user.id)
+        .not('cohort_study_stack_cleaned_at', 'is', null)
+        .limit(1)
+        .maybeSingle()
+      const hp = handoffProf as { cohort_id?: string | null; cohort_study_stack_cleaned_at?: string | null } | null
+      const slug = hp?.cohort_id != null ? String(hp.cohort_id).trim() : ''
+      if (slug) {
+        const { data: cRow } = await supabaseAdmin
+          .from('cohorts')
+          .select('product_name')
+          .eq('slug', slug)
+          .maybeSingle()
+        const pn = String((cRow as { product_name?: string | null } | null)?.product_name || '').trim()
+        if (pn) {
+          const before = rows.length
+          rows = rows.filter((r: any) => {
+            const nm = String(r?.name || '')
+            return !displayNameMatchesCohortStudyProduct(nm, pn, slug)
+          })
+          if (before !== rows.length) {
+            try {
+              console.log('[supplements] handoff: filtered cohort study user_supplement rows', {
+                before,
+                after: rows.length,
+              })
+            } catch {}
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
     // Normalize rows:
     // - Ensure primary_goal_tags present (declared intent only)
     // - Clamp monthly_cost_usd to [0, 500] to avoid unrealistic UI outliers
-    let rows: any[] = data || []
 
     // Only accept goal tags that are actual user goal categories (avoid leaking truth-engine metrics like "sleep_quality")
     const ALLOWED_GOAL_KEYS = new Set<string>(HEALTH_PRIORITIES.map(p => String(p.key)))

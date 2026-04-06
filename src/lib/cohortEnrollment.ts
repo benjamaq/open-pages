@@ -424,6 +424,12 @@ export async function runCohortMainProductHandoffCleanup(params: {
     for (const pid of profileIdsForUser) {
       await supabaseAdmin.from('profiles').update(profilePatch).eq('id', pid)
     }
+
+    try {
+      await supabaseAdmin.from('dashboard_cache').delete().eq('user_id', userId)
+    } catch {
+      /* ignore */
+    }
   } catch (e) {
     console.error('[cohortEnrollment] runCohortMainProductHandoffCleanup:', e)
   }
