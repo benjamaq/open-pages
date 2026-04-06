@@ -145,3 +145,77 @@ export async function upsertCohortParticipant(
     return { ok: false, error: e instanceof Error ? e.message : 'Cohort enrollment failed' }
   }
 }
+
+/**
+ * After study completion + Pro: remove the cohort-only stack row (and soft-disable matching
+ * user_supplement) so main BioStackr is not pre-filled with the study product; set handoff day
+ * so `/api/progress/loop` does not show "checked in today" from the last cohort check-in.
+ */
+export async function runCohortMainProductHandoffCleanup(params: {
+  profileId: string
+  userId: string
+  cohortSlug: string
+  productName: string
+  clientTodayYmd: string
+}): Promise<void> {
+  const profileId = String(params.profileId || '').trim()
+  const userId = String(params.userId || '').trim()
+  const slug = String(params.cohortSlug || '').trim().toLowerCase()
+  let productName = String(params.productName || '').trim()
+  const clientYmd = String(params.clientTodayYmd || '').trim()
+  if (!profileId || !userId || !slug || !clientYmd || !/^\d{4}-\d{2}-\d{2}$/.test(clientYmd)) {
+    return
+  }
+  try {
+    if (!productName) {
+      const { data: cohort } = await supabaseAdmin
+        .from('cohorts')
+        .select('product_name')
+        .eq('slug', slug)
+        .maybeSingle()
+      productName = String((cohort as { product_name?: string } | null)?.product_name || '').trim()
+    }
+    if (!productName) return
+
+    const nameKey = productName.toLowerCase()
+
+    const { data: stacks } = await supabaseAdmin
+      .from('stack_items')
+      .select('id,name,user_supplement_id')
+      .eq('profile_id', profileId)
+    for (const row of stacks || []) {
+      const n = String((row as { name?: string }).name || '').trim().toLowerCase()
+      if (n !== nameKey) continue
+      const sid = (row as { id?: string }).id
+      if (sid) {
+        await supabaseAdmin.from('stack_items').delete().eq('id', sid)
+      }
+    }
+
+    const { data: supps } = await supabaseAdmin
+      .from('user_supplement')
+      .select('id,name')
+      .eq('user_id', userId)
+    for (const row of supps || []) {
+      const n = String((row as { name?: string }).name || '').trim().toLowerCase()
+      if (n !== nameKey) continue
+      const id = (row as { id?: string }).id
+      if (id) {
+        await supabaseAdmin
+          .from('user_supplement')
+          .update({ is_active: false } as Record<string, unknown>)
+          .eq('id', id)
+      }
+    }
+
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        cohort_study_stack_cleaned_at: new Date().toISOString(),
+        cohort_handoff_checkin_ignore_local_date: clientYmd,
+      } as Record<string, unknown>)
+      .eq('id', profileId)
+  } catch (e) {
+    console.error('[cohortEnrollment] runCohortMainProductHandoffCleanup:', e)
+  }
+}

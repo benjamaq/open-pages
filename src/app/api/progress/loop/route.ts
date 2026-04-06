@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     let profile: any = null
     const { data: profilesRows, error: pErr } = await supabase
       .from('profiles')
-      .select('id,tier,pro_expires_at,created_at')
+      .select('id,tier,pro_expires_at,created_at,cohort_handoff_checkin_ignore_local_date')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10)
@@ -517,6 +517,30 @@ export async function GET(request: Request) {
         hasCheckedInToday = false
       }
     }
+
+    // Cohort → main product handoff: ignore "checked in today" for the handoff calendar day only
+    // (last cohort check-in must not block a fresh main-dashboard check-in prompt).
+    try {
+      const ignoreHandoffYmd = String(
+        (profile as { cohort_handoff_checkin_ignore_local_date?: string | null } | null)
+          ?.cohort_handoff_checkin_ignore_local_date || '',
+      ).trim()
+      if (ignoreHandoffYmd && ignoreHandoffYmd === todayKey) {
+        hasCheckedInToday = false
+        todaySummary = null
+      }
+      if (
+        ignoreHandoffYmd &&
+        /^\d{4}-\d{2}-\d{2}$/.test(todayKey) &&
+        todayKey > ignoreHandoffYmd &&
+        profileId
+      ) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ cohort_handoff_checkin_ignore_local_date: null } as Record<string, unknown>)
+          .eq('id', profileId)
+      }
+    } catch {}
 
     // IMPORTANT: gated implicit verdict confirmation must count explicit user check-ins,
     // not wearable-imported / inferred historical days.

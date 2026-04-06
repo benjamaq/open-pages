@@ -10,6 +10,7 @@ import {
   fetchCohortCheckinYmdsSinceEnrollForUserIds,
 } from "@/lib/cohortCheckinCount";
 import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
+import { runCohortMainProductHandoffCleanup } from "@/lib/cohortEnrollment";
 
 export const dynamic = "force-dynamic";
 
@@ -157,7 +158,9 @@ export async function GET(request: Request) {
         try {
           const { data: pAdmin, error: pAdminErr } = await supabaseAdmin
             .from("profiles")
-            .select("id, cohort_id, display_name")
+            .select(
+              "id, cohort_id, display_name, cohort_study_stack_cleaned_at",
+            )
             .eq("user_id", userId)
             .maybeSingle();
           if (pAdminErr) {
@@ -514,6 +517,36 @@ export async function GET(request: Request) {
                     studyFinishedForProduct
                   ) {
                     showCohortStudyDashboard = false;
+                  }
+
+                  const cohortStackAlreadyCleaned = Boolean(
+                    (
+                      pAdmin as {
+                        cohort_study_stack_cleaned_at?: string | null;
+                      } | null
+                    )?.cohort_study_stack_cleaned_at,
+                  );
+                  const handoffCleanupEligible =
+                    proActive &&
+                    studyFinishedForProduct &&
+                    participantStatus !== "dropped" &&
+                    Boolean(cohortStudyProductName) &&
+                    !cohortStackAlreadyCleaned &&
+                    Boolean(profileId) &&
+                    Boolean(userId) &&
+                    Boolean(cohortId);
+                  if (handoffCleanupEligible) {
+                    try {
+                      await runCohortMainProductHandoffCleanup({
+                        profileId: profileId as string,
+                        userId: userId as string,
+                        cohortSlug: cohortId as string,
+                        productName: cohortStudyProductName as string,
+                        clientTodayYmd: todayYmd,
+                      });
+                    } catch (e) {
+                      console.error("[api/me] cohort main handoff cleanup", e);
+                    }
                   }
                 } catch (partCatch: unknown) {
                   console.error(
