@@ -136,7 +136,7 @@ export default function CohortResultPageClient() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-5 sm:px-6 py-5 sm:py-6">
         {state === 'loading' ? (
           <p className="text-sm text-slate-600">Loading your results…</p>
         ) : state === 'not_ready' ? (

@@ -94,6 +94,12 @@ function parseResultSections(
   }
 }
 
+function studyContextLine(brandName: string | null, productName: string | null): string {
+  const parts = [brandName, productName].filter((x): x is string => typeof x === 'string' && x.trim() !== '')
+  if (parts.length === 0) return 'Study results'
+  return `${parts.join(' ')} study`
+}
+
 /**
  * Participant-only cohort result layout + PDF export (not TruthReportView).
  * `result_json` shape: { verdict, bullet_points[], explanation } (+ legacy keys supported).
@@ -116,7 +122,7 @@ export default function CohortParticipantResultView({
     payload.product_name,
   )
 
-  const partnerLine = [payload.brand_name, 'BioStackr'].filter(Boolean).join(' × ')
+  const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {
     try {
       const d = new Date(payload.published_at)
@@ -205,13 +211,22 @@ export default function CohortParticipantResultView({
   const showAlreadyClaimedSteady = proClaimed && !claimedOnPage
 
   return (
-    <div className="space-y-8 sm:space-y-10 lg:space-y-12">
-      <div className="flex flex-wrap items-center justify-end gap-3 pb-1">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="flex items-start gap-4 min-w-0">
+          <div className="shrink-0 rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-sm">
+            <img src="/DNA-logo-black.png" alt="DoNotAge" className="h-7 sm:h-9 w-auto max-w-[120px] object-contain object-left" />
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">Your results</h1>
+            <p className="mt-1 text-sm sm:text-base text-slate-600 font-medium">{studyLine}</p>
+          </div>
+        </div>
         <button
           type="button"
           onClick={handleDownloadPdf}
           disabled={downloading}
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-50"
+          className="shrink-0 self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50"
         >
           {downloading ? 'Preparing…' : 'Download PDF'}
         </button>
@@ -219,47 +234,47 @@ export default function CohortParticipantResultView({
 
       <div
         ref={rootRef}
-        className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm text-slate-900"
+        className="rounded-3xl border border-slate-200/95 bg-white px-6 py-8 sm:px-10 sm:py-11 text-slate-900 shadow-[0_8px_44px_-16px_rgba(15,23,42,0.18),0_2px_8px_-4px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70"
       >
-        {partnerLine ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{partnerLine}</p>
-        ) : null}
-        {publishedLabel ? (
-          <p className="mt-2 text-sm text-slate-600">Published {publishedLabel}</p>
-        ) : null}
-        <p className="mt-1 text-xs text-slate-500">Personal summary · v{payload.result_version}</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-slate-500">
+          {publishedLabel ? <span>Published {publishedLabel}</span> : null}
+          {publishedLabel ? <span className="text-slate-300 select-none" aria-hidden>·</span> : null}
+          <span>Summary v{payload.result_version}</span>
+        </div>
 
         {hasStructuredContent ? (
           <>
-            <header className="mt-8 border-t border-slate-100 pt-8">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#C84B2F]">Verdict</p>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900 leading-snug">
+            <header className="mt-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C84B2F]">Your verdict</p>
+              <h2 className="mt-3 text-[1.65rem] sm:text-4xl font-bold text-slate-900 leading-[1.15] tracking-tight">
                 {verdictHeadline}
-              </h1>
+              </h2>
             </header>
 
             {bulletPoints.length > 0 ? (
-              <section className="mt-10">
-                <h2 className="text-base font-semibold text-slate-900">What changed</h2>
-                <ul className="mt-4 list-disc space-y-3 pl-5 text-[15px] leading-relaxed text-slate-800">
+              <section className="mt-11 sm:mt-12">
+                <h3 className="text-lg font-semibold text-slate-900 tracking-tight">What changed</h3>
+                <ul className="mt-5 list-disc space-y-3.5 pl-5 text-[15px] sm:text-base leading-relaxed text-slate-800 marker:text-[#C84B2F]">
                   {bulletPoints.map((line) => (
-                    <li key={line}>{line}</li>
+                    <li key={line} className="pl-1">
+                      {line}
+                    </li>
                   ))}
                 </ul>
               </section>
             ) : null}
 
             {explanation ? (
-              <section className="mt-10">
-                <h2 className="text-base font-semibold text-slate-900">What this means</h2>
-                <p className="mt-4 text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
+              <section className="mt-11 sm:mt-12">
+                <h3 className="text-lg font-semibold text-slate-900 tracking-tight">What this means</h3>
+                <p className="mt-5 text-[15px] sm:text-base leading-[1.65] text-slate-800 whitespace-pre-line">
                   {explanation}
                 </p>
               </section>
             ) : null}
           </>
         ) : (
-          <p className="mt-8 text-sm leading-relaxed text-slate-600 border-t border-slate-100 pt-8">
+          <p className="mt-6 text-sm leading-relaxed text-slate-600">
             Your personal outcome summary will appear here once it includes a <strong>verdict</strong> (clear headline),{' '}
             <strong>bullet_points</strong> (what changed in your check-ins), and an <strong>explanation</strong> (what
             that means for you in plain English).
@@ -268,26 +283,39 @@ export default function CohortParticipantResultView({
       </div>
 
       {rewards ? (
-        <section
-          className="mt-20 sm:mt-28 lg:mt-32 rounded-3xl border border-slate-200/95 bg-gradient-to-b from-slate-200/35 via-slate-100 to-white px-5 py-9 sm:px-10 sm:py-12 text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-300/50"
-          aria-label="Your rewards"
-        >
-          <header className="max-w-2xl pb-9 sm:pb-11 border-b border-slate-200/85">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#C84B2F]">Study rewards</p>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Your rewards</h2>
-          </header>
+        <section className="mt-10 sm:mt-12 space-y-5 sm:space-y-6" aria-label="Your rewards">
+          <article className="rounded-2xl border border-slate-200 bg-white px-7 py-8 sm:px-9 sm:py-9 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/60">
+            <div className="flex items-center min-h-[2.25rem] sm:min-h-[2.5rem]">
+              <img
+                src="/DNA-logo-black.png"
+                alt="DoNotAge"
+                className="h-9 sm:h-10 w-auto max-w-[140px] object-contain object-left"
+              />
+            </div>
+            <h2 className="mt-7 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your DoNotAge reward</h2>
+            <p className="mt-4 max-w-prose text-[15px] sm:text-base leading-relaxed text-slate-700">
+              Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
+            </p>
+          </article>
 
-          <div className="mt-9 sm:mt-11 rounded-2xl border border-slate-200/90 bg-white p-7 sm:p-9 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.08)] border-l-[4px] border-l-[#C84B2F]">
+          <article className="rounded-2xl border border-slate-200/95 bg-gradient-to-br from-white via-white to-slate-50/90 px-7 py-8 sm:px-9 sm:py-9 shadow-[0_6px_32px_-12px_rgba(15,23,42,0.14)] border-l-[4px] border-l-[#C84B2F] ring-1 ring-slate-200/50">
+            <div className="flex items-center min-h-[2.25rem] sm:min-h-[2.5rem]">
+              <img
+                src="/brand/biostackr-logo.png"
+                alt="BioStackr"
+                className="h-8 sm:h-9 w-auto max-w-[130px] object-contain object-left"
+              />
+            </div>
+            <h2 className="mt-7 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your BioStackr reward</h2>
+
             {showJustClaimedSuccess ? (
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-                  Your reward has been applied
-                </h3>
-                <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
+              <div className="mt-5">
+                <p className="text-[15px] sm:text-base font-semibold text-slate-900">Your reward has been applied</p>
+                <p className="mt-3 text-[15px] sm:text-base leading-relaxed text-slate-800">
                   You now have BioStackr Pro for 3 months on this account.
                 </p>
                 <p className="mt-5 text-[15px] font-semibold text-slate-900">You can now:</p>
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-800">
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] sm:text-base leading-relaxed text-slate-800">
                   <li>Add supplements to your stack</li>
                   <li>Track your results</li>
                   <li>See what&apos;s actually working for you</li>
@@ -299,47 +327,41 @@ export default function CohortParticipantResultView({
                   Go to your dashboard
                 </Link>
               </div>
-            ) : (
+            ) : showAlreadyClaimedSteady ? (
+              <div className="mt-5 space-y-4">
+                <div className="space-y-3 text-[15px] sm:text-base leading-relaxed text-slate-800">
+                  <p>Your BioStackr Pro is now active.</p>
+                  <p>Start building your stack and see what actually works for you.</p>
+                </div>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
+                >
+                  Go to your dashboard
+                </Link>
+              </div>
+            ) : rewards.pro_claim_token ? (
               <>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">BioStackr Pro</h3>
-                {showAlreadyClaimedSteady ? (
-                  <div className="mt-5 space-y-3 text-[15px] leading-relaxed text-slate-800">
-                    <p>Your BioStackr Pro access is now active.</p>
-                    <p>You can start using Pro features immediately.</p>
-                  </div>
-                ) : rewards.pro_claim_token ? (
-                  <>
-                    <p className="mt-4 text-[15px] leading-relaxed text-slate-800">
-                      You&apos;ve unlocked 3 months of BioStackr Pro.
-                    </p>
-                    <button
-                      type="button"
-                      disabled={claimBusy}
-                      onClick={() => void claimProOnThisAccount()}
-                      className="mt-5 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
-                    >
-                      {claimBusy ? 'Activating…' : 'Claim your Pro access'}
-                    </button>
-                    {claimErr ? <p className="mt-3 text-sm text-red-600">{claimErr}</p> : null}
-                  </>
-                ) : (
-                  <p className="mt-5 text-sm text-slate-600">
-                    Your reward details will appear here when they are ready. Try refreshing the page, or contact support
-                    if this continues.
-                  </p>
-                )}
+                <p className="mt-4 text-[15px] sm:text-base leading-relaxed text-slate-800">
+                  You&apos;ve unlocked 3 months of BioStackr Pro.
+                </p>
+                <button
+                  type="button"
+                  disabled={claimBusy}
+                  onClick={() => void claimProOnThisAccount()}
+                  className="mt-5 inline-flex justify-center rounded-xl bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                >
+                  {claimBusy ? 'Activating…' : 'Claim your Pro access'}
+                </button>
+                {claimErr ? <p className="mt-3 text-sm text-red-600">{claimErr}</p> : null}
               </>
+            ) : (
+              <p className="mt-5 text-sm text-slate-600">
+                Your reward details will appear here when they are ready. Try refreshing the page, or contact support if
+                this continues.
+              </p>
             )}
-          </div>
-
-          <div className="mt-5 sm:mt-6 rounded-xl border border-dashed border-slate-300/80 bg-slate-50/95 px-4 py-4 sm:px-5 sm:py-5">
-            <h3 className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-slate-500">
-              DoNotAge SureSleep
-            </h3>
-            <p className="mt-2 text-[13px] sm:text-sm leading-relaxed text-slate-600">
-              Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
-            </p>
-          </div>
+          </article>
         </section>
       ) : null}
     </div>
