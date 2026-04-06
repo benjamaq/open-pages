@@ -17,9 +17,9 @@ export function cohortParticipantResultPath(): string {
 }
 
 /**
- * After cohort Pro reward is claimed, send users into core BioStackr (/dashboard is still the cohort study shell
- * when `showCohortStudyDashboard` is true). `/results` is the product "My Stack" experience.
+ * After cohort Pro is claimed, land on main `/dashboard`. `/api/me` sets `showCohortStudyDashboard` false when
+ * study is finished and `pro_expires_at` is in the future so this resolves to the standard product dashboard.
  */
 export function cohortProProductEntryPath(): string {
-  return '/results'
+  return '/dashboard'
 }

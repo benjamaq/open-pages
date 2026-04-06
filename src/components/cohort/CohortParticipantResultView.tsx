@@ -332,7 +332,7 @@ export default function CohortParticipantResultView({
                   href={cohortProProductEntryPath()}
                   className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
                 >
-                  Go to your stack
+                  Go to your dashboard
                 </Link>
               </div>
             ) : rewards.pro_claim_token ? (

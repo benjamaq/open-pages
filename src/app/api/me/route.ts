@@ -474,6 +474,25 @@ export async function GET(request: Request) {
                       cohortParticipantResultPublished = false;
                     }
                   }
+
+                  // Finished study + active Pro → main BioStackr dashboard (not cohort study shell).
+                  const studyCompletedAtSet =
+                    studyCompletedRaw != null &&
+                    String(studyCompletedRaw).trim() !== "";
+                  const studyFinishedForProduct =
+                    studyCompletedAtSet || participantStatus === "completed";
+                  const proExpiresMs = pro_expires_at
+                    ? Date.parse(String(pro_expires_at))
+                    : NaN;
+                  const proActive =
+                    Number.isFinite(proExpiresMs) && proExpiresMs > Date.now();
+                  if (
+                    showCohortStudyDashboard &&
+                    proActive &&
+                    studyFinishedForProduct
+                  ) {
+                    showCohortStudyDashboard = false;
+                  }
                 } catch (partCatch: unknown) {
                   console.error(
                     "[api/me] cohort participant welcome:",
