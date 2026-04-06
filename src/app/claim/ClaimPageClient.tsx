@@ -161,7 +161,13 @@ export default function ClaimPageClient() {
           </p>
           <button
             type="button"
-            onClick={() => router.push(cohortProProductEntryPath())}
+            onClick={() => {
+              try {
+                window.location.assign(cohortProProductEntryPath())
+              } catch {
+                router.push(cohortProProductEntryPath())
+              }
+            }}
             className="mt-8 w-full rounded-xl bg-[#C84B2F] px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
           >
             Go to your dashboard
@@ -181,7 +187,13 @@ export default function ClaimPageClient() {
           </p>
           <button
             type="button"
-            onClick={() => router.push(cohortProProductEntryPath())}
+            onClick={() => {
+              try {
+                window.location.assign(cohortProProductEntryPath())
+              } catch {
+                router.push(cohortProProductEntryPath())
+              }
+            }}
             className="mt-6 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50"
           >
             Go to your dashboard

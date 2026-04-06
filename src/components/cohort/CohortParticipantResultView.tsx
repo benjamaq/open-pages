@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
 
@@ -328,12 +327,12 @@ export default function CohortParticipantResultView({
                   <p>Your BioStackr Pro is now active.</p>
                   <p>Start building your stack and see what actually works for you.</p>
                 </div>
-                <Link
+                <a
                   href={cohortProProductEntryPath()}
                   className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
                 >
                   Go to your dashboard
-                </Link>
+                </a>
               </div>
             ) : rewards.pro_claim_token ? (
               <>

@@ -476,13 +476,35 @@ export async function GET(request: Request) {
                   }
 
                   // Finished study + active Pro → main BioStackr dashboard (not cohort study shell).
+                  // Use the same "done" signals as the rest of this route: cron timestamp, completed
+                  // status, computed study window complete, or published personal result (often visible
+                  // before study_completed_at is backfilled).
                   const studyCompletedAtSet =
                     studyCompletedRaw != null &&
                     String(studyCompletedRaw).trim() !== "";
                   const studyFinishedForProduct =
-                    studyCompletedAtSet || participantStatus === "completed";
-                  const proExpiresMs = pro_expires_at
-                    ? Date.parse(String(pro_expires_at))
+                    studyCompletedAtSet ||
+                    participantStatus === "completed" ||
+                    cohortStudyComplete ||
+                    cohortParticipantResultPublished;
+                  let proExpiresForGraduation = pro_expires_at;
+                  try {
+                    const { data: proRow } = await supabaseAdmin
+                      .from("profiles")
+                      .select("pro_expires_at")
+                      .eq("user_id", userId as string)
+                      .maybeSingle();
+                    const raw = (
+                      proRow as { pro_expires_at?: string | null } | null
+                    )?.pro_expires_at;
+                    if (raw != null && String(raw).trim() !== "") {
+                      proExpiresForGraduation = String(raw).trim();
+                    }
+                  } catch {
+                    /* keep pro_expires_for_graduation from earlier profiles read */
+                  }
+                  const proExpiresMs = proExpiresForGraduation
+                    ? Date.parse(String(proExpiresForGraduation))
                     : NaN;
                   const proActive =
                     Number.isFinite(proExpiresMs) && proExpiresMs > Date.now();
