@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRef, useState } from 'react'
+import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
 
 export type CohortParticipantResultPayload = {
   result_json: Record<string, unknown> | null
@@ -328,10 +329,10 @@ export default function CohortParticipantResultView({
                   <p>Start building your stack and see what actually works for you.</p>
                 </div>
                 <Link
-                  href="/dashboard"
+                  href={cohortProProductEntryPath()}
                   className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
                 >
-                  Go to your dashboard
+                  Go to your stack
                 </Link>
               </div>
             ) : rewards.pro_claim_token ? (
