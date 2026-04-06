@@ -41,8 +41,6 @@ export interface CohortStudyDashboardProps {
   currentDay: number
   daysRemaining: number
   studyComplete: boolean
-  /** Personal result published for this user (cohort_participant_results). */
-  cohortParticipantResultPublished?: boolean
   studyEndDate: string | null
   onOpenCheckin: () => void
 }
@@ -469,7 +467,6 @@ export default function CohortStudyDashboard({
   currentDay,
   daysRemaining,
   studyComplete,
-  cohortParticipantResultPublished = false,
   studyEndDate: _studyEndDate,
   onOpenCheckin,
 }: CohortStudyDashboardProps) {
@@ -668,11 +665,11 @@ export default function CohortStudyDashboard({
             <div>
               <div className="text-3xl font-bold text-gray-900">Study complete</div>
               <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
-                Thank you — your study window is finished. You do not need to complete any more check-ins for this
-                study.
+                Congratulations — you&apos;ve completed the study. Thank you for taking part. You do not need to complete
+                any more check-ins for this study.
               </p>
               <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                Your personal results are being prepared. When they are ready, they will appear on your dashboard and
+                Your personal results are now being prepared. When they are ready, they will appear on your dashboard and
                 we will email you.
               </p>
               <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-5 sm:px-5">
@@ -688,23 +685,13 @@ export default function CohortStudyDashboard({
                   You&apos;ll receive full details with your results.
                 </p>
               </div>
-              {cohortParticipantResultPublished ? (
-                <Link
-                  href={cohortParticipantResultPath()}
-                  className="mt-6 inline-flex w-full justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 sm:w-auto"
-                  style={{ backgroundColor: '#C84B2F' }}
-                >
-                  View your personal results
-                </Link>
-              ) : (
-                <p className="mt-4 text-sm text-gray-600">
-                  Results will show here when ready:{' '}
-                  <Link href={cohortParticipantResultPath()} className="font-medium text-gray-900 underline">
-                    open your results page
-                  </Link>
-                  .
-                </p>
-              )}
+              <Link
+                href={cohortParticipantResultPath()}
+                className="mt-6 inline-flex w-full justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 sm:w-auto"
+                style={{ backgroundColor: '#C84B2F' }}
+              >
+                View your personal results
+              </Link>
             </div>
           ) : (
             <>
