@@ -68,7 +68,9 @@ export async function GET(request: Request) {
     callJson('effectSummary', () => effectSummaryGET() as any),
     callJson('wearableStatus', () => wearableStatusGET(wearableReq) as any),
     callJson('settings', () => settingsGET() as any),
-    callJson('elliContext', () => elliContextGET() as any),
+    callJson('elliContext', () =>
+      elliContextGET(new Request(`${origin}/api/elli/context${qs}`, { headers: request.headers, cache: 'no-store' })) as any,
+    ),
   ])
 
   // If auth is missing, surface a unified unauthorized (the dashboard page will redirect anyway).

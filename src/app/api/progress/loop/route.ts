@@ -6,6 +6,8 @@ import { persistTruthReportSingle } from '@/lib/truth/persistTruthReportSingle'
 import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { normalizeTruthStatus } from '@/lib/verdictLabels'
 import { isProActive } from '@/lib/entitlements/pro'
+import { getYmdForUtcMsInTzOffset } from '@/lib/utils/localDateYmd'
+import { dailyEntryIsExplicitUserCheckin } from '@/lib/explicitDailyCheckin'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
 const DASHBOARD_CACHE_VERSION = 1
@@ -34,6 +36,8 @@ export async function GET(request: Request) {
     let dbg = false
     /** Client calendar "today" (YYYY-MM-DD) from dashboard; avoids UTC/server date mismatch for hasCheckedInToday. */
     let clientTodayKey: string | null = null
+    /** Same as browser `-new Date().getTimezoneOffset()`; used with legacy `checkin.created_at`. */
+    let clientTzOffsetMinutes: number | null = null
     try {
       const url = new URL(request.url)
       debugSuppId = url.searchParams.get('debugSuppId') || url.searchParams.get('dbg') || url.searchParams.get('supp')
@@ -50,6 +54,8 @@ export async function GET(request: Request) {
         url.searchParams.has('_bust')
       const lt = url.searchParams.get('localToday') || url.searchParams.get('clientToday')
       if (lt && /^\d{4}-\d{2}-\d{2}$/.test(lt)) clientTodayKey = lt
+      const tz = url.searchParams.get('tzOffset')
+      if (tz != null && /^-?\d+$/.test(tz)) clientTzOffsetMinutes = parseInt(tz, 10)
     } catch {}
     const TRACE_BUCKETS = Boolean(debugSuppId)
     if (dbg) forceNoCache = true
@@ -345,8 +351,12 @@ export async function GET(request: Request) {
       if (r?.day) return String(r.day).slice(0,10)
       if (r?.created_at) {
         try {
-          const d = new Date(r.created_at)
-          if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0,10)
+          const ms = Date.parse(String(r.created_at))
+          if (!Number.isFinite(ms)) return ''
+          if (clientTzOffsetMinutes != null) {
+            return getYmdForUtcMsInTzOffset(ms, clientTzOffsetMinutes)
+          }
+          return new Date(ms).toISOString().slice(0, 10)
         } catch {}
       }
       return ''
@@ -490,24 +500,7 @@ export async function GET(request: Request) {
       for (const e of entries365 || []) {
         const dKey = String((e as any)?.local_date || '').slice(0, 10)
         if (!dKey) continue
-        const energy = (e as any)?.energy
-        const focus = (e as any)?.focus
-        const moodRaw = (e as any)?.mood
-        const mentalClarity = (e as any)?.mental_clarity
-        const calmness = (e as any)?.calmness
-        const onset = (e as any)?.sleep_onset_bucket
-        const wakes = (e as any)?.night_wakes
-        const hasB2cSliders =
-          typeof energy === 'number' && typeof focus === 'number'
-        const hasCohortStudyFields =
-          typeof mentalClarity === 'number' ||
-          typeof calmness === 'number' ||
-          typeof onset === 'number' ||
-          typeof wakes === 'number'
-        const hasMoodAnswer =
-          typeof moodRaw === 'number' ||
-          (typeof moodRaw === 'string' && moodRaw.trim() !== '')
-        if (hasB2cSliders || hasCohortStudyFields || hasMoodAnswer) {
+        if (dailyEntryIsExplicitUserCheckin(e as Record<string, unknown>)) {
           explicitDailyCheckinDays.add(dKey)
         }
       }

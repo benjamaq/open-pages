@@ -1,12 +1,57 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import type { UserContext } from '@/lib/types'
+import { getYmdForUtcMsInTzOffset } from '@/lib/utils/localDateYmd'
+import { dailyEntryIsExplicitUserCheckin } from '@/lib/explicitDailyCheckin'
 
-export async function GET() {
+function parseClientToday(url: URL): string | null {
+  const lt = url.searchParams.get('localToday') || url.searchParams.get('clientToday')
+  if (lt && /^\d{4}-\d{2}-\d{2}$/.test(lt)) return lt
+  return null
+}
+
+function parseTzOffset(url: URL): number | null {
+  const tz = url.searchParams.get('tzOffset')
+  if (tz != null && /^-?\d+$/.test(tz)) return parseInt(tz, 10)
+  return null
+}
+
+function ymdAddDays(ymd: string, delta: number): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const x = new Date(Date.UTC(y, (m ?? 1) - 1, (d ?? 1) + delta))
+  return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, '0')}-${String(x.getUTCDate()).padStart(2, '0')}`
+}
+
+function buildCheckinDayKey(
+  c: { created_at?: string; day?: unknown },
+  tzOffsetMinutes: number | null,
+): string {
+  if (c?.day != null && String(c.day).trim() !== '') return String(c.day).slice(0, 10)
+  const raw = c?.created_at
+  if (raw) {
+    try {
+      const ms = Date.parse(String(raw))
+      if (!Number.isFinite(ms)) return ''
+      if (tzOffsetMinutes != null) return getYmdForUtcMsInTzOffset(ms, tzOffsetMinutes)
+      return new Date(ms).toISOString().slice(0, 10)
+    } catch {}
+  }
+  return ''
+}
+
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url)
+    const clientToday = parseClientToday(url)
+    const tzOffset = parseTzOffset(url)
+    const todayKey = clientToday || new Date().toISOString().slice(0, 10)
+    const yesterdayKey = ymdAddDays(todayKey, -1)
+
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const getDayKey = (c: { created_at?: string; day?: unknown }) => buildCheckinDayKey(c, tzOffset)
 
     // Profile for first name + optional streak fields
     const { data: profile } = await supabase
@@ -15,16 +60,20 @@ export async function GET() {
       .eq('id', user.id)
       .maybeSingle()
 
-    // Distinct days and total checkins
     const { data: checkinDays } = await supabase
       .from('checkin')
-      .select('created_at')
+      .select('created_at,day,mood,energy,focus,stress_level,sleep_quality')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    const distinctDays = new Set(((checkinDays as any[] | null) || []).map((c: any) => new Date(c.created_at).toISOString().slice(0, 10)))
+    const distinctDays = new Set(
+      ((checkinDays as any[] | null) || []).map((c: any) => getDayKey(c)).filter(Boolean),
+    )
     const daysTracked = distinctDays.size
-    const currentStreak = calculateStreak(checkinDays || [])
+    const currentStreak = calculateStreak((checkinDays || []) as { created_at: string; day?: unknown }[], {
+      todayKey,
+      getDayKey,
+    })
     const longestStreak = Math.max(((profile as any)?.longest_streak || 0), currentStreak)
 
     const lastCheckinAt = (() => {
@@ -34,31 +83,89 @@ export async function GET() {
     })()
     const daysSinceLastCheckin = (() => {
       if (!lastCheckinAt) return null
-      const lastYmd = new Date(lastCheckinAt).toISOString().slice(0, 10)
-      const todayYmd = new Date().toISOString().slice(0, 10)
+      const lastYmd = getDayKey({ created_at: lastCheckinAt })
+      if (!lastYmd) return null
       const lastMs = Date.parse(`${lastYmd}T00:00:00Z`)
-      const todayMs = Date.parse(`${todayYmd}T00:00:00Z`)
+      const todayMs = Date.parse(`${todayKey}T00:00:00Z`)
       if (!Number.isFinite(lastMs) || !Number.isFinite(todayMs)) return null
       return Math.max(0, Math.round((todayMs - lastMs) / 86400000))
     })()
 
-    // Today / yesterday
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-    const { data: today } = await supabase
-      .from('checkin')
-      .select('mood, energy, focus, stress_level')
+    const EXPLICIT_SELECT =
+      'local_date,mood,energy,focus,sleep_quality,mental_clarity,calmness,sleep_onset_bucket'
+
+    const { data: entriesToday } = await supabase
+      .from('daily_entries')
+      .select(EXPLICIT_SELECT)
       .eq('user_id', user.id)
-      .gte('created_at', `${todayStr}T00:00:00`)
-      .lte('created_at', `${todayStr}T23:59:59`)
-      .maybeSingle()
-    const { data: yesterday } = await supabase
-      .from('checkin')
-      .select('mood, energy, focus')
+      .eq('local_date', todayKey)
+
+    const { data: entriesYesterday } = await supabase
+      .from('daily_entries')
+      .select(EXPLICIT_SELECT)
       .eq('user_id', user.id)
-      .gte('created_at', `${yesterdayStr}T00:00:00`)
-      .lte('created_at', `${yesterdayStr}T23:59:59`)
-      .maybeSingle()
+      .eq('local_date', yesterdayKey)
+
+    let hasCheckinToday = false
+    for (const row of entriesToday || []) {
+      if (dailyEntryIsExplicitUserCheckin(row as Record<string, unknown>)) {
+        hasCheckinToday = true
+        break
+      }
+    }
+    if (!hasCheckinToday) {
+      hasCheckinToday = ((checkinDays as any[] | null) || []).some((c: any) => getDayKey(c) === todayKey)
+    }
+
+    const pickExplicit = (rows: any[] | null) =>
+      (rows || []).find((r) => dailyEntryIsExplicitUserCheckin(r as Record<string, unknown>)) || null
+
+    const deToday = pickExplicit(entriesToday as any[] | null)
+    const deYesterday = pickExplicit(entriesYesterday as any[] | null)
+
+    let today: {
+      mood?: unknown
+      energy?: unknown
+      focus?: unknown
+      stress_level?: unknown
+    } | null =
+      deToday != null
+        ? {
+            mood: (deToday as any).mood,
+            energy: (deToday as any).energy,
+            focus: (deToday as any).focus,
+          }
+        : null
+    let yesterday =
+      deYesterday != null
+        ? {
+            mood: (deYesterday as any).mood,
+            energy: (deYesterday as any).energy,
+            focus: (deYesterday as any).focus,
+          }
+        : null
+
+    if (!today) {
+      const row = ((checkinDays as any[] | null) || []).find((c: any) => getDayKey(c) === todayKey)
+      if (row) {
+        today = {
+          mood: (row as any).mood,
+          energy: (row as any).energy,
+          focus: (row as any).focus,
+          stress_level: (row as any).stress_level,
+        }
+      }
+    }
+    if (!yesterday) {
+      const row = ((checkinDays as any[] | null) || []).find((c: any) => getDayKey(c) === yesterdayKey)
+      if (row) {
+        yesterday = {
+          mood: (row as any).mood,
+          energy: (row as any).energy,
+          focus: (row as any).focus,
+        }
+      }
+    }
 
     // Active supplements
     const { data: supplements } = await supabase
@@ -85,10 +192,12 @@ export async function GET() {
       since.setDate(since.getDate() - 14)
       const { data: recent } = await supabase
         .from('checkin')
-        .select('created_at')
+        .select('created_at,day')
         .eq('user_id', user.id)
         .gte('created_at', since.toISOString())
-      const recentSet = new Set(((recent as any[] | null) || []).map((r: any) => new Date(r.created_at).toISOString().slice(0, 10)))
+      const recentSet = new Set(
+        ((recent as any[] | null) || []).map((r: any) => getDayKey(r)).filter(Boolean),
+      )
       const daysCompleted = recentSet.size
       for (const s of supplements) {
         const stage = (s as any).stage || 'hypothesis'
@@ -118,11 +227,25 @@ export async function GET() {
       })
     } catch {}
 
-    // Micro-insights disabled in clinical version (compute elsewhere if needed)
     const microInsights: UserContext['microInsights'] = []
 
-    const todayOverride: any = today ? { today: { ...(today as any), stress: (today as any).stress_level } } : {}
-    const context: UserContext & { hasWearableData?: boolean } = {
+    const todayPublic: UserContext['today'] | undefined = today
+      ? {
+          mood: (today as any).mood,
+          energy: (today as any).energy,
+          focus: (today as any).focus,
+          ...((today as any).stress_level != null
+            ? { stress: String((today as any).stress_level) }
+            : {}),
+        }
+      : undefined
+
+    const context: UserContext & {
+      hasWearableData?: boolean
+      lastCheckinAt?: string | null
+      daysSinceLastCheckin?: number | null
+      hasEarlyPattern?: boolean
+    } = {
       firstName: (profile as any)?.first_name || undefined,
       daysTracked,
       totalCheckins: (checkinDays || []).length,
@@ -130,12 +253,10 @@ export async function GET() {
       longestStreak,
       lastCheckinAt,
       daysSinceLastCheckin,
-      hasCheckinToday: !!today,
+      hasCheckinToday,
       hasWearableData,
       activeTests,
-      today: today || undefined,
-      // map stress_level -> today.stress
-      ...todayOverride,
+      today: todayPublic,
       yesterday: yesterday || undefined,
       hasNewTruthReport: newTruthReports.length > 0,
       newTruthReports,
@@ -150,15 +271,14 @@ export async function GET() {
   }
 }
 
-function calculateStreak(checkins: Array<{ created_at: string }>): number {
+function calculateStreak(
+  checkins: Array<{ created_at: string; day?: unknown }>,
+  opts: { todayKey: string; getDayKey: (c: { created_at: string; day?: unknown }) => string },
+): number {
   if (!checkins?.length) return 0
-  const set = new Set<string>(
-    checkins.map((c) => new Date(c.created_at).toISOString().split('T')[0])
-  )
-  const todayStr = new Date().toISOString().split('T')[0]
-  const yesterdayStr = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0]
+  const set = new Set<string>(checkins.map((c) => opts.getDayKey(c)).filter(Boolean))
+  const todayStr = opts.todayKey
+  const yesterdayStr = ymdAddDays(todayStr, -1)
 
   let start = todayStr
   if (!set.has(todayStr)) {
@@ -167,17 +287,14 @@ function calculateStreak(checkins: Array<{ created_at: string }>): number {
   }
 
   let streak = 0
-  let cursor = new Date(start)
+  let cursorYmd = start
   while (true) {
-    const key = cursor.toISOString().split('T')[0]
-    if (set.has(key)) {
+    if (set.has(cursorYmd)) {
       streak += 1
-      cursor = new Date(cursor.getTime() - 24 * 60 * 60 * 1000)
+      cursorYmd = ymdAddDays(cursorYmd, -1)
     } else {
       break
     }
   }
   return streak
 }
-
-

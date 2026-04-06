@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { appendLocalTodayParam } from '@/lib/utils/localDateYmd';
 import { StatusUpdate } from '@/components/dashboard/StatusUpdate';
 import { SupplementsInTesting } from '@/components/dashboard/SupplementsInTesting';
 import { TodaysCheckin } from '@/components/dashboard/TodaysCheckin';
@@ -12,7 +13,7 @@ export default function DashboardClient({ supplements }: { supplements: any[] })
   useEffect(() => {
     async function loadContext() {
       try {
-        const res = await fetch('/api/elli/context');
+        const res = await fetch(appendLocalTodayParam('/api/elli/context'));
         const data = await res.json();
         setContext(data);
       } catch (error) {

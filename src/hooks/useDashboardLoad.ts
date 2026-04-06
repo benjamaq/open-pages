@@ -51,6 +51,7 @@ export function useDashboardLoad() {
           const pass = new URLSearchParams()
           try {
             pass.set('localToday', getLocalDateYmd())
+            pass.set('tzOffset', String(-new Date().getTimezoneOffset()))
           } catch {}
           for (const k of ['debugSuppId', 'dbg', 'supp', 'nocache', 'force']) {
             const v = sp.get(k)

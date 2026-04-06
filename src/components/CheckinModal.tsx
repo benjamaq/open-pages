@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
+import { appendLocalTodayParam, getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { CheckinSuccessModal } from './checkin/CheckinSuccessModal'
 import type { UserContext } from '@/lib/types'
 
@@ -110,7 +110,10 @@ export function CheckinModal({ isOpen, onClose, onSuccess }: CheckinModalProps) 
 
       // Load Elli context and show success modal
       try {
-        const ctxRes = await fetch('/api/elli/context', { cache: 'no-store', credentials: 'include' })
+        const ctxRes = await fetch(appendLocalTodayParam('/api/elli/context'), {
+          cache: 'no-store',
+          credentials: 'include',
+        })
         if (ctxRes.ok) {
           const ctx = await ctxRes.json()
           setSubmittedNoise(noise.includes('clean_day') ? [] : noise)
