@@ -313,12 +313,11 @@ export function CheckinLauncher({
               Secure your place in the study
             </h2>
             <div className="mt-4 space-y-3 text-sm leading-relaxed text-gray-600 text-left">
+              <p>To confirm your place, complete 2 quick check-ins within 48 hours.</p>
+              <p>This gives us your baseline.</p>
               <p>
-                To confirm your spot, you need to complete 2 quick check-ins within 48 hours.
-              </p>
-              <p>This helps us establish your baseline and ensures participants follow through.</p>
-              <p>
-                Places are limited — participants who complete both check-ins first are accepted into the study.
+                Once both check-ins are complete, your place in the study is confirmed and your SureSleep is shipped
+                to you.
               </p>
             </div>
             <button

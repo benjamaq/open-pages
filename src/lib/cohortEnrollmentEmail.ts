@@ -32,25 +32,18 @@ export async function sendCohortEnrollmentEmail(params: {
   }
   const firstEsc = escapeHtml(first)
 
-  let studyLabel = 'DoNotAge SureSleep'
   let productLabel = 'SureSleep'
-  let partnerBrand = 'DoNotAge'
   const slug = String(params.cohortSlug || '').trim()
   if (slug) {
     const { data: row } = await supabaseAdmin.from('cohorts').select('product_name, brand_name').eq('slug', slug).maybeSingle()
     if (row) {
-      const { studyName, productName } = studyAndProductNamesFromCohortRow(
+      const { productName } = studyAndProductNamesFromCohortRow(
         row as { product_name?: string | null; brand_name?: string | null },
       )
-      if (studyName && studyName !== 'study') studyLabel = studyName
       if (productName && productName !== 'product') productLabel = productName
-      const bn = String((row as { brand_name?: string | null }).brand_name || '').trim()
-      if (bn) partnerBrand = bn
     }
   }
-  const studyEsc = escapeHtml(studyLabel)
   const productEsc = escapeHtml(productLabel)
-  const partnerEsc = escapeHtml(partnerBrand)
 
   const appBase = cohortEmailPublicOrigin()
   const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
@@ -59,12 +52,13 @@ export async function sendCohortEnrollmentEmail(params: {
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${firstEsc},</p>` +
-    `<p style="margin:0 0 16px;">Welcome to the <strong>${studyEsc}</strong> study. <strong>${partnerEsc}</strong> is your product partner; <strong>BioStackr</strong> runs this study and your check-ins — great to have you in.</p>` +
-    `<p style="margin:0 0 16px;">Your first step is to complete two check-ins on consecutive mornings in <strong>BioStackr</strong>. This confirms your place with <strong>${partnerEsc}</strong> and captures your baseline before <strong>${productEsc}</strong> arrives.</p>` +
-    `<p style="margin:0 0 10px;"><strong>Check-in 1 — complete today.</strong> This is your baseline — how you sleep before ${productEsc} arrives.</p>` +
-    `<p style="margin:0 0 10px;"><strong>Check-in 2 — complete tomorrow morning.</strong> Once done, your spot is confirmed and your product ships.</p>` +
-    `<p style="margin:0 0 16px;">Both check-ins need to be done within 48 hours. Anyone who doesn&apos;t complete both is quietly removed — we only ship to people who&apos;ve already shown they&apos;ll follow through.</p>` +
-    `<p style="margin:0 0 22px;">Takes about 30 seconds.</p>` +
+    `<p style="margin:0 0 6px;"><strong>To confirm your place:</strong></p>` +
+    `<p style="margin:0 0 16px;line-height:1.55;color:#374151;">` +
+    `• Complete your first check-in today<br />` +
+    `• Complete your second check-in tomorrow morning` +
+    `</p>` +
+    `<p style="margin:0 0 16px;">This gives us your baseline.</p>` +
+    `<p style="margin:0 0 22px;">Once both check-ins are complete, your place in the study is confirmed and your <strong>${productEsc}</strong> is shipped to you.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(checkinHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
     `</p>`
