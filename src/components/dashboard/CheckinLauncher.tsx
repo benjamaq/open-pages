@@ -44,6 +44,8 @@ export function CheckinLauncher({
   const [asyncCheckinFields, setAsyncCheckinFields] = useState<string[] | null | undefined>(undefined)
   const [asyncWelcomeRecommended, setAsyncWelcomeRecommended] = useState<boolean | undefined>(undefined)
   const [asyncStudyProductName, setAsyncStudyProductName] = useState<string | null | undefined>(undefined)
+  /** Mirrors /api/me `showCohortStudyDashboard` when mePayload is not passed in. */
+  const [asyncShowCohortStudyDashboard, setAsyncShowCohortStudyDashboard] = useState<boolean | undefined>(undefined)
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -89,6 +91,7 @@ export function CheckinLauncher({
       setAsyncCheckinFields(undefined)
       setAsyncWelcomeRecommended(undefined)
       setAsyncStudyProductName(undefined)
+      setAsyncShowCohortStudyDashboard(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -115,12 +118,15 @@ export function CheckinLauncher({
         setAsyncWelcomeRecommended(Boolean((data as any)?.cohortCheckinWelcomeRecommended))
         const pn = (data as any)?.cohortStudyProductName
         setAsyncStudyProductName(typeof pn === 'string' && pn.trim() ? pn.trim() : null)
+        const sc = (data as any)?.showCohortStudyDashboard
+        setAsyncShowCohortStudyDashboard(typeof sc === 'boolean' ? sc : undefined)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
           setAsyncCheckinFields(null)
           setAsyncWelcomeRecommended(false)
           setAsyncStudyProductName(null)
+          setAsyncShowCohortStudyDashboard(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -275,6 +281,13 @@ export function CheckinLauncher({
 
   const welcomeStudyTitle = cohortStudyProductName || 'SureSleep'
 
+  const showCohortStudyDashboardRaw =
+    mePayload !== undefined
+      ? (mePayload as { showCohortStudyDashboard?: unknown })?.showCohortStudyDashboard
+      : asyncShowCohortStudyDashboard
+  const showCohortStudyDashboardProp =
+    typeof showCohortStudyDashboardRaw === 'boolean' ? showCohortStudyDashboardRaw : undefined
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -329,6 +342,7 @@ export function CheckinLauncher({
           cohortIdHint={cohortIdHint}
           cohortCheckinFieldsHint={cohortCheckinFieldsHint}
           cohortStudyProductName={cohortStudyProductName}
+          showCohortStudyDashboard={showCohortStudyDashboardProp}
         />
       )}
     </>

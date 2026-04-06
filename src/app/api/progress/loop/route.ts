@@ -447,7 +447,9 @@ export async function GET(request: Request) {
     since365.setDate(since365.getDate() - 365)
     const { data: entries365 } = await supabase
       .from('daily_entries')
-      .select('local_date,mood,energy,focus,sleep_quality,tags,wearables,skipped_supplements,supplement_intake')
+      .select(
+        'local_date,mood,energy,focus,sleep_quality,mental_clarity,calmness,sleep_onset_bucket,night_wakes,tags,wearables,skipped_supplements,supplement_intake',
+      )
       .eq('user_id', user.id)
       .gte('local_date', since365.toISOString().slice(0,10))
     const allEntryDatesSet = new Set<string>((entries365 || []).map((e: any) => String(e.local_date).slice(0,10)))
@@ -480,9 +482,40 @@ export async function GET(request: Request) {
     if (cleanDatesSet.size === 0 && distinctCheckinDays.size > 0) {
       cleanDatesSet = new Set(Array.from(distinctCheckinDays))
     }
-    // Determine if user actually has a daily entry for today (authoritative for "checked in")
-    const hasTodayEntry = allEntryDatesSet.has(todayKey)
-    if (hasTodayEntry) {
+
+    // Days with at least one subjective rating — excludes wearable-only / empty daily_entries shells
+    // that still occupy a calendar local_date (those were falsely marking B2C users "checked in").
+    const explicitDailyCheckinDays = new Set<string>()
+    try {
+      for (const e of entries365 || []) {
+        const dKey = String((e as any)?.local_date || '').slice(0, 10)
+        if (!dKey) continue
+        const energy = (e as any)?.energy
+        const focus = (e as any)?.focus
+        const mood = (e as any)?.mood
+        const sleepQ = (e as any)?.sleep_quality
+        const sleep = (e as any)?.sleep
+        const mentalClarity = (e as any)?.mental_clarity
+        const calmness = (e as any)?.calmness
+        const onset = (e as any)?.sleep_onset_bucket
+        const wakes = (e as any)?.night_wakes
+        const hasAnyRating =
+          typeof energy === 'number' ||
+          typeof focus === 'number' ||
+          typeof mood === 'number' ||
+          typeof sleepQ === 'number' ||
+          typeof sleep === 'number' ||
+          typeof mentalClarity === 'number' ||
+          typeof calmness === 'number' ||
+          typeof onset === 'number' ||
+          typeof wakes === 'number'
+        if (hasAnyRating) explicitDailyCheckinDays.add(dKey)
+      }
+    } catch {}
+
+    const hasExplicitCheckinToday = explicitDailyCheckinDays.has(todayKey)
+    // Dashboard "checked in today": explicit ratings or legacy checkin row — not merely any daily_entries row.
+    if (hasExplicitCheckinToday) {
       hasCheckedInToday = true
       try {
         const te = (entries365 || []).find((e: any) => String((e as any).local_date).slice(0,10) === todayKey)
@@ -542,31 +575,8 @@ export async function GET(request: Request) {
       }
     } catch {}
 
-    // IMPORTANT: gated implicit verdict confirmation must count explicit user check-ins,
-    // not wearable-imported / inferred historical days.
-    //
-    // Source of truth: daily_entries rows with explicit check-in fields present.
-    // We use this (not the 'checkin' table) so the counter increments immediately after a check-in.
-    const explicitDailyCheckinDays = new Set<string>()
-    try {
-      for (const e of (entries365 || [])) {
-        const dKey = String((e as any)?.local_date || '').slice(0, 10)
-        if (!dKey) continue
-        const energy = (e as any)?.energy
-        const focus = (e as any)?.focus
-        const mood = (e as any)?.mood
-        const sleepQ = (e as any)?.sleep_quality
-        const sleep = (e as any)?.sleep
-        const hasAnyRating =
-          typeof energy === 'number' ||
-          typeof focus === 'number' ||
-          typeof mood === 'number' ||
-          typeof sleepQ === 'number' ||
-          typeof sleep === 'number'
-        if (hasAnyRating) explicitDailyCheckinDays.add(dKey)
-      }
-    } catch {}
-    // Account-level count (all time window): useful for debug/telemetry but NOT used for per-supplement gate unlocks.
+    // IMPORTANT: gated implicit verdict confirmation counts explicit user check-ins only (explicitDailyCheckinDays above).
+    // Account-level count (365d window): useful for debug/telemetry but NOT used for per-supplement gate unlocks.
     const totalUserCheckins = explicitDailyCheckinDays.size
 
     // Compute total wearable days across all time to gate implicit behavior/UI

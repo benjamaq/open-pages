@@ -56,14 +56,15 @@ export async function sendCohortResultReadyEmail(params: {
     `<div style="margin:32px 0 0;padding:24px 20px 22px;border-top:2px solid #e2e8f0;background:#f1f5f9;border-radius:10px;">` +
     `<p style="margin:0 0 18px;font-size:18px;font-weight:700;color:#111827;line-height:1.3;">Your rewards</p>`
 
+  const bioBlockSep = `margin:22px 0 0;padding:16px 0 0;border-top:1px dashed #cbd5e1;`
   const bioBlock = proAlready
-    ? `<div style="margin:0;">` +
+    ? `<div style="${bioBlockSep}">` +
       `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">BioStackr Pro</p>` +
       `<p style="margin:0;color:#374151;font-size:15px;line-height:1.6;">You&apos;ve unlocked 3 months of BioStackr Pro.</p>` +
       `<p style="margin:12px 0 0;color:#4b5563;font-size:14px;line-height:1.55;">Your BioStackr Pro access is now active on this account. You can start using Pro features right away.</p>` +
       `</div>`
     : rewardClaimRaw !== ''
-      ? `<div style="margin:0;">` +
+      ? `<div style="${bioBlockSep}">` +
         `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">BioStackr Pro</p>` +
         `<p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">You&apos;ve unlocked 3 months of BioStackr Pro.</p>` +
         `<p style="margin:0;">` +
@@ -71,21 +72,21 @@ export async function sendCohortResultReadyEmail(params: {
         `</p>` +
         `<p style="margin:14px 0 0;color:#6b7280;font-size:13px;line-height:1.5;">You can also claim from your results page while signed in.</p>` +
         `</div>`
-      : `<div style="margin:0;">` +
+      : `<div style="${bioBlockSep}">` +
         `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">BioStackr Pro</p>` +
         `<p style="margin:0 0 12px;color:#374151;font-size:15px;line-height:1.6;">You&apos;ve unlocked 3 months of BioStackr Pro.</p>` +
         `<p style="margin:0;color:#6b7280;font-size:14px;line-height:1.55;">Open your results while signed in to claim in one step. If you use a claim link, sign in with the same study account.</p>` +
         `</div>`
 
   const sureBlock =
-    `<div style="margin:22px 0 0;padding:16px 0 0;border-top:1px dashed #cbd5e1;">` +
+    `<div style="margin:0;">` +
     `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">DoNotAge SureSleep</p>` +
     `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.</p>` +
     `</div>`
 
   const rewardsSectionClose = `</div>`
 
-  const innerHtml = intro + resultsCta + rewardsSectionOpen + bioBlock + sureBlock + rewardsSectionClose
+  const innerHtml = intro + resultsCta + rewardsSectionOpen + sureBlock + bioBlock + rewardsSectionClose
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,

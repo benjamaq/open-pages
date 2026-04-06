@@ -108,6 +108,10 @@ function normalizePurpose(purpose: string): string {
   if (p.includes('immunity')) return 'immunity'
   if (p.includes('athletic')) return 'athletic'
   if (p.includes('inflammation')) return 'inflammation'
+  if (p.includes('gut')) return 'gut'
+  if (p.includes('longevity')) return 'longevity'
+  if (p.includes('joint')) return 'joint'
+  if (p.includes('beauty') || p.includes('skin') || p.includes('hair')) return 'beauty'
   return 'other'
 }
  

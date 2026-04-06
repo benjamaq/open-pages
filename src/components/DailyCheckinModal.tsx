@@ -84,6 +84,11 @@ interface DailyCheckinModalProps {
   cohortCheckinFieldsHint?: string[] | null
   /** From /api/me; cohort check-in modal title */
   cohortStudyProductName?: string | null
+  /**
+   * From /api/me `showCohortStudyDashboard`. When false (e.g. graduated to main product), use standard
+   * check-in even if `profiles.cohort_id` is still set. When undefined, keep legacy behavior (cohort UI if cohort id present).
+   */
+  showCohortStudyDashboard?: boolean
 }
 
 // Helper functions
@@ -218,6 +223,7 @@ export default function DailyCheckinModal({
   cohortIdHint,
   cohortCheckinFieldsHint,
   cohortStudyProductName,
+  showCohortStudyDashboard,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -247,6 +253,11 @@ export default function DailyCheckinModal({
     cohortIdHint !== undefined && cohortIdHint !== null ? trimCohortId(cohortIdHint) : null
   const effectiveCohortId =
     hintTrimmed != null && hintTrimmed !== '' ? hintTrimmed : cohortIdFromClient
+
+  const useCohortCheckinLayout =
+    showCohortStudyDashboard === false
+      ? false
+      : Boolean(effectiveCohortId)
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -934,7 +945,7 @@ useEffect(() => {
 
   if (!isOpen) return null
 
-  if (effectiveCohortId) {
+  if (useCohortCheckinLayout) {
     return (
       <CohortCheckinLayout
         isOpen={isOpen}

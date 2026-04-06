@@ -8,6 +8,7 @@ import {
 } from '@/lib/cohortCheckinFields'
 import { tryImmediateCohortComplianceConfirm } from '@/lib/cohortComplianceConfirmed'
 import { trySendCohortPostFirstCheckinEmail } from '@/lib/cohortPostFirstCheckinEmail'
+import { shouldUseCohortCheckinBranch } from '@/lib/cohortCheckinBranch'
 
 function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
   const raw = body?.local_date
@@ -30,11 +31,11 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // ── COHORT BRANCH (participants with profiles.cohort_id set) ───────────────
-    // Early return only here — standard path and validation below are unchanged.
-    // Truth engine: primary metric extraction prefers sleep_quality when present;
-    // mood/focus nulls are not used in that path. Fallback chain uses _raw wearables
-    // then subjective fields only if earlier sources missing — verify in QA for cohort rows.
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
+
+    // ── COHORT BRANCH (active study participants — not graduated main-product users) ───
+    // After Pro + study completion, /api/me hides the cohort dashboard; check-in must use the
+    // standard path so B2C sliders persist. Request body is read once for both branches.
     const { data: cohortProfileRow } = await supabase
       .from('profiles')
       .select('cohort_id')
@@ -43,8 +44,15 @@ export async function POST(request: NextRequest) {
 
     const cohortSlugRaw = (cohortProfileRow as { cohort_id?: string | null } | null)?.cohort_id
     const cohortSlug = cohortSlugRaw != null ? String(cohortSlugRaw).trim() : ''
-    if (cohortSlug) {
-      const cohortBody = (await request.json().catch(() => ({}))) as Record<string, unknown>
+    const todayYmdForBranch = parseClientLocalDateYmd(body)
+    if (
+      cohortSlug &&
+      (await shouldUseCohortCheckinBranch({
+        authUserId: user.id,
+        cohortSlug,
+        todayYmd: todayYmdForBranch,
+      }))
+    ) {
       const clamp10 = (v: unknown): number | null => {
         const n = Number(v)
         if (!Number.isFinite(n)) return null
@@ -67,12 +75,12 @@ export async function POST(request: NextRequest) {
       }
       for (const k of COHORT_CHECKIN_SLIDER_FIELD_KEYS) {
         if (!checkinFields.includes(k)) continue
-        if (clamp10(cohortBody[k]) == null) {
+        if (clamp10(body[k]) == null) {
           return NextResponse.json({ error: `Missing required cohort field: ${k}` }, { status: 400 })
         }
       }
-      const sobRaw = cohortBody.sleep_onset_bucket
-      const nwRaw = cohortBody.night_wakes
+      const sobRaw = body.sleep_onset_bucket
+      const nwRaw = body.night_wakes
       if (checkinFields.includes('sleep_onset_bucket')) {
         if (sobRaw !== undefined && sobRaw !== null && ![1, 2, 3, 4].includes(Number(sobRaw))) {
           return NextResponse.json({ error: 'Invalid sleep_onset_bucket value' }, { status: 400 })
@@ -83,13 +91,13 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
         }
       }
-      const localDate = parseClientLocalDateYmd(cohortBody)
+      const localDate = parseClientLocalDateYmd(body)
       const sleep_onset_bucket =
         sobRaw === undefined || sobRaw === null ? null : (Number(sobRaw) as 1 | 2 | 3 | 4)
       const night_wakes =
         nwRaw === undefined || nwRaw === null ? null : (Number(nwRaw) as 0 | 1 | 2)
 
-      const tagsRaw = (cohortBody as { tags?: unknown }).tags
+      const tagsRaw = (body as { tags?: unknown }).tags
       const normalizedCohortTags: string[] = Array.isArray(tagsRaw)
         ? (tagsRaw as unknown[]).map((t) => String(t).toLowerCase()).filter(Boolean)
         : []
@@ -110,7 +118,7 @@ export async function POST(request: NextRequest) {
         } else if (k === 'night_wakes') {
           cohortDePayload[k] = night_wakes
         } else {
-          cohortDePayload[k] = clamp10(cohortBody[k])
+          cohortDePayload[k] = clamp10(body[k])
         }
       }
 
@@ -193,7 +201,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, cohort: true })
     }
 
-    const body = await request.json().catch(() => ({}))
     try { console.log('[checkin] received body:', body) } catch {}
     let { mood, energy, focus, sleep, stress, tags, supplement_intake } = body || {}
     const localDate = parseClientLocalDateYmd(body || {})

@@ -86,6 +86,7 @@ export function mapPurposeTag(tag?: string): string {
     gut: 'Gut Health',
     longevity: 'Longevity',
     athletic: 'Athletic Performance',
+    beauty: 'Skin, Hair & Nails',
     'skin_hair_nails': 'Skin, Hair & Nails',
     joint: 'Joint & Bone'
   }

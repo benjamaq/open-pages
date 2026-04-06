@@ -51,6 +51,20 @@ export async function GET() {
       }
       return out
     }
+    /** Union sanitized tags from several sources (stack row, intake, name map, legacy). Preserves first-seen order. */
+    const mergeGoalTagSources = (...sources: unknown[]): string[] => {
+      const seen = new Set<string>()
+      const out: string[] = []
+      for (const src of sources) {
+        for (const t of sanitizeGoalTags(src)) {
+          if (!seen.has(t)) {
+            seen.add(t)
+            out.push(t)
+          }
+        }
+      }
+      return out
+    }
 
     // Resolve profile id with admin fallback to avoid RLS/race blocking
     let profileId: string | null = null
@@ -115,19 +129,14 @@ export async function GET() {
         const linkedUserSuppId = r.user_supplement_id || idByName.get(nm) || null
         const intake_id = linkedUserSuppId || r.id
         const meta = (linkedUserSuppId ? metaById.get(String(linkedUserSuppId)) : null) || metaByName.get(nm) || null
-        // Goal tags: prefer stack_items.primary_goal_tags, else linked user_supplement.primary_goal_tags, else name-fallback.
-        // IMPORTANT: ignore legacy stack_items.tags unless they are valid goal keys.
-        const mergedTags: string[] = (() => {
-          const fromStack = sanitizeGoalTags((r as any)?.primary_goal_tags)
-          if (fromStack.length > 0) return fromStack
-          const fromLinked = sanitizeGoalTags((meta as any)?.primary_goal_tags)
-          if (fromLinked.length > 0) return fromLinked
-          const fromName = tagsByName.get(nm) || []
-          if (fromName.length > 0) return fromName
-          const fromLegacy = sanitizeGoalTags((r as any)?.tags)
-          if (fromLegacy.length > 0) return fromLegacy
-          return []
-        })()
+        // Goal tags: merge stack_items + linked user_supplement + name fallback + legacy stack tags (all sanitized).
+        // A partial copy on stack_items (e.g. one tag) must not hide the full list on user_supplement.
+        const mergedTags = mergeGoalTagSources(
+          (r as any)?.primary_goal_tags,
+          (meta as any)?.primary_goal_tags,
+          tagsByName.get(nm),
+          (r as any)?.tags
+        )
         const is_active = meta?.is_active === false ? false : true
         const testing_status = String(meta?.testing_status || 'testing').toLowerCase()
         // Prefer retest/inferred start dates from user_supplement when present
