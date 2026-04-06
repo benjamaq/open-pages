@@ -364,11 +364,12 @@ export function CohortQualificationSection({
   return (
     <section id="cohort-apply-form" className="scroll-mt-24">
       <h2 className="text-center text-[22px] font-semibold text-neutral-900 sm:text-[24px]">
-        Apply for a place in the study
+        Apply to join this 21-day study
       </h2>
-      <div className="mx-auto mt-6 max-w-[680px] space-y-2 text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-        <p>This study is designed to measure real outcomes, not collect opinions.</p>
-        <p>We accept a limited number of participants who meet the criteria.</p>
+      <div className="mx-auto mt-6 max-w-[680px] text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
+        <p>
+          We&apos;ll review your application and confirm your place if selected.
+        </p>
       </div>
 
       <div
@@ -415,11 +416,11 @@ export function CohortQualificationSection({
               />
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              Be specific. Stronger answers are more likely to be selected.
+              Specific answers help us select the right participants.
             </p>
             {issueThanks && !issueError && (
               <p className="mt-2 text-[13px] leading-relaxed text-emerald-700">
-                Thanks — this helps us understand your situation.
+                Thanks — noted.
               </p>
             )}
             {issueError && <p className="mt-1.5 text-sm text-red-600">{issueError}</p>}
@@ -475,7 +476,7 @@ export function CohortQualificationSection({
               </div>
             </div>
             <p className="mt-3 text-[13px] leading-relaxed text-neutral-600">
-              We prioritise participants currently experiencing sleep disruption.
+              We select participants with current sleep disruption.
             </p>
             {sleepQualityError && (
               <p className="mt-2 text-sm text-red-600">Please select how you&apos;ve been sleeping overall.</p>
@@ -611,7 +612,7 @@ export function CohortQualificationSection({
             Submit application
           </button>
           <p className="mt-4 text-center text-[12px] leading-relaxed text-neutral-500 sm:text-left">
-            Applications are reviewed within 24 hours. Selected participants receive confirmation by email.
+            We review within 24 hours. Selected participants are confirmed by email.
           </p>
         </form>
       </div>

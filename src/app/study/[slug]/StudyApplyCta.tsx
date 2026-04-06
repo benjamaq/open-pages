@@ -30,7 +30,7 @@ export function StudyApplyCta({
 
   return (
     <button type="button" onClick={scrollToForm} className={merged}>
-      Apply for a place in the study
+      Apply to join this study
     </button>
   )
 }

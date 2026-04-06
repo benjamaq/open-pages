@@ -254,21 +254,21 @@ function HowItWorksSteps() {
       step: 'STEP 1',
       icon: <IconHowApply />,
       title: 'Apply for a place in the study',
-      line: 'A short application to assess fit. Selected participants are confirmed within 24 hours.',
+      line: 'We review applications and confirm selected participants within 24 hours.',
       emphasis: 'light' as const,
     },
     {
       step: 'STEP 2',
       icon: <IconHowCheckin />,
       title: 'Track your results daily',
-      line: 'A 30-second morning check-in capturing measurable changes across key outcomes. No wearable required.',
+      line: 'A quick morning check-in. No wearable required.',
       emphasis: 'strong' as const,
     },
     {
       step: 'STEP 3',
       icon: <IconHowResults />,
       title: 'See what actually changed for you',
-      line: 'A personal outcome report showing how your sleep responded over 21 days, built from your own tracked data.',
+      line: 'A personal report from your own tracked data.',
       emphasis: 'medium' as const,
     },
   ]
@@ -314,8 +314,29 @@ function HowItWorksSteps() {
             How the study works
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-            A structured 21-day study designed to measure real changes in real people.
+            Twenty-one days. Outcomes from your own check-ins.
           </p>
+          <div className="mx-auto mt-10 grid max-w-4xl gap-8 sm:grid-cols-3 sm:gap-6">
+            {[
+              {
+                title: 'Sleep quality',
+                line: 'See how your sleep actually changes over the study.',
+              },
+              {
+                title: 'Recovery',
+                line: 'Track how your nights recover across the 21 days.',
+              },
+              {
+                title: 'Next-day energy',
+                line: 'See how you feel the morning after, day by day.',
+              },
+            ].map((o) => (
+              <div key={o.title} className="text-center sm:text-left">
+                <h3 className="text-[15px] font-bold text-neutral-900 sm:text-[16px]">{o.title}</h3>
+                <p className="mt-2 text-[13px] leading-snug text-neutral-600 sm:text-[14px]">{o.line}</p>
+              </div>
+            ))}
+          </div>
           <div className="relative mt-10 md:mt-12">
             <div
               className="pointer-events-none absolute left-[6%] right-[6%] top-[3.25rem] hidden h-px bg-gradient-to-r from-transparent via-neutral-200/85 to-transparent md:block"
@@ -495,49 +516,44 @@ function WhatYouReceive({ productName }: { productName: string }) {
       className={`py-16 sm:py-24 ${STUDY_STRIPE_DIVIDER}`}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-          This is a structured study, not a survey.
-        </p>
-        <h2 className="mt-4 text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
-          What you receive as a participant
+        <h2 className="text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
+          You&apos;ll receive
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-          Confirmed participants receive the full study package below.
+        <div className="mx-auto mt-4 max-w-lg text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:text-[16px]">
+          <p>3 months of BioStackr Pro</p>
+          <p className="mt-1">3-month supply of {productName}</p>
+        </div>
+        <p className="mx-auto mt-3 max-w-xl text-center text-[13px] leading-snug text-neutral-600 sm:text-[14px]">
+          Delivered when you complete the full 21-day study.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
             visual={<SureSleepProductPhoto />}
-            title={`${productName} for the full 21 days`}
-            body="Delivered before the study begins so you can track real changes from day one."
-            footer="Included for all confirmed participants"
+            title={`${productName} for your 21-day study`}
+            body="Supplied so you can run every day of the study."
+            footer="Study supply"
           />
           <IncentiveShelfCard
             highlight
             visual={<SureSleepProductPhoto larger />}
-            title="3 months of SureSleep from DoNotAge"
-            body="A three-month supply of SureSleep when you complete all 21 daily check-ins."
-            tagline="Shipped by DoNotAge so you can keep the routine that worked for you in the study."
+            title={`3-month supply of ${productName}`}
+            body="Yours when you finish all 21 daily check-ins."
             footer="Completion reward"
           />
           <IncentiveShelfCard
             visual={<BioStackrRewardPhoto />}
-            title="3 months BioStackr Pro"
-            body="Access your personal dashboard, track your outcomes, and see exactly how your stack performs over time."
-            bodyExtra="Includes your personal study results and ongoing tracking."
-            footer="Included for all participants"
+            title="3 months of BioStackr Pro"
+            body="Full dashboard access and your study outcomes."
+            footer="Included"
           />
         </div>
         <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-neutral-200/90 bg-neutral-50 px-5 py-6 text-center shadow-sm sm:mt-12 sm:px-8 sm:py-8">
-          <p className="text-[13px] font-semibold text-neutral-800 sm:text-[14px]">
-            Every confirmed participant receives all three rewards.
-          </p>
-          <p className="mt-3 text-[24px] font-bold tabular-nums tracking-tight text-neutral-900 sm:text-[28px]">
+          <p className="text-[24px] font-bold tabular-nums tracking-tight text-neutral-900 sm:text-[28px]">
             €200+{' '}
             <span className="text-[15px] font-semibold text-neutral-700 sm:text-base">combined package value</span>
           </p>
-          <p className="mt-3 text-[12px] leading-relaxed text-neutral-600 sm:text-[13px]">
-            Illustrative total for the three study outcomes together when you complete all 21 days — not a single-product
-            price or checkout total.
+          <p className="mt-3 text-[12px] leading-snug text-neutral-600 sm:text-[13px]">
+            Combined participant reward value when you complete all 21 days.
           </p>
         </div>
       </div>
@@ -600,7 +616,7 @@ function TrustFooter() {
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>,
             'No obligation',
-            'Completing the application does not commit you to participating.'
+            "Applying doesn't lock you in."
           )}
         </div>
         <p className="mt-14 text-center text-[11px] text-white/40">
@@ -727,11 +743,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
             {!showFullMessage ? (
               <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
-                Finish the full study and the three rewards you earn are worth over{' '}
+                Finish the full 21-day study and your combined rewards are worth over{' '}
                 <span className="whitespace-nowrap" style={{ color: RUST }}>
                   €200+
-                </span>{' '}
-                combined — the full package, not a per-item retail price.
+                </span>
+                .
               </p>
             ) : null}
 
