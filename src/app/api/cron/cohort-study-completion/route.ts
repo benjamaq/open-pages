@@ -175,6 +175,112 @@ async function processCompletionPass(dry: boolean) {
   return { ok: true as const, completed, completionEmails, errors }
 }
 
+/**
+ * Second pass: participant already marked completed (e.g. manual DB / migration) but completion
+ * thank-you was never sent. Does not touch status or study_completed_at.
+ */
+async function processCompletionEmailBackfillPass(dry: boolean) {
+  let sent = 0
+  const errors: string[] = []
+
+  const { data: rows, error } = await supabaseAdmin
+    .from('cohort_participants')
+    .select('id, user_id, cohort_id, study_started_at')
+    .eq('status', 'completed')
+    .not('study_started_at', 'is', null)
+    .not('study_completed_at', 'is', null)
+    .is('completion_email_sent_at', null)
+
+  if (error) {
+    console.error('[cohort-study-completion] backfill load:', error)
+    return { ok: false as const, error: error.message, sent: 0, errors }
+  }
+
+  const list = (rows || []) as Array<{
+    id: string
+    user_id: string
+    cohort_id: string
+    study_started_at: string
+  }>
+
+  const cohortIds = [...new Set(list.map((r) => r.cohort_id).filter(Boolean))]
+  const cohortMap = new Map<string, CohortMeta>()
+  if (cohortIds.length > 0) {
+    const { data: cRows, error: cErr } = await supabaseAdmin
+      .from('cohorts')
+      .select('id, study_days, product_name, brand_name')
+      .in('id', cohortIds)
+    if (cErr) {
+      console.error('[cohort-study-completion] backfill cohorts:', cErr)
+      return { ok: false as const, error: cErr.message, sent: 0, errors }
+    }
+    for (const c of (cRows || []) as Array<CohortMeta & { id: string }>) {
+      cohortMap.set(c.id, c)
+    }
+  }
+
+  const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((r) => r.user_id))
+
+  for (const row of list) {
+    const cdef = cohortMap.get(row.cohort_id)
+
+    if (dry) {
+      sent++
+      continue
+    }
+
+    const rewardToken = await ensureCohortRewardClaimToken(String(row.id))
+    const rewardClaimAbsoluteUrl = rewardToken
+      ? `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
+      : null
+    if (!rewardToken) {
+      console.warn('[cohort-study-completion] backfill: no reward claim token for participant', row.id)
+    }
+
+    const authId = authUserIdFromCohortParticipantProfileMap(row.user_id, profMap)
+    if (!authId) {
+      console.warn('[cohort-study-completion] backfill: no auth id for participant', row.id)
+      continue
+    }
+    const email = await resolveAuthEmail(authId)
+    if (!email) {
+      console.warn('[cohort-study-completion] backfill: no email for user', authId)
+      continue
+    }
+
+    const productName =
+      (cdef?.product_name != null && String(cdef.product_name).trim() !== ''
+        ? String(cdef.product_name).trim()
+        : null) || 'your study'
+
+    const mail = await sendCohortStudyCompletionEmail({
+      to: email,
+      authUserId: authId,
+      productName,
+      partnerBrandName: cdef?.brand_name ?? null,
+      rewardClaimAbsoluteUrl,
+    })
+    if (!mail.success) {
+      errors.push(`${row.id} backfill email: ${mail.error || 'send failed'}`)
+      continue
+    }
+
+    const { error: flagErr } = await supabaseAdmin
+      .from('cohort_participants')
+      .update({ completion_email_sent_at: new Date().toISOString() })
+      .eq('id', row.id)
+      .is('completion_email_sent_at', null)
+
+    if (flagErr) {
+      errors.push(`${row.id} backfill flag: ${flagErr.message}`)
+    } else {
+      sent++
+    }
+  }
+
+  return { ok: true as const, sent, errors }
+}
+
 async function processResultReadyEmails(dry: boolean) {
   let sent = 0
   const errors: string[] = []
@@ -282,6 +388,10 @@ export async function GET(request: NextRequest) {
     if (!completion.ok) {
       return NextResponse.json({ ok: false, error: completion.error }, { status: 500 })
     }
+    const backfill = await processCompletionEmailBackfillPass(dry)
+    if (!backfill.ok) {
+      return NextResponse.json({ ok: false, error: backfill.error }, { status: 500 })
+    }
     const ready = await processResultReadyEmails(dry)
     if (!ready.ok) {
       return NextResponse.json({ ok: false, error: ready.error }, { status: 500 })
@@ -292,8 +402,9 @@ export async function GET(request: NextRequest) {
       dry,
       completed: completion.completed,
       completionEmails: completion.completionEmails,
+      completionEmailBackfillSent: backfill.sent,
       resultReadyEmails: ready.sent,
-      errors: [...completion.errors, ...ready.errors],
+      errors: [...completion.errors, ...backfill.errors, ...ready.errors],
     })
   } catch (e: unknown) {
     console.error('[cohort-study-completion]', e)
