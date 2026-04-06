@@ -244,6 +244,8 @@ export default function DailyCheckinModal({
   const [selectedLifestyleFactors, setSelectedLifestyleFactors] = useState<string[]>([])
   const [focus, setFocus] = useState<number>(5)
   const [moodScore, setMoodScore] = useState<number>(5)
+  /** B2C path only: require real interaction so Save doesn’t re-post default 5/5/5 after DB cleanup. */
+  const [b2cFormTouched, setB2cFormTouched] = useState(false)
   const [customSymptomInput, setCustomSymptomInput] = useState('')
   const [showCustomSymptomInput, setShowCustomSymptomInput] = useState(false)
   const [cohortIdFromClient, setCohortIdFromClient] = useState<string | null>(null)
@@ -305,6 +307,7 @@ export default function DailyCheckinModal({
   // Load saved data when modal opens
 useEffect(() => {
   if (isOpen) {
+      setB2cFormTouched(false)
       loadSavedData()
       // Initialize default supplement selections based on today's rotation:
       // take all by default except those explicitly listed in todayItems.skipNames.
@@ -399,14 +402,13 @@ useEffect(() => {
   }
 
   const loadSavedData = () => {
-    // Load daily check-in data
+    // Load daily check-in data (use local calendar day — must match handleSave / local_date)
     const saved = localStorage.getItem(`biostackr_last_daily_checkin_${userId}`)
     if (saved) {
       try {
         const data = JSON.parse(saved)
-        const today = new Date().toISOString().split('T')[0]
-        
-        if (data.date === today) {
+        const todayLocal = getLocalDateYmd()
+        if (data.date === todayLocal) {
           setDraft(prev => ({
             ...prev,
             energy: data.energy,
@@ -421,6 +423,7 @@ useEffect(() => {
             setFocus(data.focus)
           }
           setSelectedLifestyleFactors(Array.isArray(data.lifestyleFactors) ? data.lifestyleFactors : [])
+          setB2cFormTouched(true)
         }
       } catch (error) {
         console.error('Error loading saved check-in:', error)
@@ -458,8 +461,7 @@ useEffect(() => {
     }))
 
     // Load saved note
-    const today = new Date().toISOString().split('T')[0]
-    const savedUpdate = localStorage.getItem(`biostackr_daily_update_${today}`)
+    const savedUpdate = localStorage.getItem(`biostackr_daily_update_${getLocalDateYmd()}`)
     if (savedUpdate) {
       try {
         const data = JSON.parse(savedUpdate)
@@ -474,16 +476,20 @@ useEffect(() => {
   }
 
   const handleSave = async () => {
+    if (!useCohortCheckinLayout && !b2cFormTouched) {
+      setMessage('Move a slider or change supplements/tags to confirm your check-in.')
+      return
+    }
     setIsSaving(true)
     setMessage('')
 
     try {
-      const today = new Date().toISOString().split('T')[0]
+      const todayLocal = getLocalDateYmd()
       // Persist the exact skip list shown in this modal for same-day dashboard display
       try {
         const names = Array.isArray((todayItems as any)?.skipNames) ? (todayItems as any).skipNames as string[] : []
         if (names.length > 0 && typeof window !== 'undefined') {
-          localStorage.setItem('biostackr_skip_names_today', JSON.stringify({ date: today, names }))
+          localStorage.setItem('biostackr_skip_names_today', JSON.stringify({ date: todayLocal, names }))
         }
       } catch {}
 
@@ -570,7 +576,7 @@ useEffect(() => {
         exerciseType: 'none',
         exerciseIntensity: '',
         protocols: [],
-        date: today,
+        date: todayLocal,
         userId: userId
       }))
 
@@ -593,9 +599,9 @@ useEffect(() => {
         wearable_source: draft.wearable?.source,
         wearable_sleep_score: draft.wearable?.sleepScore,
         wearable_recovery: draft.wearable?.recoveryScore,
-        date: today
+        date: todayLocal
       }
-      localStorage.setItem(`biostackr_daily_update_${today}`, JSON.stringify(updateData))
+      localStorage.setItem(`biostackr_daily_update_${todayLocal}`, JSON.stringify(updateData))
 
       // Update dashboard energy
       onEnergyUpdate(draft.energy)
@@ -997,7 +1003,10 @@ useEffect(() => {
                       min={1}
                       max={10}
                       value={draft.energy}
-                      onChange={(e) => setDraft(d => ({ ...d, energy: Number(e.target.value) }))}
+                      onChange={(e) => {
+                        setB2cFormTouched(true)
+                        setDraft(d => ({ ...d, energy: Number(e.target.value) }))
+                      }}
                       className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
                     <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{draft.energy}/10</span>
@@ -1013,7 +1022,10 @@ useEffect(() => {
                       min={1}
                       max={10}
                       value={focus}
-                      onChange={(e) => setFocus(Number(e.target.value))}
+                      onChange={(e) => {
+                        setB2cFormTouched(true)
+                        setFocus(Number(e.target.value))
+                      }}
                       className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
                     <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{focus}/10</span>
@@ -1029,7 +1041,10 @@ useEffect(() => {
                       min={1}
                       max={10}
                       value={draft.sleep || 5}
-                      onChange={(e) => setDraft(d => ({ ...d, sleep: Number(e.target.value) }))}
+                      onChange={(e) => {
+                        setB2cFormTouched(true)
+                        setDraft(d => ({ ...d, sleep: Number(e.target.value) }))
+                      }}
                       className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
                     <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{draft.sleep || 5}/10</span>
@@ -1044,7 +1059,10 @@ useEffect(() => {
                       min={1}
                       max={10}
                       value={moodScore}
-                      onChange={(e) => setMoodScore(Number(e.target.value))}
+                      onChange={(e) => {
+                        setB2cFormTouched(true)
+                        setMoodScore(Number(e.target.value))
+                      }}
                       className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                     />
                     <span className="w-8 text-right text-sm text-gray-700 font-medium flex-shrink-0">{moodScore}/10</span>
@@ -1063,6 +1081,7 @@ useEffect(() => {
                     try {
                       (todayItems?.supplements || []).forEach((it: any) => { all[it.id] = true })
                     } catch {}
+                    setB2cFormTouched(true)
                     setSelectedSupps(all)
                   }}
                   className="text-xs text-gray-700 underline"
@@ -1071,7 +1090,10 @@ useEffect(() => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedSupps({})}
+                  onClick={() => {
+                    setB2cFormTouched(true)
+                    setSelectedSupps({})
+                  }}
                   className="text-xs text-gray-500 underline"
                 >
                   Clear
@@ -1084,7 +1106,10 @@ useEffect(() => {
                         type="checkbox"
                         className="accent-gray-900"
                         checked={!!selectedSupps[it.id]}
-                        onChange={() => setSelectedSupps(prev => ({ ...prev, [it.id]: !prev[it.id] }))}
+                        onChange={() => {
+                          setB2cFormTouched(true)
+                          setSelectedSupps(prev => ({ ...prev, [it.id]: !prev[it.id] }))
+                        }}
                       />
                       <span className="text-sm text-gray-800">{it.name || it.title || 'Item'}</span>
                     </label>
@@ -1111,7 +1136,12 @@ useEffect(() => {
                     <button
                       key={factor.id}
                       type="button"
-                      onClick={() => setSelectedLifestyleFactors(prev => prev.includes(factor.id) ? prev.filter(id => id !== factor.id) : [...prev, factor.id])}
+                      onClick={() => {
+                        setB2cFormTouched(true)
+                        setSelectedLifestyleFactors(prev =>
+                          prev.includes(factor.id) ? prev.filter(id => id !== factor.id) : [...prev, factor.id],
+                        )
+                      }}
                       className={`
                         px-3 py-1.5 rounded-full text-sm border transition-colors
                         ${selectedLifestyleFactors.includes(factor.id)
