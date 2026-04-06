@@ -95,9 +95,12 @@ function parseResultSections(
 }
 
 function studyContextLine(brandName: string | null, productName: string | null): string {
-  const parts = [brandName, productName].filter((x): x is string => typeof x === 'string' && x.trim() !== '')
-  if (parts.length === 0) return 'Study results'
-  return `${parts.join(' ')} study`
+  const b = typeof brandName === 'string' ? brandName.trim() : ''
+  const p = typeof productName === 'string' ? productName.trim() : ''
+  if (b && p) return `${b} ${p} study`
+  if (p) return `${p} study`
+  if (b) return `${b} study`
+  return 'Study results'
 }
 
 /**
@@ -207,26 +210,30 @@ export default function CohortParticipantResultView({
     }
   }
 
-  const showJustClaimedSuccess = Boolean(claimedOnPage)
-  const showAlreadyClaimedSteady = proClaimed && !claimedOnPage
-
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-        <div className="flex items-start gap-4 min-w-0">
-          <div className="shrink-0 rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-sm">
-            <img src="/DNA-logo-black.png" alt="DoNotAge" className="h-7 sm:h-9 w-auto max-w-[120px] object-contain object-left" />
+    <div className="space-y-5 sm:space-y-7">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+            <img
+              src="/DNA-logo-black.png"
+              alt="DoNotAge"
+              className="h-6 sm:h-8 w-auto max-w-[108px] sm:max-w-[124px] object-contain object-left"
+            />
           </div>
-          <div className="min-w-0 pt-0.5">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">Your results</h1>
-            <p className="mt-1 text-sm sm:text-base text-slate-600 font-medium">{studyLine}</p>
+          <div className="h-8 w-px shrink-0 bg-slate-200/80 hidden sm:block" aria-hidden />
+          <div className="min-w-0">
+            <h1 className="text-[1.625rem] sm:text-3xl font-bold text-slate-950 tracking-[-0.02em] leading-[1.12]">
+              Your results
+            </h1>
+            <p className="mt-1 text-sm sm:text-[0.9375rem] text-slate-600 font-medium tracking-tight">{studyLine}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={handleDownloadPdf}
           disabled={downloading}
-          className="shrink-0 self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+          className="shrink-0 self-start sm:self-center rounded-xl border border-slate-200/95 bg-white/90 px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-white disabled:opacity-50 backdrop-blur-sm"
         >
           {downloading ? 'Preparing…' : 'Download PDF'}
         </button>
@@ -234,29 +241,31 @@ export default function CohortParticipantResultView({
 
       <div
         ref={rootRef}
-        className="rounded-3xl border border-slate-200/95 bg-white px-6 py-8 sm:px-10 sm:py-11 text-slate-900 shadow-[0_8px_44px_-16px_rgba(15,23,42,0.18),0_2px_8px_-4px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70"
+        className="rounded-3xl border border-slate-200 bg-white px-5 py-7 sm:px-10 sm:py-10 text-slate-900 shadow-[0_12px_48px_-20px_rgba(15,23,42,0.22),0_4px_14px_-6px_rgba(15,23,42,0.08)]"
       >
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-slate-500">
-          {publishedLabel ? <span>Published {publishedLabel}</span> : null}
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm text-slate-500 font-medium">
+          {publishedLabel ? <span className="tabular-nums">Published {publishedLabel}</span> : null}
           {publishedLabel ? <span className="text-slate-300 select-none" aria-hidden>·</span> : null}
           <span>Summary v{payload.result_version}</span>
         </div>
 
         {hasStructuredContent ? (
           <>
-            <header className="mt-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C84B2F]">Your verdict</p>
-              <h2 className="mt-3 text-[1.65rem] sm:text-4xl font-bold text-slate-900 leading-[1.15] tracking-tight">
+            <header className="mt-6 sm:mt-7">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84B2F]">
+                Your verdict
+              </p>
+              <h2 className="mt-3 sm:mt-4 text-[1.75rem] sm:text-[2.125rem] font-bold text-slate-950 leading-[1.14] tracking-[-0.02em]">
                 {verdictHeadline}
               </h2>
             </header>
 
             {bulletPoints.length > 0 ? (
-              <section className="mt-11 sm:mt-12">
-                <h3 className="text-lg font-semibold text-slate-900 tracking-tight">What changed</h3>
-                <ul className="mt-5 list-disc space-y-3.5 pl-5 text-[15px] sm:text-base leading-relaxed text-slate-800 marker:text-[#C84B2F]">
+              <section className="mt-9 sm:mt-11">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What changed</h3>
+                <ul className="mt-4 sm:mt-5 list-disc space-y-3 pl-5 text-[15px] sm:text-[1.0625rem] leading-[1.6] text-slate-800 marker:text-[#C84B2F]">
                   {bulletPoints.map((line) => (
-                    <li key={line} className="pl-1">
+                    <li key={line} className="pl-0.5">
                       {line}
                     </li>
                   ))}
@@ -265,9 +274,9 @@ export default function CohortParticipantResultView({
             ) : null}
 
             {explanation ? (
-              <section className="mt-11 sm:mt-12">
-                <h3 className="text-lg font-semibold text-slate-900 tracking-tight">What this means</h3>
-                <p className="mt-5 text-[15px] sm:text-base leading-[1.65] text-slate-800 whitespace-pre-line">
+              <section className="mt-9 sm:mt-11">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What this means</h3>
+                <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-800 whitespace-pre-line">
                   {explanation}
                 </p>
               </section>
@@ -283,53 +292,38 @@ export default function CohortParticipantResultView({
       </div>
 
       {rewards ? (
-        <section className="mt-10 sm:mt-12 space-y-5 sm:space-y-6" aria-label="Your rewards">
-          <article className="rounded-2xl border border-slate-200 bg-white px-7 py-8 sm:px-9 sm:py-9 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/60">
-            <div className="flex items-center min-h-[2.25rem] sm:min-h-[2.5rem]">
+        <section className="mt-8 sm:mt-10 space-y-4 sm:space-y-5" aria-label="Your rewards">
+          <article className="rounded-2xl border border-stone-200/95 bg-gradient-to-b from-[#faf8f5] via-white to-white px-7 py-8 sm:px-9 sm:py-9 shadow-[0_6px_28px_-12px_rgba(28,25,23,0.12)]">
+            <div className="flex items-center min-h-[2.35rem]">
               <img
                 src="/DNA-logo-black.png"
                 alt="DoNotAge"
-                className="h-9 sm:h-10 w-auto max-w-[140px] object-contain object-left"
+                className="h-[1.85rem] sm:h-10 w-auto max-w-[148px] object-contain object-left"
               />
             </div>
-            <h2 className="mt-7 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your DoNotAge reward</h2>
-            <p className="mt-4 max-w-prose text-[15px] sm:text-base leading-relaxed text-slate-700">
+            <h2 className="mt-6 sm:mt-7 text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
+              Your DoNotAge reward
+            </h2>
+            <p className="mt-3 sm:mt-4 max-w-prose text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
               Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200/95 bg-gradient-to-br from-white via-white to-slate-50/90 px-7 py-8 sm:px-9 sm:py-9 shadow-[0_6px_32px_-12px_rgba(15,23,42,0.14)] border-l-[4px] border-l-[#C84B2F] ring-1 ring-slate-200/50">
-            <div className="flex items-center min-h-[2.25rem] sm:min-h-[2.5rem]">
+          <article className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/70 px-7 py-8 sm:px-9 sm:py-9 shadow-[0_8px_36px_-14px_rgba(15,23,42,0.16)] border-l-[4px] border-l-[#C84B2F]">
+            <div className="flex items-center min-h-[2.35rem]">
               <img
                 src="/brand/biostackr-logo.png"
                 alt="BioStackr"
-                className="h-8 sm:h-9 w-auto max-w-[130px] object-contain object-left"
+                className="h-8 sm:h-9 w-auto max-w-[132px] object-contain object-left"
               />
             </div>
-            <h2 className="mt-7 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Your BioStackr reward</h2>
+            <h2 className="mt-6 sm:mt-7 text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
+              Your BioStackr reward
+            </h2>
 
-            {showJustClaimedSuccess ? (
-              <div className="mt-5">
-                <p className="text-[15px] sm:text-base font-semibold text-slate-900">Your reward has been applied</p>
-                <p className="mt-3 text-[15px] sm:text-base leading-relaxed text-slate-800">
-                  You now have BioStackr Pro for 3 months on this account.
-                </p>
-                <p className="mt-5 text-[15px] font-semibold text-slate-900">You can now:</p>
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] sm:text-base leading-relaxed text-slate-800">
-                  <li>Add supplements to your stack</li>
-                  <li>Track your results</li>
-                  <li>See what&apos;s actually working for you</li>
-                </ul>
-                <Link
-                  href="/dashboard"
-                  className="mt-8 inline-flex w-full sm:w-auto justify-center rounded-xl bg-[#C84B2F] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-95"
-                >
-                  Go to your dashboard
-                </Link>
-              </div>
-            ) : showAlreadyClaimedSteady ? (
+            {proClaimed ? (
               <div className="mt-5 space-y-4">
-                <div className="space-y-3 text-[15px] sm:text-base leading-relaxed text-slate-800">
+                <div className="space-y-3 text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
                   <p>Your BioStackr Pro is now active.</p>
                   <p>Start building your stack and see what actually works for you.</p>
                 </div>
