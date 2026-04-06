@@ -227,7 +227,13 @@ export async function GET(request: Request) {
               }
             }
           } catch {}
-          if (!cacheStaleDueToNewSupp) {
+          // `hasCheckedInToday` is per calendar day; cache must not serve a different `localToday` than the request.
+          let cacheStaleWrongLocalDay = false
+          if (clientTodayKey != null) {
+            const cachedFor = (cached as { payload?: { _computedForLocalToday?: string } })?.payload?._computedForLocalToday
+            if (cachedFor !== clientTodayKey) cacheStaleWrongLocalDay = true
+          }
+          if (!cacheStaleDueToNewSupp && !cacheStaleWrongLocalDay) {
             if (dbg) {
               try { console.log('[dbg] cache-hit', { computed_at: cached.computed_at }) } catch {}
               try { debugTrace.steps.push({ step: 'cache', hit: true, computed_at: cached.computed_at }) } catch {}
@@ -241,7 +247,12 @@ export async function GET(request: Request) {
               }
             })
           }
-          try { console.log('CACHE MISS (new supplement added)') } catch {}
+          try {
+            console.log(
+              'CACHE MISS',
+              cacheStaleDueToNewSupp ? '(new supplement added)' : cacheStaleWrongLocalDay ? '(localToday mismatch)' : '',
+            )
+          } catch {}
         } else {
           try { console.log('CACHE MISS', { versionOk, cachedV, expectedV: DASHBOARD_CACHE_VERSION }) } catch {}
         }
@@ -2667,6 +2678,8 @@ export async function GET(request: Request) {
     } catch {}
     const responsePayload = {
       _v: DASHBOARD_CACHE_VERSION,
+      /** When present, dashboard_cache must only hit if request ?localToday matches (check-in is day-scoped). */
+      _computedForLocalToday: todayKey,
       debug,
       ...(dbg ? { _debugTrace: debugTrace } : {}),
       userId: user.id,
