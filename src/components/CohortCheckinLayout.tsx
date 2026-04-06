@@ -178,27 +178,54 @@ export default function CohortCheckinLayout({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="sticky top-0 bg-white border-b px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{modalTitle}</h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Close">
+      <div
+        className={`bg-white rounded-2xl w-full max-h-[90vh] flex flex-col overflow-hidden ${
+          saved ? 'max-w-md shadow-lg' : 'max-w-3xl shadow-2xl'
+        }`}
+      >
+        <div
+          className={`sticky top-0 bg-white border-b flex items-center justify-between ${
+            saved ? 'px-4 py-3' : 'px-5 sm:px-8 py-4 sm:py-6'
+          }`}
+        >
+          <h2
+            className={`font-bold text-gray-900 ${
+              saved ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'
+            }`}
+          >
+            {modalTitle}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`text-gray-400 hover:text-gray-600 leading-none ${
+              saved ? 'text-xl' : 'text-2xl'
+            }`}
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white p-5 sm:p-8">
+        <div
+          className={`flex-1 overflow-y-auto overflow-x-hidden bg-white ${
+            saved ? 'p-4 sm:p-5' : 'p-5 sm:p-8'
+          }`}
+        >
           {saved ? (
-            <div className="flex flex-col items-center justify-center text-center px-4 py-10 sm:py-14">
-              <div style={{ color: '#639922', fontSize: '48px', lineHeight: 1 }} aria-hidden="true">
+            <div className="flex flex-col items-center justify-center text-center px-2 py-4 sm:py-5">
+              <div className="text-[#639922] text-3xl leading-none sm:text-[2rem]" aria-hidden="true">
                 ✓
               </div>
-              <h3 className="mt-6 text-[20px] font-semibold text-gray-900">Done for today.</h3>
-              <p className="mt-3 text-sm text-gray-500">Your check-in has been saved.</p>
-              <p className="mt-3 text-sm text-gray-500">Come back tomorrow morning.</p>
+              <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
+              <p className="mt-1.5 text-xs sm:text-sm text-gray-500 leading-snug max-w-[260px]">
+                Your check-in has been saved.
+                <span className="block mt-0.5">Come back tomorrow morning.</span>
+              </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-8 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800"
+                className="mt-5 w-full max-w-[220px] rounded-lg bg-gray-900 text-white py-2.5 text-sm font-semibold hover:bg-gray-800"
               >
                 Close
               </button>
