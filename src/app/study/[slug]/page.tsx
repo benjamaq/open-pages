@@ -9,6 +9,8 @@ import { StudyCohortFullWaitlist } from './StudyCohortFullWaitlist'
 import { CohortQualificationSection } from './CohortQualificationSection'
 
 const RUST = '#C84B2F'
+/** Study hero: never show fewer than this many "places filled" when display capacity is larger (urgency). Capped at displayTotal. */
+const MIN_HERO_PLACES_FILLED_DISPLAY = 13
 /** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
 /** Section 1 (hero) & section 3 — matches BioStackr logo white */
@@ -141,9 +143,21 @@ function HeroCohortStatusCard({
     displayedFilled = Math.min(maxP, c)
   }
 
+  let heroPlacesFilled = displayedFilled ?? c
+  if (
+    displayTotal != null &&
+    displayTotal > MIN_HERO_PLACES_FILLED_DISPLAY &&
+    heroPlacesFilled < MIN_HERO_PLACES_FILLED_DISPLAY
+  ) {
+    heroPlacesFilled = MIN_HERO_PLACES_FILLED_DISPLAY
+  }
+  if (displayTotal != null) {
+    heroPlacesFilled = Math.min(displayTotal, Math.max(0, heroPlacesFilled))
+  }
+
   const pct =
-    displayTotal != null && displayTotal > 0 && displayedFilled != null
-      ? Math.min(100, (displayedFilled / displayTotal) * 100)
+    displayTotal != null && displayTotal > 0
+      ? Math.min(100, (heroPlacesFilled / displayTotal) * 100)
       : 0
 
   return (
@@ -167,7 +181,7 @@ function HeroCohortStatusCard({
         </p>
         {displayTotal != null ? (
           <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
-            {displayedFilled ?? c} of {displayTotal} places filled
+            {heroPlacesFilled} of {displayTotal} places filled
           </p>
         ) : null}
         <p

@@ -7,7 +7,10 @@ import { generateTruthReportForSupplement } from '@/lib/truthEngine'
 import { normalizeTruthStatus } from '@/lib/verdictLabels'
 import { isProActive } from '@/lib/entitlements/pro'
 import { getYmdForUtcMsInTzOffset } from '@/lib/utils/localDateYmd'
-import { dailyEntryIsExplicitUserCheckin } from '@/lib/explicitDailyCheckin'
+import {
+  dailyEntryHasCohortStudyCheckinFields,
+  dailyEntryIsExplicitUserCheckin,
+} from '@/lib/explicitDailyCheckin'
 
 // Bump this when dashboard_cache payload shape/semantics change, to force recompute.
 const DASHBOARD_CACHE_VERSION = 1
@@ -78,7 +81,9 @@ export async function GET(request: Request) {
     let profile: any = null
     const { data: profilesRows, error: pErr } = await supabase
       .from('profiles')
-      .select('id,tier,pro_expires_at,created_at,cohort_handoff_checkin_ignore_local_date')
+      .select(
+        'id,tier,pro_expires_at,created_at,cohort_handoff_checkin_ignore_local_date,cohort_study_stack_cleaned_at',
+      )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10)
@@ -588,6 +593,24 @@ export async function GET(request: Request) {
           .from('profiles')
           .update({ cohort_handoff_checkin_ignore_local_date: null } as Record<string, unknown>)
           .eq('id', profileId)
+      }
+      // If ignore date was missing/wrong, still unblock B2C when handoff ran and today's row is
+      // cohort-study-shaped (last study check-in), not a post-handoff B2C-only entry.
+      const cohortHandoffDone = Boolean(
+        (profile as { cohort_study_stack_cleaned_at?: string | null } | null)
+          ?.cohort_study_stack_cleaned_at,
+      )
+      if (cohortHandoffDone && hasCheckedInToday && hasExplicitCheckinToday) {
+        const te = (entries365 || []).find(
+          (e: any) => String((e as any).local_date).slice(0, 10) === todayKey,
+        )
+        if (
+          te &&
+          dailyEntryHasCohortStudyCheckinFields(te as Record<string, unknown>)
+        ) {
+          hasCheckedInToday = false
+          todaySummary = null
+        }
       }
     } catch {}
 

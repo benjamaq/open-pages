@@ -10,7 +10,10 @@ import {
   fetchCohortCheckinYmdsSinceEnrollForUserIds,
 } from "@/lib/cohortCheckinCount";
 import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
-import { runCohortMainProductHandoffCleanup } from "@/lib/cohortEnrollment";
+import {
+  needsCohortStudyStackRepair,
+  runCohortMainProductHandoffCleanup,
+} from "@/lib/cohortEnrollment";
 
 export const dynamic = "force-dynamic";
 
@@ -526,15 +529,33 @@ export async function GET(request: Request) {
                       } | null
                     )?.cohort_study_stack_cleaned_at,
                   );
+                  let cohortHandoffNeedsRepair = false;
+                  if (
+                    cohortStackAlreadyCleaned &&
+                    proActive &&
+                    studyFinishedForProduct &&
+                    participantStatus !== "dropped" &&
+                    cohortStudyProductName &&
+                    profileId &&
+                    userId &&
+                    cohortId
+                  ) {
+                    cohortHandoffNeedsRepair = await needsCohortStudyStackRepair({
+                      profileId: profileId as string,
+                      userId: userId as string,
+                      productName: cohortStudyProductName as string,
+                      cohortSlug: cohortId as string,
+                    });
+                  }
                   const handoffCleanupEligible =
                     proActive &&
                     studyFinishedForProduct &&
                     participantStatus !== "dropped" &&
                     Boolean(cohortStudyProductName) &&
-                    !cohortStackAlreadyCleaned &&
                     Boolean(profileId) &&
                     Boolean(userId) &&
-                    Boolean(cohortId);
+                    Boolean(cohortId) &&
+                    (!cohortStackAlreadyCleaned || cohortHandoffNeedsRepair);
                   if (handoffCleanupEligible) {
                     try {
                       await runCohortMainProductHandoffCleanup({
