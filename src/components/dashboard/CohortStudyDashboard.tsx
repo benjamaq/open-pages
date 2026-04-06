@@ -491,7 +491,7 @@ export default function CohortStudyDashboard({
     : Math.min(2, Math.max(0, checkinCount))
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
   const complianceGateSatisfied = gateComplete >= 2
-  const studyNameLabel = brandName ? `${brandName} · ${productName}` : productName
+  const brandDisplay = String(brandName || '').trim() || 'DoNotAge'
   const welcomeName =
     typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
       ? welcomeFirstName.trim()
@@ -519,7 +519,7 @@ export default function CohortStudyDashboard({
     }
     if (gateComplete === 1) {
       const subLong =
-        'Good start. Complete one more check-in tomorrow to confirm your place and trigger product shipment.'
+        'Complete your second check-in to confirm your place and trigger shipment.'
       if (hasCheckedInToday) {
         return {
           label: 'Check-in 2 of 2',
@@ -542,10 +542,10 @@ export default function CohortStudyDashboard({
     return {
       label: 'Check-in 1 of 2',
       headline: 'Secure your place: first check-in',
-      sub: 'Your place is reserved for 48 hours. Complete your first two check-ins to secure your spot and trigger product shipment.',
+      sub: 'You have 48 hours to complete 2 check-ins. This confirms your place and triggers product shipment.',
       showCheckinCta: !hasCheckedInToday,
       doneBlock: hasCheckedInToday,
-      ctaLabel: 'Check in now',
+      ctaLabel: 'Start first check-in',
     }
   })()
 
@@ -589,12 +589,27 @@ export default function CohortStudyDashboard({
       />
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
-        <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+        <p className="text-base sm:text-lg font-medium text-gray-900 mb-4">
           Welcome back, {welcomeName}
         </p>
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <img
+            src="/DNA-logo-black.png"
+            alt="DoNotAge"
+            className="h-8 w-auto max-w-[min(140px,42vw)] object-contain object-left sm:h-9"
+            width={140}
+            height={36}
+          />
+          <img
+            src={encodeURI('/BIOSTACKR LOGO 2.png')}
+            alt="BioStackr"
+            className="h-8 w-auto max-w-[min(168px,48vw)] object-contain object-right sm:h-9"
+            width={168}
+            height={36}
+          />
+        </div>
         <h1 className="text-2xl font-semibold text-gray-900 leading-tight">
-          <span className="block text-xs font-medium text-gray-500 mb-1.5 tracking-wide">{studyNameLabel}</span>
-          {productName} study
+          {productName} study by {brandDisplay}
         </h1>
       </section>
 
@@ -727,9 +742,11 @@ export default function CohortStudyDashboard({
                   <span className="text-emerald-700" aria-hidden>
                     ✓{' '}
                   </span>
-                  Done for today
+                  First check-in complete.
                 </div>
-                <p className="mt-1 text-[14px] text-emerald-900/90">Come back tomorrow morning for your next check-in.</p>
+                <p className="mt-1 text-[14px] text-emerald-900/90 leading-snug">
+                  Come back tomorrow morning for your second check-in to confirm your place and trigger shipment.
+                </p>
               </div>
             ) : phase1Hero.showCheckinCta ? (
               <button

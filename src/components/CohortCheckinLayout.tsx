@@ -205,7 +205,9 @@ export default function CohortCheckinLayout({
             </div>
           ) : (
             <>
-              <p className="mb-8 text-sm text-gray-600">Quick check-in for your cohort study. Takes about a minute.</p>
+              <p className="mb-8 text-sm leading-relaxed text-gray-700">
+                Answer as accurately as possible — this is your baseline before starting the supplement.
+              </p>
 
               {fields.map((fieldKey) => {
                 if (fieldKey === 'sleep_onset_bucket') {

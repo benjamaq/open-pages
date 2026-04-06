@@ -520,8 +520,8 @@ function WhatYouReceive({ productName }: { productName: string }) {
           You&apos;ll receive
         </h2>
         <div className="mx-auto mt-4 max-w-lg text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:text-[16px]">
-          <p>3 months of BioStackr Pro</p>
-          <p className="mt-1">3-month supply of {productName}</p>
+          <p>3-month supply of {productName}</p>
+          <p className="mt-1">3 months of BioStackr Pro</p>
         </div>
         <p className="mx-auto mt-3 max-w-xl text-center text-[13px] leading-snug text-neutral-600 sm:text-[14px]">
           Delivered when you complete the full 21-day study.

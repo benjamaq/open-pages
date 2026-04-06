@@ -612,7 +612,7 @@ export function CohortQualificationSection({
             Submit application
           </button>
           <p className="mt-4 text-center text-[12px] leading-relaxed text-neutral-500 sm:text-left">
-            We review within 24 hours. Selected participants are confirmed by email.
+            Selected participants will be confirmed by email.
           </p>
         </form>
       </div>

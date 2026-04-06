@@ -279,8 +279,6 @@ export function CheckinLauncher({
           : null)
       : asyncStudyProductName ?? null
 
-  const welcomeStudyTitle = cohortStudyProductName || 'SureSleep'
-
   const showCohortStudyDashboardRaw =
     mePayload !== undefined
       ? (mePayload as { showCohortStudyDashboard?: unknown })?.showCohortStudyDashboard
@@ -311,13 +309,18 @@ export function CheckinLauncher({
           aria-labelledby="cohort-welcome-title"
         >
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-2xl">
-            <h2 id="cohort-welcome-title" className="text-xl font-semibold text-gray-900">
-              Welcome to the {welcomeStudyTitle} study
+            <h2 id="cohort-welcome-title" className="text-xl font-semibold text-gray-900 leading-snug">
+              Secure your place in the study
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-gray-600">
-              You&apos;re in. Before your product arrives, we need your first quick check-in to capture your baseline.
-              Takes about 30 seconds.
-            </p>
+            <div className="mt-4 space-y-3 text-sm leading-relaxed text-gray-600 text-left">
+              <p>
+                To confirm your spot, you need to complete 2 quick check-ins within 48 hours.
+              </p>
+              <p>This helps us establish your baseline and ensures participants follow through.</p>
+              <p>
+                Places are limited — participants who complete both check-ins first are accepted into the study.
+              </p>
+            </div>
             <button
               type="button"
               className="mt-6 w-full rounded-full bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
@@ -326,7 +329,7 @@ export function CheckinLauncher({
                 setOpen(true)
               }}
             >
-              Start my first check-in
+              Start first check-in
             </button>
           </div>
         </div>
