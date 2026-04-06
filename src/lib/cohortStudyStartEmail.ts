@@ -37,7 +37,7 @@ export async function sendCohortStudyStartEmail(params: {
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-    `<p style="margin:0 0 16px;">Your <strong>${productEsc}</strong> study starts today. <strong>${partnerBrand}</strong> is your product partner; <strong>BioStackr</strong> runs the study platform and your daily check-ins. Here's what you need to know.</p>` +
+    `<p style="margin:0 0 16px;">Your <strong>${productEsc}</strong> study starts today. We use your first check-in as the starting point so we can measure changes consistently. <strong>${partnerBrand}</strong> is your product partner; <strong>BioStackr</strong> runs the study platform and your daily check-ins. Here's what you need to know.</p>` +
     `<p style="margin:0 0 6px;"><strong>Taking ${productEsc}</strong></p>` +
     `<p style="margin:0 0 16px;">Mix one scoop with water and take it 45–60 minutes before bed tonight. Take it consistently every evening — this is what gives the study its signal.</p>` +
     `<p style="margin:0 0 16px;">If you miss a night, just pick up again the next evening. Don't double up.</p>` +

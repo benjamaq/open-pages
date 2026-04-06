@@ -589,25 +589,25 @@ export default function CohortStudyDashboard({
       />
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
-        <p className="text-base sm:text-lg font-medium text-gray-900 mb-4">
-          Welcome back, {welcomeName}
-        </p>
         <div className="flex items-center justify-between gap-4 mb-4">
           <img
             src="/DNA-logo-black.png"
             alt="DoNotAge"
-            className="h-8 w-auto max-w-[min(140px,42vw)] object-contain object-left sm:h-9"
-            width={140}
-            height={36}
+            className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
+            width={200}
+            height={52}
           />
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
             alt="BioStackr"
-            className="h-8 w-auto max-w-[min(168px,48vw)] object-contain object-right sm:h-9"
-            width={168}
+            className="h-8 w-auto max-w-[min(160px,46vw)] object-contain object-right sm:h-9"
+            width={160}
             height={36}
           />
         </div>
+        <p className="text-base sm:text-lg font-medium text-gray-900 mb-1">
+          Welcome back, {welcomeName}
+        </p>
         <h1 className="text-2xl font-semibold text-gray-900 leading-tight">
           {productName} study by {brandDisplay}
         </h1>
@@ -711,6 +711,11 @@ export default function CohortStudyDashboard({
               <div className="text-3xl font-bold text-gray-900">
                 Day {currentDay} of {studyDays}
               </div>
+              {currentDay === 1 ? (
+                <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+                  Your study starts from your first check-in today, so we can measure changes consistently.
+                </p>
+              ) : null}
               <div className="mt-4 h-3 rounded-full bg-gray-200 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-[width]"
