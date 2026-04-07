@@ -94,16 +94,40 @@ function formatConfidenceDisplay(raw: unknown): string | null {
   return String(n)
 }
 
-function formatEffectSizeDisplay(raw: unknown): string | null {
+/** Cohen-style effect_size in result_json; 2–100 sometimes stored as a percent scale. */
+function normalizeEffectSizeForBands(raw: unknown): number | null {
   const n = numLike(raw)
   if (n == null) return null
-  if (Math.abs(n) < 10 && n !== Math.trunc(n)) return n.toFixed(2)
-  return formatMetricValue(n)
+  if (n > 1 && n <= 100) return n / 100
+  return n
+}
+
+/** User-facing strength only (no raw decimals). */
+function effectStrengthLabel(normalized: number | null): string | null {
+  if (normalized == null || !Number.isFinite(normalized)) return null
+  if (normalized >= 0.4) return 'Effect: strong'
+  if (normalized >= 0.2) return 'Effect: moderate'
+  return 'Effect: weak'
+}
+
+function cohortUsageRecommendation(effectNormalized: number | null, productLabel: string): string {
+  if (effectNormalized == null || !Number.isFinite(effectNormalized)) {
+    return "We don't yet have enough data to make a clear recommendation."
+  }
+  if (effectNormalized >= 0.4) {
+    return `Keep using ${productLabel} — it's working well for you.`
+  }
+  if (effectNormalized >= 0.2) {
+    return `Continue using ${productLabel} — you're seeing a positive effect.`
+  }
+  return `No clear benefit detected — you may want to stop using ${productLabel}.`
 }
 
 type ParsedResultMetrics = {
   primaryMetric: string | null
-  effectSizeLabel: string | null
+  /** Normalized effect size for thresholds; not shown in UI. */
+  effectSizeNormalized: number | null
+  effectStrengthLabel: string | null
   confidenceLabel: string | null
   rows: ParsedMetricRow[]
 }
@@ -114,7 +138,8 @@ function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
     stringField(j, 'primary_metric') || stringField(j, 'primaryMetric') || stringField(j, 'primary_outcome')
   const primaryMetric = primaryRaw ? humanizeMetricKey(primaryRaw) : null
 
-  const effectSizeLabel = formatEffectSizeDisplay(j.effect_size ?? j.effectSize)
+  const effectSizeNormalized = normalizeEffectSizeForBands(j.effect_size ?? j.effectSize)
+  const effectStrengthLabelOut = effectStrengthLabel(effectSizeNormalized)
   const confidenceLabel = formatConfidenceDisplay(j.confidence ?? j.confidence_score ?? j.signal_strength)
 
   const metricsRoot = recordField(j.metrics) ?? {}
@@ -143,7 +168,7 @@ function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
     })
   }
 
-  return { primaryMetric, effectSizeLabel, confidenceLabel, rows }
+  return { primaryMetric, effectSizeNormalized, effectStrengthLabel: effectStrengthLabelOut, confidenceLabel, rows }
 }
 
 function metricDeltaPhrase(row: ParsedMetricRow): string | null {
@@ -264,9 +289,12 @@ export default function CohortParticipantResultView({
   const hasMetricBlock =
     parsedMetrics.rows.length > 0 ||
     parsedMetrics.primaryMetric != null ||
-    parsedMetrics.effectSizeLabel != null ||
+    parsedMetrics.effectStrengthLabel != null ||
     parsedMetrics.confidenceLabel != null
   const showOutcomeBody = hasStructuredContent || hasMetricBlock
+
+  const productLabel = (payload.product_name && payload.product_name.trim()) || 'SureSleep'
+  const recommendationText = cohortUsageRecommendation(parsedMetrics.effectSizeNormalized, productLabel)
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {
@@ -416,7 +444,7 @@ export default function CohortParticipantResultView({
                   generic template.
                 </p>
 
-                {parsedMetrics.primaryMetric != null || parsedMetrics.effectSizeLabel != null ? (
+                {parsedMetrics.primaryMetric != null || parsedMetrics.effectStrengthLabel != null ? (
                   <p className="mt-5 text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
                     {parsedMetrics.primaryMetric != null ? (
                       <>
@@ -424,16 +452,13 @@ export default function CohortParticipantResultView({
                         <span className="font-semibold text-slate-950">{parsedMetrics.primaryMetric}</span>
                       </>
                     ) : null}
-                    {parsedMetrics.primaryMetric != null && parsedMetrics.effectSizeLabel != null ? (
+                    {parsedMetrics.primaryMetric != null && parsedMetrics.effectStrengthLabel != null ? (
                       <span className="text-slate-400 mx-1.5" aria-hidden>
                         ·
                       </span>
                     ) : null}
-                    {parsedMetrics.effectSizeLabel != null ? (
-                      <>
-                        <span className="text-slate-500">Effect size</span>{' '}
-                        <span className="font-semibold text-slate-950 tabular-nums">{parsedMetrics.effectSizeLabel}</span>
-                      </>
+                    {parsedMetrics.effectStrengthLabel != null ? (
+                      <span className="font-semibold text-slate-950">{parsedMetrics.effectStrengthLabel}</span>
                     ) : null}
                   </p>
                 ) : null}
@@ -503,6 +528,20 @@ export default function CohortParticipantResultView({
                 <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What this means</h3>
                 <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-800 whitespace-pre-line">
                   {explanation}
+                </p>
+              </section>
+            ) : null}
+
+            {showOutcomeBody ? (
+              <section className="mt-9 sm:mt-11" aria-labelledby="cohort-result-recommendation-heading">
+                <h3
+                  id="cohort-result-recommendation-heading"
+                  className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight"
+                >
+                  Your recommendation
+                </h3>
+                <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] font-medium leading-[1.65] text-slate-900">
+                  {recommendationText}
                 </p>
               </section>
             ) : null}
