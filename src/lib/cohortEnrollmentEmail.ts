@@ -1,6 +1,7 @@
 import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
+  COHORT_EMAIL_BRAND_LINE,
   COHORT_EMAIL_CTA_LINK_ATTRS,
   escapeHtml,
   firstNameFromAuthUser,
@@ -52,6 +53,7 @@ export async function sendCohortEnrollmentEmail(params: {
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${firstEsc},</p>` +
+    `<p style="margin:0 0 16px;">Welcome to the ${escapeHtml(COHORT_EMAIL_BRAND_LINE)} study.</p>` +
     `<p style="margin:0 0 6px;"><strong>To confirm your place:</strong></p>` +
     `<p style="margin:0 0 16px;line-height:1.55;color:#374151;">` +
     `• Complete your first check-in today<br />` +
