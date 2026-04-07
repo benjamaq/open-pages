@@ -1,6 +1,18 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-/** Study is full when confirmed participant count reaches max (no time-based cutoff). */
+/**
+ * Cohort recruitment counts (SureSleep / generic cohort slugs):
+ *
+ * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales confirmed against
+ *   `max_participants`, then maps into display slots (study landing only; not the DB cap).
+ * - Operational cap: `cohorts.max_participants` — Postgres trigger caps **applied + confirmed**
+ *   pipeline rows; study page “full” uses **confirmed-only** vs this same field (see
+ *   `isCohortCapacityFull` below). Keep max ≥ shipped target (e.g. 60).
+ * - B2C unrelated: `NEXT_PUBLIC_B2C_AT_CAPACITY` / `b2cCapacityGate.ts` — individual product signup,
+ *   not cohort enrollment.
+ */
+
+/** Study landing treats cohort as full when **confirmed** count reaches max (no time-based cutoff). */
 export function isCohortCapacityFull(maxParticipants: number | null | undefined, confirmedCount: number): boolean {
   if (maxParticipants == null || !Number.isFinite(Number(maxParticipants))) return false
   const cap = Math.max(0, Math.floor(Number(maxParticipants)))
