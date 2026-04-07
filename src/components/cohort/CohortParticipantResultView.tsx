@@ -30,6 +30,141 @@ function stringListField(j: Record<string, unknown>, key: string): string[] {
   return v.filter((x): x is string => typeof x === 'string' && x.trim() !== '').map((s) => s.trim())
 }
 
+function numLike(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+function recordField(obj: unknown): Record<string, unknown> | null {
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj as Record<string, unknown>
+  return null
+}
+
+/** baseline_avg / final_avg (and a few legacy key variants). */
+function readBaselineFinal(entry: Record<string, unknown>): { baseline: number | null; final: number | null } {
+  const baseline =
+    numLike(entry.baseline_avg) ??
+    numLike(entry.baseline) ??
+    numLike(entry.baselineAvg) ??
+    numLike(entry.baseline_mean)
+  const final =
+    numLike(entry.final_avg) ??
+    numLike(entry.final) ??
+    numLike(entry.finalAvg) ??
+    numLike(entry.final_mean)
+  return { baseline, final }
+}
+
+type ParsedMetricRow = {
+  id: string
+  label: string
+  baseline: number | null
+  final: number | null
+  /** When true, a decrease counts as improvement (e.g. night wakings). */
+  lowerIsBetter: boolean
+}
+
+function humanizeMetricKey(key: string): string {
+  const k = key.replace(/_/g, ' ').trim()
+  if (!k) return key
+  return k.replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function formatMetricValue(n: number | null): string {
+  if (n == null || !Number.isFinite(n)) return '—'
+  if (Math.abs(n - Math.round(n)) < 1e-6) return String(Math.round(n))
+  return n.toFixed(1).replace(/\.0$/, '')
+}
+
+function formatConfidenceDisplay(raw: unknown): string | null {
+  if (raw == null) return null
+  if (typeof raw === 'string') {
+    const t = raw.trim()
+    if (!t) return null
+    return t
+  }
+  const n = numLike(raw)
+  if (n == null) return null
+  if (n >= 0 && n <= 1 && n !== Math.round(n)) return `${Math.round(n * 100)}% confidence`
+  if (n > 1 && n <= 100) return `${Math.round(n)}% confidence`
+  return String(n)
+}
+
+function formatEffectSizeDisplay(raw: unknown): string | null {
+  const n = numLike(raw)
+  if (n == null) return null
+  if (Math.abs(n) < 10 && n !== Math.trunc(n)) return n.toFixed(2)
+  return formatMetricValue(n)
+}
+
+type ParsedResultMetrics = {
+  primaryMetric: string | null
+  effectSizeLabel: string | null
+  confidenceLabel: string | null
+  rows: ParsedMetricRow[]
+}
+
+/** Core outcome fields from seeded `result_json` (metrics + study-level signals). */
+function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
+  const primaryRaw =
+    stringField(j, 'primary_metric') || stringField(j, 'primaryMetric') || stringField(j, 'primary_outcome')
+  const primaryMetric = primaryRaw ? humanizeMetricKey(primaryRaw) : null
+
+  const effectSizeLabel = formatEffectSizeDisplay(j.effect_size ?? j.effectSize)
+  const confidenceLabel = formatConfidenceDisplay(j.confidence ?? j.confidence_score ?? j.signal_strength)
+
+  const metricsRoot = recordField(j.metrics) ?? {}
+  const specs: Array<{ key: string; label: string; lowerIsBetter: boolean }> = [
+    { key: 'sleep_quality', label: 'Sleep quality', lowerIsBetter: false },
+    { key: 'energy', label: 'Energy', lowerIsBetter: false },
+    { key: 'night_wakes', label: 'Night wakings', lowerIsBetter: true },
+    { key: 'night_wake', label: 'Night wakings', lowerIsBetter: true },
+  ]
+
+  const seen = new Set<string>()
+  const rows: ParsedMetricRow[] = []
+  for (const spec of specs) {
+    if (seen.has(spec.label)) continue
+    const sub = recordField(metricsRoot[spec.key])
+    if (!sub) continue
+    const { baseline, final } = readBaselineFinal(sub)
+    if (baseline == null && final == null) continue
+    seen.add(spec.label)
+    rows.push({
+      id: spec.key,
+      label: spec.label,
+      baseline,
+      final,
+      lowerIsBetter: spec.lowerIsBetter,
+    })
+  }
+
+  return { primaryMetric, effectSizeLabel, confidenceLabel, rows }
+}
+
+function metricDeltaPhrase(row: ParsedMetricRow): string | null {
+  const { baseline, final, lowerIsBetter } = row
+  if (baseline == null || final == null) return null
+  const delta = final - baseline
+  if (Math.abs(delta) < 1e-9) return 'steady between your first and last check-ins'
+  const improved = lowerIsBetter ? delta < 0 : delta > 0
+  const worse = lowerIsBetter ? delta > 0 : delta < 0
+  const mag = formatMetricValue(Math.abs(delta))
+  if (improved) {
+    return row.lowerIsBetter
+      ? `down by about ${mag} vs your start — fewer interruptions overnight`
+      : `up by about ${mag} vs your start`
+  }
+  if (worse) {
+    return row.lowerIsBetter ? `up by about ${mag} vs your start` : `down by about ${mag} vs your start`
+  }
+  return null
+}
+
 function normalizeResultRecord(raw: Record<string, unknown> | null | unknown): Record<string, unknown> {
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw as Record<string, unknown>
   if (typeof raw === 'string') {
@@ -105,7 +240,8 @@ function studyContextLine(brandName: string | null, productName: string | null):
 
 /**
  * Participant-only cohort result layout + PDF export (not TruthReportView).
- * `result_json` shape: { verdict, bullet_points[], explanation } (+ legacy keys supported).
+ * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric, effect_size,
+ * confidence, and metrics.{sleep_quality,energy,night_wakes}.{baseline_avg,final_avg}.
  */
 export default function CohortParticipantResultView({
   payload,
@@ -124,6 +260,13 @@ export default function CohortParticipantResultView({
     j,
     payload.product_name,
   )
+  const parsedMetrics = parseResultMetrics(j)
+  const hasMetricBlock =
+    parsedMetrics.rows.length > 0 ||
+    parsedMetrics.primaryMetric != null ||
+    parsedMetrics.effectSizeLabel != null ||
+    parsedMetrics.confidenceLabel != null
+  const showOutcomeBody = hasStructuredContent || hasMetricBlock
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {
@@ -249,7 +392,7 @@ export default function CohortParticipantResultView({
           <span>Summary v{payload.result_version}</span>
         </div>
 
-        {hasStructuredContent ? (
+        {showOutcomeBody ? (
           <>
             <header className="mt-6 sm:mt-7">
               <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84B2F]">
@@ -259,6 +402,88 @@ export default function CohortParticipantResultView({
                 {verdictHeadline}
               </h2>
             </header>
+
+            {hasMetricBlock ? (
+              <section className="mt-9 sm:mt-11" aria-labelledby="cohort-result-metrics-heading">
+                <h3
+                  id="cohort-result-metrics-heading"
+                  className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight"
+                >
+                  What your check-ins show
+                </h3>
+                <p className="mt-2 text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+                  Averages from your early study days compared with your last days — your personal trajectory, not a
+                  generic template.
+                </p>
+
+                {parsedMetrics.primaryMetric != null || parsedMetrics.effectSizeLabel != null ? (
+                  <p className="mt-5 text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
+                    {parsedMetrics.primaryMetric != null ? (
+                      <>
+                        <span className="text-slate-500">Primary focus</span>{' '}
+                        <span className="font-semibold text-slate-950">{parsedMetrics.primaryMetric}</span>
+                      </>
+                    ) : null}
+                    {parsedMetrics.primaryMetric != null && parsedMetrics.effectSizeLabel != null ? (
+                      <span className="text-slate-400 mx-1.5" aria-hidden>
+                        ·
+                      </span>
+                    ) : null}
+                    {parsedMetrics.effectSizeLabel != null ? (
+                      <>
+                        <span className="text-slate-500">Effect size</span>{' '}
+                        <span className="font-semibold text-slate-950 tabular-nums">{parsedMetrics.effectSizeLabel}</span>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+
+                {parsedMetrics.rows.length > 0 ? (
+                  <ul className="mt-6 sm:mt-7 list-none space-y-4 p-0 m-0">
+                    {parsedMetrics.rows.map((row) => {
+                      const phrase = metricDeltaPhrase(row)
+                      return (
+                        <li
+                          key={row.id}
+                          className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white px-4 py-4 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4">
+                            <span className="text-[15px] sm:text-base font-semibold text-slate-950">{row.label}</span>
+                            <span className="text-[15px] sm:text-base font-bold tabular-nums text-slate-900 tracking-tight">
+                              <span className="text-slate-500 font-medium text-sm sm:text-[15px]">Baseline </span>
+                              {formatMetricValue(row.baseline)}
+                              <span className="text-slate-400 font-normal mx-1.5" aria-hidden>
+                                →
+                              </span>
+                              <span className="text-slate-500 font-medium text-sm sm:text-[15px]">Final </span>
+                              {formatMetricValue(row.final)}
+                            </span>
+                          </div>
+                          {phrase ? (
+                            <p className="mt-3 text-sm sm:text-[15px] leading-relaxed text-slate-700">{phrase}</p>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : null}
+
+                {parsedMetrics.confidenceLabel != null ? (
+                  <div className="mt-7 sm:mt-8 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-4 sm:px-5 sm:py-4">
+                    <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Signal strength
+                    </p>
+                    <p className="mt-2 text-[15px] sm:text-[1.0625rem] font-medium text-slate-900 leading-snug">
+                      {parsedMetrics.confidenceLabel}
+                    </p>
+                    <p className="mt-2 text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+                      Stronger signals mean the shift in your data is less likely to be random noise alone — it does not
+                      guarantee the same outcome if you repeat the study.
+                    </p>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
             {bulletPoints.length > 0 ? (
               <section className="mt-9 sm:mt-11">
@@ -284,9 +509,9 @@ export default function CohortParticipantResultView({
           </>
         ) : (
           <p className="mt-6 text-sm leading-relaxed text-slate-600">
-            Your personal outcome summary will appear here once it includes a <strong>verdict</strong> (clear headline),{' '}
-            <strong>bullet_points</strong> (what changed in your check-ins), and an <strong>explanation</strong> (what
-            that means for you in plain English).
+            Your personal outcome summary will appear here once it includes a <strong>verdict</strong>,{' '}
+            <strong>check-in metrics</strong> (baseline vs final averages), and/or <strong>bullet_points</strong> plus
+            an <strong>explanation</strong> of what the numbers mean for you.
           </p>
         )}
       </div>

@@ -173,7 +173,7 @@ function HeroCohortStatusCard({
         </p>
         {displayTotal != null ? (
           <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
-            {heroPlacesFilled} of {displayTotal} places filled
+            {heroPlacesFilled} participants confirmed so far
           </p>
         ) : null}
         <p
@@ -194,7 +194,7 @@ function HeroCohortStatusCard({
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label={
-                displayTotal != null ? `Places filled ${Math.round(pct)} percent` : 'Study capacity'
+                displayTotal != null ? `Cohort progress ${Math.round(pct)} percent` : 'Study capacity'
               }
               role="progressbar"
             />
