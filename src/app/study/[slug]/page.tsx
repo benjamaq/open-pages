@@ -8,6 +8,11 @@ import {
   isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
+import {
+  COGNITIVE_COHORT_STUDY_ASSETS,
+  GENERIC_STUDY_PLACEHOLDER_IMAGE,
+  SLEEP_PACK_PRODUCT_IMAGE,
+} from '@/lib/cohortStudyPageAssets'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { countCohortPipelineParticipants, isCohortEnrollmentClosedByPipeline } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
@@ -40,12 +45,8 @@ function readPositiveCap(raw: unknown): number | null {
 
 const DNA_LOGO_WHITE = '/DNA-logo-white.png'
 const DNA_LOGO_BLACK = '/DNA-logo-black.png'
-/** Product pack shot: add `public/suresleep-1280x1280.png` (square source for crisp cards). */
-const SURE_SLEEP_PRODUCT = '/suresleep-1280x1280.png'
 /** Same asset as dashboard/marketing headers (`src/app/biostackr/page.tsx`). */
 const BIOSTACKR_LOGO = '/BIOSTACKR LOGO 2.png'
-/** Rewards card — BioStackr product/dashboard shot (`public/bioshot.png`). */
-const BIOSTACKR_REWARD_SHOT = '/bioshot.png'
 
 /** Subtle noise overlay when no `--cohort-hero-bg` photograph is set. */
 const HERO_GRAIN_BG = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>")`
@@ -400,9 +401,31 @@ function HowItWorksSteps({
   )
 }
 
-/** Partner mark: DNA asset for DoNotAge-branded cohorts; wordmark text otherwise (multi-cohort). */
-function StudyPartnerHeroLogo({ brandDisplay }: { brandDisplay: string }) {
+/**
+ * Partner mark: optional `partnerLogoSrc` from cohort-shaped assets (e.g. cognitive pack);
+ * else DNA for DoNotAge-branded cohorts; wordmark text otherwise.
+ */
+function StudyPartnerHeroLogo({
+  brandDisplay,
+  partnerLogoSrc,
+}: {
+  brandDisplay: string
+  /** When set (e.g. cognitive cohort asset), overrides DNA/text wordmark. */
+  partnerLogoSrc?: string | null
+}) {
   const b = String(brandDisplay || '').trim()
+  if (partnerLogoSrc) {
+    return (
+      <Image
+        src={partnerLogoSrc}
+        alt={b || 'Study partner'}
+        width={400}
+        height={160}
+        className="h-[7.75rem] w-auto max-w-[min(100%,560px)] object-contain object-left sm:h-[8.75rem] md:h-[9.5rem]"
+        priority
+      />
+    )
+  }
   if (b && !/donotage/i.test(b)) {
     return (
       <div className="flex min-h-[7.75rem] max-w-[min(100%,560px)] items-center sm:min-h-[8.75rem] md:min-h-[9.5rem]">
@@ -540,7 +563,7 @@ function BioStackrRewardPhoto() {
         </Link>
       </div>
       <Image
-        src={BIOSTACKR_REWARD_SHOT}
+        src={GENERIC_STUDY_PLACEHOLDER_IMAGE}
         alt="BioStackr dashboard and outcomes"
         width={1052}
         height={520}
@@ -551,16 +574,35 @@ function BioStackrRewardPhoto() {
   )
 }
 
+/** Cognitive cohort: partner-supplied hero for the Pro / outcomes card (no generic bioshot). */
+function CognitiveStudyRewardHeroPhoto({ src, productName }: { src: string; productName: string }) {
+  return (
+    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:px-4 sm:py-8">
+      <Image
+        src={src}
+        alt={`${productName} study rewards and BioStackr`}
+        width={1280}
+        height={720}
+        sizes="(max-width: 768px) 90vw, 360px"
+        className="h-auto w-full max-h-[min(260px,44vw)] max-w-full object-contain object-center drop-shadow-md"
+      />
+    </div>
+  )
+}
+
 function WhatYouReceive({
   productName,
   productImageSrc,
   productImageAlt,
   studyDays,
+  rewardHeroSrc,
 }: {
   productName: string
   productImageSrc: string
   productImageAlt: string
   studyDays: number
+  /** When set (cognitive cohort assets), third incentive card uses this instead of generic BioStackr bioshot. */
+  rewardHeroSrc?: string | null
 }) {
   return (
     <StudySurfaceLight
@@ -594,7 +636,13 @@ function WhatYouReceive({
             footer="Completion reward"
           />
           <IncentiveShelfCard
-            visual={<BioStackrRewardPhoto />}
+            visual={
+              rewardHeroSrc ? (
+                <CognitiveStudyRewardHeroPhoto src={rewardHeroSrc} productName={productName} />
+              ) : (
+                <BioStackrRewardPhoto />
+              )
+            }
             title="3 months of BioStackr Pro"
             body="Full dashboard access and your study outcomes."
             footer="Included"
@@ -614,7 +662,14 @@ function WhatYouReceive({
   )
 }
 
-function TrustFooter({ partnerBrand }: { partnerBrand: string }) {
+function TrustFooter({
+  partnerBrand,
+  partnerLogoSrc,
+}: {
+  partnerBrand: string
+  /** When set, show raster logo instead of DNA asset or plain text (cognitive cohort pack). */
+  partnerLogoSrc?: string | null
+}) {
   const col = (icon: ReactNode, label: string, body: string) => (
     <div className="flex flex-col items-center text-center sm:px-4">
       <div className="mb-3" style={{ color: RUST }}>
@@ -628,7 +683,15 @@ function TrustFooter({ partnerBrand }: { partnerBrand: string }) {
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-10 flex flex-col items-center justify-center gap-8 sm:mb-12 sm:flex-row sm:gap-14">
-          {/donotage/i.test(partnerBrand) ? (
+          {partnerLogoSrc ? (
+            <Image
+              src={partnerLogoSrc}
+              alt={partnerBrand || 'Study partner'}
+              width={320}
+              height={120}
+              className="h-14 w-auto max-w-[min(90vw,280px)] object-contain object-center opacity-95 sm:h-16 md:h-[4.5rem]"
+            />
+          ) : /donotage/i.test(partnerBrand) ? (
             <Image
               src={DNA_LOGO_WHITE}
               alt={partnerBrand || 'Study partner'}
@@ -757,10 +820,16 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       ? `Track measurable changes in your focus and cognitive performance over ${studyDays} days with simple daily check-ins.`
       : `Track measurable changes during your ${studyDays}-day study with simple daily check-ins.`
 
-  /** Product hero image: sleep-config cohorts use pack shot; all others use generic (no slug/product heuristics). */
-  const usePackShot = isSleepShapedCohort
-  const productHeroImageSrc = usePackShot ? SURE_SLEEP_PRODUCT : BIOSTACKR_REWARD_SHOT
+  /** Imagery from cohort shape only (`checkin_fields`): sleep pack, cognitive Seeking Health asset pack, or generic placeholder. */
+  const partnerLogoSrc = isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo : null
+  const productHeroImageSrc = isSleepShapedCohort
+    ? SLEEP_PACK_PRODUCT_IMAGE
+    : isCognitiveShapedCohort
+      ? COGNITIVE_COHORT_STUDY_ASSETS.productImage
+      : GENERIC_STUDY_PLACEHOLDER_IMAGE
+  const rewardHeroSrc = isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.rewardHero : null
   const productHeroImageAlt = productName
+  const qualificationShape: 'sleep' | 'cognitive' = isSleepShapedCohort ? 'sleep' : 'cognitive'
 
   return (
     <div className="flex flex-1 flex-col text-neutral-900">
@@ -771,7 +840,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       >
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-            <StudyPartnerHeroLogo brandDisplay={brandDisplay} />
+            <StudyPartnerHeroLogo brandDisplay={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
             <HeroBioStackrLogo />
           </div>
 
@@ -859,6 +928,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             productImageSrc={productHeroImageSrc}
             productImageAlt={productHeroImageAlt}
             studyDays={studyDays}
+            rewardHeroSrc={rewardHeroSrc}
           />
           <StudySurfaceLight
             continuous
@@ -872,6 +942,8 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 productName={productName}
                 cohortCapacityFull={capacityFull}
                 enrollmentOpen={enrollmentOpen}
+                qualificationShape={qualificationShape}
+                studyDays={studyDays}
               />
             </div>
           </StudySurfaceLight>
@@ -879,7 +951,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       ) : null}
       </div>
 
-      <TrustFooter partnerBrand={brandDisplay} />
+      <TrustFooter partnerBrand={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
     </div>
   )
 }
