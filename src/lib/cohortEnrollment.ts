@@ -189,7 +189,7 @@ export async function needsCohortStudyStackRepair(
 
 export type CohortParticipantUpsertResult =
   | { ok: true }
-  | { ok: false; error: string; code?: 'COHORT_FULL' }
+  | { ok: false; error: string; code?: 'COHORT_FULL' | 'COHORT_INACTIVE' }
 
 /** `profileId` = public.profiles.id; `cohortSlug` = public.cohorts.slug (same as profiles.cohort_id text). */
 export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: string) {
@@ -247,7 +247,7 @@ export async function upsertCohortParticipant(
   try {
     const { data: cohortRow, error: cohortErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id')
+      .select('id, status')
       .eq('slug', slug)
       .maybeSingle()
     if (cohortErr) {
@@ -257,6 +257,16 @@ export async function upsertCohortParticipant(
     if (!cohortRow?.id) {
       console.warn('[cohortEnrollment] cohort slug not found:', slug)
       return { ok: false, error: `Cohort not found for slug: ${slug}` }
+    }
+    const cohortStatus = String((cohortRow as { status?: string | null }).status || '')
+      .trim()
+      .toLowerCase()
+    if (cohortStatus !== 'active') {
+      return {
+        ok: false,
+        error: 'This study is not open for enrollment.',
+        code: 'COHORT_INACTIVE',
+      }
     }
     const cohortId = String((cohortRow as { id: string }).id)
     const enrolledAt = new Date().toISOString()

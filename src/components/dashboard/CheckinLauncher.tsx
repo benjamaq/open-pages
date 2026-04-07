@@ -316,8 +316,8 @@ export function CheckinLauncher({
               <p>To confirm your place, complete 2 quick check-ins within 48 hours.</p>
               <p>This gives us your baseline.</p>
               <p>
-                Once both check-ins are complete, your place in the study is confirmed and your SureSleep is shipped
-                to you.
+                Once both check-ins are complete, your place in the study is confirmed and your{' '}
+                {cohortStudyProductName || 'study product'} is shipped to you.
               </p>
             </div>
             <button

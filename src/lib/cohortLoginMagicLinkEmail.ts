@@ -7,9 +7,9 @@ import {
   escapeHtml,
   wrapCohortTransactionalEmailHtml,
 } from '@/lib/cohortTransactionalEmailHtml'
+import { resolveAuthUserByEmailForServer } from '@/lib/cohortLoginLinkEligibility'
 import { sendEmail } from '@/lib/email/resend'
-
-const SUBJECT = 'Your login link for the SureSleep study'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /** Rust CTA + hint line for cohort login magic-link emails (distinct label from generic dashboard CTA). */
 export function cohortEmailLoginMagicLinkCtaHtml(loginHref: string): string {
@@ -28,16 +28,17 @@ export function cohortEmailLoginMagicLinkCtaHtml(loginHref: string): string {
   )
 }
 
-export async function sendCohortParticipantLoginMagicLinkEmail(
-  to: string,
-  magicHref: string,
-): Promise<{ success: boolean; error?: string }> {
-  const safe = String(to || '').trim()
-  if (!safe) return { success: false, error: 'no email' }
-  const href = String(magicHref || '').trim()
-  if (!href) return { success: false, error: 'no link' }
-
+export function buildCohortParticipantLoginMagicLinkTransactionalEmailHtml(params: {
+  partnerBrandName: string
+  magicHref: string
+  emailSubject?: string | null
+}): { subject: string; html: string } {
   const appBase = cohortEmailPublicOrigin()
+  const partnerBrandName = String(params.partnerBrandName || '').trim() || 'Study partner'
+  const href = String(params.magicHref || '').trim()
+  const subject =
+    String(params.emailSubject || '').trim() ||
+    `Your login link — ${partnerBrandName} study on BioStackr`
 
   const innerHtml =
     '<p style="margin:0 0 16px;">Hi,</p>' +
@@ -46,12 +47,32 @@ export async function sendCohortParticipantLoginMagicLinkEmail(
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName,
     innerHtml,
     dashboardHref: href,
     omitDashboardRow: true,
   })
+  return { subject, html }
+}
 
-  return sendEmail({ to: safe, subject: SUBJECT, html })
+export async function sendCohortParticipantLoginMagicLinkEmail(
+  to: string,
+  magicHref: string,
+  opts?: { partnerBrandName?: string | null; emailSubject?: string | null },
+): Promise<{ success: boolean; error?: string }> {
+  const safe = String(to || '').trim()
+  if (!safe) return { success: false, error: 'no email' }
+  const href = String(magicHref || '').trim()
+  if (!href) return { success: false, error: 'no link' }
+
+  const partnerBrandName = String(opts?.partnerBrandName || '').trim() || 'Study partner'
+  const { subject, html } = buildCohortParticipantLoginMagicLinkTransactionalEmailHtml({
+    partnerBrandName,
+    magicHref: href,
+    emailSubject: opts?.emailSubject,
+  })
+
+  return sendEmail({ to: safe, subject, html })
 }
 
 /**
@@ -73,7 +94,27 @@ export async function sendFreshCohortLoginMagicLinkForParticipantEmail(
     return 'Could not create login link'
   }
 
-  const r = await sendCohortParticipantLoginMagicLinkEmail(em, magic)
+  let partnerBrandName = 'Study partner'
+  try {
+    const resolved = await resolveAuthUserByEmailForServer(em.toLowerCase(), supabaseAdmin)
+    if (resolved?.id) {
+      const { data: prof } = await supabaseAdmin
+        .from('profiles')
+        .select('cohort_id')
+        .eq('user_id', resolved.id)
+        .maybeSingle()
+      const slug = String((prof as { cohort_id?: string | null })?.cohort_id || '').trim().toLowerCase()
+      if (slug) {
+        const { data: c } = await supabaseAdmin.from('cohorts').select('brand_name').eq('slug', slug).maybeSingle()
+        const bn = String((c as { brand_name?: string | null })?.brand_name || '').trim()
+        if (bn) partnerBrandName = bn
+      }
+    }
+  } catch {
+    /* keep default */
+  }
+
+  const r = await sendCohortParticipantLoginMagicLinkEmail(em, magic, { partnerBrandName })
   if (!r.success) {
     console.error('[cohortLoginMagicLink] sendEmail', r.error)
     return r.error || 'Send failed'

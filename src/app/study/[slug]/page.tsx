@@ -2,6 +2,12 @@ import { Fragment, type ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import {
+  cognitiveOutcomeStripForStudyPage,
+  isCognitiveShapedCheckinFields,
+  isSleepShapedCheckinFields,
+  normalizeCohortCheckinFields,
+} from '@/lib/cohortCheckinFields'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { countCohortPipelineParticipants, isCohortEnrollmentClosedByPipeline } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
@@ -240,7 +246,15 @@ function IconHowResults() {
   )
 }
 
-function HowItWorksSteps() {
+function HowItWorksSteps({
+  studyDays,
+  outcomeStripVariant,
+  cognitiveOutcomeRows,
+}: {
+  studyDays: number
+  outcomeStripVariant: 'sleep' | 'cognitive' | 'generic'
+  cognitiveOutcomeRows: { title: string; line: string }[]
+}) {
   const steps = [
     {
       step: 'STEP 1',
@@ -306,23 +320,41 @@ function HowItWorksSteps() {
             How the study works
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-            Twenty-one days. Outcomes from your own check-ins.
+            {studyDays} days. Outcomes from your own check-ins.
           </p>
           <div className="mx-auto mt-10 grid max-w-4xl gap-8 sm:grid-cols-3 sm:gap-6">
-            {[
-              {
-                title: 'Sleep quality',
-                line: 'See how your sleep actually changes over the study.',
-              },
-              {
-                title: 'Recovery',
-                line: 'Track how your nights recover across the 21 days.',
-              },
-              {
-                title: 'Next-day energy',
-                line: 'See how you feel the morning after, day by day.',
-              },
-            ].map((o) => (
+            {(outcomeStripVariant === 'sleep'
+              ? [
+                  {
+                    title: 'Sleep quality',
+                    line: 'See how your sleep actually changes over the study.',
+                  },
+                  {
+                    title: 'Recovery',
+                    line: `Track how your nights recover across the ${studyDays} days.`,
+                  },
+                  {
+                    title: 'Next-day energy',
+                    line: 'See how you feel the morning after, day by day.',
+                  },
+                ]
+              : outcomeStripVariant === 'cognitive' && cognitiveOutcomeRows.length > 0
+                ? cognitiveOutcomeRows
+                : [
+                    {
+                      title: 'Daily signals',
+                      line: `Track your study metrics across the ${studyDays} days.`,
+                    },
+                    {
+                      title: 'Personal trajectory',
+                      line: 'See how your scores trend from first to last check-in.',
+                    },
+                    {
+                      title: 'Clear takeaway',
+                      line: 'A concise summary of what changed for you.',
+                    },
+                  ]
+            ).map((o) => (
               <div key={o.title} className="text-center sm:text-left">
                 <h3 className="text-[15px] font-bold text-neutral-900 sm:text-[16px]">{o.title}</h3>
                 <p className="mt-2 text-[13px] leading-snug text-neutral-600 sm:text-[14px]">{o.line}</p>
@@ -368,11 +400,22 @@ function HowItWorksSteps() {
   )
 }
 
-function HeroDonotageLogo() {
+/** Partner mark: DNA asset for DoNotAge-branded cohorts; wordmark text otherwise (multi-cohort). */
+function StudyPartnerHeroLogo({ brandDisplay }: { brandDisplay: string }) {
+  const b = String(brandDisplay || '').trim()
+  if (b && !/donotage/i.test(b)) {
+    return (
+      <div className="flex min-h-[7.75rem] max-w-[min(100%,560px)] items-center sm:min-h-[8.75rem] md:min-h-[9.5rem]">
+        <span className="text-left text-[1.65rem] font-bold leading-tight tracking-tight text-neutral-900 sm:text-[1.85rem] md:text-[2rem]">
+          {b}
+        </span>
+      </div>
+    )
+  }
   return (
     <Image
       src={DNA_LOGO_BLACK}
-      alt="DoNotAge.org"
+      alt={b || 'Study partner'}
       width={200}
       height={200}
       className="h-[7.75rem] w-auto max-w-[min(100%,560px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] md:h-[9.5rem]"
@@ -401,8 +444,16 @@ function HeroBioStackrLogo() {
   )
 }
 
-/** SureSleep pack / bottle artwork (`public/suresleep-1280x1280.png`). */
-function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
+/** Product visual — pack shot when available; otherwise neutral study-product placeholder. */
+function StudyProductPhoto({
+  larger,
+  imageSrc,
+  imageAlt,
+}: {
+  larger?: boolean
+  imageSrc: string
+  imageAlt: string
+}) {
   const max =
     larger === true
       ? 'max-h-[min(300px,48vw)] sm:max-h-[320px]'
@@ -410,8 +461,8 @@ function SureSleepProductPhoto({ larger }: { larger?: boolean }) {
   return (
     <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-7 sm:min-h-[260px] sm:py-10">
       <Image
-        src={SURE_SLEEP_PRODUCT}
-        alt="SureSleep"
+        src={imageSrc}
+        alt={imageAlt}
         width={1280}
         height={1280}
         sizes="(max-width: 768px) 75vw, 320px"
@@ -500,7 +551,17 @@ function BioStackrRewardPhoto() {
   )
 }
 
-function WhatYouReceive({ productName }: { productName: string }) {
+function WhatYouReceive({
+  productName,
+  productImageSrc,
+  productImageAlt,
+  studyDays,
+}: {
+  productName: string
+  productImageSrc: string
+  productImageAlt: string
+  studyDays: number
+}) {
   return (
     <StudySurfaceLight
       continuous
@@ -516,20 +577,20 @@ function WhatYouReceive({ productName }: { productName: string }) {
           <p className="mt-1">3 months of BioStackr Pro</p>
         </div>
         <p className="mx-auto mt-3 max-w-xl text-center text-[13px] leading-snug text-neutral-600 sm:text-[14px]">
-          Delivered when you complete the full 21-day study.
+          Delivered when you complete the full {studyDays}-day study.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
-            visual={<SureSleepProductPhoto />}
-            title={`${productName} for your 21-day study`}
+            visual={<StudyProductPhoto imageSrc={productImageSrc} imageAlt={productImageAlt} />}
+            title={`${productName} for your ${studyDays}-day study`}
             body="Supplied so you can run every day of the study."
             footer="Study supply"
           />
           <IncentiveShelfCard
             highlight
-            visual={<SureSleepProductPhoto larger />}
+            visual={<StudyProductPhoto larger imageSrc={productImageSrc} imageAlt={productImageAlt} />}
             title={`3-month supply of ${productName}`}
-            body="Yours when you finish all 21 daily check-ins."
+            body={`Yours when you finish all ${studyDays} daily check-ins.`}
             footer="Completion reward"
           />
           <IncentiveShelfCard
@@ -545,7 +606,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
             <span className="text-[15px] font-semibold text-neutral-700 sm:text-base">combined package value</span>
           </p>
           <p className="mt-3 text-[12px] leading-snug text-neutral-600 sm:text-[13px]">
-            Combined participant reward value when you complete all 21 days.
+            Combined participant reward value when you complete all {studyDays} days.
           </p>
         </div>
       </div>
@@ -553,7 +614,7 @@ function WhatYouReceive({ productName }: { productName: string }) {
   )
 }
 
-function TrustFooter() {
+function TrustFooter({ partnerBrand }: { partnerBrand: string }) {
   const col = (icon: ReactNode, label: string, body: string) => (
     <div className="flex flex-col items-center text-center sm:px-4">
       <div className="mb-3" style={{ color: RUST }}>
@@ -567,13 +628,17 @@ function TrustFooter() {
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-10 flex flex-col items-center justify-center gap-8 sm:mb-12 sm:flex-row sm:gap-14">
-          <Image
-            src={DNA_LOGO_WHITE}
-            alt="DoNotAge.org"
-            width={160}
-            height={160}
-            className="h-14 w-auto object-contain opacity-90 sm:h-16 md:h-[4.5rem]"
-          />
+          {/donotage/i.test(partnerBrand) ? (
+            <Image
+              src={DNA_LOGO_WHITE}
+              alt={partnerBrand || 'Study partner'}
+              width={160}
+              height={160}
+              className="h-14 w-auto object-contain opacity-90 sm:h-16 md:h-[4.5rem]"
+            />
+          ) : (
+            <span className="text-center text-lg font-bold text-white sm:text-xl">{partnerBrand}</span>
+          )}
           <div className="hidden h-14 w-px shrink-0 bg-white/20 sm:block md:h-16" aria-hidden />
           <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
             <Image
@@ -593,7 +658,7 @@ function TrustFooter() {
               <path d="M7 11V7a5 5 0 0110 0v4" />
             </svg>,
             'Your data is private',
-            'Participant results are anonymised. DoNotAge never sees individual level data.'
+            `Participant results are anonymised. ${partnerBrand} never sees individual level data.`
           )}
           {col(
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -612,7 +677,7 @@ function TrustFooter() {
           )}
         </div>
         <p className="mt-14 text-center text-[11px] text-white/40">
-          This study is run by BioStackr on behalf of DoNotAge · biostackr.io · GDPR compliant
+          This study is run by BioStackr on behalf of {partnerBrand} · biostackr.io · GDPR compliant
         </p>
       </div>
     </footer>
@@ -671,7 +736,31 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const productName = String(cohort.product_name || 'Study product')
   const brandName = String(cohort.brand_name || '')
-  const brandDisplay = brandName.trim() || 'DoNotAge'
+  const brandDisplay = brandName.trim() || 'Study partner'
+  const cohortStatus = String(cohortRow.status || 'draft').trim().toLowerCase()
+  const enrollmentOpen = cohortStatus === 'active'
+  const studyDays =
+    typeof cohortRow.study_days === 'number' && Number.isFinite(cohortRow.study_days) && cohortRow.study_days > 0
+      ? Math.floor(cohortRow.study_days)
+      : 21
+
+  const normalizedCheckinFields = normalizeCohortCheckinFields(cohortRow.checkin_fields)
+  const isSleepShapedCohort = isSleepShapedCheckinFields(normalizedCheckinFields)
+  const isCognitiveShapedCohort = isCognitiveShapedCheckinFields(normalizedCheckinFields)
+  const cognitiveOutcomeRows = isCognitiveShapedCohort
+    ? cognitiveOutcomeStripForStudyPage(normalizedCheckinFields)
+    : []
+
+  const outcomeSecondaryLine = isSleepShapedCohort
+    ? `Track measurable changes in your sleep over ${studyDays} days with simple daily check-ins.`
+    : isCognitiveShapedCohort
+      ? `Track measurable changes in your focus and cognitive performance over ${studyDays} days with simple daily check-ins.`
+      : `Track measurable changes during your ${studyDays}-day study with simple daily check-ins.`
+
+  /** Product hero image: sleep-config cohorts use pack shot; all others use generic (no slug/product heuristics). */
+  const usePackShot = isSleepShapedCohort
+  const productHeroImageSrc = usePackShot ? SURE_SLEEP_PRODUCT : BIOSTACKR_REWARD_SHOT
+  const productHeroImageAlt = productName
 
   return (
     <div className="flex flex-1 flex-col text-neutral-900">
@@ -682,7 +771,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       >
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-            <HeroDonotageLogo />
+            <StudyPartnerHeroLogo brandDisplay={brandDisplay} />
             <HeroBioStackrLogo />
           </div>
 
@@ -697,7 +786,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               <p className="mt-0.5 text-[15px] font-semibold text-neutral-900 sm:text-[16px]">by {brandDisplay}</p>
             </div>
             <p className="mt-2 text-[13px] font-normal leading-snug text-neutral-600 sm:mt-2.5 sm:text-[14px]">
-              21-day customer outcomes study
+              {studyDays}-day customer outcomes study
             </p>
 
             {!showFullMessage ? (
@@ -731,14 +820,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               <p className="font-medium text-neutral-800">
                 {brandDisplay} is working with BioStackr to measure how {productName} performs in real customers.
               </p>
-              <p className="text-neutral-700">
-                Track measurable changes in your sleep over 21 days with simple daily check-ins.
-              </p>
+              <p className="text-neutral-700">{outcomeSecondaryLine}</p>
             </div>
 
             {!showFullMessage ? (
               <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
-                Finish the full 21-day study and your combined rewards are worth over{' '}
+                Finish the full {studyDays}-day study and your combined rewards are worth over{' '}
                 <span className="whitespace-nowrap" style={{ color: RUST }}>
                   €200+
                 </span>
@@ -746,7 +833,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </p>
             ) : null}
 
-            {!showFullMessage ? (
+            {!showFullMessage && enrollmentOpen ? (
               <div className="mt-4 flex flex-col items-center sm:mt-5">
                 <StudyApplyCta variant="heroLight" />
                 <p className="mt-4 max-w-md px-2 text-center text-[12px] font-medium leading-snug text-neutral-600 sm:mt-5 sm:text-[13px]">
@@ -760,8 +847,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
       {!showFullMessage ? (
         <>
-          <HowItWorksSteps />
-          <WhatYouReceive productName={productName} />
+          <HowItWorksSteps
+            studyDays={studyDays}
+            outcomeStripVariant={
+              isSleepShapedCohort ? 'sleep' : isCognitiveShapedCohort ? 'cognitive' : 'generic'
+            }
+            cognitiveOutcomeRows={cognitiveOutcomeRows}
+          />
+          <WhatYouReceive
+            productName={productName}
+            productImageSrc={productHeroImageSrc}
+            productImageAlt={productHeroImageAlt}
+            studyDays={studyDays}
+          />
           <StudySurfaceLight
             continuous
             surfaceColor={STUDY_SECTION_QUAL_BG}
@@ -773,6 +871,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 cohortBrandName={brandName}
                 productName={productName}
                 cohortCapacityFull={capacityFull}
+                enrollmentOpen={enrollmentOpen}
               />
             </div>
           </StudySurfaceLight>
@@ -780,7 +879,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       ) : null}
       </div>
 
-      <TrustFooter />
+      <TrustFooter partnerBrand={brandDisplay} />
     </div>
   )
 }

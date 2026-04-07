@@ -9,34 +9,20 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-export async function sendCohortStudyCompletionEmail(params: {
-  to: string
-  authUserId: string
+export function buildCohortStudyCompletionTransactionalEmailHtml(params: {
+  firstNameForGreeting: string
   productName: string
-  partnerBrandName?: string | null
-  /** Retained for callers (cron); claim CTA lives in result-ready email and on the result page only. */
-  rewardClaimAbsoluteUrl?: string | null
-}): Promise<{ success: boolean; id?: string; error?: string }> {
-  const to = String(params.to || '').trim()
-  if (!to) return { success: false, error: 'missing email' }
-  const authUserId = String(params.authUserId || '').trim()
-  if (!authUserId) return { success: false, error: 'missing user' }
-
+  partnerBrandName: string
+}): { subject: string; html: string } {
   const product = String(params.productName || 'your study').trim() || 'your study'
   const productEsc = escapeHtml(product)
-  const partnerBrand = escapeHtml(String(params.partnerBrandName ?? 'DoNotAge').trim() || 'DoNotAge')
-
-  const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUserId)
-  if (auErr || !auth?.user) {
-    console.error('[cohort-study-completion-email] auth', authUserId, auErr?.message)
-  }
-  const first = escapeHtml(firstNameFromAuthUser(auth?.user ?? { email: to }))
-
-  void params.rewardClaimAbsoluteUrl
+  const partnerPlain = String(params.partnerBrandName ?? 'Study partner').trim() || 'Study partner'
+  const partnerBrand = escapeHtml(partnerPlain)
+  const first = escapeHtml(params.firstNameForGreeting)
 
   const appBase = cohortEmailPublicOrigin()
   const dashboardHref = `${appBase}${cohortDashboardStudyPath()}`
-  const subject = `Thank you — your ${productEsc} study is complete`
+  const subject = `Thank you — your ${product} study is complete`
 
   const rewardsInfoBlock =
     `<div style="margin:24px 0;padding:16px 18px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">` +
@@ -44,7 +30,7 @@ export async function sendCohortStudyCompletionEmail(params: {
     `<p style="margin:0 0 10px;font-size:15px;line-height:1.5;color:#374151;">You&apos;ve unlocked:</p>` +
     `<ul style="margin:0;padding-left:20px;color:#374151;font-size:15px;line-height:1.55;">` +
     `<li style="margin:0 0 6px;">3 months of BioStackr Pro</li>` +
-    `<li style="margin:0;">A 3-month supply of SureSleep</li>` +
+    `<li style="margin:0;">A 3-month supply of <strong>${productEsc}</strong> (via <strong>${partnerBrand}</strong>)</li>` +
     `</ul>` +
     `<p style="margin:12px 0 0;font-size:14px;line-height:1.5;color:#6b7280;">You&apos;ll receive full details with your results.</p>` +
     `</div>`
@@ -61,9 +47,42 @@ export async function sendCohortStudyCompletionEmail(params: {
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName: partnerPlain,
     innerHtml,
     dashboardHref,
     omitDashboardRow: true,
+  })
+  return { subject, html }
+}
+
+export async function sendCohortStudyCompletionEmail(params: {
+  to: string
+  authUserId: string
+  productName: string
+  partnerBrandName?: string | null
+  /** Retained for callers (cron); claim CTA lives in result-ready email and on the result page only. */
+  rewardClaimAbsoluteUrl?: string | null
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  const to = String(params.to || '').trim()
+  if (!to) return { success: false, error: 'missing email' }
+  const authUserId = String(params.authUserId || '').trim()
+  if (!authUserId) return { success: false, error: 'missing user' }
+
+  const product = String(params.productName || 'your study').trim() || 'your study'
+  const partnerPlain = String(params.partnerBrandName ?? 'Study partner').trim() || 'Study partner'
+
+  const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUserId)
+  if (auErr || !auth?.user) {
+    console.error('[cohort-study-completion-email] auth', authUserId, auErr?.message)
+  }
+  const firstNameForGreeting = firstNameFromAuthUser(auth?.user ?? { email: to })
+
+  void params.rewardClaimAbsoluteUrl
+
+  const { subject, html } = buildCohortStudyCompletionTransactionalEmailHtml({
+    firstNameForGreeting,
+    productName: product,
+    partnerBrandName: partnerPlain,
   })
 
   return sendEmail({ to, subject, html })

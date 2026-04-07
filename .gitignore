@@ -42,3 +42,6 @@ next-env.d.ts
 
 # supabase CLI local cache
 supabase/.temp/
+
+# local tooling output (e.g. cohort email HTML snapshots)
+/tmp/

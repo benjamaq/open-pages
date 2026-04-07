@@ -39,6 +39,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No cohort context' }, { status: 400 })
     }
 
+    const { data: cohortGate } = await supabaseAdmin
+      .from('cohorts')
+      .select('status')
+      .eq('slug', slug)
+      .maybeSingle()
+    const gateSt = String((cohortGate as { status?: string | null } | null)?.status || '')
+      .trim()
+      .toLowerCase()
+    if (gateSt !== 'active') {
+      return NextResponse.json(
+        { error: 'This study is not open for enrollment.', code: 'COHORT_INACTIVE' },
+        { status: 403 },
+      )
+    }
+
     const { data: prof, error: pErr } = await supabaseAdmin
       .from('profiles')
       .select('id, cohort_id')
@@ -64,7 +79,9 @@ export async function POST(req: NextRequest) {
 
     const enroll = await upsertCohortParticipant(profileId, slug, null)
     if (!enroll.ok) {
-      return NextResponse.json({ error: enroll.error }, { status: 500 })
+      const status =
+        enroll.code === 'COHORT_FULL' ? 409 : enroll.code === 'COHORT_INACTIVE' ? 403 : 500
+      return NextResponse.json({ error: enroll.error, code: enroll.code }, { status })
     }
     await ensureCohortStudyStackItem(profileId, slug)
 

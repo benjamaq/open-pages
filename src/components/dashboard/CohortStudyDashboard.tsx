@@ -488,7 +488,16 @@ export default function CohortStudyDashboard({
     : Math.min(2, Math.max(0, checkinCount))
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
   const complianceGateSatisfied = gateComplete >= 2
-  const brandDisplay = String(brandName || '').trim() || 'DoNotAge'
+  const brandDisplay = String(brandName || '').trim() || 'Study partner'
+  const isSleepShapedCohort = useMemo(() => {
+    const raw =
+      Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
+        ? checkinFieldsProp
+        : DEFAULT_COHORT_CHECKIN_FIELDS
+    return raw.some(
+      (f) => String(f).includes('sleep') || f === 'night_wakes' || f === 'sleep_onset_bucket',
+    )
+  }, [checkinFieldsProp])
   const welcomeName =
     typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
       ? welcomeFirstName.trim()
@@ -587,13 +596,17 @@ export default function CohortStudyDashboard({
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
         <div className="flex items-center justify-between gap-4 mb-4">
-          <img
-            src="/DNA-logo-black.png"
-            alt="DoNotAge"
-            className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
-            width={200}
-            height={52}
-          />
+          {/donotage/i.test(brandDisplay) ? (
+            <img
+              src="/DNA-logo-black.png"
+              alt={brandDisplay}
+              className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
+              width={200}
+              height={52}
+            />
+          ) : (
+            <span className="text-xl font-bold text-gray-900 sm:text-2xl">{brandDisplay}</span>
+          )}
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
             alt="BioStackr"
@@ -615,9 +628,18 @@ export default function CohortStudyDashboard({
           <div>
             {pendingFirstStudyNight ? (
               <>
-                <h2 className="text-[26px] font-bold leading-snug text-gray-900">First night</h2>
+                <h2 className="text-[26px] font-bold leading-snug text-gray-900">First study day</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                  Take {productName} tonight, about 45 minutes before bed. Check in tomorrow morning.
+                  {isSleepShapedCohort ? (
+                    <>
+                      Take {productName} tonight, about 45 minutes before bed. Check in tomorrow morning.
+                    </>
+                  ) : (
+                    <>
+                      Follow your study protocol for {productName}. Complete your first check-in tomorrow when your study
+                      window begins.
+                    </>
+                  )}
                 </p>
               </>
             ) : (
@@ -627,7 +649,7 @@ export default function CohortStudyDashboard({
                   You&apos;re confirmed — your product will be shipped shortly.
                 </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                  Your 21-day study begins when you confirm your product has arrived.
+                  Your {studyDays}-day study begins when you confirm your product has arrived.
                 </p>
                 <p className="mt-2 text-[15px] leading-relaxed text-gray-600">
                   When it arrives, come back here and tap the button below, then complete your first check-in.
@@ -641,22 +663,32 @@ export default function CohortStudyDashboard({
                   My product has arrived
                 </button>
                 {/* TODO: “How to take …” dosing copy is placeholder pending Dan Wild confirmation. */}
-                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
-                  <h3 className="text-[15px] font-semibold text-gray-900">How to take {productName}</h3>
-                  <div className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-gray-700">
-                    <p>
-                      Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it
-                      consistently each evening as part of a wind-down routine.
-                    </p>
-                    <p>
-                      One scoop per day — do not exceed the recommended dose. Take 45–60 minutes before bed. Avoid caffeine or
-                      stimulants in the evening hours.
-                    </p>
-                    <p>
-                      {productName} is non-habit-forming and safe for daily use.
+                {isSleepShapedCohort ? (
+                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                    <h3 className="text-[15px] font-semibold text-gray-900">How to take {productName}</h3>
+                    <div className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-gray-700">
+                      <p>
+                        Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it
+                        consistently each evening as part of a wind-down routine.
+                      </p>
+                      <p>
+                        One scoop per day — do not exceed the recommended dose. Take 45–60 minutes before bed. Avoid caffeine
+                        or stimulants in the evening hours.
+                      </p>
+                      <p>
+                        {productName} is non-habit-forming and safe for daily use.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                    <h3 className="text-[15px] font-semibold text-gray-900">Using {productName}</h3>
+                    <p className="mt-3 text-[14px] leading-relaxed text-gray-700">
+                      Follow the directions on your product label (or your clinician&apos;s guidance) for this study unless
+                      you&apos;re unwell.
                     </p>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
@@ -679,7 +711,7 @@ export default function CohortStudyDashboard({
                 </p>
                 <ul className="mt-2 list-disc pl-5 text-[15px] leading-relaxed text-gray-800 space-y-1">
                   <li>3 months of BioStackr Pro</li>
-                  <li>A 3-month supply of SureSleep</li>
+                  <li>A 3-month supply of {productName}</li>
                 </ul>
                 <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
                   You&apos;ll receive full details with your results.

@@ -19,7 +19,7 @@ export function shippingNurtureSubject(step: ShippingNurtureStep): string {
     case 'day10':
       return 'Getting close — are you ready?'
     default:
-      return 'DoNotAge × BioStackr — study update'
+      return 'Study update — BioStackr'
   }
 }
 
@@ -36,7 +36,7 @@ export function shippingNurtureInnerHtml(
   switch (step) {
     case 'day4':
       paragraphs = [
-        `Your spot in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> is dispatching your <strong>${product}</strong>. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>. Your 21 days start that day — complete your first check-in right after. Until then, there is nothing you need to do.`,
+        `Your spot in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> is dispatching your <strong>${product}</strong>. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>. Your study window starts that day — complete your first check-in right after. Until then, there is nothing you need to do.`,
       ]
       break
     case 'day7':
@@ -71,6 +71,7 @@ export function shippingNurtureBodyHtml(
     )}</p>`
   return wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName: params.brandName,
     innerHtml: inner,
     dashboardHref: checkInHref,
     omitDashboardRow: true,
@@ -101,6 +102,7 @@ export async function sendShippingNurtureEmail(params: {
     )}</p>`
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName: params.brandName,
     innerHtml: inner,
     dashboardHref: checkInHref,
     omitDashboardRow: true,

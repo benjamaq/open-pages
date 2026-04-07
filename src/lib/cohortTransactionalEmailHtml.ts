@@ -1,10 +1,10 @@
 /**
- * Shared HTML layout for DoNotAge × BioStackr cohort transactional emails (Resend).
+ * Shared HTML layout for partner × BioStackr cohort transactional emails (Resend).
  * Image URLs must be absolute — callers should pass `appBase` from `cohortEmailPublicOrigin()`.
  */
 
-/** Canonical partner × platform line for headers, footers, and reference in copy (Unicode ×). */
-export const COHORT_EMAIL_BRAND_LINE = 'DoNotAge × BioStackr'
+/** @deprecated Use cohortEmailPartnerXBioStackrLine(partnerBrandName) with cohort `brand_name`. */
+export const COHORT_EMAIL_BRAND_LINE = 'Study partner × BioStackr'
 
 /** Helper line under dashboard CTAs in cohort transactional emails. */
 export const COHORT_EMAIL_MAGIC_LINK_HINT = 'This link logs you straight in — no password needed.'
@@ -15,6 +15,12 @@ export const COHORT_EMAIL_MAGIC_LINK_HINT = 'This link logs you straight in — 
  * (Prefer over target="_blank" for email links that must complete PKCE / cookie auth.)
  */
 export const COHORT_EMAIL_CTA_LINK_ATTRS = ' target="_top" rel="noopener noreferrer"'
+
+/** Canonical partner × platform line (Unicode ×). */
+export function cohortEmailPartnerXBioStackrLine(partnerBrandName: string): string {
+  const p = String(partnerBrandName || '').trim() || 'Study partner'
+  return `${p} × BioStackr`
+}
 
 export function escapeHtml(s: string): string {
   return String(s || '')
@@ -36,12 +42,28 @@ export function firstNameFromAuthUser(user: {
   return em || 'there'
 }
 
-function cohortEmailPublicLogoUrls(appBase: string): { donotage: string; biostackr: string } {
+/** Left header cell: DNA logo when partner is DoNotAge-branded; otherwise partner name wordmark. */
+export function cohortEmailPartnerHeaderCellHtml(appBase: string, partnerBrandName: string): string {
   const base = appBase.replace(/\/$/, '')
-  return {
-    donotage: `${base}/DNA-logo-black.png`,
-    biostackr: `${base}/${encodeURI('BIOSTACKR LOGO 2.png')}`,
+  const p = String(partnerBrandName || '').trim()
+  if (/donotage/i.test(p)) {
+    const logo = `${base}/DNA-logo-black.png`
+    return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
+                  <img src="${logo}" alt="${escapeHtml(p || 'Partner')}" width="132" style="display:block;max-width:132px;width:132px;height:auto;border:0;" />
+                </td>`
   }
+  const label = escapeHtml(p || 'Study partner')
+  return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
+                  <span style="font-size:15px;font-weight:700;color:#111827;display:block;max-width:200px;line-height:1.25;">${label}</span>
+                </td>`
+}
+
+function cohortEmailBioStackrHeaderCellHtml(appBase: string): string {
+  const base = appBase.replace(/\/$/, '')
+  const biostackr = `${base}/${encodeURI('BIOSTACKR LOGO 2.png')}`
+  return `<td align="right" valign="middle" style="width:48%;padding:0;">
+                  <img src="${biostackr}" alt="BioStackr" width="168" style="display:block;max-width:168px;width:168px;height:auto;margin-left:auto;border:0;" />
+                </td>`
 }
 
 /** Shared CTA for simple (non-shell) cohort emails (legacy magic-link dashboards — prefer `cohortEmailCheckInCtaHtml`). */
@@ -70,17 +92,21 @@ export function cohortEmailCheckInCtaHtml(absoluteCheckInUrl: string): string {
 /** Table-based shell: works in Gmail mobile + desktop. */
 export function wrapCohortTransactionalEmailHtml(opts: {
   appBase: string
+  /** Cohort `brand_name` (e.g. DoNotAge, Seeking Health) — drives header wordmark / logo and × BioStackr line. */
+  partnerBrandName: string
   innerHtml: string
   /** Footer / shell link — e.g. stable `cohortEmailCheckInLandingAbsoluteUrl()` for cohort emails. */
   dashboardHref: string
   /** Set true when innerHtml already includes the dashboard button + hint (e.g. post-check-in 1). */
   omitDashboardRow?: boolean
 }): string {
-  const { donotage, biostackr } = cohortEmailPublicLogoUrls(opts.appBase)
+  const brandLine = cohortEmailPartnerXBioStackrLine(opts.partnerBrandName)
+  const partnerCell = cohortEmailPartnerHeaderCellHtml(opts.appBase, opts.partnerBrandName)
+  const bioCell = cohortEmailBioStackrHeaderCellHtml(opts.appBase)
   const dash = escapeHtml(opts.dashboardHref)
   const dashboardRow = opts.omitDashboardRow
-       ? ''
-       : `<tr>
+    ? ''
+    : `<tr>
           <td style="padding:18px 22px 8px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-top:1px solid #eee;background:#ffffff;">
             <p style="margin:0;text-align:center;">
               <a href="${dash}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">View your study dashboard →</a>
@@ -106,12 +132,8 @@ export function wrapCohortTransactionalEmailHtml(opts: {
           <td style="padding:20px 22px 18px;border-bottom:1px solid #e8e4de;background:#ffffff;">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
               <tr>
-                <td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
-                  <img src="${donotage}" alt="DoNotAge" width="132" style="display:block;max-width:132px;width:132px;height:auto;border:0;" />
-                </td>
-                <td align="right" valign="middle" style="width:48%;padding:0;">
-                  <img src="${biostackr}" alt="BioStackr" width="168" style="display:block;max-width:168px;width:168px;height:auto;margin-left:auto;border:0;" />
-                </td>
+                ${partnerCell}
+                ${bioCell}
               </tr>
             </table>
           </td>
@@ -119,7 +141,7 @@ export function wrapCohortTransactionalEmailHtml(opts: {
         <tr>
           <td style="padding:12px 22px 16px;border-bottom:1px solid #e8e4de;background:#ffffff;text-align:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
             <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#1a1a1a;">${escapeHtml(
-              COHORT_EMAIL_BRAND_LINE,
+              brandLine,
             )}</span>
           </td>
         </tr>
@@ -131,7 +153,7 @@ ${opts.innerHtml}
         ${dashboardRow}
         <tr>
           <td style="padding:20px 22px 26px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;line-height:1.55;color:#4b5563;border-top:1px solid #eee;background:#fafaf9;">
-            <strong style="color:#1a1a1a;">${escapeHtml(COHORT_EMAIL_BRAND_LINE)}</strong><br />
+            <strong style="color:#1a1a1a;">${escapeHtml(brandLine)}</strong><br />
             Running a real-world customer outcomes study.<br />
             Your data stays private and is only used in anonymised analysis.
           </td>

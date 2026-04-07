@@ -9,6 +9,8 @@ export type DailyReminderEmailParams = {
   supplementCount: number
   progressPercent: number
   checkinUrl: string
+  /** Cohort `brand_name` for transactional shell (header + × BioStackr line). */
+  partnerBrandName?: string | null
   /** Optional line under the CTA (cohort daily emails use stable `/check-in`; hint usually omitted). */
   linkHint?: string | null
   // Optional daily metrics to display (Energy/Focus/Sleep/Mood on 1–10 scale)
@@ -45,13 +47,15 @@ export function renderDailyReminderInnerHtml(params: DailyReminderEmailParams): 
   )
 }
 
-/** Full HTML: shared cohort transactional shell (dual logos, DoNotAge × BioStackr) + daily reminder body. */
+/** Full HTML: shared cohort transactional shell (partner × BioStackr) + daily reminder body. */
 export function renderDailyReminderEmail(params: DailyReminderEmailParams): string {
   const innerHtml = renderDailyReminderInnerHtml(params)
   const appBase = cohortEmailPublicOrigin()
   const dashboardHref = String(params.checkinUrl || '').trim() || `${appBase.replace(/\/$/, '')}/check-in`
+  const partnerBrandName = String(params.partnerBrandName || '').trim() || 'Study partner'
   return wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName,
     innerHtml,
     dashboardHref,
     omitDashboardRow: true,

@@ -8,7 +8,7 @@ function CohortCheckInHeader() {
       <div className="flex items-center justify-between gap-4">
         <img
           src="/DNA-logo-black.png"
-          alt="DoNotAge"
+          alt="Study partner"
           className="h-8 w-auto max-w-[132px] object-contain object-left"
           width={132}
           height={32}
@@ -21,7 +21,7 @@ function CohortCheckInHeader() {
           height={32}
         />
       </div>
-      <p className="mt-4 text-center text-xs font-medium tracking-wide text-neutral-500">DoNotAge × BioStackr</p>
+      <p className="mt-4 text-center text-xs font-medium tracking-wide text-neutral-500">Partner study × BioStackr</p>
     </header>
   )
 }

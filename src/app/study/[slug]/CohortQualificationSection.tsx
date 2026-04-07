@@ -75,11 +75,14 @@ export function CohortQualificationSection({
   cohortBrandName,
   productName,
   cohortCapacityFull = false,
+  enrollmentOpen = true,
 }: {
   cohortSlug: string
   cohortBrandName: string
   productName: string
   cohortCapacityFull?: boolean
+  /** When false (e.g. cohorts.status is draft), show message only — no apply flow. */
+  enrollmentOpen?: boolean
 }) {
   const router = useRouter()
   const [issue, setIssue] = useState('')
@@ -243,6 +246,25 @@ export function CohortQualificationSection({
     } finally {
       setWaitlistBusy(false)
     }
+  }
+
+  if (!enrollmentOpen) {
+    return (
+      <section id="cohort-apply-form" className="scroll-mt-24">
+        <div
+          className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-6 py-8 sm:px-8"
+          style={{
+            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            borderRadius: 12,
+          }}
+        >
+          <h2 className="text-[18px] font-bold text-neutral-900">Enrollment not open</h2>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+            This study page is visible for preview, but applications are not available until the study is active.
+          </p>
+        </div>
+      </section>
+    )
   }
 
   if (hardExit) {

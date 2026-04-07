@@ -10,19 +10,48 @@ import {
 } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
 
-export function studyAndProductNamesFromCohortRow(
-  cRow: { product_name?: string | null; brand_name?: string | null } | null | undefined,
-): { studyName: string; productName: string } {
-  let studyName = 'study'
-  let productName = 'product'
-  if (!cRow) return { studyName, productName }
-  const pn = cRow.product_name
-  const bn = cRow.brand_name
-  productName = pn != null && String(pn).trim() !== '' ? String(pn).trim() : productName
-  const brand = bn != null && String(bn).trim() !== '' ? String(bn).trim() : ''
-  studyName = brand ? `${brand} ${productName}` : productName
-  return { studyName, productName }
+export { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
+
+export function buildComplianceConfirmedTransactionalEmailHtml(params: {
+  firstNameForGreeting: string
+  studyName: string
+  productName: string
+  brandName: string
+}): { subject: string; html: string } {
+  const first = escapeHtml(params.firstNameForGreeting)
+  const study = escapeHtml(params.studyName)
+  const product = escapeHtml(params.productName)
+  const partnerPlain = String(params.brandName || '').trim() || 'Study partner'
+  const brand = escapeHtml(partnerPlain)
+  const appBase = cohortEmailPublicOrigin()
+  const dashboardStudyHref = `${appBase}${cohortDashboardStudyPath()}`
+
+  const innerHtml =
+    `<p style="margin:0 0 16px;">Hi ${first},</p>` +
+    `<p style="margin:0 0 20px;">You're in. Your place in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly — <strong>BioStackr</strong> runs the study platform and your check-ins.</p>` +
+    `<p style="margin:0 0 6px;"><strong>Before it arrives</strong></p>` +
+    `<p style="margin:0 0 18px;">Keep your routine stable — no new supplements. We want a clean baseline.</p>` +
+    `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +
+    `<p style="margin:0 0 18px;">Use <strong>${product}</strong> exactly as directed for this study&apos;s protocol.<br />Complete your first study check-in the next calendar day after you begin.</p>` +
+    `<p style="margin:0 0 6px;"><strong>During the study</strong></p>` +
+    `<p style="margin:0 0 18px;">You'll get a short daily reminder from <strong>BioStackr</strong>. Each check-in takes ~30 seconds.</p>` +
+    `<p style="margin:0 0 6px;"><strong>At the end</strong></p>` +
+    `<p style="margin:0 0 18px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
+    `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>` +
+    `<p style="margin:0;">Thank you for being part of this.</p>` +
+    cohortEmailDashboardCtaHtml(dashboardStudyHref)
+
+  const html = wrapCohortTransactionalEmailHtml({
+    appBase,
+    partnerBrandName: partnerPlain,
+    innerHtml,
+    dashboardHref: dashboardStudyHref,
+    omitDashboardRow: true,
+  })
+  const subject = "You're in — your product is on its way"
+  return { subject, html }
 }
 
 /** Confirmation email after two qualifying check-ins (cron backstop + immediate path from /api/checkin). */
@@ -41,38 +70,16 @@ export async function sendComplianceConfirmedEmail(params: {
     const to = String(auth.user.email).trim()
     if (!to) return
 
-    const first = escapeHtml(firstNameFromAuthUser(auth.user))
-    const study = escapeHtml(params.studyName)
-    const product = escapeHtml(params.productName)
-    const brand = escapeHtml(String(params.brandName ?? '').trim() || 'DoNotAge')
-    const appBase = cohortEmailPublicOrigin()
-    const dashboardStudyHref = `${appBase}${cohortDashboardStudyPath()}`
-
-    const innerHtml =
-      `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-      `<p style="margin:0 0 20px;">You're in. Your place in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly — <strong>BioStackr</strong> runs the study platform and your check-ins.</p>` +
-      `<p style="margin:0 0 6px;"><strong>Before it arrives</strong></p>` +
-      `<p style="margin:0 0 18px;">Keep your routine stable — no new supplements. We want a clean baseline.</p>` +
-      `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +
-      `<p style="margin:0 0 18px;">Take ${product} in the evening (45 minutes before bed).<br />Complete your first check-in the next morning.</p>` +
-      `<p style="margin:0 0 6px;"><strong>During the study</strong></p>` +
-      `<p style="margin:0 0 18px;">You'll get a short daily reminder from <strong>BioStackr</strong>. Each check-in takes ~30 seconds.</p>` +
-      `<p style="margin:0 0 6px;"><strong>At the end</strong></p>` +
-      `<p style="margin:0 0 18px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
-      `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>` +
-      `<p style="margin:0;">Thank you for being part of this.</p>` +
-      cohortEmailDashboardCtaHtml(dashboardStudyHref)
-
-    const html = wrapCohortTransactionalEmailHtml({
-      appBase,
-      innerHtml,
-      dashboardHref: dashboardStudyHref,
-      omitDashboardRow: true,
+    const { subject, html } = buildComplianceConfirmedTransactionalEmailHtml({
+      firstNameForGreeting: firstNameFromAuthUser(auth.user),
+      studyName: params.studyName,
+      productName: params.productName,
+      brandName: params.brandName ?? '',
     })
 
     const r = await sendEmail({
       to,
-      subject: "You're in — your product is on its way",
+      subject,
       html,
     })
     if (!r.success) {

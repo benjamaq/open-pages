@@ -1,5 +1,8 @@
 /** Allowed cohort check-in field keys (config-driven via public.cohorts.checkin_fields). */
 
+/** Cognitive stack with no schema changes: stored in daily_entries, valid in /api/checkin, renderable in result UI when `result_json.metrics` uses the same keys. */
+export const RECOMMENDED_COGNITIVE_CHECKIN_FIELDS_3: readonly string[] = ['focus', 'energy', 'mental_clarity']
+
 export const COHORT_CHECKIN_FIELD_KEYS = [
   'sleep_quality',
   'energy',
@@ -45,7 +48,7 @@ export const DEFAULT_COHORT_CHECKIN_FIELDS: string[] = [
 
 const ALLOW = new Set<string>(COHORT_CHECKIN_FIELD_KEYS as unknown as string[])
 
-/** Normalize DB array; if empty/invalid after filter, return default SureSleep-style set. */
+/** Normalize DB array; if empty/invalid after filter, return default cohort check-in set. */
 export function normalizeCohortCheckinFields(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [...DEFAULT_COHORT_CHECKIN_FIELDS]
   const out: string[] = []
@@ -54,6 +57,21 @@ export function normalizeCohortCheckinFields(raw: unknown): string[] {
     if (ALLOW.has(k) && !out.includes(k)) out.push(k)
   }
   return out.length > 0 ? out : [...DEFAULT_COHORT_CHECKIN_FIELDS]
+}
+
+/** True when normalized `checkin_fields` include sleep-night signals (config-only; no slug/brand). */
+export function isSleepShapedCheckinFields(normalizedKeys: string[]): boolean {
+  return normalizedKeys.some(
+    (f) => f.includes('sleep') || f === 'night_wakes' || f === 'sleep_onset_bucket',
+  )
+}
+
+/**
+ * Cognitive-outcome study page: not sleep-shaped, but includes cognitive anchors from `checkin_fields`.
+ */
+export function isCognitiveShapedCheckinFields(normalizedKeys: string[]): boolean {
+  if (isSleepShapedCheckinFields(normalizedKeys)) return false
+  return normalizedKeys.some((f) => f === 'focus' || f === 'mental_clarity')
 }
 
 const LABELS: Record<string, string> = {
@@ -82,4 +100,37 @@ export function cohortCheckinFieldDescription(key: string): string | null {
 export function cohortCheckinFieldLabel(key: string): string {
   const k = String(key || '').trim()
   return LABELS[k] || k.replace(/_/g, ' ')
+}
+
+/** Slider keys that can appear on the public study “outcomes” strip (non-sleep). Order follows cohort config. */
+const STUDY_PAGE_COGNITIVE_STRIP_KEYS = new Set(['focus', 'energy', 'mental_clarity', 'mood', 'calmness'])
+
+/** Shorter titles on /study/[slug] (e.g. “Energy” vs dashboard “Morning energy”). */
+const STUDY_PAGE_STRIP_TITLE: Partial<Record<string, string>> = {
+  energy: 'Energy',
+}
+
+const STUDY_PAGE_COGNITIVE_LINE: Partial<Record<string, string>> = {
+  focus: 'See how your focus trends from your first check-in to your last.',
+  energy: 'Track how your energy compares morning to morning.',
+  mental_clarity: 'See how sharp and clear your thinking feels across the study.',
+  mood: 'See how your mood shifts day by day.',
+  calmness: 'Track how calm and steady you feel over time.',
+}
+
+/**
+ * Up to three outcome rows for the cognitive branch of the study landing “How it works” strip.
+ * Order matches `checkin_fields` after normalization.
+ */
+export function cognitiveOutcomeStripForStudyPage(normalizedKeys: string[]): { title: string; line: string }[] {
+  const rows: { title: string; line: string }[] = []
+  for (const k of normalizedKeys) {
+    if (!STUDY_PAGE_COGNITIVE_STRIP_KEYS.has(k)) continue
+    const line = STUDY_PAGE_COGNITIVE_LINE[k]
+    if (!line) continue
+    const title = STUDY_PAGE_STRIP_TITLE[k] ?? cohortCheckinFieldLabel(k)
+    rows.push({ title, line })
+    if (rows.length >= 3) break
+  }
+  return rows
 }

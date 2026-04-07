@@ -12,7 +12,7 @@ async function enrollProfileInCohort(
   profileId: string,
   cohortSlug: string,
   qualificationResponse: string | null,
-): Promise<{ ok: true } | { ok: false; error: string; code?: 'COHORT_FULL' }> {
+): Promise<{ ok: true } | { ok: false; error: string; code?: 'COHORT_FULL' | 'COHORT_INACTIVE' }> {
   const r = await upsertCohortParticipant(profileId, cohortSlug, qualificationResponse)
   if (!r.ok) return r
   await ensureCohortStudyStackItem(profileId, cohortSlug)
@@ -20,7 +20,8 @@ async function enrollProfileInCohort(
 }
 
 function jsonEnrollmentError(enr: { ok: false; error: string; code?: string }) {
-  const status = enr.code === 'COHORT_FULL' ? 409 : 500
+  const status =
+    enr.code === 'COHORT_FULL' ? 409 : enr.code === 'COHORT_INACTIVE' ? 403 : 500
   return NextResponse.json({ error: enr.error, code: enr.code }, { status })
 }
 

@@ -10,41 +10,27 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-/**
- * Result-ready / study-finished email: intro, results CTA, rewards (same copy as result page), DoNotAge × BioStackr shell.
- */
-export async function sendCohortResultReadyEmail(params: {
-  to: string
-  authUserId: string
+export function buildCohortResultReadyTransactionalEmailHtml(params: {
+  firstNameForGreeting: string
   productName: string
-  partnerBrandName?: string | null
+  partnerBrandName: string
+  /** Results CTA + shell footer target (magic link or plain app URL). */
+  resultHref: string
   rewardClaimAbsoluteUrl?: string | null
   proRewardAlreadyClaimed?: boolean
-}): Promise<{ success: boolean; id?: string; error?: string }> {
-  const to = String(params.to || '').trim()
-  if (!to) return { success: false, error: 'missing email' }
-  const authUserId = String(params.authUserId || '').trim()
-  if (!authUserId) return { success: false, error: 'missing user' }
-
+}): { subject: string; html: string } {
   const product = String(params.productName || 'your study').trim() || 'your study'
   const productEsc = escapeHtml(product)
-
-  const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUserId)
-  if (auErr || !auth?.user) {
-    console.error('[cohort-result-ready-email] auth', authUserId, auErr?.message)
-  }
-  const first = escapeHtml(firstNameFromAuthUser(auth?.user ?? { email: to }))
-
-  const appBase = cohortEmailPublicOrigin()
-  const resultPath = cohortParticipantResultPath()
-  const resultHrefPlain = `${appBase}${resultPath}`
-  const resultHref =
-    (await generateCohortEmailMagicLinkUrl(to, resultPath)) ?? resultHrefPlain
-  const dashboardHref = resultHref
-  const subject = `Your ${productEsc} study — results are ready`
-
+  const partnerPlain = String(params.partnerBrandName || '').trim() || 'Study partner'
+  const partnerEsc = escapeHtml(partnerPlain)
+  const first = escapeHtml(params.firstNameForGreeting)
+  const resultHref = String(params.resultHref || '').trim()
   const rewardClaimRaw = String(params.rewardClaimAbsoluteUrl || '').trim()
   const proAlready = Boolean(params.proRewardAlreadyClaimed)
+
+  const appBase = cohortEmailPublicOrigin()
+  const dashboardHref = resultHref
+  const subject = `Your ${product} study — results are ready`
 
   const intro =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -82,21 +68,64 @@ export async function sendCohortResultReadyEmail(params: {
         `<p style="margin:0;color:#6b7280;font-size:14px;line-height:1.55;">Open your results while signed in to claim in one step. If you use a claim link, sign in with the same study account.</p>` +
         `</div>`
 
-  const sureBlock =
+  const partnerRewardBlock =
     `<div style="margin:0;">` +
-    `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">DoNotAge SureSleep</p>` +
-    `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.</p>` +
+    `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${partnerEsc} · ${productEsc}</p>` +
+    `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your 3-month supply of <strong>${productEsc}</strong> will be shipped automatically to the address you provided during signup. <strong>${partnerEsc}</strong> handles fulfilment.</p>` +
     `</div>`
 
   const rewardsSectionClose = `</div>`
 
-  const innerHtml = intro + resultsCta + rewardsSectionOpen + sureBlock + bioBlock + rewardsSectionClose
+  const innerHtml = intro + resultsCta + rewardsSectionOpen + partnerRewardBlock + bioBlock + rewardsSectionClose
 
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
+    partnerBrandName: partnerPlain,
     innerHtml,
     dashboardHref,
     omitDashboardRow: true,
+  })
+  return { subject, html }
+}
+
+/**
+ * Result-ready / study-finished email: intro, results CTA, rewards (aligned with result page), partner × BioStackr shell.
+ */
+export async function sendCohortResultReadyEmail(params: {
+  to: string
+  authUserId: string
+  productName: string
+  partnerBrandName?: string | null
+  rewardClaimAbsoluteUrl?: string | null
+  proRewardAlreadyClaimed?: boolean
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  const to = String(params.to || '').trim()
+  if (!to) return { success: false, error: 'missing email' }
+  const authUserId = String(params.authUserId || '').trim()
+  if (!authUserId) return { success: false, error: 'missing user' }
+
+  const product = String(params.productName || 'your study').trim() || 'your study'
+  const partnerPlain = String(params.partnerBrandName || '').trim() || 'Study partner'
+
+  const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUserId)
+  if (auErr || !auth?.user) {
+    console.error('[cohort-result-ready-email] auth', authUserId, auErr?.message)
+  }
+  const firstNameForGreeting = firstNameFromAuthUser(auth?.user ?? { email: to })
+
+  const appBase = cohortEmailPublicOrigin()
+  const resultPath = cohortParticipantResultPath()
+  const resultHrefPlain = `${appBase}${resultPath}`
+  const resultHref =
+    (await generateCohortEmailMagicLinkUrl(to, resultPath)) ?? resultHrefPlain
+
+  const { subject, html } = buildCohortResultReadyTransactionalEmailHtml({
+    firstNameForGreeting,
+    productName: product,
+    partnerBrandName: partnerPlain,
+    resultHref,
+    rewardClaimAbsoluteUrl: params.rewardClaimAbsoluteUrl,
+    proRewardAlreadyClaimed: params.proRewardAlreadyClaimed,
   })
 
   return sendEmail({ to, subject, html })

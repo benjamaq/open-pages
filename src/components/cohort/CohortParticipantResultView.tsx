@@ -146,6 +146,10 @@ function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
   const specs: Array<{ key: string; label: string; lowerIsBetter: boolean }> = [
     { key: 'sleep_quality', label: 'Sleep quality', lowerIsBetter: false },
     { key: 'energy', label: 'Energy', lowerIsBetter: false },
+    { key: 'focus', label: 'Focus', lowerIsBetter: false },
+    { key: 'mood', label: 'Mood', lowerIsBetter: false },
+    { key: 'mental_clarity', label: 'Mental clarity', lowerIsBetter: false },
+    { key: 'calmness', label: 'Calmness', lowerIsBetter: false },
     { key: 'night_wakes', label: 'Night wakings', lowerIsBetter: true },
     { key: 'night_wake', label: 'Night wakings', lowerIsBetter: true },
   ]
@@ -179,9 +183,13 @@ function metricDeltaPhrase(row: ParsedMetricRow): string | null {
   const improved = lowerIsBetter ? delta < 0 : delta > 0
   const worse = lowerIsBetter ? delta > 0 : delta < 0
   const mag = formatMetricValue(Math.abs(delta))
+  const sleepInterruptionMetric = row.id === 'night_wakes' || row.id === 'night_wake'
   if (improved) {
-    return row.lowerIsBetter
-      ? `down by about ${mag} vs your start — fewer interruptions overnight`
+    if (lowerIsBetter && sleepInterruptionMetric) {
+      return `down by about ${mag} vs your start — fewer interruptions overnight`
+    }
+    return lowerIsBetter
+      ? `down by about ${mag} vs your start`
       : `up by about ${mag} vs your start`
   }
   if (worse) {
@@ -263,6 +271,23 @@ function studyContextLine(brandName: string | null, productName: string | null):
   return 'Study results'
 }
 
+/** DNA asset only when brand reads as DoNotAge; otherwise wordmark text for multi-cohort parity. */
+function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
+  const b = typeof brandName === 'string' ? brandName.trim() : ''
+  if (b && !/donotage/i.test(b)) {
+    return (
+      <span className="text-lg sm:text-xl font-bold text-slate-950 tracking-tight">{b}</span>
+    )
+  }
+  return (
+    <img
+      src="/DNA-logo-black.png"
+      alt={b || 'Study partner'}
+      className="h-6 sm:h-8 w-auto max-w-[108px] sm:max-w-[124px] object-contain object-left"
+    />
+  )
+}
+
 /**
  * Participant-only cohort result layout + PDF export (not TruthReportView).
  * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric, effect_size,
@@ -293,7 +318,7 @@ export default function CohortParticipantResultView({
     parsedMetrics.confidenceLabel != null
   const showOutcomeBody = hasStructuredContent || hasMetricBlock
 
-  const productLabel = (payload.product_name && payload.product_name.trim()) || 'SureSleep'
+  const productLabel = (payload.product_name && payload.product_name.trim()) || 'your study product'
   const recommendationText = cohortUsageRecommendation(parsedMetrics.effectSizeNormalized, productLabel)
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
@@ -386,11 +411,7 @@ export default function CohortParticipantResultView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
-            <img
-              src="/DNA-logo-black.png"
-              alt="DoNotAge"
-              className="h-6 sm:h-8 w-auto max-w-[108px] sm:max-w-[124px] object-contain object-left"
-            />
+            <CohortResultPartnerMark brandName={payload.brand_name} />
           </div>
           <div className="h-8 w-px shrink-0 bg-slate-200/80 hidden sm:block" aria-hidden />
           <div className="min-w-0">
@@ -559,17 +580,18 @@ export default function CohortParticipantResultView({
         <section className="mt-8 sm:mt-10 space-y-4 sm:space-y-5" aria-label="Your rewards">
           <article className="rounded-2xl border border-stone-200/95 bg-gradient-to-b from-[#faf8f5] via-white to-white px-7 py-8 sm:px-9 sm:py-9 shadow-[0_6px_28px_-12px_rgba(28,25,23,0.12)]">
             <div className="flex items-center min-h-[2.35rem]">
-              <img
-                src="/DNA-logo-black.png"
-                alt="DoNotAge"
-                className="h-[1.85rem] sm:h-10 w-auto max-w-[148px] object-contain object-left"
-              />
+              <div className="max-w-[min(100%,200px)]">
+                <CohortResultPartnerMark brandName={payload.brand_name} />
+              </div>
             </div>
             <h2 className="mt-6 sm:mt-7 text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
-              Your DoNotAge reward
+              {payload.brand_name?.trim()
+                ? `Your ${payload.brand_name.trim()} reward`
+                : 'Your partner reward'}
             </h2>
             <p className="mt-3 sm:mt-4 max-w-prose text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
-              Your 3-month supply of SureSleep will be shipped automatically to the address you provided during signup.
+              Your 3-month supply of {productLabel} will be shipped automatically to the address you provided during
+              signup.
             </p>
           </article>
 

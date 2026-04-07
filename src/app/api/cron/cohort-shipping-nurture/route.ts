@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
       const brandName =
         cohortRow?.brand_name != null && String(cohortRow.brand_name).trim() !== ''
           ? String(cohortRow.brand_name).trim()
-          : 'DoNotAge'
+          : 'Study partner'
 
       const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
       if (auErr || !auth?.user?.email) {

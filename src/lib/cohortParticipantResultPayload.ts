@@ -61,81 +61,109 @@ function pickBestPublishedRow(rows: Record<string, unknown>[]): Record<string, u
  * Prefer `.limit(n)` + first row over `.maybeSingle()` with `.order()` — PostgREST can error or behave
  * inconsistently with order+limit+maybeSingle in some deployments.
  */
-async function queryPublishedResultsForUserKeys(userKeys: string[]): Promise<Record<string, unknown> | null> {
+async function queryPublishedResultForCohortAndUserKeys(
+  cohortUuid: string,
+  userKeys: string[],
+): Promise<Record<string, unknown> | null> {
   const uniq = [...new Set(userKeys.map((k) => String(k || '').trim()).filter(Boolean))]
-  if (uniq.length === 0) return null
+  if (uniq.length === 0 || !String(cohortUuid || '').trim()) return null
 
   const { data, error } = await supabaseAdmin
     .from('cohort_participant_results')
     .select(SELECT_RESULT_COLS)
+    .eq('cohort_id', cohortUuid)
     .in('user_id', uniq)
     .not('published_at', 'is', null)
     .order('published_at', { ascending: false })
     .limit(20)
 
   if (error) {
-    console.error('[cohortParticipantResultPayload] result query', error.message, error.code)
+    console.error('[cohortParticipantResultPayload] cohort-scoped result', cohortUuid, error.message)
     return null
   }
   return pickBestPublishedRow((data || []) as Record<string, unknown>[])
 }
 
+/** `profiles.cohort_id` holds the cohort slug; resolve to `cohorts.id` (try stack-primary profile first). */
+async function resolvePreferredCohortUuidFromProfiles(authUserId: string): Promise<string | null> {
+  const uid = String(authUserId || '').trim()
+  if (!uid) return null
+  const primaryId = (await pickPrimaryProfileIdByStackCount(uid)) || ''
+  const { data: profs } = await supabaseAdmin.from('profiles').select('id').eq('user_id', uid)
+  const ordered: string[] = []
+  if (primaryId) ordered.push(primaryId)
+  for (const p of profs || []) {
+    const id = String((p as { id?: string }).id || '').trim()
+    if (id && !ordered.includes(id)) ordered.push(id)
+  }
+  for (const pid of ordered) {
+    const { data: row } = await supabaseAdmin.from('profiles').select('cohort_id').eq('id', pid).maybeSingle()
+    const slug = String((row as { cohort_id?: string | null })?.cohort_id || '').trim().toLowerCase()
+    if (!slug) continue
+    const { data: c } = await supabaseAdmin.from('cohorts').select('id').eq('slug', slug).maybeSingle()
+    if (c && (c as { id?: string }).id) return String((c as { id: string }).id)
+  }
+  return null
+}
+
 /**
- * When a row exists but user_id on the result row doesn’t match auth/profile keys (bad seed / migration),
- * find the cohort from cohort_participants and load the published result for that cohort + keys.
+ * Cohort-safe resolution only: never picks the latest published row across cohorts without context.
+ *
+ * 1. If `profiles.cohort_id` resolves to a cohort UUID, return **only** that cohort’s published result (or null).
+ * 2. If no profile cohort slug, allow **only** when exactly one `cohort_participants.cohort_id` has a published
+ *    result for this user (e.g. profile cleared after graduation).
+ * 3. If multiple cohorts have published results and the profile does not disambiguate, return null.
  */
-async function queryPublishedResultsViaParticipantCohorts(userKeys: string[]): Promise<Record<string, unknown> | null> {
-  const uniq = [...new Set(userKeys.map((k) => String(k || '').trim()).filter(Boolean))]
-  if (uniq.length === 0) return null
+async function findPublishedResultRowForAuthUser(authUserId: string): Promise<{
+  row: Record<string, unknown>
+  cohortUuid: string
+} | null> {
+  const keys = await expandAuthLookupKeys(authUserId)
+  if (keys.length === 0) return null
 
   const { data: parts, error: pErr } = await supabaseAdmin
     .from('cohort_participants')
     .select('cohort_id')
-    .in('user_id', uniq)
+    .in('user_id', keys)
 
   if (pErr) {
     console.error('[cohortParticipantResultPayload] cohort_participants lookup', pErr.message)
     return null
   }
 
-  const cohortIds = [...new Set((parts || []).map((p) => String((p as { cohort_id?: string }).cohort_id || '').trim()).filter(Boolean))]
-  if (cohortIds.length === 0) return null
+  const participantCohortIds = [
+    ...new Set(
+      (parts || [])
+        .map((p) => String((p as { cohort_id?: string }).cohort_id || '').trim())
+        .filter(Boolean),
+    ),
+  ]
 
-  for (const cohortId of cohortIds) {
-    const { data, error } = await supabaseAdmin
-      .from('cohort_participant_results')
-      .select(SELECT_RESULT_COLS)
-      .eq('cohort_id', cohortId)
-      .in('user_id', uniq)
-      .not('published_at', 'is', null)
-      .order('published_at', { ascending: false })
-      .limit(20)
+  const preferredCohortUuid = await resolvePreferredCohortUuidFromProfiles(authUserId)
 
-    if (error) {
-      console.error('[cohortParticipantResultPayload] result by cohort', cohortId, error.message)
-      continue
-    }
-    const row = pickBestPublishedRow((data || []) as Record<string, unknown>[])
-    if (row) return row
+  if (preferredCohortUuid) {
+    const row = await queryPublishedResultForCohortAndUserKeys(preferredCohortUuid, keys)
+    if (!row) return null
+    const cohortUuid = String(row.cohort_id || '').trim()
+    if (!cohortUuid) return null
+    return { row, cohortUuid }
+  }
+
+  const rowsWithCohort: { cohortId: string; row: Record<string, unknown> }[] = []
+  for (const cid of participantCohortIds) {
+    const row = await queryPublishedResultForCohortAndUserKeys(cid, keys)
+    if (row) rowsWithCohort.push({ cohortId: cid, row })
+  }
+  if (rowsWithCohort.length === 1) {
+    const row = rowsWithCohort[0].row
+    const cohortUuid = String(row.cohort_id || '').trim()
+    if (!cohortUuid) return null
+    return { row, cohortUuid }
+  }
+  if (rowsWithCohort.length > 1) {
+    return null
   }
   return null
-}
-
-async function findPublishedResultRowForAuthUser(authUserId: string): Promise<{
-  row: Record<string, unknown>
-  cohortUuid: string
-} | null> {
-  const keys = await expandAuthLookupKeys(authUserId)
-
-  let row = await queryPublishedResultsForUserKeys(keys)
-  if (!row) {
-    row = await queryPublishedResultsViaParticipantCohorts(keys)
-  }
-
-  if (!row) return null
-  const cohortUuid = String(row.cohort_id || '').trim()
-  if (!cohortUuid) return null
-  return { row, cohortUuid }
 }
 
 async function fetchCohortProductMeta(cohortUuidOrSlug: string): Promise<{

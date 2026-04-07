@@ -178,7 +178,7 @@ function LoginInner() {
           <CohortResendLoginLinkForm
             idPrefix="login-cohort-magic"
             heading="Get a magic link instead of password"
-            lead="SureSleep study participants can log in without a password. We will email you a link that opens your dashboard."
+            lead="Partner study participants can log in without a password. We will email you a link that opens your dashboard."
             submitLabel="Email me a login link"
             className="text-center"
           />

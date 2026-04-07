@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
- * Cohort recruitment counts (SureSleep / generic cohort slugs):
+ * Cohort recruitment counts (per cohort slug):
  *
  * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales confirmed against
  *   `max_participants`, then maps into display slots (study landing only; not the DB cap).

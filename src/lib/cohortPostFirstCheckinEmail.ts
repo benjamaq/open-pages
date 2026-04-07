@@ -18,6 +18,48 @@ export type CohortPostFirstCheckinEmailResult = {
   debug?: Record<string, unknown>
 }
 
+export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
+  firstNameForGreeting: string
+  studyName: string
+  productName: string
+  partnerBrandName: string
+  checkInHref: string
+}): { subject: string; html: string } {
+  const first = escapeHtml(params.firstNameForGreeting)
+  const studyEsc = escapeHtml(params.studyName)
+  const productLabel = escapeHtml(params.productName)
+  const partnerBrand = escapeHtml(
+    String(params.partnerBrandName || 'Study partner').trim() || 'Study partner',
+  )
+  const partnerBrandPlain = String(params.partnerBrandName || 'Study partner').trim() || 'Study partner'
+  const checkInHref = String(params.checkInHref || '').trim()
+
+  const appBase = cohortEmailPublicOrigin()
+
+  const innerHtml =
+    `<p style="margin:0 0 16px;">Hi ${first},</p>` +
+    `<p style="margin:0 0 16px;">You've completed your first baseline check-in for the <strong>${studyEsc}</strong> study on <strong>BioStackr</strong> — one step away from securing your place with <strong>${partnerBrand}</strong>.</p>` +
+    `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
+    `<ul style="margin:0 0 20px;padding-left:20px;">` +
+    `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>` +
+    `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
+    `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
+    `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>` +
+    `</ul>` +
+    `<p style="margin:28px 0 8px;text-align:center;">` +
+    `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
+    `</p>`
+
+  const html = wrapCohortTransactionalEmailHtml({
+    appBase,
+    partnerBrandName: partnerBrandPlain,
+    innerHtml,
+    dashboardHref: checkInHref,
+    omitDashboardRow: true,
+  })
+  return { subject: 'One more check-in to confirm your place', html }
+}
+
 /**
  * After first distinct compliance check-in (n === 1): send nudge for second check-in.
  * Claimed atomically via post_first_checkin_email_sent_at to avoid duplicates.
@@ -138,43 +180,23 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       return { sent: false, skip: 'empty_email', debug: {} }
     }
 
-    const first = escapeHtml(firstNameFromAuthUser(auth.user))
-    const appBase = cohortEmailPublicOrigin()
     const { studyName, productName } = studyAndProductNamesFromCohortRow(
       cohort as { product_name?: string | null; brand_name?: string | null },
     )
-    const studyEsc = escapeHtml(studyName)
-    const productLabel = escapeHtml(productName)
-    const partnerBrand = escapeHtml(
-      String((cohort as { brand_name?: string | null }).brand_name || 'DoNotAge').trim() || 'DoNotAge',
-    )
-
+    const partnerBrandPlain = String((cohort as { brand_name?: string | null }).brand_name || 'Study partner').trim() || 'Study partner'
     const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
 
-    const innerHtml =
-      `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-      `<p style="margin:0 0 16px;">You've completed your first baseline check-in for the <strong>${studyEsc}</strong> study on <strong>BioStackr</strong> — one step away from securing your place with <strong>${partnerBrand}</strong>.</p>` +
-      `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
-      `<ul style="margin:0 0 20px;padding-left:20px;">` +
-      `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>` +
-      `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
-      `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
-      `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>` +
-      `</ul>` +
-      `<p style="margin:28px 0 8px;text-align:center;">` +
-      `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
-      `</p>`
-
-    const html = wrapCohortTransactionalEmailHtml({
-      appBase,
-      innerHtml,
-      dashboardHref: checkInHref,
-      omitDashboardRow: true,
+    const { subject, html } = buildCohortPostFirstCheckinTransactionalEmailHtml({
+      firstNameForGreeting: firstNameFromAuthUser(auth.user),
+      studyName,
+      productName,
+      partnerBrandName: partnerBrandPlain,
+      checkInHref,
     })
 
     const r = await sendEmail({
       to,
-      subject: 'One more check-in to confirm your place',
+      subject,
       html,
     })
     if (!r.success) {

@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "seed:test": "tsx scripts/seedTestData.ts",
-    "emails:compile": "node scripts/compile-daily-reminder-mjml.js"
+    "emails:compile": "node scripts/compile-daily-reminder-mjml.js",
+    "test:cohort-policy": "tsx --test src/lib/cohortPublishedResultPolicy.test.ts",
+    "test:cohort-publish-validation": "tsx --test src/lib/cohortParticipantResultPublishValidation.test.ts",
+    "cohort:email-previews": "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=stub SUPABASE_SERVICE_ROLE_KEY=stub tsx scripts/cohort-email-previews.ts"
   },
   "dependencies": {
     "@next/third-parties": "^16.1.1",
