@@ -3,14 +3,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { countCohortConfirmedParticipants, isCohortCapacityFull } from '@/lib/cohortRecruitment'
+import { countCohortPipelineParticipants, isCohortEnrollmentClosedByPipeline } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
 import { StudyCohortFullWaitlist } from './StudyCohortFullWaitlist'
 import { CohortQualificationSection } from './CohortQualificationSection'
 
 const RUST = '#C84B2F'
-/** Study hero: never show fewer than this many "places filled" when display capacity is larger (urgency). Capped at displayTotal. */
-const MIN_HERO_PLACES_FILLED_DISPLAY = 13
 /** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
 /** Section 1 (hero) & section 3 — matches BioStackr logo white */
@@ -108,17 +106,18 @@ function StepRowConnector() {
 }
 
 function HeroCohortStatusCard({
-  confirmed,
+  pipelineFilled,
   maxParticipants,
   displayCapacity,
 }: {
-  confirmed: number
-  /** Backend cap; with displayCapacity drives proportional hero fill (confirmed/max → slice of display slots). */
+  /** applied + confirmed rows — same basis as DB enrollment cap and `isCohortEnrollmentClosedByPipeline`. */
+  pipelineFilled: number
+  /** Operational cap; with displayCapacity: round((pipeline/max)*display) for the public “25 slots” bar. */
   maxParticipants: number | null
-  /** Public cohort size shown in hero (e.g. 25); fill is scaled: round((confirmed/max)*display). */
+  /** Public denominator only (e.g. 25); does not cap real enrollment (maxParticipants does). */
   displayCapacity: number | null
 }) {
-  const c = Math.max(0, Math.floor(Number(confirmed)))
+  const c = Math.max(0, Math.floor(Number(pipelineFilled)))
   const maxP =
     maxParticipants != null && Number.isFinite(Number(maxParticipants)) && Number(maxParticipants) > 0
       ? Math.floor(Number(maxParticipants))
@@ -144,13 +143,6 @@ function HeroCohortStatusCard({
   }
 
   let heroPlacesFilled = displayedFilled ?? c
-  if (
-    displayTotal != null &&
-    displayTotal > MIN_HERO_PLACES_FILLED_DISPLAY &&
-    heroPlacesFilled < MIN_HERO_PLACES_FILLED_DISPLAY
-  ) {
-    heroPlacesFilled = MIN_HERO_PLACES_FILLED_DISPLAY
-  }
   if (displayTotal != null) {
     heroPlacesFilled = Math.min(displayTotal, Math.max(0, heroPlacesFilled))
   }
@@ -669,9 +661,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     )
   }
 
-  const confirmedCount = await countCohortConfirmedParticipants(cohortId)
-  /** Hide application only at real cap (max_participants); hero uses proportional display vs display_capacity. */
-  const capacityFull = isCohortCapacityFull(maxP, confirmedCount)
+  const pipelineCount = await countCohortPipelineParticipants(cohortId)
+  /**
+   * Enrollment closed = pipeline (applied + confirmed) ≥ max_participants — same rule as DB trigger.
+   * Hero “X of 25” uses the same pipeline count scaled into display_capacity (urgency bar only).
+   */
+  const capacityFull = isCohortEnrollmentClosedByPipeline(maxP, pipelineCount)
   const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
 
   const productName = String(cohort.product_name || 'Study product')
@@ -708,7 +703,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             {!showFullMessage ? (
               <div className="mt-4 sm:mt-5">
                 <HeroCohortStatusCard
-                  confirmed={confirmedCount}
+                  pipelineFilled={pipelineCount}
                   maxParticipants={maxP}
                   displayCapacity={displayCap}
                 />

@@ -6,17 +6,33 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales confirmed against
  *   `max_participants`, then maps into display slots (study landing only; not the DB cap).
  * - Operational cap: `cohorts.max_participants` — Postgres trigger caps **applied + confirmed**
- *   pipeline rows; study page “full” uses **confirmed-only** vs this same field (see
- *   `isCohortCapacityFull` below). Keep max ≥ shipped target (e.g. 60).
+ *   pipeline rows; study page “full” + hero fill use **the same pipeline count** vs this field
+ *   (`isCohortEnrollmentClosedByPipeline`). Keep max ≥ shipped target (e.g. 60).
  * - B2C unrelated: `NEXT_PUBLIC_B2C_AT_CAPACITY` / `b2cCapacityGate.ts` — individual product signup,
  *   not cohort enrollment.
  */
 
-/** Study landing treats cohort as full when **confirmed** count reaches max (no time-based cutoff). */
+/**
+ * Study landing “full” / hero waitlist — **confirmed-only** (legacy helper).
+ * Prefer `isCohortEnrollmentClosedByPipeline` for matching DB trigger + signup closure.
+ */
 export function isCohortCapacityFull(maxParticipants: number | null | undefined, confirmedCount: number): boolean {
   if (maxParticipants == null || !Number.isFinite(Number(maxParticipants))) return false
   const cap = Math.max(0, Math.floor(Number(maxParticipants)))
   return confirmedCount >= cap
+}
+
+/**
+ * True when no more **applied** or **confirmed** slots exist — matches
+ * `trg_enforce_cohort_pipeline_capacity` (pipeline = applied + confirmed).
+ */
+export function isCohortEnrollmentClosedByPipeline(
+  maxParticipants: number | null | undefined,
+  pipelineCount: number,
+): boolean {
+  if (maxParticipants == null || !Number.isFinite(Number(maxParticipants))) return false
+  const cap = Math.max(0, Math.floor(Number(maxParticipants)))
+  return pipelineCount >= cap
 }
 
 /** applied + confirmed rows (pipeline / historical capacity toward signup — not used for “study full”). */
