@@ -22,50 +22,167 @@ export type BuildCohortParticipantResultOutcome =
   | { ok: true; payload: CohortParticipantResultApiPayload }
   | { ok: false; reason: 'no_published_result' | 'participant_dropped' }
 
+const SELECT_RESULT_COLS = 'result_json, result_version, published_at, status, cohort_id'
+
+function isPublishedRow(r: { status?: unknown; published_at?: unknown }): boolean {
+  const st = String(r.status ?? '')
+    .trim()
+    .toLowerCase()
+  const pAt = r.published_at
+  if (pAt == null || String(pAt).trim() === '') return false
+  return st === 'published' || st === 'ready'
+}
+
+/** All profile.id + auth id for this user (cohort_participants / results may key on either). */
+async function expandAuthLookupKeys(authUserId: string): Promise<string[]> {
+  const keys = new Set<string>()
+  const aid = String(authUserId || '').trim()
+  if (aid) keys.add(aid)
+  const { data: profs } = await supabaseAdmin.from('profiles').select('id').eq('user_id', aid)
+  for (const p of profs || []) {
+    const id = String((p as { id?: string }).id || '').trim()
+    if (id) keys.add(id)
+  }
+  return [...keys]
+}
+
+function pickBestPublishedRow(rows: Record<string, unknown>[]): Record<string, unknown> | null {
+  const pub = (rows || []).filter((r) => isPublishedRow(r as { status?: unknown; published_at?: unknown }))
+  if (pub.length === 0) return null
+  pub.sort((a, b) => {
+    const ta = Date.parse(String((a as { published_at?: string }).published_at || '')) || 0
+    const tb = Date.parse(String((b as { published_at?: string }).published_at || '')) || 0
+    return tb - ta
+  })
+  return pub[0] as Record<string, unknown>
+}
+
 /**
- * Resolve published `cohort_participant_results` for an auth user.
- * Tries `user_id = auth` first, then `user_id IN (profile ids)` for legacy rows that stored `profiles.id`.
+ * Prefer `.limit(n)` + first row over `.maybeSingle()` with `.order()` — PostgREST can error or behave
+ * inconsistently with order+limit+maybeSingle in some deployments.
  */
+async function queryPublishedResultsForUserKeys(userKeys: string[]): Promise<Record<string, unknown> | null> {
+  const uniq = [...new Set(userKeys.map((k) => String(k || '').trim()).filter(Boolean))]
+  if (uniq.length === 0) return null
+
+  const { data, error } = await supabaseAdmin
+    .from('cohort_participant_results')
+    .select(SELECT_RESULT_COLS)
+    .in('user_id', uniq)
+    .not('published_at', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(20)
+
+  if (error) {
+    console.error('[cohortParticipantResultPayload] result query', error.message, error.code)
+    return null
+  }
+  return pickBestPublishedRow((data || []) as Record<string, unknown>[])
+}
+
+/**
+ * When a row exists but user_id on the result row doesn’t match auth/profile keys (bad seed / migration),
+ * find the cohort from cohort_participants and load the published result for that cohort + keys.
+ */
+async function queryPublishedResultsViaParticipantCohorts(userKeys: string[]): Promise<Record<string, unknown> | null> {
+  const uniq = [...new Set(userKeys.map((k) => String(k || '').trim()).filter(Boolean))]
+  if (uniq.length === 0) return null
+
+  const { data: parts, error: pErr } = await supabaseAdmin
+    .from('cohort_participants')
+    .select('cohort_id')
+    .in('user_id', uniq)
+
+  if (pErr) {
+    console.error('[cohortParticipantResultPayload] cohort_participants lookup', pErr.message)
+    return null
+  }
+
+  const cohortIds = [...new Set((parts || []).map((p) => String((p as { cohort_id?: string }).cohort_id || '').trim()).filter(Boolean))]
+  if (cohortIds.length === 0) return null
+
+  for (const cohortId of cohortIds) {
+    const { data, error } = await supabaseAdmin
+      .from('cohort_participant_results')
+      .select(SELECT_RESULT_COLS)
+      .eq('cohort_id', cohortId)
+      .in('user_id', uniq)
+      .not('published_at', 'is', null)
+      .order('published_at', { ascending: false })
+      .limit(20)
+
+    if (error) {
+      console.error('[cohortParticipantResultPayload] result by cohort', cohortId, error.message)
+      continue
+    }
+    const row = pickBestPublishedRow((data || []) as Record<string, unknown>[])
+    if (row) return row
+  }
+  return null
+}
+
 async function findPublishedResultRowForAuthUser(authUserId: string): Promise<{
   row: Record<string, unknown>
   cohortUuid: string
 } | null> {
-  const selectCols = 'result_json, result_version, published_at, status, cohort_id'
+  const keys = await expandAuthLookupKeys(authUserId)
 
-  const run = async (keys: string[]) => {
-    const uniq = [...new Set(keys.map((k) => String(k || '').trim()).filter(Boolean))]
-    if (uniq.length === 0) return null
-    const { data, error } = await supabaseAdmin
-      .from('cohort_participant_results')
-      .select(selectCols)
-      .in('user_id', uniq)
-      .eq('status', 'published')
-      .not('published_at', 'is', null)
-      .order('published_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    if (error) {
-      console.error('[cohortParticipantResultPayload] result query', error.message)
-      return null
-    }
-    return data as Record<string, unknown> | null
-  }
-
-  let row = await run([authUserId])
+  let row = await queryPublishedResultsForUserKeys(keys)
   if (!row) {
-    const { data: profs } = await supabaseAdmin.from('profiles').select('id').eq('user_id', authUserId)
-    const pids = (profs || [])
-      .map((p) => String((p as { id?: string }).id || '').trim())
-      .filter(Boolean)
-    if (pids.length > 0) {
-      row = await run(pids)
-    }
+    row = await queryPublishedResultsViaParticipantCohorts(keys)
   }
 
   if (!row) return null
-  const cohortUuid = String(row.cohort_id || '')
+  const cohortUuid = String(row.cohort_id || '').trim()
   if (!cohortUuid) return null
   return { row, cohortUuid }
+}
+
+async function fetchCohortProductMeta(cohortUuidOrSlug: string): Promise<{
+  product_name: string | null
+  brand_name: string | null
+  /** Canonical `cohorts.id` — use for `cohort_participants.cohort_id` joins. */
+  cohortIdForParticipants: string
+} | null> {
+  const { data: byId, error: idErr } = await supabaseAdmin
+    .from('cohorts')
+    .select('id, product_name, brand_name')
+    .eq('id', cohortUuidOrSlug)
+    .maybeSingle()
+
+  if (!idErr && byId && (byId as { id?: string }).id) {
+    const c = byId as { id: string; product_name?: string | null; brand_name?: string | null }
+    return {
+      cohortIdForParticipants: String(c.id),
+      product_name:
+        c.product_name != null && String(c.product_name).trim() !== '' ? String(c.product_name).trim() : null,
+      brand_name: c.brand_name != null && String(c.brand_name).trim() !== '' ? String(c.brand_name).trim() : null,
+    }
+  }
+
+  const { data: bySlug, error: slugErr } = await supabaseAdmin
+    .from('cohorts')
+    .select('id, product_name, brand_name')
+    .eq('slug', cohortUuidOrSlug)
+    .maybeSingle()
+
+  if (!slugErr && bySlug && (bySlug as { id?: string }).id) {
+    const c = bySlug as { id: string; product_name?: string | null; brand_name?: string | null }
+    return {
+      cohortIdForParticipants: String(c.id),
+      product_name:
+        c.product_name != null && String(c.product_name).trim() !== '' ? String(c.product_name).trim() : null,
+      brand_name: c.brand_name != null && String(c.brand_name).trim() !== '' ? String(c.brand_name).trim() : null,
+    }
+  }
+
+  console.error(
+    '[cohortParticipantResultPayload] cohort def missing for',
+    cohortUuidOrSlug,
+    idErr?.message,
+    slugErr?.message,
+  )
+  return null
 }
 
 /**
@@ -81,26 +198,12 @@ export async function buildCohortParticipantResultPayload(
 
   const { row, cohortUuid } = found
 
-  const { data: cdef, error: cErr } = await supabaseAdmin
-    .from('cohorts')
-    .select('id, product_name, brand_name')
-    .eq('id', cohortUuid)
-    .maybeSingle()
-  if (cErr || !cdef?.id) {
-    console.error('[cohortParticipantResultPayload] cohort def', cohortUuid, cErr?.message)
+  const meta = await fetchCohortProductMeta(cohortUuid)
+  if (!meta) {
     return { ok: false, reason: 'no_published_result' }
   }
 
-  const productName =
-    (cdef as { product_name?: string | null }).product_name != null &&
-    String((cdef as { product_name: string }).product_name).trim() !== ''
-      ? String((cdef as { product_name: string }).product_name).trim()
-      : null
-  const brandName =
-    (cdef as { brand_name?: string | null }).brand_name != null &&
-    String((cdef as { brand_name: string }).brand_name).trim() !== ''
-      ? String((cdef as { brand_name: string }).brand_name).trim()
-      : null
+  const { product_name: productName, brand_name: brandName, cohortIdForParticipants } = meta
 
   const publishedAt = row.published_at != null ? String(row.published_at) : ''
 
@@ -112,7 +215,7 @@ export async function buildCohortParticipantResultPayload(
   const { data: cpRow } = await supabaseAdmin
     .from('cohort_participants')
     .select('id, status')
-    .eq('cohort_id', cohortUuid)
+    .eq('cohort_id', cohortIdForParticipants)
     .in('user_id', cpUserIds)
     .maybeSingle()
 
