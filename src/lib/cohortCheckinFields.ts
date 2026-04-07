@@ -76,6 +76,7 @@ export function isCognitiveShapedCheckinFields(normalizedKeys: string[]): boolea
 
 const LABELS: Record<string, string> = {
   sleep_quality: 'Sleep quality',
+  /** Sleep-shaped cohorts only; cognitive cohorts override via `cohortCheckinFieldLabel(…, normalized)`. */
   energy: 'Morning energy',
   mood: 'Mood',
   focus: 'Focus',
@@ -85,34 +86,75 @@ const LABELS: Record<string, string> = {
   night_wakes: 'Times woken in the night',
 }
 
-/** Short helper lines under cohort slider labels (UI only). */
-const DESCRIPTIONS: Record<string, string> = {
-  mental_clarity: 'How clear and sharp did your thinking feel?',
-  calmness: 'How calm and steady did you feel?',
+/** Non-sleep (cognitive-style) check-in: same DB keys, customer-facing copy for Optimal Focus–style cohorts. */
+const COGNITIVE_UI_LABELS: Partial<Record<string, string>> = {
+  focus: 'Focus',
+  energy: 'Mental energy and alertness',
+  mental_clarity: 'Mental clarity',
 }
 
-export function cohortCheckinFieldDescription(key: string): string | null {
-  const k = String(key || '').trim()
-  return DESCRIPTIONS[k] ?? null
+/** Prompts under sliders — cognitive / non-sleep cohorts only (no sleep or “morning energy” framing). */
+const COGNITIVE_FIELD_PROMPTS: Partial<Record<string, string>> = {
+  focus: 'How well were you able to concentrate today?',
+  energy: 'How mentally alert and switched-on did you feel today?',
+  mental_clarity: 'How clear and sharp did your thinking feel today?',
 }
 
-/** Human label for cohort check-in field keys (dashboard copy). */
-export function cohortCheckinFieldLabel(key: string): string {
+/** Short helper for calmness (either cohort shape). */
+const CALMNESS_PROMPT = 'How calm and steady did you feel?'
+
+/**
+ * Human label for cohort check-in field keys.
+ * Pass `normalizedCheckinFields` from `cohorts.checkin_fields` (normalized) so cognitive cohorts get
+ * “Mental energy and alertness” for `energy` while sleep-shaped cohorts keep “Morning energy”.
+ */
+export function cohortCheckinFieldLabel(key: string, normalizedCheckinFields?: string[] | null): string {
   const k = String(key || '').trim()
+  if (normalizedCheckinFields && normalizedCheckinFields.length > 0 && !isSleepShapedCheckinFields(normalizedCheckinFields)) {
+    const c = COGNITIVE_UI_LABELS[k]
+    if (c) return c
+  }
   return LABELS[k] || k.replace(/_/g, ' ')
+}
+
+/**
+ * Helper line under slider labels (UI only). Cognitive cohorts get outcome-focused prompts; sleep cohorts
+ * typically omit prompts except calmness.
+ */
+export function cohortCheckinFieldDescription(key: string, normalizedCheckinFields?: string[] | null): string | null {
+  const k = String(key || '').trim()
+  if (k === 'calmness') return CALMNESS_PROMPT
+  if (normalizedCheckinFields && normalizedCheckinFields.length > 0 && !isSleepShapedCheckinFields(normalizedCheckinFields)) {
+    return COGNITIVE_FIELD_PROMPTS[k] ?? null
+  }
+  return null
+}
+
+/**
+ * Primary heading above a 1–10 slider in `CohortCheckinLayout`. Sleep cohorts keep legacy lines
+ * (e.g. “Sleep quality last night”); cognitive cohorts use shape-aware labels + scale.
+ */
+export function cohortCheckinSliderHeading(key: string, normalizedCheckinFields: string[]): string {
+  const k = String(key || '').trim()
+  if (!isCohortCheckinSliderField(k)) return k
+  if (isSleepShapedCheckinFields(normalizedCheckinFields)) {
+    if (k === 'sleep_quality') return 'Sleep quality last night (1–10)'
+    if (k === 'energy') return 'Morning energy level (1–10)'
+    if (k === 'mood') return 'How is your mood?'
+    if (k === 'focus') return 'How is your focus?'
+    if (k === 'mental_clarity') return 'Mental clarity (1–10)'
+    if (k === 'calmness') return 'Calmness (1–10)'
+    return `${cohortCheckinFieldLabel(k, normalizedCheckinFields)} (1–10)`
+  }
+  return `${cohortCheckinFieldLabel(k, normalizedCheckinFields)} (1–10)`
 }
 
 /** Slider keys that can appear on the public study “outcomes” strip (non-sleep). Order follows cohort config. */
 const STUDY_PAGE_COGNITIVE_STRIP_KEYS = new Set(['focus', 'energy', 'mental_clarity', 'mood', 'calmness'])
 
-/** Shorter titles on /study/[slug] (e.g. “Energy” vs dashboard “Morning energy”). */
-const STUDY_PAGE_STRIP_TITLE: Partial<Record<string, string>> = {
-  energy: 'Energy',
-}
-
 const STUDY_PAGE_COGNITIVE_LINE: Partial<Record<string, string>> = {
   focus: 'See how your focus trends from your first check-in to your last.',
-  energy: 'Track how your energy compares morning to morning.',
+  energy: 'See how your mental energy and alertness change across the study.',
   mental_clarity: 'See how sharp and clear your thinking feels across the study.',
   mood: 'See how your mood shifts day by day.',
   calmness: 'Track how calm and steady you feel over time.',
@@ -128,7 +170,7 @@ export function cognitiveOutcomeStripForStudyPage(normalizedKeys: string[]): { t
     if (!STUDY_PAGE_COGNITIVE_STRIP_KEYS.has(k)) continue
     const line = STUDY_PAGE_COGNITIVE_LINE[k]
     if (!line) continue
-    const title = STUDY_PAGE_STRIP_TITLE[k] ?? cohortCheckinFieldLabel(k)
+    const title = cohortCheckinFieldLabel(k, normalizedKeys)
     rows.push({ title, line })
     if (rows.length >= 3) break
   }

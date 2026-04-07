@@ -257,6 +257,11 @@ function HowItWorksSteps({
   outcomeStripVariant: 'sleep' | 'cognitive' | 'generic'
   cognitiveOutcomeRows: { title: string; line: string }[]
 }) {
+  const checkinStepLine =
+    outcomeStripVariant === 'sleep'
+      ? 'A quick morning check-in. No wearable required.'
+      : 'A quick daily check-in. No wearable required.'
+
   const steps = [
     {
       step: 'STEP 1',
@@ -269,7 +274,7 @@ function HowItWorksSteps({
       step: 'STEP 2',
       icon: <IconHowCheckin />,
       title: 'Track your results daily',
-      line: 'A quick morning check-in. No wearable required.',
+      line: checkinStepLine,
       emphasis: 'strong' as const,
     },
     {

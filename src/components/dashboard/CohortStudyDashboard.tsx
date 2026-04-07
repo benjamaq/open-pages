@@ -6,6 +6,7 @@ import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
 import {
   cohortCheckinFieldLabel,
   DEFAULT_COHORT_CHECKIN_FIELDS,
+  normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 
@@ -508,7 +509,8 @@ export default function CohortStudyDashboard({
       Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
         ? checkinFieldsProp
         : DEFAULT_COHORT_CHECKIN_FIELDS
-    return raw.map((k) => cohortCheckinFieldLabel(k))
+    const normalized = normalizeCohortCheckinFields(raw)
+    return normalized.map((k) => cohortCheckinFieldLabel(k, normalized))
   }, [checkinFieldsProp])
 
   const gateDots = (
@@ -814,10 +816,18 @@ export default function CohortStudyDashboard({
               {currentDay === 1 ? (
                 <>
                   <p className="mt-2 text-sm font-semibold text-gray-900">First one&apos;s done.</p>
-                  <p className="mt-2 text-sm text-gray-700">Come back tomorrow morning after you wake up.</p>
+                  <p className="mt-2 text-sm text-gray-700">
+                    {isSleepShapedCohort
+                      ? 'Come back tomorrow morning after you wake up.'
+                      : 'Come back tomorrow for your next check-in.'}
+                  </p>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-gray-700">Great work. Come back tomorrow morning after you wake up.</p>
+                <p className="mt-2 text-sm text-gray-700">
+                  {isSleepShapedCohort
+                    ? 'Great work. Come back tomorrow morning after you wake up.'
+                    : 'Great work. Come back tomorrow for your next check-in.'}
+                </p>
               )}
               <button
                 type="button"
@@ -833,7 +843,9 @@ export default function CohortStudyDashboard({
                 <>
                   <div className="text-sm font-semibold text-amber-950">Day 1 — you&apos;re in.</div>
                   <p className="mt-2 text-sm text-gray-700">
-                    A quick morning check-in each day — about 30 seconds. You&apos;ve got this.
+                    {isSleepShapedCohort
+                      ? 'A quick morning check-in each day — about 30 seconds. You&apos;ve got this.'
+                      : 'A quick daily check-in — about 30 seconds. You&apos;ve got this.'}
                   </p>
                 </>
               ) : (

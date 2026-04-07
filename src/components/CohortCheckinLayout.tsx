@@ -13,7 +13,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import {
   cohortCheckinFieldDescription,
+  cohortCheckinSliderHeading,
   isCohortCheckinSliderField,
+  isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 
@@ -52,15 +54,6 @@ const WAKES_OPTIONS = [
   { value: 1 as const, label: '1–2 times' },
   { value: 2 as const, label: '3 or more' },
 ]
-
-const SLIDER_LABELS: Record<string, string> = {
-  sleep_quality: 'Sleep quality last night (1–10)',
-  energy: 'Morning energy level (1–10)',
-  mood: 'How is your mood?',
-  focus: 'How is your focus?',
-  mental_clarity: 'Mental clarity',
-  calmness: 'Calmness',
-}
 
 const STEP_SPAN_STYLE = {
   fontSize: '14px',
@@ -220,7 +213,11 @@ export default function CohortCheckinLayout({
               <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
               <p className="mt-1.5 text-xs sm:text-sm text-gray-500 leading-snug max-w-[260px]">
                 Your check-in has been saved.
-                <span className="block mt-0.5">Come back tomorrow morning.</span>
+                <span className="block mt-0.5">
+                  {isSleepShapedCheckinFields(fields)
+                    ? 'Come back tomorrow morning.'
+                    : 'Come back tomorrow for your next check-in.'}
+                </span>
               </p>
               <button
                 type="button"
@@ -298,8 +295,8 @@ export default function CohortCheckinLayout({
                 if (isCohortCheckinSliderField(fieldKey)) {
                   step += 1
                   const k = step
-                  const label = SLIDER_LABELS[fieldKey] || fieldKey
-                  const desc = cohortCheckinFieldDescription(fieldKey)
+                  const label = cohortCheckinSliderHeading(fieldKey, fields)
+                  const desc = cohortCheckinFieldDescription(fieldKey, fields)
                   const v = typeof values[fieldKey] === 'number' ? (values[fieldKey] as number) : 5
                   return (
                     <div key={fieldKey} className="mb-8 space-y-2">
@@ -348,7 +345,9 @@ export default function CohortCheckinLayout({
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Tag anything that might have affected your sleep — we&apos;ll exclude these days from your results.
+                  {isSleepShapedCheckinFields(fields)
+                    ? 'Tag anything that might have affected your sleep — we&apos;ll exclude these days from your results.'
+                    : 'Tag anything unusual that might have affected your scores — we&apos;ll exclude these days from your results.'}
                 </p>
               </div>
 

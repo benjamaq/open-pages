@@ -143,9 +143,20 @@ function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
   const confidenceLabel = formatConfidenceDisplay(j.confidence ?? j.confidence_score ?? j.signal_strength)
 
   const metricsRoot = recordField(j.metrics) ?? {}
+  const metricKeysPresent = Object.keys(metricsRoot).filter((mk) => recordField(metricsRoot[mk]))
+  const cognitiveOnlyResult =
+    metricKeysPresent.length > 0 &&
+    !metricKeysPresent.some(
+      (mk) => mk.includes('sleep') || mk === 'night_wakes' || mk === 'sleep_onset_bucket',
+    )
+
   const specs: Array<{ key: string; label: string; lowerIsBetter: boolean }> = [
     { key: 'sleep_quality', label: 'Sleep quality', lowerIsBetter: false },
-    { key: 'energy', label: 'Energy', lowerIsBetter: false },
+    {
+      key: 'energy',
+      label: cognitiveOnlyResult ? 'Mental energy and alertness' : 'Energy',
+      lowerIsBetter: false,
+    },
     { key: 'focus', label: 'Focus', lowerIsBetter: false },
     { key: 'mood', label: 'Mood', lowerIsBetter: false },
     { key: 'mental_clarity', label: 'Mental clarity', lowerIsBetter: false },
