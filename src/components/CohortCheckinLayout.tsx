@@ -216,7 +216,7 @@ export default function CohortCheckinLayout({
                 <span className="block mt-0.5">
                   {isSleepShapedCheckinFields(fields)
                     ? 'Come back tomorrow morning.'
-                    : 'Come back tomorrow for your next check-in.'}
+                    : 'Come back tomorrow.'}
                 </span>
               </p>
               <button

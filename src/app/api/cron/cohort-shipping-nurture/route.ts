@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { daysBetweenInclusiveUtcYmd } from '@/lib/cohortCheckinCount'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
+import { isSleepShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 import { sendShippingNurtureEmail, type ShippingNurtureStep } from '@/lib/cohortShippingNurture'
 import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -88,11 +89,14 @@ export async function GET(request: NextRequest) {
     const already = new Set((sentRows || []).map((r: { cohort_participant_id: string; step: string }) => sentKey(r.cohort_participant_id, r.step)))
 
     const cohortIds = [...new Set(list.map((p) => p.cohort_id))]
-    const cohortById: Record<string, { product_name?: string | null; brand_name?: string | null }> = {}
+    const cohortById: Record<
+      string,
+      { product_name?: string | null; brand_name?: string | null; checkin_fields?: unknown }
+    > = {}
     if (cohortIds.length > 0) {
       const { data: cohortRows, error: cErr } = await supabaseAdmin
         .from('cohorts')
-        .select('id, product_name, brand_name')
+        .select('id, product_name, brand_name, checkin_fields')
         .in('id', cohortIds)
       if (cErr) {
         console.error('[cohort-shipping-nurture] cohorts:', cErr)
@@ -139,6 +143,9 @@ export async function GET(request: NextRequest) {
         cohortRow?.brand_name != null && String(cohortRow.brand_name).trim() !== ''
           ? String(cohortRow.brand_name).trim()
           : 'Study partner'
+      const sleepShapedCohort = isSleepShapedCheckinFields(
+        normalizeCohortCheckinFields(cohortRow?.checkin_fields),
+      )
 
       const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
       if (auErr || !auth?.user?.email) {
@@ -164,6 +171,7 @@ export async function GET(request: NextRequest) {
         studyName,
         brandName,
         productName,
+        sleepShapedCohort,
       })
 
       if (!result.success) {

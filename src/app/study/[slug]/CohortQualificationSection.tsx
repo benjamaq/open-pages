@@ -788,8 +788,17 @@ export function CohortQualificationSection({
                 required
               />
               <span>
-                I can commit to a 30-second check-in each morning for {days} days, starting with 2 check-ins in the next 48
-                hours.
+                {qualificationShape === 'sleep' ? (
+                  <>
+                    I can commit to a 30-second check-in each morning for {days} days, starting with 2 check-ins in the next
+                    48 hours.
+                  </>
+                ) : (
+                  <>
+                    I can commit to a 30-second check-in each day for {days} days, starting with 2 check-ins in the next 48
+                    hours.
+                  </>
+                )}
               </span>
             </label>
           </div>

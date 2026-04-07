@@ -26,11 +26,18 @@ export function shippingNurtureSubject(step: ShippingNurtureStep): string {
 /** Inner HTML only (no document wrapper). */
 export function shippingNurtureInnerHtml(
   step: ShippingNurtureStep,
-  params: { studyName: string; brandName: string; productName: string },
+  params: {
+    studyName: string
+    brandName: string
+    productName: string
+    /** Default true. False for cognitive / non-sleep cohorts — avoids “morning” in reminder line. */
+    sleepShapedCohort?: boolean
+  },
 ): string {
   const study = escapeHtml(params.studyName)
   const brand = escapeHtml(params.brandName)
   const product = escapeHtml(params.productName)
+  const sleepShaped = params.sleepShapedCohort !== false
 
   let paragraphs: string[] = []
   switch (step) {
@@ -41,7 +48,9 @@ export function shippingNurtureInnerHtml(
       break
     case 'day7':
       paragraphs = [
-        `Your <strong>${product}</strong> from <strong>${brand}</strong> should be arriving any day now. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>, then complete your first check-in. Each check-in takes about 30 seconds; reminders start the morning after you begin. Questions? Reply to this email.`,
+        `Your <strong>${product}</strong> from <strong>${brand}</strong> should be arriving any day now. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>, then complete your first check-in. Each check-in takes about 30 seconds; reminders start ${
+          sleepShaped ? 'the morning after you begin' : 'the day after you begin'
+        }. Questions? Reply to this email.`,
       ]
       break
     case 'day10':
@@ -59,7 +68,7 @@ export function shippingNurtureInnerHtml(
 /** Full HTML with shared cohort shell (logos, brand line, footer) — for previews or tooling. */
 export function shippingNurtureBodyHtml(
   step: ShippingNurtureStep,
-  params: { studyName: string; brandName: string; productName: string },
+  params: { studyName: string; brandName: string; productName: string; sleepShapedCohort?: boolean },
 ): string {
   const appBase = cohortEmailPublicOrigin()
   const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
@@ -84,6 +93,7 @@ export async function sendShippingNurtureEmail(params: {
   studyName: string
   brandName: string
   productName: string
+  sleepShapedCohort?: boolean
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -95,6 +105,7 @@ export async function sendShippingNurtureEmail(params: {
       studyName: params.studyName,
       brandName: params.brandName,
       productName: params.productName,
+      sleepShapedCohort: params.sleepShapedCohort,
     }) +
     cohortEmailCheckInCtaHtml(checkInHref) +
     `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">${escapeHtml(

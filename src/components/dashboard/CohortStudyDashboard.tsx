@@ -6,6 +6,7 @@ import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
 import {
   cohortCheckinFieldLabel,
   DEFAULT_COHORT_CHECKIN_FIELDS,
+  isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
@@ -142,12 +143,15 @@ function ProductArrivedModal({
   open,
   onClose,
   productName,
+  sleepShapedCohort,
   onSubmit,
   onFlowFinished,
 }: {
   open: boolean
   onClose: () => void
   productName: string
+  /** When false (cognitive cohort), avoid “tomorrow morning” in success copy. */
+  sleepShapedCohort: boolean
   onSubmit: (body: CohortStartStudyBody) => Promise<{ openCheckin: boolean }>
   onFlowFinished: (openCheckin: boolean) => void
 }) {
@@ -244,7 +248,9 @@ function ProductArrivedModal({
                 onClick={() =>
                   finishWithApi(
                     { productArrived: 'yesterday', tookProductLastNight: false },
-                    'No problem. Take it tonight, then check in tomorrow morning.',
+                    sleepShapedCohort
+                      ? 'No problem. Take it tonight, then check in tomorrow morning.'
+                      : 'No problem. Take it tonight, then check in tomorrow.',
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
@@ -290,7 +296,9 @@ function ProductArrivedModal({
                 onClick={() =>
                   finishWithApi(
                     { productArrived: 'today' },
-                    `Take ${productName} tonight, about 45 minutes before bed. Check in tomorrow morning.`,
+                    sleepShapedCohort
+                      ? `Take ${productName} tonight, about 45 minutes before bed. Check in tomorrow morning.`
+                      : `Take ${productName} tonight, about 45 minutes before bed. Check in tomorrow.`,
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-slate-50 disabled:opacity-50"
@@ -495,9 +503,7 @@ export default function CohortStudyDashboard({
       Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
         ? checkinFieldsProp
         : DEFAULT_COHORT_CHECKIN_FIELDS
-    return raw.some(
-      (f) => String(f).includes('sleep') || f === 'night_wakes' || f === 'sleep_onset_bucket',
-    )
+    return isSleepShapedCheckinFields(normalizeCohortCheckinFields(raw))
   }, [checkinFieldsProp])
   const welcomeName =
     typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
@@ -592,6 +598,7 @@ export default function CohortStudyDashboard({
         open={productArrivedOpen}
         onClose={() => setProductArrivedOpen(false)}
         productName={productName}
+        sleepShapedCohort={isSleepShapedCohort}
         onSubmit={startStudyApi}
         onFlowFinished={onArrivalFlowFinished}
       />
@@ -751,7 +758,12 @@ export default function CohortStudyDashboard({
             <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your spot is confirmed</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
               You are in the study. Your product will be dispatched shortly. Your daily check-ins start when it arrives. You
-              will receive a reminder each morning. Keep your supplement routine as it is until then.
+              {isSleepShapedCohort ? (
+                <> will receive a reminder each morning. </>
+              ) : (
+                <> will receive a daily reminder. </>
+              )}
+              Keep your supplement routine as it is until then.
             </p>
           </div>
         ) : phase1Hero ? (
@@ -771,7 +783,9 @@ export default function CohortStudyDashboard({
                   First check-in complete.
                 </div>
                 <p className="mt-1 text-[14px] text-emerald-900/90 leading-snug">
-                  Come back tomorrow morning for your second check-in to confirm your place and trigger shipment.
+                  {isSleepShapedCohort
+                    ? 'Come back tomorrow morning for your second check-in to confirm your place and trigger shipment.'
+                    : 'Come back tomorrow for your second check-in to confirm your place and trigger shipment.'}
                 </p>
               </div>
             ) : phase1Hero.showCheckinCta ? (
@@ -819,14 +833,14 @@ export default function CohortStudyDashboard({
                   <p className="mt-2 text-sm text-gray-700">
                     {isSleepShapedCohort
                       ? 'Come back tomorrow morning after you wake up.'
-                      : 'Come back tomorrow for your next check-in.'}
+                      : 'Come back tomorrow.'}
                   </p>
                 </>
               ) : (
                 <p className="mt-2 text-sm text-gray-700">
                   {isSleepShapedCohort
                     ? 'Great work. Come back tomorrow morning after you wake up.'
-                    : 'Great work. Come back tomorrow for your next check-in.'}
+                    : 'Great work. Come back tomorrow.'}
                 </p>
               )}
               <button
