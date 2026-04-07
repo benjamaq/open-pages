@@ -8,6 +8,7 @@ import {
   isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
+import { resolveStudyLandingRewards } from '@/lib/cohortStudyLandingRewards'
 import {
   COGNITIVE_COHORT_STUDY_ASSETS,
   GENERIC_STUDY_PLACEHOLDER_IMAGE,
@@ -543,7 +544,10 @@ function IncentiveShelfCard({
   )
 }
 
-/** BioStackr reward card — wordmark above `bioshot` (no multiply: must read on light gradient). */
+/**
+ * Third “You’ll receive” card only: BioStackr Pro — always `GENERIC_STUDY_PLACEHOLDER_IMAGE` (/bioshot.png).
+ * Do not substitute cohort partner assets here.
+ */
 function BioStackrRewardPhoto() {
   return (
     <div className="flex min-h-[220px] w-full flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:gap-5 sm:px-4 sm:py-8">
@@ -574,13 +578,13 @@ function BioStackrRewardPhoto() {
   )
 }
 
-/** Cognitive cohort: partner-supplied hero for the Pro / outcomes card (no generic bioshot). */
-function CognitiveStudyRewardHeroPhoto({ src, productName }: { src: string; productName: string }) {
+/** Partner completion reward visual (e.g. store credit artwork from `study_landing_reward_config`). */
+function PartnerCompletionRewardPhoto({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:px-4 sm:py-8">
       <Image
         src={src}
-        alt={`${productName} study rewards and BioStackr`}
+        alt={alt}
         width={1280}
         height={720}
         sizes="(max-width: 768px) 90vw, 360px"
@@ -591,19 +595,29 @@ function CognitiveStudyRewardHeroPhoto({ src, productName }: { src: string; prod
 }
 
 function WhatYouReceive({
-  productName,
   productImageSrc,
   productImageAlt,
   studyDays,
-  rewardHeroSrc,
+  landingRewards,
 }: {
-  productName: string
   productImageSrc: string
   productImageAlt: string
   studyDays: number
-  /** When set (cognitive cohort assets), third incentive card uses this instead of generic BioStackr bioshot. */
-  rewardHeroSrc?: string | null
+  landingRewards: ReturnType<typeof resolveStudyLandingRewards>
 }) {
+  const { summaryLines, packageValueHeadline, packageValueSubline, studyProductCard, completionCard } = landingRewards
+
+  /** Middle card: store credit uses partner hero art only — never the study product image. */
+  const completionVisual =
+    completionCard.kind === 'store_credit' ? (
+      <PartnerCompletionRewardPhoto
+        src={completionCard.imagePath}
+        alt={completionCard.title}
+      />
+    ) : (
+      <StudyProductPhoto larger imageSrc={productImageSrc} imageAlt={productImageAlt} />
+    )
+
   return (
     <StudySurfaceLight
       continuous
@@ -615,8 +629,8 @@ function WhatYouReceive({
           You&apos;ll receive
         </h2>
         <div className="mx-auto mt-4 max-w-lg text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:text-[16px]">
-          <p>3-month supply of {productName}</p>
-          <p className="mt-1">3 months of BioStackr Pro</p>
+          <p>{summaryLines[0]}</p>
+          <p className="mt-1">{summaryLines[1]}</p>
         </div>
         <p className="mx-auto mt-3 max-w-xl text-center text-[13px] leading-snug text-neutral-600 sm:text-[14px]">
           Delivered when you complete the full {studyDays}-day study.
@@ -624,25 +638,19 @@ function WhatYouReceive({
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
             visual={<StudyProductPhoto imageSrc={productImageSrc} imageAlt={productImageAlt} />}
-            title={`${productName} for your ${studyDays}-day study`}
-            body="Supplied so you can run every day of the study."
-            footer="Study supply"
+            title={studyProductCard.title}
+            body={studyProductCard.body}
+            footer={studyProductCard.footer}
           />
           <IncentiveShelfCard
             highlight
-            visual={<StudyProductPhoto larger imageSrc={productImageSrc} imageAlt={productImageAlt} />}
-            title={`3-month supply of ${productName}`}
-            body={`Yours when you finish all ${studyDays} daily check-ins.`}
-            footer="Completion reward"
+            visual={completionVisual}
+            title={completionCard.title}
+            body={completionCard.body}
+            footer={completionCard.footer}
           />
           <IncentiveShelfCard
-            visual={
-              rewardHeroSrc ? (
-                <CognitiveStudyRewardHeroPhoto src={rewardHeroSrc} productName={productName} />
-              ) : (
-                <BioStackrRewardPhoto />
-              )
-            }
+            visual={<BioStackrRewardPhoto />}
             title="3 months of BioStackr Pro"
             body="Full dashboard access and your study outcomes."
             footer="Included"
@@ -650,12 +658,10 @@ function WhatYouReceive({
         </div>
         <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-neutral-200/90 bg-neutral-50 px-5 py-6 text-center shadow-sm sm:mt-12 sm:px-8 sm:py-8">
           <p className="text-[24px] font-bold tabular-nums tracking-tight text-neutral-900 sm:text-[28px]">
-            €200+{' '}
+            {packageValueHeadline}{' '}
             <span className="text-[15px] font-semibold text-neutral-700 sm:text-base">combined package value</span>
           </p>
-          <p className="mt-3 text-[12px] leading-snug text-neutral-600 sm:text-[13px]">
-            Combined participant reward value when you complete all {studyDays} days.
-          </p>
+          <p className="mt-3 text-[12px] leading-snug text-neutral-600 sm:text-[13px]">{packageValueSubline}</p>
         </div>
       </div>
     </StudySurfaceLight>
@@ -801,6 +807,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const brandName = String(cohort.brand_name || '')
   const brandDisplay = brandName.trim() || 'Study partner'
   const cohortStatus = String(cohortRow.status || 'draft').trim().toLowerCase()
+  /** Only `active` shows the full application form; `draft` is preview-only (intentional). */
   const enrollmentOpen = cohortStatus === 'active'
   const studyDays =
     typeof cohortRow.study_days === 'number' && Number.isFinite(cohortRow.study_days) && cohortRow.study_days > 0
@@ -827,9 +834,17 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     : isCognitiveShapedCohort
       ? COGNITIVE_COHORT_STUDY_ASSETS.productImage
       : GENERIC_STUDY_PLACEHOLDER_IMAGE
-  const rewardHeroSrc = isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.rewardHero : null
   const productHeroImageAlt = productName
   const qualificationShape: 'sleep' | 'cognitive' = isSleepShapedCohort ? 'sleep' : 'cognitive'
+
+  const landingRewards = resolveStudyLandingRewards({
+    cohortRow,
+    brandDisplay,
+    productName,
+    studyDays,
+    defaultStoreCreditVisualPath: COGNITIVE_COHORT_STUDY_ASSETS.rewardHero,
+    isCognitiveShapedCohort,
+  })
 
   return (
     <div className="flex flex-1 flex-col text-neutral-900">
@@ -896,7 +911,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
                 Finish the full {studyDays}-day study and your combined rewards are worth over{' '}
                 <span className="whitespace-nowrap" style={{ color: RUST }}>
-                  €200+
+                  {landingRewards.packageValueHeadline}
                 </span>
                 .
               </p>
@@ -924,11 +939,10 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             cognitiveOutcomeRows={cognitiveOutcomeRows}
           />
           <WhatYouReceive
-            productName={productName}
             productImageSrc={productHeroImageSrc}
             productImageAlt={productHeroImageAlt}
             studyDays={studyDays}
-            rewardHeroSrc={rewardHeroSrc}
+            landingRewards={landingRewards}
           />
           <StudySurfaceLight
             continuous
