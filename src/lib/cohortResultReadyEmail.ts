@@ -1,4 +1,5 @@
 import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
+import { generateCohortEmailMagicLinkUrl } from '@/lib/cohortEmailMagicLink'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
@@ -35,8 +36,11 @@ export async function sendCohortResultReadyEmail(params: {
   const first = escapeHtml(firstNameFromAuthUser(auth?.user ?? { email: to }))
 
   const appBase = cohortEmailPublicOrigin()
-  const resultHref = `${appBase}${cohortParticipantResultPath()}`
-  const dashboardHref = `${appBase}${cohortParticipantResultPath()}`
+  const resultPath = cohortParticipantResultPath()
+  const resultHrefPlain = `${appBase}${resultPath}`
+  const resultHref =
+    (await generateCohortEmailMagicLinkUrl(to, resultPath)) ?? resultHrefPlain
+  const dashboardHref = resultHref
   const subject = `Your ${productEsc} study — results are ready`
 
   const rewardClaimRaw = String(params.rewardClaimAbsoluteUrl || '').trim()

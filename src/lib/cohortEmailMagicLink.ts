@@ -17,6 +17,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * - `cohortGateReminderEmail.ts` — dashboard
  * - `cohortEnrollmentEmail.ts` — first check-in (`cohortDashboardStudyCheckinPath`)
  * - `cohortPostFirstCheckinEmail.ts` — check-in + dashboard
+ * - `cohortResultReadyEmail.ts` — personal results page (`/dashboard/cohort-result`)
  * - `cohortLoginMagicLinkEmail.ts` — login / resend magic link (dashboard)
  * - Daily check-in emails (cohort check-in deep link): `sendDailyReminder` (`resend.ts`), `send-reminder.ts`,
  *   `send-daily` notification route, `send-daily-emails` cron, `test-daily-reminder` admin — via

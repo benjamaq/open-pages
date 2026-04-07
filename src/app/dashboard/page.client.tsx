@@ -4,6 +4,7 @@ import UpgradeButton from '@/components/billing/UpgradeButton'
 import DashboardAddSupplementGate from '@/components/dashboard/DashboardAddSupplementGate'
 import { CheckinEducationModal } from '@/components/dashboard/CheckinEducationModal'
 import { CheckinLauncher } from '@/components/dashboard/CheckinLauncher'
+import { CohortDroppedHoldScreen } from '@/components/cohort/CohortDroppedHoldScreen'
 import CohortStudyDashboard from '@/components/dashboard/CohortStudyDashboard'
 import { DailyProgressLoop } from '@/components/dashboard/DailyProgressLoop'
 import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPanel'
@@ -133,7 +134,10 @@ export function DashboardPageClient() {
   }
 
   const me = (data as any)?.me as Record<string, unknown> | undefined
+  const cohortParticipantDropped = Boolean(me?.cohortParticipantDropped)
   const showCohortStudy = Boolean(me?.showCohortStudyDashboard)
+  /** Cohort study UI or dropped terminal: minimal header, no B2C nav. */
+  const useCohortShell = showCohortStudy || cohortParticipantDropped
   const cohortCheckinFields = Array.isArray(me?.checkinFields)
     ? (me.checkinFields as string[])
     : null
@@ -154,7 +158,7 @@ export function DashboardPageClient() {
     >
       <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto">
-          {showCohortStudy ? (
+          {useCohortShell ? (
             <div className="flex items-center justify-between gap-4">
               <a href="/dashboard" className="flex items-center shrink-0" aria-label="BioStackr home">
                 <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-7 sm:h-8 w-auto" />
@@ -200,6 +204,13 @@ export function DashboardPageClient() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="space-y-6">
+          {cohortParticipantDropped ? (
+            <CohortDroppedHoldScreen
+              brandName={typeof me?.cohortStudyBrandName === 'string' ? me.cohortStudyBrandName : null}
+              productName={typeof me?.cohortStudyProductName === 'string' ? me.cohortStudyProductName : null}
+            />
+          ) : null}
+
           {showCohortStudy ? (
             <>
               <CohortStudyDashboard
@@ -258,7 +269,7 @@ export function DashboardPageClient() {
             </>
           ) : null}
 
-          {!showCohortStudy && shouldShowWelcomeBack && (
+          {!showCohortStudy && !cohortParticipantDropped && shouldShowWelcomeBack && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-start justify-between gap-3">
               <div className="leading-snug">
                 <div className="font-semibold">Welcome back!</div>
@@ -285,7 +296,7 @@ export function DashboardPageClient() {
               </button>
             </div>
           )}
-          {!showCohortStudy && spotBanner && spotBanner.checkinsCompleted < 2 && (
+          {!showCohortStudy && !cohortParticipantDropped && spotBanner && spotBanner.checkinsCompleted < 2 && (
             <div className="rounded-xl border border-[#6A3F2B]/30 bg-[#faf6f3] px-4 py-3 text-sm text-neutral-900">
               <div className="font-semibold text-[#6A3F2B]">
                 Complete your second check-in to secure your spot — due in{' '}
@@ -300,15 +311,15 @@ export function DashboardPageClient() {
               </p>
             </div>
           )}
-          {!showCohortStudy ? <DashboardAddSupplementGate /> : null}
+          {!showCohortStudy && !cohortParticipantDropped ? <DashboardAddSupplementGate /> : null}
 
-          {!showCohortStudy ? (
+          {!showCohortStudy && !cohortParticipantDropped ? (
             <div className="mb-2">
               <PersonalHeader me={(data as any)?.me} progress={(data as any)?.progressLoop} isMember={isMember} />
             </div>
           ) : null}
 
-          {!showCohortStudy ? (
+          {!showCohortStudy && !cohortParticipantDropped ? (
             <DashboardUnifiedPanel
               suggestionsPayload={(data as any)?.dailySkip}
               progressPayload={(data as any)?.progressLoop}
@@ -321,7 +332,7 @@ export function DashboardPageClient() {
             />
           ) : null}
 
-          {!showCohortStudy ? (
+          {!showCohortStudy && !cohortParticipantDropped ? (
             <DailyProgressLoop
               progressPayload={(data as any)?.progressLoop}
               isMember={isMember}
@@ -330,7 +341,7 @@ export function DashboardPageClient() {
             />
           ) : null}
 
-          {!showCohortStudy ? (
+          {!showCohortStudy && !cohortParticipantDropped ? (
             <CheckinLauncher
               mePayload={(data as any)?.me}
               supplementsPayload={(data as any)?.supplements}
@@ -338,7 +349,9 @@ export function DashboardPageClient() {
             />
           ) : null}
 
-          {!showCohortStudy ? <CheckinEducationModal wearableStatusPayload={(data as any)?.wearableStatus} /> : null}
+          {!showCohortStudy && !cohortParticipantDropped ? (
+            <CheckinEducationModal wearableStatusPayload={(data as any)?.wearableStatus} />
+          ) : null}
         </div>
       </main>
     </div>

@@ -84,6 +84,8 @@ export async function GET(request: Request) {
     let profileWelcomeFirstName: string | null = null;
     /** True when this user should see the cohort study dashboard (/dashboard), not the B2C stack dashboard. */
     let showCohortStudyDashboard = false;
+    /** True when cohort_participants.status is `dropped` — cohort terminal state only (not B2C product). */
+    let cohortParticipantDropped = false;
     /** Set when we load cohort_participants (debug / logging); null if not in cohort participant path. */
     let cohortParticipantStatus: string | null = null;
 
@@ -310,6 +312,7 @@ export async function GET(request: Request) {
                   }
                   if (participantStatus === "dropped") {
                     showCohortStudyDashboard = false;
+                    cohortParticipantDropped = true;
                   } else if (
                     participantStatus &&
                     !["applied", "confirmed", "completed"].includes(
@@ -647,6 +650,7 @@ export async function GET(request: Request) {
       email,
       cohortId,
       cohortParticipantStatus,
+      cohortParticipantDropped,
       showCohortStudyDashboard,
     });
 
@@ -679,6 +683,7 @@ export async function GET(request: Request) {
       cohortStudyPersistedComplete,
       cohortParticipantResultPublished,
       showCohortStudyDashboard,
+      cohortParticipantDropped,
       cohortParticipantStatus,
     });
   } catch (e: any) {
