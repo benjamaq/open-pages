@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { addMonths } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { runCohortHandoffAfterProClaim } from '@/lib/cohortEnrollment'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       })
       .eq('token', token)
       .is('claimed_at', null)
-      .select('id, user_id')
+      .select('id, user_id, cohort_participant_id')
 
     if (claimErr) {
       console.error('[claim-reward] claim update', claimErr.message)
@@ -84,11 +85,22 @@ export async function POST(request: NextRequest) {
     if (!updated?.id) {
       const { data: existing } = await supabaseAdmin
         .from('cohort_reward_claims')
-        .select('user_id, claimed_at')
+        .select('user_id, claimed_at, cohort_participant_id')
         .eq('token', token)
         .maybeSingle()
-      const ex = existing as { user_id?: string | null; claimed_at?: string | null } | null
+      const ex = existing as {
+        user_id?: string | null
+        claimed_at?: string | null
+        cohort_participant_id?: string | null
+      } | null
       if (ex?.claimed_at && ex.user_id === user.id) {
+        const cpid = String(ex.cohort_participant_id || '').trim()
+        if (cpid) {
+          await runCohortHandoffAfterProClaim({
+            authUserId: user.id,
+            cohortParticipantId: cpid,
+          })
+        }
         return NextResponse.json({
           ok: true,
           already_claimed: true,
@@ -144,6 +156,16 @@ export async function POST(request: NextRequest) {
         { error: 'Could not update your profile. Complete signup, then try again.' },
         { status: 500 },
       )
+    }
+
+    const cohortParticipantId = String(
+      (updated as { cohort_participant_id?: string | null }).cohort_participant_id || '',
+    ).trim()
+    if (cohortParticipantId) {
+      await runCohortHandoffAfterProClaim({
+        authUserId: user.id,
+        cohortParticipantId,
+      })
     }
 
     return NextResponse.json({

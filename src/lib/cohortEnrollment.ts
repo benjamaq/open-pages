@@ -434,3 +434,65 @@ export async function runCohortMainProductHandoffCleanup(params: {
     console.error('[cohortEnrollment] runCohortMainProductHandoffCleanup:', e)
   }
 }
+
+/**
+ * Run stack / supplement / handoff-date cleanup immediately after Pro claim (or idempotent re-run if already claimed).
+ * `/api/me` also runs `runCohortMainProductHandoffCleanup` when eligible, but claim must not depend on the next
+ * dashboard load — otherwise B2C shows cohort stack and check-in residue after redirect.
+ */
+export async function runCohortHandoffAfterProClaim(params: {
+  authUserId: string
+  cohortParticipantId: string
+  clientTodayYmd?: string
+}): Promise<void> {
+  const uid = String(params.authUserId || '').trim()
+  const cpRowId = String(params.cohortParticipantId || '').trim()
+  if (!uid || !cpRowId) return
+  const ymd =
+    params.clientTodayYmd && /^\d{4}-\d{2}-\d{2}$/.test(params.clientTodayYmd)
+      ? params.clientTodayYmd
+      : new Date().toISOString().slice(0, 10)
+
+  try {
+    const { data: part, error: pErr } = await supabaseAdmin
+      .from('cohort_participants')
+      .select('cohort_id')
+      .eq('id', cpRowId)
+      .maybeSingle()
+    if (pErr || !(part as { cohort_id?: string } | null)?.cohort_id) {
+      console.warn('[cohortEnrollment] handoff after claim: participant', cpRowId, pErr?.message)
+      return
+    }
+    const cohortUuid = String((part as { cohort_id: string }).cohort_id)
+
+    const { data: cohort, error: cErr } = await supabaseAdmin
+      .from('cohorts')
+      .select('slug, product_name')
+      .eq('id', cohortUuid)
+      .maybeSingle()
+    if (cErr || !cohort) {
+      console.warn('[cohortEnrollment] handoff after claim: cohort', cohortUuid, cErr?.message)
+      return
+    }
+
+    const slug = String((cohort as { slug?: string }).slug || '').trim().toLowerCase()
+    const productName = String((cohort as { product_name?: string }).product_name || '').trim()
+    if (!slug) return
+
+    const profileId = (await pickPrimaryProfileIdByStackCount(uid)) || ''
+    if (!profileId) {
+      console.warn('[cohortEnrollment] handoff after claim: no primary profile', uid)
+      return
+    }
+
+    await runCohortMainProductHandoffCleanup({
+      profileId,
+      userId: uid,
+      cohortSlug: slug,
+      productName,
+      clientTodayYmd: ymd,
+    })
+  } catch (e) {
+    console.error('[cohortEnrollment] runCohortHandoffAfterProClaim:', e)
+  }
+}
