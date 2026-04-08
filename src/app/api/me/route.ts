@@ -227,7 +227,10 @@ export async function GET(request: Request) {
             if (picked) profileId = picked;
           }
 
-          if (cohortId && profileId) {
+          // Cohort row (checkin_fields, study copy) must load whenever cohortId exists. Do not gate on
+          // profileId — profile id can be missing while cohort_id (slug) is still set; cohortCheckinBranch
+          // only needs cohortId + userId, which produced checkinFields: null + branch true before this fix.
+          if (cohortId) {
             const todayYmd = todayYmdForCohort(request);
             const { data: cdef, error: cdefErr } = await supabaseAdmin
               .from("cohorts")
@@ -243,6 +246,13 @@ export async function GET(request: Request) {
                 cdefErr.message,
               );
             }
+            console.log("[api/me] cohort cdef lookup", {
+              cohortId,
+              profileId,
+              cdef: cdef ?? null,
+              rawCheckinFields: (cdef as { checkin_fields?: unknown } | null)
+                ?.checkin_fields,
+            });
             if (cdef != null) {
               checkinFields = normalizeCohortCheckinFields(
                 (cdef as { checkin_fields?: unknown }).checkin_fields,
@@ -288,7 +298,7 @@ export async function GET(request: Request) {
               if (cohortUuid) {
                 try {
                   const cpUserIds = cohortParticipantUserIdCandidatesSync(
-                    profileId,
+                    profileId ?? "",
                     userId,
                   );
                   const { data: part, error: partErr } = await supabaseAdmin
