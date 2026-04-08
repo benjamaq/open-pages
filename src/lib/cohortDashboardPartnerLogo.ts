@@ -3,9 +3,9 @@
  * on cohort dashboard surfaces so first-visit and internal pages stay visually consistent.
  */
 
-/** Partner logo in `CohortStudyDashboard` top row (left). */
+/** Partner logo in `CohortStudyDashboard` top row (left). Slightly taller than BioStackr on mobile so DNA marks read clearly. */
 export const COHORT_DASHBOARD_PARTNER_MARK_CLASS =
-  'h-14 w-auto max-w-[min(260px,58vw)] object-contain object-left sm:h-16 md:h-[4.5rem] md:max-w-[min(300px,50vw)]'
+  'h-16 w-auto max-w-[min(300px,64vw)] object-contain object-left sm:h-[4.25rem] sm:max-w-[min(300px,58vw)] md:h-[4.75rem] md:max-w-[min(320px,50vw)]'
 
 /** BioStackr wordmark in the same row (right). */
 export const COHORT_DASHBOARD_BIOSTACKR_ROW_CLASS =
