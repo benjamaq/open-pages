@@ -88,11 +88,11 @@ export async function POST(req: NextRequest) {
     if (firstCohortAttach) {
       const em = String(user.email || '').trim()
       if (em) {
-        try {
-          await sendCohortEnrollmentEmail({ to: em, authUserId: user.id, cohortSlug: slug })
-        } catch (mailErr) {
-          console.error('[complete-pending-enrollment] cohort enrollment email failed:', mailErr)
-        }
+        void sendCohortEnrollmentEmail({ to: em, authUserId: user.id, cohortSlug: slug }).catch(
+          (mailErr: unknown) => {
+            console.error('[complete-pending-enrollment] cohort enrollment email failed:', mailErr)
+          },
+        )
       }
     }
 

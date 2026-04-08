@@ -131,15 +131,13 @@ export async function POST(req: NextRequest) {
             )
             if (!enr.ok) return jsonEnrollmentError(enr)
             if (email) {
-              try {
-                await sendCohortEnrollmentEmail({
-                  to: email,
-                  authUserId: user_id,
-                  cohortSlug: cohort_id,
-                })
-              } catch (mailErr) {
+              void sendCohortEnrollmentEmail({
+                to: email,
+                authUserId: user_id,
+                cohortSlug: cohort_id,
+              }).catch((mailErr: unknown) => {
                 console.error('[api/profiles] cohort welcome email failed:', mailErr)
-              }
+              })
             }
           }
 
@@ -272,15 +270,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: raceUpdErr.message || 'Could not set cohort on profile' }, { status: 500 })
           }
           if (email) {
-            try {
-              await sendCohortEnrollmentEmail({
-                to: email,
-                authUserId: user_id,
-                cohortSlug: cohort_id,
-              })
-            } catch (mailErr) {
+            void sendCohortEnrollmentEmail({
+              to: email,
+              authUserId: user_id,
+              cohortSlug: cohort_id,
+            }).catch((mailErr: unknown) => {
               console.error('[api/profiles] cohort welcome email failed:', mailErr)
-            }
+            })
           }
         } else if (raceNameFields && existing?.id) {
           const { error: nameOnlyErr } = await supabaseAdmin
@@ -310,15 +306,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: setCohortErr.message || 'Could not attach cohort to profile' }, { status: 500 })
       }
       if (email) {
-        try {
-          await sendCohortEnrollmentEmail({
-            to: email,
-            authUserId: user_id,
-            cohortSlug: cohort_id,
-          })
-        } catch (mailErr) {
+        void sendCohortEnrollmentEmail({
+          to: email,
+          authUserId: user_id,
+          cohortSlug: cohort_id,
+        }).catch((mailErr: unknown) => {
           console.error('[api/profiles] cohort welcome email failed:', mailErr)
-        }
+        })
       }
     }
 

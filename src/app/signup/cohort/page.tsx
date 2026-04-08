@@ -104,11 +104,20 @@ function CohortSignupInner() {
       return
     }
 
+    const signupT0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    const logSignup = (step: string) => {
+      try {
+        const t = typeof performance !== 'undefined' ? performance.now() : Date.now()
+        console.log('[cohort-signup] timing', { step, ms: Math.round(t - signupT0) })
+      } catch {}
+    }
+
     try {
       const supabase = createClient()
       const cleanEmail = email.trim()
       const cleanName = name.trim()
       const firstName = cleanName.split(' ')[0] || cleanName
+      logSignup('before_signUp')
       const { data, error: signErr } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
@@ -138,6 +147,7 @@ function CohortSignupInner() {
         setLoading(false)
         return
       }
+      logSignup('after_signUp')
 
       if (!data?.user?.id) {
         setError('We could not finish signup. If email confirmation is required, complete that step and try signing in.')
@@ -181,12 +191,14 @@ function CohortSignupInner() {
           shipping_postal_code: shippingPostal.trim(),
           shipping_country: shippingCountry.trim(),
         }
+        logSignup('before_profiles_post')
         const pr = await fetch('/api/profiles', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(apiBody),
         })
+        logSignup('after_profiles_post')
         if (!pr.ok) {
           const j = (await pr.json().catch(() => ({}))) as { error?: string }
           setError(String(j.error || 'Could not save your profile. Try again or contact support.'))
@@ -197,12 +209,14 @@ function CohortSignupInner() {
         try {
           const { data: sessWrap } = await supabase.auth.getSession()
           if (sessWrap?.session) {
+            logSignup('before_complete_pending_enrollment')
             await fetch('/api/cohort/complete-pending-enrollment', {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ cohort_slug: slug }),
             })
+            logSignup('after_complete_pending_enrollment')
           }
         } catch {}
         try {
@@ -219,10 +233,12 @@ function CohortSignupInner() {
     }
 
     setLoading(false)
+    logSignup('before_nav_delay')
     try {
       clearDraft()
     } catch {}
     await new Promise(r => setTimeout(r, 400))
+    logSignup('before_router_push')
     router.push('/dashboard?view=cohort&checkin=1')
   }
 

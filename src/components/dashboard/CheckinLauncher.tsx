@@ -48,6 +48,8 @@ export function CheckinLauncher({
   const [asyncShowCohortStudyDashboard, setAsyncShowCohortStudyDashboard] = useState<boolean | undefined>(undefined)
   /** Mirrors /api/me `cohortCheckinBranch` when mePayload is not passed in. */
   const [asyncCohortCheckinBranch, setAsyncCohortCheckinBranch] = useState<boolean | undefined>(undefined)
+  /** Mirrors /api/me `cohortHasCheckedInToday` when mePayload is not passed in. */
+  const [asyncCohortHasCheckedInToday, setAsyncCohortHasCheckedInToday] = useState<boolean | undefined>(undefined)
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export function CheckinLauncher({
       setAsyncStudyProductName(undefined)
       setAsyncShowCohortStudyDashboard(undefined)
       setAsyncCohortCheckinBranch(undefined)
+      setAsyncCohortHasCheckedInToday(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -125,6 +128,8 @@ export function CheckinLauncher({
         setAsyncShowCohortStudyDashboard(typeof sc === 'boolean' ? sc : undefined)
         const ccb = (data as any)?.cohortCheckinBranch
         setAsyncCohortCheckinBranch(typeof ccb === 'boolean' ? ccb : undefined)
+        const ht = (data as any)?.cohortHasCheckedInToday
+        setAsyncCohortHasCheckedInToday(typeof ht === 'boolean' ? ht : undefined)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -133,6 +138,7 @@ export function CheckinLauncher({
           setAsyncStudyProductName(null)
           setAsyncShowCohortStudyDashboard(undefined)
           setAsyncCohortCheckinBranch(undefined)
+          setAsyncCohortHasCheckedInToday(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -144,6 +150,7 @@ export function CheckinLauncher({
   }, [mePayload])
 
   // Resolve ?checkin=1: welcome screen first (cohort, zero check-ins since enroll), else open modal.
+  // If cohort study user already completed today's check-in, do not force the modal — show dashboard state.
   useEffect(() => {
     let pending = false
     try {
@@ -157,21 +164,39 @@ export function CheckinLauncher({
     const ready = fromDashboardMe || asyncMeDone
     if (!ready) return
 
-    const welcome = fromDashboardMe
-      ? Boolean((mePayload as any)?.cohortCheckinWelcomeRecommended)
-      : Boolean(asyncWelcomeRecommended)
-    const cid = fromDashboardMe ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
+    const showCohortDash = fromDashboardMe
+      ? Boolean((mePayload as any)?.showCohortStudyDashboard)
+      : Boolean(asyncShowCohortStudyDashboard)
+    const doneCohortToday = fromDashboardMe
+      ? Boolean((mePayload as any)?.cohortHasCheckedInToday)
+      : Boolean(asyncCohortHasCheckedInToday)
 
     try {
       sessionStorage.removeItem(PENDING_CHECKIN_KEY)
     } catch {}
+
+    if (showCohortDash && doneCohortToday) {
+      return
+    }
+
+    const welcome = fromDashboardMe
+      ? Boolean((mePayload as any)?.cohortCheckinWelcomeRecommended)
+      : Boolean(asyncWelcomeRecommended)
+    const cid = fromDashboardMe ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
 
     if (welcome && cid) {
       setShowCohortWelcome(true)
     } else {
       setOpen(true)
     }
-  }, [mePayload, asyncMeDone, asyncWelcomeRecommended, asyncCohortHint])
+  }, [
+    mePayload,
+    asyncMeDone,
+    asyncWelcomeRecommended,
+    asyncCohortHint,
+    asyncShowCohortStudyDashboard,
+    asyncCohortHasCheckedInToday,
+  ])
 
   useEffect(() => {
     let cancelled = false
