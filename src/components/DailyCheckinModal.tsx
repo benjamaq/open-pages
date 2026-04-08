@@ -987,8 +987,8 @@ useEffect(() => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:items-center sm:p-4">
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header (sticky, neutral) */}
         <div className="sticky top-0 bg-white border-b px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Daily Check-in</h2>

@@ -63,7 +63,7 @@ export function StudyCohortFullWaitlist({ cohortSlug }: { cohortSlug: string }) 
               setEmail(e.target.value)
               setErr(null)
             }}
-            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-[15px] text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-base text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
             placeholder="you@example.com"
           />
           {err && <p className="text-[13px] text-red-600">{err}</p>}

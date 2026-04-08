@@ -118,8 +118,11 @@ function StepRowConnector() {
   )
 }
 
-/** Public hero only: never show awkward raw pipeline counts (e.g. 1). Does not affect capacity or admin. */
-const MIN_PUBLIC_COHORT_HERO_FILLED = 8
+/**
+ * Public study hero only (social-proof floor). Does not affect admin, capacity enforcement, or enrollment logic.
+ * displayCount = min(publicDenominator, max(realPipeline, DISPLAY_FLOOR)); denominator (e.g. 25) unchanged.
+ */
+const PUBLIC_COHORT_HERO_DISPLAY_FLOOR = 15
 
 function HeroCohortStatusCard({
   pipelineFilled,
@@ -128,9 +131,9 @@ function HeroCohortStatusCard({
 }: {
   /** applied + confirmed rows — same basis as DB enrollment cap and `isCohortEnrollmentClosedByPipeline`. */
   pipelineFilled: number
-  /** Operational cap; with displayCapacity: round((pipeline/max)*display) for the public “25 slots” bar. */
+  /** Operational hard cap (not shown as the public “25” unless no display_capacity). */
   maxParticipants: number | null
-  /** Public denominator only (e.g. 25); does not cap real enrollment (maxParticipants does). */
+  /** Public denominator for hero copy (e.g. 25); marketing-only vs max_participants. */
   displayCapacity: number | null
 }) {
   const c = Math.max(0, Math.floor(Number(pipelineFilled)))
@@ -143,37 +146,14 @@ function HeroCohortStatusCard({
       ? Math.floor(Number(displayCapacity))
       : null
 
-  /**
-   * Display math (study landing only):
-   * - Both max_participants + display_capacity: numerator = round((pipeline / max) * display_capacity).
-   * - Only display_capacity: legacy fallback used raw min(display, pipeline) — floored below so tiny
-   *   pipelines never read as “1 confirmed”.
-   * - Only max_participants: numerator = min(max, pipeline), then floored when shown with a public total.
-   * Real counts / enrollment closure still use raw `pipelineFilled` outside this component.
-   */
-  let displayTotal: number | null = null
-  let displayedFilled: number | null = null
+  /** Headline denominator: prefer display_capacity, else max_participants. */
+  const displayTotal: number | null = disp != null ? disp : maxP != null ? maxP : null
 
-  if (maxP != null && disp != null) {
-    displayTotal = disp
-    const ratio = Math.min(1, Math.max(0, c / maxP))
-    displayedFilled = Math.round(ratio * disp)
-  } else if (disp != null) {
-    displayTotal = disp
-    displayedFilled = Math.min(disp, c)
-  } else if (maxP != null) {
-    displayTotal = maxP
-    displayedFilled = Math.min(maxP, c)
-  }
-
-  let heroPlacesFilled = displayedFilled ?? c
-  if (displayTotal != null) {
-    const cappedToBar = Math.min(displayTotal, Math.max(0, heroPlacesFilled))
-    heroPlacesFilled = Math.min(
-      displayTotal,
-      Math.max(MIN_PUBLIC_COHORT_HERO_FILLED, cappedToBar),
-    )
-  }
+  /** Public-facing filled count: never below DISPLAY_FLOOR, never above public denominator. */
+  const heroPlacesFilled =
+    displayTotal != null
+      ? Math.min(displayTotal, Math.max(PUBLIC_COHORT_HERO_DISPLAY_FLOOR, c))
+      : Math.max(PUBLIC_COHORT_HERO_DISPLAY_FLOOR, c)
 
   const pct =
     displayTotal != null && displayTotal > 0

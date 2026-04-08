@@ -193,7 +193,7 @@ export default function CohortCheckinLayout({
   let step = 0
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-3 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:items-center sm:p-4">
       <div
         className={`bg-white rounded-2xl w-full max-h-[90vh] flex flex-col overflow-hidden ${
           saved ? 'max-w-md shadow-lg' : 'max-w-3xl shadow-2xl'

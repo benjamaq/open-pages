@@ -295,7 +295,7 @@ function ProductArrivedModal({
         if (!busy && e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-5 sm:p-6">
+      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
         {successView ? (
           <>
             <h3 id="product-arrived-title" className="text-lg font-semibold text-gray-900">

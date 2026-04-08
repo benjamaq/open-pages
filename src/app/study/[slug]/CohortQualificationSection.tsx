@@ -370,7 +370,7 @@ export function CohortQualificationSection({
                   setWaitlistEmail(e.target.value)
                   setWaitlistErr(null)
                 }}
-                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
                 placeholder="you@example.com"
               />
               {waitlistErr && <p className="text-sm text-red-600">{waitlistErr}</p>}
@@ -418,7 +418,7 @@ export function CohortQualificationSection({
                   setWaitlistEmail(e.target.value)
                   setWaitlistErr(null)
                 }}
-                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
                 placeholder="you@example.com"
               />
               {waitlistErr && <p className="text-sm text-red-600">{waitlistErr}</p>}
@@ -502,7 +502,7 @@ export function CohortQualificationSection({
                   }
                 }}
                 placeholder="Your answer…"
-                className="min-h-[100px] w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[#C84B2F] focus:outline-none focus:ring-1 focus:ring-[#C84B2F]"
+                className="min-h-[100px] w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-[#C84B2F] focus:outline-none focus:ring-1 focus:ring-[#C84B2F]"
               />
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
