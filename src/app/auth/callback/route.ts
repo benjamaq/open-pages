@@ -13,6 +13,19 @@ function normalizeOtpType(raw: string | null): (typeof EMAIL_OTP_TYPES)[number] 
   return 'magiclink'
 }
 
+/**
+ * GoTrue `/verify` + `verifyOtp`: for `token_hash` flows, `type=magiclink` only looks up the recovery
+ * token. `admin.generateLink({ type: 'magiclink' })` sometimes stores the hash on confirmation (e.g. when
+ * the flow is coerced to signup). The supported token-hash path is `type=email` (EmailOTPVerification),
+ * which resolves via confirmation OR recovery and matches `generateLink` output. `magiclink` is also
+ * deprecated in client docs for verifyOtp.
+ *
+ * @see https://supabase.com/docs/reference/javascript/auth-verifyotp
+ */
+function verifyOtpTypeForTokenHash(_urlTypeRaw: string | null): 'email' {
+  return 'email'
+}
+
 function safeNextPath(raw: string | null): string {
   const def = cohortDashboardStudyPath()
   if (raw == null || raw === '') return def
@@ -62,7 +75,7 @@ function createSupabaseForCallback(request: NextRequest, response: NextResponse)
 }
 
 /**
- * Magic link: `/auth/callback?token_hash=…&type=magiclink&next=…` → verifyOtp → session cookies on redirect → dashboard.
+ * Magic link: `/auth/callback?token_hash=…&type=email&next=…` → verifyOtp({ type: 'email', token_hash }) → session cookies on redirect → dashboard.
  * Legacy: `?code=` (PKCE) → exchangeCodeForSession.
  */
 export async function GET(request: NextRequest) {
@@ -75,14 +88,19 @@ export async function GET(request: NextRequest) {
   if (token_hash) {
     const response = callbackSuccessRedirect(request, next)
     const supabase = createSupabaseForCallback(request, response)
+    const otpType = verifyOtpTypeForTokenHash(typeRaw)
     const { error } = await supabase.auth.verifyOtp({
-      type: normalizeOtpType(typeRaw),
+      type: otpType,
       token_hash,
     })
     if (!error) {
       return response
     }
-    console.error('[auth/callback] verifyOtp failed', error.message)
+    console.error('[auth/callback] verifyOtp failed', {
+      message: error.message,
+      urlType: typeRaw,
+      otpType,
+    })
     return callbackErrorRedirect(request)
   }
 

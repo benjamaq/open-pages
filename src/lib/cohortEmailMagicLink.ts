@@ -7,7 +7,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 /**
  * Cohort magic links use `auth.admin.generateLink` **without** `redirectTo`, then `properties.hashed_token` to build
- * `/auth/callback?token_hash=…&type=magiclink&next=…`. Never put Supabase `action_link` verify URLs in email HTML.
+ * `/auth/callback?token_hash=…&type=email&next=…` (callback maps legacy `type=magiclink` to `email` for verifyOtp).
+ * Never put Supabase `action_link` verify URLs in email HTML.
  *
  * **Inventory — every “dashboard” / “check-in” CTA must flow through `generateCohortEmailMagicLinkUrl` (or
  * `generateCohortDashboardMagicLinkUrl` / `cohortTransactional*MagicHref`, which wrap it):**
@@ -64,7 +65,7 @@ function buildCohortMagicLinkOnOrigin(
     : `/${postAuthDestinationPath}`
   const u = new URL('/auth/callback', base)
   u.searchParams.set('token_hash', hashedToken)
-  u.searchParams.set('type', 'magiclink')
+  u.searchParams.set('type', 'email')
   u.searchParams.set('next', dest)
   return u.toString()
 }
