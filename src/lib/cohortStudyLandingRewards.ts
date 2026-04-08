@@ -142,7 +142,7 @@ export function resolveStudyLandingRewards(params: {
     summaryLines = defaultProductSupplySummary
   }
 
-  const defaultPkgHeadline = '€200+'
+  const defaultPkgHeadline = '$200+'
   const defaultPkgSub = `Combined participant reward value when you complete all ${studyDays} days.`
   const packageValueHeadline = str(cfg?.package_value?.headline) || defaultPkgHeadline
   const packageValueSubline = str(cfg?.package_value?.subline) || defaultPkgSub

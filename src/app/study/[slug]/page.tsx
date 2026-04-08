@@ -572,14 +572,14 @@ function BioStackrRewardPhoto() {
       <div className="flex w-full shrink-0 justify-center px-1">
         <Link
           href="/"
-          className="inline-flex rounded-lg bg-white/95 px-3 py-2 shadow-sm ring-1 ring-neutral-200/70 transition-opacity hover:opacity-90"
+          className="inline-flex items-center justify-center transition-opacity hover:opacity-90"
         >
           <Image
             src={BIOSTACKR_LOGO}
             alt="BioStackr"
             width={434}
             height={135}
-            className="h-9 w-auto max-w-[min(220px,85vw)] object-contain sm:h-10 sm:max-w-[240px]"
+            className="h-9 w-auto max-w-[min(220px,85vw)] object-contain mix-blend-multiply contrast-[1.03] sm:h-10 sm:max-w-[240px]"
           />
           <span className="sr-only">BioStackr home</span>
         </Link>
@@ -623,7 +623,7 @@ function WhatYouReceive({
   studyDays: number
   landingRewards: ReturnType<typeof resolveStudyLandingRewards>
 }) {
-  const { summaryLines, packageValueHeadline, packageValueSubline, studyProductCard, completionCard } = landingRewards
+  const { packageValueHeadline, studyProductCard, completionCard } = landingRewards
 
   /** Middle card: store credit uses partner hero art only — never the study product image. */
   const completionVisual =
@@ -643,16 +643,9 @@ function WhatYouReceive({
       className={`py-16 sm:py-24 ${STUDY_STRIPE_DIVIDER}`}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <h2 className="text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
-          You&apos;ll receive
+        <h2 className="text-center text-[22px] font-bold leading-snug text-neutral-900 sm:text-[26px]">
+          You&apos;ll receive {packageValueHeadline} in value
         </h2>
-        <div className="mx-auto mt-4 max-w-lg text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:text-[16px]">
-          <p>{summaryLines[0]}</p>
-          <p className="mt-1">{summaryLines[1]}</p>
-        </div>
-        <p className="mx-auto mt-3 max-w-xl text-center text-[13px] leading-snug text-neutral-600 sm:text-[14px]">
-          Delivered when you complete the full {studyDays}-day study.
-        </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
             visual={<StudyProductPhoto imageSrc={productImageSrc} imageAlt={productImageAlt} />}
@@ -673,13 +666,6 @@ function WhatYouReceive({
             body="Full dashboard access and your study outcomes."
             footer="Included"
           />
-        </div>
-        <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-neutral-200/90 bg-neutral-50 px-5 py-6 text-center shadow-sm sm:mt-12 sm:px-8 sm:py-8">
-          <p className="text-[24px] font-bold tabular-nums tracking-tight text-neutral-900 sm:text-[28px]">
-            {packageValueHeadline}{' '}
-            <span className="text-[15px] font-semibold text-neutral-700 sm:text-base">combined package value</span>
-          </p>
-          <p className="mt-3 text-[12px] leading-snug text-neutral-600 sm:text-[13px]">{packageValueSubline}</p>
         </div>
       </div>
     </StudySurfaceLight>
