@@ -19,6 +19,7 @@ import {
   pickPrimaryProfileIdByStackCount,
   runCohortMainProductHandoffCleanup,
 } from "@/lib/cohortEnrollment";
+import { shouldUseCohortCheckinBranch } from "@/lib/cohortCheckinBranch";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +96,8 @@ export async function GET(request: Request) {
     /** Partner completion incentive is store credit (vs product supply) — from `study_landing_reward_config`. */
     let cohortCompletionRewardStoreCredit = false;
     let cohortStoreCreditTitle: string | null = null;
+    /** Matches POST /api/checkin cohort path (`shouldUseCohortCheckinBranch`) — use for check-in modal UI. */
+    let cohortCheckinBranch = false;
 
     if (!authError && user) {
       email = user.email || null;
@@ -670,6 +673,21 @@ export async function GET(request: Request) {
       showCohortStudyDashboard,
     });
 
+    if (cohortId && userId) {
+      try {
+        cohortCheckinBranch = await shouldUseCohortCheckinBranch({
+          authUserId: userId as string,
+          cohortSlug: cohortId,
+          todayYmd: todayYmdForCohort(request),
+        });
+      } catch (e: unknown) {
+        console.error(
+          "[api/me] cohortCheckinBranch",
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
+
     return NextResponse.json({
       firstName: firstName || null,
       profileWelcomeFirstName,
@@ -703,6 +721,7 @@ export async function GET(request: Request) {
       cohortParticipantStatus,
       cohortCompletionRewardStoreCredit,
       cohortStoreCreditTitle,
+      cohortCheckinBranch,
     });
   } catch (e: any) {
     return NextResponse.json(

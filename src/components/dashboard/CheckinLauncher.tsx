@@ -46,6 +46,8 @@ export function CheckinLauncher({
   const [asyncStudyProductName, setAsyncStudyProductName] = useState<string | null | undefined>(undefined)
   /** Mirrors /api/me `showCohortStudyDashboard` when mePayload is not passed in. */
   const [asyncShowCohortStudyDashboard, setAsyncShowCohortStudyDashboard] = useState<boolean | undefined>(undefined)
+  /** Mirrors /api/me `cohortCheckinBranch` when mePayload is not passed in. */
+  const [asyncCohortCheckinBranch, setAsyncCohortCheckinBranch] = useState<boolean | undefined>(undefined)
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export function CheckinLauncher({
       setAsyncWelcomeRecommended(undefined)
       setAsyncStudyProductName(undefined)
       setAsyncShowCohortStudyDashboard(undefined)
+      setAsyncCohortCheckinBranch(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -120,6 +123,8 @@ export function CheckinLauncher({
         setAsyncStudyProductName(typeof pn === 'string' && pn.trim() ? pn.trim() : null)
         const sc = (data as any)?.showCohortStudyDashboard
         setAsyncShowCohortStudyDashboard(typeof sc === 'boolean' ? sc : undefined)
+        const ccb = (data as any)?.cohortCheckinBranch
+        setAsyncCohortCheckinBranch(typeof ccb === 'boolean' ? ccb : undefined)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -127,6 +132,7 @@ export function CheckinLauncher({
           setAsyncWelcomeRecommended(false)
           setAsyncStudyProductName(null)
           setAsyncShowCohortStudyDashboard(undefined)
+          setAsyncCohortCheckinBranch(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -286,6 +292,13 @@ export function CheckinLauncher({
   const showCohortStudyDashboardProp =
     typeof showCohortStudyDashboardRaw === 'boolean' ? showCohortStudyDashboardRaw : undefined
 
+  const cohortCheckinBranchRaw =
+    mePayload !== undefined
+      ? (mePayload as { cohortCheckinBranch?: unknown })?.cohortCheckinBranch
+      : asyncCohortCheckinBranch
+  const cohortCheckinBranchProp =
+    typeof cohortCheckinBranchRaw === 'boolean' ? cohortCheckinBranchRaw : undefined
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -345,6 +358,7 @@ export function CheckinLauncher({
           cohortCheckinFieldsHint={cohortCheckinFieldsHint}
           cohortStudyProductName={cohortStudyProductName}
           showCohortStudyDashboard={showCohortStudyDashboardProp}
+          cohortCheckinBranch={cohortCheckinBranchProp}
         />
       )}
     </>

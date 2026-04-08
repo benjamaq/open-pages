@@ -89,6 +89,11 @@ interface DailyCheckinModalProps {
    * check-in even if `profiles.cohort_id` is still set. When undefined, keep legacy behavior (cohort UI if cohort id present).
    */
   showCohortStudyDashboard?: boolean
+  /**
+   * From /api/me — matches POST /api/checkin cohort branch (`shouldUseCohortCheckinBranch`).
+   * When true, always render cohort check-in fields (never B2C fallback) so saves match API validation.
+   */
+  cohortCheckinBranch?: boolean
 }
 
 // Helper functions
@@ -224,6 +229,7 @@ export default function DailyCheckinModal({
   cohortCheckinFieldsHint,
   cohortStudyProductName,
   showCohortStudyDashboard,
+  cohortCheckinBranch,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -256,10 +262,13 @@ export default function DailyCheckinModal({
   const effectiveCohortId =
     hintTrimmed != null && hintTrimmed !== '' ? hintTrimmed : cohortIdFromClient
 
+  /** Must stay in sync with POST /api/checkin — cohort branch requires cohort slider keys from cohorts.checkin_fields. */
   const useCohortCheckinLayout =
-    showCohortStudyDashboard === false
-      ? false
-      : Boolean(effectiveCohortId)
+    cohortCheckinBranch === true
+      ? true
+      : showCohortStudyDashboard === false
+        ? false
+        : Boolean(effectiveCohortId)
 
   // Allowed confounders
   const CONFOUNDERS = [
