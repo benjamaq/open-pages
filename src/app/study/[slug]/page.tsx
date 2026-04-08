@@ -291,6 +291,42 @@ function HowItWorksSteps({
     },
   ]
 
+  const outcomeRows =
+    outcomeStripVariant === 'sleep'
+      ? [
+          {
+            title: 'Sleep quality',
+            line: 'See how your sleep actually changes over the study.',
+          },
+          {
+            title: 'Recovery',
+            line: `Track how your nights recover across the ${studyDays} days.`,
+          },
+          {
+            title: 'Next-day energy',
+            line: 'See how you feel the morning after, day by day.',
+          },
+        ]
+      : outcomeStripVariant === 'cognitive' && cognitiveOutcomeRows.length > 0
+        ? cognitiveOutcomeRows
+        : [
+            {
+              title: 'Daily signals',
+              line: `Track your study metrics across the ${studyDays} days.`,
+            },
+            {
+              title: 'Personal trajectory',
+              line: 'See how your scores trend from first to last check-in.',
+            },
+            {
+              title: 'Clear takeaway',
+              line: 'A concise summary of what changed for you.',
+            },
+          ]
+
+  /** Same width as `StepRowConnector` so outcome columns line up with step cards on md+. */
+  const outcomeColumnGutter = <div className="w-9 shrink-0 sm:w-11" aria-hidden />
+
   const cardClass = (emphasis: 'light' | 'medium' | 'strong') => {
     const base =
       'flex h-full min-h-0 flex-col rounded-xl border px-5 py-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg sm:px-7 sm:py-8'
@@ -339,42 +375,19 @@ function HowItWorksSteps({
           <h2 className="mt-4 text-center text-[22px] font-bold text-neutral-900 sm:text-[24px]">
             How the study works
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-            {studyDays} days. Outcomes from your own check-ins.
-          </p>
-          <div className="mx-auto mt-10 grid max-w-4xl gap-8 sm:grid-cols-3 sm:gap-6">
-            {(outcomeStripVariant === 'sleep'
-              ? [
-                  {
-                    title: 'Sleep quality',
-                    line: 'See how your sleep actually changes over the study.',
-                  },
-                  {
-                    title: 'Recovery',
-                    line: `Track how your nights recover across the ${studyDays} days.`,
-                  },
-                  {
-                    title: 'Next-day energy',
-                    line: 'See how you feel the morning after, day by day.',
-                  },
-                ]
-              : outcomeStripVariant === 'cognitive' && cognitiveOutcomeRows.length > 0
-                ? cognitiveOutcomeRows
-                : [
-                    {
-                      title: 'Daily signals',
-                      line: `Track your study metrics across the ${studyDays} days.`,
-                    },
-                    {
-                      title: 'Personal trajectory',
-                      line: 'See how your scores trend from first to last check-in.',
-                    },
-                    {
-                      title: 'Clear takeaway',
-                      line: 'A concise summary of what changed for you.',
-                    },
-                  ]
-            ).map((o) => (
+          <div className="mx-auto mt-10 hidden max-w-4xl gap-8 md:flex md:max-w-none md:justify-center">
+            {outcomeRows.map((o, i) => (
+              <Fragment key={o.title}>
+                <div className="flex min-w-0 flex-1 basis-0 max-w-[21rem] flex-col text-left">
+                  <h3 className="text-[15px] font-bold text-neutral-900 sm:text-[16px]">{o.title}</h3>
+                  <p className="mt-2 text-[13px] leading-snug text-neutral-600 sm:text-[14px]">{o.line}</p>
+                </div>
+                {i < outcomeRows.length - 1 ? outcomeColumnGutter : null}
+              </Fragment>
+            ))}
+          </div>
+          <div className="mx-auto mt-10 grid max-w-4xl gap-8 sm:grid-cols-3 sm:gap-6 md:hidden">
+            {outcomeRows.map((o) => (
               <div key={o.title} className="text-center sm:text-left">
                 <h3 className="text-[15px] font-bold text-neutral-900 sm:text-[16px]">{o.title}</h3>
                 <p className="mt-2 text-[13px] leading-snug text-neutral-600 sm:text-[14px]">{o.line}</p>
@@ -501,7 +514,7 @@ function StudyProductPhoto({
       ? 'max-h-[min(300px,48vw)] sm:max-h-[320px]'
       : 'max-h-[min(260px,44vw)] sm:max-h-[280px]'
   return (
-    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-7 sm:min-h-[260px] sm:py-10">
+    <div className="flex min-h-[160px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-4 py-5 sm:min-h-[180px] sm:py-7">
       <Image
         src={imageSrc}
         alt={imageAlt}
@@ -539,22 +552,23 @@ function IncentiveShelfCard({
     : 'shadow-[0_12px_40px_-8px_rgba(26,31,46,0.16)] ring-1 ring-neutral-900/[0.06] transition-shadow duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_48px_-10px_rgba(26,31,46,0.2)]'
   return (
     <div
-      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border bg-white md:min-h-[448px] ${depth}`}
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-white ${depth}`}
       style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
-      <div className="flex min-h-0 flex-[3] flex-col bg-neutral-50/30">{visual}</div>
-      <div className="flex flex-[2] flex-col justify-between px-6 pb-6 pt-5">
-        <div>
-          <h3 className="text-[17px] font-bold leading-snug text-neutral-900">{title}</h3>
-          <p className="mt-2 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{body}</p>
-          {bodyExtra ? (
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{bodyExtra}</p>
-          ) : null}
-          {tagline ? (
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
-          ) : null}
-        </div>
-        <p className="mt-5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: RUST }}>
+      <div className="flex min-h-0 shrink-0 flex-col bg-neutral-50/30">{visual}</div>
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 px-5 pb-5 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
+        <h3 className="text-[17px] font-bold leading-snug text-neutral-900">{title}</h3>
+        <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{body}</p>
+        {bodyExtra ? (
+          <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{bodyExtra}</p>
+        ) : null}
+        {tagline ? (
+          <p className="text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
+        ) : null}
+        <p
+          className="pt-1 text-center text-[10px] font-semibold uppercase tracking-wide"
+          style={{ color: RUST }}
+        >
           {footer}
         </p>
       </div>
@@ -568,7 +582,7 @@ function IncentiveShelfCard({
  */
 function BioStackrRewardPhoto() {
   return (
-    <div className="flex min-h-[220px] w-full flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:gap-5 sm:px-4 sm:py-8">
+    <div className="flex min-h-[160px] w-full flex-1 flex-col items-center justify-center gap-3 bg-gradient-to-b from-white to-neutral-50 px-3 py-4 sm:min-h-[180px] sm:gap-4 sm:px-4 sm:py-6">
       <div className="flex w-full shrink-0 justify-center px-1">
         <Link
           href="/"
@@ -599,7 +613,7 @@ function BioStackrRewardPhoto() {
 /** Partner completion reward visual (e.g. store credit artwork from `study_landing_reward_config`). */
 function PartnerCompletionRewardPhoto({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="flex min-h-[220px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-5 sm:min-h-[260px] sm:px-4 sm:py-8">
+    <div className="flex min-h-[160px] w-full flex-1 items-center justify-center bg-gradient-to-b from-white to-neutral-50 px-3 py-4 sm:min-h-[180px] sm:px-4 sm:py-6">
       <Image
         src={src}
         alt={alt}
@@ -644,7 +658,7 @@ function WhatYouReceive({
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-bold leading-snug text-neutral-900 sm:text-[26px]">
-          You&apos;ll receive two hundred dollars in value
+          You&apos;ll receive {landingRewards.packageValueHeadline} in value
         </h2>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
@@ -882,9 +896,6 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               </h1>
               <p className="mt-0.5 text-[15px] font-semibold text-neutral-900 sm:text-[16px]">by {brandDisplay}</p>
             </div>
-            <p className="mt-2 text-[13px] font-normal leading-snug text-neutral-600 sm:mt-2.5 sm:text-[14px]">
-              {studyDays}-day customer outcomes study
-            </p>
 
             {!showFullMessage ? (
               <div className="mt-4 sm:mt-5">
@@ -924,7 +935,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
                 Finish the full {studyDays}-day study and your combined rewards are worth over{' '}
                 <span className="whitespace-nowrap" style={{ color: RUST }}>
-                  two hundred dollars
+                  {landingRewards.packageValueHeadline}
                 </span>
                 .
               </p>
