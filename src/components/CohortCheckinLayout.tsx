@@ -200,27 +200,30 @@ export default function CohortCheckinLayout({
         }`}
       >
         <div
-          className={`sticky top-0 bg-white border-b flex items-center justify-between ${
-            saved ? 'px-4 py-3' : 'px-5 sm:px-8 py-4 sm:py-6'
+          className={`sticky top-0 flex items-center gap-2 border-b bg-white ${
+            saved ? 'px-4 py-3' : 'px-5 py-4 sm:px-8 sm:py-6'
           }`}
         >
+          <div className="w-9 shrink-0 sm:w-10" aria-hidden />
           <h2
-            className={`font-bold text-gray-900 ${
+            className={`flex-1 text-center font-bold text-gray-900 ${
               saved ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'
             }`}
           >
             {modalTitle}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`text-gray-400 hover:text-gray-600 leading-none ${
-              saved ? 'text-xl' : 'text-2xl'
-            }`}
-            aria-label="Close"
-          >
-            ×
-          </button>
+          <div className="flex w-9 shrink-0 justify-end sm:w-10">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`text-gray-400 hover:text-gray-600 leading-none ${
+                saved ? 'text-xl' : 'text-2xl'
+              }`}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <div

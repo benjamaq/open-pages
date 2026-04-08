@@ -990,9 +990,14 @@ useEffect(() => {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:items-center sm:p-4">
       <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header (sticky, neutral) */}
-        <div className="sticky top-0 bg-white border-b px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Daily Check-in</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        <div className="sticky top-0 flex items-center gap-2 border-b bg-white px-5 py-4 sm:px-8 sm:py-6">
+          <div className="w-9 shrink-0 sm:w-10" aria-hidden />
+          <h2 className="flex-1 text-center text-xl font-bold text-gray-900 sm:text-2xl">Daily Check-in</h2>
+          <div className="flex w-9 shrink-0 justify-end sm:w-10">
+            <button type="button" onClick={onClose} className="text-2xl leading-none text-gray-400 hover:text-gray-600">
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content (neutral, reusing Add Supplement spacing rhythm) */}
