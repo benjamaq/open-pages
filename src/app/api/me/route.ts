@@ -232,24 +232,37 @@ export async function GET(request: Request) {
           // only needs cohortId + userId, which produced checkinFields: null + branch true before this fix.
           if (cohortId) {
             const todayYmd = todayYmdForCohort(request);
-            const { data: cdef, error: cdefErr } = await supabaseAdmin
+            const cohortLookupKey = String(cohortId).trim();
+            const cohortSelect =
+              "id, slug, checkin_fields, product_name, brand_name, study_days, start_date, end_date, study_landing_reward_config";
+            let { data: cdef, error: cdefErr } = await supabaseAdmin
               .from("cohorts")
-              .select(
-                "id, checkin_fields, product_name, brand_name, study_days, start_date, end_date, study_landing_reward_config",
-              )
-              .eq("slug", cohortId)
+              .select(cohortSelect)
+              .eq("slug", cohortLookupKey)
               .maybeSingle();
+            const uuidLike =
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                cohortLookupKey,
+              );
+            if (cdef == null && cdefErr == null && uuidLike) {
+              const r2 = await supabaseAdmin
+                .from("cohorts")
+                .select(cohortSelect)
+                .eq("id", cohortLookupKey)
+                .maybeSingle();
+              cdef = r2.data;
+              cdefErr = r2.error;
+            }
             if (cdefErr) {
               console.error(
                 "[api/me] cohorts lookup:",
-                cohortId,
+                cohortLookupKey,
                 cdefErr.message,
               );
             }
-            console.log("[api/me] cohort cdef lookup", {
-              cohortId,
-              profileId,
-              cdef: cdef ?? null,
+            console.log("[api/me] cohort lookup", {
+              cohortId: cohortLookupKey,
+              cdef,
               rawCheckinFields: (cdef as { checkin_fields?: unknown } | null)
                 ?.checkin_fields,
             });
