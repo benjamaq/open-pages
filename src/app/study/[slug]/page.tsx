@@ -924,7 +924,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
               <p className="mx-auto mt-4 max-w-xl px-1 text-center text-[15px] font-semibold leading-snug text-neutral-900 sm:mt-5 sm:text-[16px]">
                 Finish the full {studyDays}-day study and your combined rewards are worth over{' '}
                 <span className="whitespace-nowrap" style={{ color: RUST }}>
-                  {landingRewards.packageValueHeadline}
+                  two hundred dollars
                 </span>
                 .
               </p>
