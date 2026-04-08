@@ -95,7 +95,15 @@ function callbackSuccessRedirect(request: NextRequest, nextPath: string): NextRe
   return NextResponse.redirect(location)
 }
 
-function callbackErrorRedirect(request: NextRequest): NextResponse {
+/**
+ * Magic link / OAuth code failed or missing — send users to `/login` with preserved `next` so they can
+ * use password sign-in or request a fresh cohort magic link (not a dead-end `/auth/auth-code-error`).
+ */
+function callbackLoginRecoveryRedirect(
+  request: NextRequest,
+  nextPath: string,
+  reason: 'expired_link' | 'auth_incomplete',
+): NextResponse {
   const forwardedHost = request.headers.get('x-forwarded-host')
   const isLocalEnv = process.env.NODE_ENV === 'development'
   let origin: string
@@ -106,7 +114,11 @@ function callbackErrorRedirect(request: NextRequest): NextResponse {
   } else {
     origin = request.nextUrl.origin
   }
-  return NextResponse.redirect(new URL('/auth/auth-code-error', origin).toString())
+  const u = new URL('/login', origin)
+  u.searchParams.set('reason', reason)
+  const safe = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
+  u.searchParams.set('next', safe)
+  return NextResponse.redirect(u.toString())
 }
 
 function createSupabaseForCallback(request: NextRequest, response: NextResponse) {
@@ -171,7 +183,7 @@ export async function GET(request: NextRequest) {
       urlType: typeRaw,
       ...authErrorFields(lastError),
     })
-    return callbackErrorRedirect(request)
+    return callbackLoginRecoveryRedirect(request, next, 'expired_link')
   }
 
   if (code) {
@@ -182,12 +194,12 @@ export async function GET(request: NextRequest) {
       return response
     }
     console.error('[auth/callback] exchangeCodeForSession failed', authErrorFields(error))
-    return callbackErrorRedirect(request)
+    return callbackLoginRecoveryRedirect(request, next, 'expired_link')
   }
 
   console.warn('[auth/callback] missing token_hash and code', {
     pathname: request.nextUrl.pathname,
     searchRedacted: redactSearchForLog(request.nextUrl.search),
   })
-  return callbackErrorRedirect(request)
+  return callbackLoginRecoveryRedirect(request, next, 'auth_incomplete')
 }

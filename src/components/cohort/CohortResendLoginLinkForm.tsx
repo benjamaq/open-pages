@@ -9,6 +9,8 @@ type Props = {
   lead?: string | null
   submitLabel?: string
   className?: string
+  /** Prefill when present (e.g. `/login?email=` from recovery flows). */
+  initialEmail?: string
 }
 
 export function CohortResendLoginLinkForm({
@@ -17,8 +19,9 @@ export function CohortResendLoginLinkForm({
   lead = null,
   submitLabel = 'Send me a new login link',
   className = '',
+  initialEmail = '',
 }: Props) {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => initialEmail.trim())
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

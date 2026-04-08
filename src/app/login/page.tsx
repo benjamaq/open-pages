@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CohortResendLoginLinkForm } from '@/components/cohort/CohortResendLoginLinkForm'
@@ -13,6 +13,21 @@ function safeRedirect(raw: string | null): string {
   const t = raw.trim()
   if (!t.startsWith('/') || t.startsWith('//')) return def
   return t
+}
+
+function looksLikeEmail(s: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
+}
+
+function RecoveryBanner({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-800"
+      role="status"
+    >
+      {children}
+    </div>
+  )
 }
 
 export default function LoginPage() {
@@ -32,7 +47,11 @@ export default function LoginPage() {
 function LoginInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
+  const reason = searchParams.get('reason')
+  const qpEmail = searchParams.get('email')
+  const prefillEmail =
+    qpEmail && looksLikeEmail(qpEmail) ? qpEmail.trim().toLowerCase() : ''
+  const [email, setEmail] = useState(prefillEmail)
   const [password, setPassword] = useState('')
   const [showAccessCode, setShowAccessCode] = useState(false)
   const [accessCode, setAccessCode] = useState('')
@@ -80,7 +99,7 @@ function LoginInner() {
         }
       }
 
-      const next = safeRedirect(searchParams.get('redirect'))
+      const next = safeRedirect(searchParams.get('next') ?? searchParams.get('redirect'))
       setLoading(false)
       router.push(next)
     } catch (err: any) {
@@ -118,6 +137,16 @@ function LoginInner() {
           <h1 className="text-2xl font-semibold text-slate-900">Welcome back</h1>
           <p className="mt-2 text-gray-600">Pick up where you left off.</p>
         </div>
+        {reason === 'expired_link' && (
+          <RecoveryBanner>
+            This sign-in link has expired. Sign in below or request a new link.
+          </RecoveryBanner>
+        )}
+        {reason === 'auth_incomplete' && (
+          <RecoveryBanner>
+            We couldn&apos;t complete sign-in from that link. Sign in below or request a new link.
+          </RecoveryBanner>
+        )}
         <form onSubmit={onSubmit} className="mt-6 space-y-4" aria-disabled={isInAppBrowser()}>
           <div className="grid gap-1">
             <label className="text-sm text-gray-700">Email</label>
@@ -176,7 +205,9 @@ function LoginInner() {
         </form>
         <div className="mt-8 border-t border-slate-200 pt-6">
           <CohortResendLoginLinkForm
+            key={prefillEmail ? `cohort-${prefillEmail}` : 'cohort'}
             idPrefix="login-cohort-magic"
+            initialEmail={prefillEmail}
             heading="Get a magic link instead of password"
             lead="Partner study participants can log in without a password. We will email you a link that opens your dashboard."
             submitLabel="Email me a login link"
