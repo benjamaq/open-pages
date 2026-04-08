@@ -1,5 +1,5 @@
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortTransactionalCheckinMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   cohortEmailPartnerXBioStackrLine,
@@ -17,6 +17,8 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   firstName: string
   productLabel: string
   partnerBrandName: string
+  /** Absolute URL — production uses Supabase magic link via `cohortTransactionalCheckinMagicHref`. */
+  firstCheckInHref: string
   /** Default true (sleep-style copy). Set false when cohort `checkin_fields` are not sleep-shaped. */
   sleepShapedCohort?: boolean
   /** When true, omit product-supply-as-reward framing; use store credit + Pro copy. */
@@ -31,7 +33,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   const brandLineEsc = escapeHtml(cohortEmailPartnerXBioStackrLine(partnerBrandName))
 
   const appBase = cohortEmailPublicOrigin()
-  const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const checkinHref = String(params.firstCheckInHref || '').trim()
   const subject = "You're in — complete your first check-in"
   const sleepShaped = params.sleepShapedCohort !== false
   const secondCheckinWhen = sleepShaped ? 'tomorrow morning' : 'tomorrow'
@@ -115,10 +117,12 @@ export async function sendCohortEnrollmentEmail(params: {
       storeCreditTitle = storeCreditTitleFromCohortRow(row as { study_landing_reward_config?: unknown })
     }
   }
+  const { href: firstCheckInHref } = await cohortTransactionalCheckinMagicHref(to, 'enrollment')
   const { subject, html } = buildCohortEnrollmentTransactionalEmailHtml({
     firstName: first,
     productLabel,
     partnerBrandName,
+    firstCheckInHref,
     sleepShapedCohort,
     storeCreditPartnerReward,
     storeCreditTitle,

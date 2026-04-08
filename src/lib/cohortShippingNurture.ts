@@ -1,5 +1,5 @@
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortTransactionalCheckinMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   COHORT_EMAIL_MAGIC_LINK_HINT,
   cohortEmailCheckInCtaHtml,
@@ -68,10 +68,17 @@ export function shippingNurtureInnerHtml(
 /** Full HTML with shared cohort shell (logos, brand line, footer) — for previews or tooling. */
 export function shippingNurtureBodyHtml(
   step: ShippingNurtureStep,
-  params: { studyName: string; brandName: string; productName: string; sleepShapedCohort?: boolean },
+  params: {
+    studyName: string
+    brandName: string
+    productName: string
+    sleepShapedCohort?: boolean
+    /** Production sends use Supabase magic link from `cohortTransactionalCheckinMagicHref`. */
+    checkInHref: string
+  },
 ): string {
   const appBase = cohortEmailPublicOrigin()
-  const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const checkInHref = String(params.checkInHref || '').trim()
   const inner =
     shippingNurtureInnerHtml(step, params) +
     cohortEmailCheckInCtaHtml(checkInHref) +
@@ -99,7 +106,7 @@ export async function sendShippingNurtureEmail(params: {
   if (!to) return { success: false, error: 'missing email' }
   const subject = shippingNurtureSubject(params.step)
   const appBase = cohortEmailPublicOrigin()
-  const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const { href: checkInHref } = await cohortTransactionalCheckinMagicHref(to, `shipping-nurture-${params.step}`)
   const inner =
     shippingNurtureInnerHtml(params.step, {
       studyName: params.studyName,

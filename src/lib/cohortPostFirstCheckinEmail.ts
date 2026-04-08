@@ -1,7 +1,7 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortTransactionalCheckinMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   escapeHtml,
@@ -200,7 +200,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       cohort as { product_name?: string | null; brand_name?: string | null },
     )
     const partnerBrandPlain = String((cohort as { brand_name?: string | null }).brand_name || 'Study partner').trim() || 'Study partner'
-    const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+    const { href: checkInHref } = await cohortTransactionalCheckinMagicHref(to, 'post-first-checkin')
 
     const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
       cohort as { study_landing_reward_config?: unknown; checkin_fields?: unknown },

@@ -1,8 +1,10 @@
 import { buildComplianceConfirmedTransactionalEmailHtml } from '@/lib/cohortComplianceConfirmed'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
 import { buildCohortEnrollmentTransactionalEmailHtml } from '@/lib/cohortEnrollmentEmail'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
-import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
+import {
+  cohortDashboardCheckinDirectAbsoluteUrl,
+  cohortDashboardDirectAbsoluteUrl,
+} from '@/lib/cohortEmailMagicLink'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import { buildCohortGateReminderEmailHtml } from '@/lib/cohortGateReminderEmail'
 import { buildCohortParticipantLoginMagicLinkTransactionalEmailHtml } from '@/lib/cohortLoginMagicLinkEmail'
@@ -76,7 +78,8 @@ export function renderCohortEmailPreviewHtml(
   })
 
   const appBase = cohortEmailPublicOrigin().replace(/\/$/, '')
-  const placeholderMagic = `${appBase}${cohortDashboardStudyPath()}?preview=1`
+  const placeholderDashboard = `${cohortDashboardDirectAbsoluteUrl()}?preview=1`
+  const placeholderCheckin = `${cohortDashboardCheckinDirectAbsoluteUrl()}?preview=1`
   const placeholderResult = `${appBase}/dashboard/cohort-result?preview=1`
   const placeholderClaim = `${appBase}/account?preview=claim`
   const sc = branding.completionRewardStoreCredit === true
@@ -88,6 +91,7 @@ export function renderCohortEmailPreviewHtml(
         firstName: first,
         productLabel: prod,
         partnerBrandName,
+        firstCheckInHref: placeholderCheckin,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -109,6 +113,7 @@ export function renderCohortEmailPreviewHtml(
         firstNameForGreeting: first,
         productName: prod,
         partnerBrandName,
+        dashboardHref: placeholderDashboard,
         studyDurationDays: branding.studyDurationDays,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
@@ -118,6 +123,7 @@ export function renderCohortEmailPreviewHtml(
         firstNameForGreeting: first,
         productName: prod,
         partnerBrandName,
+        dashboardHref: placeholderDashboard,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -127,11 +133,12 @@ export function renderCohortEmailPreviewHtml(
         studyName,
         productName: prod,
         brandName: partnerBrandName,
+        dashboardStudyHref: placeholderDashboard,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
     case 'post-first-checkin': {
-      const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
+      const checkInHref = placeholderCheckin
       return buildCohortPostFirstCheckinTransactionalEmailHtml({
         firstNameForGreeting: first,
         studyName,
@@ -145,7 +152,7 @@ export function renderCohortEmailPreviewHtml(
     case 'login-magic-link':
       return buildCohortParticipantLoginMagicLinkTransactionalEmailHtml({
         partnerBrandName,
-        magicHref: placeholderMagic,
+        magicHref: placeholderDashboard,
       })
     case 'shipping-day4':
     case 'shipping-day7':
@@ -155,11 +162,12 @@ export function renderCohortEmailPreviewHtml(
         studyName,
         brandName: partnerBrandName,
         productName: prod,
+        checkInHref: placeholderCheckin,
       })
       return { subject: shippingNurtureSubject(step), html }
     }
     case 'gate-reminder':
-      return buildCohortGateReminderEmailHtml()
+      return buildCohortGateReminderEmailHtml({ checkInHref: placeholderCheckin })
     default: {
       const _x: never = template
       void _x

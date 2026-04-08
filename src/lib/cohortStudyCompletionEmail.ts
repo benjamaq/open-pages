@@ -1,5 +1,5 @@
-import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortTransactionalDashboardMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   COHORT_EMAIL_CTA_LINK_ATTRS,
   escapeHtml,
@@ -13,6 +13,8 @@ export function buildCohortStudyCompletionTransactionalEmailHtml(params: {
   firstNameForGreeting: string
   productName: string
   partnerBrandName: string
+  /** Absolute URL — production uses Supabase magic link via `cohortTransactionalDashboardMagicHref`. */
+  dashboardHref: string
   storeCreditPartnerReward?: boolean
   storeCreditTitle?: string
 }): { subject: string; html: string } {
@@ -27,7 +29,7 @@ export function buildCohortStudyCompletionTransactionalEmailHtml(params: {
   )
 
   const appBase = cohortEmailPublicOrigin()
-  const dashboardHref = `${appBase}${cohortDashboardStudyPath()}`
+  const dashboardHref = String(params.dashboardHref || '').trim()
   const subject = `Thank you — your ${product} study is complete`
 
   const partnerRewardLi = storeCredit
@@ -91,10 +93,12 @@ export async function sendCohortStudyCompletionEmail(params: {
 
   void params.rewardClaimAbsoluteUrl
 
+  const dashboardHref = await cohortTransactionalDashboardMagicHref(to, 'study-completion')
   const { subject, html } = buildCohortStudyCompletionTransactionalEmailHtml({
     firstNameForGreeting,
     productName: product,
     partnerBrandName: partnerPlain,
+    dashboardHref,
     storeCreditPartnerReward: params.storeCreditPartnerReward,
     storeCreditTitle: params.storeCreditTitle,
   })

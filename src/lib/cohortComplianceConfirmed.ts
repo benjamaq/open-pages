@@ -1,7 +1,7 @@
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
-import { cohortDashboardStudyPath } from '@/lib/cohortDashboardDeepLink'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortTransactionalDashboardMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   cohortEmailDashboardCtaHtml,
   escapeHtml,
@@ -20,6 +20,8 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   studyName: string
   productName: string
   brandName: string
+  /** Absolute URL — production uses Supabase magic link via `cohortTransactionalDashboardMagicHref`. */
+  dashboardStudyHref: string
   storeCreditPartnerReward?: boolean
   storeCreditTitle?: string
 }): { subject: string; html: string } {
@@ -29,7 +31,7 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   const partnerPlain = String(params.brandName || '').trim() || 'Study partner'
   const brand = escapeHtml(partnerPlain)
   const appBase = cohortEmailPublicOrigin()
-  const dashboardStudyHref = `${appBase}${cohortDashboardStudyPath()}`
+  const dashboardStudyHref = String(params.dashboardStudyHref || '').trim()
   const storeCredit = params.storeCreditPartnerReward === true
   const creditEsc = escapeHtml(String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit')
 
@@ -81,11 +83,13 @@ export async function sendComplianceConfirmedEmail(params: {
     const to = String(auth.user.email).trim()
     if (!to) return
 
+    const dashboardStudyHref = await cohortTransactionalDashboardMagicHref(to, 'compliance-confirmed')
     const { subject, html } = buildComplianceConfirmedTransactionalEmailHtml({
       firstNameForGreeting: firstNameFromAuthUser(auth.user),
       studyName: params.studyName,
       productName: params.productName,
       brandName: params.brandName ?? '',
+      dashboardStudyHref,
       storeCreditPartnerReward: params.storeCreditPartnerReward,
       storeCreditTitle: params.storeCreditTitle,
     })

@@ -13,8 +13,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * `generateCohortDashboardMagicLinkUrl` / `cohortTransactional*MagicHref`, which wrap it):**
  * - `cohortComplianceConfirmed.ts` — dashboard
  * - `cohortStudyStartEmail.ts` — dashboard
- * - `cohortShippingNurture.ts` — dashboard
- * - `cohortGateReminderEmail.ts` — dashboard
+ * - `cohortShippingNurture.ts` — check-in (`cohortTransactionalCheckinMagicHref`)
+ * - `cohortGateReminderEmail.ts` — check-in (`cohortTransactionalCheckinMagicHref`)
  * - `cohortEnrollmentEmail.ts` — first check-in (`cohortDashboardStudyCheckinPath`)
  * - `cohortPostFirstCheckinEmail.ts` — check-in + dashboard
  * - `cohortResultReadyEmail.ts` — personal results page (`/dashboard/cohort-result`)
