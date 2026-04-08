@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
+import { COHORT_RESULT_PARTNER_MARK_CLASS } from '@/lib/cohortDashboardPartnerLogo'
 
 export type CohortParticipantResultPayload = {
   result_json: Record<string, unknown> | null
@@ -294,7 +295,7 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
     <img
       src="/DNA-logo-black.png"
       alt={b || 'Study partner'}
-      className="h-6 sm:h-8 w-auto max-w-[108px] sm:max-w-[124px] object-contain object-left"
+      className={COHORT_RESULT_PARTNER_MARK_CLASS}
     />
   )
 }
@@ -431,7 +432,7 @@ export default function CohortParticipantResultView({
     <div className="space-y-5 sm:space-y-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+          <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
             <CohortResultPartnerMark brandName={payload.brand_name} />
           </div>
           <div className="h-8 w-px shrink-0 bg-slate-200/80 hidden sm:block" aria-hidden />

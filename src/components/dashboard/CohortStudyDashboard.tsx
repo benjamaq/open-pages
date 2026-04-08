@@ -11,6 +11,10 @@ import {
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import { cohortPartnerLogoPublicCandidates } from '@/lib/cohortStudyPageAssets'
+import {
+  COHORT_DASHBOARD_BIOSTACKR_ROW_CLASS,
+  COHORT_DASHBOARD_PARTNER_MARK_CLASS,
+} from '@/lib/cohortDashboardPartnerLogo'
 
 export type CohortStartStudyBody = {
   productArrived: 'today' | 'yesterday' | 'few_days_ago' | 'skip'
@@ -78,9 +82,9 @@ function CohortDashboardPartnerMark({
       <img
         src="/DNA-logo-black.png"
         alt={brandDisplay}
-        className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
-        width={200}
-        height={52}
+        className={COHORT_DASHBOARD_PARTNER_MARK_CLASS}
+        width={280}
+        height={72}
       />
     )
   }
@@ -96,9 +100,9 @@ function CohortDashboardPartnerMark({
     <img
       src={encodeURI(src)}
       alt={brandDisplay}
-      className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
-      width={200}
-      height={52}
+      className={COHORT_DASHBOARD_PARTNER_MARK_CLASS}
+      width={280}
+      height={72}
       onError={() => {
         if (attempt < candidates.length - 1) {
           setAttempt((a) => a + 1)
@@ -673,9 +677,9 @@ export default function CohortStudyDashboard({
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
             alt="BioStackr"
-            className="h-8 w-auto max-w-[min(160px,46vw)] object-contain object-right sm:h-9"
-            width={160}
-            height={36}
+            className={COHORT_DASHBOARD_BIOSTACKR_ROW_CLASS}
+            width={200}
+            height={48}
           />
         </div>
         <p className="text-base sm:text-lg font-medium text-gray-900 mb-1">

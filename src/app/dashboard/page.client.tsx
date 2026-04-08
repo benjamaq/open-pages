@@ -11,6 +11,7 @@ import { DashboardUnifiedPanel } from '@/components/dashboard/DashboardUnifiedPa
 import { PersonalHeader } from '@/components/dashboard/PersonalHeader'
 import { useDashboardLoad } from '@/hooks/useDashboardLoad'
 import { COHORT_DASHBOARD_VIEW_QUERY, COHORT_DASHBOARD_VIEW_VALUE } from '@/lib/cohortDashboardDeepLink'
+import { COHORT_SHELL_HEADER_BIOSTACKR_CLASS } from '@/lib/cohortDashboardPartnerLogo'
 import { CohortResendLoginLinkForm } from '@/components/cohort/CohortResendLoginLinkForm'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -161,7 +162,11 @@ export function DashboardPageClient() {
           {useCohortShell ? (
             <div className="flex items-center justify-between gap-4">
               <a href="/dashboard" className="flex items-center shrink-0" aria-label="BioStackr home">
-                <img src="/BIOSTACKR LOGO 2.png" alt="BioStackr" className="h-7 sm:h-8 w-auto" />
+                <img
+                  src="/BIOSTACKR LOGO 2.png"
+                  alt="BioStackr"
+                  className={COHORT_SHELL_HEADER_BIOSTACKR_CLASS}
+                />
               </a>
               <a href="/auth/signout" className="text-sm text-slate-700 hover:underline whitespace-nowrap">
                 Log out
