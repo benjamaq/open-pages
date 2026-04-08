@@ -1,4 +1,4 @@
-import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
+import { fetchCohortCheckinYmdsSinceEnrollForUserIds } from '@/lib/cohortCheckinCount'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import { cohortTransactionalDashboardMagicHref } from '@/lib/cohortEmailMagicLink'
@@ -138,8 +138,19 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       .maybeSingle()
     if (pErr || !part?.id || !part.enrolled_at) return
 
-    const n = await countDistinctDailyEntriesSinceForUserIds(userKeys, String(part.enrolled_at))
-    if (n < 2) return
+    const enrolledIso = String(part.enrolled_at)
+    const ymds = await fetchCohortCheckinYmdsSinceEnrollForUserIds(userKeys, enrolledIso)
+    const n = ymds.length
+    if (n < 2) {
+      console.log('[cohort-compliance] immediate confirm skipped: need 2 distinct days', {
+        cohortParticipantId: part.id,
+        cohortId: cohort.id,
+        distinctDayCount: n,
+        distinctLocalDates: [...ymds].sort(),
+        enrolled_at: enrolledIso,
+      })
+      return
+    }
 
     const { data: updated, error: uErr } = await supabaseAdmin
       .from('cohort_participants')

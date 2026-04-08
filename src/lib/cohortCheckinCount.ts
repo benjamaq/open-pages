@@ -65,15 +65,30 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
 
   const [{ data: byCreated }, { data: byDate }] = await Promise.all([byCreatedQ, byDateQ])
   const ymds = new Set<string>()
-  /** Only calendar days on/after enrollment; optional `minCreatedAtIso` ties rows to study clock start. */
+  /**
+   * Study phase (`minCreatedAtIso`): require calendar day on/after anchor day AND `created_at` after study start instant.
+   * Compliance (no `minCreatedAtIso`): count distinct `local_date` for rows with `created_at >= enrolled_at`.
+   * Do not compare client `local_date` to the UTC *calendar day* of `enrolled_at` only — e.g. enroll at
+   * `2026-04-02T01:00Z` makes enrollYmd `2026-04-02` while the first check-in can legitimately be `local_date`
+   * `2026-04-01` after that instant; the old `ymd < enrollYmd` gate dropped that day and blocked confirmation at n=2.
+   */
   const addRow = (r: { local_date?: string | null; created_at?: string | null }) => {
     const ymd = effectiveDailyEntryYmd(r)
-    if (!ymd || ymd < enrollYmd) return
+    if (!ymd) return
+    const ca = r.created_at != null ? String(r.created_at) : ''
+
     if (minCreated) {
-      const ca = r.created_at != null ? String(r.created_at) : ''
+      if (ymd < enrollYmd) return
       if (!ca || ca < minCreated) return
+      ymds.add(ymd)
+      return
     }
-    ymds.add(ymd)
+
+    if (ca) {
+      if (ca >= createdLower) ymds.add(ymd)
+      return
+    }
+    if (ymd >= enrollYmd) ymds.add(ymd)
   }
   for (const r of byCreated || []) addRow(r as { local_date?: string | null; created_at?: string | null })
   for (const r of byDate || []) addRow(r as { local_date?: string | null; created_at?: string | null })
