@@ -57,6 +57,11 @@ export async function shouldUseCohortCheckinBranch(params: {
     return false
   }
 
+  /** Compliance gate: must use cohort /api/checkin path so `tryImmediateCohortComplianceConfirm` runs. */
+  if (participantStatus === 'applied') {
+    return true
+  }
+
   const studyCompletedRaw = (part as { study_completed_at?: string | null } | null)
     ?.study_completed_at
   const studyCompletedAtSet =
@@ -112,6 +117,7 @@ export async function shouldUseCohortCheckinBranch(params: {
     pro_expires_at: (pAdmin as { pro_expires_at?: string | null } | null)?.pro_expires_at,
   })
 
+  // Graduated main-product users (Pro + study finished): B2C sliders only — not applied (handled above).
   if (proActive && studyFinishedForProduct) return false
 
   return true

@@ -107,6 +107,11 @@ export async function sendComplianceConfirmedEmail(params: {
   }
 }
 
+function shortId(id: string | undefined): string {
+  const s = String(id || '')
+  return s.length <= 8 ? s : s.slice(-8)
+}
+
 /**
  * After a cohort daily_entries upsert: if this applied participant now has ≥2 distinct check-in days
  * since enroll (same semantics as the cron), confirm and send the same email. Cron remains the backstop
@@ -118,7 +123,15 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
   cohortSlug: string
 }): Promise<void> {
   const slug = String(opts.cohortSlug || '').trim()
-  if (!slug || !opts.profileId || !opts.authUserId) return
+  const logCtx = {
+    authUserIdSuffix: shortId(opts.authUserId),
+    profileIdSuffix: shortId(opts.profileId),
+    cohortSlug: slug,
+  }
+  if (!slug || !opts.profileId || !opts.authUserId) {
+    console.log('[cohort-compliance] immediate confirm skip: missing slug/profile/auth', logCtx)
+    return
+  }
 
   try {
     const { data: cohort, error: cErr } = await supabaseAdmin
@@ -126,28 +139,65 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       .select('id, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .eq('slug', slug)
       .maybeSingle()
-    if (cErr || !cohort?.id) return
+    if (cErr || !cohort?.id) {
+      console.warn('[cohort-compliance] immediate confirm skip: cohort lookup', { ...logCtx, cErr: cErr?.message })
+      return
+    }
 
     const userKeys = cohortParticipantUserIdCandidatesSync(opts.profileId, opts.authUserId)
-    const { data: part, error: pErr } = await supabaseAdmin
+    const { data: partRows, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
       .select('id, enrolled_at')
       .in('user_id', userKeys)
       .eq('cohort_id', cohort.id)
       .eq('status', 'applied')
-      .maybeSingle()
-    if (pErr || !part?.id || !part.enrolled_at) return
+      .limit(5)
+    if (pErr) {
+      console.error('[cohort-compliance] immediate confirm skip: participant query error', { ...logCtx, pErr: pErr.message })
+      return
+    }
+    const rows = (partRows || []) as Array<{ id: string; enrolled_at: string }>
+    if (rows.length > 1) {
+      console.warn('[cohort-compliance] multiple applied rows for same cohort/user keys; using first', {
+        ...logCtx,
+        cohortParticipantIds: rows.map((r) => shortId(r.id)),
+        count: rows.length,
+      })
+    }
+    const part = rows[0]
+    if (!part?.id || !part.enrolled_at) {
+      console.log('[cohort-compliance] immediate confirm skip: no applied participant row', {
+        ...logCtx,
+        cohortId: cohort.id,
+        userKeysSuffixes: userKeys.map((k) => shortId(k)),
+      })
+      return
+    }
 
     const enrolledIso = String(part.enrolled_at)
     const ymds = await fetchCohortCheckinYmdsSinceEnrollForUserIds(userKeys, enrolledIso)
     const n = ymds.length
+
+    const { data: dbgEntries } = await supabaseAdmin
+      .from('daily_entries')
+      .select('local_date, created_at, user_id')
+      .in('user_id', userKeys)
+      .order('local_date', { ascending: false })
+      .limit(12)
+
     if (n < 2) {
       console.log('[cohort-compliance] immediate confirm skipped: need 2 distinct days', {
+        ...logCtx,
         cohortParticipantId: part.id,
         cohortId: cohort.id,
         distinctDayCount: n,
         distinctLocalDates: [...ymds].sort(),
         enrolled_at: enrolledIso,
+        dailyEntriesRecent: (dbgEntries || []).map((r) => ({
+          local_date: (r as { local_date?: string }).local_date,
+          created_at: (r as { created_at?: string }).created_at,
+          user_id_suffix: shortId((r as { user_id?: string }).user_id),
+        })),
       })
       return
     }
@@ -164,10 +214,22 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       .maybeSingle()
 
     if (uErr) {
-      console.error('[checkin] cohort compliance confirm update', part.id, uErr)
+      console.error('[cohort-compliance] confirm UPDATE error', { cohortParticipantId: part.id, uErr })
       return
     }
-    if (!updated) return
+    if (!updated?.id) {
+      console.warn('[cohort-compliance] confirm UPDATE returned 0 rows (race or status not applied)', {
+        cohortParticipantId: part.id,
+        ...logCtx,
+      })
+      return
+    }
+
+    console.log('[cohort-compliance] immediate confirm OK', {
+      cohortParticipantId: part.id,
+      distinctDayCount: n,
+      ...logCtx,
+    })
 
     const { studyName, productName } = studyAndProductNamesFromCohortRow(
       cohort as { product_name?: string | null; brand_name?: string | null },

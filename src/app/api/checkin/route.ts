@@ -38,21 +38,33 @@ export async function POST(request: NextRequest) {
     // standard path so B2C sliders persist. Request body is read once for both branches.
     const { data: cohortProfileRow } = await supabase
       .from('profiles')
-      .select('cohort_id')
+      .select('id, cohort_id')
       .eq('user_id', user.id)
       .maybeSingle()
 
+    const cohortProfileId = (cohortProfileRow as { id?: string } | null)?.id
     const cohortSlugRaw = (cohortProfileRow as { cohort_id?: string | null } | null)?.cohort_id
     const cohortSlug = cohortSlugRaw != null ? String(cohortSlugRaw).trim() : ''
     const todayYmdForBranch = parseClientLocalDateYmd(body)
-    if (
-      cohortSlug &&
+    const useCohortBranch =
+      !!cohortSlug &&
       (await shouldUseCohortCheckinBranch({
         authUserId: user.id,
         cohortSlug,
         todayYmd: todayYmdForBranch,
       }))
-    ) {
+    if (!useCohortBranch && cohortSlug) {
+      try {
+        console.warn('[checkin] cohort branch skipped (B2C path); compliance hook may rely on post-upsert confirm', {
+          authUserIdSuffix: String(user.id).slice(-8),
+          cohortSlug,
+          todayYmd: todayYmdForBranch,
+        })
+      } catch {
+        /* ignore */
+      }
+    }
+    if (useCohortBranch) {
       const clamp10 = (v: unknown): number | null => {
         const n = Number(v)
         if (!Number.isFinite(n)) return null
@@ -393,6 +405,20 @@ export async function POST(request: NextRequest) {
           .eq('user_id', user.id)
       } catch (e2) { try { console.log('[dashboard_cache] update invalidate error (ignored):', (e2 as any)?.message || e2) } catch {} }
     }
+
+    // Safety net: cohort profile + B2C path still upserts daily_entries; confirm when ≥2 distinct days (immediate path was cohort-only).
+    if (cohortSlug && cohortProfileId) {
+      try {
+        await tryImmediateCohortComplianceConfirm({
+          authUserId: user.id,
+          profileId: cohortProfileId,
+          cohortSlug,
+        })
+      } catch (e) {
+        console.error('[checkin] cohort compliance confirm (b2c path)', e)
+      }
+    }
+
     return NextResponse.json({ success: true, id: (upserted as any)?.id, upserted: true, micro_wins: microWins })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
