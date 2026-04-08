@@ -82,13 +82,19 @@ export async function POST(request: NextRequest) {
       const sobRaw = body.sleep_onset_bucket
       const nwRaw = body.night_wakes
       if (checkinFields.includes('sleep_onset_bucket')) {
-        if (sobRaw !== undefined && sobRaw !== null && ![1, 2, 3, 4].includes(Number(sobRaw))) {
-          return NextResponse.json({ error: 'Invalid sleep_onset_bucket value' }, { status: 400 })
+        if (sobRaw === undefined || sobRaw === null || ![1, 2, 3, 4].includes(Number(sobRaw))) {
+          return NextResponse.json(
+            { error: 'Time to fall asleep is required for this cohort check-in.' },
+            { status: 400 },
+          )
         }
       }
       if (checkinFields.includes('night_wakes')) {
-        if (nwRaw !== undefined && nwRaw !== null && ![0, 1, 2].includes(Number(nwRaw))) {
-          return NextResponse.json({ error: 'Invalid night_wakes value' }, { status: 400 })
+        if (nwRaw === undefined || nwRaw === null || ![0, 1, 2].includes(Number(nwRaw))) {
+          return NextResponse.json(
+            { error: 'Night wakings selection is required for this cohort check-in.' },
+            { status: 400 },
+          )
         }
       }
       const localDate = parseClientLocalDateYmd(body)

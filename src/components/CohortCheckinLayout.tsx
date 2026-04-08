@@ -4,9 +4,8 @@
  * Cohort-only daily check-in UI. Fields come from public.cohorts.checkin_fields (via /api/me).
  * Standard users never see this component.
  *
- * Validation note: Slider fields (sleep_quality, energy, etc.) default to 5 and are always sent;
- * optional bucket fields (sleep_onset_bucket, night_wakes) omit from the POST when unset.
- * The API requires slider fields present in cohort checkin_fields — there is no “unanswered slider” bug.
+ * Save is gated until every key in normalized `checkin_fields` is explicitly answered: sliders require
+ * at least one interaction each (no silent default 5), bucket fields require a selection.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -90,13 +89,32 @@ export default function CohortCheckinLayout({
 
   const fields = useMemo(() => normalizeCohortCheckinFields(checkinFieldsProp), [checkinFieldsProp])
   const [values, setValues] = useState<Record<string, number | null>>(() => buildInitialValues(fields))
+  /** Sliders start at 5 visually but save is blocked until the user moves each slider at least once. */
+  const [sliderTouched, setSliderTouched] = useState<Record<string, boolean>>({})
   const [selectedConfoundTags, setSelectedConfoundTags] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [saved, setSaved] = useState(false)
 
+  const cohortCheckinComplete = useMemo(() => {
+    for (const f of fields) {
+      if (f === 'sleep_onset_bucket' || f === 'night_wakes') {
+        const x = values[f]
+        if (x === null || x === undefined) return false
+        continue
+      }
+      if (isCohortCheckinSliderField(f)) {
+        if (!sliderTouched[f]) return false
+        const n = values[f]
+        if (typeof n !== 'number' || Number.isNaN(n)) return false
+      }
+    }
+    return true
+  }, [fields, values, sliderTouched])
+
   useEffect(() => {
     setValues(buildInitialValues(fields))
+    setSliderTouched({})
   }, [fields.join('|')])
 
   useEffect(() => {
@@ -104,6 +122,7 @@ export default function CohortCheckinLayout({
       setSaved(false)
       setMessage('')
       setSelectedConfoundTags([])
+      setSliderTouched({})
     }
   }, [isOpen])
 
@@ -120,6 +139,10 @@ export default function CohortCheckinLayout({
   }
 
   const handleCohortSubmit = async () => {
+    if (!cohortCheckinComplete) {
+      setMessage('Complete every metric in this check-in before saving.')
+      return
+    }
     setIsSaving(true)
     setMessage('')
     try {
@@ -249,7 +272,9 @@ export default function CohortCheckinLayout({
                           <button
                             key={o.value}
                             type="button"
-                            onClick={() => setNum('sleep_onset_bucket', o.value)}
+                            onClick={() => {
+                              setNum('sleep_onset_bucket', o.value)
+                            }}
                             className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
                               sleepOnsetBucket === o.value
                                 ? 'border-gray-900 bg-gray-900 text-white'
@@ -278,7 +303,9 @@ export default function CohortCheckinLayout({
                           <button
                             key={o.value}
                             type="button"
-                            onClick={() => setNum('night_wakes', o.value)}
+                            onClick={() => {
+                              setNum('night_wakes', o.value)
+                            }}
                             className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
                               nightWakes === o.value
                                 ? 'border-gray-900 bg-gray-900 text-white'
@@ -311,7 +338,11 @@ export default function CohortCheckinLayout({
                           min={1}
                           max={10}
                           value={v}
-                          onChange={(e) => setNum(fieldKey, Number(e.target.value))}
+                          onChange={(e) => {
+                            const n = Number(e.target.value)
+                            setNum(fieldKey, n)
+                            setSliderTouched((prev) => ({ ...prev, [fieldKey]: true }))
+                          }}
                           className="flex-1 h-3 rounded-lg appearance-none cursor-pointer bg-gray-300 min-w-0"
                         />
                         <span className="w-10 text-right text-sm font-medium text-gray-700">{v}/10</span>
@@ -349,12 +380,17 @@ export default function CohortCheckinLayout({
                 </p>
               </div>
 
+              {!cohortCheckinComplete ? (
+                <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                  Complete every metric in this check-in before saving.
+                </p>
+              ) : null}
               {message && <p className="mb-4 text-sm text-gray-800">{message}</p>}
 
               <button
                 type="button"
                 onClick={handleCohortSubmit}
-                disabled={isSaving}
+                disabled={isSaving || !cohortCheckinComplete}
                 className="mt-2 w-full rounded-xl bg-gray-900 text-white py-3 font-semibold hover:bg-gray-800 disabled:opacity-60"
               >
                 {isSaving ? 'Saving…' : 'Save check-in'}
