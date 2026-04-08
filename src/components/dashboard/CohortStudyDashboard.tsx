@@ -10,6 +10,7 @@ import {
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
+import { cohortPartnerLogoPublicCandidates } from '@/lib/cohortStudyPageAssets'
 
 export type CohortStartStudyBody = {
   productArrived: 'today' | 'yesterday' | 'few_days_ago' | 'skip'
@@ -48,6 +49,65 @@ export interface CohortStudyDashboardProps {
   studyComplete: boolean
   studyEndDate: string | null
   onOpenCheckin: () => void
+}
+
+/** DoNotAge → DNA asset; else try `/cohorts/{brand-slug}/logo.png` then `/cohorts/{cohort-slug}/logo.png`; on failure, wordmark text. */
+function CohortDashboardPartnerMark({
+  brandDisplay,
+  cohortId,
+}: {
+  brandDisplay: string
+  cohortId: string
+}) {
+  const isDonotage = /donotage/i.test(brandDisplay)
+  const candidates = useMemo(
+    () => cohortPartnerLogoPublicCandidates(cohortId, brandDisplay),
+    [cohortId, brandDisplay],
+  )
+  const candidateKey = candidates.join('|')
+  const [attempt, setAttempt] = useState(0)
+  const [useTextFallback, setUseTextFallback] = useState(false)
+
+  useEffect(() => {
+    setAttempt(0)
+    setUseTextFallback(false)
+  }, [candidateKey])
+
+  if (isDonotage) {
+    return (
+      <img
+        src="/DNA-logo-black.png"
+        alt={brandDisplay}
+        className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
+        width={200}
+        height={52}
+      />
+    )
+  }
+
+  if (useTextFallback || candidates.length === 0) {
+    return (
+      <span className="text-xl font-bold text-gray-900 sm:text-2xl">{brandDisplay}</span>
+    )
+  }
+
+  const src = candidates[attempt]
+  return (
+    <img
+      src={encodeURI(src)}
+      alt={brandDisplay}
+      className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
+      width={200}
+      height={52}
+      onError={() => {
+        if (attempt < candidates.length - 1) {
+          setAttempt((a) => a + 1)
+        } else {
+          setUseTextFallback(true)
+        }
+      }}
+    />
+  )
 }
 
 function formatGateTimeRemaining(deadlineMs: number, nowMs: number): { line: string; sub: string } {
@@ -461,7 +521,7 @@ function StudySupportModal({
 }
 
 export default function CohortStudyDashboard({
-  cohortId: _cohortId,
+  cohortId,
   checkinFields: checkinFieldsProp = null,
   cohortCompletionRewardStoreCredit = false,
   cohortStoreCreditTitle = null,
@@ -484,7 +544,6 @@ export default function CohortStudyDashboard({
   studyEndDate: _studyEndDate,
   onOpenCheckin,
 }: CohortStudyDashboardProps) {
-  void _cohortId
   void _startDateIso
   void _currentStreak
   void _studyEndDate
@@ -610,17 +669,7 @@ export default function CohortStudyDashboard({
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
         <div className="flex items-center justify-between gap-4 mb-4">
-          {/donotage/i.test(brandDisplay) ? (
-            <img
-              src="/DNA-logo-black.png"
-              alt={brandDisplay}
-              className="h-11 w-auto max-w-[min(200px,52vw)] object-contain object-left sm:h-12 md:h-[3.25rem]"
-              width={200}
-              height={52}
-            />
-          ) : (
-            <span className="text-xl font-bold text-gray-900 sm:text-2xl">{brandDisplay}</span>
-          )}
+          <CohortDashboardPartnerMark brandDisplay={brandDisplay} cohortId={cohortId} />
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
             alt="BioStackr"

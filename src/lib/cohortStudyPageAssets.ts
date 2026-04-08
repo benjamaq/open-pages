@@ -10,3 +10,37 @@ export const COGNITIVE_COHORT_STUDY_ASSETS = {
 
 export const SLEEP_PACK_PRODUCT_IMAGE = '/suresleep-1280x1280.png'
 export const GENERIC_STUDY_PLACEHOLDER_IMAGE = '/bioshot.png'
+
+/** Lowercase hyphenated segment for `/public/cohorts/{segment}/…` (no hardcoded cohorts). */
+export function slugifyCohortAssetSegment(raw: string): string {
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/['\u2019]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/**
+ * Ordered `/cohorts/{folder}/logo.png` URLs to try for the cohort dashboard partner mark.
+ * Prefer brand-based folder (matches short asset packs like `public/cohorts/seeking-health/`)
+ * when the DB slug is longer (e.g. `seeking-health-optimal-focus`).
+ */
+export function cohortPartnerLogoPublicCandidates(
+  cohortSlug: string,
+  brandName: string,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (segment: string) => {
+    const s = slugifyCohortAssetSegment(segment)
+    if (!s) return
+    const path = `/cohorts/${s}/logo.png`
+    if (seen.has(path)) return
+    seen.add(path)
+    out.push(path)
+  }
+  push(brandName)
+  push(cohortSlug)
+  return out
+}
