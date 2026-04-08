@@ -10,6 +10,7 @@ import {
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { ensureCohortRewardClaimToken } from '@/lib/cohortRewardClaimDb'
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,8 @@ type CohortMeta = {
   study_days: number | null
   product_name: string | null
   brand_name: string | null
+  study_landing_reward_config?: unknown
+  checkin_fields?: unknown
 }
 
 async function resolveAuthEmail(authUserId: string): Promise<string | null> {
@@ -78,7 +81,7 @@ async function processCompletionPass(dry: boolean) {
   if (cohortIds.length > 0) {
     const { data: cRows, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, study_days, product_name, brand_name')
+      .select('id, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .in('id', cohortIds)
     if (cErr) {
       console.error('[cohort-study-completion] cohorts:', cErr)
@@ -147,12 +150,21 @@ async function processCompletionPass(dry: boolean) {
         ? String(cdef.product_name).trim()
         : null) || 'your study'
 
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      (cdef || {}) as { study_landing_reward_config?: unknown },
+    )
+
     const send = await sendCohortStudyCompletionEmail({
       to: email,
       authUserId: authId,
       productName,
       partnerBrandName: cdef?.brand_name ?? null,
       rewardClaimAbsoluteUrl,
+      storeCreditPartnerReward,
+      storeCreditTitle,
     })
     if (!send.success) {
       errors.push(`${row.id} email: ${send.error || 'send failed'}`)
@@ -208,7 +220,7 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
   if (cohortIds.length > 0) {
     const { data: cRows, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, study_days, product_name, brand_name')
+      .select('id, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .in('id', cohortIds)
     if (cErr) {
       console.error('[cohort-study-completion] backfill cohorts:', cErr)
@@ -253,12 +265,21 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
         ? String(cdef.product_name).trim()
         : null) || 'your study'
 
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      (cdef || {}) as { study_landing_reward_config?: unknown },
+    )
+
     const mail = await sendCohortStudyCompletionEmail({
       to: email,
       authUserId: authId,
       productName,
       partnerBrandName: cdef?.brand_name ?? null,
       rewardClaimAbsoluteUrl,
+      storeCreditPartnerReward,
+      storeCreditTitle,
     })
     if (!mail.success) {
       errors.push(`${row.id} backfill email: ${mail.error || 'send failed'}`)
@@ -329,10 +350,15 @@ async function processResultReadyEmails(dry: boolean) {
 
     const { data: cRow } = await supabaseAdmin
       .from('cohorts')
-      .select('product_name, brand_name')
+      .select('product_name, brand_name, study_landing_reward_config, checkin_fields')
       .eq('id', r.cohort_id)
       .maybeSingle()
-    const cMeta = cRow as { product_name?: string | null; brand_name?: string | null } | null
+    const cMeta = cRow as {
+      product_name?: string | null
+      brand_name?: string | null
+      study_landing_reward_config?: unknown
+      checkin_fields?: unknown
+    } | null
     const productName =
       (cMeta?.product_name != null && String(cMeta.product_name).trim() !== ''
         ? String(cMeta.product_name).trim()
@@ -352,6 +378,13 @@ async function processResultReadyEmails(dry: boolean) {
       rewardClaimAbsoluteUrl = `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(String(cr.token).trim())}`
     }
 
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      (cMeta || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      (cMeta || {}) as { study_landing_reward_config?: unknown },
+    )
+
     const mail = await sendCohortResultReadyEmail({
       to: email,
       authUserId: r.user_id,
@@ -359,6 +392,8 @@ async function processResultReadyEmails(dry: boolean) {
       partnerBrandName: cMeta?.brand_name ?? null,
       rewardClaimAbsoluteUrl,
       proRewardAlreadyClaimed,
+      storeCreditPartnerReward,
+      storeCreditTitle,
     })
     if (!mail.success) {
       errors.push(`result ${r.cohort_id}/${r.user_id}: ${mail.error}`)

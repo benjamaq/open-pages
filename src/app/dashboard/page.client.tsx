@@ -216,6 +216,10 @@ export function DashboardPageClient() {
               <CohortStudyDashboard
                 cohortId={String(me?.cohortId || '')}
                 checkinFields={cohortCheckinFields}
+                cohortCompletionRewardStoreCredit={Boolean(me?.cohortCompletionRewardStoreCredit)}
+                cohortStoreCreditTitle={
+                  typeof me?.cohortStoreCreditTitle === 'string' ? me.cohortStoreCreditTitle : null
+                }
                 welcomeFirstName={
                   typeof me?.profileWelcomeFirstName === 'string' && me.profileWelcomeFirstName.trim()
                     ? me.profileWelcomeFirstName.trim()

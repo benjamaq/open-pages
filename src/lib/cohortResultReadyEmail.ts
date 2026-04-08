@@ -18,6 +18,8 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
   resultHref: string
   rewardClaimAbsoluteUrl?: string | null
   proRewardAlreadyClaimed?: boolean
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): { subject: string; html: string } {
   const product = String(params.productName || 'your study').trim() || 'your study'
   const productEsc = escapeHtml(product)
@@ -27,6 +29,10 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
   const resultHref = String(params.resultHref || '').trim()
   const rewardClaimRaw = String(params.rewardClaimAbsoluteUrl || '').trim()
   const proAlready = Boolean(params.proRewardAlreadyClaimed)
+  const storeCredit = params.storeCreditPartnerReward === true
+  const creditTitleEsc = escapeHtml(
+    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+  )
 
   const appBase = cohortEmailPublicOrigin()
   const dashboardHref = resultHref
@@ -68,11 +74,15 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
         `<p style="margin:0;color:#6b7280;font-size:14px;line-height:1.55;">Open your results while signed in to claim in one step. If you use a claim link, sign in with the same study account.</p>` +
         `</div>`
 
-  const partnerRewardBlock =
-    `<div style="margin:0;">` +
-    `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${partnerEsc} · ${productEsc}</p>` +
-    `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your 3-month supply of <strong>${productEsc}</strong> will be shipped automatically to the address you provided during signup. <strong>${partnerEsc}</strong> handles fulfilment.</p>` +
-    `</div>`
+  const partnerRewardBlock = storeCredit
+    ? `<div style="margin:0;">` +
+      `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${partnerEsc} · completion reward</p>` +
+      `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your <strong>${creditTitleEsc}</strong> from <strong>${partnerEsc}</strong> is handled per the study terms. You&apos;ll receive details by email where applicable.</p>` +
+      `</div>`
+    : `<div style="margin:0;">` +
+      `<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${partnerEsc} · ${productEsc}</p>` +
+      `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">Your 3-month supply of <strong>${productEsc}</strong> will be shipped automatically to the address you provided during signup. <strong>${partnerEsc}</strong> handles fulfilment.</p>` +
+      `</div>`
 
   const rewardsSectionClose = `</div>`
 
@@ -98,6 +108,8 @@ export async function sendCohortResultReadyEmail(params: {
   partnerBrandName?: string | null
   rewardClaimAbsoluteUrl?: string | null
   proRewardAlreadyClaimed?: boolean
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -126,6 +138,8 @@ export async function sendCohortResultReadyEmail(params: {
     resultHref,
     rewardClaimAbsoluteUrl: params.rewardClaimAbsoluteUrl,
     proRewardAlreadyClaimed: params.proRewardAlreadyClaimed,
+    storeCreditPartnerReward: params.storeCreditPartnerReward,
+    storeCreditTitle: params.storeCreditTitle,
   })
 
   return sendEmail({ to, subject, html })

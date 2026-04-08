@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { normalizeCohortCheckinFields } from "@/lib/cohortCheckinFields";
+import {
+  cohortUsesStoreCreditPartnerReward,
+  storeCreditTitleFromCohortRow,
+} from "@/lib/cohortStudyLandingRewards";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   countDistinctDailyEntriesSinceForUserIds,
@@ -88,6 +92,9 @@ export async function GET(request: Request) {
     let cohortParticipantDropped = false;
     /** Set when we load cohort_participants (debug / logging); null if not in cohort participant path. */
     let cohortParticipantStatus: string | null = null;
+    /** Partner completion incentive is store credit (vs product supply) — from `study_landing_reward_config`. */
+    let cohortCompletionRewardStoreCredit = false;
+    let cohortStoreCreditTitle: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -222,7 +229,7 @@ export async function GET(request: Request) {
             const { data: cdef, error: cdefErr } = await supabaseAdmin
               .from("cohorts")
               .select(
-                "id, checkin_fields, product_name, brand_name, study_days, start_date, end_date",
+                "id, checkin_fields, product_name, brand_name, study_days, start_date, end_date, study_landing_reward_config",
               )
               .eq("slug", cohortId)
               .maybeSingle();
@@ -246,6 +253,15 @@ export async function GET(request: Request) {
 
             if (cdef != null) {
               showCohortStudyDashboard = true;
+              cohortCompletionRewardStoreCredit = cohortUsesStoreCreditPartnerReward(
+                cdef as {
+                  study_landing_reward_config?: unknown;
+                  checkin_fields?: unknown;
+                },
+              );
+              cohortStoreCreditTitle = storeCreditTitleFromCohortRow(
+                cdef as { study_landing_reward_config?: unknown },
+              );
               const pn = (cdef as { product_name?: string | null } | null)
                 ?.product_name;
               cohortStudyProductName =
@@ -685,6 +701,8 @@ export async function GET(request: Request) {
       showCohortStudyDashboard,
       cohortParticipantDropped,
       cohortParticipantStatus,
+      cohortCompletionRewardStoreCredit,
+      cohortStoreCreditTitle,
     });
   } catch (e: any) {
     return NextResponse.json(

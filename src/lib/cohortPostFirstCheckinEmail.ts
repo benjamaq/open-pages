@@ -11,6 +11,7 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 
 export type CohortPostFirstCheckinEmailResult = {
   sent: boolean
@@ -24,6 +25,9 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   productName: string
   partnerBrandName: string
   checkInHref: string
+  /** When true, no product-supply reward or “dispatch supply” wording. */
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
   const studyEsc = escapeHtml(params.studyName)
@@ -33,18 +37,30 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   )
   const partnerBrandPlain = String(params.partnerBrandName || 'Study partner').trim() || 'Study partner'
   const checkInHref = String(params.checkInHref || '').trim()
+  const storeCredit = params.storeCreditPartnerReward === true
+  const creditTitleEsc = escapeHtml(
+    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+  )
 
   const appBase = cohortEmailPublicOrigin()
+
+  const logisticsLi = storeCredit
+    ? `<li style="margin:0 0 8px;">You&apos;ll receive study and shipping updates from <strong>${partnerBrand}</strong> by email</li>`
+    : `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>`
+
+  const rewardLi = storeCredit
+    ? `<li style="margin:0;">Your completion rewards are locked in — <strong>${creditTitleEsc}</strong> from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro (per study terms)</li>`
+    : `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
     `<p style="margin:0 0 16px;">You've completed your first baseline check-in for the <strong>${studyEsc}</strong> study on <strong>BioStackr</strong> — one step away from securing your place with <strong>${partnerBrand}</strong>.</p>` +
     `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
     `<ul style="margin:0 0 20px;padding-left:20px;">` +
-    `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>` +
+    logisticsLi +
     `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
     `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
-    `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>` +
+    rewardLi +
     `</ul>` +
     `<p style="margin:28px 0 8px;text-align:center;">` +
     `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
@@ -93,7 +109,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
   try {
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name, brand_name')
+      .select('id, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .eq('slug', slug)
       .maybeSingle()
     if (cErr || !cohort?.id) {
@@ -186,12 +202,21 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
     const partnerBrandPlain = String((cohort as { brand_name?: string | null }).brand_name || 'Study partner').trim() || 'Study partner'
     const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
 
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      cohort as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      cohort as { study_landing_reward_config?: unknown },
+    )
+
     const { subject, html } = buildCohortPostFirstCheckinTransactionalEmailHtml({
       firstNameForGreeting: firstNameFromAuthUser(auth.user),
       studyName,
       productName,
       partnerBrandName: partnerBrandPlain,
       checkInHref,
+      storeCreditPartnerReward,
+      storeCreditTitle,
     })
 
     const r = await sendEmail({

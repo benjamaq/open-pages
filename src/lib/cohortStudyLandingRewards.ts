@@ -3,6 +3,8 @@
  * Defaults preserve the historical DoNotAge-style product-supply completion reward when config is absent.
  */
 
+import { isCognitiveShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+
 export type CompletionPartnerRewardType = 'product_supply' | 'store_credit'
 
 export type StudyLandingRewardConfigJson = {
@@ -186,4 +188,28 @@ export function resolveStudyLandingRewards(params: {
       footer: 'Completion reward',
     },
   }
+}
+
+/**
+ * Store-credit vs product-supply partner completion reward (transactional email copy).
+ * Mirrors `resolveStudyLandingRewards` when `cohortRow` has no full product/brand context.
+ */
+export function cohortUsesStoreCreditPartnerReward(cohortRow: {
+  study_landing_reward_config?: unknown
+  checkin_fields?: unknown
+}): boolean {
+  const cfg = parseStudyLandingRewardConfig(cohortRow.study_landing_reward_config)
+  const explicit = cfg?.completion_partner_reward_type
+  if (explicit === 'store_credit') return true
+  if (explicit === 'product_supply') return false
+  const normalized = normalizeCohortCheckinFields(cohortRow.checkin_fields)
+  if (isCognitiveShapedCheckinFields(normalized)) return true
+  return false
+}
+
+export function storeCreditTitleFromCohortRow(cohortRow: { study_landing_reward_config?: unknown }): string {
+  const cfg = parseStudyLandingRewardConfig(cohortRow.study_landing_reward_config)
+  const t = cfg?.partner_store_credit?.title
+  const s = String(t ?? '').trim()
+  return s || '$120 store credit'
 }

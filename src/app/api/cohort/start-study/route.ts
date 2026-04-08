@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortStudyStartEmail } from '@/lib/cohortStudyStartEmail'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     const { data: cohortRow, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name, brand_name, study_days')
+      .select('id, product_name, brand_name, study_days, study_landing_reward_config, checkin_fields')
       .eq('slug', cohortSlug)
       .maybeSingle()
     if (cErr || !cohortRow?.id) {
@@ -132,6 +133,13 @@ export async function POST(request: NextRequest) {
       typeof studyDaysRaw === 'number' && Number.isFinite(studyDaysRaw) && studyDaysRaw > 0
         ? Math.floor(studyDaysRaw)
         : 21
+
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      cohortRow as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      cohortRow as { study_landing_reward_config?: unknown },
+    )
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
@@ -215,6 +223,8 @@ export async function POST(request: NextRequest) {
         productName,
         partnerBrandName: partnerBrandName || null,
         studyDurationDays,
+        storeCreditPartnerReward,
+        storeCreditTitle,
       })
       if (!r.success) {
         console.warn('[cohort/start-study] email', r.error)

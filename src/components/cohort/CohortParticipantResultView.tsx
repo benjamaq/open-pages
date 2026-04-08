@@ -329,6 +329,16 @@ export default function CohortParticipantResultView({
     parsedMetrics.confidenceLabel != null
   const showOutcomeBody = hasStructuredContent || hasMetricBlock
 
+  const metricsRootForReward = recordField(j.metrics) ?? {}
+  const metricKeysForReward = Object.keys(metricsRootForReward).filter((mk) =>
+    recordField(metricsRootForReward[mk]),
+  )
+  const storeCreditPartnerRewardUi =
+    metricKeysForReward.length > 0 &&
+    !metricKeysForReward.some(
+      (mk) => mk.includes('sleep') || mk === 'night_wakes' || mk === 'sleep_onset_bucket',
+    )
+
   const productLabel = (payload.product_name && payload.product_name.trim()) || 'your study product'
   const recommendationText = cohortUsageRecommendation(parsedMetrics.effectSizeNormalized, productLabel)
 
@@ -601,8 +611,17 @@ export default function CohortParticipantResultView({
                 : 'Your partner reward'}
             </h2>
             <p className="mt-3 sm:mt-4 max-w-prose text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
-              Your 3-month supply of {productLabel} will be shipped automatically to the address you provided during
-              signup.
+              {storeCreditPartnerRewardUi ? (
+                <>
+                  Your <strong>$120 store credit</strong> from {payload.brand_name?.trim() || 'the study partner'} is
+                  handled per the study terms. You&apos;ll receive details by email where applicable.
+                </>
+              ) : (
+                <>
+                  Your 3-month supply of {productLabel} will be shipped automatically to the address you provided during
+                  signup.
+                </>
+              )}
             </p>
           </article>
 

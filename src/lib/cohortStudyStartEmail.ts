@@ -14,6 +14,8 @@ export function buildCohortStudyStartTransactionalEmailHtml(params: {
   productName: string
   partnerBrandName: string
   studyDurationDays?: number
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): { subject: string; html: string } {
   const product = String(params.productName || 'your study product').trim() || 'your study product'
   const productEsc = escapeHtml(product)
@@ -24,11 +26,19 @@ export function buildCohortStudyStartTransactionalEmailHtml(params: {
       ? Math.floor(params.studyDurationDays)
       : 21
   const first = escapeHtml(params.firstNameForGreeting)
+  const storeCredit = params.storeCreditPartnerReward === true
+  const creditTitleEsc = escapeHtml(
+    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+  )
 
   const subject = `Your ${product} study starts today`
 
   const appBase = cohortEmailPublicOrigin()
   const dashboardHref = `${appBase}${cohortDashboardStudyPath()}`
+
+  const completionRewardsParagraph = storeCredit
+    ? `<p style="margin:0 0 16px;">Participants who complete the full study receive <strong>${creditTitleEsc}</strong> from <strong>${partnerBrand}</strong> plus 3 months of BioStackr Pro, per the study terms.</p>`
+    : `<p style="margin:0 0 16px;">Participants who complete the full study receive partner fulfilment (where applicable — e.g. a 3-month supply of <strong>${productEsc}</strong> from <strong>${partnerBrand}</strong>) plus BioStackr Pro per the study terms.</p>`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -42,7 +52,7 @@ export function buildCohortStudyStartTransactionalEmailHtml(params: {
     `<p style="margin:0 0 6px;"><strong>If you&apos;re unwell</strong></p>` +
     `<p style="margin:0 0 16px;">Pause the product until you feel better unless your clinician says otherwise. Tag those days. Resume when you&apos;re recovered — your study window continues from where you left off.</p>` +
     `<p style="margin:0 0 6px;"><strong>Completion rewards</strong></p>` +
-    `<p style="margin:0 0 16px;">Participants who complete the full study receive partner fulfilment (where applicable — e.g. a 3-month supply of <strong>${productEsc}</strong> from <strong>${partnerBrand}</strong>) plus BioStackr Pro per the study terms.</p>` +
+    completionRewardsParagraph +
     `<p style="margin:0 0 20px;">Thank you for taking part — we&apos;ll translate your check-ins into a clear, personal summary at the end.</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(dashboardHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">View your study dashboard →</a>` +
@@ -65,6 +75,8 @@ export async function sendCohortStudyStartEmail(params: {
   partnerBrandName?: string | null
   /** Calendar length of the study window (for subject / copy). Defaults to 21. */
   studyDurationDays?: number
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -85,6 +97,8 @@ export async function sendCohortStudyStartEmail(params: {
     productName: product,
     partnerBrandName: partnerPlain,
     studyDurationDays: params.studyDurationDays,
+    storeCreditPartnerReward: params.storeCreditPartnerReward,
+    storeCreditTitle: params.storeCreditTitle,
   })
 
   return sendEmail({ to, subject, html })

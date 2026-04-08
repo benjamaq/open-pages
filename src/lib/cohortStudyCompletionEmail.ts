@@ -13,16 +13,26 @@ export function buildCohortStudyCompletionTransactionalEmailHtml(params: {
   firstNameForGreeting: string
   productName: string
   partnerBrandName: string
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): { subject: string; html: string } {
   const product = String(params.productName || 'your study').trim() || 'your study'
   const productEsc = escapeHtml(product)
   const partnerPlain = String(params.partnerBrandName ?? 'Study partner').trim() || 'Study partner'
   const partnerBrand = escapeHtml(partnerPlain)
   const first = escapeHtml(params.firstNameForGreeting)
+  const storeCredit = params.storeCreditPartnerReward === true
+  const creditTitleEsc = escapeHtml(
+    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+  )
 
   const appBase = cohortEmailPublicOrigin()
   const dashboardHref = `${appBase}${cohortDashboardStudyPath()}`
   const subject = `Thank you — your ${product} study is complete`
+
+  const partnerRewardLi = storeCredit
+    ? `<li style="margin:0;"><strong>${creditTitleEsc}</strong> from <strong>${partnerBrand}</strong> (per study terms)</li>`
+    : `<li style="margin:0;">A 3-month supply of <strong>${productEsc}</strong> (via <strong>${partnerBrand}</strong>)</li>`
 
   const rewardsInfoBlock =
     `<div style="margin:24px 0;padding:16px 18px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">` +
@@ -30,7 +40,7 @@ export function buildCohortStudyCompletionTransactionalEmailHtml(params: {
     `<p style="margin:0 0 10px;font-size:15px;line-height:1.5;color:#374151;">You&apos;ve unlocked:</p>` +
     `<ul style="margin:0;padding-left:20px;color:#374151;font-size:15px;line-height:1.55;">` +
     `<li style="margin:0 0 6px;">3 months of BioStackr Pro</li>` +
-    `<li style="margin:0;">A 3-month supply of <strong>${productEsc}</strong> (via <strong>${partnerBrand}</strong>)</li>` +
+    partnerRewardLi +
     `</ul>` +
     `<p style="margin:12px 0 0;font-size:14px;line-height:1.5;color:#6b7280;">You&apos;ll receive full details with your results.</p>` +
     `</div>`
@@ -62,6 +72,8 @@ export async function sendCohortStudyCompletionEmail(params: {
   partnerBrandName?: string | null
   /** Retained for callers (cron); claim CTA lives in result-ready email and on the result page only. */
   rewardClaimAbsoluteUrl?: string | null
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -83,6 +95,8 @@ export async function sendCohortStudyCompletionEmail(params: {
     firstNameForGreeting,
     productName: product,
     partnerBrandName: partnerPlain,
+    storeCreditPartnerReward: params.storeCreditPartnerReward,
+    storeCreditTitle: params.storeCreditTitle,
   })
 
   return sendEmail({ to, subject, html })

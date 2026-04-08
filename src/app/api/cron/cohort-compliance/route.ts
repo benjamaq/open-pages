@@ -3,6 +3,7 @@ import {
   sendComplianceConfirmedEmail,
   studyAndProductNamesFromCohortRow,
 } from '@/lib/cohortComplianceConfirmed'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 import { fetchCohortCheckinYmdsSinceEnrollForUserIds } from '@/lib/cohortCheckinCount'
 import {
   cohortParticipantUserIdCandidatesSync,
@@ -136,16 +137,24 @@ export async function GET(request: NextRequest) {
             let studyName = 'study'
             let productName = 'product'
             let brandName: string | null = null
+            let storeCreditPartnerReward = false
+            let storeCreditTitle = '$120 store credit'
             try {
               const { data: cRow } = await supabaseAdmin
                 .from('cohorts')
-                .select('product_name, brand_name')
+                .select('product_name, brand_name, study_landing_reward_config, checkin_fields')
                 .eq('id', p.cohort_id)
                 .maybeSingle()
               const names = studyAndProductNamesFromCohortRow(cRow as { product_name?: string | null; brand_name?: string | null } | null)
               studyName = names.studyName
               productName = names.productName
               brandName = (cRow as { brand_name?: string | null } | null)?.brand_name ?? null
+              storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+                (cRow || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+              )
+              storeCreditTitle = storeCreditTitleFromCohortRow(
+                (cRow || {}) as { study_landing_reward_config?: unknown },
+              )
             } catch (cohErr) {
               console.error('[cohort-compliance] cohort lookup for email', p.cohort_id, cohErr)
             }
@@ -154,6 +163,8 @@ export async function GET(request: NextRequest) {
               studyName,
               productName,
               brandName,
+              storeCreditPartnerReward,
+              storeCreditTitle,
             })
           }
         } else {

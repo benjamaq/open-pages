@@ -11,6 +11,7 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 
 export { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
 
@@ -19,6 +20,8 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   studyName: string
   productName: string
   brandName: string
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
   const study = escapeHtml(params.studyName)
@@ -27,6 +30,12 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   const brand = escapeHtml(partnerPlain)
   const appBase = cohortEmailPublicOrigin()
   const dashboardStudyHref = `${appBase}${cohortDashboardStudyPath()}`
+  const storeCredit = params.storeCreditPartnerReward === true
+  const creditEsc = escapeHtml(String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit')
+
+  const rewardParagraph = storeCredit
+    ? `<p style="margin:0 0 20px;">Your completion rewards — <strong>${creditEsc}</strong> from <strong>${brand}</strong>, plus three months of BioStackr Pro — are locked in from today.</p>`
+    : `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
@@ -39,7 +48,7 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
     `<p style="margin:0 0 18px;">You'll get a short daily reminder from <strong>BioStackr</strong>. Each check-in takes ~30 seconds.</p>` +
     `<p style="margin:0 0 6px;"><strong>At the end</strong></p>` +
     `<p style="margin:0 0 18px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
-    `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>` +
+    rewardParagraph +
     `<p style="margin:0;">Thank you for being part of this.</p>` +
     cohortEmailDashboardCtaHtml(dashboardStudyHref)
 
@@ -60,6 +69,8 @@ export async function sendComplianceConfirmedEmail(params: {
   studyName: string
   productName: string
   brandName?: string | null
+  storeCreditPartnerReward?: boolean
+  storeCreditTitle?: string
 }): Promise<void> {
   try {
     const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(params.authUserId)
@@ -75,6 +86,8 @@ export async function sendComplianceConfirmedEmail(params: {
       studyName: params.studyName,
       productName: params.productName,
       brandName: params.brandName ?? '',
+      storeCreditPartnerReward: params.storeCreditPartnerReward,
+      storeCreditTitle: params.storeCreditTitle,
     })
 
     const r = await sendEmail({
@@ -106,7 +119,7 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
   try {
     const { data: cohort, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name, brand_name')
+      .select('id, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .eq('slug', slug)
       .maybeSingle()
     if (cErr || !cohort?.id) return
@@ -145,11 +158,19 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       cohort as { product_name?: string | null; brand_name?: string | null },
     )
     const brandName = (cohort as { brand_name?: string | null }).brand_name
+    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
+      cohort as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+    )
+    const storeCreditTitle = storeCreditTitleFromCohortRow(
+      cohort as { study_landing_reward_config?: unknown },
+    )
     await sendComplianceConfirmedEmail({
       authUserId: opts.authUserId,
       studyName,
       productName,
       brandName,
+      storeCreditPartnerReward,
+      storeCreditTitle,
     })
   } catch (e) {
     console.error('[checkin] cohort compliance confirm', e)

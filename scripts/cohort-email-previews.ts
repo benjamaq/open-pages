@@ -16,7 +16,13 @@ const root = join(process.cwd(), 'tmp', 'cohort-email-previews')
 
 const PRESETS = [
   { key: 'donotage-sleep', partnerBrandName: 'DoNotAge', productName: 'SureSleep' },
-  { key: 'seeking-health-sample', partnerBrandName: 'Seeking Health', productName: 'Optimal Focus' },
+  {
+    key: 'seeking-health-sample',
+    partnerBrandName: 'Seeking Health',
+    productName: 'Optimal Focus',
+    completionRewardStoreCredit: true,
+    storeCreditTitle: '$120 store credit',
+  },
 ] as const
 
 function main() {
@@ -31,6 +37,8 @@ function main() {
             partnerBrandName: preset.partnerBrandName,
             productName: preset.productName,
             resultReadyRewardVariant,
+            completionRewardStoreCredit: 'completionRewardStoreCredit' in preset ? preset.completionRewardStoreCredit : undefined,
+            storeCreditTitle: 'storeCreditTitle' in preset ? preset.storeCreditTitle : undefined,
           })
           const name = `result-ready__${resultReadyRewardVariant}.html`
           writeFileSync(join(dir, name), html, 'utf8')
@@ -40,6 +48,8 @@ function main() {
       const { html } = renderCohortEmailPreviewHtml(template, {
         partnerBrandName: preset.partnerBrandName,
         productName: preset.productName,
+        completionRewardStoreCredit: 'completionRewardStoreCredit' in preset ? preset.completionRewardStoreCredit : undefined,
+        storeCreditTitle: 'storeCreditTitle' in preset ? preset.storeCreditTitle : undefined,
       })
       writeFileSync(join(dir, `${template}.html`), html, 'utf8')
     }

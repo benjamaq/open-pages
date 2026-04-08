@@ -45,6 +45,9 @@ export type CohortEmailPreviewBranding = {
    * - `default` — inline instructions only
    */
   resultReadyRewardVariant?: 'claim' | 'default' | 'claimed'
+  /** Seeking Health–style: store credit + Pro; no product-supply reward copy. */
+  completionRewardStoreCredit?: boolean
+  storeCreditTitle?: string
 }
 
 function shippingStepFromTemplate(
@@ -76,6 +79,8 @@ export function renderCohortEmailPreviewHtml(
   const placeholderMagic = `${appBase}${cohortDashboardStudyPath()}?preview=1`
   const placeholderResult = `${appBase}/dashboard/cohort-result?preview=1`
   const placeholderClaim = `${appBase}/account?preview=claim`
+  const sc = branding.completionRewardStoreCredit === true
+  const scTitle = String(branding.storeCreditTitle || '$120 store credit').trim() || '$120 store credit'
 
   switch (template) {
     case 'enrollment':
@@ -83,6 +88,8 @@ export function renderCohortEmailPreviewHtml(
         firstName: first,
         productLabel: prod,
         partnerBrandName,
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     case 'result-ready': {
       const v = branding.resultReadyRewardVariant || 'default'
@@ -93,6 +100,8 @@ export function renderCohortEmailPreviewHtml(
         resultHref: placeholderResult,
         rewardClaimAbsoluteUrl: v === 'claim' ? placeholderClaim : '',
         proRewardAlreadyClaimed: v === 'claimed',
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     }
     case 'study-start':
@@ -101,12 +110,16 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         partnerBrandName,
         studyDurationDays: branding.studyDurationDays,
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     case 'study-completion':
       return buildCohortStudyCompletionTransactionalEmailHtml({
         firstNameForGreeting: first,
         productName: prod,
         partnerBrandName,
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     case 'compliance-confirmed':
       return buildComplianceConfirmedTransactionalEmailHtml({
@@ -114,6 +127,8 @@ export function renderCohortEmailPreviewHtml(
         studyName,
         productName: prod,
         brandName: partnerBrandName,
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     case 'post-first-checkin': {
       const checkInHref = cohortEmailCheckInLandingAbsoluteUrl()
@@ -123,6 +138,8 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         partnerBrandName,
         checkInHref,
+        storeCreditPartnerReward: sc,
+        storeCreditTitle: scTitle,
       })
     }
     case 'login-magic-link':

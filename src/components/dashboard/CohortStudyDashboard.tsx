@@ -21,6 +21,9 @@ export interface CohortStudyDashboardProps {
   cohortId: string
   /** Cohort check-in dimensions from `/api/me` (cohorts.checkin_fields). */
   checkinFields?: string[] | null
+  /** From `study_landing_reward_config` via /api/me — store credit vs product-supply completion copy. */
+  cohortCompletionRewardStoreCredit?: boolean
+  cohortStoreCreditTitle?: string | null
   /** Shown as "Welcome back, …" — prefer `profiles` via /api/me `profileWelcomeFirstName`. */
   welcomeFirstName?: string | null
   /** True when cohort_participants.status is `confirmed` and confirmed_at is set (compliance gate cleared in DB). */
@@ -460,6 +463,8 @@ function StudySupportModal({
 export default function CohortStudyDashboard({
   cohortId: _cohortId,
   checkinFields: checkinFieldsProp = null,
+  cohortCompletionRewardStoreCredit = false,
+  cohortStoreCreditTitle = null,
   welcomeFirstName = null,
   cohortConfirmed,
   cohortAwaitingStudyStart = false,
@@ -720,7 +725,15 @@ export default function CohortStudyDashboard({
                 </p>
                 <ul className="mt-2 list-disc pl-5 text-[15px] leading-relaxed text-gray-800 space-y-1">
                   <li>3 months of BioStackr Pro</li>
-                  <li>A 3-month supply of {productName}</li>
+                  {cohortCompletionRewardStoreCredit ? (
+                    <li>
+                      {(typeof cohortStoreCreditTitle === 'string' && cohortStoreCreditTitle.trim() !== ''
+                        ? cohortStoreCreditTitle.trim()
+                        : '$120 store credit') + ' from ' + brandDisplay}
+                    </li>
+                  ) : (
+                    <li>A 3-month supply of {productName}</li>
+                  )}
                 </ul>
                 <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
                   You&apos;ll receive full details with your results.
