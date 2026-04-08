@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Download, Copy, ChevronDown, Plus } from 'lucide-react'
 import { abbreviateSupplementName } from '@/lib/utils/abbreviate'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import CohortCheckinLayout from '@/components/CohortCheckinLayout'
+import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 
 // Constants for symptom tracking
 const coreSymptoms = [
@@ -269,6 +270,17 @@ export default function DailyCheckinModal({
       : showCohortStudyDashboard === false
         ? false
         : Boolean(effectiveCohortId)
+
+  /** Same guard as dashboard `page.client` / `CheckinLauncher` — only real arrays are a valid hint. */
+  const cohortCheckinFieldsResolved = Array.isArray(cohortCheckinFieldsHint)
+    ? cohortCheckinFieldsHint
+    : null
+  /** Remount cohort layout when normalized field set changes; dep string is stable if contents match. */
+  const cohortCheckinLayoutKey = useMemo(() => {
+    return normalizeCohortCheckinFields(cohortCheckinFieldsResolved).join('|')
+  }, [
+    Array.isArray(cohortCheckinFieldsHint) ? cohortCheckinFieldsHint.join('|') : '',
+  ])
 
   // Allowed confounders
   const CONFOUNDERS = [
@@ -963,11 +975,12 @@ useEffect(() => {
   if (useCohortCheckinLayout) {
     return (
       <CohortCheckinLayout
+        key={cohortCheckinLayoutKey}
         isOpen={isOpen}
         onClose={onClose}
         onEnergyUpdate={onEnergyUpdate}
         userId={userId}
-        checkinFields={cohortCheckinFieldsHint}
+        checkinFields={cohortCheckinFieldsResolved}
         cohortStudyProductName={cohortStudyProductName}
       />
     )
