@@ -556,17 +556,19 @@ function IncentiveShelfCard({
       style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
       <div className="flex min-h-0 shrink-0 flex-col bg-neutral-50/30">{visual}</div>
-      <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 px-5 pb-5 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
-        <h3 className="text-[17px] font-bold leading-snug text-neutral-900">{title}</h3>
-        <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{body}</p>
-        {bodyExtra ? (
-          <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{bodyExtra}</p>
-        ) : null}
-        {tagline ? (
-          <p className="text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
-        ) : null}
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-5 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[17px] font-bold leading-snug text-neutral-900">{title}</h3>
+          <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{body}</p>
+          {bodyExtra ? (
+            <p className="text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{bodyExtra}</p>
+          ) : null}
+          {tagline ? (
+            <p className="text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
+          ) : null}
+        </div>
         <p
-          className="pt-1 text-center text-[10px] font-semibold uppercase tracking-wide"
+          className="mt-auto pt-4 text-center text-[10px] font-semibold uppercase tracking-wide"
           style={{ color: RUST }}
         >
           {footer}

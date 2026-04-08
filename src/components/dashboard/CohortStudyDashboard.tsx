@@ -6,11 +6,15 @@ import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
 import {
   cohortCheckinFieldLabel,
   DEFAULT_COHORT_CHECKIN_FIELDS,
+  isCognitiveShapedCheckinFields,
   isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
-import { cohortPartnerLogoPublicCandidates } from '@/lib/cohortStudyPageAssets'
+import {
+  COGNITIVE_COHORT_STUDY_ASSETS,
+  cohortPartnerLogoPublicCandidates,
+} from '@/lib/cohortStudyPageAssets'
 import {
   COHORT_DASHBOARD_BIOSTACKR_ROW_CLASS,
   COHORT_DASHBOARD_PARTNER_MARK_CLASS,
@@ -55,13 +59,20 @@ export interface CohortStudyDashboardProps {
   onOpenCheckin: () => void
 }
 
-/** DoNotAge → DNA asset; else try `/cohorts/{brand-slug}/logo.png` then `/cohorts/{cohort-slug}/logo.png`; on failure, wordmark text. */
+/**
+ * DoNotAge → DNA asset; cognitive-shaped cohorts (e.g. Seeking Health) → pack logo under
+ * `COGNITIVE_COHORT_STUDY_ASSETS`; else try `/cohorts/{brand-slug}/logo.png` then `/cohorts/{cohort-slug}/logo.png`;
+ * on failure, wordmark text.
+ */
 function CohortDashboardPartnerMark({
   brandDisplay,
   cohortId,
+  cognitiveShapedCohort,
 }: {
   brandDisplay: string
   cohortId: string
+  /** When true, use the same Seeking Health asset path as `/study/[slug]` (not UUID-based paths). */
+  cognitiveShapedCohort: boolean
 }) {
   const isDonotage = /donotage/i.test(brandDisplay)
   const candidates = useMemo(
@@ -81,6 +92,18 @@ function CohortDashboardPartnerMark({
     return (
       <img
         src="/DNA-logo-black.png"
+        alt={brandDisplay}
+        className={COHORT_DASHBOARD_PARTNER_MARK_CLASS}
+        width={280}
+        height={72}
+      />
+    )
+  }
+
+  if (cognitiveShapedCohort) {
+    return (
+      <img
+        src={encodeURI(COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo)}
         alt={brandDisplay}
         className={COHORT_DASHBOARD_PARTNER_MARK_CLASS}
         width={280}
@@ -573,6 +596,13 @@ export default function CohortStudyDashboard({
         : DEFAULT_COHORT_CHECKIN_FIELDS
     return isSleepShapedCheckinFields(normalizeCohortCheckinFields(raw))
   }, [checkinFieldsProp])
+  const isCognitiveShapedCohort = useMemo(() => {
+    const raw =
+      Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
+        ? checkinFieldsProp
+        : DEFAULT_COHORT_CHECKIN_FIELDS
+    return isCognitiveShapedCheckinFields(normalizeCohortCheckinFields(raw))
+  }, [checkinFieldsProp])
   const welcomeName =
     typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
       ? welcomeFirstName.trim()
@@ -673,7 +703,11 @@ export default function CohortStudyDashboard({
       <StudySupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <section>
         <div className="flex items-center justify-between gap-4 mb-4">
-          <CohortDashboardPartnerMark brandDisplay={brandDisplay} cohortId={cohortId} />
+          <CohortDashboardPartnerMark
+            brandDisplay={brandDisplay}
+            cohortId={cohortId}
+            cognitiveShapedCohort={isCognitiveShapedCohort}
+          />
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
             alt="BioStackr"
