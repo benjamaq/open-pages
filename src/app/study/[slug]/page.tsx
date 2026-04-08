@@ -623,7 +623,7 @@ function WhatYouReceive({
   studyDays: number
   landingRewards: ReturnType<typeof resolveStudyLandingRewards>
 }) {
-  const { packageValueHeadline, studyProductCard, completionCard } = landingRewards
+  const { studyProductCard, completionCard } = landingRewards
 
   /** Middle card: store credit uses partner hero art only — never the study product image. */
   const completionVisual =
@@ -644,7 +644,7 @@ function WhatYouReceive({
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <h2 className="text-center text-[22px] font-bold leading-snug text-neutral-900 sm:text-[26px]">
-          You&apos;ll receive {packageValueHeadline} in value
+          You&apos;ll receive two hundred dollars in value
         </h2>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
