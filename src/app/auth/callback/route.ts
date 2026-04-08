@@ -3,14 +3,54 @@ import { Database } from '@/lib/types'
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
-const EMAIL_OTP_TYPES = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'] as const
+/** application/x-www-form-urlencoded treats `+` as space; Supabase hashes are often base64-like and may contain `+`. */
+function normalizeTokenHashFromQuery(raw: string | null | undefined): string | null {
+  if (raw == null || raw === '') return null
+  const fixed = raw.replace(/ /g, '+').trim()
+  return fixed === '' ? null : fixed
+}
 
-function normalizeOtpType(raw: string | null): (typeof EMAIL_OTP_TYPES)[number] {
-  const t = String(raw || '').trim().toLowerCase()
-  if (EMAIL_OTP_TYPES.includes(t as (typeof EMAIL_OTP_TYPES)[number])) {
-    return t as (typeof EMAIL_OTP_TYPES)[number]
+function redactSearchForLog(search: string): string {
+  return search.replace(/token_hash=[^&]*/i, 'token_hash=[REDACTED]')
+}
+
+function extractTokenHash(request: NextRequest): { hash: string | null; diagnostics: Record<string, unknown> } {
+  const sp = request.nextUrl.searchParams
+  const rawFromParams = sp.get('token_hash')
+  const hadSpacesInRawParam = typeof rawFromParams === 'string' && rawFromParams.includes(' ')
+  let hash = normalizeTokenHashFromQuery(rawFromParams)
+
+  if (!hash) {
+    const url = request.url
+    const m = /[?&]token_hash=([^&]+)/.exec(url)
+    if (m) {
+      try {
+        hash = normalizeTokenHashFromQuery(decodeURIComponent(m[1]))
+      } catch {
+        hash = normalizeTokenHashFromQuery(m[1])
+      }
+    }
   }
-  return 'magiclink'
+
+  return {
+    hash,
+    diagnostics: {
+      tokenHashLen: hash?.length ?? 0,
+      hadSpacesInRawParam: hadSpacesInRawParam,
+    },
+  }
+}
+
+function authErrorFields(err: unknown): { message: string; status?: number; code?: string } {
+  if (err && typeof err === 'object') {
+    const e = err as { message?: string; status?: number; code?: string }
+    return {
+      message: typeof e.message === 'string' ? e.message : String(err),
+      status: e.status,
+      code: typeof e.code === 'string' ? e.code : undefined,
+    }
+  }
+  return { message: String(err) }
 }
 
 /**
@@ -20,11 +60,11 @@ function normalizeOtpType(raw: string | null): (typeof EMAIL_OTP_TYPES)[number] 
  * which resolves via confirmation OR recovery and matches `generateLink` output. `magiclink` is also
  * deprecated in client docs for verifyOtp.
  *
+ * We still try `magiclink` and `recovery` after `email` when `email` fails — same hash, different GoTrue branches.
+ *
  * @see https://supabase.com/docs/reference/javascript/auth-verifyotp
  */
-function verifyOtpTypeForTokenHash(_urlTypeRaw: string | null): 'email' {
-  return 'email'
-}
+const VERIFY_OTP_ATTEMPTS = ['email', 'magiclink', 'recovery'] as const
 
 function safeNextPath(raw: string | null): string {
   const def = cohortDashboardStudyPath()
@@ -56,7 +96,17 @@ function callbackSuccessRedirect(request: NextRequest, nextPath: string): NextRe
 }
 
 function callbackErrorRedirect(request: NextRequest): NextResponse {
-  return NextResponse.redirect(new URL('/auth/auth-code-error', request.nextUrl.origin).toString())
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const isLocalEnv = process.env.NODE_ENV === 'development'
+  let origin: string
+  if (isLocalEnv) {
+    origin = request.nextUrl.origin
+  } else if (forwardedHost) {
+    origin = `https://${forwardedHost}`
+  } else {
+    origin = request.nextUrl.origin
+  }
+  return NextResponse.redirect(new URL('/auth/auth-code-error', origin).toString())
 }
 
 function createSupabaseForCallback(request: NextRequest, response: NextResponse) {
@@ -80,7 +130,7 @@ function createSupabaseForCallback(request: NextRequest, response: NextResponse)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
-  const token_hash = searchParams.get('token_hash')
+  const { hash: token_hash, diagnostics } = extractTokenHash(request)
   const typeRaw = searchParams.get('type')
   const code = searchParams.get('code')
   const next = safeNextPath(searchParams.get('next'))
@@ -88,18 +138,38 @@ export async function GET(request: NextRequest) {
   if (token_hash) {
     const response = callbackSuccessRedirect(request, next)
     const supabase = createSupabaseForCallback(request, response)
-    const otpType = verifyOtpTypeForTokenHash(typeRaw)
-    const { error } = await supabase.auth.verifyOtp({
-      type: otpType,
-      token_hash,
+
+    console.log('[auth/callback] verifyOtp context', {
+      token_hash: '[REDACTED]',
+      type: typeRaw,
+      next,
+      pathname: request.nextUrl.pathname,
+      searchRedacted: redactSearchForLog(request.nextUrl.search),
+      urlHost: request.headers.get('host'),
+      forwardedHost: request.headers.get('x-forwarded-host'),
+      ...diagnostics,
     })
-    if (!error) {
-      return response
+
+    let lastError: unknown = null
+    for (const otpType of VERIFY_OTP_ATTEMPTS) {
+      const { error } = await supabase.auth.verifyOtp({
+        type: otpType,
+        token_hash,
+      })
+      if (!error) {
+        return response
+      }
+      lastError = error
+      console.warn('[auth/callback] verifyOtp attempt failed', {
+        otpType,
+        urlType: typeRaw,
+        ...authErrorFields(error),
+      })
     }
-    console.error('[auth/callback] verifyOtp failed', {
-      message: error.message,
+
+    console.error('[auth/callback] verifyOtp all attempts failed', {
       urlType: typeRaw,
-      otpType,
+      ...authErrorFields(lastError),
     })
     return callbackErrorRedirect(request)
   }
@@ -111,9 +181,13 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return response
     }
-    console.error('[auth/callback] exchangeCodeForSession failed', error.message)
+    console.error('[auth/callback] exchangeCodeForSession failed', authErrorFields(error))
     return callbackErrorRedirect(request)
   }
 
+  console.warn('[auth/callback] missing token_hash and code', {
+    pathname: request.nextUrl.pathname,
+    searchRedacted: redactSearchForLog(request.nextUrl.search),
+  })
   return callbackErrorRedirect(request)
 }
