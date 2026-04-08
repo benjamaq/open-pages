@@ -315,26 +315,30 @@ function HowItWorksSteps({
   }
 
   const renderCard = (s: (typeof steps)[0], stepIndex: number) => (
-    <div key={s.title} className={cardClass(s.emphasis)}>
-      <div className="mb-3 flex justify-center md:hidden">
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/15 text-[15px] font-bold tabular-nums text-[#C84B2F] ring-1 ring-[#C84B2F]/20"
-          aria-label={`Step ${stepIndex + 1} of 3`}
-        >
-          {stepIndex + 1}
-        </span>
-      </div>
-      <div className="mb-3 flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/[0.12] sm:mb-4 sm:h-16 sm:w-16">
-        {s.icon}
-      </div>
-      <p
-        className="hidden text-[11px] font-semibold tracking-[0.2em] text-neutral-400/90 md:block md:text-[12px]"
-        style={{ fontVariant: 'small-caps' }}
+    <div key={s.title} className={`relative ${cardClass(s.emphasis)}`}>
+      <span
+        className="absolute left-3 top-3 z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/15 text-[15px] font-bold tabular-nums text-[#C84B2F] ring-1 ring-[#C84B2F]/20 md:hidden"
+        aria-label={`Step ${stepIndex + 1} of 3`}
       >
-        {s.step}
-      </p>
-      <h3 className="mt-2 text-[17px] font-bold leading-snug text-neutral-900 sm:text-[18px]">{s.title}</h3>
-      <p className="mt-3 text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px]">{s.line}</p>
+        {stepIndex + 1}
+      </span>
+      <div className="flex min-h-0 w-full flex-col items-center text-center md:items-start md:text-left">
+        <div className="mb-3 flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/[0.12] sm:mb-4 sm:h-16 sm:w-16">
+          {s.icon}
+        </div>
+        <p
+          className="hidden text-[11px] font-semibold tracking-[0.2em] text-neutral-400/90 md:block md:text-[12px]"
+          style={{ fontVariant: 'small-caps' }}
+        >
+          {s.step}
+        </p>
+        <h3 className="mt-2 w-full text-[17px] font-bold leading-snug text-neutral-900 sm:text-[18px] md:text-left">
+          {s.title}
+        </h3>
+        <p className="mt-3 w-full text-[13px] leading-relaxed text-neutral-600/80 sm:text-[14px] md:text-left">
+          {s.line}
+        </p>
+      </div>
     </div>
   )
 
