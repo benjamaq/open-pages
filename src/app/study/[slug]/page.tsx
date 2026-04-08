@@ -293,7 +293,7 @@ function HowItWorksSteps({
 
   const cardClass = (emphasis: 'light' | 'medium' | 'strong') => {
     const base =
-      'flex h-full min-h-0 flex-col rounded-xl border px-7 py-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg'
+      'flex h-full min-h-0 flex-col rounded-xl border px-5 py-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg sm:px-7 sm:py-8'
     if (emphasis === 'light') {
       return `${base} border-neutral-200/70 bg-white/75 shadow-sm hover:shadow-md`
     }
@@ -303,13 +303,21 @@ function HowItWorksSteps({
     return `${base} border-neutral-200/90 bg-white/95 shadow-md hover:shadow-xl`
   }
 
-  const renderCard = (s: (typeof steps)[0]) => (
+  const renderCard = (s: (typeof steps)[0], stepIndex: number) => (
     <div key={s.title} className={cardClass(s.emphasis)}>
-      <div className="mb-4 flex h-[3.5rem] w-[3.5rem] shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/[0.12] sm:h-16 sm:w-16">
+      <div className="mb-3 flex justify-center md:hidden">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/15 text-[15px] font-bold tabular-nums text-[#C84B2F] ring-1 ring-[#C84B2F]/20"
+          aria-label={`Step ${stepIndex + 1} of 3`}
+        >
+          {stepIndex + 1}
+        </span>
+      </div>
+      <div className="mb-3 flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-[#C84B2F]/[0.12] sm:mb-4 sm:h-16 sm:w-16">
         {s.icon}
       </div>
       <p
-        className="text-[11px] font-semibold tracking-[0.2em] text-neutral-400/90 sm:text-[12px]"
+        className="hidden text-[11px] font-semibold tracking-[0.2em] text-neutral-400/90 md:block md:text-[12px]"
         style={{ fontVariant: 'small-caps' }}
       >
         {s.step}
@@ -381,18 +389,18 @@ function HowItWorksSteps({
             <div className="hidden items-stretch md:flex md:justify-center">
               {steps.map((s, i) => (
                 <Fragment key={s.title}>
-                  <div className="flex min-w-0 flex-1 basis-0 max-w-[21rem] flex-col">{renderCard(s)}</div>
+                  <div className="flex min-w-0 flex-1 basis-0 max-w-[21rem] flex-col">{renderCard(s, i)}</div>
                   {i < steps.length - 1 ? <StepRowConnector /> : null}
                 </Fragment>
               ))}
             </div>
-            <div className="flex flex-col gap-8 md:hidden">
-              {steps.map((s) => (
+            <div className="flex flex-col gap-4 md:hidden">
+              {steps.map((s, i) => (
                 <Fragment key={s.title}>
-                  {renderCard(s)}
-                  {s.step !== 'STEP 3' ? (
-                    <div className="flex justify-center text-neutral-300">
-                      <svg width="20" height="28" viewBox="0 0 20 28" fill="none" aria-hidden>
+                  {renderCard(s, i)}
+                  {i < steps.length - 1 ? (
+                    <div className="flex justify-center py-0.5 text-neutral-300">
+                      <svg width="18" height="22" viewBox="0 0 20 28" fill="none" aria-hidden>
                         <path
                           d="M10 2v20M6 18l4 4 4-4"
                           stroke="currentColor"
