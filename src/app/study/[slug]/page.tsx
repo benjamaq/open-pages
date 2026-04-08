@@ -119,46 +119,40 @@ function StepRowConnector() {
 }
 
 /**
- * Public study hero only (social-proof floor). Does not affect admin, capacity enforcement, or enrollment logic.
- * displayCount = min(publicDenominator, max(realPipeline, DISPLAY_FLOOR)); denominator (e.g. 25) unchanged.
+ * Marketing-only mapping for the public study hero (pipeline/applied+confirmed as input).
+ * Does not affect admin, DB, gating, or real max_participants (e.g. 60).
  */
-const PUBLIC_COHORT_HERO_DISPLAY_FLOOR = 15
+const PUBLIC_STUDY_HERO_DISPLAY_TOTAL = 25
+
+function publicStudyHeroDisplayedPipeline(realPipeline: number): number {
+  const c = Math.max(0, Math.floor(Number(realPipeline)))
+  if (c <= 13) return 13
+  if (c < 23) return c
+  if (c < 60) return 23
+  return 25
+}
 
 function HeroCohortStatusCard({
   pipelineFilled,
-  maxParticipants,
-  displayCapacity,
+  maxParticipants: _maxParticipants,
+  displayCapacity: _displayCapacity,
 }: {
   /** applied + confirmed rows — same basis as DB enrollment cap and `isCohortEnrollmentClosedByPipeline`. */
   pipelineFilled: number
-  /** Operational hard cap (not shown as the public “25” unless no display_capacity). */
+  /** Unused for public hero numbers; real cap stays in DB (e.g. 60). */
   maxParticipants: number | null
-  /** Public denominator for hero copy (e.g. 25); marketing-only vs max_participants. */
+  /** Unused for public hero numbers; avoids showing backend display_capacity when it’s not 25. */
   displayCapacity: number | null
 }) {
+  void _maxParticipants
+  void _displayCapacity
+
   const c = Math.max(0, Math.floor(Number(pipelineFilled)))
-  const maxP =
-    maxParticipants != null && Number.isFinite(Number(maxParticipants)) && Number(maxParticipants) > 0
-      ? Math.floor(Number(maxParticipants))
-      : null
-  const disp =
-    displayCapacity != null && Number.isFinite(Number(displayCapacity)) && Number(displayCapacity) > 0
-      ? Math.floor(Number(displayCapacity))
-      : null
-
-  /** Headline denominator: prefer display_capacity, else max_participants. */
-  const displayTotal: number | null = disp != null ? disp : maxP != null ? maxP : null
-
-  /** Public-facing filled count: never below DISPLAY_FLOOR, never above public denominator. */
-  const heroPlacesFilled =
-    displayTotal != null
-      ? Math.min(displayTotal, Math.max(PUBLIC_COHORT_HERO_DISPLAY_FLOOR, c))
-      : Math.max(PUBLIC_COHORT_HERO_DISPLAY_FLOOR, c)
+  const displayTotal = PUBLIC_STUDY_HERO_DISPLAY_TOTAL
+  const heroPlacesFilled = Math.min(displayTotal, publicStudyHeroDisplayedPipeline(c))
 
   const pct =
-    displayTotal != null && displayTotal > 0
-      ? Math.min(100, (heroPlacesFilled / displayTotal) * 100)
-      : 0
+    displayTotal > 0 ? Math.min(100, (heroPlacesFilled / displayTotal) * 100) : 0
 
   return (
     <div
@@ -171,43 +165,29 @@ function HeroCohortStatusCard({
       />
       <div className="relative z-10">
         <p className="text-center text-[19px] font-bold leading-snug text-neutral-900 sm:text-[21px]">
-          {displayTotal != null ? (
-            <>
-              Limited cohort: <span className="tabular-nums">{displayTotal}</span> participants
-            </>
-          ) : (
-            'Limited cohort'
-          )}
+          Limited cohort: <span className="tabular-nums">{displayTotal}</span> participants
         </p>
-        {displayTotal != null ? (
-          <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
-            {heroPlacesFilled} participants confirmed so far
-          </p>
-        ) : null}
-        <p
-          className={`text-center text-[12px] font-medium leading-relaxed text-neutral-600 sm:text-[13px] ${displayTotal != null ? 'mt-3' : 'mt-2'}`}
-        >
+        <p className="mt-4 text-center text-[24px] font-bold tabular-nums leading-tight text-neutral-900 sm:mt-5 sm:text-[31px]">
+          {heroPlacesFilled} participants selected so far
+        </p>
+        <p className="mt-3 text-center text-[12px] font-medium leading-relaxed text-neutral-600 sm:text-[13px]">
           Applications reviewed within 24 hours
         </p>
-        {displayTotal != null ? (
-          <div className="mt-6 w-full overflow-hidden rounded-full bg-neutral-300 ring-1 ring-neutral-400/25">
-            <div
-              className="h-[9px] min-w-0 rounded-full transition-[width] duration-1000 ease-out sm:h-[10px]"
-              style={{
-                width: `${pct}%`,
-                background: `linear-gradient(180deg, #d95938 0%, ${RUST} 55%, #a33d24 100%)`,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
-              }}
-              aria-valuenow={Math.round(pct)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={
-                displayTotal != null ? `Cohort progress ${Math.round(pct)} percent` : 'Study capacity'
-              }
-              role="progressbar"
-            />
-          </div>
-        ) : null}
+        <div className="mt-6 w-full overflow-hidden rounded-full bg-neutral-300 ring-1 ring-neutral-400/25">
+          <div
+            className="h-[9px] min-w-0 rounded-full transition-[width] duration-1000 ease-out sm:h-[10px]"
+            style={{
+              width: `${pct}%`,
+              background: `linear-gradient(180deg, #d95938 0%, ${RUST} 55%, #a33d24 100%)`,
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+            }}
+            aria-valuenow={Math.round(pct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Cohort progress ${Math.round(pct)} percent`}
+            role="progressbar"
+          />
+        </div>
       </div>
     </div>
   )
