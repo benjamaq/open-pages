@@ -118,6 +118,9 @@ function StepRowConnector() {
   )
 }
 
+/** Public hero only: never show awkward raw pipeline counts (e.g. 1). Does not affect capacity or admin. */
+const MIN_PUBLIC_COHORT_HERO_FILLED = 8
+
 function HeroCohortStatusCard({
   pipelineFilled,
   maxParticipants,
@@ -140,6 +143,14 @@ function HeroCohortStatusCard({
       ? Math.floor(Number(displayCapacity))
       : null
 
+  /**
+   * Display math (study landing only):
+   * - Both max_participants + display_capacity: numerator = round((pipeline / max) * display_capacity).
+   * - Only display_capacity: legacy fallback used raw min(display, pipeline) — floored below so tiny
+   *   pipelines never read as “1 confirmed”.
+   * - Only max_participants: numerator = min(max, pipeline), then floored when shown with a public total.
+   * Real counts / enrollment closure still use raw `pipelineFilled` outside this component.
+   */
   let displayTotal: number | null = null
   let displayedFilled: number | null = null
 
@@ -157,7 +168,11 @@ function HeroCohortStatusCard({
 
   let heroPlacesFilled = displayedFilled ?? c
   if (displayTotal != null) {
-    heroPlacesFilled = Math.min(displayTotal, Math.max(0, heroPlacesFilled))
+    const cappedToBar = Math.min(displayTotal, Math.max(0, heroPlacesFilled))
+    heroPlacesFilled = Math.min(
+      displayTotal,
+      Math.max(MIN_PUBLIC_COHORT_HERO_FILLED, cappedToBar),
+    )
   }
 
   const pct =
