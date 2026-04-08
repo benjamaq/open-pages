@@ -25,6 +25,9 @@ export interface EmailData {
 export interface DailyReminderData {
   userName: string
   userEmail: string
+  /** When set, cohort participants receive magic-link check-in URLs (same as daily cron). */
+  authUserId?: string
+  profileId?: string
   supplements: Array<{
     name: string
     dose?: string
@@ -204,6 +207,7 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
     // Lazy import to avoid circular deps at module load
     const { renderDailyReminderEmail } = await import('@/lib/email/templates/daily-reminder')
     const { cohortEmailCheckInLandingAbsoluteUrl } = await import('@/lib/cohortCheckInLanding')
+    const { resolveDailyReminderCheckinHrefForUser } = await import('@/lib/cohortDailyReminderCheckinHref')
     const supplementCount =
       (Array.isArray(data.supplements) ? data.supplements.length : 0) +
       (Array.isArray(data.protocols) ? data.protocols.length : 0) +
@@ -211,7 +215,13 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
       (Array.isArray(data.mindfulness) ? data.mindfulness.length : 0)
     // Until we plumb real stack clarity here, default to 0
     const progressPercent = 0
-    const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+    let checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+    if (data.authUserId && data.userEmail) {
+      checkinHref = await resolveDailyReminderCheckinHrefForUser({
+        authUserId: data.authUserId,
+        recipientEmail: data.userEmail,
+      })
+    }
     const html = renderDailyReminderEmail({
       firstName: data.userName || 'there',
       supplementCount: Math.max(1, supplementCount),

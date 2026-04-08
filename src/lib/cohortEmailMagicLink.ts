@@ -20,10 +20,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * - `cohortPostFirstCheckinEmail.ts` — check-in + dashboard
  * - `cohortResultReadyEmail.ts` — personal results page (`/dashboard/cohort-result`)
  * - `cohortLoginMagicLinkEmail.ts` — login / resend magic link (dashboard)
- * - Daily check-in emails (cohort check-in deep link): `sendDailyReminder` (`resend.ts`), `send-reminder.ts`,
- *   `send-daily` notification route, `send-daily-emails` cron, `test-daily-reminder` admin — via
- *   `cohortTransactionalCheckinMagicHref` → `cohortDashboardStudyCheckinPath`.
- * - `api/reminders/send` (legacy profile reminders): stable `cohortEmailCheckInLandingAbsoluteUrl()` CTA.
+ * - Daily check-in emails (cohort participants): `resolveDailyReminderCheckinHrefForUser` →
+ *   `cohortTransactionalCheckinMagicHref` when `profiles.cohort_id` + active `cohort_participants` row;
+ *   otherwise stable `/check-in` landing. Used by `send-daily-emails` cron, `notifications/send-daily`,
+ *   `send-reminder.ts`, `resend.sendDailyReminder` (optional `authUserId`), `api/reminders/send`.
  *   so non-cohort users are not sent to `view=cohort`.
  *
  * Template `daily-reminder.tsx` only renders `checkinUrl` from those callers — do not hardcode dashboard URLs there.

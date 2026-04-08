@@ -11,7 +11,7 @@ export type DailyReminderEmailParams = {
   checkinUrl: string
   /** Cohort `brand_name` for transactional shell (header + × BioStackr line). */
   partnerBrandName?: string | null
-  /** Optional line under the CTA (cohort daily emails use stable `/check-in`; hint usually omitted). */
+  /** Optional line under the CTA (hint usually omitted). */
   linkHint?: string | null
   // Optional daily metrics to display (Energy/Focus/Sleep/Mood on 1–10 scale)
   energy?: number

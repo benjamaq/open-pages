@@ -259,6 +259,8 @@ export async function sendTestEmail() {
     const emailData = {
       userName: (profile as any).display_name || (profile as any).name || 'User',
       userEmail: user.email!,
+      authUserId: user.id,
+      profileId: (profile as any).id,
       supplements: supplements.map((item: any) => ({
         name: item.name || 'Unknown supplement',
         dose: item.dose || '',

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
@@ -506,7 +506,10 @@ async function handler(req: NextRequest) {
           } catch {}
         }
 
-        const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+        const checkinHref = await resolveDailyReminderCheckinHrefForUser({
+          authUserId: p.user_id,
+          recipientEmail: email,
+        })
 
         // Greeting priority:
         // 1) profiles.display_name (first token)

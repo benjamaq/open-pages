@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,7 +117,10 @@ export async function POST(req: NextRequest) {
           continue
         }
       }
-      const checkinUrl = cohortEmailCheckInLandingAbsoluteUrl()
+      const checkinUrl = await resolveDailyReminderCheckinHrefForUser({
+        authUserId: userId,
+        recipientEmail: recipientEmail ?? '',
+      })
       // Optional stack
       const { data: us } = await supabaseAdmin
         .from('user_supplement')

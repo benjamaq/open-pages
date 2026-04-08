@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
 import { Resend } from 'resend'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
@@ -222,7 +222,10 @@ async function handleSend() {
             console.log('[email] User ID:', profile.user_id)
             console.log('[email] Metrics returned:', JSON.stringify(latest))
           } catch {}
-          const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+          const checkinHref = await resolveDailyReminderCheckinHrefForUser({
+            authUserId: profile.user_id,
+            recipientEmail: userEmail,
+          })
           const html = renderV3Reminder({
             firstName: userName || 'there',
             supplementCount: Math.max(1, supplementCount),

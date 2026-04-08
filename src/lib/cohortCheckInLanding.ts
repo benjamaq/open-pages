@@ -1,9 +1,9 @@
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 
 /**
- * Optional `/check-in` landing (e.g. env override). Cohort transactional CTAs that need auth use
- * `cohortTransactionalCheckinMagicHref` / `cohortTransactionalDashboardMagicHref` (hashed_token →
- * `/auth/callback`) so the first click establishes a session; this URL remains for legacy or manual flows.
+ * Optional `/check-in` landing (e.g. env override). Cohort transactional CTAs use magic links;
+ * non-cohort daily reminders resolve here. Active cohort daily reminders use
+ * `resolveDailyReminderCheckinHrefForUser` → `/auth/callback?token_hash=…`.
  */
 export function cohortEmailCheckInLandingAbsoluteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_COHORT_CHECKIN_LANDING_URL?.trim()

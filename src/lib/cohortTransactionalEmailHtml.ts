@@ -79,7 +79,7 @@ export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
   )
 }
 
-/** Stable /check-in landing link for cohort emails (no per-email magic URL). */
+/** Primary check-in CTA — URL is often magic `/auth/callback?token_hash=…` from `cohortTransactionalCheckinMagicHref`. */
 export function cohortEmailCheckInCtaHtml(absoluteCheckInUrl: string): string {
   const href = escapeHtml(absoluteCheckInUrl)
   return (

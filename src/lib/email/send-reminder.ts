@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { renderDailyReminderEmail } from './templates/daily-reminder'
-import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
+import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
 
 type Options = {
   emailOverride?: string
@@ -61,7 +61,10 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     const totalW = percs.reduce((s, x) => s + x.weight, 0)
     progressPercent = totalW > 0 ? Math.round(percs.reduce((s, x) => s + (x.pct * x.weight), 0) / totalW) : 0
   } catch {}
-  const checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+  const checkinHref = await resolveDailyReminderCheckinHrefForUser({
+    authUserId: userId,
+    recipientEmail,
+  })
   const html = renderDailyReminderEmail({
     firstName: firstName || 'there',
     supplementCount,
