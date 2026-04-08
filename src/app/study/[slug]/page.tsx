@@ -23,8 +23,13 @@ import { CohortQualificationSection } from './CohortQualificationSection'
 const RUST = '#C84B2F'
 /** Trust footer + other dark panels */
 const DARK_PANEL_BG = '#1a1f2e'
-/** Section 1 (hero) & section 3 — matches BioStackr logo white */
-const HERO_LIGHT_BG = '#FFFFFF'
+/**
+ * Hero / study shell surface — matches corner pixels of `public/BIOSTACKR LOGO 2.png` (#fff).
+ * Keeps partner + BioStackr marks visually seamless with the logo raster.
+ */
+const BIOSTACKR_LOGO_PAPER_BG = '#ffffff'
+/** Section 1 (hero) & section 3 — same as BioStackr wordmark asset background */
+const HERO_LIGHT_BG = BIOSTACKR_LOGO_PAPER_BG
 /** Section 2 — slightly darker band vs hero */
 const STUDY_SECTION_BAND_BG = '#F2F3F5'
 /** Section 4 — same family as band, a touch more off-white */
@@ -427,15 +432,15 @@ function StudyPartnerHeroLogo({
         alt={b || 'Study partner'}
         width={400}
         height={160}
-        className="h-[7.75rem] w-auto max-w-[min(100%,560px)] object-contain object-left sm:h-[8.75rem] md:h-[9.5rem]"
+        className="h-[2.75rem] w-auto max-w-[min(52vw,220px)] object-contain object-left sm:h-[8.75rem] sm:max-w-[min(100%,560px)] md:h-[9.5rem]"
         priority
       />
     )
   }
   if (b && !/donotage/i.test(b)) {
     return (
-      <div className="flex min-h-[7.75rem] max-w-[min(100%,560px)] items-center sm:min-h-[8.75rem] md:min-h-[9.5rem]">
-        <span className="text-left text-[1.65rem] font-bold leading-tight tracking-tight text-neutral-900 sm:text-[1.85rem] md:text-[2rem]">
+      <div className="flex min-h-[2.75rem] max-w-[min(52vw,220px)] items-center sm:min-h-[8.75rem] sm:max-w-[min(100%,560px)] md:min-h-[9.5rem]">
+        <span className="text-left text-[1.125rem] font-bold leading-tight tracking-tight text-neutral-900 sm:text-[1.85rem] md:text-[2rem]">
           {b}
         </span>
       </div>
@@ -447,7 +452,7 @@ function StudyPartnerHeroLogo({
       alt={b || 'Study partner'}
       width={200}
       height={200}
-      className="h-[7.75rem] w-auto max-w-[min(100%,560px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] md:h-[9.5rem]"
+      className="h-[2.75rem] w-auto max-w-[min(52vw,200px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] sm:max-w-[min(100%,560px)] md:h-[9.5rem]"
       priority
     />
   )
@@ -457,15 +462,15 @@ function HeroBioStackrLogo() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-center self-start bg-transparent transition-opacity hover:opacity-95 sm:self-center"
+      className="inline-flex shrink-0 items-center self-center bg-transparent transition-opacity hover:opacity-95"
     >
-      {/* multiply: white padding in raster blends into light surfaces */}
+      {/* multiply: white padding in raster blends into BIOSTACKR_LOGO_PAPER_BG */}
       <Image
         src={BIOSTACKR_LOGO}
         alt="BioStackr"
         width={434}
         height={135}
-        className="h-[3.75rem] w-auto max-w-[min(100%,340px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[4.25rem] md:h-[4.7rem]"
+        className="h-[2.35rem] w-auto max-w-[min(42vw,200px)] object-contain mix-blend-multiply contrast-[1.04] sm:h-[4.25rem] sm:max-w-[min(100%,340px)] md:h-[4.7rem]"
         priority
       />
       <span className="sr-only">BioStackr home</span>
@@ -693,14 +698,14 @@ function TrustFooter({
   return (
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="mb-10 flex flex-col items-center justify-center gap-8 sm:mb-12 sm:flex-row sm:gap-14">
+        <div className="mb-10 flex w-full flex-row flex-nowrap items-center justify-center gap-4 sm:mb-12 sm:gap-14">
           {partnerLogoSrc ? (
             <Image
               src={partnerLogoSrc}
               alt={partnerBrand || 'Study partner'}
               width={320}
               height={120}
-              className="h-14 w-auto max-w-[min(90vw,280px)] object-contain object-center opacity-95 sm:h-16 md:h-[4.5rem]"
+              className="h-9 w-auto max-w-[min(42vw,200px)] object-contain object-center opacity-95 sm:h-16 sm:max-w-[min(90vw,280px)] md:h-[4.5rem]"
             />
           ) : /donotage/i.test(partnerBrand) ? (
             <Image
@@ -708,19 +713,21 @@ function TrustFooter({
               alt={partnerBrand || 'Study partner'}
               width={160}
               height={160}
-              className="h-14 w-auto object-contain opacity-90 sm:h-16 md:h-[4.5rem]"
+              className="h-9 w-auto max-w-[min(40vw,180px)] object-contain opacity-90 sm:h-16 md:h-[4.5rem]"
             />
           ) : (
-            <span className="text-center text-lg font-bold text-white sm:text-xl">{partnerBrand}</span>
+            <span className="max-w-[45%] text-left text-sm font-bold leading-snug text-white sm:text-center sm:text-lg md:text-xl">
+              {partnerBrand}
+            </span>
           )}
-          <div className="hidden h-14 w-px shrink-0 bg-white/20 sm:block md:h-16" aria-hidden />
-          <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
+          <div className="h-9 w-px shrink-0 bg-white/25 sm:h-14 md:h-16" aria-hidden />
+          <Link href="/" className="inline-flex shrink-0 opacity-90 transition-opacity hover:opacity-100">
             <Image
               src={BIOSTACKR_LOGO}
               alt="BioStackr"
               width={434}
               height={135}
-              className="h-11 w-auto max-w-[min(90vw,320px)] brightness-125 sm:h-12 md:h-14"
+              className="h-8 w-auto max-w-[min(38vw,180px)] brightness-125 sm:h-12 sm:max-w-[min(90vw,320px)] md:h-14"
             />
             <span className="sr-only">BioStackr home</span>
           </Link>
@@ -852,16 +859,23 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   })
 
   return (
-    <div className="flex flex-1 flex-col text-neutral-900">
-      <div className="flex flex-1 flex-col">
+    <div
+      className="flex flex-1 flex-col text-neutral-900"
+      style={{ backgroundColor: BIOSTACKR_LOGO_PAPER_BG }}
+    >
+      <div className="flex min-h-0 flex-1 flex-col">
       <section
         className={`relative w-full overflow-hidden px-4 pb-11 pt-10 sm:px-6 sm:pb-12 sm:pt-12 md:pt-14 ${STUDY_STRIPE_DIVIDER}`}
         style={{ backgroundColor: HERO_LIGHT_BG }}
       >
         <div className="relative z-10 mx-auto max-w-5xl">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-            <StudyPartnerHeroLogo brandDisplay={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
-            <HeroBioStackrLogo />
+          <div className="flex w-full flex-row flex-nowrap items-center justify-between gap-2 sm:gap-8">
+            <div className="min-w-0 flex-[1_1_auto]">
+              <StudyPartnerHeroLogo brandDisplay={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
+            </div>
+            <div className="shrink-0 pl-1">
+              <HeroBioStackrLogo />
+            </div>
           </div>
 
           <div className="mx-auto mt-12 max-w-2xl text-center sm:mt-16 md:mt-[4.25rem]">
