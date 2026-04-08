@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { pickPrimaryProfileIdByStackCount } from '@/lib/cohortEnrollment'
+import { ensureCohortRewardClaimToken } from '@/lib/cohortRewardClaimDb'
 
 export type CohortParticipantResultProReward = {
   has_row: boolean
@@ -256,6 +257,8 @@ export async function buildCohortParticipantResultPayload(
 
   const cpId = (cpRow as { id?: string } | null)?.id
   if (cpId) {
+    // Lazy-create claim row if study-completion cron missed it — results page needs token for happy-path Pro CTA.
+    await ensureCohortRewardClaimToken(cpId)
     const { data: claimRow } = await supabaseAdmin
       .from('cohort_reward_claims')
       .select('token, claimed_at')

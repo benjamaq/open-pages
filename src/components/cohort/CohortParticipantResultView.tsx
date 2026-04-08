@@ -124,6 +124,64 @@ function cohortUsageRecommendation(effectNormalized: number | null, productLabel
   return `No clear benefit detected — you may want to stop using ${productLabel}.`
 }
 
+/** Top-level + nested keys some publish pipelines use instead of `effect_size`. */
+function readEffectSizeFromJsonKeys(j: Record<string, unknown>): number | null {
+  const n =
+    normalizeEffectSizeForBands(j.effect_size ?? j.effectSize) ??
+    normalizeEffectSizeForBands(j.effect_size_pct ?? j.effect_pct ?? j.effectPercent)
+  if (n != null) return n
+  const summary = recordField(j.summary)
+  if (summary) {
+    const s = normalizeEffectSizeForBands(
+      summary.effect_size ?? summary.effectSize ?? summary.effect_size_pct,
+    )
+    if (s != null) return s
+  }
+  return null
+}
+
+/**
+ * When admins publish verdict + metrics but omit Cohen-style `effect_size`, infer a conservative
+ * positive strength from baseline→final shifts so the recommendation block matches the visible outcome.
+ */
+function inferEffectSizeFromParsedMetrics(parsed: ParsedResultMetrics): number | null {
+  let best: number | null = null
+  for (const row of parsed.rows) {
+    const { baseline, final, lowerIsBetter } = row
+    if (baseline == null || final == null) continue
+    const delta = final - baseline
+    const improved = lowerIsBetter ? delta < -0.2 : delta > 0.2
+    if (!improved) continue
+    const mag = Math.abs(delta)
+    let score = 0.24
+    if (mag >= 2.5) score = 0.55
+    else if (mag >= 2) score = 0.48
+    else if (mag >= 1) score = 0.38
+    else if (mag >= 0.5) score = 0.3
+    if (best == null || score > best) best = score
+  }
+  return best
+}
+
+function buildRecommendationParagraph(
+  j: Record<string, unknown>,
+  parsed: ParsedResultMetrics,
+  productLabel: string,
+): string {
+  const explicit =
+    stringField(j, 'usage_recommendation') ||
+    stringField(j, 'recommendation') ||
+    stringField(j, 'cohort_usage_recommendation')
+  if (explicit) return explicit
+
+  const effect =
+    readEffectSizeFromJsonKeys(j) ??
+    parsed.effectSizeNormalized ??
+    inferEffectSizeFromParsedMetrics(parsed)
+
+  return cohortUsageRecommendation(effect, productLabel)
+}
+
 type ParsedResultMetrics = {
   primaryMetric: string | null
   /** Normalized effect size for thresholds; not shown in UI. */
@@ -302,8 +360,10 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
 
 /**
  * Participant-only cohort result layout + PDF export (not TruthReportView).
- * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric, effect_size,
- * confidence, and metrics.{sleep_quality,energy,night_wakes}.{baseline_avg,final_avg}.
+ * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric,
+ * effect_size (or effect_size_pct, summary.effect_size), usage_recommendation (overrides generated copy),
+ * confidence, and metrics.{…}.{baseline_avg,final_avg}. Missing `effect_size` with improving metrics still
+ * yields a positive recommendation via inferred effect strength.
  */
 export default function CohortParticipantResultView({
   payload,
@@ -341,7 +401,7 @@ export default function CohortParticipantResultView({
     )
 
   const productLabel = (payload.product_name && payload.product_name.trim()) || 'your study product'
-  const recommendationText = cohortUsageRecommendation(parsedMetrics.effectSizeNormalized, productLabel)
+  const recommendationText = buildRecommendationParagraph(j, parsedMetrics, productLabel)
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {

@@ -1,5 +1,17 @@
 import { normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 
+/**
+ * Published `result_json` — renderer (`CohortParticipantResultView`) expectations:
+ *
+ * - **Verdict / narrative:** `verdict` or `title`; `bullet_points` (or `highlights` / `bullets`); `explanation` or
+ *   `summary` / `overview`.
+ * - **Recommendation block:** optional explicit `usage_recommendation` or `recommendation` (full paragraph).
+ *   Otherwise generated from `effect_size` | `effectSize` | `effect_size_pct` | `summary.effect_size`, or inferred
+ *   from improving `metrics.{key}.{baseline_avg,final_avg,...}` when effect fields are omitted.
+ * - **Metrics:** `metrics.{sleep_quality|energy|focus|...}` objects with baseline/final numeric fields per cohort
+ *   `checkin_fields`.
+ */
+
 /** Metric keys the result UI can render (`CohortParticipantResultView` / `parseResultMetrics`). */
 export const COHORT_RESULT_RENDERER_METRIC_KEYS = new Set([
   'sleep_quality',
