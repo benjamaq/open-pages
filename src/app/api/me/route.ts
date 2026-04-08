@@ -243,18 +243,10 @@ export async function GET(request: Request) {
                 cdefErr.message,
               );
             }
-            if (
-              cdef != null &&
-              Array.isArray(
-                (cdef as { checkin_fields?: unknown }).checkin_fields,
-              )
-            ) {
-              checkinFields = normalizeCohortCheckinFields(
-                (cdef as { checkin_fields: unknown }).checkin_fields,
-              );
-            }
-
             if (cdef != null) {
+              checkinFields = normalizeCohortCheckinFields(
+                (cdef as { checkin_fields?: unknown }).checkin_fields,
+              );
               showCohortStudyDashboard = true;
               cohortCompletionRewardStoreCredit = cohortUsesStoreCreditPartnerReward(
                 cdef as {
