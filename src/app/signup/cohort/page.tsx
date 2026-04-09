@@ -126,7 +126,7 @@ function CohortSignupInner() {
             name: cleanName,
             first_name: firstName,
             reminder_enabled: true,
-            reminder_time: reminderSlot === 'midday' ? '12:00' : reminderSlot === 'evening' ? '19:00' : '08:00',
+            reminder_time: reminderSlot === 'midday' ? '12:00' : reminderSlot === 'evening' ? '19:00' : '07:00',
             reminder_timezone: detectedTz,
           },
         },

@@ -29,7 +29,7 @@ function reminderSlotToTime(slot: string): string {
   const s = String(slot || '').toLowerCase()
   if (s === 'midday') return '12:00'
   if (s === 'evening') return '19:00'
-  return '08:00'
+  return '07:00'
 }
 
 function toSlugBase(input: string) {

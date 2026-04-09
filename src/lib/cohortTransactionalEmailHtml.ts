@@ -42,14 +42,20 @@ export function firstNameFromAuthUser(user: {
   return em || 'there'
 }
 
-/** Left header cell: DNA logo when partner is DoNotAge-branded; otherwise partner name wordmark. */
+/** Left header cell: partner logo when we ship assets (DoNotAge, Seeking Health); else wordmark text. */
 export function cohortEmailPartnerHeaderCellHtml(appBase: string, partnerBrandName: string): string {
   const base = appBase.replace(/\/$/, '')
   const p = String(partnerBrandName || '').trim()
   if (/donotage/i.test(p)) {
     const logo = `${base}/DNA-logo-black.png`
     return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
-                  <img src="${logo}" alt="${escapeHtml(p || 'Partner')}" width="132" style="display:block;max-width:132px;width:132px;height:auto;border:0;" />
+                  <img src="${escapeHtml(logo)}" alt="${escapeHtml(p || 'Partner')}" width="132" style="display:block;max-width:132px;width:132px;height:auto;border:0;" />
+                </td>`
+  }
+  if (/seeking\s*health/i.test(p)) {
+    const logo = `${base}/cohorts/seeking-health/logo.png`
+    return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
+                  <img src="${escapeHtml(logo)}" alt="${escapeHtml(p || 'Seeking Health')}" width="160" style="display:block;max-width:160px;width:160px;height:auto;border:0;" />
                 </td>`
   }
   const label = escapeHtml(p || 'Study partner')
