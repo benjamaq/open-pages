@@ -3,6 +3,34 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const IN_CHUNK = 120
 
 /**
+ * Given any mix of `profiles.id` and `auth.users.id` values, load `profiles` rows and return
+ * a superset of ids so `.in('user_id', …)` against `cohort_participants` matches regardless of
+ * which column value was stored (force-email paths sometimes only had auth id — would miss rows keyed by profile id).
+ */
+export async function expandCandidateKeysForCohortParticipantMatch(
+  supabase: SupabaseClient,
+  candidateKeys: string[],
+): Promise<string[]> {
+  const out = new Set<string>(candidateKeys.filter(Boolean))
+  if (out.size === 0) return []
+
+  const keysArr = [...out]
+  for (let i = 0; i < keysArr.length; i += IN_CHUNK) {
+    const chunk = keysArr.slice(i, i + IN_CHUNK)
+    const [r1, r2] = await Promise.all([
+      supabase.from('profiles').select('id, user_id').in('user_id', chunk),
+      supabase.from('profiles').select('id, user_id').in('id', chunk),
+    ])
+    for (const row of [...(r1.data || []), ...(r2.data || [])] as { id: string; user_id: string }[]) {
+      out.add(row.id)
+      out.add(row.user_id)
+    }
+  }
+
+  return [...out]
+}
+
+/**
  * Unique `profiles.id` and `profiles.user_id` values from reminder candidate rows, for
  * matching `cohort_participants.user_id` (which may store either UUID).
  */
@@ -29,9 +57,11 @@ export async function fetchExpandedCohortStudyCompletedIdExclusions(
   const exclude = new Set<string>()
   if (candidateKeys.length === 0) return exclude
 
+  const expandedKeys = await expandCandidateKeysForCohortParticipantMatch(supabase, candidateKeys)
+
   const rawCpIds = new Set<string>()
-  for (let i = 0; i < candidateKeys.length; i += IN_CHUNK) {
-    const chunk = candidateKeys.slice(i, i + IN_CHUNK)
+  for (let i = 0; i < expandedKeys.length; i += IN_CHUNK) {
+    const chunk = expandedKeys.slice(i, i + IN_CHUNK)
     const { data: rows, error } = await supabase
       .from('cohort_participants')
       .select('user_id')

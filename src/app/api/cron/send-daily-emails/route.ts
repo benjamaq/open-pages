@@ -21,6 +21,7 @@ import {
   profileKeysForCohortParticipantFilter,
   profileRowMatchesCohortStudyCompletedExclusion,
 } from '@/lib/cohortDailyReminderCompletedFilter'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 
 /** Decode email query param: trim, fix `+` lost as space in unencoded query strings. */
 function normalizeForceEmailQuery(raw: string): string {
@@ -432,11 +433,43 @@ async function handler(req: NextRequest) {
     const results: any[] = []
     let successCount = 0
     let failCount = 0
+
+    if (authorizedForce && (filterEmail || forceUserId)) {
+      for (const p of profilesInWindow) {
+        if (p.user_id && !p.profile_id) {
+          const { data: profFill } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('user_id', p.user_id)
+            .maybeSingle()
+          if (profFill && (profFill as { id?: string }).id) {
+            p.profile_id = String((profFill as { id: string }).id)
+          }
+        }
+      }
+    }
+
     for (const p of profilesInWindow) {
       try {
         const email = emailMap.get(p.user_id)
         if (!email) { results.push({ user_id: p.user_id, skip: 'no email', stage: 'email-lookup' }); continue }
         if (filterEmail && email.toLowerCase() !== filterEmail.toLowerCase()) { continue }
+
+        if (authorizedForce && (filterEmail || forceUserId)) {
+          const cohortKeys = cohortParticipantUserIdCandidatesSync(String(p.profile_id || ''), p.user_id)
+          if (cohortKeys.length > 0) {
+            const { data: completedForced } = await supabaseAdmin
+              .from('cohort_participants')
+              .select('id')
+              .not('study_completed_at', 'is', null)
+              .in('user_id', cohortKeys)
+              .limit(1)
+            if (completedForced && completedForced.length > 0) {
+              results.push({ user_id: p.user_id, skip: 'study_completed', stage: 'force_pre_send' })
+              continue
+            }
+          }
+        }
 
         // Engagement filter: Only send to active users (recent activity OR at least 1 active supplement)
         if (!bypassAll) {
