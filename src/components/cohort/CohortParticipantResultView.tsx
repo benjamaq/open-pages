@@ -202,20 +202,24 @@ function primaryMetricRow(j: Record<string, unknown>, parsed: ParsedResultMetric
 
 const OUTCOME_SUBTEXT = 'Based on your real-world data over the study period'
 
-function outcomeHeadlineProofAndSubtext(
+/** Strong outcome-led headline when we cannot name a specific metric. */
+const POSITIVE_VERDICT_CLEAR_EFFECT_HEADLINE = 'This supplement showed a clear positive effect'
+
+function outcomeHeadlineAndSubtext(
   j: Record<string, unknown>,
   parsed: ParsedResultMetrics,
   fallbackHeadline: string,
-): { headline: string; subtext: string | null; proofLine: string | null } {
+): { headline: string; subtext: string | null } {
   if (!verdictIsPositive(j)) {
-    return { headline: fallbackHeadline, subtext: null, proofLine: null }
+    return { headline: fallbackHeadline, subtext: null }
   }
 
-  const rowForProof = primaryMetricRow(j, parsed) ?? firstImprovedMetricRow(parsed)
-  const proofLine = rowForProof ? proofLineFromMetricRow(rowForProof) : null
-
-  const rowForHeadline = rowForProof ?? primaryMetricRow(j, parsed)
-  if (rowForHeadline) {
+  const primary = primaryMetricRow(j, parsed)
+  const rowForHeadline =
+    primary && rowShowsMeaningfulImprovement(primary)
+      ? primary
+      : firstImprovedMetricRow(parsed) ?? primary
+  if (rowForHeadline && metricsShowImprovement(parsed)) {
     let headlineMetric: string
     if (rowForHeadline.id === 'night_wakes' || rowForHeadline.id === 'night_wake') {
       headlineMetric = 'sleep'
@@ -229,20 +233,67 @@ function outcomeHeadlineProofAndSubtext(
     return {
       headline: `Your ${headlineMetric} improved`,
       subtext: OUTCOME_SUBTEXT,
-      proofLine,
     }
   }
 
-  if (narrativeSuggestsImprovement(j)) {
-    return { headline: 'Your results improved', subtext: OUTCOME_SUBTEXT, proofLine: null }
+  if (narrativeSuggestsImprovement(j) || metricsShowImprovement(parsed)) {
+    return { headline: POSITIVE_VERDICT_CLEAR_EFFECT_HEADLINE, subtext: OUTCOME_SUBTEXT }
   }
 
   const rawV = stringField(j, 'verdict')
   if (rawV && ['positive', 'improved'].includes(rawV.trim().toLowerCase())) {
-    return { headline: 'Your results improved', subtext: OUTCOME_SUBTEXT, proofLine: null }
+    return { headline: POSITIVE_VERDICT_CLEAR_EFFECT_HEADLINE, subtext: OUTCOME_SUBTEXT }
   }
 
-  return { headline: fallbackHeadline, subtext: null, proofLine: null }
+  return { headline: fallbackHeadline, subtext: null }
+}
+
+/**
+ * Evidence lines for the Key finding block — only existing baseline/final and labels (no new math).
+ */
+function buildKeyFindingLines(
+  j: Record<string, unknown>,
+  parsed: ParsedResultMetrics,
+): string[] {
+  const lines: string[] = []
+  const seen = new Set<string>()
+  const primary = primaryMetricRow(j, parsed)
+
+  const pushUnique = (s: string) => {
+    const t = s.trim()
+    if (!t || seen.has(t)) return
+    seen.add(t)
+    lines.push(t)
+  }
+
+  const improvedRows = parsed.rows.filter(rowShowsMeaningfulImprovement)
+  const order: ParsedMetricRow[] = []
+  if (primary && improvedRows.some((r) => r.id === primary.id)) {
+    order.push(primary)
+  }
+  for (const r of improvedRows) {
+    if (r.id !== primary?.id) order.push(r)
+  }
+  const rowsToFeature = order.length > 0 ? order : improvedRows
+
+  for (const row of rowsToFeature.slice(0, 3)) {
+    pushUnique(`${row.label} improved over the study period.`)
+    const pl = proofLineFromMetricRow(row)
+    if (pl) pushUnique(pl)
+  }
+
+  if (lines.length === 0 && narrativeSuggestsImprovement(j)) {
+    pushUnique('Your check-ins showed a clear upward shift during the study.')
+  }
+
+  if (lines.length === 0 && parsed.rows.length > 0) {
+    for (const row of parsed.rows.slice(0, 3)) {
+      const pl = proofLineFromMetricRow(row)
+      if (pl) pushUnique(pl)
+    }
+  }
+
+  return lines
 }
 
 /** Top-level + nested keys some publish pipelines use instead of `effect_size`. */
@@ -500,8 +551,8 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
  * Participant-only cohort result layout + PDF export (not TruthReportView).
  * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric,
  * effect_size (or effect_size_pct, summary.effect_size), usage_recommendation (overrides generated copy),
- * confidence, and metrics.{…}.{baseline_avg,final_avg}. Rendering maps `verdict: positive` + improving
- * metrics to a decisive recommendation without changing published numbers.
+ * confidence, and metrics.{…}.{baseline_avg,final_avg}. Layout: verdict → key finding → narrative →
+ * check-in detail → recommendation; rewards; closing “What this unlocks next” (presentation only).
  */
 export default function CohortParticipantResultView({
   payload,
@@ -540,8 +591,13 @@ export default function CohortParticipantResultView({
 
   const productLabel = (payload.product_name && payload.product_name.trim()) || 'your study product'
   const recommendationText = buildRecommendationParagraph(j, parsedMetrics, productLabel)
-  const { headline: outcomeHeadline, subtext: outcomeSubtext, proofLine: outcomeProofLine } =
-    outcomeHeadlineProofAndSubtext(j, parsedMetrics, verdictHeadline)
+  const { headline: outcomeHeadline, subtext: outcomeSubtext } = outcomeHeadlineAndSubtext(
+    j,
+    parsedMetrics,
+    verdictHeadline,
+  )
+  const keyFindingLines = buildKeyFindingLines(j, parsedMetrics)
+  const showKeyFinding = keyFindingLines.length > 0
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {
@@ -629,7 +685,7 @@ export default function CohortParticipantResultView({
   }
 
   return (
-    <div className="space-y-5 sm:space-y-7">
+    <div className="space-y-6 sm:space-y-9">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
@@ -669,20 +725,42 @@ export default function CohortParticipantResultView({
               <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84B2F]">
                 Your verdict
               </p>
-              <h2 className="mt-3 sm:mt-4 text-[1.75rem] sm:text-[2.125rem] font-bold text-slate-950 leading-[1.14] tracking-[-0.02em]">
+              <h2 className="mt-3 sm:mt-4 text-[1.875rem] sm:text-[2.25rem] font-bold text-slate-950 leading-[1.12] tracking-[-0.02em]">
                 {outcomeHeadline}
               </h2>
               {outcomeSubtext ? (
-                <p className="mt-2 max-w-prose text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+                <p className="mt-3 max-w-prose text-[13px] sm:text-[0.9375rem] text-slate-600 leading-relaxed">
                   {outcomeSubtext}
                 </p>
               ) : null}
-              {outcomeProofLine ? (
-                <p className="mt-3 max-w-prose text-[15px] sm:text-[1.0625rem] font-medium text-slate-800 tabular-nums tracking-tight">
-                  {outcomeProofLine}
-                </p>
-              ) : null}
             </header>
+
+            {showKeyFinding ? (
+              <section
+                className="mt-8 sm:mt-10"
+                aria-labelledby="cohort-result-key-finding-heading"
+              >
+                <h3
+                  id="cohort-result-key-finding-heading"
+                  className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"
+                >
+                  Key finding
+                </h3>
+                <div className="mt-4 rounded-2xl border border-slate-200/95 bg-gradient-to-b from-slate-50/95 to-white px-5 py-5 sm:px-7 sm:py-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                  <ul className="list-none space-y-3.5 p-0 m-0" role="list">
+                    {keyFindingLines.map((line) => (
+                      <li key={line} className="flex gap-3 text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
+                        <span
+                          className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C84B2F]"
+                          aria-hidden
+                        />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            ) : null}
 
             {bulletPoints.length > 0 ? (
               <section className="mt-9 sm:mt-11">
@@ -849,8 +927,8 @@ export default function CohortParticipantResultView({
             {proClaimed ? (
               <div className="mt-5 space-y-4">
                 <div className="space-y-3 text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
-                  <p>Your BioStackr Pro is now active.</p>
-                  <p>Start building your stack and see what actually works for you.</p>
+                  <p>Your BioStackr Pro access is now active.</p>
+                  <p>You can now start testing the rest of your supplement stack.</p>
                 </div>
                 <a
                   href={cohortProProductEntryPath()}
@@ -862,7 +940,8 @@ export default function CohortParticipantResultView({
             ) : rewards.pro_claim_token ? (
               <>
                 <p className="mt-4 text-[15px] sm:text-base leading-relaxed text-slate-800">
-                  You&apos;ve unlocked 3 months of BioStackr Pro.
+                  You&apos;ve unlocked 3 months of BioStackr Pro — use it to test the rest of your stack the same way you
+                  tested this study.
                 </p>
                 <button
                   type="button"
@@ -886,26 +965,38 @@ export default function CohortParticipantResultView({
 
       {showOutcomeBody ? (
         <section
-          className="rounded-2xl border border-slate-200/80 bg-slate-50/40 px-5 py-5 sm:px-6 sm:py-6"
-          aria-labelledby="cohort-result-next-step-heading"
+          className="rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white via-slate-50/40 to-slate-50/70 px-6 py-10 sm:px-10 sm:py-12 shadow-[0_16px_48px_-28px_rgba(15,23,42,0.18),0_4px_14px_-6px_rgba(15,23,42,0.06)]"
+          aria-labelledby="cohort-result-unlocks-heading"
         >
-          <h3
-            id="cohort-result-next-step-heading"
-            className="text-sm font-semibold text-slate-800 tracking-tight"
-          >
-            What to do next
-          </h3>
-          <p className="mt-2 max-w-prose text-[13px] sm:text-sm text-slate-600 leading-relaxed">
-            You&apos;ve now seen how this supplement affects you.
-            <br />
-            If you&apos;re taking other supplements, you can test them in the same way with BioStackr.
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Report conclusion
           </p>
-          <Link
-            href="/dashboard"
-            className="mt-4 inline-flex text-sm font-medium text-[#C84B2F] hover:underline underline-offset-2"
+          <h2
+            id="cohort-result-unlocks-heading"
+            className="mt-3 text-2xl sm:text-[1.75rem] font-bold text-slate-950 tracking-tight leading-snug"
           >
-            Test another supplement
-          </Link>
+            What this unlocks next
+          </h2>
+          <div className="mt-7 max-w-2xl space-y-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-700">
+            <p>
+              You now have evidence that this supplement affects you positively.
+            </p>
+            <p className="text-slate-600">
+              Most people are still guessing with the rest of their stack.
+            </p>
+            <p>
+              With BioStackr, you can test your other supplements the same way — and find out what is actually helping,
+              what is neutral, and what may not be worth taking.
+            </p>
+          </div>
+          <div className="mt-10">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200/95 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50/90 sm:min-w-[240px]"
+            >
+              Start testing your stack
+            </Link>
+          </div>
         </section>
       ) : null}
     </div>
