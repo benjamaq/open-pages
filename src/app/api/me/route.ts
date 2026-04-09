@@ -20,6 +20,7 @@ import {
   runCohortMainProductHandoffCleanup,
 } from "@/lib/cohortEnrollment";
 import { shouldUseCohortCheckinBranch } from "@/lib/cohortCheckinBranch";
+import { resolveCohortDashboardParticipantUi } from "@/lib/cohortDashboardParticipantUi";
 
 export const dynamic = "force-dynamic";
 
@@ -355,15 +356,6 @@ export async function GET(request: Request) {
                   ) {
                     showCohortStudyDashboard = false;
                   }
-                  // Shipment / post-gate UX: confirmed or completed with a cleared gate (confirmed_at).
-                  cohortConfirmed =
-                    (participantStatus === "confirmed" ||
-                      participantStatus === "completed") &&
-                    confirmedAtRaw != null &&
-                    String(confirmedAtRaw).trim() !== "";
-                  const confirmedAtIso = cohortConfirmed
-                    ? String(confirmedAtRaw).trim()
-                    : null;
                   const studyStartedRaw = (
                     part as { study_started_at?: string | null } | null
                   )?.study_started_at;
@@ -376,19 +368,23 @@ export async function GET(request: Request) {
                   const studyCompletedRaw = (
                     part as { study_completed_at?: string | null } | null
                   )?.study_completed_at;
+                  const cohortUi = resolveCohortDashboardParticipantUi({
+                    participantStatus,
+                    confirmedAtRaw,
+                    studyStartedAtIso,
+                    studyCompletedRaw,
+                    todayYmd,
+                  });
+                  cohortConfirmed = cohortUi.cohortConfirmed;
+                  cohortAwaitingStudyStart = cohortUi.cohortAwaitingStudyStart;
                   cohortStudyPersistedComplete =
                     participantStatus === "completed" ||
-                    (studyCompletedRaw != null &&
-                      String(studyCompletedRaw).trim() !== "");
+                    cohortUi.studyCompletedAtSet;
                   const studyStartYmd = studyStartedAtIso
                     ? studyStartedAtIso.slice(0, 10)
                     : null;
                   const studyClockHasBegun = Boolean(
                     studyStartYmd != null && studyStartYmd <= todayYmd,
-                  );
-                  cohortAwaitingStudyStart = Boolean(
-                    cohortConfirmed &&
-                      (!studyStartedAtIso || !studyClockHasBegun),
                   );
 
                   if (enrolledAt) {
