@@ -207,7 +207,8 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
     // Lazy import to avoid circular deps at module load
     const { renderDailyReminderEmail } = await import('@/lib/email/templates/daily-reminder')
     const { cohortEmailCheckInLandingAbsoluteUrl } = await import('@/lib/cohortCheckInLanding')
-    const { resolveDailyReminderCheckinHrefForUser } = await import('@/lib/cohortDailyReminderCheckinHref')
+    const { resolveDailyReminderCheckinHrefForUser, resolveDailyReminderEmailShellForUser } =
+      await import('@/lib/cohortDailyReminderCheckinHref')
     const supplementCount =
       (Array.isArray(data.supplements) ? data.supplements.length : 0) +
       (Array.isArray(data.protocols) ? data.protocols.length : 0) +
@@ -216,8 +217,13 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
     // Until we plumb real stack clarity here, default to 0
     const progressPercent = 0
     let checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
+    let emailShell = { cohortTransactionalShell: false as boolean, partnerBrandName: null as string | null }
     if (data.authUserId && data.userEmail) {
       checkinHref = await resolveDailyReminderCheckinHrefForUser({
+        authUserId: data.authUserId,
+        recipientEmail: data.userEmail,
+      })
+      emailShell = await resolveDailyReminderEmailShellForUser({
         authUserId: data.authUserId,
         recipientEmail: data.userEmail,
       })
@@ -228,6 +234,10 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
       progressPercent,
       checkinUrl: checkinHref,
       linkHint: null,
+      cohortTransactionalShell: emailShell.cohortTransactionalShell,
+      ...(emailShell.cohortTransactionalShell
+        ? { partnerBrandName: emailShell.partnerBrandName }
+        : {}),
     })
     return sendEmail({
       to: data.userEmail,

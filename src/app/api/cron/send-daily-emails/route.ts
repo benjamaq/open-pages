@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
+import {
+  resolveDailyReminderCheckinHrefForUser,
+  resolveDailyReminderEmailShellForUser,
+} from '@/lib/cohortDailyReminderCheckinHref'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
@@ -510,6 +513,10 @@ async function handler(req: NextRequest) {
           authUserId: p.user_id,
           recipientEmail: email,
         })
+        const emailShell = await resolveDailyReminderEmailShellForUser({
+          authUserId: p.user_id,
+          recipientEmail: email,
+        })
 
         // Greeting priority:
         // 1) profiles.display_name (first token)
@@ -588,6 +595,10 @@ async function handler(req: NextRequest) {
           progressPercent,
           checkinUrl: checkinHref,
           linkHint: null,
+          cohortTransactionalShell: emailShell.cohortTransactionalShell,
+          ...(emailShell.cohortTransactionalShell
+            ? { partnerBrandName: emailShell.partnerBrandName }
+            : {}),
           ...(energy != null ? { energy } : {}),
           ...(focus  != null ? { focus }  : {}),
           ...(sleep  != null ? { sleep }  : {}),

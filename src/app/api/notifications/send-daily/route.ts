@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '../../../../utils/supabase/admin'
 import { startOfMinute, endOfMinute, subMinutes, addMinutes } from 'date-fns'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
-import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
+import {
+  resolveDailyReminderCheckinHrefForUser,
+  resolveDailyReminderEmailShellForUser,
+} from '@/lib/cohortDailyReminderCheckinHref'
 import { Resend } from 'resend'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
@@ -226,12 +229,20 @@ async function handleSend() {
             authUserId: profile.user_id,
             recipientEmail: userEmail,
           })
+          const emailShell = await resolveDailyReminderEmailShellForUser({
+            authUserId: profile.user_id,
+            recipientEmail: userEmail,
+          })
           const html = renderV3Reminder({
             firstName: userName || 'there',
             supplementCount: Math.max(1, supplementCount),
             progressPercent,
             checkinUrl: checkinHref,
             linkHint: null,
+            cohortTransactionalShell: emailShell.cohortTransactionalShell,
+            ...(emailShell.cohortTransactionalShell
+              ? { partnerBrandName: emailShell.partnerBrandName }
+              : {}),
             ...(latest?.energy != null ? { energy: latest.energy } : {}),
             ...(latest?.focus != null ? { focus: latest.focus } : {}),
             ...(latest?.sleep != null ? { sleep: latest.sleep } : {}),

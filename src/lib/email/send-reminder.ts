@@ -1,7 +1,10 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { renderDailyReminderEmail } from './templates/daily-reminder'
-import { resolveDailyReminderCheckinHrefForUser } from '@/lib/cohortDailyReminderCheckinHref'
+import {
+  resolveDailyReminderCheckinHrefForUser,
+  resolveDailyReminderEmailShellForUser,
+} from '@/lib/cohortDailyReminderCheckinHref'
 
 type Options = {
   emailOverride?: string
@@ -65,12 +68,20 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     authUserId: userId,
     recipientEmail,
   })
+  const emailShell = await resolveDailyReminderEmailShellForUser({
+    authUserId: userId,
+    recipientEmail,
+  })
   const html = renderDailyReminderEmail({
     firstName: firstName || 'there',
     supplementCount,
     progressPercent,
     checkinUrl: checkinHref,
     linkHint: null,
+    cohortTransactionalShell: emailShell.cohortTransactionalShell,
+    ...(emailShell.cohortTransactionalShell
+      ? { partnerBrandName: emailShell.partnerBrandName }
+      : {}),
   })
   const subject = `Quick check-in — 10 seconds`
   if (dry || preview) {

@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
       progressPercent: readinessScore,
       checkinUrl: checkInUrl,
       linkHint,
+      cohortTransactionalShell: false,
       energy: pain,
       focus: mood,
       sleep
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
       progressPercent: readinessScore,
       checkinUrl: checkInUrl,
       linkHint,
+      cohortTransactionalShell: false,
       energy: pain,
       focus: mood,
       sleep
