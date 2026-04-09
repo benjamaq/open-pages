@@ -27,7 +27,13 @@ function assertCron(request: NextRequest): NextResponse | null {
   return null
 }
 
-type Row = { id: string; user_id: string; enrolled_at: string; gate_reminder_sent_at: string | null }
+type Row = {
+  id: string
+  user_id: string
+  enrolled_at: string
+  gate_reminder_sent_at: string | null
+  study_started_at: string | null
+}
 
 export async function GET(request: NextRequest) {
   const denied = assertCron(request)
@@ -41,8 +47,9 @@ export async function GET(request: NextRequest) {
   try {
     const { data: participants, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, user_id, enrolled_at, gate_reminder_sent_at')
+      .select('id, user_id, enrolled_at, gate_reminder_sent_at, study_started_at')
       .eq('status', 'applied')
+      .is('study_started_at', null)
 
     if (pErr) {
       console.error('[cohort-gate-reminder]', pErr)

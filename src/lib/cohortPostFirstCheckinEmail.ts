@@ -80,6 +80,7 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
  * After first distinct compliance check-in (n === 1): send nudge for second check-in.
  * Claimed atomically via post_first_checkin_email_sent_at to avoid duplicates.
  *
+ * Skips when `study_started_at` is set — active study users get daily reminders only, not gate copy.
  * Participant may be `applied` or, in edge cases, `confirmed` with n===1 — still send if claim is free.
  * Call this before tryImmediateCohortComplianceConfirm so a mistaken n>=2 cannot confirm before this runs.
  */
@@ -123,7 +124,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
     const userKeys = cohortParticipantUserIdCandidatesSync(opts.profileId, opts.authUserId)
     const { data: part, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, enrolled_at, status')
+      .select('id, enrolled_at, status, study_started_at')
       .in('user_id', userKeys)
       .eq('cohort_id', cohort.id)
       .in('status', ['applied', 'confirmed'])
@@ -138,6 +139,14 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
           err: pErr?.message ?? null,
           hasRow: !!part,
         },
+      }
+    }
+
+    if (part.study_started_at != null && String(part.study_started_at).trim() !== '') {
+      return {
+        sent: false,
+        skip: 'study_started_at_set',
+        debug: { partId: part.id, study_started_at: part.study_started_at },
       }
     }
 
