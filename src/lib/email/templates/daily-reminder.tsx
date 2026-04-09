@@ -43,7 +43,7 @@ export function renderDailyReminderInnerHtml(params: DailyReminderEmailParams): 
 
   return (
     `<p style="margin:0 0 16px;font-size:18px;font-weight:600;color:#1a1a1a;">Hey ${esc(firstName || 'there')},</p>` +
-    `<p style="margin:0 0 22px;font-size:16px;color:#1a1a1a;line-height:1.65;">Time for your daily check-in. Three sliders, ten seconds.</p>` +
+    `<p style="margin:0 0 22px;font-size:16px;color:#1a1a1a;line-height:1.65;">Time for your daily check-in.</p>` +
     `<p style="margin:0 0 24px;">` +
     `<a href="${esc(checkinUrl)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;">Check In Now</a>` +
     hintBlock +
