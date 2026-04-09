@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 
 // Initialize Resend client lazily
 let resend: Resend | null = null
@@ -239,9 +240,13 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
         ? { partnerBrandName: emailShell.partnerBrandName }
         : {}),
     })
+    const subject = dailyReminderEmailSubject({
+      cohortTransactionalShell: emailShell.cohortTransactionalShell,
+      partnerBrandName: emailShell.partnerBrandName,
+    })
     return sendEmail({
       to: data.userEmail,
-      subject: `${progressPercent}% complete`,
+      subject,
       html
     })
   } catch (e: any) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { renderDailyReminderEmail as renderV3Reminder } from '@/lib/email/templates/daily-reminder'
+import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 import { cohortEmailCheckInLandingAbsoluteUrl } from '@/lib/cohortCheckInLanding'
 
 function stackToLines(list: string[]): string {
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       sleep
     })
 
-    const subject = `${readinessScore}% complete`
+    const subject = dailyReminderEmailSubject({ cohortTransactionalShell: false })
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
       sleep
     })
 
-    const subject = `${readinessScore}% complete`
+    const subject = dailyReminderEmailSubject({ cohortTransactionalShell: false })
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const from = process.env.RESEND_FROM || 'BioStackr <reminders@biostackr.io>'
     const reply_to = process.env.REPLY_TO_EMAIL || undefined

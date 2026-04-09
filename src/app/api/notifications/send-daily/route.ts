@@ -6,6 +6,7 @@ import {
   resolveDailyReminderCheckinHrefForUser,
   resolveDailyReminderEmailShellForUser,
 } from '@/lib/cohortDailyReminderCheckinHref'
+import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 import { Resend } from 'resend'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 
@@ -249,7 +250,10 @@ async function handleSend() {
             ...(latest?.mood != null ? { mood: latest.mood } : {})
           })
           try { console.log('[notifications/send-daily] Latest metrics:', latest) } catch {}
-          const subject = `Quick check-in — 10 seconds`
+          const subject = dailyReminderEmailSubject({
+            cohortTransactionalShell: emailShell.cohortTransactionalShell,
+            partnerBrandName: emailShell.partnerBrandName,
+          })
           const sendResp = await resend.emails.send({
             from,
             to: userEmail!,

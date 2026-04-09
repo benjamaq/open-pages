@@ -5,6 +5,7 @@ import {
   resolveDailyReminderCheckinHrefForUser,
   resolveDailyReminderEmailShellForUser,
 } from '@/lib/cohortDailyReminderCheckinHref'
+import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 
 type Options = {
   emailOverride?: string
@@ -83,7 +84,10 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
       ? { partnerBrandName: emailShell.partnerBrandName }
       : {}),
   })
-  const subject = `Quick check-in — 10 seconds`
+  const subject = dailyReminderEmailSubject({
+    cohortTransactionalShell: emailShell.cohortTransactionalShell,
+    partnerBrandName: emailShell.partnerBrandName,
+  })
   if (dry || preview) {
     return { ok: true, dry: true, subject, html, supplementCount, progressPercent }
   }

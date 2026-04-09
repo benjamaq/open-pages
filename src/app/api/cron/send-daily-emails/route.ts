@@ -7,6 +7,7 @@ import {
   resolveDailyReminderCheckinHrefForUser,
   resolveDailyReminderEmailShellForUser,
 } from '@/lib/cohortDailyReminderCheckinHref'
+import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 import { Resend } from 'resend'
 import { formatInTimeZone } from 'date-fns-tz'
 import { addDays } from 'date-fns'
@@ -616,7 +617,10 @@ async function handler(req: NextRequest) {
           console.log('[daily-cron] HTML contains Check in?', (typeof html === 'string') ? html.includes('Check in') : false)
         } catch {}
 
-        let subject = `Quick check-in — 10 seconds`
+        const subject = dailyReminderEmailSubject({
+          cohortTransactionalShell: emailShell.cohortTransactionalShell,
+          partnerBrandName: emailShell.partnerBrandName,
+        })
 
         if (dryRun) {
           // eslint-disable-next-line no-console
