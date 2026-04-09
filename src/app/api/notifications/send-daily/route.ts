@@ -9,6 +9,7 @@ import {
 import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 import { Resend } from 'resend'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
+import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -117,6 +118,22 @@ async function handleSend() {
           console.error(`⚠️ Skipping user ${profile.id} - no email data`)
           errors.push({ user: profile.id, error: 'No email found' })
           continue
+        }
+
+        const cohortKeys = cohortParticipantUserIdCandidatesSync(profile.id, profile.user_id)
+        if (cohortKeys.length > 0) {
+          const { data: completedCohort, error: ccErr } = await supabaseAdmin
+            .from('cohort_participants')
+            .select('id')
+            .not('study_completed_at', 'is', null)
+            .in('user_id', cohortKeys)
+            .limit(1)
+          if (ccErr) {
+            console.warn('[notifications/send-daily] cohort study_completed lookup:', ccErr.message)
+          } else if (completedCohort && completedCohort.length > 0) {
+            console.log(`⏭️ Skipping ${userEmail} — cohort study completed`)
+            continue
+          }
         }
 
         const userName = profile.display_name || 'User'

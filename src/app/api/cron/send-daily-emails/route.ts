@@ -16,6 +16,11 @@ import {
   getAuthUserByEmailAdminListUsers,
   getAuthUserByEmailNorm,
 } from '@/lib/cohortLoginLinkEligibility'
+import {
+  fetchExpandedCohortStudyCompletedIdExclusions,
+  profileKeysForCohortParticipantFilter,
+  profileRowMatchesCohortStudyCompletedExclusion,
+} from '@/lib/cohortDailyReminderCompletedFilter'
 
 /** Decode email query param: trim, fix `+` lost as space in unencoded query strings. */
 function normalizeForceEmailQuery(raw: string): string {
@@ -311,32 +316,24 @@ async function handler(req: NextRequest) {
               after: scopedProfiles.length,
             })
           }
+        }
 
-          const { data: studyDoneRows, error: sdErr } = await supabaseAdmin
-            .from('cohort_participants')
-            .select('user_id')
-            .not('study_completed_at', 'is', null)
-            .in('user_id', [...cpUserIdKeys])
-          if (sdErr) {
-            console.warn('[daily-cron] cohort study-completed skip lookup:', sdErr.message)
-          } else {
-            const completedCpUserIds = new Set(
-              ((studyDoneRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
-            )
-            const beforeDone = scopedProfiles.length
-            scopedProfiles = scopedProfiles.filter((p) => {
-              if (!p.profile_id) return true
-              const pid = String(p.profile_id)
-              const uid = String((p as { user_id?: string }).user_id || '')
-              if (completedCpUserIds.has(pid) || (uid && completedCpUserIds.has(uid))) return false
-              return true
-            })
-            // eslint-disable-next-line no-console
-            console.log('[daily-cron] Cohort study completed filter:', {
-              before: beforeDone,
-              after: scopedProfiles.length,
-            })
-          }
+        const completionKeys = profileKeysForCohortParticipantFilter(scopedProfiles)
+        if (completionKeys.length > 0) {
+          const beforeDone = scopedProfiles.length
+          const exclusion = await fetchExpandedCohortStudyCompletedIdExclusions(
+            supabaseAdmin,
+            completionKeys,
+          )
+          scopedProfiles = scopedProfiles.filter(
+            (p) => !profileRowMatchesCohortStudyCompletedExclusion(p, exclusion),
+          )
+          // eslint-disable-next-line no-console
+          console.log('[daily-cron] Cohort study completed filter:', {
+            before: beforeDone,
+            after: scopedProfiles.length,
+            exclusionKeys: exclusion.size,
+          })
         }
       } catch (e) {
         console.warn('[daily-cron] cohort awaiting filter skipped:', (e as any)?.message)
