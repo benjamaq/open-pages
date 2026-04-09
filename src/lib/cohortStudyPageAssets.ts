@@ -5,6 +5,8 @@
 export const COGNITIVE_COHORT_STUDY_ASSETS = {
   partnerLogo: '/cohorts/seeking-health/logo.png',
   productImage: '/cohorts/seeking-health/product.png',
+  /** First card in “You’ll receive” (product shelf) — Seeking Health pack. */
+  productImageFirstShelf: '/cohorts/seeking-health/product2.png',
   rewardHero: '/cohorts/seeking-health/hero.png',
 } as const
 

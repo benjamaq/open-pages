@@ -609,16 +609,20 @@ function PartnerCompletionRewardPhoto({ src, alt }: { src: string; alt: string }
 
 function WhatYouReceive({
   productImageSrc,
+  productImageFirstShelfSrc,
   productImageAlt,
   studyDays,
   landingRewards,
 }: {
   productImageSrc: string
+  /** When set (e.g. cognitive Seeking Health), first shelf card only — middle card still uses `productImageSrc` when it shows product art. */
+  productImageFirstShelfSrc?: string | null
   productImageAlt: string
   studyDays: number
   landingRewards: ReturnType<typeof resolveStudyLandingRewards>
 }) {
   const { studyProductCard, completionCard } = landingRewards
+  const firstShelfSrc = (productImageFirstShelfSrc && String(productImageFirstShelfSrc).trim()) || productImageSrc
 
   /** Middle card: store credit uses partner hero art only — never the study product image. */
   const completionVisual =
@@ -643,7 +647,7 @@ function WhatYouReceive({
         </h2>
         <div className="mt-12 grid gap-8 md:grid-cols-3 md:items-stretch">
           <IncentiveShelfCard
-            visual={<StudyProductPhoto imageSrc={productImageSrc} imageAlt={productImageAlt} />}
+            visual={<StudyProductPhoto imageSrc={firstShelfSrc} imageAlt={productImageAlt} />}
             title={studyProductCard.title}
             body={studyProductCard.body}
             footer={studyProductCard.footer}
@@ -945,6 +949,9 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           />
           <WhatYouReceive
             productImageSrc={productHeroImageSrc}
+            productImageFirstShelfSrc={
+              isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.productImageFirstShelf : null
+            }
             productImageAlt={productHeroImageAlt}
             studyDays={studyDays}
             landingRewards={landingRewards}
