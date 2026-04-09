@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
 import { COHORT_RESULT_PARTNER_MARK_CLASS } from '@/lib/cohortDashboardPartnerLogo'
@@ -69,6 +70,15 @@ type ParsedMetricRow = {
   lowerIsBetter: boolean
 }
 
+type ParsedResultMetrics = {
+  primaryMetric: string | null
+  /** Normalized effect size for thresholds; not shown in UI. */
+  effectSizeNormalized: number | null
+  effectStrengthLabel: string | null
+  confidenceLabel: string | null
+  rows: ParsedMetricRow[]
+}
+
 function humanizeMetricKey(key: string): string {
   const k = key.replace(/_/g, ' ').trim()
   if (!k) return key
@@ -111,6 +121,9 @@ function effectStrengthLabel(normalized: number | null): string | null {
   return 'Effect: weak'
 }
 
+const POSITIVE_OUTCOME_RECOMMENDATION =
+  'Based on your results, continuing this supplement is likely beneficial.'
+
 function cohortUsageRecommendation(effectNormalized: number | null, productLabel: string): string {
   if (effectNormalized == null || !Number.isFinite(effectNormalized)) {
     return "We don't yet have enough data to make a clear recommendation."
@@ -122,6 +135,114 @@ function cohortUsageRecommendation(effectNormalized: number | null, productLabel
     return `Continue using ${productLabel} — you're seeing a positive effect.`
   }
   return `No clear benefit detected — you may want to stop using ${productLabel}.`
+}
+
+/** Cohort `result_json.verdict` — positive / improved outcomes (rendering only; not the stats engine). */
+function verdictIsPositive(j: Record<string, unknown>): boolean {
+  const v = stringField(j, 'verdict')
+  if (!v) return false
+  const s = v.trim().toLowerCase()
+  return s === 'positive' || s === 'improved'
+}
+
+function rowShowsMeaningfulImprovement(row: ParsedMetricRow): boolean {
+  const { baseline, final, lowerIsBetter } = row
+  if (baseline == null || final == null) return false
+  const delta = final - baseline
+  return lowerIsBetter ? delta < -0.2 : delta > 0.2
+}
+
+function metricsShowImprovement(parsed: ParsedResultMetrics): boolean {
+  return parsed.rows.some(rowShowsMeaningfulImprovement)
+}
+
+function firstImprovedMetricRow(parsed: ParsedResultMetrics): ParsedMetricRow | null {
+  for (const row of parsed.rows) {
+    if (rowShowsMeaningfulImprovement(row)) return row
+  }
+  return null
+}
+
+/** When metrics are sparse but narrative still describes improvement (aligns verdict + summary). */
+function narrativeSuggestsImprovement(j: Record<string, unknown>): boolean {
+  const chunks: string[] = []
+  const summary = stringField(j, 'summary')
+  const expl = stringField(j, 'explanation')
+  if (summary) chunks.push(summary)
+  if (expl) chunks.push(expl)
+  for (const line of stringListField(j, 'bullet_points')) chunks.push(line)
+  const text = chunks.join(' ').toLowerCase()
+  if (!text) return false
+  return /\b(improved|improvement|better|increased|positive trend|fewer|reduced)\b/.test(text)
+}
+
+function proofLineFromMetricRow(row: ParsedMetricRow): string | null {
+  const { baseline, final, lowerIsBetter, label } = row
+  if (baseline == null || final == null) return null
+  const delta = final - baseline
+  if (Math.abs(delta) < 1e-9) return null
+  const improved = lowerIsBetter ? delta < -0.2 : delta > 0.2
+  const b = formatMetricValue(baseline)
+  const f = formatMetricValue(final)
+  if (improved) {
+    return lowerIsBetter ? `${label} decreased from ${b} → ${f}` : `${label} increased from ${b} → ${f}`
+  }
+  return `${label} changed from ${b} → ${f}`
+}
+
+function primaryMetricRow(j: Record<string, unknown>, parsed: ParsedResultMetrics): ParsedMetricRow | null {
+  const key =
+    stringField(j, 'primary_metric') || stringField(j, 'primaryMetric') || stringField(j, 'primary_outcome')
+  if (key) {
+    const row = parsed.rows.find((r) => r.id === key)
+    if (row) return row
+  }
+  return null
+}
+
+const OUTCOME_SUBTEXT = 'Based on your real-world data over the study period'
+
+function outcomeHeadlineProofAndSubtext(
+  j: Record<string, unknown>,
+  parsed: ParsedResultMetrics,
+  fallbackHeadline: string,
+): { headline: string; subtext: string | null; proofLine: string | null } {
+  if (!verdictIsPositive(j)) {
+    return { headline: fallbackHeadline, subtext: null, proofLine: null }
+  }
+
+  const rowForProof = primaryMetricRow(j, parsed) ?? firstImprovedMetricRow(parsed)
+  const proofLine = rowForProof ? proofLineFromMetricRow(rowForProof) : null
+
+  const rowForHeadline = rowForProof ?? primaryMetricRow(j, parsed)
+  if (rowForHeadline) {
+    let headlineMetric: string
+    if (rowForHeadline.id === 'night_wakes' || rowForHeadline.id === 'night_wake') {
+      headlineMetric = 'sleep'
+    } else {
+      const words = rowForHeadline.label.trim().split(/\s+/)
+      headlineMetric =
+        words.length <= 2
+          ? words.join(' ').toLowerCase()
+          : words.slice(0, 2).join(' ').toLowerCase()
+    }
+    return {
+      headline: `Your ${headlineMetric} improved`,
+      subtext: OUTCOME_SUBTEXT,
+      proofLine,
+    }
+  }
+
+  if (narrativeSuggestsImprovement(j)) {
+    return { headline: 'Your results improved', subtext: OUTCOME_SUBTEXT, proofLine: null }
+  }
+
+  const rawV = stringField(j, 'verdict')
+  if (rawV && ['positive', 'improved'].includes(rawV.trim().toLowerCase())) {
+    return { headline: 'Your results improved', subtext: OUTCOME_SUBTEXT, proofLine: null }
+  }
+
+  return { headline: fallbackHeadline, subtext: null, proofLine: null }
 }
 
 /** Top-level + nested keys some publish pipelines use instead of `effect_size`. */
@@ -174,21 +295,18 @@ function buildRecommendationParagraph(
     stringField(j, 'cohort_usage_recommendation')
   if (explicit) return explicit
 
+  const positive = verdictIsPositive(j)
+  const improved = metricsShowImprovement(parsed) || narrativeSuggestsImprovement(j)
+  if (positive && improved) {
+    return POSITIVE_OUTCOME_RECOMMENDATION
+  }
+
   const effect =
     readEffectSizeFromJsonKeys(j) ??
     parsed.effectSizeNormalized ??
     inferEffectSizeFromParsedMetrics(parsed)
 
   return cohortUsageRecommendation(effect, productLabel)
-}
-
-type ParsedResultMetrics = {
-  primaryMetric: string | null
-  /** Normalized effect size for thresholds; not shown in UI. */
-  effectSizeNormalized: number | null
-  effectStrengthLabel: string | null
-  confidenceLabel: string | null
-  rows: ParsedMetricRow[]
 }
 
 /** Core outcome fields from seeded `result_json` (metrics + study-level signals). */
@@ -240,6 +358,26 @@ function parseResultMetrics(j: Record<string, unknown>): ParsedResultMetrics {
       final,
       lowerIsBetter: spec.lowerIsBetter,
     })
+  }
+
+  const primaryKey =
+    stringField(j, 'primary_metric') || stringField(j, 'primaryMetric') || stringField(j, 'primary_outcome')
+  if (primaryKey && !rows.some((r) => r.id === primaryKey)) {
+    const sub = recordField(metricsRoot[primaryKey])
+    if (sub) {
+      const { baseline, final } = readBaselineFinal(sub)
+      if (baseline != null || final != null) {
+        const pkLower = primaryKey.toLowerCase()
+        rows.push({
+          id: primaryKey,
+          label: humanizeMetricKey(primaryKey),
+          baseline,
+          final,
+          lowerIsBetter:
+            pkLower.includes('night_wake') || pkLower.includes('sleep_onset') || pkLower.includes('wakes'),
+        })
+      }
+    }
   }
 
   return { primaryMetric, effectSizeNormalized, effectStrengthLabel: effectStrengthLabelOut, confidenceLabel, rows }
@@ -362,8 +500,8 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
  * Participant-only cohort result layout + PDF export (not TruthReportView).
  * `result_json`: verdict / bullet_points / explanation / summary, plus optional primary_metric,
  * effect_size (or effect_size_pct, summary.effect_size), usage_recommendation (overrides generated copy),
- * confidence, and metrics.{…}.{baseline_avg,final_avg}. Missing `effect_size` with improving metrics still
- * yields a positive recommendation via inferred effect strength.
+ * confidence, and metrics.{…}.{baseline_avg,final_avg}. Rendering maps `verdict: positive` + improving
+ * metrics to a decisive recommendation without changing published numbers.
  */
 export default function CohortParticipantResultView({
   payload,
@@ -402,6 +540,8 @@ export default function CohortParticipantResultView({
 
   const productLabel = (payload.product_name && payload.product_name.trim()) || 'your study product'
   const recommendationText = buildRecommendationParagraph(j, parsedMetrics, productLabel)
+  const { headline: outcomeHeadline, subtext: outcomeSubtext, proofLine: outcomeProofLine } =
+    outcomeHeadlineProofAndSubtext(j, parsedMetrics, verdictHeadline)
 
   const studyLine = studyContextLine(payload.brand_name, payload.product_name)
   const publishedLabel = (() => {
@@ -530,9 +670,41 @@ export default function CohortParticipantResultView({
                 Your verdict
               </p>
               <h2 className="mt-3 sm:mt-4 text-[1.75rem] sm:text-[2.125rem] font-bold text-slate-950 leading-[1.14] tracking-[-0.02em]">
-                {verdictHeadline}
+                {outcomeHeadline}
               </h2>
+              {outcomeSubtext ? (
+                <p className="mt-2 max-w-prose text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+                  {outcomeSubtext}
+                </p>
+              ) : null}
+              {outcomeProofLine ? (
+                <p className="mt-3 max-w-prose text-[15px] sm:text-[1.0625rem] font-medium text-slate-800 tabular-nums tracking-tight">
+                  {outcomeProofLine}
+                </p>
+              ) : null}
             </header>
+
+            {bulletPoints.length > 0 ? (
+              <section className="mt-9 sm:mt-11">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What changed</h3>
+                <ul className="mt-4 sm:mt-5 list-disc space-y-3 pl-5 text-[15px] sm:text-[1.0625rem] leading-[1.6] text-slate-800 marker:text-[#C84B2F]">
+                  {bulletPoints.map((line) => (
+                    <li key={line} className="pl-0.5">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {explanation ? (
+              <section className="mt-9 sm:mt-11">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What this means</h3>
+                <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-800 whitespace-pre-line">
+                  {explanation}
+                </p>
+              </section>
+            ) : null}
 
             {hasMetricBlock ? (
               <section className="mt-9 sm:mt-11" aria-labelledby="cohort-result-metrics-heading">
@@ -613,41 +785,17 @@ export default function CohortParticipantResultView({
               </section>
             ) : null}
 
-            {bulletPoints.length > 0 ? (
-              <section className="mt-9 sm:mt-11">
-                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What changed</h3>
-                <ul className="mt-4 sm:mt-5 list-disc space-y-3 pl-5 text-[15px] sm:text-[1.0625rem] leading-[1.6] text-slate-800 marker:text-[#C84B2F]">
-                  {bulletPoints.map((line) => (
-                    <li key={line} className="pl-0.5">
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            {explanation ? (
-              <section className="mt-9 sm:mt-11">
-                <h3 className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight">What this means</h3>
-                <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-800 whitespace-pre-line">
-                  {explanation}
-                </p>
-              </section>
-            ) : null}
-
-            {showOutcomeBody ? (
-              <section className="mt-9 sm:mt-11" aria-labelledby="cohort-result-recommendation-heading">
-                <h3
-                  id="cohort-result-recommendation-heading"
-                  className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight"
-                >
-                  Your recommendation
-                </h3>
-                <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] font-medium leading-[1.65] text-slate-900">
-                  {recommendationText}
-                </p>
-              </section>
-            ) : null}
+            <section className="mt-9 sm:mt-11" aria-labelledby="cohort-result-recommendation-heading">
+              <h3
+                id="cohort-result-recommendation-heading"
+                className="text-base sm:text-lg font-semibold text-slate-950 tracking-tight"
+              >
+                Your recommendation
+              </h3>
+              <p className="mt-4 sm:mt-5 text-[15px] sm:text-[1.0625rem] font-medium leading-[1.65] text-slate-900">
+                {recommendationText}
+              </p>
+            </section>
           </>
         ) : (
           <p className="mt-6 text-sm leading-relaxed text-slate-600">
@@ -733,6 +881,31 @@ export default function CohortParticipantResultView({
               </p>
             )}
           </article>
+        </section>
+      ) : null}
+
+      {showOutcomeBody ? (
+        <section
+          className="rounded-2xl border border-slate-200/80 bg-slate-50/40 px-5 py-5 sm:px-6 sm:py-6"
+          aria-labelledby="cohort-result-next-step-heading"
+        >
+          <h3
+            id="cohort-result-next-step-heading"
+            className="text-sm font-semibold text-slate-800 tracking-tight"
+          >
+            What to do next
+          </h3>
+          <p className="mt-2 max-w-prose text-[13px] sm:text-sm text-slate-600 leading-relaxed">
+            You&apos;ve now seen how this supplement affects you.
+            <br />
+            If you&apos;re taking other supplements, you can test them in the same way with BioStackr.
+          </p>
+          <Link
+            href="/dashboard"
+            className="mt-4 inline-flex text-sm font-medium text-[#C84B2F] hover:underline underline-offset-2"
+          >
+            Test another supplement
+          </Link>
         </section>
       ) : null}
     </div>
