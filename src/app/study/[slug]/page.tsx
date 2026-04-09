@@ -674,11 +674,15 @@ function WhatYouReceive({
 function TrustFooter({
   partnerBrand,
   partnerLogoSrc,
+  footerPartnerLogoSrc,
 }: {
   partnerBrand: string
   /** When set, show raster logo instead of DNA asset or plain text (cognitive cohort pack). */
   partnerLogoSrc?: string | null
+  /** Optional light/white mark for dark footer (e.g. Seeking Health); overrides `partnerLogoSrc` in footer row only. */
+  footerPartnerLogoSrc?: string | null
 }) {
+  const footerRasterSrc = footerPartnerLogoSrc || partnerLogoSrc
   const col = (icon: ReactNode, label: string, body: string) => (
     <div className="flex flex-col items-center text-center sm:px-4">
       <div className="mb-3" style={{ color: RUST }}>
@@ -692,9 +696,9 @@ function TrustFooter({
     <footer className="py-14 sm:py-16" style={{ background: DARK_PANEL_BG }}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-10 flex w-full flex-row flex-nowrap items-center justify-center gap-4 sm:mb-12 sm:gap-14">
-          {partnerLogoSrc ? (
+          {footerRasterSrc ? (
             <Image
-              src={partnerLogoSrc}
+              src={footerRasterSrc}
               alt={partnerBrand || 'Study partner'}
               width={320}
               height={120}
@@ -977,7 +981,13 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       ) : null}
       </div>
 
-      <TrustFooter partnerBrand={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
+      <TrustFooter
+        partnerBrand={brandDisplay}
+        partnerLogoSrc={partnerLogoSrc}
+        footerPartnerLogoSrc={
+          isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogoWhite : null
+        }
+      />
     </div>
   )
 }

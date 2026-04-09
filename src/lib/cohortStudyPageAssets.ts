@@ -4,6 +4,8 @@
  */
 export const COGNITIVE_COHORT_STUDY_ASSETS = {
   partnerLogo: '/cohorts/seeking-health/logo.png',
+  /** Dark footer strip — white mark (`logowhite.png` in public pack). */
+  partnerLogoWhite: '/cohorts/seeking-health/logowhite.png',
   productImage: '/cohorts/seeking-health/product.png',
   /** First card in “You’ll receive” (product shelf) — Seeking Health pack. */
   productImageFirstShelf: '/cohorts/seeking-health/product2.png',
