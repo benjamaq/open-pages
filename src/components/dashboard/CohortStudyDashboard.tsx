@@ -749,6 +749,26 @@ export default function CohortStudyDashboard({
                 <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
                   You&apos;re confirmed — your product will be shipped shortly.
                 </p>
+                <div
+                  className="mt-5 rounded-xl border border-[#C84B2F]/25 bg-[#FAF7F4] px-4 py-4 sm:px-5 sm:py-5"
+                  role="region"
+                  aria-label="Check in before your product arrives"
+                >
+                  <h3 className="text-[17px] font-semibold leading-snug text-gray-900">
+                    Before your product arrives
+                  </h3>
+                  <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-gray-700">
+                    <p>
+                      Before you start taking it, we want to understand how you feel right now, without it.
+                    </p>
+                    <p>
+                      Over the next 3 days, check in each morning and answer honestly.
+                    </p>
+                    <p className="text-gray-600">
+                      In a few days, things may start to change. These check-ins are what let us see that clearly.
+                    </p>
+                  </div>
+                </div>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
                   Your {studyDays}-day study begins when you confirm your product has arrived.
                 </p>
