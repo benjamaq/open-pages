@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
       const raw = String(body?.timezone || '').trim()
       return raw || 'UTC'
     })()
+    const explicitTimezoneFromBody = String(body?.timezone || '').trim()
 
     if (!user_id) {
       return NextResponse.json({ error: 'user_id required' }, { status: 400 })
@@ -164,12 +165,18 @@ export async function POST(req: NextRequest) {
           if (nameFields) {
             Object.assign(updatePayload, nameFields)
           }
+          if (explicitTimezoneFromBody !== '') {
+            updatePayload.timezone = tz
+            updatePayload.reminder_timezone = tz
+            updatePayload.reminder_timezone_autodetected = true
+          }
           const shouldPatchProfile =
             needsBackfill ||
             cohort_id != null ||
             reminderFromSlot != null ||
             Object.keys(shippingPatch).length > 0 ||
-            nameFields != null
+            nameFields != null ||
+            explicitTimezoneFromBody !== ''
           console.log('[api/profiles] existing profile - updatePayload:', updatePayload, 'shouldPatch:', shouldPatchProfile)
           if (shouldPatchProfile) {
             const { error: updErr } = await supabaseAdmin.from('profiles').update(updatePayload as any).eq('user_id', user_id)
@@ -261,6 +268,11 @@ export async function POST(req: NextRequest) {
           if (reminderFromSlot != null) raceUpd.reminder_time = reminderFromSlot
           if (Object.keys(shippingPatch).length > 0) Object.assign(raceUpd, shippingPatch)
           if (raceNameFields) Object.assign(raceUpd, raceNameFields)
+          if (explicitTimezoneFromBody !== '') {
+            raceUpd.timezone = tz
+            raceUpd.reminder_timezone = tz
+            raceUpd.reminder_timezone_autodetected = true
+          }
           const { error: raceUpdErr } = await supabaseAdmin
             .from('profiles')
             .update(raceUpd as any)
@@ -279,13 +291,36 @@ export async function POST(req: NextRequest) {
             })
           }
         } else if (raceNameFields && existing?.id) {
+          const nameRaceUpd: Record<string, unknown> = {
+            ...raceNameFields,
+            updated_at: new Date().toISOString(),
+          }
+          if (explicitTimezoneFromBody !== '') {
+            nameRaceUpd.timezone = tz
+            nameRaceUpd.reminder_timezone = tz
+            nameRaceUpd.reminder_timezone_autodetected = true
+          }
           const { error: nameOnlyErr } = await supabaseAdmin
             .from('profiles')
-            .update({ ...raceNameFields, updated_at: new Date().toISOString() } as any)
+            .update(nameRaceUpd as any)
             .eq('user_id', user_id)
           if (nameOnlyErr) {
             console.error('[api/profiles] race display_name update:', nameOnlyErr)
             return NextResponse.json({ error: nameOnlyErr.message || 'Could not update profile name' }, { status: 500 })
+          }
+        } else if (existing?.id && explicitTimezoneFromBody !== '') {
+          const { error: tzRaceErr } = await supabaseAdmin
+            .from('profiles')
+            .update({
+              timezone: tz,
+              reminder_timezone: tz,
+              reminder_timezone_autodetected: true,
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq('user_id', user_id)
+          if (tzRaceErr) {
+            console.error('[api/profiles] race timezone update:', tzRaceErr)
+            return NextResponse.json({ error: tzRaceErr.message || 'Could not update profile timezone' }, { status: 500 })
           }
         }
         return NextResponse.json({ ok: true, id: existing?.id, slug: (existing as any)?.slug })
