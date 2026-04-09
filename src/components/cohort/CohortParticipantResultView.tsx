@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
 import { COHORT_RESULT_PARTNER_MARK_CLASS } from '@/lib/cohortDashboardPartnerLogo'
+import { COGNITIVE_COHORT_STUDY_ASSETS } from '@/lib/cohortStudyPageAssets'
 
 export type CohortParticipantResultPayload = {
   result_json: Record<string, unknown> | null
@@ -530,10 +530,31 @@ function studyContextLine(brandName: string | null, productName: string | null):
   return 'Study results'
 }
 
-/** DNA asset only when brand reads as DoNotAge; otherwise wordmark text for multi-cohort parity. */
+/**
+ * Partner mark: DoNotAge → DNA; Seeking Health → cohort asset pack (same as dashboard / emails);
+ * other brands → wordmark text; missing brand → DNA fallback.
+ */
 function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
   const b = typeof brandName === 'string' ? brandName.trim() : ''
-  if (b && !/donotage/i.test(b)) {
+  if (/donotage/i.test(b)) {
+    return (
+      <img
+        src="/DNA-logo-black.png"
+        alt={b || 'DoNotAge'}
+        className={COHORT_RESULT_PARTNER_MARK_CLASS}
+      />
+    )
+  }
+  if (/seeking\s*health/i.test(b)) {
+    return (
+      <img
+        src={encodeURI(COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo)}
+        alt={b || 'Seeking Health'}
+        className={COHORT_RESULT_PARTNER_MARK_CLASS}
+      />
+    )
+  }
+  if (b) {
     return (
       <span className="text-lg sm:text-xl font-bold text-slate-950 tracking-tight">{b}</span>
     )
@@ -541,7 +562,7 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
   return (
     <img
       src="/DNA-logo-black.png"
-      alt={b || 'Study partner'}
+      alt="Study partner"
       className={COHORT_RESULT_PARTNER_MARK_CLASS}
     />
   )
@@ -744,7 +765,7 @@ export default function CohortParticipantResultView({
                   id="cohort-result-key-finding-heading"
                   className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"
                 >
-                  Key finding
+                  What we found
                 </h3>
                 <div className="mt-4 rounded-2xl border border-slate-200/95 bg-gradient-to-b from-slate-50/95 to-white px-5 py-5 sm:px-7 sm:py-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                   <ul className="list-none space-y-3.5 p-0 m-0" role="list">
@@ -965,7 +986,7 @@ export default function CohortParticipantResultView({
 
       {showOutcomeBody ? (
         <section
-          className="rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white via-slate-50/40 to-slate-50/70 px-6 py-10 sm:px-10 sm:py-12 shadow-[0_16px_48px_-28px_rgba(15,23,42,0.18),0_4px_14px_-6px_rgba(15,23,42,0.06)]"
+          className="rounded-2xl border border-slate-200/70 bg-white/90 px-6 py-8 sm:px-8 sm:py-9 shadow-[0_4px_24px_-12px_rgba(15,23,42,0.08)]"
           aria-labelledby="cohort-result-unlocks-heading"
         >
           <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -973,11 +994,11 @@ export default function CohortParticipantResultView({
           </p>
           <h2
             id="cohort-result-unlocks-heading"
-            className="mt-3 text-2xl sm:text-[1.75rem] font-bold text-slate-950 tracking-tight leading-snug"
+            className="mt-2.5 text-xl sm:text-2xl font-bold text-slate-950 tracking-tight leading-snug"
           >
             What this unlocks next
           </h2>
-          <div className="mt-7 max-w-2xl space-y-5 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-700">
+          <div className="mt-5 max-w-2xl space-y-4 text-[15px] sm:text-[1.0625rem] leading-[1.65] text-slate-700">
             <p>
               You now have evidence that this supplement affects you positively.
             </p>
@@ -988,14 +1009,6 @@ export default function CohortParticipantResultView({
               With BioStackr, you can test your other supplements the same way — and find out what is actually helping,
               what is neutral, and what may not be worth taking.
             </p>
-          </div>
-          <div className="mt-10">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200/95 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50/90 sm:min-w-[240px]"
-            >
-              Start testing your stack
-            </Link>
           </div>
         </section>
       ) : null}
