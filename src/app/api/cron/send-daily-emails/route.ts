@@ -317,27 +317,42 @@ async function handler(req: NextRequest) {
             })
           }
         }
-
-        const completionKeys = profileKeysForCohortParticipantFilter(scopedProfiles)
-        if (completionKeys.length > 0) {
-          const beforeDone = scopedProfiles.length
-          const exclusion = await fetchExpandedCohortStudyCompletedIdExclusions(
-            supabaseAdmin,
-            completionKeys,
-          )
-          scopedProfiles = scopedProfiles.filter(
-            (p) => !profileRowMatchesCohortStudyCompletedExclusion(p, exclusion),
-          )
-          // eslint-disable-next-line no-console
-          console.log('[daily-cron] Cohort study completed filter:', {
-            before: beforeDone,
-            after: scopedProfiles.length,
-            exclusionKeys: exclusion.size,
-          })
-        }
       } catch (e) {
         console.warn('[daily-cron] cohort awaiting filter skipped:', (e as any)?.message)
       }
+    }
+
+    // Cohort study completed: exclude from daily reminders (bulk AND force=1&email= paths).
+    try {
+      const completionKeys = profileKeysForCohortParticipantFilter(scopedProfiles)
+      if (completionKeys.length > 0) {
+        const beforeDone = scopedProfiles.length
+        const exclusion = await fetchExpandedCohortStudyCompletedIdExclusions(
+          supabaseAdmin,
+          completionKeys,
+        )
+        scopedProfiles = scopedProfiles.filter(
+          (p) => !profileRowMatchesCohortStudyCompletedExclusion(p, exclusion),
+        )
+        // eslint-disable-next-line no-console
+        console.log('[daily-cron] Cohort study completed filter:', {
+          before: beforeDone,
+          after: scopedProfiles.length,
+          exclusionKeys: exclusion.size,
+        })
+      }
+    } catch (e) {
+      console.warn('[daily-cron] cohort study completed filter skipped:', (e as any)?.message)
+    }
+
+    if (
+      scopedProfiles.length === 0 &&
+      authorizedForce &&
+      (filterEmail || forceUserId)
+    ) {
+      // eslint-disable-next-line no-console
+      console.log('[daily-cron] Force target excluded: cohort study completed')
+      return NextResponse.json({ ok: true, skipped: 'study_completed' })
     }
 
     // STEP 2: Resolve emails via RPC (server-side), avoids auth API issues
