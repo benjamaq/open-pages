@@ -549,15 +549,15 @@ function IncentiveShelfCard({
             <p className="text-[13px] leading-relaxed text-neutral-500/80 sm:text-[14px]">{tagline}</p>
           ) : null}
         </div>
-        <div className="mt-auto flex flex-col items-center pt-4">
-          {bottomAccessory}
-          <p
-            className={`text-center text-[10px] font-semibold uppercase tracking-wide ${bottomAccessory ? 'mt-3' : ''}`}
-            style={{ color: RUST }}
-          >
-            {footer}
-          </p>
-        </div>
+        {bottomAccessory ? (
+          <div className="mt-5 flex shrink-0 justify-center sm:mt-6">{bottomAccessory}</div>
+        ) : null}
+        <p
+          className="mt-auto pt-4 text-center text-[10px] font-semibold uppercase tracking-wide"
+          style={{ color: RUST }}
+        >
+          {footer}
+        </p>
       </div>
     </div>
   )
@@ -722,7 +722,7 @@ function TrustFooter({
               alt={partnerBrand || 'Study partner'}
               width={320}
               height={120}
-              className="h-9 w-auto max-w-[min(42vw,200px)] object-contain object-center opacity-95 sm:h-16 sm:max-w-[min(90vw,280px)] md:h-[4.5rem]"
+              className="h-8 w-auto max-w-[min(38vw,180px)] object-contain object-center opacity-95 sm:h-12 sm:max-w-[min(90vw,320px)] md:h-14"
             />
           ) : /donotage/i.test(partnerBrand) ? (
             <Image
@@ -737,7 +737,7 @@ function TrustFooter({
               {partnerBrand}
             </span>
           )}
-          <div className="h-9 w-px shrink-0 bg-white/25 sm:h-14 md:h-16" aria-hidden />
+          <div className="h-8 w-px shrink-0 bg-white/25 sm:h-12 md:h-14" aria-hidden />
           <Link href="/" className="inline-flex shrink-0 opacity-90 transition-opacity hover:opacity-100">
             <Image
               src={BIOSTACKR_LOGO}
