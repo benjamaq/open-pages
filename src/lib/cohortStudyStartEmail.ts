@@ -36,10 +36,10 @@ export function buildCohortStudyStartTransactionalEmailHtml(params: {
   const checkinHref = String(params.checkinHref || '').trim()
 
   const innerHtml =
-    `<p style="margin:0 0 12px;">Your <strong>${productEsc}</strong> has arrived.</p>` +
+    `<p style="margin:0 0 12px;">Your <strong>${productEsc}</strong> has arrived. Let&rsquo;s get started.</p>` +
     `<p style="margin:0 0 12px;">${takeEsc}, as directed on the label.</p>` +
-    `<p style="margin:0 0 8px;">Then complete your first check-in.</p>` +
-    cohortEmailCheckInCtaHtml(checkinHref, 'Start your first check-in →') +
+    `<p style="margin:0 0 12px;">Then complete your first check-in so we can capture how you feel from day one.</p>` +
+    cohortEmailCheckInCtaHtml(checkinHref, '👉 Start your first check-in') +
     `<p style="margin:20px 0 0;font-size:12px;line-height:1.5;color:#6b7280;">If anything feels off, follow the product guidance.</p>`
 
   const html = wrapCohortTransactionalEmailHtml({
