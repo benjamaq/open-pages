@@ -724,10 +724,13 @@ export default function CohortStudyDashboard({
         </h1>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+      <section
+        className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${
+          awaitingProductHolding && !pendingFirstStudyNight ? 'p-5 sm:p-6' : 'p-6'
+        }`}
+      >
         {awaitingProductHolding ? (
-          <div>
-            {pendingFirstStudyNight ? (
+          pendingFirstStudyNight ? (
               <>
                 <h2 className="text-[26px] font-bold leading-snug text-gray-900">First study day</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
@@ -744,75 +747,49 @@ export default function CohortStudyDashboard({
                 </p>
               </>
             ) : (
-              <>
-                <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your product is on the way</h2>
-                <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
-                  You&apos;re confirmed — your product will be shipped shortly.
+              <div role="region" aria-label="While you wait for your product">
+                <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug text-gray-900">
+                  Your product is on the way
+                </h2>
+                <p className="mt-2 text-[15px] leading-snug text-gray-800">
+                  Before it arrives, keep checking in so we can capture how you feel right now — without it.
                 </p>
-                <div
-                  className="mt-5 rounded-xl border border-[#C84B2F]/25 bg-[#FAF7F4] px-4 py-4 sm:px-5 sm:py-5"
-                  role="region"
-                  aria-label="Check in before your product arrives"
-                >
-                  <h3 className="text-[17px] font-semibold leading-snug text-gray-900">
-                    Before your product arrives
-                  </h3>
-                  <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-gray-700">
-                    <p>
-                      Before you start taking it, we want to understand how you feel right now, without it.
-                    </p>
-                    <p>
-                      Over the next 3 days, check in each morning and answer honestly.
-                    </p>
-                    <p className="text-gray-600">
-                      In a few days, things may start to change. These check-ins are what let us see that clearly.
-                    </p>
-                  </div>
-                </div>
-                <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                  Your {studyDays}-day study begins when you confirm your product has arrived.
-                </p>
-                <p className="mt-2 text-[15px] leading-relaxed text-gray-600">
-                  When it arrives, come back here and tap the button below, then complete your first check-in.
+                <p className="mt-2 text-sm leading-snug text-gray-600">
+                  Once you start taking it, we&apos;ll compare the difference.
                 </p>
                 <button
                   type="button"
-                  onClick={() => setProductArrivedOpen(true)}
-                  className="mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
-                  style={{ backgroundColor: '#C84B2F' }}
+                  onClick={onOpenCheckin}
+                  className="mt-4 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
                 >
-                  My product has arrived
+                  Check in now
                 </button>
-                {/* TODO: “How to take …” dosing copy is placeholder pending Dan Wild confirmation. */}
-                {isSleepShapedCohort ? (
-                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
-                    <h3 className="text-[15px] font-semibold text-gray-900">How to take {productName}</h3>
-                    <div className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-gray-700">
-                      <p>
-                        Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it
-                        consistently each evening as part of a wind-down routine.
-                      </p>
-                      <p>
-                        One scoop per day — do not exceed the recommended dose. Take 45–60 minutes before bed. Avoid caffeine
-                        or stimulants in the evening hours.
-                      </p>
-                      <p>
-                        {productName} is non-habit-forming and safe for daily use.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
-                    <h3 className="text-[15px] font-semibold text-gray-900">Using {productName}</h3>
-                    <p className="mt-3 text-[14px] leading-relaxed text-gray-700">
-                      Follow the directions on your product label (or your clinician&apos;s guidance) for this study unless
-                      you&apos;re unwell.
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+                <button
+                  type="button"
+                  onClick={() => setProductArrivedOpen(true)}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                >
+                  Product arrived? Start your study
+                </button>
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <p className="text-[13px] leading-snug text-gray-600">
+                    {isSleepShapedCohort ? (
+                      <>
+                        <span className="font-medium text-gray-800">How to take {productName}: </span>
+                        Mix one scoop with water, about 45 minutes before bed, unless your protocol says otherwise. One
+                        scoop per day — do not exceed the labelled dose.
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium text-gray-800">Using {productName}: </span>
+                        Follow the directions on your product label (or your clinician&apos;s guidance) for this study
+                        unless you&apos;re unwell.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )
         ) : cohortConfirmed ? (
           studyComplete ? (
             <div>
@@ -937,10 +914,12 @@ export default function CohortStudyDashboard({
         </section>
       ) : null}
 
-      <section>
-        {cohortConfirmed && (awaitingProductHolding || !studyComplete) ? (
-          hasCheckedInToday ? (
-            <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
+      {cohortConfirmed &&
+      (awaitingProductHolding || !studyComplete) &&
+      (hasCheckedInToday || !awaitingProductHolding) ? (
+        <section>
+          {hasCheckedInToday ? (
+            <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-4 sm:p-5">
               <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
                 <span className="text-emerald-700" aria-hidden="true">
                   ✓
@@ -949,9 +928,7 @@ export default function CohortStudyDashboard({
               </div>
               {awaitingProductHolding ? (
                 <p className="mt-2 text-sm text-gray-700">
-                  {isSleepShapedCohort
-                    ? 'Thanks — today&apos;s snapshot is saved. Come back tomorrow morning if you like while you wait for your product, or adjust today&apos;s entry below.'
-                    : 'Thanks — today&apos;s snapshot is saved. Come back tomorrow if you like while you wait for your product, or adjust today&apos;s entry below.'}
+                  You&apos;re set for today. Update below if anything changed.
                 </p>
               ) : currentDay === 1 ? (
                 <>
@@ -971,24 +948,15 @@ export default function CohortStudyDashboard({
               )}
               <button
                 type="button"
-                className="mt-4 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
+                className="mt-3 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
                 onClick={onOpenCheckin}
               >
                 Edit today&apos;s check-in
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-5">
-              {awaitingProductHolding ? (
-                <>
-                  <div className="text-sm font-semibold text-amber-950">While you wait for delivery</div>
-                  <p className="mt-2 text-sm text-gray-700">
-                    {isSleepShapedCohort
-                      ? `A quick morning check-in — same questions as before, about 30 seconds. Honest answers help us see how things change once you start ${productName}.`
-                      : `A quick daily check-in — same questions as before, about 30 seconds. Honest answers help us see how things change once you start ${productName}.`}
-                  </p>
-                </>
-              ) : currentDay === 1 ? (
+            <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-4 sm:p-5">
+              {currentDay === 1 ? (
                 <>
                   <div className="text-sm font-semibold text-amber-950">Day 1 — you&apos;re in.</div>
                   <p className="mt-2 text-sm text-gray-700">
@@ -1011,9 +979,9 @@ export default function CohortStudyDashboard({
                 Check in now
               </button>
             </div>
-          )
-        ) : null}
-      </section>
+          )}
+        </section>
+      ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-gray-900">What we&apos;re measuring</h2>
