@@ -457,9 +457,15 @@ export async function GET(request: Request) {
                         todayYmd,
                       );
                     } else if (cohortConfirmed && cohortAwaitingStudyStart) {
-                      cohortCheckinCount = 0;
-                      cohortCurrentStreak = 0;
-                      cohortHasCheckedInToday = false;
+                      /** Pre–study-started: still writing cohort check-ins (shipping / baseline window). Same anchor as compliance gate. */
+                      cohortCheckinCount = cntCompliance;
+                      cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
+                        ymdsCompliance,
+                        todayYmd,
+                      );
+                      cohortHasCheckedInToday = new Set(ymdsCompliance).has(
+                        todayYmd,
+                      );
                     } else {
                       cohortHasCheckedInToday = new Set(ymdsCompliance).has(
                         todayYmd,
@@ -491,7 +497,8 @@ export async function GET(request: Request) {
                     );
                   } else if (cohortConfirmed && cohortAwaitingStudyStart) {
                     cohortStudyCurrentDay = 0;
-                    cohortStudyComplete = cohortStudyPersistedComplete;
+                    /** Pre–study clock: dashboard must not treat participant as “study complete” (hides check-in). `participantStatus === completed` with null study timestamps is inconsistent but must not block baseline check-ins. */
+                    cohortStudyComplete = false;
                     cohortDaysRemaining = cohortStudyDays;
                   } else {
                     cohortStudyCurrentDay = 1;

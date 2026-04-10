@@ -582,7 +582,7 @@ export default function CohortStudyDashboard({
   /** Product-shipment holding is only after DB confirmation — never for `applied` / compliance phase. */
   const awaitingProductHolding = Boolean(cohortConfirmed && cohortAwaitingStudyStart)
 
-  /** While awaiting product (confirmed only), API reports study check-ins as 0 — gate UI must show complete. */
+  /** While awaiting product (confirmed only), hero gate shows 2/2; `checkinCount` still reflects ongoing pre-study check-ins. */
   const gateComplete = awaitingProductHolding
     ? 2
     : Math.min(2, Math.max(0, checkinCount))
@@ -938,7 +938,7 @@ export default function CohortStudyDashboard({
       ) : null}
 
       <section>
-        {cohortConfirmed && !cohortAwaitingStudyStart && !studyComplete ? (
+        {cohortConfirmed && (awaitingProductHolding || !studyComplete) ? (
           hasCheckedInToday ? (
             <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-5">
               <div className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
@@ -947,7 +947,13 @@ export default function CohortStudyDashboard({
                 </span>{' '}
                 Checked in today
               </div>
-              {currentDay === 1 ? (
+              {awaitingProductHolding ? (
+                <p className="mt-2 text-sm text-gray-700">
+                  {isSleepShapedCohort
+                    ? 'Thanks — today&apos;s snapshot is saved. Come back tomorrow morning if you like while you wait for your product, or adjust today&apos;s entry below.'
+                    : 'Thanks — today&apos;s snapshot is saved. Come back tomorrow if you like while you wait for your product, or adjust today&apos;s entry below.'}
+                </p>
+              ) : currentDay === 1 ? (
                 <>
                   <p className="mt-2 text-sm font-semibold text-gray-900">First one&apos;s done.</p>
                   <p className="mt-2 text-sm text-gray-700">
@@ -973,7 +979,16 @@ export default function CohortStudyDashboard({
             </div>
           ) : (
             <div className="rounded-2xl border-2 border-amber-200/90 bg-amber-50/50 p-5">
-              {currentDay === 1 ? (
+              {awaitingProductHolding ? (
+                <>
+                  <div className="text-sm font-semibold text-amber-950">While you wait for delivery</div>
+                  <p className="mt-2 text-sm text-gray-700">
+                    {isSleepShapedCohort
+                      ? `A quick morning check-in — same questions as before, about 30 seconds. Honest answers help us see how things change once you start ${productName}.`
+                      : `A quick daily check-in — same questions as before, about 30 seconds. Honest answers help us see how things change once you start ${productName}.`}
+                  </p>
+                </>
+              ) : currentDay === 1 ? (
                 <>
                   <div className="text-sm font-semibold text-amber-950">Day 1 — you&apos;re in.</div>
                   <p className="mt-2 text-sm text-gray-700">
