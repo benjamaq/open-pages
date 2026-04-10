@@ -991,14 +991,15 @@ export default function CohortStudyDashboard({
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-gray-900">What we&apos;re measuring</h2>
-        <ol className="mt-3 space-y-2 text-sm text-gray-700 list-decimal list-inside">
+      <section className="mt-10 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-3 sm:px-3.5 sm:py-3">
+        <h2 className="text-xs font-medium text-gray-500">What you&apos;ll rate each day</h2>
+        <p className="mt-1.5 text-[11px] leading-snug text-gray-400">Same as your first check-ins.</p>
+        <ul className="mt-2 list-none space-y-1 text-xs leading-snug text-gray-500">
           {measureItems.map((label) => (
             <li key={label}>{label}</li>
           ))}
-        </ol>
-        <p className="mt-4 text-sm text-gray-600">
+        </ul>
+        <p className="mt-2.5 text-[11px] leading-relaxed text-gray-400">
           We track this over {studyDays} days; results are shared when the study ends.
         </p>
       </section>
