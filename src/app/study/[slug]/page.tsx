@@ -513,7 +513,9 @@ type IncentiveShelfCardProps = {
   bodyExtra?: string
   tagline?: string
   footer: string
-  /** Optional mark below body copy, above the footer line (e.g. partner logo on store-credit card). */
+  /** Optional partner mark at the top inside the card (above hero art). */
+  topAccessory?: ReactNode
+  /** Optional mark below body copy, above the footer line. */
   bottomAccessory?: ReactNode
   /** Stronger border and shadow for the primary incentive card */
   highlight?: boolean
@@ -526,6 +528,7 @@ function IncentiveShelfCard({
   bodyExtra,
   tagline,
   footer,
+  topAccessory,
   bottomAccessory,
   highlight,
 }: IncentiveShelfCardProps) {
@@ -537,6 +540,11 @@ function IncentiveShelfCard({
       className={`flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-white ${depth}`}
       style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
+      {topAccessory ? (
+        <div className="flex shrink-0 justify-center border-b border-neutral-200/60 bg-white px-4 pb-2.5 pt-3 sm:px-5 sm:pt-3.5">
+          {topAccessory}
+        </div>
+      ) : null}
       <div className="flex min-h-0 shrink-0 flex-col bg-neutral-50/30">{visual}</div>
       <div className="flex min-h-0 flex-1 flex-col px-5 pb-5 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
         <div className="flex flex-col gap-3">
@@ -613,13 +621,25 @@ function PartnerCompletionRewardPhoto({ src, alt }: { src: string; alt: string }
   )
 }
 
+function ShelfPartnerTopMark({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={320}
+      height={120}
+      className="h-6 w-auto max-w-[min(130px,50%)] object-contain object-center opacity-[0.92] sm:h-7 sm:max-w-[150px]"
+    />
+  )
+}
+
 function WhatYouReceive({
   productImageSrc,
   productImageFirstShelfSrc,
   productImageAlt,
   studyDays,
   landingRewards,
-  storeCreditPartnerLogo,
+  shelfPartnerLogo,
 }: {
   productImageSrc: string
   /** When set (e.g. cognitive Seeking Health), first shelf card only — middle card still uses `productImageSrc` when it shows product art. */
@@ -627,8 +647,8 @@ function WhatYouReceive({
   productImageAlt: string
   studyDays: number
   landingRewards: ReturnType<typeof resolveStudyLandingRewards>
-  /** Shown under store-credit copy when set (e.g. `/cohorts/…/logo.png`). */
-  storeCreditPartnerLogo?: { src: string; alt: string } | null
+  /** Partner mark at top of first two shelf cards (e.g. Seeking Health when `partnerLogoSrc` is set). */
+  shelfPartnerLogo?: { src: string; alt: string } | null
 }) {
   const { studyProductCard, completionCard } = landingRewards
   const firstShelfSrc = (productImageFirstShelfSrc && String(productImageFirstShelfSrc).trim()) || productImageSrc
@@ -643,6 +663,11 @@ function WhatYouReceive({
     ) : (
       <StudyProductPhoto larger imageSrc={productImageSrc} imageAlt={productImageAlt} />
     )
+
+  const partnerTop =
+    shelfPartnerLogo != null && String(shelfPartnerLogo.src || '').trim() !== '' ? (
+      <ShelfPartnerTopMark src={shelfPartnerLogo.src} alt={shelfPartnerLogo.alt} />
+    ) : undefined
 
   return (
     <StudySurfaceLight
@@ -660,6 +685,7 @@ function WhatYouReceive({
             title={studyProductCard.title}
             body={studyProductCard.body}
             footer={studyProductCard.footer}
+            topAccessory={partnerTop}
           />
           <IncentiveShelfCard
             highlight
@@ -667,17 +693,7 @@ function WhatYouReceive({
             title={completionCard.title}
             body={completionCard.body}
             footer={completionCard.footer}
-            bottomAccessory={
-              completionCard.kind === 'store_credit' && storeCreditPartnerLogo ? (
-                <Image
-                  src={storeCreditPartnerLogo.src}
-                  alt={storeCreditPartnerLogo.alt}
-                  width={320}
-                  height={120}
-                  className="h-7 w-auto max-w-[min(140px,55%)] object-contain object-center opacity-[0.92] sm:h-8 sm:max-w-[160px]"
-                />
-              ) : undefined
-            }
+            topAccessory={partnerTop}
           />
           <IncentiveShelfCard
             visual={<BioStackrRewardPhoto />}
@@ -979,10 +995,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
             productImageAlt={productHeroImageAlt}
             studyDays={studyDays}
             landingRewards={landingRewards}
-            storeCreditPartnerLogo={
-              landingRewards.completionCard.kind === 'store_credit' && partnerLogoSrc
+            shelfPartnerLogo={
+              partnerLogoSrc
                 ? { src: partnerLogoSrc, alt: `${brandDisplay} logo` }
-                : null
+                : /donotage/i.test(brandDisplay)
+                  ? { src: DNA_LOGO_BLACK, alt: `${brandDisplay} logo` }
+                  : null
             }
           />
           <StudySurfaceLight
