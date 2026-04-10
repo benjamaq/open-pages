@@ -748,56 +748,55 @@ export default function CohortStudyDashboard({
               </>
             ) : (
               <div role="region" aria-label="While you wait for your product">
-                <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug text-gray-900">
+                <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
                   Your product is on the way
                 </h2>
-                <p className="mt-4 text-[15px] leading-snug text-gray-800">
+                <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
                   While you wait, keep checking in so we can capture how you feel right now — without it.
                 </p>
-                <p className="mt-3 text-sm leading-snug text-gray-600">
+                <p className="mt-4 text-[15px] leading-relaxed text-gray-600">
                   Once you start taking it, we&apos;ll compare the difference.
                 </p>
-                {hasCheckedInToday ? (
-                  <button
-                    type="button"
-                    onClick={onOpenCheckin}
-                    className="mt-6 w-full rounded-xl border-2 border-gray-900 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                  >
-                    Edit today&apos;s check-in
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onOpenCheckin}
-                    className="mt-6 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-                  >
-                    Check in now
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={onOpenCheckin}
+                  className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                >
+                  {hasCheckedInToday ? 'Edit today&apos;s check-in' : 'Check in now'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setProductArrivedOpen(true)}
-                  className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                  className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
                 >
                   Product arrived? Start your study
                 </button>
-                <div className="mt-5 border-t border-slate-200 pt-5">
-                  <p className="text-[13px] leading-snug text-gray-600">
-                    {isSleepShapedCohort ? (
-                      <>
-                        <span className="font-medium text-gray-800">How to take {productName}: </span>
-                        Mix one scoop with water, about 45 minutes before bed, unless your protocol says otherwise. One
-                        scoop per day — do not exceed the labelled dose.
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-medium text-gray-800">Using {productName}: </span>
-                        Follow the directions on your product label (or your clinician&apos;s guidance) for this study
-                        unless you&apos;re unwell.
-                      </>
-                    )}
-                  </p>
-                </div>
+                {isSleepShapedCohort ? (
+                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                    <h3 className="text-[15px] font-semibold text-gray-900">How to take {productName}</h3>
+                    <div className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-gray-700">
+                      <p>
+                        Mix one scoop with water and take approximately 45 minutes before your desired bedtime. Use it
+                        consistently each evening as part of a wind-down routine.
+                      </p>
+                      <p>
+                        One scoop per day — do not exceed the recommended dose. Take 45–60 minutes before bed. Avoid caffeine
+                        or stimulants in the evening hours.
+                      </p>
+                      <p>
+                        {productName} is non-habit-forming and safe for daily use.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                    <h3 className="text-[15px] font-semibold text-gray-900">Using {productName}</h3>
+                    <p className="mt-3 text-[14px] leading-relaxed text-gray-700">
+                      Follow the directions on your product label (or your clinician&apos;s guidance) for this study unless
+                      you&apos;re unwell.
+                    </p>
+                  </div>
+                )}
               </div>
             )
         ) : cohortConfirmed ? (
