@@ -724,7 +724,8 @@ function WhatYouReceive({
           <IncentiveShelfCard
             visual={<BioStackrRewardPhoto />}
             title="3 months of BioStackr Pro"
-            body="Full dashboard access and your study outcomes."
+            body="You're paying for supplements with almost no feedback on whether they work for you. BioStackr fixes that—it connects what you take to how you feel (sleep, energy, focus) so you keep what earns its place and drop what doesn't."
+            bodyExtra="Your Pro pass unlocks the full dashboard, your personal results from this study, and three months of clearer, data-backed supplement decisions—less guesswork, better value."
             footer="Included"
           />
         </div>
