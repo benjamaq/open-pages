@@ -751,27 +751,37 @@ export default function CohortStudyDashboard({
                 <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug text-gray-900">
                   Your product is on the way
                 </h2>
-                <p className="mt-2 text-[15px] leading-snug text-gray-800">
-                  Before it arrives, keep checking in so we can capture how you feel right now — without it.
+                <p className="mt-4 text-[15px] leading-snug text-gray-800">
+                  While you wait, keep checking in so we can capture how you feel right now — without it.
                 </p>
-                <p className="mt-2 text-sm leading-snug text-gray-600">
+                <p className="mt-3 text-sm leading-snug text-gray-600">
                   Once you start taking it, we&apos;ll compare the difference.
                 </p>
-                <button
-                  type="button"
-                  onClick={onOpenCheckin}
-                  className="mt-4 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-                >
-                  Check in now
-                </button>
+                {hasCheckedInToday ? (
+                  <button
+                    type="button"
+                    onClick={onOpenCheckin}
+                    className="mt-6 w-full rounded-xl border-2 border-gray-900 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                  >
+                    Edit today&apos;s check-in
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onOpenCheckin}
+                    className="mt-6 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                  >
+                    Check in now
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setProductArrivedOpen(true)}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                  className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
                 >
                   Product arrived? Start your study
                 </button>
-                <div className="mt-4 border-t border-slate-200 pt-4">
+                <div className="mt-5 border-t border-slate-200 pt-5">
                   <p className="text-[13px] leading-snug text-gray-600">
                     {isSleepShapedCohort ? (
                       <>
@@ -914,9 +924,7 @@ export default function CohortStudyDashboard({
         </section>
       ) : null}
 
-      {cohortConfirmed &&
-      (awaitingProductHolding || !studyComplete) &&
-      (hasCheckedInToday || !awaitingProductHolding) ? (
+      {cohortConfirmed && !studyComplete && !awaitingProductHolding ? (
         <section>
           {hasCheckedInToday ? (
             <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/60 p-4 sm:p-5">
