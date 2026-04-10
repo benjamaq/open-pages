@@ -1,9 +1,13 @@
 /**
  * Resolves public /study/[slug] "You'll receive" incentives from `cohorts.study_landing_reward_config`.
- * Defaults preserve the historical DoNotAge-style product-supply completion reward when config is absent.
+ * When config is absent: sleep-shaped cohorts default to product-supply framing; cognitive-shaped cohorts
+ * default to store credit — with neutral copy unless `study_landing_reward_config` supplies amounts.
  */
 
 import { isCognitiveShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
+
+/** Generic label when store credit is the reward type but no custom title is configured in DB. */
+export const NEUTRAL_STORE_CREDIT_DISPLAY_TITLE = 'Store credit'
 
 export type CompletionPartnerRewardType = 'product_supply' | 'store_credit'
 
@@ -123,7 +127,10 @@ export function resolveStudyLandingRewards(params: {
   }
 
   const defaultProductSupplySummary: [string, string] = [`3-month supply of ${pn}`, '3 months of BioStackr Pro']
-  const defaultStoreCreditSummary: [string, string] = ['$120 store credit', '3 months of BioStackr Pro']
+  const defaultStoreCreditSummary: [string, string] = [
+    NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
+    '3 months of BioStackr Pro',
+  ]
 
   let summaryLines: [string, string]
   if (completionType === 'store_credit') {
@@ -142,8 +149,8 @@ export function resolveStudyLandingRewards(params: {
     summaryLines = defaultProductSupplySummary
   }
 
-  const defaultPkgHeadline = '$200+'
-  const defaultPkgSub = `Combined participant reward value when you complete all ${studyDays} days.`
+  const defaultPkgHeadline = 'Study rewards'
+  const defaultPkgSub = `Combined participant rewards when you complete all ${studyDays} days.`
   const packageValueHeadline = str(cfg?.package_value?.headline) || defaultPkgHeadline
   const packageValueSubline = str(cfg?.package_value?.subline) || defaultPkgSub
 
@@ -154,10 +161,10 @@ export function resolveStudyLandingRewards(params: {
   }
 
   if (completionType === 'store_credit') {
-    const t = str(cfg?.partner_store_credit?.title) || '$120 store credit'
+    const t = str(cfg?.partner_store_credit?.title) || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE
     const d =
       str(cfg?.partner_store_credit?.description) ||
-      `Receive $120 in store credit from ${bd} when you complete the full study.`
+      `Receive store credit from ${bd} when you complete the full study.`
     const imagePath = str(cfg?.partner_store_credit?.visual_path) || defaultStoreCreditVisualPath
     return {
       completionType: 'store_credit',
@@ -207,9 +214,17 @@ export function cohortUsesStoreCreditPartnerReward(cohortRow: {
   return false
 }
 
-export function storeCreditTitleFromCohortRow(cohortRow: { study_landing_reward_config?: unknown }): string {
+/**
+ * Title for store-credit completion rewards only. Returns null when the cohort does not use store credit,
+ * so API clients do not surface partner-credit copy for product-supply cohorts.
+ */
+export function storeCreditTitleFromCohortRow(cohortRow: {
+  study_landing_reward_config?: unknown
+  checkin_fields?: unknown
+}): string | null {
+  if (!cohortUsesStoreCreditPartnerReward(cohortRow)) return null
   const cfg = parseStudyLandingRewardConfig(cohortRow.study_landing_reward_config)
   const t = cfg?.partner_store_credit?.title
   const s = String(t ?? '').trim()
-  return s || '$120 store credit'
+  return s || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE
 }

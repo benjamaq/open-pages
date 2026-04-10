@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       cohortRow as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
     const storeCreditTitle = storeCreditTitleFromCohortRow(
-      cohortRow as { study_landing_reward_config?: unknown },
+      cohortRow as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
 
     const { data: part, error: partErr } = await supabaseAdmin
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
         cohortSlug,
         studyDurationDays,
         storeCreditPartnerReward,
-        storeCreditTitle,
+        storeCreditTitle: storeCreditTitle ?? undefined,
       })
       if (!r.success) {
         console.warn('[cohort/start-study] email', r.error)

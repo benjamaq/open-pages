@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { STUDY_COHORT_FULL_WAITLIST_SOURCE } from '@/lib/studyCohortFullWaitlistSource'
+import {
+  isAcceptedStudyCohortFullWaitlistSource,
+  STUDY_COHORT_FULL_WAITLIST_SOURCE,
+} from '@/lib/studyCohortFullWaitlistSource'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -11,7 +14,7 @@ function normEmail(s: string): string {
 /**
  * Public: join study waitlist (no account).
  * Body: { cohort_slug: string, email: string, source?: string }
- * When source is set, must match STUDY_COHORT_FULL_WAITLIST_SOURCE (cohort-full capture).
+ * When source is set, must be an accepted cohort-full tag (canonical or legacy).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     const email = typeof emailRaw === 'string' ? normEmail(emailRaw) : ''
     let source: string | null = null
     if (sourceRaw !== undefined && sourceRaw !== null && sourceRaw !== '') {
-      if (typeof sourceRaw !== 'string' || sourceRaw !== STUDY_COHORT_FULL_WAITLIST_SOURCE) {
+      if (!isAcceptedStudyCohortFullWaitlistSource(sourceRaw)) {
         return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
       }
       source = STUDY_COHORT_FULL_WAITLIST_SOURCE

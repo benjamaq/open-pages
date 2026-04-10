@@ -643,7 +643,7 @@ async function handler(req: NextRequest) {
           linkHint: null,
           cohortTransactionalShell: emailShell.cohortTransactionalShell,
           ...(emailShell.cohortTransactionalShell
-            ? { partnerBrandName: emailShell.partnerBrandName }
+            ? { partnerBrandName: emailShell.partnerBrandName, cohortSlug: emailShell.cohortSlug }
             : {}),
           ...(energy != null ? { energy } : {}),
           ...(focus  != null ? { focus }  : {}),

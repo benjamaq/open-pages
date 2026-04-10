@@ -268,6 +268,13 @@ export async function GET(request: Request) {
                 ?.checkin_fields,
             });
             if (cdef != null) {
+              const canonicalSlug = (cdef as { slug?: string | null })?.slug;
+              if (
+                canonicalSlug != null &&
+                String(canonicalSlug).trim() !== ""
+              ) {
+                cohortId = String(canonicalSlug).trim();
+              }
               checkinFields = normalizeCohortCheckinFields(
                 (cdef as { checkin_fields?: unknown }).checkin_fields,
               );
@@ -279,7 +286,10 @@ export async function GET(request: Request) {
                 },
               );
               cohortStoreCreditTitle = storeCreditTitleFromCohortRow(
-                cdef as { study_landing_reward_config?: unknown },
+                cdef as {
+                  study_landing_reward_config?: unknown;
+                  checkin_fields?: unknown;
+                },
               );
               const pn = (cdef as { product_name?: string | null } | null)
                 ?.product_name;

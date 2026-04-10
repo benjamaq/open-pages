@@ -12,7 +12,7 @@ async function resolveDailyReminderCohortParticipantContext(opts: {
   recipientEmail: string
 }): Promise<
   | { eligible: false }
-  | { eligible: true; partnerBrandName: string | null }
+  | { eligible: true; cohortSlug: string; partnerBrandName: string | null }
 > {
   const email = String(opts.recipientEmail || '').trim()
   const uid = String(opts.authUserId || '').trim()
@@ -67,7 +67,7 @@ async function resolveDailyReminderCohortParticipantContext(opts: {
     return { eligible: false }
   }
 
-  return { eligible: true, partnerBrandName }
+  return { eligible: true, cohortSlug, partnerBrandName }
 }
 
 /**
@@ -76,14 +76,19 @@ async function resolveDailyReminderCohortParticipantContext(opts: {
 export async function resolveDailyReminderEmailShellForUser(opts: {
   authUserId: string
   recipientEmail: string
-}): Promise<{ cohortTransactionalShell: boolean; partnerBrandName: string | null }> {
+}): Promise<{
+  cohortTransactionalShell: boolean
+  partnerBrandName: string | null
+  cohortSlug: string | null
+}> {
   const ctx = await resolveDailyReminderCohortParticipantContext(opts)
   if (!ctx.eligible) {
-    return { cohortTransactionalShell: false, partnerBrandName: null }
+    return { cohortTransactionalShell: false, partnerBrandName: null, cohortSlug: null }
   }
   return {
     cohortTransactionalShell: true,
     partnerBrandName: ctx.partnerBrandName,
+    cohortSlug: ctx.cohortSlug,
   }
 }
 

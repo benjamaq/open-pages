@@ -1,7 +1,12 @@
 /**
  * Brand-specific dosing for product-arrival email + in-app Day 1 / pre-product helper.
- * Match slug + brand + product so copy stays aligned with study SKUs.
+ * Slug-canonical only — avoids accidental matches on `brand_name` or product strings.
  */
+
+import {
+  isDonotageSureSleepStudySlug,
+  isSeekingHealthOptimalFocusStudySlug,
+} from '@/lib/cohortPartnerBranding'
 
 export type CohortArrivalDosingKind = 'seeking_optimal_focus' | 'donotage_suresleep' | 'default'
 
@@ -10,21 +15,12 @@ export function resolveCohortArrivalDosingKind(params: {
   productName: string
   cohortSlug?: string | null
 }): CohortArrivalDosingKind {
-  const brand = String(params.partnerBrandName || '').toLowerCase()
-  const product = String(params.productName || '').toLowerCase()
-  const slug = String(params.cohortSlug || '').toLowerCase()
-
-  if (
-    slug.includes('optimal-focus') ||
-    (/seeking\s*health/.test(brand) && /optimal\s*focus/.test(product))
-  ) {
+  void params.partnerBrandName
+  void params.productName
+  if (isSeekingHealthOptimalFocusStudySlug(params.cohortSlug)) {
     return 'seeking_optimal_focus'
   }
-  if (
-    slug.includes('donotage-suresleep') ||
-    ((/donotage|do\s*not\s*age/.test(brand) || /dna/i.test(brand)) &&
-      (/sure\s*sleep|suresleep/.test(product) || slug.includes('suresleep')))
-  ) {
+  if (isDonotageSureSleepStudySlug(params.cohortSlug)) {
     return 'donotage_suresleep'
   }
   return 'default'

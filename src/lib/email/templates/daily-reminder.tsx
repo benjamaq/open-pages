@@ -17,6 +17,8 @@ export type DailyReminderEmailParams = {
   cohortTransactionalShell: boolean
   /** Cohort `brand_name` for transactional shell; ignored when `cohortTransactionalShell` is false. */
   partnerBrandName?: string | null
+  /** Canonical cohort slug for email header asset selection. */
+  cohortSlug?: string | null
   /** Optional line under the CTA (hint usually omitted). */
   linkHint?: string | null
   // Optional daily metrics to display (Energy/Focus/Sleep/Mood on 1–10 scale)
@@ -110,6 +112,7 @@ export function renderDailyReminderEmail(params: DailyReminderEmailParams): stri
   return wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref,
     omitDashboardRow: true,

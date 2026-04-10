@@ -17,7 +17,7 @@ Your Open Pages app now has a fully functional, production-ready authentication 
 - **`/auth/signup`** - Registration form with email confirmation
 - **`/auth/callback`** - Handles Supabase auth callbacks
 - **`/auth/signout`** - Server-side sign-out endpoint
-- **`/auth/auth-code-error`** - Error handling for auth issues
+- **`/auth/auth-code-error`** - Legacy page; expired/magic-link failures from `/auth/callback` redirect to `/login` with `reason=` (recovery UX) instead
 
 #### **Reusable Components**
 - **`AuthButton`** - Smart navigation button (Sign In/Sign Out/Dashboard)

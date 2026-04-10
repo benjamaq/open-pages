@@ -72,6 +72,7 @@ export function shippingNurtureBodyHtml(
     brandName: string
     productName: string
     sleepShapedCohort?: boolean
+    cohortSlug?: string | null
     /** Production sends use Supabase magic link from `cohortTransactionalCheckinMagicHref`. */
     checkInHref: string
   },
@@ -82,6 +83,7 @@ export function shippingNurtureBodyHtml(
   return wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: params.brandName,
+    cohortSlug: params.cohortSlug,
     innerHtml: inner,
     dashboardHref: checkInHref,
     omitDashboardRow: true,
@@ -95,6 +97,7 @@ export async function sendShippingNurtureEmail(params: {
   brandName: string
   productName: string
   sleepShapedCohort?: boolean
+  cohortSlug?: string | null
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -111,6 +114,7 @@ export async function sendShippingNurtureEmail(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: params.brandName,
+    cohortSlug: params.cohortSlug,
     innerHtml: inner,
     dashboardHref: checkInHref,
     omitDashboardRow: true,

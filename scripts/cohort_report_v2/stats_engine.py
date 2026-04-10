@@ -11,10 +11,24 @@ from .registry import MetricDef
 
 
 def cohens_d(before: list[float], after: list[float]) -> float:
-    diffs = np.array(after) - np.array(before)
-    if len(diffs) < 2:
+    """Paired Cohen's d: mean(baseline→final difference) / SD of those differences.
+
+    Returns 0.0 when n < 2, lengths mismatch, or SD is zero / non-finite (constant diffs,
+    tiny-n degeneracy) so report generation never emits inf or NumPy divide warnings.
+    """
+    b = np.asarray(before, dtype=float)
+    a = np.asarray(after, dtype=float)
+    if b.ndim != 1 or a.ndim != 1 or b.shape != a.shape or b.size < 2:
         return 0.0
-    return float(np.mean(diffs) / np.std(diffs, ddof=1))
+    diffs = a - b
+    std_d = float(np.std(diffs, ddof=1))
+    if not np.isfinite(std_d) or std_d < 1e-12:
+        return 0.0
+    mean_d = float(np.mean(diffs))
+    d = mean_d / std_d
+    if not np.isfinite(d):
+        return 0.0
+    return float(d)
 
 
 def bootstrap_ci(before: list[float], after: list[float], n_boot: int = 1000, ci: int = 95) -> tuple[float, float]:

@@ -45,6 +45,7 @@ export function buildCohortStudyStartTransactionalEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: partnerPlain,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: checkinHref,
     omitDashboardRow: true,

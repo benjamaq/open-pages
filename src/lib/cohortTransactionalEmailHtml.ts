@@ -3,6 +3,11 @@
  * Image URLs must be absolute — callers should pass `appBase` from `cohortEmailPublicOrigin()`.
  */
 
+import {
+  isDonotageSureSleepStudySlug,
+  isSeekingHealthOptimalFocusStudySlug,
+} from '@/lib/cohortPartnerBranding'
+
 /** @deprecated Use cohortEmailPartnerXBioStackrLine(partnerBrandName) with cohort `brand_name`. */
 export const COHORT_EMAIL_BRAND_LINE = 'Study partner × BioStackr'
 
@@ -42,20 +47,24 @@ export function firstNameFromAuthUser(user: {
   return em || 'there'
 }
 
-/** Left header cell: partner logo when we ship assets (DoNotAge, Seeking Health); else wordmark text. */
-export function cohortEmailPartnerHeaderCellHtml(appBase: string, partnerBrandName: string): string {
+/** Left header cell: partner logo only for slug-canonical asset packs; else wordmark text (no brand substring guessing). */
+export function cohortEmailPartnerHeaderCellHtml(
+  appBase: string,
+  partnerBrandName: string,
+  cohortSlug?: string | null,
+): string {
   const base = appBase.replace(/\/$/, '')
   const p = String(partnerBrandName || '').trim()
-  if (/donotage/i.test(p)) {
+  if (isDonotageSureSleepStudySlug(cohortSlug)) {
     const logo = `${base}/DNA-logo-black.png`
     return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
                   <img src="${escapeHtml(logo)}" alt="${escapeHtml(p || 'Partner')}" width="132" style="display:block;max-width:132px;width:132px;height:auto;border:0;" />
                 </td>`
   }
-  if (/seeking\s*health/i.test(p)) {
+  if (isSeekingHealthOptimalFocusStudySlug(cohortSlug)) {
     const logo = `${base}/cohorts/seeking-health/logo.png`
     return `<td align="left" valign="middle" style="width:52%;padding:0 6px 0 0;">
-                  <img src="${escapeHtml(logo)}" alt="${escapeHtml(p || 'Seeking Health')}" width="160" style="display:block;max-width:160px;width:160px;height:auto;border:0;" />
+                  <img src="${escapeHtml(logo)}" alt="${escapeHtml(p || 'Partner')}" width="160" style="display:block;max-width:160px;width:160px;height:auto;border:0;" />
                 </td>`
   }
   const label = escapeHtml(p || 'Study partner')
@@ -107,6 +116,8 @@ export function wrapCohortTransactionalEmailHtml(opts: {
   appBase: string
   /** Cohort `brand_name` (e.g. DoNotAge, Seeking Health) — drives header wordmark / logo and × BioStackr line. */
   partnerBrandName: string
+  /** Canonical `cohorts.slug` — selects DNA vs Seeking Health header assets when applicable. */
+  cohortSlug?: string | null
   innerHtml: string
   /** Footer / shell link — e.g. stable `cohortEmailCheckInLandingAbsoluteUrl()` for cohort emails. */
   dashboardHref: string
@@ -114,7 +125,11 @@ export function wrapCohortTransactionalEmailHtml(opts: {
   omitDashboardRow?: boolean
 }): string {
   const brandLine = cohortEmailPartnerXBioStackrLine(opts.partnerBrandName)
-  const partnerCell = cohortEmailPartnerHeaderCellHtml(opts.appBase, opts.partnerBrandName)
+  const partnerCell = cohortEmailPartnerHeaderCellHtml(
+    opts.appBase,
+    opts.partnerBrandName,
+    opts.cohortSlug,
+  )
   const bioCell = cohortEmailBioStackrHeaderCellHtml(opts.appBase)
   const dash = escapeHtml(opts.dashboardHref)
   const dashboardRow = opts.omitDashboardRow

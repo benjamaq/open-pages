@@ -63,11 +63,14 @@ export async function GET(request: NextRequest) {
     }
 
     const cohortIds = [...new Set(list.map((p) => p.cohort_id).filter(Boolean))]
-    const cohortMeta = new Map<string, { brand_name: string | null; product_name: string | null }>()
+    const cohortMeta = new Map<
+      string,
+      { slug: string | null; brand_name: string | null; product_name: string | null }
+    >()
     if (cohortIds.length > 0) {
       const { data: cRows, error: cErr } = await supabaseAdmin
         .from('cohorts')
-        .select('id, brand_name, product_name')
+        .select('id, slug, brand_name, product_name')
         .in('id', cohortIds)
       if (cErr) {
         console.error('[cohort-gate-reminder] cohorts lookup', cErr)
@@ -75,10 +78,12 @@ export async function GET(request: NextRequest) {
       }
       for (const c of (cRows || []) as Array<{
         id: string
+        slug?: string | null
         brand_name?: string | null
         product_name?: string | null
       }>) {
         cohortMeta.set(String(c.id), {
+          slug: c.slug != null && String(c.slug).trim() !== '' ? String(c.slug).trim() : null,
           brand_name: c.brand_name ?? null,
           product_name: c.product_name ?? null,
         })
@@ -123,6 +128,7 @@ export async function GET(request: NextRequest) {
             ? String(cm.brand_name).trim()
             : 'Study partner',
         productName: cm?.product_name != null ? String(cm.product_name).trim() : null,
+        cohortSlug: cm?.slug ?? null,
       })
       if (!r.success) {
         console.error('[cohort-gate-reminder] send failed', to, r.error)

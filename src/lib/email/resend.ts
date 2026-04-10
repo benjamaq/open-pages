@@ -218,7 +218,11 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
     // Until we plumb real stack clarity here, default to 0
     const progressPercent = 0
     let checkinHref = cohortEmailCheckInLandingAbsoluteUrl()
-    let emailShell = { cohortTransactionalShell: false as boolean, partnerBrandName: null as string | null }
+    let emailShell = {
+      cohortTransactionalShell: false as boolean,
+      partnerBrandName: null as string | null,
+      cohortSlug: null as string | null,
+    }
     if (data.authUserId && data.userEmail) {
       checkinHref = await resolveDailyReminderCheckinHrefForUser({
         authUserId: data.authUserId,
@@ -237,7 +241,7 @@ export async function sendDailyReminder(data: DailyReminderData): Promise<{ succ
       linkHint: null,
       cohortTransactionalShell: emailShell.cohortTransactionalShell,
       ...(emailShell.cohortTransactionalShell
-        ? { partnerBrandName: emailShell.partnerBrandName }
+        ? { partnerBrandName: emailShell.partnerBrandName, cohortSlug: emailShell.cohortSlug }
         : {}),
     })
     const subject = dailyReminderEmailSubject({

@@ -17,6 +17,7 @@ import {
 } from '@/lib/cohortShippingNurture'
 import { buildCohortStudyCompletionTransactionalEmailHtml } from '@/lib/cohortStudyCompletionEmail'
 import { buildCohortStudyStartTransactionalEmailHtml } from '@/lib/cohortStudyStartEmail'
+import { NEUTRAL_STORE_CREDIT_DISPLAY_TITLE } from '@/lib/cohortStudyLandingRewards'
 /** All cohort transactional templates exposed for preview / snapshot scripts. */
 export const COHORT_EMAIL_PREVIEW_TEMPLATE_IDS = [
   'enrollment',
@@ -85,7 +86,10 @@ export function renderCohortEmailPreviewHtml(
   const placeholderResult = `${appBase}/dashboard/cohort-result?preview=1`
   const placeholderClaim = `${appBase}/account?preview=claim`
   const sc = branding.completionRewardStoreCredit === true
-  const scTitle = String(branding.storeCreditTitle || '$120 store credit').trim() || '$120 store credit'
+  const scTitle =
+    String(branding.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
+    NEUTRAL_STORE_CREDIT_DISPLAY_TITLE
+  const previewCohortSlug = branding.cohortSlug ?? null
 
   switch (template) {
     case 'enrollment':
@@ -94,6 +98,7 @@ export function renderCohortEmailPreviewHtml(
         productLabel: prod,
         partnerBrandName,
         firstCheckInHref: placeholderCheckin,
+        cohortSlug: previewCohortSlug,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -104,6 +109,7 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         partnerBrandName,
         resultHref: placeholderResult,
+        cohortSlug: previewCohortSlug,
         rewardClaimAbsoluteUrl: v === 'claim' ? placeholderClaim : '',
         proRewardAlreadyClaimed: v === 'claimed',
         storeCreditPartnerReward: sc,
@@ -123,6 +129,7 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         partnerBrandName,
         dashboardHref: placeholderDashboard,
+        cohortSlug: previewCohortSlug,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -133,6 +140,7 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         brandName: partnerBrandName,
         dashboardStudyHref: placeholderDashboard,
+        cohortSlug: previewCohortSlug,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -144,6 +152,7 @@ export function renderCohortEmailPreviewHtml(
         productName: prod,
         partnerBrandName,
         checkInHref,
+        cohortSlug: previewCohortSlug,
         storeCreditPartnerReward: sc,
         storeCreditTitle: scTitle,
       })
@@ -152,6 +161,7 @@ export function renderCohortEmailPreviewHtml(
       return buildCohortParticipantLoginMagicLinkTransactionalEmailHtml({
         partnerBrandName,
         magicHref: placeholderDashboard,
+        cohortSlug: previewCohortSlug,
       })
     case 'shipping-day4':
     case 'shipping-day7':
@@ -161,6 +171,7 @@ export function renderCohortEmailPreviewHtml(
         studyName,
         brandName: partnerBrandName,
         productName: prod,
+        cohortSlug: previewCohortSlug,
         checkInHref: placeholderCheckin,
       })
       return { subject: shippingNurtureSubject(step), html }
@@ -168,8 +179,9 @@ export function renderCohortEmailPreviewHtml(
     case 'gate-reminder':
       return buildCohortGateReminderEmailHtml({
         checkInHref: placeholderCheckin,
-        partnerBrandName: 'Seeking Health',
-        productName: 'Optimal Focus',
+        partnerBrandName,
+        productName: prod,
+        cohortSlug: previewCohortSlug,
       })
     default: {
       const _x: never = template

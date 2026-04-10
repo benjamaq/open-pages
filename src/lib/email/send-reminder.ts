@@ -81,7 +81,7 @@ export async function sendReminderToUser(userId: string, opts?: Options) {
     linkHint: null,
     cohortTransactionalShell: emailShell.cohortTransactionalShell,
     ...(emailShell.cohortTransactionalShell
-      ? { partnerBrandName: emailShell.partnerBrandName }
+      ? { partnerBrandName: emailShell.partnerBrandName, cohortSlug: emailShell.cohortSlug }
       : {}),
   })
   const subject = dailyReminderEmailSubject({

@@ -138,22 +138,26 @@ export async function GET(request: NextRequest) {
             let productName = 'product'
             let brandName: string | null = null
             let storeCreditPartnerReward = false
-            let storeCreditTitle = '$120 store credit'
+            let storeCreditTitle: string | null = null
+            let cohortSlug: string | null = null
             try {
               const { data: cRow } = await supabaseAdmin
                 .from('cohorts')
-                .select('product_name, brand_name, study_landing_reward_config, checkin_fields')
+                .select('slug, product_name, brand_name, study_landing_reward_config, checkin_fields')
                 .eq('id', p.cohort_id)
                 .maybeSingle()
               const names = studyAndProductNamesFromCohortRow(cRow as { product_name?: string | null; brand_name?: string | null } | null)
               studyName = names.studyName
               productName = names.productName
               brandName = (cRow as { brand_name?: string | null } | null)?.brand_name ?? null
+              const rawSlug = (cRow as { slug?: string | null } | null)?.slug
+              cohortSlug =
+                rawSlug != null && String(rawSlug).trim() !== '' ? String(rawSlug).trim() : null
               storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
                 (cRow || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
               )
               storeCreditTitle = storeCreditTitleFromCohortRow(
-                (cRow || {}) as { study_landing_reward_config?: unknown },
+                (cRow || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
               )
             } catch (cohErr) {
               console.error('[cohort-compliance] cohort lookup for email', p.cohort_id, cohErr)
@@ -163,6 +167,7 @@ export async function GET(request: NextRequest) {
               studyName,
               productName,
               brandName,
+              cohortSlug,
               storeCreditPartnerReward,
               storeCreditTitle,
             })

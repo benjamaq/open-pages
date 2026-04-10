@@ -13,6 +13,7 @@ import { sendEmail } from '@/lib/email/resend'
 export type CohortGateReminderEmailMeta = {
   partnerBrandName: string
   productName?: string | null
+  cohortSlug?: string | null
 }
 
 export function buildCohortGateReminderEmailHtml(params: {
@@ -20,6 +21,7 @@ export function buildCohortGateReminderEmailHtml(params: {
   checkInHref: string
   partnerBrandName: string
   productName?: string | null
+  cohortSlug?: string | null
 }): { subject: string; html: string } {
   const checkInHref = String(params.checkInHref || '').trim()
   const partner = String(params.partnerBrandName || '').trim() || 'Study partner'
@@ -43,6 +45,7 @@ export function buildCohortGateReminderEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase: cohortEmailPublicOrigin(),
     partnerBrandName: partner,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: cohortDashboardDirectAbsoluteUrl(),
     omitDashboardRow: false,
@@ -63,6 +66,7 @@ export async function sendCohortGateReminderEmail(
     checkInHref,
     partnerBrandName,
     productName: meta.productName,
+    cohortSlug: meta.cohortSlug,
   })
   return sendEmail({
     to: safe,

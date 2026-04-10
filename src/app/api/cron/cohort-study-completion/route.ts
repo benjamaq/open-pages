@@ -37,6 +37,7 @@ function utcTodayYmd(): string {
 }
 
 type CohortMeta = {
+  slug: string | null
   study_days: number | null
   product_name: string | null
   brand_name: string | null
@@ -81,14 +82,18 @@ async function processCompletionPass(dry: boolean) {
   if (cohortIds.length > 0) {
     const { data: cRows, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields')
+      .select(
+        'id, slug, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields',
+      )
       .in('id', cohortIds)
     if (cErr) {
       console.error('[cohort-study-completion] cohorts:', cErr)
       return { ok: false as const, error: cErr.message }
     }
-    for (const c of (cRows || []) as Array<CohortMeta & { id: string }>) {
-      cohortMap.set(c.id, c)
+    for (const c of (cRows || []) as Array<CohortMeta & { id: string; slug?: string | null }>) {
+      const slug =
+        c.slug != null && String(c.slug).trim() !== '' ? String(c.slug).trim() : null
+      cohortMap.set(c.id, { ...c, slug })
     }
   }
 
@@ -154,7 +159,7 @@ async function processCompletionPass(dry: boolean) {
       (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
     const storeCreditTitle = storeCreditTitleFromCohortRow(
-      (cdef || {}) as { study_landing_reward_config?: unknown },
+      (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
 
     const send = await sendCohortStudyCompletionEmail({
@@ -162,6 +167,7 @@ async function processCompletionPass(dry: boolean) {
       authUserId: authId,
       productName,
       partnerBrandName: cdef?.brand_name ?? null,
+      cohortSlug: cdef?.slug ?? null,
       rewardClaimAbsoluteUrl,
       storeCreditPartnerReward,
       storeCreditTitle,
@@ -220,14 +226,18 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
   if (cohortIds.length > 0) {
     const { data: cRows, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields')
+      .select(
+        'id, slug, study_days, product_name, brand_name, study_landing_reward_config, checkin_fields',
+      )
       .in('id', cohortIds)
     if (cErr) {
       console.error('[cohort-study-completion] backfill cohorts:', cErr)
       return { ok: false as const, error: cErr.message, sent: 0, errors }
     }
-    for (const c of (cRows || []) as Array<CohortMeta & { id: string }>) {
-      cohortMap.set(c.id, c)
+    for (const c of (cRows || []) as Array<CohortMeta & { id: string; slug?: string | null }>) {
+      const slug =
+        c.slug != null && String(c.slug).trim() !== '' ? String(c.slug).trim() : null
+      cohortMap.set(c.id, { ...c, slug })
     }
   }
 
@@ -269,7 +279,7 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
       (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
     const storeCreditTitle = storeCreditTitleFromCohortRow(
-      (cdef || {}) as { study_landing_reward_config?: unknown },
+      (cdef || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
 
     const mail = await sendCohortStudyCompletionEmail({
@@ -277,6 +287,7 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
       authUserId: authId,
       productName,
       partnerBrandName: cdef?.brand_name ?? null,
+      cohortSlug: cdef?.slug ?? null,
       rewardClaimAbsoluteUrl,
       storeCreditPartnerReward,
       storeCreditTitle,
@@ -350,10 +361,11 @@ async function processResultReadyEmails(dry: boolean) {
 
     const { data: cRow } = await supabaseAdmin
       .from('cohorts')
-      .select('product_name, brand_name, study_landing_reward_config, checkin_fields')
+      .select('slug, product_name, brand_name, study_landing_reward_config, checkin_fields')
       .eq('id', r.cohort_id)
       .maybeSingle()
     const cMeta = cRow as {
+      slug?: string | null
       product_name?: string | null
       brand_name?: string | null
       study_landing_reward_config?: unknown
@@ -382,14 +394,17 @@ async function processResultReadyEmails(dry: boolean) {
       (cMeta || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
     const storeCreditTitle = storeCreditTitleFromCohortRow(
-      (cMeta || {}) as { study_landing_reward_config?: unknown },
+      (cMeta || {}) as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
+    const cohortSlug =
+      cMeta?.slug != null && String(cMeta.slug).trim() !== '' ? String(cMeta.slug).trim() : null
 
     const mail = await sendCohortResultReadyEmail({
       to: email,
       authUserId: r.user_id,
       productName,
       partnerBrandName: cMeta?.brand_name ?? null,
+      cohortSlug,
       rewardClaimAbsoluteUrl,
       proRewardAlreadyClaimed,
       storeCreditPartnerReward,

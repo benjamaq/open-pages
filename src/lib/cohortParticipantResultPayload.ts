@@ -16,6 +16,7 @@ export type CohortParticipantResultApiPayload = {
   published_at: string
   product_name: string | null
   brand_name: string | null
+  cohort_slug: string | null
   pro_reward: CohortParticipantResultProReward
 }
 
@@ -170,19 +171,27 @@ async function findPublishedResultRowForAuthUser(authUserId: string): Promise<{
 async function fetchCohortProductMeta(cohortUuidOrSlug: string): Promise<{
   product_name: string | null
   brand_name: string | null
+  cohort_slug: string | null
   /** Canonical `cohorts.id` — use for `cohort_participants.cohort_id` joins. */
   cohortIdForParticipants: string
 } | null> {
   const { data: byId, error: idErr } = await supabaseAdmin
     .from('cohorts')
-    .select('id, product_name, brand_name')
+    .select('id, slug, product_name, brand_name')
     .eq('id', cohortUuidOrSlug)
     .maybeSingle()
 
   if (!idErr && byId && (byId as { id?: string }).id) {
-    const c = byId as { id: string; product_name?: string | null; brand_name?: string | null }
+    const c = byId as {
+      id: string
+      slug?: string | null
+      product_name?: string | null
+      brand_name?: string | null
+    }
+    const slug = c.slug != null && String(c.slug).trim() !== '' ? String(c.slug).trim() : null
     return {
       cohortIdForParticipants: String(c.id),
+      cohort_slug: slug,
       product_name:
         c.product_name != null && String(c.product_name).trim() !== '' ? String(c.product_name).trim() : null,
       brand_name: c.brand_name != null && String(c.brand_name).trim() !== '' ? String(c.brand_name).trim() : null,
@@ -191,14 +200,21 @@ async function fetchCohortProductMeta(cohortUuidOrSlug: string): Promise<{
 
   const { data: bySlug, error: slugErr } = await supabaseAdmin
     .from('cohorts')
-    .select('id, product_name, brand_name')
+    .select('id, slug, product_name, brand_name')
     .eq('slug', cohortUuidOrSlug)
     .maybeSingle()
 
   if (!slugErr && bySlug && (bySlug as { id?: string }).id) {
-    const c = bySlug as { id: string; product_name?: string | null; brand_name?: string | null }
+    const c = bySlug as {
+      id: string
+      slug?: string | null
+      product_name?: string | null
+      brand_name?: string | null
+    }
+    const slug = c.slug != null && String(c.slug).trim() !== '' ? String(c.slug).trim() : null
     return {
       cohortIdForParticipants: String(c.id),
+      cohort_slug: slug,
       product_name:
         c.product_name != null && String(c.product_name).trim() !== '' ? String(c.product_name).trim() : null,
       brand_name: c.brand_name != null && String(c.brand_name).trim() !== '' ? String(c.brand_name).trim() : null,
@@ -232,7 +248,12 @@ export async function buildCohortParticipantResultPayload(
     return { ok: false, reason: 'no_published_result' }
   }
 
-  const { product_name: productName, brand_name: brandName, cohortIdForParticipants } = meta
+  const {
+    product_name: productName,
+    brand_name: brandName,
+    cohort_slug: cohortSlug,
+    cohortIdForParticipants,
+  } = meta
 
   const publishedAt = row.published_at != null ? String(row.published_at) : ''
 
@@ -285,6 +306,7 @@ export async function buildCohortParticipantResultPayload(
     published_at: publishedAt,
     product_name: productName,
     brand_name: brandName,
+    cohort_slug: cohortSlug,
     pro_reward,
   }
 

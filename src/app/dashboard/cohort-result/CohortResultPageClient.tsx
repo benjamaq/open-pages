@@ -12,6 +12,7 @@ type ApiOk = {
   published_at: string
   product_name: string | null
   brand_name: string | null
+  cohort_slug?: string | null
   pro_reward?: {
     has_row: boolean
     claimed: boolean
@@ -30,6 +31,7 @@ function apiPayloadToState(p: CohortParticipantResultApiPayload): ApiOk {
     published_at: p.published_at,
     product_name: p.product_name,
     brand_name: p.brand_name,
+    cohort_slug: p.cohort_slug ?? null,
     pro_reward: p.pro_reward,
   }
 }
@@ -101,6 +103,7 @@ export default function CohortResultPageClient({
           published_at: String(j.published_at || ''),
           product_name: j.product_name ?? null,
           brand_name: j.brand_name ?? null,
+          cohort_slug: (j as { cohort_slug?: string | null }).cohort_slug ?? null,
           pro_reward: j.pro_reward,
         })
         setState('ready')
@@ -246,6 +249,7 @@ export default function CohortResultPageClient({
               published_at: payload.published_at,
               product_name: payload.product_name,
               brand_name: payload.brand_name,
+              cohort_slug: payload.cohort_slug ?? null,
             }}
             rewards={{
               pro_claimed: Boolean(payload.pro_reward?.claimed),

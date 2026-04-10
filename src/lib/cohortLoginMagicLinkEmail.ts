@@ -31,6 +31,7 @@ export function cohortEmailLoginMagicLinkCtaHtml(loginHref: string): string {
 export function buildCohortParticipantLoginMagicLinkTransactionalEmailHtml(params: {
   partnerBrandName: string
   magicHref: string
+  cohortSlug?: string | null
   emailSubject?: string | null
 }): { subject: string; html: string } {
   const appBase = cohortEmailPublicOrigin()
@@ -48,6 +49,7 @@ export function buildCohortParticipantLoginMagicLinkTransactionalEmailHtml(param
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: href,
     omitDashboardRow: true,
@@ -58,7 +60,11 @@ export function buildCohortParticipantLoginMagicLinkTransactionalEmailHtml(param
 export async function sendCohortParticipantLoginMagicLinkEmail(
   to: string,
   magicHref: string,
-  opts?: { partnerBrandName?: string | null; emailSubject?: string | null },
+  opts?: {
+    partnerBrandName?: string | null
+    cohortSlug?: string | null
+    emailSubject?: string | null
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const safe = String(to || '').trim()
   if (!safe) return { success: false, error: 'no email' }
@@ -69,6 +75,7 @@ export async function sendCohortParticipantLoginMagicLinkEmail(
   const { subject, html } = buildCohortParticipantLoginMagicLinkTransactionalEmailHtml({
     partnerBrandName,
     magicHref: href,
+    cohortSlug: opts?.cohortSlug,
     emailSubject: opts?.emailSubject,
   })
 
@@ -95,6 +102,7 @@ export async function sendFreshCohortLoginMagicLinkForParticipantEmail(
   }
 
   let partnerBrandName = 'Study partner'
+  let cohortSlug: string | null = null
   try {
     const resolved = await resolveAuthUserByEmailForServer(em.toLowerCase(), supabaseAdmin)
     if (resolved?.id) {
@@ -105,6 +113,7 @@ export async function sendFreshCohortLoginMagicLinkForParticipantEmail(
         .maybeSingle()
       const slug = String((prof as { cohort_id?: string | null })?.cohort_id || '').trim().toLowerCase()
       if (slug) {
+        cohortSlug = slug
         const { data: c } = await supabaseAdmin.from('cohorts').select('brand_name').eq('slug', slug).maybeSingle()
         const bn = String((c as { brand_name?: string | null })?.brand_name || '').trim()
         if (bn) partnerBrandName = bn
@@ -114,7 +123,7 @@ export async function sendFreshCohortLoginMagicLinkForParticipantEmail(
     /* keep default */
   }
 
-  const r = await sendCohortParticipantLoginMagicLinkEmail(em, magic, { partnerBrandName })
+  const r = await sendCohortParticipantLoginMagicLinkEmail(em, magic, { partnerBrandName, cohortSlug })
   if (!r.success) {
     console.error('[cohortLoginMagicLink] sendEmail', r.error)
     return r.error || 'Send failed'

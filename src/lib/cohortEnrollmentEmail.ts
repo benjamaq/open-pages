@@ -11,7 +11,11 @@ import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 import { isSleepShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
-import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
+import {
+  cohortUsesStoreCreditPartnerReward,
+  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
+  storeCreditTitleFromCohortRow,
+} from '@/lib/cohortStudyLandingRewards'
 
 export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   firstName: string
@@ -19,12 +23,13 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   partnerBrandName: string
   /** Absolute URL — production uses Supabase magic link via `cohortTransactionalCheckinMagicHref`. */
   firstCheckInHref: string
+  cohortSlug?: string | null
   /** Default true (sleep-style copy). Set false when cohort `checkin_fields` are not sleep-shaped. */
   sleepShapedCohort?: boolean
   /** When true, omit product-supply-as-reward framing; use store credit + Pro copy. */
   storeCreditPartnerReward?: boolean
   /** From `partner_store_credit.title` when store-credit cohort; defaults in sender. */
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const firstEsc = escapeHtml(params.firstName)
   const productLabel = String(params.productLabel || 'your study product').trim() || 'your study product'
@@ -40,7 +45,8 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
 
   const storeCredit = params.storeCreditPartnerReward === true
   const creditTitleEsc = escapeHtml(
-    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
+      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
   )
   const confirmNextSteps = storeCredit
     ? `Once both check-ins are complete, your place in the study is confirmed. We&apos;ll follow up by email with next steps — including your <strong>${creditTitleEsc}</strong> and 3 months of BioStackr Pro when you complete the study.`
@@ -63,6 +69,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: checkinHref,
     omitDashboardRow: true,
@@ -95,7 +102,7 @@ export async function sendCohortEnrollmentEmail(params: {
   const slug = String(params.cohortSlug || '').trim()
   let sleepShapedCohort = true
   let storeCreditPartnerReward = false
-  let storeCreditTitle = '$120 store credit'
+  let storeCreditTitle: string | null = null
   if (slug) {
     const { data: row } = await supabaseAdmin
       .from('cohorts')
@@ -114,7 +121,9 @@ export async function sendCohortEnrollmentEmail(params: {
       storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
         row as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
       )
-      storeCreditTitle = storeCreditTitleFromCohortRow(row as { study_landing_reward_config?: unknown })
+      storeCreditTitle = storeCreditTitleFromCohortRow(
+        row as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
+      )
     }
   }
   const { href: firstCheckInHref } = await cohortTransactionalCheckinMagicHref(to, 'enrollment')
@@ -123,9 +132,10 @@ export async function sendCohortEnrollmentEmail(params: {
     productLabel,
     partnerBrandName,
     firstCheckInHref,
+    cohortSlug: slug || null,
     sleepShapedCohort,
     storeCreditPartnerReward,
-    storeCreditTitle,
+    storeCreditTitle: storeCreditTitle ?? undefined,
   })
 
   await sendEmail({ to, subject, html })

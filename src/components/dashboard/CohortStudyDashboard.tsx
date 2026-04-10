@@ -6,11 +6,15 @@ import { cohortParticipantResultPath } from '@/lib/cohortDashboardDeepLink'
 import {
   cohortCheckinFieldLabel,
   DEFAULT_COHORT_CHECKIN_FIELDS,
-  isCognitiveShapedCheckinFields,
   isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
+import {
+  isDonotageSureSleepStudySlug,
+  isSeekingHealthOptimalFocusStudySlug,
+} from '@/lib/cohortPartnerBranding'
+import { NEUTRAL_STORE_CREDIT_DISPLAY_TITLE } from '@/lib/cohortStudyLandingRewards'
 import {
   COGNITIVE_COHORT_STUDY_ASSETS,
   cohortPartnerLogoPublicCandidates,
@@ -64,21 +68,18 @@ export interface CohortStudyDashboardProps {
 }
 
 /**
- * DoNotAge → DNA asset; cognitive-shaped cohorts (e.g. Seeking Health) → pack logo under
- * `COGNITIVE_COHORT_STUDY_ASSETS`; else try `/cohorts/{brand-slug}/logo.png` then `/cohorts/{cohort-slug}/logo.png`;
- * on failure, wordmark text.
+ * `donotage-suresleep` → DNA asset; `seeking-health-optimal-focus` → SH public pack; else cohort-folder logos or wordmark.
+ * Slug-canonical only (no `brand_name` substring matching).
  */
 function CohortDashboardPartnerMark({
   brandDisplay,
   cohortId,
-  cognitiveShapedCohort,
 }: {
   brandDisplay: string
   cohortId: string
-  /** When true, use the same Seeking Health asset path as `/study/[slug]` (not UUID-based paths). */
-  cognitiveShapedCohort: boolean
 }) {
-  const isDonotage = /donotage/i.test(brandDisplay)
+  const useDnaPack = isDonotageSureSleepStudySlug(cohortId)
+  const useSeekingPack = isSeekingHealthOptimalFocusStudySlug(cohortId)
   const candidates = useMemo(
     () => cohortPartnerLogoPublicCandidates(cohortId, brandDisplay),
     [cohortId, brandDisplay],
@@ -92,7 +93,7 @@ function CohortDashboardPartnerMark({
     setUseTextFallback(false)
   }, [candidateKey])
 
-  if (isDonotage) {
+  if (useDnaPack) {
     return (
       <img
         src="/DNA-logo-black.png"
@@ -104,7 +105,7 @@ function CohortDashboardPartnerMark({
     )
   }
 
-  if (cognitiveShapedCohort) {
+  if (useSeekingPack) {
     return (
       <img
         src={encodeURI(COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo)}
@@ -495,18 +496,20 @@ function StudySupportModal({
     >
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start gap-3">
-          <h3 className="text-lg font-semibold text-gray-900">Message support</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{done ? 'Thanks' : 'Message support'}</h3>
           <button type="button" className="text-sm text-gray-500 hover:text-gray-800" onClick={onClose}>
             Close
           </button>
         </div>
-        <p className="mt-2 text-sm text-gray-600">Choose one option. We email the study team with your account details.</p>
         {done ? (
-          <p className="mt-4 text-sm text-emerald-800 font-medium">
-            Thanks for reaching out. We&apos;ll get back to you shortly.
+          <p className="mt-3 text-sm text-emerald-800 font-medium leading-relaxed">
+            Great — we&apos;ve received your message and will get back to you shortly.
           </p>
         ) : (
           <>
+            <p className="mt-2 text-sm text-gray-600">
+              Choose one option. We email the study team with your account details.
+            </p>
             <div className="mt-4 space-y-2">
               {(
                 [
@@ -598,13 +601,6 @@ export default function CohortStudyDashboard({
         ? checkinFieldsProp
         : DEFAULT_COHORT_CHECKIN_FIELDS
     return isSleepShapedCheckinFields(normalizeCohortCheckinFields(raw))
-  }, [checkinFieldsProp])
-  const isCognitiveShapedCohort = useMemo(() => {
-    const raw =
-      Array.isArray(checkinFieldsProp) && checkinFieldsProp.length > 0
-        ? checkinFieldsProp
-        : DEFAULT_COHORT_CHECKIN_FIELDS
-    return isCognitiveShapedCheckinFields(normalizeCohortCheckinFields(raw))
   }, [checkinFieldsProp])
   const welcomeName =
     typeof welcomeFirstName === 'string' && welcomeFirstName.trim() !== ''
@@ -718,7 +714,6 @@ export default function CohortStudyDashboard({
           <CohortDashboardPartnerMark
             brandDisplay={brandDisplay}
             cohortId={cohortId}
-            cognitiveShapedCohort={isCognitiveShapedCohort}
           />
           <img
             src={encodeURI('/BIOSTACKR LOGO 2.png')}
@@ -808,7 +803,7 @@ export default function CohortStudyDashboard({
                     <li>
                       {(typeof cohortStoreCreditTitle === 'string' && cohortStoreCreditTitle.trim() !== ''
                         ? cohortStoreCreditTitle.trim()
-                        : '$120 store credit') + ' from ' + brandDisplay}
+                        : NEUTRAL_STORE_CREDIT_DISPLAY_TITLE) + ' from ' + brandDisplay}
                     </li>
                   ) : (
                     <li>A 3-month supply of {productName}</li>

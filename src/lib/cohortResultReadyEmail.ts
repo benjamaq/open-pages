@@ -9,6 +9,7 @@ import {
 } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { NEUTRAL_STORE_CREDIT_DISPLAY_TITLE } from '@/lib/cohortStudyLandingRewards'
 
 export function buildCohortResultReadyTransactionalEmailHtml(params: {
   firstNameForGreeting: string
@@ -16,10 +17,11 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
   partnerBrandName: string
   /** Results CTA + shell footer target (magic link or plain app URL). */
   resultHref: string
+  cohortSlug?: string | null
   rewardClaimAbsoluteUrl?: string | null
   proRewardAlreadyClaimed?: boolean
   storeCreditPartnerReward?: boolean
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const product = String(params.productName || 'your study').trim() || 'your study'
   const productEsc = escapeHtml(product)
@@ -31,7 +33,8 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
   const proAlready = Boolean(params.proRewardAlreadyClaimed)
   const storeCredit = params.storeCreditPartnerReward === true
   const creditTitleEsc = escapeHtml(
-    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
+      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
   )
 
   const appBase = cohortEmailPublicOrigin()
@@ -91,6 +94,7 @@ export function buildCohortResultReadyTransactionalEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: partnerPlain,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref,
     omitDashboardRow: true,
@@ -106,10 +110,11 @@ export async function sendCohortResultReadyEmail(params: {
   authUserId: string
   productName: string
   partnerBrandName?: string | null
+  cohortSlug?: string | null
   rewardClaimAbsoluteUrl?: string | null
   proRewardAlreadyClaimed?: boolean
   storeCreditPartnerReward?: boolean
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const to = String(params.to || '').trim()
   if (!to) return { success: false, error: 'missing email' }
@@ -136,6 +141,7 @@ export async function sendCohortResultReadyEmail(params: {
     productName: product,
     partnerBrandName: partnerPlain,
     resultHref,
+    cohortSlug: params.cohortSlug,
     rewardClaimAbsoluteUrl: params.rewardClaimAbsoluteUrl,
     proRewardAlreadyClaimed: params.proRewardAlreadyClaimed,
     storeCreditPartnerReward: params.storeCreditPartnerReward,

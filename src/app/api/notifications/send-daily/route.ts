@@ -259,7 +259,7 @@ async function handleSend() {
             linkHint: null,
             cohortTransactionalShell: emailShell.cohortTransactionalShell,
             ...(emailShell.cohortTransactionalShell
-              ? { partnerBrandName: emailShell.partnerBrandName }
+              ? { partnerBrandName: emailShell.partnerBrandName, cohortSlug: emailShell.cohortSlug }
               : {}),
             ...(latest?.energy != null ? { energy: latest.energy } : {}),
             ...(latest?.focus != null ? { focus: latest.focus } : {}),

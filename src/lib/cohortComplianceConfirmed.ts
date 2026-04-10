@@ -11,7 +11,11 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
-import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
+import {
+  cohortUsesStoreCreditPartnerReward,
+  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
+  storeCreditTitleFromCohortRow,
+} from '@/lib/cohortStudyLandingRewards'
 
 export { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
 
@@ -22,8 +26,9 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   brandName: string
   /** Absolute URL — production uses Supabase magic link via `cohortTransactionalDashboardMagicHref`. */
   dashboardStudyHref: string
+  cohortSlug?: string | null
   storeCreditPartnerReward?: boolean
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
   const study = escapeHtml(params.studyName)
@@ -33,7 +38,10 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   const appBase = cohortEmailPublicOrigin()
   const dashboardStudyHref = String(params.dashboardStudyHref || '').trim()
   const storeCredit = params.storeCreditPartnerReward === true
-  const creditEsc = escapeHtml(String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit')
+  const creditEsc = escapeHtml(
+    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
+      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
+  )
 
   const rewardParagraph = storeCredit
     ? `<p style="margin:0 0 20px;">Your completion rewards — <strong>${creditEsc}</strong> from <strong>${brand}</strong>, plus three months of BioStackr Pro — are locked in from today.</p>`
@@ -57,6 +65,7 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: partnerPlain,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: dashboardStudyHref,
     omitDashboardRow: true,
@@ -71,8 +80,9 @@ export async function sendComplianceConfirmedEmail(params: {
   studyName: string
   productName: string
   brandName?: string | null
+  cohortSlug?: string | null
   storeCreditPartnerReward?: boolean
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): Promise<void> {
   try {
     const { data: auth, error: auErr } = await supabaseAdmin.auth.admin.getUserById(params.authUserId)
@@ -90,6 +100,7 @@ export async function sendComplianceConfirmedEmail(params: {
       productName: params.productName,
       brandName: params.brandName ?? '',
       dashboardStudyHref,
+      cohortSlug: params.cohortSlug,
       storeCreditPartnerReward: params.storeCreditPartnerReward,
       storeCreditTitle: params.storeCreditTitle,
     })
@@ -246,6 +257,7 @@ export async function tryImmediateCohortComplianceConfirm(opts: {
       studyName,
       productName,
       brandName,
+      cohortSlug: slug,
       storeCreditPartnerReward,
       storeCreditTitle,
     })

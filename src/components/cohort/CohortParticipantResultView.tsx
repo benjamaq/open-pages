@@ -3,7 +3,12 @@
 import { useRef, useState } from 'react'
 import { cohortProProductEntryPath } from '@/lib/cohortDashboardDeepLink'
 import { COHORT_RESULT_PARTNER_MARK_CLASS } from '@/lib/cohortDashboardPartnerLogo'
+import {
+  isDonotageSureSleepStudySlug,
+  isSeekingHealthOptimalFocusStudySlug,
+} from '@/lib/cohortPartnerBranding'
 import { COGNITIVE_COHORT_STUDY_ASSETS } from '@/lib/cohortStudyPageAssets'
+import { NEUTRAL_STORE_CREDIT_DISPLAY_TITLE } from '@/lib/cohortStudyLandingRewards'
 
 export type CohortParticipantResultPayload = {
   result_json: Record<string, unknown> | null
@@ -11,6 +16,7 @@ export type CohortParticipantResultPayload = {
   published_at: string
   product_name: string | null
   brand_name: string | null
+  cohort_slug?: string | null
 }
 
 export type CohortParticipantResultRewards = {
@@ -530,26 +536,29 @@ function studyContextLine(brandName: string | null, productName: string | null):
   return 'Study results'
 }
 
-/**
- * Partner mark: DoNotAge → DNA; Seeking Health → cohort asset pack (same as dashboard / emails);
- * other brands → wordmark text; missing brand → DNA fallback.
- */
-function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
+/** Partner mark from canonical cohort slug only (matches dashboard / transactional email rules). */
+function CohortResultPartnerMark({
+  brandName,
+  cohortSlug,
+}: {
+  brandName: string | null
+  cohortSlug?: string | null
+}) {
   const b = typeof brandName === 'string' ? brandName.trim() : ''
-  if (/donotage/i.test(b)) {
+  if (isDonotageSureSleepStudySlug(cohortSlug)) {
     return (
       <img
         src="/DNA-logo-black.png"
-        alt={b || 'DoNotAge'}
+        alt={b || 'Study partner'}
         className={COHORT_RESULT_PARTNER_MARK_CLASS}
       />
     )
   }
-  if (/seeking\s*health/i.test(b)) {
+  if (isSeekingHealthOptimalFocusStudySlug(cohortSlug)) {
     return (
       <img
         src={encodeURI(COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo)}
-        alt={b || 'Seeking Health'}
+        alt={b || 'Study partner'}
         className={COHORT_RESULT_PARTNER_MARK_CLASS}
       />
     )
@@ -560,11 +569,7 @@ function CohortResultPartnerMark({ brandName }: { brandName: string | null }) {
     )
   }
   return (
-    <img
-      src="/DNA-logo-black.png"
-      alt="Study partner"
-      className={COHORT_RESULT_PARTNER_MARK_CLASS}
-    />
+    <span className="text-lg sm:text-xl font-bold text-slate-950 tracking-tight">Study partner</span>
   )
 }
 
@@ -710,7 +715,10 @@ export default function CohortParticipantResultView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="shrink-0 rounded-2xl border border-slate-200/95 bg-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
-            <CohortResultPartnerMark brandName={payload.brand_name} />
+            <CohortResultPartnerMark
+              brandName={payload.brand_name}
+              cohortSlug={payload.cohort_slug ?? null}
+            />
           </div>
           <div className="h-8 w-px shrink-0 bg-slate-200/80 hidden sm:block" aria-hidden />
           <div className="min-w-0">
@@ -910,7 +918,10 @@ export default function CohortParticipantResultView({
           <article className="rounded-2xl border border-stone-200/95 bg-gradient-to-b from-[#faf8f5] via-white to-white px-7 py-8 sm:px-9 sm:py-9 shadow-[0_6px_28px_-12px_rgba(28,25,23,0.12)]">
             <div className="flex items-center min-h-[2.35rem]">
               <div className="max-w-[min(100%,200px)]">
-                <CohortResultPartnerMark brandName={payload.brand_name} />
+                <CohortResultPartnerMark
+                  brandName={payload.brand_name}
+                  cohortSlug={payload.cohort_slug ?? null}
+                />
               </div>
             </div>
             <h2 className="mt-6 sm:mt-7 text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
@@ -921,8 +932,9 @@ export default function CohortParticipantResultView({
             <p className="mt-3 sm:mt-4 max-w-prose text-[15px] sm:text-[1.0625rem] leading-relaxed text-slate-800">
               {storeCreditPartnerRewardUi ? (
                 <>
-                  Your <strong>$120 store credit</strong> from {payload.brand_name?.trim() || 'the study partner'} is
-                  handled per the study terms. You&apos;ll receive details by email where applicable.
+                  Your <strong>{NEUTRAL_STORE_CREDIT_DISPLAY_TITLE.toLowerCase()}</strong> from{' '}
+                  {payload.brand_name?.trim() || 'the study partner'} is handled per the study terms. You&apos;ll receive
+                  details by email where applicable.
                 </>
               ) : (
                 <>

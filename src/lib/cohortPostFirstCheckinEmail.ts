@@ -11,7 +11,11 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
-import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
+import {
+  cohortUsesStoreCreditPartnerReward,
+  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
+  storeCreditTitleFromCohortRow,
+} from '@/lib/cohortStudyLandingRewards'
 
 export type CohortPostFirstCheckinEmailResult = {
   sent: boolean
@@ -25,9 +29,10 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   productName: string
   partnerBrandName: string
   checkInHref: string
+  cohortSlug?: string | null
   /** When true, no product-supply reward or “dispatch supply” wording. */
   storeCreditPartnerReward?: boolean
-  storeCreditTitle?: string
+  storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
   const studyEsc = escapeHtml(params.studyName)
@@ -39,7 +44,8 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   const checkInHref = String(params.checkInHref || '').trim()
   const storeCredit = params.storeCreditPartnerReward === true
   const creditTitleEsc = escapeHtml(
-    String(params.storeCreditTitle || '$120 store credit').trim() || '$120 store credit',
+    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
+      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
   )
 
   const appBase = cohortEmailPublicOrigin()
@@ -69,6 +75,7 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: partnerBrandPlain,
+    cohortSlug: params.cohortSlug,
     innerHtml,
     dashboardHref: checkInHref,
     omitDashboardRow: true,
@@ -215,7 +222,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       cohort as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
     const storeCreditTitle = storeCreditTitleFromCohortRow(
-      cohort as { study_landing_reward_config?: unknown },
+      cohort as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
     )
 
     const { subject, html } = buildCohortPostFirstCheckinTransactionalEmailHtml({
@@ -224,6 +231,7 @@ export async function trySendCohortPostFirstCheckinEmail(opts: {
       productName,
       partnerBrandName: partnerBrandPlain,
       checkInHref,
+      cohortSlug: slug,
       storeCreditPartnerReward,
       storeCreditTitle,
     })

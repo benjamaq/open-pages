@@ -91,12 +91,17 @@ export async function GET(request: NextRequest) {
     const cohortIds = [...new Set(list.map((p) => p.cohort_id))]
     const cohortById: Record<
       string,
-      { product_name?: string | null; brand_name?: string | null; checkin_fields?: unknown }
+      {
+        slug?: string | null
+        product_name?: string | null
+        brand_name?: string | null
+        checkin_fields?: unknown
+      }
     > = {}
     if (cohortIds.length > 0) {
       const { data: cohortRows, error: cErr } = await supabaseAdmin
         .from('cohorts')
-        .select('id, product_name, brand_name, checkin_fields')
+        .select('id, slug, product_name, brand_name, checkin_fields')
         .in('id', cohortIds)
       if (cErr) {
         console.error('[cohort-shipping-nurture] cohorts:', cErr)
@@ -165,6 +170,10 @@ export async function GET(request: NextRequest) {
         continue
       }
 
+      const slugRaw = cohortRow?.slug
+      const cohortSlug =
+        slugRaw != null && String(slugRaw).trim() !== '' ? String(slugRaw).trim() : null
+
       const result = await sendShippingNurtureEmail({
         to,
         step,
@@ -172,6 +181,7 @@ export async function GET(request: NextRequest) {
         brandName,
         productName,
         sleepShapedCohort,
+        cohortSlug,
       })
 
       if (!result.success) {

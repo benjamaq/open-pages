@@ -8,6 +8,10 @@ import {
   isSleepShapedCheckinFields,
   normalizeCohortCheckinFields,
 } from '@/lib/cohortCheckinFields'
+import {
+  isDonotageSureSleepStudySlug,
+  isSeekingHealthOptimalFocusStudySlug,
+} from '@/lib/cohortPartnerBranding'
 import { resolveStudyLandingRewards } from '@/lib/cohortStudyLandingRewards'
 import {
   COGNITIVE_COHORT_STUDY_ASSETS,
@@ -434,16 +438,17 @@ function HowItWorksSteps({
 }
 
 /**
- * Partner mark: optional `partnerLogoSrc` from cohort-shaped assets (e.g. cognitive pack);
- * else DNA for DoNotAge-branded cohorts; wordmark text otherwise.
+ * Partner mark: optional `partnerLogoSrc` (Seeking Health pack on canonical slug); else DNA for SureSleep slug; else wordmark.
  */
 function StudyPartnerHeroLogo({
   brandDisplay,
   partnerLogoSrc,
+  cohortSlug,
 }: {
   brandDisplay: string
   /** When set (e.g. cognitive cohort asset), overrides DNA/text wordmark. */
   partnerLogoSrc?: string | null
+  cohortSlug: string
 }) {
   const b = String(brandDisplay || '').trim()
   if (partnerLogoSrc) {
@@ -458,24 +463,24 @@ function StudyPartnerHeroLogo({
       />
     )
   }
-  if (b && !/donotage/i.test(b)) {
+  if (isDonotageSureSleepStudySlug(cohortSlug)) {
     return (
-      <div className="flex min-h-[2.75rem] max-w-[min(52vw,220px)] items-center sm:min-h-[8.75rem] sm:max-w-[min(100%,560px)] md:min-h-[9.5rem]">
-        <span className="text-left text-[1.125rem] font-bold leading-tight tracking-tight text-neutral-900 sm:text-[1.85rem] md:text-[2rem]">
-          {b}
-        </span>
-      </div>
+      <Image
+        src={DNA_LOGO_BLACK}
+        alt={b || 'Study partner'}
+        width={200}
+        height={200}
+        className="h-[2.75rem] w-auto max-w-[min(52vw,200px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] sm:max-w-[min(100%,560px)] md:h-[9.5rem]"
+        priority
+      />
     )
   }
   return (
-    <Image
-      src={DNA_LOGO_BLACK}
-      alt={b || 'Study partner'}
-      width={200}
-      height={200}
-      className="h-[2.75rem] w-auto max-w-[min(52vw,200px)] object-contain object-left contrast-[1.06] sm:h-[8.75rem] sm:max-w-[min(100%,560px)] md:h-[9.5rem]"
-      priority
-    />
+    <div className="flex min-h-[2.75rem] max-w-[min(52vw,220px)] items-center sm:min-h-[8.75rem] sm:max-w-[min(100%,560px)] md:min-h-[9.5rem]">
+      <span className="text-left text-[1.125rem] font-bold leading-tight tracking-tight text-neutral-900 sm:text-[1.85rem] md:text-[2rem]">
+        {b || 'Study partner'}
+      </span>
+    </div>
   )
 }
 
@@ -734,10 +739,12 @@ function WhatYouReceive({
 }
 
 function TrustFooter({
+  cohortSlug,
   partnerBrand,
   partnerLogoSrc,
   footerPartnerLogoSrc,
 }: {
+  cohortSlug: string
   partnerBrand: string
   /** When set, show raster logo instead of DNA asset or plain text (cognitive cohort pack). */
   partnerLogoSrc?: string | null
@@ -766,7 +773,7 @@ function TrustFooter({
               height={120}
               className="h-8 w-auto max-w-[min(38vw,180px)] object-contain object-center opacity-95 sm:h-12 sm:max-w-[min(90vw,320px)] md:h-14"
             />
-          ) : /donotage/i.test(partnerBrand) ? (
+          ) : isDonotageSureSleepStudySlug(cohortSlug) ? (
             <Image
               src={DNA_LOGO_WHITE}
               alt={partnerBrand || 'Study partner'}
@@ -901,22 +908,29 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       ? `Track measurable changes in your focus and cognitive performance over ${studyDays} days with simple daily check-ins.`
       : `Track measurable changes during your ${studyDays}-day study with simple daily check-ins.`
 
-  /** Imagery from cohort shape only (`checkin_fields`): sleep pack, cognitive Seeking Health asset pack, or generic placeholder. */
-  const partnerLogoSrc = isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo : null
-  const productHeroImageSrc = isSleepShapedCohort
+  /** Partner packs are slug-canonical — never inferred from `brand_name` substrings. */
+  const useSeekingPack = isSeekingHealthOptimalFocusStudySlug(slug)
+  const useDonotageSleepPack = isDonotageSureSleepStudySlug(slug) && isSleepShapedCohort
+
+  const partnerLogoSrc = useSeekingPack ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogo : null
+  const productHeroImageSrc = useDonotageSleepPack
     ? SLEEP_PACK_PRODUCT_IMAGE
-    : isCognitiveShapedCohort
+    : useSeekingPack
       ? COGNITIVE_COHORT_STUDY_ASSETS.productImage
       : GENERIC_STUDY_PLACEHOLDER_IMAGE
   const productHeroImageAlt = productName
   const qualificationShape: 'sleep' | 'cognitive' = isSleepShapedCohort ? 'sleep' : 'cognitive'
+
+  const defaultStoreCreditHero = useSeekingPack
+    ? COGNITIVE_COHORT_STUDY_ASSETS.rewardHero
+    : GENERIC_STUDY_PLACEHOLDER_IMAGE
 
   const landingRewards = resolveStudyLandingRewards({
     cohortRow,
     brandDisplay,
     productName,
     studyDays,
-    defaultStoreCreditVisualPath: COGNITIVE_COHORT_STUDY_ASSETS.rewardHero,
+    defaultStoreCreditVisualPath: defaultStoreCreditHero,
     isCognitiveShapedCohort,
   })
 
@@ -933,7 +947,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex w-full flex-row flex-nowrap items-center justify-between gap-2 sm:gap-8">
             <div className="min-w-0 flex-[1_1_auto]">
-              <StudyPartnerHeroLogo brandDisplay={brandDisplay} partnerLogoSrc={partnerLogoSrc} />
+              <StudyPartnerHeroLogo
+                brandDisplay={brandDisplay}
+                partnerLogoSrc={partnerLogoSrc}
+                cohortSlug={slug}
+              />
             </div>
             <div className="shrink-0 pl-1">
               <HeroBioStackrLogo />
@@ -1019,15 +1037,15 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           <WhatYouReceive
             productImageSrc={productHeroImageSrc}
             productImageFirstShelfSrc={
-              isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.productImageFirstShelf : null
+              useSeekingPack ? COGNITIVE_COHORT_STUDY_ASSETS.productImageFirstShelf : null
             }
             productImageAlt={productHeroImageAlt}
             studyDays={studyDays}
             landingRewards={landingRewards}
             shelfPartnerLogo={
-              partnerLogoSrc
+              useSeekingPack && partnerLogoSrc
                 ? { src: partnerLogoSrc, alt: `${brandDisplay} logo` }
-                : /donotage/i.test(brandDisplay)
+                : useDonotageSleepPack
                   ? { src: DNA_LOGO_BLACK, alt: `${brandDisplay} logo` }
                   : null
             }
@@ -1054,11 +1072,10 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
       </div>
 
       <TrustFooter
+        cohortSlug={cohort.slug}
         partnerBrand={brandDisplay}
         partnerLogoSrc={partnerLogoSrc}
-        footerPartnerLogoSrc={
-          isCognitiveShapedCohort ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogoWhite : null
-        }
+        footerPartnerLogoSrc={useSeekingPack ? COGNITIVE_COHORT_STUDY_ASSETS.partnerLogoWhite : null}
       />
     </div>
   )
