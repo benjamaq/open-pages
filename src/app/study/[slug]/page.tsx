@@ -562,7 +562,7 @@ function IncentiveShelfCard({
       style={{ borderColor: highlight ? RUST : '#e5e2dc' }}
     >
       {topAccessory ? (
-        <div className="flex min-h-[3.25rem] shrink-0 items-center justify-center border-b border-neutral-200/60 bg-white px-4 py-3.5 sm:min-h-[3.75rem] sm:px-5 sm:py-4">
+        <div className="flex min-h-[3.75rem] shrink-0 items-center justify-center border-b border-neutral-200/60 bg-white px-4 py-4 sm:min-h-[4.25rem] sm:px-5 sm:py-4 md:min-h-[4.5rem]">
           {topAccessory}
         </div>
       ) : null}
@@ -646,14 +646,14 @@ function ShelfPartnerTopMark({ src, alt }: { src: string; alt: string }) {
   /** DNA wordmark has a lot of clear padding in the raster — needs more height to read at a glance. */
   const isDnaMark = /dna-logo/i.test(String(src || ''))
   const sizeClass = isDnaMark
-    ? 'h-11 w-auto max-w-[min(260px,92vw)] sm:h-14 sm:max-w-[min(300px,90%)] md:h-[3.75rem] md:max-w-[320px]'
+    ? 'h-14 w-auto max-w-[min(320px,94vw)] sm:h-[4.25rem] sm:max-w-[min(380px,92%)] md:h-[4.75rem] md:max-w-[420px] lg:h-20 lg:max-w-[440px]'
     : 'h-9 w-auto max-w-[min(200px,88vw)] sm:h-10 sm:max-w-[220px] md:h-11 md:max-w-[240px]'
   return (
     <Image
       src={src}
       alt={alt}
-      width={320}
-      height={120}
+      width={400}
+      height={150}
       className={`${sizeClass} object-contain object-center opacity-[0.92]`}
     />
   )
