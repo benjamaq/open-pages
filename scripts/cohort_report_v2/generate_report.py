@@ -8,11 +8,13 @@ Usage (from repo root):
   python -m scripts.cohort_report_v2.generate_report --cohort donotage-suresleep
   python -m scripts.cohort_report_v2.generate_report --cohort seeking-health-optimal-focus
   python -m scripts.cohort_report_v2.generate_report --mock --cohort donotage-suresleep
+  # With SUPABASE_* set, --mock still loads real cohort.checkin_fields; only entries are synthetic.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,20 +27,63 @@ from .pdf_report import build_pdf
 from .registry import pick_chart_metric, pick_primary_metric, resolve_metrics_for_cohort
 from .stats_engine import analyse_cohort
 
-
-def run_mock(cohort_slug: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    """Synthetic data for layout smoke tests (no network)."""
-    print("Running with MOCK DATA...")
-    cohort = {
+# Offline mock metadata only — keep in sync with supabase migrations for known slugs.
+# When SUPABASE_* env is set, mock mode loads the real cohort row instead (checkin_fields from DB).
+_MOCK_OFFLINE_COHORTS: dict[str, dict[str, Any]] = {
+    "donotage-suresleep": {
         "id": "00000000-0000-4000-8000-000000000001",
-        "slug": cohort_slug,
+        "brand_name": "DoNotAge",
+        "product_name": "SureSleep",
+        "study_days": 21,
+        "checkin_fields": ["sleep_quality", "energy", "sleep_onset_bucket", "night_wakes"],
+    },
+    "seeking-health-optimal-focus": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "brand_name": "Seeking Health",
+        "product_name": "Optimal Focus",
+        "study_days": 21,
+        "checkin_fields": ["focus", "energy", "mental_clarity"],
+    },
+    "placeholder-cohort-v1": {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "brand_name": "BioStackr Internal",
+        "product_name": "Placeholder Product (draft — not for external use)",
+        "study_days": 21,
+        "checkin_fields": ["energy", "mood", "calmness"],
+    },
+}
+
+
+def _cohort_row_for_mock(cohort_slug: str) -> dict[str, Any]:
+    slug = str(cohort_slug or "").strip().lower()
+    url = os.environ.get("SUPABASE_URL", "").strip()
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    if url and key:
+        print("Mock mode: loading cohort row from Supabase (checkin_fields from DB)…")
+        return fetch_cohort_row(slug)
+
+    base = _MOCK_OFFLINE_COHORTS.get(slug)
+    if base:
+        print(f"Mock mode: offline stub for `{slug}` (no Supabase env — using repo-aligned checkin_fields).")
+        return {"slug": slug, **base}
+    print(
+        f"Mock mode: unknown slug `{slug}` — using generic 3-slider stub "
+        "(energy, mood, calmness). Set SUPABASE_* to read real checkin_fields from DB."
+    )
+    return {
+        "id": "00000000-0000-4000-8000-000000000099",
+        "slug": slug,
         "brand_name": "Mock Brand",
         "product_name": "Mock Product",
         "study_days": 21,
-        "checkin_fields": ["sleep_quality", "energy", "sleep_onset_bucket", "night_wakes"]
-        if "suresleep" in cohort_slug
-        else ["focus", "energy", "mental_clarity"],
+        "checkin_fields": ["energy", "mood", "calmness"],
     }
+
+
+def run_mock(cohort_slug: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Synthetic participants + entries. Cohort metadata (especially checkin_fields) from DB if env set, else offline stubs."""
+    print("Running with MOCK DATA (synthetic daily_entries only)…")
+    cohort = _cohort_row_for_mock(cohort_slug)
     participants = [{"user_id": f"user-{i}", "enrolled_at": "2026-03-01"} for i in range(20)]
     entries: list[dict[str, Any]] = []
     rng = np.random.default_rng(42)
