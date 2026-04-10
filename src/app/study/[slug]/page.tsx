@@ -132,6 +132,27 @@ function publicStudyHeroDisplayedPipeline(realPipeline: number): number {
   return 25
 }
 
+/**
+ * Partner-facing legal/display strings on the public study page only.
+ * DB `cohorts` rows stay canonical (SureSleep / DoNotAge) for pipelines, email, and matching logic.
+ */
+function studyLandingDisplayProductAndBrand(
+  slug: string,
+  productNameFromDb: string,
+  brandNameFromDb: string,
+): { productName: string; brandName: string } {
+  const slugNorm = String(slug || '').trim().toLowerCase()
+  const productName = String(productNameFromDb || '').trim() || 'Study product'
+  const brandName = String(brandNameFromDb || '').trim()
+  if (slugNorm !== 'donotage-suresleep') {
+    return { productName, brandName }
+  }
+  return {
+    productName: productName.replaceAll('SureSleep', 'SureSleep®'),
+    brandName: brandName.replaceAll('DoNotAge', 'DoNotAge.org'),
+  }
+}
+
 function HeroCohortStatusCard({
   pipelineFilled,
   maxParticipants: _maxParticipants,
@@ -848,8 +869,11 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
   const capacityFull = isCohortEnrollmentClosedByPipeline(maxP, pipelineCount)
   const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
 
-  const productName = String(cohort.product_name || 'Study product')
-  const brandName = String(cohort.brand_name || '')
+  const { productName, brandName } = studyLandingDisplayProductAndBrand(
+    slug,
+    String(cohort.product_name || 'Study product'),
+    String(cohort.brand_name || ''),
+  )
   const brandDisplay = brandName.trim() || 'Study partner'
   const cohortStatus = String(cohortRow.status || 'draft').trim().toLowerCase()
   /** Only `active` shows the full application form; `draft` is preview-only (intentional). */
