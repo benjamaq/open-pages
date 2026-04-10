@@ -30,6 +30,7 @@ function assertCron(request: NextRequest): NextResponse | null {
 type Row = {
   id: string
   user_id: string
+  cohort_id: string
   enrolled_at: string
   gate_reminder_sent_at: string | null
   study_started_at: string | null
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: participants, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, user_id, enrolled_at, gate_reminder_sent_at, study_started_at')
+      .select('id, user_id, cohort_id, enrolled_at, gate_reminder_sent_at, study_started_at')
       .eq('status', 'applied')
       .is('study_started_at', null)
 
@@ -59,6 +60,29 @@ export async function GET(request: NextRequest) {
     const list = (participants || []) as Row[]
     if (list.length === 0) {
       return NextResponse.json({ ok: true, sent: 0, dry })
+    }
+
+    const cohortIds = [...new Set(list.map((p) => p.cohort_id).filter(Boolean))]
+    const cohortMeta = new Map<string, { brand_name: string | null; product_name: string | null }>()
+    if (cohortIds.length > 0) {
+      const { data: cRows, error: cErr } = await supabaseAdmin
+        .from('cohorts')
+        .select('id, brand_name, product_name')
+        .in('id', cohortIds)
+      if (cErr) {
+        console.error('[cohort-gate-reminder] cohorts lookup', cErr)
+        return NextResponse.json({ error: cErr.message }, { status: 500 })
+      }
+      for (const c of (cRows || []) as Array<{
+        id: string
+        brand_name?: string | null
+        product_name?: string | null
+      }>) {
+        cohortMeta.set(String(c.id), {
+          brand_name: c.brand_name ?? null,
+          product_name: c.product_name ?? null,
+        })
+      }
     }
 
     const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
@@ -92,7 +116,14 @@ export async function GET(request: NextRequest) {
       const to = String(auth.user.email).trim()
       if (!to) continue
 
-      const r = await sendCohortGateReminderEmail(to)
+      const cm = cohortMeta.get(String(p.cohort_id))
+      const r = await sendCohortGateReminderEmail(to, {
+        partnerBrandName:
+          cm?.brand_name != null && String(cm.brand_name).trim() !== ''
+            ? String(cm.brand_name).trim()
+            : 'Study partner',
+        productName: cm?.product_name != null ? String(cm.product_name).trim() : null,
+      })
       if (!r.success) {
         console.error('[cohort-gate-reminder] send failed', to, r.error)
         continue

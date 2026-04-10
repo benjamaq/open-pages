@@ -1,7 +1,6 @@
 import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import { cohortTransactionalCheckinMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
-  COHORT_EMAIL_MAGIC_LINK_HINT,
   cohortEmailCheckInCtaHtml,
   escapeHtml,
   wrapCohortTransactionalEmailHtml,
@@ -79,12 +78,7 @@ export function shippingNurtureBodyHtml(
 ): string {
   const appBase = cohortEmailPublicOrigin()
   const checkInHref = String(params.checkInHref || '').trim()
-  const inner =
-    shippingNurtureInnerHtml(step, params) +
-    cohortEmailCheckInCtaHtml(checkInHref) +
-    `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">${escapeHtml(
-      COHORT_EMAIL_MAGIC_LINK_HINT,
-    )}</p>`
+  const inner = shippingNurtureInnerHtml(step, params) + cohortEmailCheckInCtaHtml(checkInHref)
   return wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: params.brandName,
@@ -113,11 +107,7 @@ export async function sendShippingNurtureEmail(params: {
       brandName: params.brandName,
       productName: params.productName,
       sleepShapedCohort: params.sleepShapedCohort,
-    }) +
-    cohortEmailCheckInCtaHtml(checkInHref) +
-    `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">${escapeHtml(
-      COHORT_EMAIL_MAGIC_LINK_HINT,
-    )}</p>`
+    }) + cohortEmailCheckInCtaHtml(checkInHref)
   const html = wrapCohortTransactionalEmailHtml({
     appBase,
     partnerBrandName: params.brandName,

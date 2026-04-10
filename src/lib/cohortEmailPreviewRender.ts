@@ -167,7 +167,11 @@ export function renderCohortEmailPreviewHtml(
       return { subject: shippingNurtureSubject(step), html }
     }
     case 'gate-reminder':
-      return buildCohortGateReminderEmailHtml({ checkInHref: placeholderCheckin })
+      return buildCohortGateReminderEmailHtml({
+        checkInHref: placeholderCheckin,
+        partnerBrandName: 'Seeking Health',
+        productName: 'Optimal Focus',
+      })
     default: {
       const _x: never = template
       void _x

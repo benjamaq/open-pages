@@ -27,7 +27,6 @@ export function CheckinLauncher({
   const router = useRouter()
   const search = useSearchParams()
   const [open, setOpen] = useState(false)
-  const [showCohortWelcome, setShowCohortWelcome] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [userName, setUserName] = useState<string>('')
   const [todayItems, setTodayItems] = useState<any>({
@@ -42,7 +41,6 @@ export function CheckinLauncher({
   /** Set only when mePayload is undefined (standalone fetch). */
   const [asyncCohortHint, setAsyncCohortHint] = useState<string | null | undefined>(undefined)
   const [asyncCheckinFields, setAsyncCheckinFields] = useState<string[] | null | undefined>(undefined)
-  const [asyncWelcomeRecommended, setAsyncWelcomeRecommended] = useState<boolean | undefined>(undefined)
   const [asyncStudyProductName, setAsyncStudyProductName] = useState<string | null | undefined>(undefined)
   /** Mirrors /api/me `showCohortStudyDashboard` when mePayload is not passed in. */
   const [asyncShowCohortStudyDashboard, setAsyncShowCohortStudyDashboard] = useState<boolean | undefined>(undefined)
@@ -93,7 +91,6 @@ export function CheckinLauncher({
       } catch {}
       setAsyncCohortHint(undefined)
       setAsyncCheckinFields(undefined)
-      setAsyncWelcomeRecommended(undefined)
       setAsyncStudyProductName(undefined)
       setAsyncShowCohortStudyDashboard(undefined)
       setAsyncCohortCheckinBranch(undefined)
@@ -121,7 +118,6 @@ export function CheckinLauncher({
         } else {
           setAsyncCheckinFields(null)
         }
-        setAsyncWelcomeRecommended(Boolean((data as any)?.cohortCheckinWelcomeRecommended))
         const pn = (data as any)?.cohortStudyProductName
         setAsyncStudyProductName(typeof pn === 'string' && pn.trim() ? pn.trim() : null)
         const sc = (data as any)?.showCohortStudyDashboard
@@ -134,7 +130,6 @@ export function CheckinLauncher({
         if (!cancelled) {
           setAsyncCohortHint(null)
           setAsyncCheckinFields(null)
-          setAsyncWelcomeRecommended(false)
           setAsyncStudyProductName(null)
           setAsyncShowCohortStudyDashboard(undefined)
           setAsyncCohortCheckinBranch(undefined)
@@ -179,24 +174,10 @@ export function CheckinLauncher({
       return
     }
 
-    const welcome = fromDashboardMe
-      ? Boolean((mePayload as any)?.cohortCheckinWelcomeRecommended)
-      : Boolean(asyncWelcomeRecommended)
-    const cid = fromDashboardMe ? trimCohortId(mePayload?.cohortId) : asyncCohortHint
-
-    if (welcome && cid) {
-      setShowCohortWelcome(true)
-    } else {
-      setOpen(true)
-    }
-  }, [
-    mePayload,
-    asyncMeDone,
-    asyncWelcomeRecommended,
-    asyncCohortHint,
-    asyncShowCohortStudyDashboard,
-    asyncCohortHasCheckedInToday,
-  ])
+    // Landed via ?checkin=1 (email magic links promise check-in). Open the drawer directly —
+    // do not require a second click through "Secure your place" interstitial.
+    setOpen(true)
+  }, [mePayload, asyncMeDone, asyncShowCohortStudyDashboard, asyncCohortHasCheckedInToday])
 
   useEffect(() => {
     let cancelled = false
@@ -339,38 +320,6 @@ export function CheckinLauncher({
 
   return (
     <>
-      {showCohortWelcome && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="cohort-welcome-title"
-        >
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-2xl">
-            <h2 id="cohort-welcome-title" className="text-xl font-semibold text-gray-900 leading-snug">
-              Secure your place in the study
-            </h2>
-            <div className="mt-4 space-y-3 text-sm leading-relaxed text-gray-600 text-left">
-              <p>To confirm your place, complete 2 quick check-ins within 48 hours.</p>
-              <p>This gives us your baseline.</p>
-              <p>
-                Once both check-ins are complete, your place in the study is confirmed and your{' '}
-                {cohortStudyProductName || 'study product'} is shipped to you.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="mt-6 w-full rounded-full bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-              onClick={() => {
-                setShowCohortWelcome(false)
-                setOpen(true)
-              }}
-            >
-              Start first check-in
-            </button>
-          </div>
-        </div>
-      )}
       {open && (
         <DailyCheckinModal
           isOpen={true}
