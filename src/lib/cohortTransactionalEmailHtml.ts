@@ -94,7 +94,7 @@ export function cohortEmailCheckInCtaHtml(
   const label = escapeHtml(ctaLabel)
   return (
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:10px;font-size:16px;letter-spacing:0.01em;">${label}</a>` +
+    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#111827;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:10px;font-size:16px;letter-spacing:0.01em;">${label}</a>` +
     `</p>` +
     `<p style="margin:14px 0 0;text-align:center;font-size:12px;line-height:1.5;color:#6b7280;">` +
     escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +

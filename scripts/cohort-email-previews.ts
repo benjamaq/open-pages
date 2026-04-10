@@ -15,11 +15,17 @@ import {
 const root = join(process.cwd(), 'tmp', 'cohort-email-previews')
 
 const PRESETS = [
-  { key: 'donotage-sleep', partnerBrandName: 'DoNotAge', productName: 'SureSleep' },
+  {
+    key: 'donotage-sleep',
+    partnerBrandName: 'DoNotAge',
+    productName: 'SureSleep',
+    cohortSlug: 'donotage-suresleep',
+  },
   {
     key: 'seeking-health-sample',
     partnerBrandName: 'Seeking Health',
     productName: 'Optimal Focus',
+    cohortSlug: 'seeking-health-optimal-focus',
     completionRewardStoreCredit: true,
     storeCreditTitle: '$120 store credit',
   },
@@ -36,6 +42,7 @@ function main() {
           const { html } = renderCohortEmailPreviewHtml(template, {
             partnerBrandName: preset.partnerBrandName,
             productName: preset.productName,
+            cohortSlug: 'cohortSlug' in preset ? preset.cohortSlug : undefined,
             resultReadyRewardVariant,
             completionRewardStoreCredit: 'completionRewardStoreCredit' in preset ? preset.completionRewardStoreCredit : undefined,
             storeCreditTitle: 'storeCreditTitle' in preset ? preset.storeCreditTitle : undefined,
@@ -48,6 +55,7 @@ function main() {
       const { html } = renderCohortEmailPreviewHtml(template, {
         partnerBrandName: preset.partnerBrandName,
         productName: preset.productName,
+        cohortSlug: 'cohortSlug' in preset ? preset.cohortSlug : undefined,
         completionRewardStoreCredit: 'completionRewardStoreCredit' in preset ? preset.completionRewardStoreCredit : undefined,
         storeCreditTitle: 'storeCreditTitle' in preset ? preset.storeCreditTitle : undefined,
       })

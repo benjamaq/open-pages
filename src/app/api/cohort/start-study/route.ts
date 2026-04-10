@@ -222,6 +222,7 @@ export async function POST(request: NextRequest) {
         authUserId: user.id,
         productName,
         partnerBrandName: partnerBrandName || null,
+        cohortSlug,
         studyDurationDays,
         storeCreditPartnerReward,
         storeCreditTitle,

@@ -50,6 +50,8 @@ export type CohortEmailPreviewBranding = {
   /** Seeking Health–style: store credit + Pro; no product-supply reward copy. */
   completionRewardStoreCredit?: boolean
   storeCreditTitle?: string
+  /** e.g. `seeking-health-optimal-focus` — drives arrival dosing line in `study-start` email. */
+  cohortSlug?: string | null
 }
 
 function shippingStepFromTemplate(
@@ -110,13 +112,10 @@ export function renderCohortEmailPreviewHtml(
     }
     case 'study-start':
       return buildCohortStudyStartTransactionalEmailHtml({
-        firstNameForGreeting: first,
         productName: prod,
         partnerBrandName,
-        dashboardHref: placeholderDashboard,
-        studyDurationDays: branding.studyDurationDays,
-        storeCreditPartnerReward: sc,
-        storeCreditTitle: scTitle,
+        checkinHref: placeholderCheckin,
+        cohortSlug: branding.cohortSlug ?? null,
       })
     case 'study-completion':
       return buildCohortStudyCompletionTransactionalEmailHtml({
