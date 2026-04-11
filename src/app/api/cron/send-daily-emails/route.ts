@@ -433,6 +433,17 @@ async function handler(req: NextRequest) {
     const results: any[] = []
     let successCount = 0
     let failCount = 0
+    let skipCount = 0
+
+    const logCandidate = (phase: string, payload: Record<string, unknown>) => {
+      try {
+        console.log('[daily-cron] candidate', JSON.stringify({ phase, ...payload }))
+      } catch {}
+    }
+    const recordSkip = (row: Record<string, unknown>) => {
+      skipCount++
+      results.push({ outcome: 'skipped', ...row })
+    }
 
     if (authorizedForce && (filterEmail || forceUserId)) {
       for (const p of profilesInWindow) {
@@ -451,9 +462,36 @@ async function handler(req: NextRequest) {
 
     for (const p of profilesInWindow) {
       try {
+        const emailEarly = emailMap.get(p.user_id) ?? null
+        logCandidate('in_reminder_window', {
+          user_id: p.user_id,
+          profile_id: p.profile_id ?? null,
+          email: emailEarly,
+          on_final_send_list: true,
+        })
+
         const email = emailMap.get(p.user_id)
-        if (!email) { results.push({ user_id: p.user_id, skip: 'no email', stage: 'email-lookup' }); continue }
-        if (filterEmail && email.toLowerCase() !== filterEmail.toLowerCase()) { continue }
+        if (!email) {
+          logCandidate('branch', { user_id: p.user_id, branch: 'skip_no_email' })
+          recordSkip({ user_id: p.user_id, skip: 'no email', skip_reason: 'no email', stage: 'email-lookup' })
+          continue
+        }
+        if (filterEmail && email.toLowerCase() !== filterEmail.toLowerCase()) {
+          logCandidate('branch', {
+            user_id: p.user_id,
+            email,
+            branch: 'skip_email_filter_mismatch',
+            filterEmail,
+          })
+          recordSkip({
+            user_id: p.user_id,
+            email,
+            skip: 'email_filter_mismatch',
+            skip_reason: 'email_filter_mismatch',
+            filterEmail,
+          })
+          continue
+        }
 
         if (authorizedForce && (filterEmail || forceUserId)) {
           const cohortKeys = cohortParticipantUserIdCandidatesSync(String(p.profile_id || ''), p.user_id)
@@ -465,7 +503,8 @@ async function handler(req: NextRequest) {
               .in('user_id', cohortKeys)
               .limit(1)
             if (completedForced && completedForced.length > 0) {
-              results.push({ user_id: p.user_id, skip: 'study_completed', stage: 'force_pre_send' })
+              logCandidate('branch', { user_id: p.user_id, branch: 'skip_study_completed_force_pre_send' })
+              recordSkip({ user_id: p.user_id, skip: 'study_completed', skip_reason: 'study_completed', stage: 'force_pre_send' })
               continue
             }
           }
@@ -494,7 +533,8 @@ async function handler(req: NextRequest) {
             recentActive = Number(recentCount || 0) > 0
           } catch {}
           if (!recentActive && supplementCount === 0) {
-            results.push({ user_id: p.user_id, skip: 'inactive_30d_and_no_supplements' })
+            logCandidate('branch', { user_id: p.user_id, email, branch: 'skip_inactive_30d_and_no_supplements' })
+            recordSkip({ user_id: p.user_id, email, skip: 'inactive_30d_and_no_supplements', skip_reason: 'inactive_30d_and_no_supplements' })
             continue
           }
         }
@@ -508,8 +548,14 @@ async function handler(req: NextRequest) {
             .eq('email_type', 'daily_reminder')
             .gte('sent_at', new Date(new Date().toDateString()))
             .limit(1)
-          if (sentToday && sentToday.length) { results.push({ user_id: p.user_id, skip: 'already sent' }); continue }
+          if (sentToday && sentToday.length) {
+            logCandidate('branch', { user_id: p.user_id, email, branch: 'skip_already_sent_today' })
+            recordSkip({ user_id: p.user_id, email, skip: 'already sent', skip_reason: 'already sent' })
+            continue
+          }
         }
+
+        logCandidate('branch', { user_id: p.user_id, email, branch: 'post_gates_building_email' })
 
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
         const tz = (p.reminder_timezone || p.timezone || 'UTC').toString()
@@ -670,10 +716,21 @@ async function handler(req: NextRequest) {
         if (dryRun) {
           // eslint-disable-next-line no-console
           console.log('[daily-cron] DRY RUN - would send to:', { user_id: p.user_id, email, subject })
-          results.push({ user_id: p.user_id, email, ok: true, dry: true, tz, localYesterdayStr, subject })
+          logCandidate('branch', { user_id: p.user_id, email, branch: 'dry_run_resend_skipped', resend_called: false })
+          recordSkip({
+            user_id: p.user_id,
+            email,
+            ok: true,
+            dry: true,
+            skip_reason: 'dry_run',
+            tz,
+            localYesterdayStr,
+            subject,
+          })
         } else {
           // eslint-disable-next-line no-console
           console.log('[daily-cron] Sending to:', { user_id: p.user_id, email, subject })
+          logCandidate('resend', { user_id: p.user_id, email, resend_called: true })
           try {
             const resp = await resend.emails.send({ from: sender, to: email!, subject, html, ...(reply_to ? { reply_to: reply_to } : {}) })
             const resendId = resp.data?.id || null
@@ -682,13 +739,27 @@ async function handler(req: NextRequest) {
             // eslint-disable-next-line no-console
             console.log('[daily-cron] Resend response:', { user_id: p.user_id, email, resend_id: resendId, error: sendError })
             try {
+              console.log('[daily-cron] Resend raw:', JSON.stringify({ data: resp.data, error: resp.error }))
+            } catch {
+              console.log('[daily-cron] Resend raw: (unserializable)')
+            }
+            try {
               console.log('[daily-cron] Resend payload:', { from: sender, to: email, subject, html: (typeof html === 'string') ? html.substring(0, 300) : '(non-string)' })
             } catch {}
             if (!sentOk) {
               console.error('[daily-cron] Resend send failed:', { user_id: p.user_id, email, error: sendError })
-              results.push({ user_id: p.user_id, email, ok: false, resend_id: resendId, error: sendError })
+              results.push({
+                outcome: 'failed',
+                user_id: p.user_id,
+                email,
+                ok: false,
+                resend_id: resendId,
+                error: sendError,
+              })
               failCount++
             } else {
+              let emailSendsInsertOk = false
+              let lastReminderSentAtUpdated = false
               try {
                 const { error: insertErr } = await supabaseAdmin
                   .from('email_sends')
@@ -702,6 +773,7 @@ async function handler(req: NextRequest) {
                 if (insertErr) {
                   console.error('[daily-cron] email_sends insert failed (daily_reminder):', insertErr)
                 } else {
+                  emailSendsInsertOk = true
                   // eslint-disable-next-line no-console
                   console.log('[daily-cron] email_sends insert OK (daily_reminder):', { user_id: p.user_id, resend_id: resendId })
                 }
@@ -733,28 +805,93 @@ async function handler(req: NextRequest) {
                 if (updErr) {
                   console.error('[daily-cron] profiles update failed (last_reminder_sent_at):', { user_id: p.user_id, error: updErr })
                 } else {
+                  lastReminderSentAtUpdated = true
                   console.log('[daily-cron] profiles updated last_reminder_sent_at:', { user_id: p.user_id })
                 }
               } catch (updEx) {
                 console.error('[daily-cron] profiles update exception (last_reminder_sent_at):', { user_id: p.user_id, error: (updEx as any)?.message || updEx })
               }
-              results.push({ user_id: p.user_id, email, ok: true, id: resendId })
+              logCandidate('branch', {
+                user_id: p.user_id,
+                email,
+                branch: 'sent',
+                email_sends_insert_ok: emailSendsInsertOk,
+                last_reminder_sent_at_updated: lastReminderSentAtUpdated,
+              })
+              results.push({
+                outcome: 'sent',
+                user_id: p.user_id,
+                email,
+                ok: true,
+                id: resendId,
+                email_sends_insert_ok: emailSendsInsertOk,
+                last_reminder_sent_at_updated: lastReminderSentAtUpdated,
+              })
               successCount++
             }
           } catch (sendEx: any) {
             console.error('[daily-cron] Resend exception:', { user_id: p.user_id, email, error: sendEx?.message || sendEx })
-            results.push({ user_id: p.user_id, email, ok: false, error: sendEx?.message || 'send_exception' })
+            results.push({
+              outcome: 'failed',
+              user_id: p.user_id,
+              email,
+              ok: false,
+              error: sendEx?.message || 'send_exception',
+            })
             failCount++
           }
         }
       } catch (e: any) {
-        results.push({ user_id: p.user_id, ok: false, error: e?.message })
+        const msg = e?.message || String(e)
+        failCount++
+        console.error('[daily-cron] candidate pipeline exception:', {
+          user_id: p.user_id,
+          profile_id: p.profile_id,
+          email: emailMap.get(p.user_id) ?? null,
+          error: msg,
+          stack: e instanceof Error ? e.stack : undefined,
+        })
+        results.push({
+          outcome: 'failed',
+          user_id: p.user_id,
+          profile_id: p.profile_id ?? null,
+          email: emailMap.get(p.user_id) ?? null,
+          ok: false,
+          error: msg,
+          stage: 'pipeline_exception',
+        })
       }
     }
 
+    const accounted = successCount + failCount + skipCount
+    if (accounted !== profilesInWindow.length) {
+      // eslint-disable-next-line no-console
+      console.error('[daily-cron] Summary invariant broken:', {
+        success: successCount,
+        failed: failCount,
+        skipped: skipCount,
+        attempted: profilesInWindow.length,
+        accounted,
+      })
+    }
     // eslint-disable-next-line no-console
-    console.log('[daily-cron] Summary:', { success: successCount, failed: failCount, attempted: profilesInWindow.length })
-    return NextResponse.json({ ok: true, count: results.length, results, success: successCount, failed: failCount, dryRun: dryRun ? true : undefined, resolvedEmails: emailMap.size })
+    console.log('[daily-cron] Summary:', {
+      success: successCount,
+      failed: failCount,
+      skipped: skipCount,
+      attempted: profilesInWindow.length,
+      accounted,
+    })
+    return NextResponse.json({
+      ok: true,
+      count: results.length,
+      results,
+      success: successCount,
+      failed: failCount,
+      skipped: skipCount,
+      dryRun: dryRun ? true : undefined,
+      resolvedEmails: emailMap.size,
+    })
   } catch (e: any) {
     // eslint-disable-next-line no-console
     console.error('[daily-cron] Fatal error:', e)
