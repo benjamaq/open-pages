@@ -798,11 +798,10 @@ export default function CohortStudyDashboard({
               ) : (
                 <>
                   <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                    Your personal results are now being prepared. When they are ready, they will appear on your dashboard
-                    and we will email you.
+                    Your personal results are now being prepared.
                   </p>
                   <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
-                    We&apos;ll email you when your summary is ready.
+                    We&apos;ll email you with a link as soon as your results are ready.
                   </p>
                 </>
               )}
