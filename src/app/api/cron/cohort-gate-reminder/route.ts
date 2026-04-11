@@ -34,6 +34,35 @@ type Row = {
   enrolled_at: string
   gate_reminder_sent_at: string | null
   study_started_at: string | null
+  confirmed_at: string | null
+  study_completed_at: string | null
+}
+
+function isNonEmptyTs(v: unknown): boolean {
+  return v != null && String(v).trim() !== ''
+}
+
+/** Pre-send / pre-dry guard: cohort state may advance while the cron iterates. */
+async function participantStillEligibleForGateReminder(participantId: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin
+    .from('cohort_participants')
+    .select('status, confirmed_at, study_started_at, study_completed_at, gate_reminder_sent_at')
+    .eq('id', participantId)
+    .maybeSingle()
+  if (error || !data) return false
+  const r = data as {
+    status?: string
+    confirmed_at?: string | null
+    study_started_at?: string | null
+    study_completed_at?: string | null
+    gate_reminder_sent_at?: string | null
+  }
+  if (String(r.status || '') !== 'applied') return false
+  if (isNonEmptyTs(r.confirmed_at)) return false
+  if (isNonEmptyTs(r.study_started_at)) return false
+  if (isNonEmptyTs(r.study_completed_at)) return false
+  if (isNonEmptyTs(r.gate_reminder_sent_at)) return false
+  return true
 }
 
 export async function GET(request: NextRequest) {
@@ -48,9 +77,13 @@ export async function GET(request: NextRequest) {
   try {
     const { data: participants, error: pErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, user_id, cohort_id, enrolled_at, gate_reminder_sent_at, study_started_at')
+      .select(
+        'id, user_id, cohort_id, enrolled_at, gate_reminder_sent_at, study_started_at, confirmed_at, study_completed_at',
+      )
       .eq('status', 'applied')
+      .is('confirmed_at', null)
       .is('study_started_at', null)
+      .is('study_completed_at', null)
 
     if (pErr) {
       console.error('[cohort-gate-reminder]', pErr)
@@ -107,6 +140,15 @@ export async function GET(request: NextRequest) {
 
       const n = await countDistinctDailyEntriesSinceForUserIds(entryUserIds, String(p.enrolled_at))
       if (n >= 1) continue
+
+      const stillEligible = await participantStillEligibleForGateReminder(p.id)
+      if (!stillEligible) {
+        console.log('[cohort-gate-reminder] skip: participant no longer pre-compliance', {
+          cohortParticipantId: p.id,
+          user_id: p.user_id,
+        })
+        continue
+      }
 
       if (dry) {
         sent += 1

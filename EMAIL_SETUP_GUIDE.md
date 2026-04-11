@@ -1,7 +1,8 @@
 # Email Notification System Setup Guide
 
 ## Overview
-The Biostackr app now includes a comprehensive email notification system that sends daily reminders for supplements, protocols, movement, and mindfulness activities.
+
+The Biostackr app includes an email notification system for daily reminders (supplements, protocols, cohort-aware check-in links, and related content).
 
 ## Features
 - ✅ Daily email reminders with personalized content
@@ -53,31 +54,33 @@ CRON_SECRET=your_secure_random_token
 
 ### 4. Scheduled Jobs Setup
 
-#### Option A: Vercel Cron (Recommended for Vercel deployments)
-The `vercel.json` file is already configured to run notifications every 5 minutes:
+#### Production: Vercel Cron (source of truth for daily reminders)
+Daily reminders are sent by **`/api/cron/send-daily-emails`** only. `vercel.json` schedules it hourly, for example:
+
 ```json
 {
   "crons": [
     {
-      "path": "/api/notifications/send-daily",
-      "schedule": "*/5 * * * *"
+      "path": "/api/cron/send-daily-emails",
+      "schedule": "0 * * * *"
     }
   ]
 }
 ```
 
-#### Option B: External Cron Service
-Use services like:
-- GitHub Actions (free)
-- Uptime Robot (free tier available)
-- Cronhooks
-- EasyCron
+Vercel invokes this route with the `x-vercel-cron` header. For manual runs, use **`Authorization: Bearer YOUR_CRON_SECRET`**.
 
-Set up a POST request to:
+> **`/api/notifications/send-daily` is deprecated** and returns **410 Gone**. It must not be scheduled. Use **`/api/cron/send-daily-emails`** only to avoid duplicate sends and inconsistent dedupe.
+
+#### External Cron Service (if not using Vercel Cron)
+Point your job at the **same** path:
+
 ```
-POST https://yourdomain.com/api/notifications/send-daily
+GET https://yourdomain.com/api/cron/send-daily-emails
 Authorization: Bearer YOUR_CRON_SECRET
 ```
+
+(POST is also supported by the route handler.)
 
 ### 5. Testing the System
 
@@ -88,9 +91,9 @@ Authorization: Bearer YOUR_CRON_SECRET
 
 ### 6. Email Templates
 
-The system includes beautiful, responsive email templates:
-- **Daily Reminders**: Personalized with user's items
-- **Missed Items**: Gentle reminders for incomplete items
+The system includes responsive email templates:
+- **Daily Reminders**: V3 template with cohort-aware CTAs where applicable
+- **Missed Items**: Gentle reminders for incomplete items (where implemented)
 - **Professional Design**: Mobile-responsive with Biostackr branding
 
 ## Usage
@@ -113,16 +116,22 @@ The system provides these server actions:
 
 ## API Endpoints
 
-### Daily Reminder Cron
+### Daily reminder cron (production)
 ```
-POST /api/notifications/send-daily
+GET https://yourdomain.com/api/cron/send-daily-emails
 Authorization: Bearer CRON_SECRET
 ```
 
-### Health Check
+Optional smoke test (short-circuit, no send):
 ```
-GET /api/notifications/send-daily
+GET https://yourdomain.com/api/cron/send-daily-emails?ping=1
 ```
+
+### Deprecated (do not use)
+```
+GET|POST /api/notifications/send-daily → 410 Gone
+```
+Use **`/api/cron/send-daily-emails`** instead.
 
 ## Database Tables
 
@@ -141,12 +150,10 @@ Tracks all sent emails for monitoring and analytics.
 ## Customization
 
 ### Email Templates
-Edit templates in `src/lib/email/resend.ts`:
-- `generateDailyReminderHTML()` - Daily reminder template
-- `generateMissedItemsHTML()` - Missed items template
+Edit templates in `src/lib/email/resend.ts` and related V3 daily reminder builders.
 
 ### Scheduling
-Modify the cron schedule in `vercel.json` or your external cron service.
+Modify the cron schedule in `vercel.json` or your external cron service (**only** `/api/cron/send-daily-emails`).
 
 ### Content Filtering
 Customize what content appears in emails by modifying the server actions in `src/lib/actions/notifications.ts`.
@@ -154,18 +161,17 @@ Customize what content appears in emails by modifying the server actions in `src
 ## Monitoring
 
 ### Email Delivery
-- All sent emails are logged in the `email_log` table
-- Track delivery status and errors
+- Cron route logs and `email_sends` rows for `daily_reminder` (see app implementation)
+- Track delivery status and errors in Resend
 - Monitor bounce rates and failures
 
 ### Cron Job Health
-- Health check endpoint: `GET /api/notifications/send-daily`
-- Monitor cron job execution
-- Check for failed email sends
+- Ping: `GET /api/cron/send-daily-emails?ping=1`
+- Monitor Vercel Cron executions for `/api/cron/send-daily-emails`
 
 ## Security
 
-- **Cron Protection**: API endpoint protected with `CRON_SECRET`
+- **Cron Protection**: `/api/cron/send-daily-emails` accepts Vercel cron requests or `Authorization: Bearer CRON_SECRET` (and production rules for `force=1` where applicable)
 - **RLS Policies**: Database access controlled with Row Level Security
 - **Email Validation**: User email addresses validated
 - **Unsubscribe**: Easy unsubscribe functionality
@@ -175,13 +181,12 @@ Customize what content appears in emails by modifying the server actions in `src
 ### Emails Not Sending
 1. Check Resend API key is correct
 2. Verify domain is configured in Resend
-3. Check cron job is running
-4. Review email logs in database
+3. Confirm **only** `/api/cron/send-daily-emails` is scheduled (not the deprecated notifications path)
+4. Review logs and `email_sends` / Resend dashboard
 
 ### Wrong Times
-1. Verify timezone settings in user preferences
-2. Check server timezone configuration
-3. Ensure cron runs frequently enough (every 5 minutes recommended)
+1. Verify timezone settings in user preferences and `profiles.reminder_timezone` / `timezone`
+2. Check server time; cron runs hourly with a small send window per user local time
 
 ### Database Errors
 1. Ensure migration was run successfully
@@ -193,7 +198,8 @@ Customize what content appears in emails by modifying the server actions in `src
 - [ ] Database migration completed
 - [ ] Resend account set up and domain verified
 - [ ] Environment variables configured
-- [ ] Cron job scheduled and running
+- [ ] **Vercel cron** (or external job) targets **`/api/cron/send-daily-emails`** only
+- [ ] Nothing schedules **`/api/notifications/send-daily`**
 - [ ] Test emails working
 - [ ] Unsubscribe page functional
 - [ ] Email delivery monitoring in place
@@ -203,7 +209,8 @@ Customize what content appears in emails by modifying the server actions in `src
 For issues with the email system:
 1. Check the email logs in your database
 2. Verify all environment variables are set
-3. Test the API endpoints directly
+3. Test **`/api/cron/send-daily-emails?ping=1`** and a dry/targeted run as documented in code
 4. Review the Resend dashboard for delivery status
 
-The email notification system is now ready to help users stay consistent with their health routines! 🎉
+The email notification system is now ready to help users stay consistent with their health routines.
+

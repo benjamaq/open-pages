@@ -925,7 +925,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     ? COGNITIVE_COHORT_STUDY_ASSETS.rewardHero
     : GENERIC_STUDY_PLACEHOLDER_IMAGE
 
-  const landingRewards = resolveStudyLandingRewards({
+  let landingRewards = resolveStudyLandingRewards({
     cohortRow,
     brandDisplay,
     productName,
@@ -933,6 +933,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     defaultStoreCreditVisualPath: defaultStoreCreditHero,
     isCognitiveShapedCohort,
   })
+
+  // Seeking Health Optimal Focus: combined headline when DB has not set package_value.headline yet.
+  if (
+    useSeekingPack &&
+    landingRewards.packageValueHeadline === 'Study rewards'
+  ) {
+    landingRewards = {
+      ...landingRewards,
+      packageValueHeadline: '$180',
+      packageValueSubline:
+        'Combined participant reward value when you complete all study days ($120 Seeking Health store credit plus 3 months of BioStackr Pro).',
+    }
+  }
 
   return (
     <div
@@ -1069,6 +1082,15 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </StudySurfaceLight>
         </>
       ) : null}
+      </div>
+
+      <div className="border-t border-neutral-200/70 bg-neutral-50/90 px-4 py-3 text-center sm:px-6">
+        <Link
+          href="/check-in"
+          className="inline-block text-[11px] font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-neutral-700 hover:underline sm:text-[12px]"
+        >
+          Already a participant? Log in here →
+        </Link>
       </div>
 
       <TrustFooter

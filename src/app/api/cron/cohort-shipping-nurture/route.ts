@@ -71,7 +71,14 @@ export async function GET(request: NextRequest) {
 
     const list = (participants || []) as ParticipantRow[]
     if (list.length === 0) {
-      return NextResponse.json({ ok: true, processed: 0, sent: 0, skipped: 0, dry })
+      return NextResponse.json({
+        ok: true,
+        processed: 0,
+        sent: 0,
+        ...(dry ? { would_send: 0 } : {}),
+        skipped: 0,
+        dry,
+      })
     }
 
     const partIds = list.map((p) => p.id)
@@ -115,7 +122,10 @@ export async function GET(request: NextRequest) {
 
     const profMap = await fetchProfilesByCohortParticipantUserIds(list.map((p) => p.user_id))
 
+    /** Successful real sends only (always 0 when `dry`). */
     let sent = 0
+    /** Dry-run: participants that would receive a nurture email this pass (no send, no DB log). */
+    let wouldSend = 0
     let skipped = 0
     const errors: string[] = []
 
@@ -166,7 +176,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (dry) {
-        sent += 1
+        wouldSend += 1
         continue
       }
 
@@ -209,6 +219,7 @@ export async function GET(request: NextRequest) {
       ok: true,
       processed: list.length,
       sent,
+      ...(dry ? { would_send: wouldSend } : {}),
       skipped,
       error_count: errors.length,
       errors: errors.slice(0, 20),

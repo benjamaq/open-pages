@@ -9,7 +9,7 @@ import {
 } from '@/lib/cohortDailyReminderCheckinHref'
 import { dailyReminderEmailSubject } from '@/lib/email/dailyReminderEmailSubject'
 import { Resend } from 'resend'
-import { formatInTimeZone } from 'date-fns-tz'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 import { addDays } from 'date-fns'
 import { getLatestDailyMetrics, getStackProgressForUser } from '@/lib/email/email-stats'
 import {
@@ -33,6 +33,18 @@ function normalizeForceEmailQuery(raw: string): string {
   return s
 }
 
+/** Start of calendar `now` in `timeZone`, as UTC ISO string (for `sent_at` lower bound). */
+function startOfLocalDayUtcIso(now: Date, timeZone: string): string {
+  const tz = (timeZone && String(timeZone).trim()) || 'UTC'
+  try {
+    const ymd = formatInTimeZone(now, tz, 'yyyy-MM-dd')
+    return fromZonedTime(`${ymd}T00:00:00`, tz).toISOString()
+  } catch {
+    const ymd = formatInTimeZone(now, 'UTC', 'yyyy-MM-dd')
+    return fromZonedTime(`${ymd}T00:00:00`, 'UTC').toISOString()
+  }
+}
+
 type ProfileRow = {
   user_id: string;
   display_name: string | null;
@@ -47,27 +59,43 @@ async function handler(req: NextRequest) {
   try {
     // eslint-disable-next-line no-console
     console.log('[daily-cron] Starting email cron job...')
+
+    // 1) Read debug flags (before Supabase: production force must fail fast without DB)
+    const url = new URL(req.url)
+    const dryParam = url.searchParams.get('dry')
+    const rawEmail = url.searchParams.get('email') || undefined
+    const forceUserId = url.searchParams.get('user_id') || undefined
+    // Normalize email query (strip accidental quotes, restore + addresses when + was sent unencoded)
+    const filterEmail = rawEmail
+      ? normalizeForceEmailQuery(rawEmail.replace(/^"+|"+$/g, ''))
+      : undefined
+    const dryRun = dryParam === '1'
+    const forceFlag = url.searchParams.get('force') === '1'
+    const hasAuth = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
+    const okVercelCron = Boolean(req.headers.get('x-vercel-cron'))
+    /** Production deploy only; preview/local stay loose for testing without leaking secrets. */
+    const isProductionDeployment = process.env.VERCEL_ENV === 'production'
+
+    if (forceFlag && isProductionDeployment && !hasAuth && !okVercelCron) {
+      return NextResponse.json(
+        { ok: false, error: 'force_requires_cron_auth' },
+        { status: 401 },
+      )
+    }
+
+    const forceTrusted =
+      hasAuth ||
+      okVercelCron ||
+      (!isProductionDeployment && (!!filterEmail || !!forceUserId))
+
+    const authorizedForce = forceFlag && forceTrusted
+    const bypassAll = (dryRun && !!filterEmail) || authorizedForce
+
     const supabaseAdmin = createSupabaseAdmin(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
-
-    // 1) Read debug flags
-  const url = new URL(req.url)
-  const dryParam = url.searchParams.get('dry')
-  const rawEmail = url.searchParams.get('email') || undefined
-  const forceUserId = url.searchParams.get('user_id') || undefined
-  // Normalize email query (strip accidental quotes, restore + addresses when + was sent unencoded)
-  const filterEmail = rawEmail
-    ? normalizeForceEmailQuery(rawEmail.replace(/^"+|"+$/g, ''))
-    : undefined
-  const dryRun = dryParam === '1'
-  const forceFlag = url.searchParams.get('force') === '1'
-  // Allow force when explicitly targeting an email, even without auth header (scoped to that user only)
-  const hasAuth = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
-  const authorizedForce = forceFlag && (hasAuth || !!filterEmail || !!forceUserId)
-  const bypassAll = (dryRun && !!filterEmail) || authorizedForce
     // 2) Select users to send (simplified: users with yesterday entry; opt-out handled later)
     const todayStart = new Date(); todayStart.setHours(0,0,0,0)
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(todayStart.getDate() - 1)
@@ -539,14 +567,16 @@ async function handler(req: NextRequest) {
           }
         }
 
-        // Deduplicate by email_sends same day
+        // Deduplicate by email_sends: same calendar day in user's reminder timezone
         if (!bypassAll) {
+          const tzForDedupe = (p.reminder_timezone || p.timezone || 'UTC').toString()
+          const localDayStartIso = startOfLocalDayUtcIso(new Date(), tzForDedupe)
           const { data: sentToday } = await supabaseAdmin
             .from('email_sends')
             .select('id')
             .eq('user_id', p.user_id)
             .eq('email_type', 'daily_reminder')
-            .gte('sent_at', new Date(new Date().toDateString()))
+            .gte('sent_at', localDayStartIso)
             .limit(1)
           if (sentToday && sentToday.length) {
             logCandidate('branch', { user_id: p.user_id, email, branch: 'skip_already_sent_today' })

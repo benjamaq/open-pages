@@ -22,9 +22,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * - `cohortLoginMagicLinkEmail.ts` — login / resend magic link (dashboard)
  * - Daily check-in emails (cohort participants): `resolveDailyReminderCheckinHrefForUser` →
  *   `cohortTransactionalCheckinMagicHref` when `profiles.cohort_id` + active `cohort_participants` row;
- *   otherwise stable `/check-in` landing. Used by `send-daily-emails` cron, `notifications/send-daily`,
- *   `send-reminder.ts`, `resend.sendDailyReminder` (optional `authUserId`), `api/reminders/send`.
- *   so non-cohort users are not sent to `view=cohort`.
+ *   otherwise stable `/check-in` landing. Callers: `/api/cron/send-daily-emails`, `send-reminder.ts`,
+ *   `resend.sendDailyReminder` (optional `authUserId`), `api/reminders/send` — so non-cohort users are not sent to `view=cohort`.
  *
  * Template `daily-reminder.tsx` only renders `checkinUrl` from those callers — do not hardcode dashboard URLs there.
  */

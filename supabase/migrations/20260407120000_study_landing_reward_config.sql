@@ -20,8 +20,8 @@ SET study_landing_reward_config = jsonb_build_object(
     '3 months of BioStackr Pro'
   ),
   'package_value', jsonb_build_object(
-    'headline', '$200+',
-    'subline', 'Combined participant reward value when you complete all study days.'
+    'headline', '$180',
+    'subline', 'Combined participant reward value when you complete all study days ($120 Seeking Health store credit plus 3 months of BioStackr Pro).'
   )
 )
 WHERE slug = 'seeking-health-optimal-focus';
