@@ -823,7 +823,23 @@ function TrustFooter({
             "Applying doesn't lock you in."
           )}
         </div>
-        <p className="mt-14 text-center text-[11px] text-white/40">
+        <div className="mt-12 border-t border-white/20 pt-10 text-center sm:mt-14 sm:pt-12">
+          <Link
+            href="/check-in"
+            className="inline-block rounded-lg px-2 py-2 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/50"
+          >
+            <span className="block text-[16px] font-semibold leading-snug text-white sm:text-[18px]">
+              Already a participant?
+            </span>
+            <span
+              className="mt-1.5 block text-[17px] font-bold leading-snug underline decoration-2 underline-offset-[6px] decoration-white/45 sm:text-[19px]"
+              style={{ color: RUST }}
+            >
+              Log in here →
+            </span>
+          </Link>
+        </div>
+        <p className="mt-10 text-center text-[11px] text-white/40 sm:mt-12">
           This study is run by BioStackr on behalf of {partnerBrand} · biostackr.io · GDPR compliant
         </p>
       </div>
@@ -1082,15 +1098,6 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
           </StudySurfaceLight>
         </>
       ) : null}
-      </div>
-
-      <div className="border-t border-neutral-200/70 bg-neutral-50/90 px-4 py-3 text-center sm:px-6">
-        <Link
-          href="/check-in"
-          className="inline-block text-[11px] font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-neutral-700 hover:underline sm:text-[12px]"
-        >
-          Already a participant? Log in here →
-        </Link>
       </div>
 
       <TrustFooter
