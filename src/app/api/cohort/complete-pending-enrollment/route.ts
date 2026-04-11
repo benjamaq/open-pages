@@ -80,7 +80,13 @@ export async function POST(req: NextRequest) {
     const enroll = await upsertCohortParticipant(profileId, slug, null)
     if (!enroll.ok) {
       const status =
-        enroll.code === 'COHORT_FULL' ? 409 : enroll.code === 'COHORT_INACTIVE' ? 403 : 500
+        enroll.code === 'STUDY_FULL'
+          ? 400
+          : enroll.code === 'COHORT_FULL'
+            ? 409
+            : enroll.code === 'COHORT_INACTIVE'
+              ? 403
+              : 500
       return NextResponse.json({ error: enroll.error, code: enroll.code }, { status })
     }
     await ensureCohortStudyStackItem(profileId, slug)

@@ -189,7 +189,11 @@ export async function needsCohortStudyStackRepair(
 
 export type CohortParticipantUpsertResult =
   | { ok: true }
-  | { ok: false; error: string; code?: 'COHORT_FULL' | 'COHORT_INACTIVE' }
+  | {
+      ok: false
+      error: string
+      code?: 'COHORT_FULL' | 'COHORT_INACTIVE' | 'STUDY_FULL'
+    }
 
 /** `profileId` = public.profiles.id; `cohortSlug` = public.cohorts.slug (same as profiles.cohort_id text). */
 export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: string) {
@@ -230,6 +234,22 @@ export async function ensureCohortStudyStackItem(profileId: string, cohortSlug: 
   }
 }
 
+function isRpcStudyFullError(err: { message?: string }): boolean {
+  return String(err.message || '').includes('Study is full')
+}
+
+function isRpcCohortInactiveError(err: { message?: string }): boolean {
+  return String(err.message || '').includes('COHORT_INACTIVE')
+}
+
+function isRpcCohortNotFoundError(err: { message?: string }): boolean {
+  return String(err.message || '').includes('COHORT_NOT_FOUND')
+}
+
+function isRpcProfileIdRequiredError(err: { message?: string }): boolean {
+  return String(err.message || '').includes('PROFILE_ID_REQUIRED')
+}
+
 export async function upsertCohortParticipant(
   profileId: string,
   cohortSlug: string | null,
@@ -245,36 +265,84 @@ export async function upsertCohortParticipant(
   const qRaw = qualificationResponse != null ? String(qualificationResponse).trim() : ''
   const qualificationStored = qRaw !== '' ? qRaw : null
   try {
-    const { data: cohortRow, error: cohortErr } = await supabaseAdmin
-      .from('cohorts')
-      .select('id, status')
-      .eq('slug', slug)
-      .maybeSingle()
-    if (cohortErr) {
-      console.error('[cohortEnrollment] cohort lookup:', cohortErr)
-      return { ok: false, error: cohortErr.message || 'Cohort lookup failed' }
-    }
-    if (!cohortRow?.id) {
-      console.warn('[cohortEnrollment] cohort slug not found:', slug)
-      return { ok: false, error: `Cohort not found for slug: ${slug}` }
-    }
-    const cohortStatus = String((cohortRow as { status?: string | null }).status || '')
-      .trim()
-      .toLowerCase()
-    if (cohortStatus !== 'active') {
-      return {
-        ok: false,
-        error: 'This study is not open for enrollment.',
-        code: 'COHORT_INACTIVE',
-      }
-    }
-    const cohortId = String((cohortRow as { id: string }).id)
-    const enrolledAt = new Date().toISOString()
     const candidates = await cohortParticipantUserIdCandidatesForProfile(profileId)
     if (candidates.length === 0) {
       return { ok: false, error: 'Could not resolve profile for cohort enrollment' }
     }
 
+    const { data: rpcId, error: rpcErr } = await supabaseAdmin.rpc(
+      'enroll_cohort_applied_participant_atomic',
+      {
+        p_cohort_slug: slug,
+        p_profile_id: profileId,
+        p_qualification_response: qualificationStored,
+      },
+    )
+
+    if (!rpcErr && rpcId != null && String(rpcId).trim() !== '') {
+      return { ok: true }
+    }
+    if (!rpcErr && (rpcId == null || String(rpcId).trim() === '')) {
+      console.error('[cohortEnrollment] enroll_cohort_applied_participant_atomic: empty result')
+      return { ok: false, error: 'Could not create cohort participant' }
+    }
+
+    if (rpcErr) {
+      if (isRpcStudyFullError(rpcErr)) {
+        return { ok: false, error: 'Study is full', code: 'STUDY_FULL' }
+      }
+      if (isRpcCohortInactiveError(rpcErr)) {
+        return {
+          ok: false,
+          error: 'This study is not open for enrollment.',
+          code: 'COHORT_INACTIVE',
+        }
+      }
+      if (isRpcCohortNotFoundError(rpcErr)) {
+        console.warn('[cohortEnrollment] cohort slug not found:', slug)
+        return { ok: false, error: `Cohort not found for slug: ${slug}` }
+      }
+      if (isRpcProfileIdRequiredError(rpcErr)) {
+        return { ok: false, error: 'Missing profile id' }
+      }
+      const msg = String(rpcErr.message || '')
+      if (
+        rpcErr.code === '23505' ||
+        msg.toLowerCase().includes('duplicate') ||
+        msg.includes('unique')
+      ) {
+        /* fall through to idempotent update */
+      } else {
+        console.error('[cohortEnrollment] enroll_cohort_applied_participant_atomic:', rpcErr)
+        return { ok: false, error: rpcErr.message || 'Could not create cohort participant' }
+      }
+    }
+
+    const { data: cohortRow, error: cohortErr } = await supabaseAdmin
+      .from('cohorts')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle()
+    if (cohortErr || !cohortRow?.id) {
+      console.warn('[cohortEnrollment] cohort slug not found (post-conflict):', slug, cohortErr?.message)
+      return { ok: false, error: `Cohort not found for slug: ${slug}` }
+    }
+    const cohortId = String((cohortRow as { id: string }).id)
+
+    const updatePatch: Record<string, unknown> = {
+      currently_taking_product: false,
+      qualification_response: qualificationStored,
+    }
+    for (const uid of candidates) {
+      const { error: upErr } = await supabaseAdmin
+        .from('cohort_participants')
+        .update(updatePatch as Record<string, unknown>)
+        .eq('user_id', uid)
+        .eq('cohort_id', cohortId)
+      if (!upErr) return { ok: true }
+    }
+
+    const enrolledAt = new Date().toISOString()
     const basePayload = {
       cohort_id: cohortId,
       status: 'applied' as const,
@@ -282,10 +350,7 @@ export async function upsertCohortParticipant(
       currently_taking_product: false,
       qualification_response: qualificationStored,
     }
-
-    let conflicted = false
     let lastFkMessage: string | null = null
-
     for (const uid of candidates) {
       const { error: insErr } = await supabaseAdmin
         .from('cohort_participants')
@@ -303,8 +368,16 @@ export async function upsertCohortParticipant(
         }
       }
       if (insErr.code === '23505') {
-        conflicted = true
-        break
+        for (const u of candidates) {
+          const { error: up2 } = await supabaseAdmin
+            .from('cohort_participants')
+            .update(updatePatch as Record<string, unknown>)
+            .eq('user_id', u)
+            .eq('cohort_id', cohortId)
+          if (!up2) return { ok: true }
+        }
+        console.error('[cohortEnrollment] cohort_participants update: no row matched candidates')
+        return { ok: false, error: 'Could not update cohort participant' }
       }
       if (insErr.code === '23503') {
         lastFkMessage = insErr.message
@@ -313,24 +386,6 @@ export async function upsertCohortParticipant(
       console.error('[cohortEnrollment] cohort_participants insert:', insErr)
       return { ok: false, error: insErr.message || 'Could not create cohort participant' }
     }
-
-    const updatePatch: Record<string, unknown> = {
-      currently_taking_product: false,
-      qualification_response: qualificationStored,
-    }
-    if (conflicted) {
-      for (const uid of candidates) {
-        const { error: upErr } = await supabaseAdmin
-          .from('cohort_participants')
-          .update(updatePatch as Record<string, unknown>)
-          .eq('user_id', uid)
-          .eq('cohort_id', cohortId)
-        if (!upErr) return { ok: true }
-      }
-      console.error('[cohortEnrollment] cohort_participants update: no row matched candidates')
-      return { ok: false, error: 'Could not update cohort participant' }
-    }
-
     if (lastFkMessage) {
       console.error('[cohortEnrollment] cohort_participants insert:', lastFkMessage)
       return { ok: false, error: lastFkMessage || 'Could not create cohort participant' }

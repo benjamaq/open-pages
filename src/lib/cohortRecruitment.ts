@@ -3,11 +3,13 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 /**
  * Cohort recruitment counts (per cohort slug):
  *
- * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales confirmed against
- *   `max_participants`, then maps into display slots (study landing only; not the DB cap).
- * - Operational cap: `cohorts.max_participants` — Postgres trigger caps **applied + confirmed**
- *   pipeline rows; study page “full” + hero fill use **the same pipeline count** vs this field
- *   (`isCohortEnrollmentClosedByPipeline`). Keep max ≥ shipped target (e.g. 60).
+ * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales against
+ *   `max_participants` into display slots (study landing).
+ * - Enrollment RPC `enroll_cohort_applied_participant_atomic`: when `display_capacity` is set (≥1),
+ *   blocks new **applied** inserts if pipeline (**applied + confirmed**) count ≥ that value (single TX, `FOR UPDATE` cohort).
+ * - Operational cap: `cohorts.max_participants` — Postgres trigger `trg_enforce_cohort_pipeline_capacity` caps
+ *   **applied + confirmed** vs `max_participants` only (backstop if RPC bypassed or `display_capacity` null).
+ * - Study page “full” + hero use **the same pipeline count** vs `max_participants` (`isCohortEnrollmentClosedByPipeline`).
  * - B2C unrelated: `NEXT_PUBLIC_B2C_AT_CAPACITY` / `b2cCapacityGate.ts` — individual product signup,
  *   not cohort enrollment.
  */
