@@ -1,5 +1,5 @@
--- Atomic enrollment: lock cohort, enforce display_capacity vs applied+confirmed pipeline, insert one row.
--- max_participants trigger (trg_enforce_cohort_pipeline_capacity) unchanged as backstop.
+-- cohort_participants.user_id references auth.users(id); p_profile_id is profiles.id.
+-- Resolve auth id from profiles.user_id before insert.
 
 CREATE OR REPLACE FUNCTION public.enroll_cohort_applied_participant_atomic(
   p_cohort_slug text,
@@ -45,7 +45,6 @@ BEGIN
     RAISE EXCEPTION 'COHORT_INACTIVE';
   END IF;
 
-  -- Primary cap for app enrollment path: display_capacity when set (positive).
   IF v_cohort.display_capacity IS NOT NULL AND v_cohort.display_capacity >= 1 THEN
     v_cap := v_cohort.display_capacity::integer;
 
@@ -86,3 +85,5 @@ COMMENT ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, 
 
 REVOKE ALL ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) TO service_role;
+
+SELECT pg_notify('pgrst', 'reload schema');

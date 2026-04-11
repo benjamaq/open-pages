@@ -17,9 +17,19 @@ DECLARE
   v_cap integer;
   v_pipeline integer;
   v_new_id uuid;
+  v_auth_user_id uuid;
 BEGIN
   IF p_profile_id IS NULL THEN
     RAISE EXCEPTION 'PROFILE_ID_REQUIRED';
+  END IF;
+
+  SELECT p.user_id
+  INTO v_auth_user_id
+  FROM public.profiles p
+  WHERE p.id = p_profile_id;
+
+  IF v_auth_user_id IS NULL THEN
+    RAISE EXCEPTION 'PROFILE_NOT_FOUND';
   END IF;
 
   SELECT c.*
@@ -59,7 +69,7 @@ BEGIN
   )
   VALUES (
     v_cohort.id,
-    p_profile_id,
+    v_auth_user_id,
     'applied',
     now(),
     false,
@@ -72,7 +82,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) IS
-  'SERIALIZABLE enrollment: FOR UPDATE cohort row, optional display_capacity vs pipeline (applied+confirmed), insert applied row. Trigger still enforces max_participants.';
+  'SERIALIZABLE enrollment: FOR UPDATE cohort row, optional display_capacity vs pipeline (applied+confirmed), insert applied row with cohort_participants.user_id = profiles.user_id (auth). Trigger still enforces max_participants.';
 
 REVOKE ALL ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) TO service_role;
