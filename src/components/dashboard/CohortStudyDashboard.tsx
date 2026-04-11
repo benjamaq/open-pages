@@ -63,6 +63,8 @@ export interface CohortStudyDashboardProps {
   currentDay: number
   daysRemaining: number
   studyComplete: boolean
+  /** From `/api/me` `cohortParticipantResultPublished` — personal summary row published in DB. */
+  cohortParticipantResultPublished?: boolean
   studyEndDate: string | null
   onOpenCheckin: () => void
 }
@@ -574,6 +576,7 @@ export default function CohortStudyDashboard({
   currentDay,
   daysRemaining,
   studyComplete,
+  cohortParticipantResultPublished = false,
   studyEndDate: _studyEndDate,
   onOpenCheckin,
 }: CohortStudyDashboardProps) {
@@ -788,10 +791,21 @@ export default function CohortStudyDashboard({
                 Congratulations — you&apos;ve completed the study. Thank you for taking part. You do not need to complete
                 any more check-ins for this study.
               </p>
-              <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                Your personal results are now being prepared. When they are ready, they will appear on your dashboard and
-                we will email you.
-              </p>
+              {cohortParticipantResultPublished ? (
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                  Your personal results are ready. You can view your summary below whenever you like.
+                </p>
+              ) : (
+                <>
+                  <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                    Your personal results are now being prepared. When they are ready, they will appear on your dashboard
+                    and we will email you.
+                  </p>
+                  <p className="mt-3 text-[14px] leading-relaxed text-gray-600">
+                    We&apos;ll email you when your summary is ready.
+                  </p>
+                </>
+              )}
               <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-5 sm:px-5">
                 <h3 className="text-base font-semibold text-gray-900">Your rewards</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
@@ -813,12 +827,14 @@ export default function CohortStudyDashboard({
                   You&apos;ll receive full details with your results.
                 </p>
               </div>
-              <Link
-                href={cohortParticipantResultPath()}
-                className="mt-6 inline-flex w-full justify-center rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 sm:w-auto"
-              >
-                View your personal results
-              </Link>
+              {cohortParticipantResultPublished ? (
+                <Link
+                  href={cohortParticipantResultPath()}
+                  className="mt-6 inline-flex w-full justify-center rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 sm:w-auto"
+                >
+                  View your personal results
+                </Link>
+              ) : null}
             </div>
           ) : (
             <>

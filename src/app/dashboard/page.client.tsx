@@ -263,6 +263,7 @@ export function DashboardPageClient() {
                 currentDay={typeof me?.cohortStudyCurrentDay === 'number' ? me.cohortStudyCurrentDay : 1}
                 daysRemaining={typeof me?.cohortDaysRemaining === 'number' ? me.cohortDaysRemaining : 0}
                 studyComplete={Boolean(me?.cohortStudyComplete)}
+                cohortParticipantResultPublished={Boolean(me?.cohortParticipantResultPublished)}
                 studyEndDate={typeof me?.cohortStudyEndDate === 'string' ? me.cohortStudyEndDate : null}
                 onOpenCheckin={() => {
                   try {
