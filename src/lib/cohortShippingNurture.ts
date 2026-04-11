@@ -2,7 +2,6 @@ import { cohortEmailPublicOrigin } from '@/lib/cohortEmailPublicOrigin'
 import { cohortTransactionalCheckinMagicHref } from '@/lib/cohortEmailMagicLink'
 import {
   cohortEmailCheckInCtaHtml,
-  escapeHtml,
   wrapCohortTransactionalEmailHtml,
 } from '@/lib/cohortTransactionalEmailHtml'
 import { sendEmail } from '@/lib/email/resend'
@@ -14,9 +13,9 @@ export function shippingNurtureSubject(step: ShippingNurtureStep): string {
     case 'day4':
       return "Your product is on its way — here's what to expect"
     case 'day7':
-      return 'Your study starts soon'
+      return 'Your product should be arriving any day now'
     case 'day10':
-      return 'Getting close — are you ready?'
+      return 'Quick check — did your product arrive?'
     default:
       return 'Study update — BioStackr'
   }
@@ -25,36 +24,28 @@ export function shippingNurtureSubject(step: ShippingNurtureStep): string {
 /** Inner HTML only (no document wrapper). */
 export function shippingNurtureInnerHtml(
   step: ShippingNurtureStep,
-  params: {
+  _params: {
     studyName: string
     brandName: string
     productName: string
-    /** Default true. False for cognitive / non-sleep cohorts — avoids “morning” in reminder line. */
     sleepShapedCohort?: boolean
   },
 ): string {
-  const study = escapeHtml(params.studyName)
-  const brand = escapeHtml(params.brandName)
-  const product = escapeHtml(params.productName)
-  const sleepShaped = params.sleepShapedCohort !== false
-
   let paragraphs: string[] = []
   switch (step) {
     case 'day4':
       paragraphs = [
-        `Your spot in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> is dispatching your <strong>${product}</strong>. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>. Your study window starts that day — complete your first check-in right after. Until then, there is nothing you need to do.`,
+        'Your product will be dispatched to you shortly. While you wait, keep doing your daily check-in each morning — these baseline check-ins are an important part of your personal results and count toward your final analysis.',
       ]
       break
     case 'day7':
       paragraphs = [
-        `Your <strong>${product}</strong> from <strong>${brand}</strong> should be arriving any day now. When it arrives, open your study dashboard on <strong>BioStackr</strong> and tap <strong>My product has arrived</strong>, then complete your first check-in. Each check-in takes about 30 seconds; reminders start ${
-          sleepShaped ? 'the morning after you begin' : 'the day after you begin'
-        }. Questions? Reply to this email.`,
+        "Your product should be arriving any day now. The moment it lands, open your BioStackr dashboard and tap 'My product has arrived' — your 21-day study begins that same morning. Keep checking in daily until it arrives.",
       ]
       break
     case 'day10':
       paragraphs = [
-        `If your <strong>${product}</strong> has arrived, open your <strong>BioStackr</strong> study dashboard and tap <strong>My product has arrived</strong>, then complete your first check-in. If it has not arrived yet, reply to this email and we will look into it.`,
+        "Just making sure everything landed okay. If your product has arrived and you have not started your study yet, open your dashboard and tap 'My product has arrived' to get going. If it has not arrived yet, just reply to this email and we will look into it straight away.",
       ]
       break
     default:
