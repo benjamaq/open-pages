@@ -11,11 +11,7 @@ import {
 import { sendEmail } from '@/lib/email/resend'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
-import {
-  cohortUsesStoreCreditPartnerReward,
-  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
-  storeCreditTitleFromCohortRow,
-} from '@/lib/cohortStudyLandingRewards'
+import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
 
 export { studyAndProductNamesFromCohortRow } from '@/lib/cohortStudyProductNames'
 
@@ -31,36 +27,29 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
-  const study = escapeHtml(params.studyName)
   const product = escapeHtml(params.productName)
   const partnerPlain = String(params.brandName || '').trim() || 'Study partner'
   const brand = escapeHtml(partnerPlain)
   const appBase = cohortEmailPublicOrigin()
   const dashboardStudyHref = String(params.dashboardStudyHref || '').trim()
-  const storeCredit = params.storeCreditPartnerReward === true
-  const creditEsc = escapeHtml(
-    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
-      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
-  )
-
-  const rewardParagraph = storeCredit
-    ? `<p style="margin:0 0 20px;">Your completion rewards — <strong>${creditEsc}</strong> from <strong>${brand}</strong>, plus three months of BioStackr Pro — are locked in from today.</p>`
-    : `<p style="margin:0 0 20px;">Your completion reward — a 3-month supply of ${product} from <strong>${brand}</strong>, plus three months of BioStackr Pro — is locked in from today.</p>`
+  void params.studyName
+  void params.storeCreditPartnerReward
+  void params.storeCreditTitle
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-    `<p style="margin:0 0 20px;">You're in. Your place in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly — <strong>BioStackr</strong> runs the study platform and your check-ins.</p>` +
-    `<p style="margin:0 0 20px;">Your next step: come back tomorrow morning for your next check-in.</p>` +
-    `<p style="margin:0 0 6px;"><strong>Before it arrives</strong></p>` +
-    `<p style="margin:0 0 18px;">Keep your routine stable — no new supplements. We want a clean baseline.</p>` +
-    `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +
-    `<p style="margin:0 0 18px;">Use <strong>${product}</strong> exactly as directed for this study&apos;s protocol.<br />Complete your first study check-in the next calendar day after you begin.</p>` +
-    `<p style="margin:0 0 6px;"><strong>During the study</strong></p>` +
-    `<p style="margin:0 0 18px;">You'll get a short daily reminder from <strong>BioStackr</strong>. Each check-in takes ~30 seconds.</p>` +
-    `<p style="margin:0 0 6px;"><strong>At the end</strong></p>` +
-    `<p style="margin:0 0 18px;">You'll receive a clear breakdown of what actually changed for you.</p>` +
-    rewardParagraph +
-    `<p style="margin:0;">Thank you for being part of this.</p>` +
+    `<p style="margin:0 0 8px;font-size:16px;line-height:1.55;color:#111827;">You&apos;re in.</p>` +
+    `<p style="margin:0 0 22px;font-size:16px;line-height:1.55;color:#111827;">Your place in the <strong>${brand}</strong> <strong>${product}</strong> study is confirmed.</p>` +
+    `<p style="margin:0 0 22px;font-size:16px;line-height:1.55;color:#111827;"><strong>Important:</strong> come back tomorrow morning for your next check-in.</p>` +
+    `<p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#374151;">Before your product arrives, you&apos;ll complete a few more daily check-ins to build your baseline.</p>` +
+    `<p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#374151;">Your <strong>${product}</strong> is now being prepared and will be shipped to you shortly.</p>` +
+    `<p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#374151;">Once it arrives:</p>` +
+    `<ul style="margin:0 0 22px;padding:0 0 0 20px;font-size:15px;line-height:1.55;color:#374151;">` +
+    `<li style="margin:0 0 8px;">You&apos;ll begin taking it as directed</li>` +
+    `<li style="margin:0 0 8px;">Continue your daily check-ins</li>` +
+    `<li style="margin:0;">We&apos;ll compare your results over time</li>` +
+    `</ul>` +
+    `<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">Your completion reward is already locked in.</p>` +
     cohortEmailDashboardCtaHtml(dashboardStudyHref)
 
   const html = wrapCohortTransactionalEmailHtml({
