@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { denyUnlessAdminApi } from '@/lib/adminApiAuth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   cohortHealthStatusLabel,
@@ -20,18 +21,9 @@ function cohortOperationalCap(maxParticipants: unknown): number | null {
   return Number.isFinite(m) && m > 0 ? Math.floor(m) : null
 }
 
-function adminDenied(req: NextRequest): NextResponse | null {
-  if (process.env.NODE_ENV !== 'production') return null
-  const key = req.headers.get('x-admin-key')
-  if (!key || key !== process.env.ADMIN_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  return null
-}
-
 /** GET /api/admin/cohorts — list cohorts. GET /api/admin/cohorts?cohort_uuid= — confirmed participants. */
 export async function GET(request: NextRequest) {
-  const denied = adminDenied(request)
+  const denied = await denyUnlessAdminApi(request)
   if (denied) return denied
 
   const { searchParams } = new URL(request.url)

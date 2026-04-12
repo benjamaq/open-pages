@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { denyUnlessAdminApi } from '@/lib/adminApiAuth'
 
 function supabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -7,26 +8,17 @@ function supabaseAdmin() {
   return createSupabaseAdmin(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
 }
 
-function isProd() {
-  return process.env.NODE_ENV === 'production'
-}
-
 export async function GET(req: NextRequest) {
   try {
+    const denied = await denyUnlessAdminApi(req)
+    if (denied) return denied
+
     const { searchParams } = new URL(req.url)
     const userId = searchParams.get('user_id') || undefined
     const email = searchParams.get('email') || undefined
 
     if (!userId && !email) {
       return NextResponse.json({ ok: false, error: 'Provide user_id or email' }, { status: 400 })
-    }
-
-    // Simple protection: require X-Admin-Key in production
-    if (isProd()) {
-      const headerKey = req.headers.get('x-admin-key')
-      if (!headerKey || headerKey !== process.env.ADMIN_API_KEY) {
-        return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
-      }
     }
 
     const admin = supabaseAdmin()

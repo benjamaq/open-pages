@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { adminPanelAllowlistConfigured, isAdminPanelEmail } from '@/lib/adminPanelAllowlist'
 import { Database } from '../types'
 
 export async function updateSession(request: NextRequest) {
@@ -36,10 +37,42 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const path = request.nextUrl.pathname
+
+  if (user && path.startsWith('/admin/login')) {
+    if (isAdminPanelEmail(user.email)) {
+      const nextRaw = request.nextUrl.searchParams.get('next')
+      let target = '/admin/cohorts'
+      if (
+        nextRaw &&
+        nextRaw.startsWith('/') &&
+        !nextRaw.startsWith('//') &&
+        nextRaw.startsWith('/admin')
+      ) {
+        target = nextRaw
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = target
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+  }
+
   if (
-    !user
+    user &&
+    path.startsWith('/admin') &&
+    !path.startsWith('/admin/login') &&
+    adminPanelAllowlistConfigured() &&
+    !isAdminPanelEmail(user.email)
   ) {
-    const path = request.nextUrl.pathname
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin/login'
+    url.search = ''
+    url.searchParams.set('reason', 'forbidden')
+    return NextResponse.redirect(url)
+  }
+
+  if (!user) {
     // NEW SYSTEM: allow public access to /new-login and /new-signup,
     // but protect /dashboard by redirecting to /login
     if (path.startsWith('/dashboard') || path.startsWith('/insights') || path.startsWith('/onboarding')) {
@@ -59,9 +92,26 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/contact') ||
       path.startsWith('/biostackr') ||
       path === '/check-in' ||
-      path.startsWith('/check-in/')
+      path.startsWith('/check-in/') ||
+      path.startsWith('/admin/login')
     ) {
       return supabaseResponse
+    }
+
+    if (path.startsWith('/admin')) {
+      const isProd = process.env.NODE_ENV === 'production'
+      if (!isProd) {
+        return supabaseResponse
+      }
+      if (!adminPanelAllowlistConfigured()) {
+        if (path === '/admin/cohorts' || path.startsWith('/admin/cohorts/')) {
+          return supabaseResponse
+        }
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin/login'
+      url.searchParams.set('next', `${path}${request.nextUrl.search}`)
+      return NextResponse.redirect(url)
     }
 
     // EXISTING SYSTEM: original guard & redirects to /auth/signin

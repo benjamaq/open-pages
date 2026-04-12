@@ -16,11 +16,15 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Admin UI: block /admin/* except /admin/cohorts (key entry). Requires cookie set when saving key there.
+  // Admin UI: block /admin/* except /admin/cohorts (key entry), unless session allowlist is enabled (see Supabase middleware).
   const adminApiKey = process.env.ADMIN_API_KEY || ''
-  if (process.env.NODE_ENV === 'production' && adminApiKey) {
+  const adminUsesSessionAllowlist = (process.env.ADMIN_PANEL_ALLOWED_EMAILS || '').trim().length > 0
+  if (process.env.NODE_ENV === 'production' && adminApiKey && !adminUsesSessionAllowlist) {
     const isAdminKeyEntry =
-      pathname === '/admin/cohorts' || pathname.startsWith('/admin/cohorts/')
+      pathname === '/admin/cohorts' ||
+      pathname.startsWith('/admin/cohorts/') ||
+      pathname === '/admin/login' ||
+      pathname.startsWith('/admin/login/')
     if (pathname.startsWith('/admin') && !isAdminKeyEntry) {
       const cookieKey = request.cookies.get('bs_admin_key')?.value || ''
       if (cookieKey !== adminApiKey) {
