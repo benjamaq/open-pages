@@ -95,6 +95,10 @@ interface DailyCheckinModalProps {
    * When true, always render cohort check-in fields (never B2C fallback) so saves match API validation.
    */
   cohortCheckinBranch?: boolean
+  /** From /api/me `cohortConfirmed` — drives compliance “confirm your place” copy in cohort modal. */
+  cohortSpotConfirmed?: boolean
+  /** From /api/me `cohortCheckinCount` during compliance (distinct days); omit when spot already confirmed. */
+  cohortComplianceDistinctDays?: number | null
 }
 
 // Helper functions
@@ -231,6 +235,8 @@ export default function DailyCheckinModal({
   cohortStudyProductName,
   showCohortStudyDashboard,
   cohortCheckinBranch,
+  cohortSpotConfirmed,
+  cohortComplianceDistinctDays,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -982,6 +988,8 @@ useEffect(() => {
         userId={userId}
         checkinFields={cohortCheckinFieldsResolved}
         cohortStudyProductName={cohortStudyProductName}
+        cohortSpotConfirmed={cohortSpotConfirmed}
+        cohortComplianceDistinctDays={cohortComplianceDistinctDays}
       />
     )
   }

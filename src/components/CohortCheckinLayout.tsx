@@ -39,6 +39,16 @@ export type CohortCheckinLayoutProps = {
   checkinFields?: string[] | null
   /** Cohort product name from /api/me for modal title. */
   cohortStudyProductName?: string | null
+  /**
+   * From /api/me `cohortConfirmed`. When true, copy skips the 2-in-48h “confirm your place” framing.
+   * When undefined, compliance-specific lines are omitted (safe fallback).
+   */
+  cohortSpotConfirmed?: boolean
+  /**
+   * From /api/me `cohortCheckinCount` while the spot is not yet confirmed (distinct compliance days).
+   * Used only with `cohortSpotConfirmed === false` for intro + first-save success messaging.
+   */
+  cohortComplianceDistinctDays?: number | null
 }
 
 const ONSET_OPTIONS = [
@@ -81,6 +91,8 @@ export default function CohortCheckinLayout({
   userId: _userId,
   checkinFields: checkinFieldsProp,
   cohortStudyProductName,
+  cohortSpotConfirmed,
+  cohortComplianceDistinctDays,
 }: CohortCheckinLayoutProps) {
   void _userId
 
@@ -95,6 +107,13 @@ export default function CohortCheckinLayout({
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [saved, setSaved] = useState(false)
+  /** Snapshot when the form opens so post-save copy matches “first vs second” compliance check-in. */
+  const [complianceDistinctDaysAtOpen, setComplianceDistinctDaysAtOpen] = useState<number | null>(null)
+
+  const showCompliancePlaceCopy =
+    cohortSpotConfirmed === false &&
+    typeof cohortComplianceDistinctDays === 'number' &&
+    cohortComplianceDistinctDays < 2
 
   const cohortCheckinComplete = useMemo(() => {
     for (const f of fields) {
@@ -123,8 +142,13 @@ export default function CohortCheckinLayout({
       setMessage('')
       setSelectedConfoundTags([])
       setSliderTouched({})
+      setComplianceDistinctDaysAtOpen(null)
+    } else if (!saved) {
+      setComplianceDistinctDaysAtOpen(
+        typeof cohortComplianceDistinctDays === 'number' ? cohortComplianceDistinctDays : null,
+      )
     }
-  }, [isOpen])
+  }, [isOpen, saved, cohortComplianceDistinctDays])
 
   useEffect(() => {
     if (!saved) return
@@ -236,15 +260,25 @@ export default function CohortCheckinLayout({
               <div className="text-[#639922] text-3xl leading-none sm:text-[2rem]" aria-hidden="true">
                 ✓
               </div>
-              <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
-              <p className="mt-1.5 text-xs sm:text-sm text-gray-500 leading-snug max-w-[260px]">
-                Your check-in has been saved.
-                <span className="block mt-0.5">
+              {cohortSpotConfirmed === false && complianceDistinctDaysAtOpen === 0 ? (
+                <p className="mt-3 text-sm font-medium text-gray-900 leading-snug max-w-[280px]">
                   {isSleepShapedCheckinFields(fields)
-                    ? 'Come back tomorrow morning.'
-                    : 'Come back tomorrow.'}
-                </span>
-              </p>
+                    ? 'First check-in complete. Come back tomorrow morning to confirm your place.'
+                    : 'First check-in complete. Come back tomorrow to confirm your place.'}
+                </p>
+              ) : (
+                <>
+                  <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-gray-500 leading-snug max-w-[260px]">
+                    Your check-in has been saved.
+                    <span className="block mt-0.5">
+                      {isSleepShapedCheckinFields(fields)
+                        ? 'Come back tomorrow morning.'
+                        : 'Come back tomorrow.'}
+                    </span>
+                  </p>
+                </>
+              )}
               <button
                 type="button"
                 onClick={onClose}
@@ -255,6 +289,13 @@ export default function CohortCheckinLayout({
             </div>
           ) : (
             <>
+              {showCompliancePlaceCopy ? (
+                <p className="mb-3 text-sm font-medium leading-relaxed text-gray-900">
+                  {cohortComplianceDistinctDays === 0
+                    ? "Complete today's check-in and one more tomorrow to confirm your place."
+                    : "Complete today's check-in to confirm your place."}
+                </p>
+              ) : null}
               <p className="mb-8 text-sm leading-relaxed text-gray-700">
                 Answer as accurately as possible — this is your baseline before starting the supplement.
               </p>

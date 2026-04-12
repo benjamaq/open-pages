@@ -48,6 +48,10 @@ export function CheckinLauncher({
   const [asyncCohortCheckinBranch, setAsyncCohortCheckinBranch] = useState<boolean | undefined>(undefined)
   /** Mirrors /api/me `cohortHasCheckedInToday` when mePayload is not passed in. */
   const [asyncCohortHasCheckedInToday, setAsyncCohortHasCheckedInToday] = useState<boolean | undefined>(undefined)
+  /** Mirrors /api/me `cohortConfirmed` when mePayload is not passed in. */
+  const [asyncCohortConfirmed, setAsyncCohortConfirmed] = useState<boolean | undefined>(undefined)
+  /** Mirrors /api/me `cohortCheckinCount` when mePayload is not passed in. */
+  const [asyncCohortCheckinCount, setAsyncCohortCheckinCount] = useState<number | undefined>(undefined)
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -95,6 +99,8 @@ export function CheckinLauncher({
       setAsyncShowCohortStudyDashboard(undefined)
       setAsyncCohortCheckinBranch(undefined)
       setAsyncCohortHasCheckedInToday(undefined)
+      setAsyncCohortConfirmed(undefined)
+      setAsyncCohortCheckinCount(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -126,6 +132,10 @@ export function CheckinLauncher({
         setAsyncCohortCheckinBranch(typeof ccb === 'boolean' ? ccb : undefined)
         const ht = (data as any)?.cohortHasCheckedInToday
         setAsyncCohortHasCheckedInToday(typeof ht === 'boolean' ? ht : undefined)
+        const cohortConfirmedRaw = (data as any)?.cohortConfirmed
+        setAsyncCohortConfirmed(typeof cohortConfirmedRaw === 'boolean' ? cohortConfirmedRaw : undefined)
+        const cc = (data as any)?.cohortCheckinCount
+        setAsyncCohortCheckinCount(typeof cc === 'number' && Number.isFinite(cc) ? cc : undefined)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -134,6 +144,8 @@ export function CheckinLauncher({
           setAsyncShowCohortStudyDashboard(undefined)
           setAsyncCohortCheckinBranch(undefined)
           setAsyncCohortHasCheckedInToday(undefined)
+          setAsyncCohortConfirmed(undefined)
+          setAsyncCohortCheckinCount(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -305,6 +317,24 @@ export function CheckinLauncher({
   const cohortCheckinBranchProp =
     typeof cohortCheckinBranchRaw === 'boolean' ? cohortCheckinBranchRaw : undefined
 
+  const cohortSpotConfirmed =
+    mePayload !== undefined
+      ? typeof (mePayload as { cohortConfirmed?: unknown }).cohortConfirmed === 'boolean'
+        ? Boolean((mePayload as { cohortConfirmed?: boolean }).cohortConfirmed)
+        : undefined
+      : asyncCohortConfirmed !== undefined
+        ? Boolean(asyncCohortConfirmed)
+        : undefined
+
+  const cohortComplianceDistinctDays: number | null =
+    mePayload !== undefined
+      ? typeof (mePayload as { cohortCheckinCount?: unknown }).cohortCheckinCount === 'number'
+        ? (mePayload as { cohortCheckinCount: number }).cohortCheckinCount
+        : null
+      : typeof asyncCohortCheckinCount === 'number'
+        ? asyncCohortCheckinCount
+        : null
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -333,6 +363,8 @@ export function CheckinLauncher({
           cohortStudyProductName={cohortStudyProductName}
           showCohortStudyDashboard={showCohortStudyDashboardProp}
           cohortCheckinBranch={cohortCheckinBranchProp}
+          cohortSpotConfirmed={cohortSpotConfirmed}
+          cohortComplianceDistinctDays={cohortComplianceDistinctDays}
         />
       )}
     </>
