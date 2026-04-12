@@ -19,7 +19,7 @@ import {
   SLEEP_PACK_PRODUCT_IMAGE,
 } from '@/lib/cohortStudyPageAssets'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { countCohortPipelineParticipants, isStudyVisibleEnrollmentClosed } from '@/lib/cohortRecruitment'
+import { countCohortPipelineParticipants, isCohortEnrollmentClosedByPipeline } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
 import { StudyCohortFullWaitlist } from './StudyCohortFullWaitlist'
 import { CohortQualificationSection } from './CohortQualificationSection'
@@ -122,18 +122,24 @@ function StepRowConnector() {
   )
 }
 
-/**
- * Marketing-only mapping for the public study hero (pipeline/applied+confirmed as input).
- * Does not affect admin, DB, gating, or real max_participants (e.g. 60).
- */
+/** Headline “Limited cohort: N participants” — marketing ceiling shown in hero. */
 const PUBLIC_STUDY_HERO_DISPLAY_TOTAL = 25
 
-function publicStudyHeroDisplayedPipeline(realPipeline: number): number {
-  const c = Math.max(0, Math.floor(Number(realPipeline)))
-  if (c <= 13) return 13
-  if (c < 23) return c
-  if (c < 60) return 23
-  return 25
+/**
+ * Hero “participants selected so far” — urgency only; does not close enrollment.
+ * - Floor13 at low pipeline; scales proportionally through real enrollments vs max_participants.
+ * - Stays ≤ 23 while pipeline &lt; hard cap; jumps to 25 when pipeline ≥ cap (study operationally full).
+ */
+function heroDisplayedSelectedSoFar(pipeline: number, maxParticipants: number | null): number {
+  const p = Math.max(0, Math.floor(Number(pipeline)))
+  const cap =
+    maxParticipants != null && Number.isFinite(maxParticipants) && maxParticipants >= 1
+      ? Math.floor(maxParticipants)
+      : 60
+  if (p >= cap) return 25
+  const t = cap > 0 ? p / cap : 0
+  const scaled = 13 + Math.round(t * (23 - 13))
+  return Math.min(23, Math.max(13, scaled))
 }
 
 /**
@@ -159,22 +165,15 @@ function studyLandingDisplayProductAndBrand(
 
 function HeroCohortStatusCard({
   pipelineFilled,
-  maxParticipants: _maxParticipants,
-  displayCapacity: _displayCapacity,
+  maxParticipants,
 }: {
-  /** applied + confirmed rows — same basis as DB enrollment cap and `isCohortEnrollmentClosedByPipeline`. */
+  /** applied + confirmed rows — same basis as DB enrollment cap. */
   pipelineFilled: number
-  /** Unused for public hero numbers; real cap stays in DB (e.g. 60). */
+  /** Hard operational cap (e.g. 60); hero count scales as pipeline / maxParticipants. */
   maxParticipants: number | null
-  /** Unused for public hero numbers; avoids showing backend display_capacity when it’s not 25. */
-  displayCapacity: number | null
 }) {
-  void _maxParticipants
-  void _displayCapacity
-
-  const c = Math.max(0, Math.floor(Number(pipelineFilled)))
   const displayTotal = PUBLIC_STUDY_HERO_DISPLAY_TOTAL
-  const heroPlacesFilled = Math.min(displayTotal, publicStudyHeroDisplayedPipeline(c))
+  const heroPlacesFilled = heroDisplayedSelectedSoFar(pipelineFilled, maxParticipants)
 
   const pct =
     displayTotal > 0 ? Math.min(100, (heroPlacesFilled / displayTotal) * 100) : 0
@@ -891,12 +890,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const pipelineCount = await countCohortPipelineParticipants(cohortId)
   /**
-   * Visible “full” / waitlist on load: pipeline (applied + confirmed) ≥ display_capacity when set (e.g. 25),
-   * else ≥ max_participants. Hard enrollment cap remains max_participants in DB/RPC only.
+   * Full / waitlist when pipeline ≥ max_participants (e.g. 60). Matches RPC + trigger.
+   * display_capacity is not used for this gate — only for optional DB/analytics; hero uses its own curve.
    */
-  const visibleEnrollmentClosed = isStudyVisibleEnrollmentClosed(pipelineCount, displayCap, maxP)
+  const enrollmentClosedByHardCap = isCohortEnrollmentClosedByPipeline(maxP, pipelineCount)
   const showFullMessage =
-    visibleEnrollmentClosed || String(statusParam || '').toLowerCase() === 'full'
+    enrollmentClosedByHardCap || String(statusParam || '').toLowerCase() === 'full'
 
   const { productName, brandName } = studyLandingDisplayProductAndBrand(
     slug,
@@ -1014,11 +1013,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
             {!showFullMessage ? (
               <div className="mt-4 sm:mt-5">
-                <HeroCohortStatusCard
-                  pipelineFilled={pipelineCount}
-                  maxParticipants={maxP}
-                  displayCapacity={displayCap}
-                />
+                <HeroCohortStatusCard pipelineFilled={pipelineCount} maxParticipants={maxP} />
               </div>
             ) : (
               <div
@@ -1103,7 +1098,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
                 productName={productName}
-                cohortVisibleCapacityFull={visibleEnrollmentClosed}
+                cohortEnrollmentClosedByMax={enrollmentClosedByHardCap}
                 enrollmentOpen={enrollmentOpen}
                 qualificationShape={qualificationShape}
                 studyDays={studyDays}
