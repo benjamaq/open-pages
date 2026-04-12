@@ -91,7 +91,7 @@ export function CohortQualificationSection({
   cohortSlug,
   cohortBrandName,
   productName,
-  cohortCapacityFull = false,
+  cohortVisibleCapacityFull = false,
   enrollmentOpen = true,
   qualificationShape,
   studyDays = 21,
@@ -99,7 +99,8 @@ export function CohortQualificationSection({
   cohortSlug: string
   cohortBrandName: string
   productName: string
-  cohortCapacityFull?: boolean
+  /** True when study page visible cap is reached (display_capacity, else max_participants). */
+  cohortVisibleCapacityFull?: boolean
   /** When false (e.g. cohorts.status is draft), show message only — no apply flow. */
   enrollmentOpen?: boolean
   /** From `checkin_fields` on the server — sleep vs cognitive screening copy. */
@@ -250,7 +251,7 @@ export function CohortQualificationSection({
             `Primary cognitive issue: ${cognitiveIssue}`,
           ].join('\n| ')
 
-    if (cohortCapacityFull) {
+    if (cohortVisibleCapacityFull) {
       setShowCapacityWaitlist(true)
       return
     }

@@ -3,15 +3,14 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 /**
  * Cohort recruitment counts (per cohort slug):
  *
- * - Public urgency: `cohorts.display_capacity` — hero “N places filled” scales against
- *   `max_participants` into display slots (study landing).
- * - Enrollment RPC `enroll_cohort_applied_participant_atomic`: when `display_capacity` is set (≥1),
- *   blocks new **applied** inserts if pipeline (**applied + confirmed**) count ≥ that value (single TX, `FOR UPDATE` cohort).
- * - Operational cap: `cohorts.max_participants` — Postgres trigger `trg_enforce_cohort_pipeline_capacity` caps
- *   **applied + confirmed** vs `max_participants` only (backstop if RPC bypassed or `display_capacity` null).
- * - Study page “full” + hero use **the same pipeline count** vs `max_participants` (`isCohortEnrollmentClosedByPipeline`).
- * - B2C unrelated: `NEXT_PUBLIC_B2C_AT_CAPACITY` / `b2cCapacityGate.ts` — individual product signup,
- *   not cohort enrollment.
+ * - Pipeline = `cohort_participants` with status IN (`applied`, `confirmed`) only — not dropped/completed.
+ * - Study landing **waitlist vs apply form** (server): `isStudyVisibleEnrollmentClosed` — pipeline vs
+ *   `display_capacity` when set (marketing “visible” cap, e.g. 25); if `display_capacity` is null, falls back
+ *   to `max_participants`.
+ * - Hero progress card (`HeroCohortStatusCard`): separate presentation; does not drive enrollment closure.
+ * - Enrollment RPC `enroll_cohort_applied_participant_atomic`: hard cap pipeline vs `max_participants` only
+ *   (`display_capacity` ignored). Trigger `trg_enforce_cohort_pipeline_capacity` matches.
+ * - B2C unrelated: `NEXT_PUBLIC_B2C_AT_CAPACITY` / `b2cCapacityGate.ts`.
  */
 
 /**
@@ -37,7 +36,23 @@ export function isCohortEnrollmentClosedByPipeline(
   return pipelineCount >= cap
 }
 
-/** applied + confirmed rows (pipeline / historical capacity toward signup — not used for “study full”). */
+/**
+ * Study page load: show “full” + waitlist when pipeline ≥ visible cap.
+ * When `display_capacity` is set (≥1), that is the visible cap; otherwise use `max_participants`.
+ */
+export function isStudyVisibleEnrollmentClosed(
+  pipelineCount: number,
+  displayCapacity: number | null | undefined,
+  maxParticipants: number | null | undefined,
+): boolean {
+  if (displayCapacity != null && Number.isFinite(Number(displayCapacity)) && Number(displayCapacity) >= 1) {
+    const cap = Math.max(0, Math.floor(Number(displayCapacity)))
+    return pipelineCount >= cap
+  }
+  return isCohortEnrollmentClosedByPipeline(maxParticipants, pipelineCount)
+}
+
+/** applied + confirmed rows (pipeline — same basis as RPC + visible/full checks). */
 export async function countCohortPipelineParticipants(cohortUuid: string): Promise<number> {
   const { count, error } = await supabaseAdmin
     .from('cohort_participants')

@@ -19,7 +19,7 @@ import {
   SLEEP_PACK_PRODUCT_IMAGE,
 } from '@/lib/cohortStudyPageAssets'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { countCohortPipelineParticipants, isCohortEnrollmentClosedByPipeline } from '@/lib/cohortRecruitment'
+import { countCohortPipelineParticipants, isStudyVisibleEnrollmentClosed } from '@/lib/cohortRecruitment'
 import { StudyApplyCta } from './StudyApplyCta'
 import { StudyCohortFullWaitlist } from './StudyCohortFullWaitlist'
 import { CohortQualificationSection } from './CohortQualificationSection'
@@ -891,11 +891,12 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
 
   const pipelineCount = await countCohortPipelineParticipants(cohortId)
   /**
-   * Enrollment closed = pipeline (applied + confirmed) ≥ max_participants — same rule as DB trigger.
-   * Hero “X of 25” uses the same pipeline count scaled into display_capacity (urgency bar only).
+   * Visible “full” / waitlist on load: pipeline (applied + confirmed) ≥ display_capacity when set (e.g. 25),
+   * else ≥ max_participants. Hard enrollment cap remains max_participants in DB/RPC only.
    */
-  const capacityFull = isCohortEnrollmentClosedByPipeline(maxP, pipelineCount)
-  const showFullMessage = capacityFull || String(statusParam || '').toLowerCase() === 'full'
+  const visibleEnrollmentClosed = isStudyVisibleEnrollmentClosed(pipelineCount, displayCap, maxP)
+  const showFullMessage =
+    visibleEnrollmentClosed || String(statusParam || '').toLowerCase() === 'full'
 
   const { productName, brandName } = studyLandingDisplayProductAndBrand(
     slug,
@@ -1102,7 +1103,7 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
                 cohortSlug={cohort.slug}
                 cohortBrandName={brandName}
                 productName={productName}
-                cohortCapacityFull={capacityFull}
+                cohortVisibleCapacityFull={visibleEnrollmentClosed}
                 enrollmentOpen={enrollmentOpen}
                 qualificationShape={qualificationShape}
                 studyDays={studyDays}

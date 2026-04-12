@@ -1,8 +1,6 @@
--- Atomic enrollment: lock cohort, enforce max_participants vs applied+confirmed pipeline, insert one row.
--- display_capacity is UI-only (study hero urgency) and must not be used here.
--- Later migrations may replace this function; 20260430200000_enroll_cohort_atomic_cap_max_participants_only.sql
--- reapplies this rule if superseded.
--- max_participants trigger (trg_enforce_cohort_pipeline_capacity) unchanged as backstop.
+-- enroll_cohort_applied_participant_atomic must cap pipeline (applied+confirmed) against
+-- cohorts.max_participants only. display_capacity is UI-only and must not gate enrollment.
+-- (Earlier migrations 20260430170000 / 20260430180000 incorrectly used display_capacity again.)
 
 CREATE OR REPLACE FUNCTION public.enroll_cohort_applied_participant_atomic(
   p_cohort_slug text,
@@ -48,7 +46,8 @@ BEGIN
     RAISE EXCEPTION 'COHORT_INACTIVE';
   END IF;
 
-  -- Operational cap: max_participants only. display_capacity is ignored.
+  -- Operational cap: max_participants only (matches trg_enforce_cohort_pipeline_capacity).
+  -- display_capacity is not read here.
   IF v_cohort.max_participants IS NOT NULL AND v_cohort.max_participants >= 1 THEN
     v_cap := v_cohort.max_participants::integer;
 
@@ -85,7 +84,9 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) IS
-  'SERIALIZABLE enrollment: FOR UPDATE cohort row; pipeline (applied+confirmed) capped by cohorts.max_participants only. display_capacity is UI-only.';
+  'SERIALIZABLE enrollment: FOR UPDATE cohort row; pipeline (applied+confirmed) capped by cohorts.max_participants only. display_capacity is UI-only and ignored here. Trigger trg_enforce_cohort_pipeline_capacity remains backstop.';
 
 REVOKE ALL ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.enroll_cohort_applied_participant_atomic(text, uuid, text) TO service_role;
+
+SELECT pg_notify('pgrst', 'reload schema');
