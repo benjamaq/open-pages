@@ -591,6 +591,14 @@ export default function CohortStudyDashboard({
   /** Product-shipment holding is only after DB confirmation — never for `applied` / compliance phase. */
   const awaitingProductHolding = Boolean(cohortConfirmed && cohortAwaitingStudyStart)
 
+  /**
+   * Pre-study baseline: distinct check-in days since enrollment (`cohortCheckinCount` from /api/me).
+   * UI-only threshold before the product-arrival flow is offered as a primary action.
+   */
+  const BASELINE_REQUIRED_CHECKINS = 3
+  const baselineCheckinsComplete = Math.min(checkinCount, BASELINE_REQUIRED_CHECKINS)
+  const canStartStudyFromProduct = checkinCount >= BASELINE_REQUIRED_CHECKINS
+
   /** While awaiting product (confirmed only), hero gate shows 2/2; `checkinCount` still reflects ongoing pre-study check-ins. */
   const gateComplete = awaitingProductHolding
     ? 2
@@ -760,22 +768,32 @@ export default function CohortStudyDashboard({
                 <p className="mt-4 text-[15px] leading-relaxed text-gray-600">
                   Once your product arrives, we&rsquo;ll start measuring the difference.
                 </p>
-                <button
-                  type="button"
-                  onClick={onOpenCheckin}
-                  className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-                >
-                  {hasCheckedInToday
-                    ? 'Come back tomorrow for your next check-in'
-                    : 'Check in now'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProductArrivedOpen(true)}
-                  className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
-                >
-                  Product arrived? Start your study
-                </button>
+                {hasCheckedInToday ? (
+                  <p className="mt-8 text-[15px] leading-relaxed text-gray-800">
+                    You&apos;ve checked in today. Come back tomorrow for your next baseline check-in.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onOpenCheckin}
+                    className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                  >
+                    Check in now
+                  </button>
+                )}
+                {canStartStudyFromProduct ? (
+                  <button
+                    type="button"
+                    onClick={() => setProductArrivedOpen(true)}
+                    className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                  >
+                    Product arrived? Start your study
+                  </button>
+                ) : (
+                  <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-gray-600">
+                    Your product is on the way
+                  </p>
+                )}
                 <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
                   <p className="text-sm font-semibold text-gray-900">{productName}</p>
                   <p className="mt-2 text-[14px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
@@ -904,6 +922,17 @@ export default function CohortStudyDashboard({
         ) : null}
       </section>
 
+      {awaitingProductHolding && !pendingFirstStudyNight ? (
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm sm:px-5">
+          <p className="text-[13px] font-medium text-gray-700">
+            Baseline progress: {baselineCheckinsComplete} of {BASELINE_REQUIRED_CHECKINS} check-ins complete
+          </p>
+          <p className="mt-1.5 text-[12px] leading-snug text-gray-500">
+            Complete your baseline before starting the study.
+          </p>
+        </section>
+      ) : null}
+
       {!cohortConfirmed && !showInterimSpotConfirmed && !awaitingProductHolding ? (
         <section className="text-center px-1 space-y-3">
           <div>
@@ -930,11 +959,7 @@ export default function CohortStudyDashboard({
                 </span>{' '}
                 Checked in today
               </div>
-              {awaitingProductHolding ? (
-                <p className="mt-2 text-sm text-gray-700">
-                  You&apos;re set for today. Update below if anything changed.
-                </p>
-              ) : currentDay === 1 ? (
+              {currentDay === 1 ? (
                 <>
                   <p className="mt-2 text-sm font-semibold text-gray-900">First one&apos;s done.</p>
                   <p className="mt-2 text-sm text-gray-700">
