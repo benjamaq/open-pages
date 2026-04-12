@@ -54,7 +54,7 @@ BEGIN
 
     SELECT count(*)::integer INTO v_pipeline
     FROM public.cohort_participants cp
-    WHERE cp.cohort_id = v_cohort.id
+    WHERE cp.cohort_id::text = v_cohort.id::text
       AND cp.status IN ('applied', 'confirmed');
 
     IF v_pipeline >= v_cap THEN
