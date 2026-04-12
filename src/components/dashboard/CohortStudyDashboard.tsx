@@ -772,8 +772,8 @@ export default function CohortStudyDashboard({
                   Once your product arrives, we&rsquo;ll measure what changes.
                 </p>
                 <div className="mt-6">
-                  <h3 className="text-sm font-semibold text-gray-900">Next steps</h3>
-                  <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed text-gray-800">
+                  <h3 className="text-base font-bold text-gray-950">Next steps</h3>
+                  <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed font-medium text-gray-950">
                     <li>Continue checking in for a few days so we can build your baseline</li>
                     <li>Your product will arrive, and you&apos;ll start taking it</li>
                     <li>We&apos;ll compare your results before and after</li>
