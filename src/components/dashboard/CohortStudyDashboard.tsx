@@ -760,14 +760,25 @@ export default function CohortStudyDashboard({
             ) : (
               <div role="region" aria-label="While you wait for your product">
                 <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
-                  You&apos;re in — keep checking in daily
+                  You&apos;re in — your spot is confirmed
                 </h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                  Nice work — you&apos;re now part of the study.
+                </p>
                 <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
-                  While you wait for your product, keep checking in each day so we can build your baseline.
+                  While you wait for your product, keep checking in each day so we can capture how you feel right now.
                 </p>
-                <p className="mt-4 text-[15px] leading-relaxed text-gray-600">
-                  Once your product arrives, we&rsquo;ll start measuring the difference.
+                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                  Once your product arrives, we&rsquo;ll measure what changes.
                 </p>
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-900">Next steps</h3>
+                  <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed text-gray-800">
+                    <li>Continue checking in for a few days so we can build your baseline</li>
+                    <li>Your product will arrive, and you&apos;ll start taking it</li>
+                    <li>We&apos;ll compare your results before and after</li>
+                  </ol>
+                </div>
                 {hasCheckedInToday ? (
                   <p className="mt-8 text-[15px] leading-relaxed text-gray-800">
                     You&apos;ve checked in today. Come back tomorrow for your next baseline check-in.
