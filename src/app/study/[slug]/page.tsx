@@ -963,6 +963,19 @@ export default async function StudyLandingPage({ params, searchParams }: Props) 
     }
   }
 
+  // DoNotAge SureSleep: same fallback when study_landing_reward_config.package_value.headline is missing.
+  if (
+    useDonotageSleepPack &&
+    landingRewards.packageValueHeadline === 'Study rewards'
+  ) {
+    landingRewards = {
+      ...landingRewards,
+      packageValueHeadline: '$200',
+      packageValueSubline:
+        'Combined participant reward value when you complete all study days (full SureSleep study supply plus 3 months of BioStackr Pro).',
+    }
+  }
+
   return (
     <div
       className="flex flex-1 flex-col text-neutral-900"
