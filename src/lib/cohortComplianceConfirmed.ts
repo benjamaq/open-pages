@@ -50,6 +50,7 @@ export function buildComplianceConfirmedTransactionalEmailHtml(params: {
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
     `<p style="margin:0 0 20px;">You're in. Your place in the <strong>${study}</strong> study is confirmed. <strong>${brand}</strong> will be dispatching your <strong>${product}</strong> shortly — <strong>BioStackr</strong> runs the study platform and your check-ins.</p>` +
+    `<p style="margin:0 0 20px;">Your next step: come back tomorrow morning for your next check-in.</p>` +
     `<p style="margin:0 0 6px;"><strong>Before it arrives</strong></p>` +
     `<p style="margin:0 0 18px;">Keep your routine stable — no new supplements. We want a clean baseline.</p>` +
     `<p style="margin:0 0 6px;"><strong>When it arrives</strong></p>` +

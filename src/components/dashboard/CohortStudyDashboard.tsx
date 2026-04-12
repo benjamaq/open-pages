@@ -752,20 +752,22 @@ export default function CohortStudyDashboard({
             ) : (
               <div role="region" aria-label="While you wait for your product">
                 <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
-                  Your product is on the way
+                  You&apos;re in — keep checking in daily
                 </h2>
                 <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
-                  While you wait, keep checking in so we can capture how you feel right now — without it.
+                  While you wait for your product, keep checking in each day so we can build your baseline.
                 </p>
                 <p className="mt-4 text-[15px] leading-relaxed text-gray-600">
-                  Once you start taking it, we&rsquo;ll compare the difference.
+                  Once your product arrives, we&rsquo;ll start measuring the difference.
                 </p>
                 <button
                   type="button"
                   onClick={onOpenCheckin}
                   className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
                 >
-                  {hasCheckedInToday ? "Edit today's check-in" : 'Check in now'}
+                  {hasCheckedInToday
+                    ? 'Come back tomorrow for your next check-in'
+                    : 'Check in now'}
                 </button>
                 <button
                   type="button"
@@ -953,7 +955,7 @@ export default function CohortStudyDashboard({
                 className="mt-3 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
                 onClick={onOpenCheckin}
               >
-                {"Edit today's check-in"}
+                Come back tomorrow for your next check-in
               </button>
             </div>
           ) : (
