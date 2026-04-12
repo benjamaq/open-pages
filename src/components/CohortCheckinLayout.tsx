@@ -290,7 +290,7 @@ export default function CohortCheckinLayout({
           ) : (
             <>
               {showCompliancePlaceCopy ? (
-                <p className="mb-3 text-sm font-medium leading-relaxed text-gray-900">
+                <p className="mb-4 max-w-xl mx-auto text-center text-base sm:text-lg font-bold leading-snug text-gray-900">
                   {cohortComplianceDistinctDays === 0
                     ? "Complete today's check-in and one more tomorrow to confirm your place."
                     : "Complete today's check-in to confirm your place."}
