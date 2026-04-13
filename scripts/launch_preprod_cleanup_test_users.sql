@@ -37,8 +37,9 @@
 -- profiles.referred_by (self-FK), daily_email_sends.profile_id (legacy schema),
 -- intervention_periods (via stack_items), plus app_user / avatars as in script below.
 --
--- public.experiments (if present): DELETE runs only for columns that exist (user_id
--- and/or profile_id) via EXECUTE so the DO block still compiles when the shape differs.
+-- public.experiments (if present): user_id / profile_id deletes use EXECUTE (parsed
+-- only when that branch runs). Other tables use static DELETE guarded by to_regclass +
+-- information_schema column EXISTS checks.
 -- ============================================================================
 
 BEGIN;
@@ -81,7 +82,9 @@ SELECT id FROM _cleanup_profile_ids;
 -- SELECT * FROM _cleanup_profile_ids;
 
 -- ============================================================================
--- DELETES (FK-safe order; missing tables skipped via to_regclass / column checks)
+-- DELETES (FK-safe order). Each statement requires table existence (to_regclass)
+-- AND information_schema column existence for every column referenced, so the
+-- block parses and runs across schema variants.
 -- ============================================================================
 DO $$
 BEGIN
@@ -96,75 +99,153 @@ BEGIN
     WHERE referred_by IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.effect_history') IS NOT NULL AND to_regclass('public.user_supplement_effect') IS NOT NULL THEN
+  IF to_regclass('public.effect_history') IS NOT NULL
+     AND to_regclass('public.user_supplement_effect') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'effect_history' AND column_name = 'user_supplement_effect_id'
+     )
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_supplement_effect' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.effect_history
     WHERE user_supplement_effect_id IN (
       SELECT id FROM public.user_supplement_effect WHERE user_id IN (SELECT id FROM _cleanup_auth_ids)
     );
   END IF;
 
-  IF to_regclass('public.user_supplement_effect') IS NOT NULL THEN
+  IF to_regclass('public.user_supplement_effect') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_supplement_effect' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_supplement_effect WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.supplement_truth_reports') IS NOT NULL THEN
+  IF to_regclass('public.supplement_truth_reports') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'supplement_truth_reports' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.supplement_truth_reports WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.supplement_intake_days') IS NOT NULL AND to_regclass('public.user_supplement') IS NOT NULL THEN
+  IF to_regclass('public.supplement_intake_days') IS NOT NULL
+     AND to_regclass('public.user_supplement') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'supplement_intake_days' AND column_name = 'user_supplement_id'
+     )
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_supplement' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.supplement_intake_days
     WHERE user_supplement_id IN (SELECT id FROM public.user_supplement WHERE user_id IN (SELECT id FROM _cleanup_auth_ids));
   END IF;
 
-  IF to_regclass('public.daily_metrics') IS NOT NULL THEN
+  IF to_regclass('public.daily_metrics') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'daily_metrics' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.daily_metrics WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.daily_processed_scores') IS NOT NULL THEN
+  IF to_regclass('public.daily_processed_scores') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'daily_processed_scores' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.daily_processed_scores WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.effect_summary') IS NOT NULL THEN
+  IF to_regclass('public.effect_summary') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'effect_summary' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.effect_summary WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.pattern_insights') IS NOT NULL THEN
+  IF to_regclass('public.pattern_insights') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'pattern_insights' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.pattern_insights WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.validation_test') IS NOT NULL THEN
+  IF to_regclass('public.validation_test') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'validation_test' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.validation_test WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.insight') IS NOT NULL THEN
+  IF to_regclass('public.insight') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'insight' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.insight WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.recommendation') IS NOT NULL THEN
+  IF to_regclass('public.recommendation') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'recommendation' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.recommendation WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.message_history') IS NOT NULL THEN
+  IF to_regclass('public.message_history') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'message_history' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.message_history WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.wearable_sync') IS NOT NULL THEN
+  IF to_regclass('public.wearable_sync') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'wearable_sync' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.wearable_sync WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.checkin') IS NOT NULL THEN
+  IF to_regclass('public.checkin') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'checkin' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.checkin WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_supplement') IS NOT NULL THEN
+  IF to_regclass('public.user_supplement') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_supplement' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_supplement WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_baselines') IS NOT NULL THEN
+  IF to_regclass('public.user_baselines') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_baselines' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_baselines WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.checkins') IS NOT NULL THEN
+  IF to_regclass('public.checkins') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'checkins' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.checkins WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
@@ -190,11 +271,24 @@ BEGIN
     END IF;
   END IF;
 
-  IF to_regclass('public.cohort_participant_results') IS NOT NULL THEN
+  IF to_regclass('public.cohort_participant_results') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'cohort_participant_results' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.cohort_participant_results WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.cohort_shipping_nurture_sent') IS NOT NULL AND to_regclass('public.cohort_participants') IS NOT NULL THEN
+  IF to_regclass('public.cohort_shipping_nurture_sent') IS NOT NULL
+     AND to_regclass('public.cohort_participants') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'cohort_shipping_nurture_sent' AND column_name = 'cohort_participant_id'
+     )
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'cohort_participants' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.cohort_shipping_nurture_sent
     WHERE cohort_participant_id IN (
       SELECT cp.id
@@ -205,7 +299,15 @@ BEGIN
   END IF;
 
   IF to_regclass('public.cohort_reward_claims') IS NOT NULL THEN
-    IF to_regclass('public.cohort_participants') IS NOT NULL THEN
+    IF to_regclass('public.cohort_participants') IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'cohort_reward_claims' AND column_name = 'cohort_participant_id'
+       )
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'cohort_participants' AND column_name = 'user_id'
+       ) THEN
       DELETE FROM public.cohort_reward_claims
       WHERE cohort_participant_id IN (
         SELECT cp.id
@@ -214,20 +316,37 @@ BEGIN
            OR cp.user_id IN (SELECT id FROM _cleanup_auth_ids)
       );
     END IF;
-    DELETE FROM public.cohort_reward_claims WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'cohort_reward_claims' AND column_name = 'user_id'
+    ) THEN
+      DELETE FROM public.cohort_reward_claims WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
+    END IF;
   END IF;
 
-  IF to_regclass('public.cohort_participants') IS NOT NULL THEN
+  IF to_regclass('public.cohort_participants') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'cohort_participants' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.cohort_participants
     WHERE user_id IN (SELECT id FROM _cleanup_profile_ids)
        OR user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.onboarding_events') IS NOT NULL THEN
+  IF to_regclass('public.onboarding_events') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'onboarding_events' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.onboarding_events WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.email_sends') IS NOT NULL THEN
+  IF to_regclass('public.email_sends') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'email_sends' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.email_sends WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
@@ -246,40 +365,77 @@ BEGIN
     END IF;
   END IF;
 
-  IF to_regclass('public.push_subscriptions') IS NOT NULL THEN
+  IF to_regclass('public.push_subscriptions') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'push_subscriptions' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.push_subscriptions WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_tag_metadata') IS NOT NULL THEN
+  IF to_regclass('public.user_tag_metadata') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_tag_metadata' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_tag_metadata WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.daily_entries') IS NOT NULL THEN
+  IF to_regclass('public.daily_entries') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'daily_entries' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.daily_entries WHERE user_id IN (SELECT uid FROM _cleanup_all_uuids);
   END IF;
 
-  IF to_regclass('public.dashboard_cache') IS NOT NULL THEN
+  IF to_regclass('public.dashboard_cache') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'dashboard_cache' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.dashboard_cache WHERE user_id IN (SELECT uid FROM _cleanup_all_uuids);
   END IF;
 
-  IF to_regclass('public.user_historical_data') IS NOT NULL THEN
+  IF to_regclass('public.user_historical_data') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_historical_data' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_historical_data WHERE user_id IN (SELECT uid FROM _cleanup_all_uuids);
   END IF;
 
-  IF to_regclass('public.mood_entries') IS NOT NULL THEN
+  IF to_regclass('public.mood_entries') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'mood_entries' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.mood_entries WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.elli_messages') IS NOT NULL THEN
+  IF to_regclass('public.elli_messages') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'elli_messages' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.elli_messages WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.elli_api_calls') IS NOT NULL THEN
+  IF to_regclass('public.elli_api_calls') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'elli_api_calls' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.elli_api_calls WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
   IF to_regclass('public.magic_checkin_tokens') IS NOT NULL THEN
-    DELETE FROM public.magic_checkin_tokens WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'magic_checkin_tokens' AND column_name = 'user_id'
+    ) THEN
+      DELETE FROM public.magic_checkin_tokens WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
+    END IF;
     IF EXISTS (
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = 'magic_checkin_tokens' AND column_name = 'profile_id'
@@ -288,48 +444,93 @@ BEGIN
     END IF;
   END IF;
 
-  IF to_regclass('public.supplement_logs') IS NOT NULL THEN
+  IF to_regclass('public.supplement_logs') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'supplement_logs' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.supplement_logs WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_insight_preferences') IS NOT NULL THEN
+  IF to_regclass('public.user_insight_preferences') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_insight_preferences' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_insight_preferences WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.stack_change_log') IS NOT NULL THEN
+  IF to_regclass('public.stack_change_log') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'stack_change_log' AND column_name = 'owner_user_id'
+     ) THEN
     DELETE FROM public.stack_change_log WHERE owner_user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.promo_redemptions') IS NOT NULL THEN
+  IF to_regclass('public.promo_redemptions') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'promo_redemptions' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.promo_redemptions WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.contact_submissions') IS NOT NULL THEN
+  IF to_regclass('public.contact_submissions') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'contact_submissions' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.contact_submissions WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.email_log') IS NOT NULL THEN
+  IF to_regclass('public.email_log') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'email_log' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.email_log WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.email_prefs') IS NOT NULL THEN
+  IF to_regclass('public.email_prefs') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'email_prefs' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.email_prefs WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_subscriptions') IS NOT NULL THEN
+  IF to_regclass('public.user_subscriptions') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_subscriptions' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_subscriptions WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.user_usage') IS NOT NULL THEN
+  IF to_regclass('public.user_usage') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'user_usage' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.user_usage WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.notification_queue') IS NOT NULL THEN
+  IF to_regclass('public.notification_queue') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'notification_queue' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.notification_queue WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
   IF to_regclass('public.notification_preferences') IS NOT NULL THEN
-    DELETE FROM public.notification_preferences WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'notification_preferences' AND column_name = 'profile_id'
+    ) THEN
+      DELETE FROM public.notification_preferences WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
+    END IF;
     IF EXISTS (
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = 'notification_preferences' AND column_name = 'user_id'
@@ -338,74 +539,142 @@ BEGIN
     END IF;
   END IF;
 
-  IF to_regclass('public.stack_followers') IS NOT NULL THEN
+  IF to_regclass('public.stack_followers') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'stack_followers' AND column_name = 'owner_user_id'
+     ) THEN
     DELETE FROM public.stack_followers WHERE owner_user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.beta_users') IS NOT NULL THEN
+  IF to_regclass('public.beta_users') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'beta_users' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.beta_users WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.intervention_periods') IS NOT NULL AND to_regclass('public.stack_items') IS NOT NULL THEN
+  IF to_regclass('public.intervention_periods') IS NOT NULL
+     AND to_regclass('public.stack_items') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'intervention_periods' AND column_name = 'intervention_id'
+     )
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'stack_items' AND column_name = 'id'
+     )
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'stack_items' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.intervention_periods
     WHERE intervention_id IN (SELECT id FROM public.stack_items WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids));
   END IF;
 
-  IF to_regclass('public.stack_items') IS NOT NULL THEN
+  IF to_regclass('public.stack_items') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'stack_items' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.stack_items WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.protocols') IS NOT NULL THEN
+  IF to_regclass('public.protocols') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'protocols' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.protocols WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.uploads') IS NOT NULL THEN
+  IF to_regclass('public.uploads') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'uploads' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.uploads WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.gear') IS NOT NULL THEN
+  IF to_regclass('public.gear') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'gear' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.gear WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.library_items') IS NOT NULL THEN
+  IF to_regclass('public.library_items') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'library_items' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.library_items WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.library') IS NOT NULL THEN
+  IF to_regclass('public.library') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'library' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.library WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.journal_entries') IS NOT NULL THEN
+  IF to_regclass('public.journal_entries') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'journal_entries' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.journal_entries WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.shop_gear_items') IS NOT NULL THEN
+  IF to_regclass('public.shop_gear_items') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'shop_gear_items' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.shop_gear_items WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.daily_updates') IS NOT NULL THEN
+  IF to_regclass('public.daily_updates') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'daily_updates' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.daily_updates WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.daily_update_shares') IS NOT NULL THEN
+  IF to_regclass('public.daily_update_shares') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'daily_update_shares' AND column_name = 'profile_id'
+     ) THEN
     DELETE FROM public.daily_update_shares WHERE profile_id IN (SELECT id FROM _cleanup_profile_ids);
   END IF;
 
-  IF to_regclass('public.profiles') IS NOT NULL THEN
+  IF to_regclass('public.profiles') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'user_id'
+     ) THEN
     DELETE FROM public.profiles WHERE user_id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.app_user') IS NOT NULL THEN
+  IF to_regclass('public.app_user') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'app_user' AND column_name = 'id'
+     ) THEN
     DELETE FROM public.app_user WHERE id IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 
-  IF to_regclass('public.avatars') IS NOT NULL THEN
-    IF EXISTS (
-      SELECT 1 FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'avatars' AND column_name = 'owner'
-    ) THEN
-      DELETE FROM public.avatars WHERE owner IN (SELECT id FROM _cleanup_auth_ids);
-    END IF;
+  IF to_regclass('public.avatars') IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'avatars' AND column_name = 'owner'
+     ) THEN
+    DELETE FROM public.avatars WHERE owner IN (SELECT id FROM _cleanup_auth_ids);
   END IF;
 END $$;
 
