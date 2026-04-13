@@ -124,6 +124,20 @@ async function processCompletionPass(dry: boolean) {
       continue
     }
 
+    /**
+     * Pro claim row must exist before we mark the study complete. If ensure runs after completion,
+     * this cron can never retry (participant no longer matches confirmed + incomplete), leaving
+     * users with no token. FK allows a claim row while the participant is still `confirmed`.
+     */
+    const rewardToken = await ensureCohortRewardClaimToken(String(row.id))
+    if (!rewardToken) {
+      const msg = 'reward claim token could not be created (see logs)'
+      console.error('[cohort-study-completion]', row.id, msg)
+      errors.push(`${row.id}: ${msg}`)
+      continue
+    }
+    const rewardClaimAbsoluteUrl = `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
+
     const { data: updated, error: upErr } = await supabaseAdmin
       .from('cohort_participants')
       .update({
@@ -142,14 +156,6 @@ async function processCompletionPass(dry: boolean) {
     }
     if (!updated) continue
     completed++
-
-    const rewardToken = await ensureCohortRewardClaimToken(String(updated.id))
-    const rewardClaimAbsoluteUrl = rewardToken
-      ? `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
-      : null
-    if (!rewardToken) {
-      console.warn('[cohort-study-completion] no reward claim token for participant', updated.id)
-    }
 
     if (updated.completion_email_sent_at) continue
 
@@ -266,12 +272,13 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
     }
 
     const rewardToken = await ensureCohortRewardClaimToken(String(row.id))
-    const rewardClaimAbsoluteUrl = rewardToken
-      ? `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
-      : null
     if (!rewardToken) {
-      console.warn('[cohort-study-completion] backfill: no reward claim token for participant', row.id)
+      const msg = 'backfill: reward claim token could not be created'
+      console.error('[cohort-study-completion]', row.id, msg)
+      errors.push(`${row.id}: ${msg}`)
+      continue
     }
+    const rewardClaimAbsoluteUrl = `${cohortEmailPublicOrigin()}/claim?token=${encodeURIComponent(rewardToken)}`
 
     const authId = authUserIdFromCohortParticipantProfileMap(row.user_id, profMap)
     if (!authId) {
@@ -325,6 +332,68 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
   }
 
   return { ok: true as const, sent, errors }
+}
+
+/**
+ * Repair: `status = completed` but no `cohort_reward_claims` row (e.g. legacy ordering bug or insert failure).
+ * Idempotent; does not send email.
+ */
+async function processMissingRewardClaimBackfillPass(dry: boolean) {
+  let created = 0
+  const errors: string[] = []
+
+  const { data: parts, error: pErr } = await supabaseAdmin
+    .from('cohort_participants')
+    .select('id')
+    .eq('status', 'completed')
+    .not('study_completed_at', 'is', null)
+
+  if (pErr) {
+    console.error('[cohort-study-completion] reward-claim backfill load participants:', pErr)
+    return { ok: false as const, error: pErr.message, created: 0, errors }
+  }
+
+  const partList = (parts || []) as Array<{ id: string }>
+  if (partList.length === 0) {
+    return { ok: true as const, created: 0, errors }
+  }
+
+  const { data: claimRows, error: cErr } = await supabaseAdmin
+    .from('cohort_reward_claims')
+    .select('cohort_participant_id')
+
+  if (cErr) {
+    console.error('[cohort-study-completion] reward-claim backfill load claims:', cErr)
+    return { ok: false as const, error: cErr.message, created: 0, errors }
+  }
+
+  const claimed = new Set(
+    (claimRows || [])
+      .map((r) => String((r as { cohort_participant_id?: string }).cohort_participant_id || '').trim())
+      .filter(Boolean),
+  )
+
+  for (const p of partList) {
+    const pid = String(p.id || '').trim()
+    if (!pid || claimed.has(pid)) continue
+
+    if (dry) {
+      created++
+      continue
+    }
+
+    const token = await ensureCohortRewardClaimToken(pid)
+    if (!token) {
+      const msg = 'reward-claim backfill: ensure failed'
+      console.error('[cohort-study-completion]', pid, msg)
+      errors.push(`${pid}: ${msg}`)
+      continue
+    }
+    claimed.add(pid)
+    created++
+  }
+
+  return { ok: true as const, created, errors }
 }
 
 async function processResultReadyEmails(dry: boolean) {
@@ -456,6 +525,10 @@ export async function GET(request: NextRequest) {
     if (!backfill.ok) {
       return NextResponse.json({ ok: false, error: backfill.error }, { status: 500 })
     }
+    const rewardClaimRepair = await processMissingRewardClaimBackfillPass(dry)
+    if (!rewardClaimRepair.ok) {
+      return NextResponse.json({ ok: false, error: rewardClaimRepair.error }, { status: 500 })
+    }
     const ready = await processResultReadyEmails(dry)
     if (!ready.ok) {
       return NextResponse.json({ ok: false, error: ready.error }, { status: 500 })
@@ -467,8 +540,9 @@ export async function GET(request: NextRequest) {
       completed: completion.completed,
       completionEmails: completion.completionEmails,
       completionEmailBackfillSent: backfill.sent,
+      rewardClaimRowsRepaired: rewardClaimRepair.created,
       resultReadyEmails: ready.sent,
-      errors: [...completion.errors, ...backfill.errors, ...ready.errors],
+      errors: [...completion.errors, ...backfill.errors, ...rewardClaimRepair.errors, ...ready.errors],
     })
   } catch (e: unknown) {
     console.error('[cohort-study-completion]', e)
