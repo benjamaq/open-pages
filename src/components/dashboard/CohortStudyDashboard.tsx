@@ -51,6 +51,8 @@ export interface CohortStudyDashboardProps {
   cohortAwaitingStudyStart?: boolean
   /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
   cohortStudyStartedAtIso?: string | null
+  /** From `/api/me` `cohortStudyStartPending` — product-arrival flow saved; study clock starts after first check-in. */
+  cohortStudyStartPending?: boolean
   /** After successful start-study API: refresh already fired from caller; optionally open check-in. */
   onAfterStudyStarted?: (opts?: { openCheckin?: boolean }) => void
   /** ISO timestamp: enrollment + 48h; for compliance-gate countdown only. */
@@ -567,6 +569,7 @@ export default function CohortStudyDashboard({
   cohortParticipantConfirmedAtIso = null,
   cohortAwaitingStudyStart = false,
   cohortStudyStartedAtIso = null,
+  cohortStudyStartPending = false,
   onAfterStudyStarted,
   complianceDeadlineIso,
   brandName,
@@ -711,9 +714,18 @@ export default function CohortStudyDashboard({
       cohortParticipantConfirmedAtIso.trim() !== '' &&
       localTodayYmd === localYmdFromParticipantIso(cohortParticipantConfirmedAtIso.trim()),
   )
+  /** Product-arrival questionnaire submitted; first study check-in not saved yet (`study_started_at` still null). */
+  const productArrivalPendingFirstCheckin =
+    awaitingProductHolding &&
+    !pendingFirstStudyNight &&
+    canStartStudyFromProduct &&
+    cohortStudyStartPending
   /** Post-confirm baseline done (3 of 3); still waiting on product / study start. */
   const baselineWaitForProductOnly =
-    awaitingProductHolding && !pendingFirstStudyNight && canStartStudyFromProduct
+    awaitingProductHolding &&
+    !pendingFirstStudyNight &&
+    canStartStudyFromProduct &&
+    !productArrivalPendingFirstCheckin
 
   const startStudyApi = async (body: CohortStartStudyBody) => {
     const res = await fetch('/api/cohort/start-study', {
@@ -805,6 +817,29 @@ export default function CohortStudyDashboard({
                       className="mt-8 w-full rounded-xl bg-[#C84B2F] px-4 py-3.5 text-base font-semibold text-white shadow-sm hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C84B2F] focus-visible:ring-offset-2"
                     >
                       My product has arrived
+                    </button>
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                      <p className="text-sm font-semibold text-gray-900">{productName}</p>
+                      <p className="mt-2 text-[14px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
+                      <p className="mt-2 text-xs leading-snug text-gray-500">
+                        If anything feels off, follow the product guidance.
+                      </p>
+                    </div>
+                  </>
+                ) : productArrivalPendingFirstCheckin ? (
+                  <>
+                    <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+                      You&apos;re ready to start
+                    </h2>
+                    <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                      Complete your first check-in to begin day 1 of your {studyDays}-day study.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onOpenCheckin}
+                      className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                    >
+                      Check in now
                     </button>
                     <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
                       <p className="text-sm font-semibold text-gray-900">{productName}</p>
@@ -1015,7 +1050,7 @@ export default function CohortStudyDashboard({
         ) : null}
       </section>
 
-      {awaitingProductHolding && !pendingFirstStudyNight ? (
+      {awaitingProductHolding && !pendingFirstStudyNight && !productArrivalPendingFirstCheckin ? (
         <section className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm sm:px-5">
           <p className="text-[13px] font-medium text-gray-700">
             Baseline progress: {baselineCheckinsComplete} of {BASELINE_REQUIRED_CHECKINS} check-ins complete
@@ -1024,6 +1059,13 @@ export default function CohortStudyDashboard({
             {baselineCheckinsComplete >= BASELINE_REQUIRED_CHECKINS
               ? 'When your product arrives, start your study with the button above.'
               : 'Complete your baseline before starting the study.'}
+          </p>
+        </section>
+      ) : null}
+      {productArrivalPendingFirstCheckin ? (
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm sm:px-5">
+          <p className="text-[13px] font-medium text-gray-700">
+            Complete your check-in to start the study clock.
           </p>
         </section>
       ) : null}

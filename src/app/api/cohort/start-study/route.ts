@@ -3,8 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
 import { countCohortBaselineCheckinDistinctDaysForUserIds } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { sendCohortStudyStartEmail } from '@/lib/cohortStudyStartEmail'
-import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
+import {
+  STUDY_START_PENDING_SCHEMA_V,
+  type StudyStartPendingV1,
+} from '@/lib/cohortStudyStartPending'
 
 export const dynamic = 'force-dynamic'
 
@@ -115,32 +117,13 @@ export async function POST(request: NextRequest) {
 
     const { data: cohortRow, error: cErr } = await supabaseAdmin
       .from('cohorts')
-      .select('id, product_name, brand_name, study_days, study_landing_reward_config, checkin_fields')
+      .select('id, study_days')
       .eq('slug', cohortSlug)
       .maybeSingle()
     if (cErr || !cohortRow?.id) {
       return NextResponse.json({ error: 'Cohort not found' }, { status: 400 })
     }
     const cohortUuid = String((cohortRow as { id: string }).id)
-    const productName =
-      (cohortRow as { product_name?: string | null }).product_name != null
-        ? String((cohortRow as { product_name: string }).product_name).trim()
-        : 'Study product'
-    const partnerBrandName = String(
-      (cohortRow as { brand_name?: string | null }).brand_name ?? '',
-    ).trim()
-    const studyDaysRaw = (cohortRow as { study_days?: number | null }).study_days
-    const studyDurationDays =
-      typeof studyDaysRaw === 'number' && Number.isFinite(studyDaysRaw) && studyDaysRaw > 0
-        ? Math.floor(studyDaysRaw)
-        : 21
-
-    const storeCreditPartnerReward = cohortUsesStoreCreditPartnerReward(
-      cohortRow as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
-    )
-    const storeCreditTitle = storeCreditTitleFromCohortRow(
-      cohortRow as { study_landing_reward_config?: unknown; checkin_fields?: unknown },
-    )
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
@@ -217,42 +200,24 @@ export async function POST(request: NextRequest) {
     }
 
     const arrived = productArrivedAtForChoice(choice, todayYmd, firstDoseYmd)
-    const patch: Record<string, unknown> = {
-      study_started_at: studyStartedIso,
-    }
-    if (arrived) {
-      patch.product_arrived_at = arrived
+    const firstNightDeferPath =
+      choice === 'today' || (choice === 'yesterday' && tookLastNight === false)
+    const pendingPayload: StudyStartPendingV1 = {
+      v: STUDY_START_PENDING_SCHEMA_V,
+      studyStartedIso,
+      productArrivedAtYmd: arrived,
+      sendStudyStartEmail: !firstNightDeferPath,
     }
 
     const { error: upErr } = await supabaseAdmin
       .from('cohort_participants')
-      .update(patch)
+      .update({ study_start_pending: pendingPayload })
       .eq('id', (part as { id: string }).id)
       .is('study_started_at', null)
 
     if (upErr) {
-      console.error('[cohort/start-study] update', upErr)
+      console.error('[cohort/start-study] study_start_pending update', upErr)
       return NextResponse.json({ error: 'Could not start study' }, { status: 500 })
-    }
-
-    const email = String(user.email || '').trim()
-    const firstNightDeferPath =
-      choice === 'today' || (choice === 'yesterday' && tookLastNight === false)
-    const sendStartEmail = !firstNightDeferPath
-    if (email && sendStartEmail) {
-      const r = await sendCohortStudyStartEmail({
-        to: email,
-        authUserId: user.id,
-        productName,
-        partnerBrandName: partnerBrandName || null,
-        cohortSlug,
-        studyDurationDays,
-        storeCreditPartnerReward,
-        storeCreditTitle: storeCreditTitle ?? undefined,
-      })
-      if (!r.success) {
-        console.warn('[cohort/start-study] email', r.error)
-      }
     }
 
     return NextResponse.json({ ok: true, openCheckin })

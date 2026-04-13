@@ -23,6 +23,7 @@ import {
 } from "@/lib/cohortEnrollment";
 import { shouldUseCohortCheckinBranch } from "@/lib/cohortCheckinBranch";
 import { resolveCohortDashboardParticipantUi } from "@/lib/cohortDashboardParticipantUi";
+import { parseStudyStartPending } from "@/lib/cohortStudyStartPending";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,8 @@ export async function GET(request: Request) {
     let cohortParticipantConfirmedAtIso: string | null = null;
     /** DB `cohort_participants.product_arrived_at` (DATE as YYYY-MM-DD) when set — cohort check-in modal subtitle. */
     let cohortParticipantProductArrivedAt: string | null = null;
+    /** True when `study_start_pending` holds a valid payload (product-arrival flow done; clock applies on first check-in). */
+    let cohortStudyStartPending = false;
 
     if (!authError && user) {
       email = user.email || null;
@@ -334,7 +337,7 @@ export async function GET(request: Request) {
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
                     .select(
-                      "enrolled_at, confirmed_at, study_started_at, study_completed_at, status, product_arrived_at",
+                      "enrolled_at, confirmed_at, study_started_at, study_completed_at, status, product_arrived_at, study_start_pending",
                     )
                     .in("user_id", cpUserIds)
                     .eq("cohort_id", cohortUuid)
@@ -401,6 +404,11 @@ export async function GET(request: Request) {
                     cohortParticipantProductArrivedAt =
                       /^\d{4}-\d{2}-\d{2}$/.test(y) ? y : null;
                   }
+                  cohortStudyStartPending =
+                    parseStudyStartPending(
+                      (part as { study_start_pending?: unknown } | null)
+                        ?.study_start_pending,
+                    ) != null;
                   const cohortUi = resolveCohortDashboardParticipantUi({
                     participantStatus,
                     confirmedAtRaw,
@@ -548,6 +556,14 @@ export async function GET(request: Request) {
                         todayYmd,
                       );
                     }
+                  }
+
+                  if (
+                    cohortStudyStartPending &&
+                    (studyStartedAtIso == null ||
+                      String(studyStartedAtIso).trim() === "")
+                  ) {
+                    cohortHasCheckedInToday = false;
                   }
 
                   if (
@@ -814,6 +830,7 @@ export async function GET(request: Request) {
       cohortCheckinBranch,
       cohortParticipantConfirmedAtIso,
       cohortParticipantProductArrivedAt,
+      cohortStudyStartPending,
     });
   } catch (e: any) {
     return NextResponse.json(

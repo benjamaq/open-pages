@@ -240,6 +240,7 @@ export function DashboardPageClient() {
                 cohortStudyStartedAtIso={
                   typeof me?.cohortStudyStartedAtIso === 'string' ? me.cohortStudyStartedAtIso : null
                 }
+                cohortStudyStartPending={Boolean(me?.cohortStudyStartPending)}
                 onAfterStudyStarted={({ openCheckin } = {}) => {
                   try {
                     if (openCheckin) {

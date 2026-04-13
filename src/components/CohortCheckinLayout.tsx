@@ -67,6 +67,8 @@ export type CohortCheckinLayoutProps = {
   cohortStudyStartedAtIso?: string | null
   /** From /api/me `cohortParticipantProductArrivedAt` (YYYY-MM-DD). When set, modal subtitle uses active-study copy. */
   cohortParticipantProductArrivedAtYmd?: string | null
+  /** From /api/me `cohortStudyStartPending` — same active-study subtitle until first check-in applies the clock. */
+  cohortStudyStartPending?: boolean
 }
 
 const ONSET_OPTIONS = [
@@ -113,6 +115,7 @@ export default function CohortCheckinLayout({
   cohortComplianceDistinctDays,
   cohortStudyStartedAtIso,
   cohortParticipantProductArrivedAtYmd = null,
+  cohortStudyStartPending = false,
 }: CohortCheckinLayoutProps) {
   void _userId
   const studyClockHasBegun = cohortStudyClockHasBegunForUi(cohortStudyStartedAtIso)
@@ -375,8 +378,9 @@ export default function CohortCheckinLayout({
               ) : null}
               <p className="mb-8 text-sm leading-relaxed text-gray-700">
                 Answer as accurately as possible —{' '}
-                {cohortParticipantProductArrivedAtYmd != null &&
-                String(cohortParticipantProductArrivedAtYmd).trim() !== ''
+                {(cohortParticipantProductArrivedAtYmd != null &&
+                  String(cohortParticipantProductArrivedAtYmd).trim() !== '') ||
+                cohortStudyStartPending
                   ? "you're now in the active study phase."
                   : 'this is your baseline before starting the supplement.'}
               </p>

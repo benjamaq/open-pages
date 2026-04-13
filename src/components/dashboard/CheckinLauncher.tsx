@@ -62,6 +62,9 @@ export function CheckinLauncher({
   const [asyncCohortStudyStartedAtIso, setAsyncCohortStudyStartedAtIso] = useState<string | null | undefined>(
     undefined,
   )
+  const [asyncCohortStudyStartPending, setAsyncCohortStudyStartPending] = useState<boolean | undefined>(
+    undefined,
+  )
   const [asyncCohortParticipantProductArrivedAtYmd, setAsyncCohortParticipantProductArrivedAtYmd] = useState<
     string | null | undefined
   >(undefined)
@@ -115,6 +118,7 @@ export function CheckinLauncher({
       setAsyncCohortConfirmed(undefined)
       setAsyncCohortCheckinCount(undefined)
       setAsyncCohortStudyStartedAtIso(undefined)
+      setAsyncCohortStudyStartPending(undefined)
       setAsyncCohortParticipantProductArrivedAtYmd(undefined)
       setAsyncMeDone(false)
       return () => {
@@ -157,6 +161,8 @@ export function CheckinLauncher({
         )
         const pa = (data as any)?.cohortParticipantProductArrivedAt
         setAsyncCohortParticipantProductArrivedAtYmd(cohortProductArrivedYmdFromMe(pa))
+        const pend = (data as any)?.cohortStudyStartPending
+        setAsyncCohortStudyStartPending(typeof pend === 'boolean' ? pend : false)
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -168,6 +174,7 @@ export function CheckinLauncher({
           setAsyncCohortConfirmed(undefined)
           setAsyncCohortCheckinCount(undefined)
           setAsyncCohortStudyStartedAtIso(undefined)
+          setAsyncCohortStudyStartPending(undefined)
           setAsyncCohortParticipantProductArrivedAtYmd(undefined)
         }
       } finally {
@@ -373,6 +380,11 @@ export function CheckinLauncher({
         )
       : asyncCohortParticipantProductArrivedAtYmd
 
+  const cohortStudyStartPendingProp: boolean | undefined =
+    mePayload !== undefined
+      ? Boolean((mePayload as { cohortStudyStartPending?: unknown }).cohortStudyStartPending)
+      : asyncCohortStudyStartPending
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -405,6 +417,7 @@ export function CheckinLauncher({
           cohortComplianceDistinctDays={cohortComplianceDistinctDays}
           cohortStudyStartedAtIso={cohortStudyStartedAtIso}
           cohortParticipantProductArrivedAtYmd={cohortParticipantProductArrivedAtYmd}
+          cohortStudyStartPending={cohortStudyStartPendingProp}
         />
       )}
     </>

@@ -9,6 +9,7 @@ import {
 import { tryImmediateCohortComplianceConfirm } from '@/lib/cohortComplianceConfirmed'
 import { trySendCohortPostFirstCheckinEmail } from '@/lib/cohortPostFirstCheckinEmail'
 import { shouldUseCohortCheckinBranch } from '@/lib/cohortCheckinBranch'
+import { applyCohortStudyStartPendingAfterCohortCheckin } from '@/lib/cohortStudyStartPending'
 
 function parseClientLocalDateYmd(body: Record<string, unknown> | null | undefined): string {
   const raw = body?.local_date
@@ -147,6 +148,12 @@ export async function POST(request: NextRequest) {
       if (cohortDeErr) {
         return NextResponse.json({ error: cohortDeErr.message }, { status: 500 })
       }
+
+      await applyCohortStudyStartPendingAfterCohortCheckin({
+        authUserId: user.id,
+        authEmail: user.email,
+        cohortSlug,
+      })
 
       try {
         const todayStr = localDate

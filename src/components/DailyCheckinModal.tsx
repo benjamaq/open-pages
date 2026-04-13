@@ -103,6 +103,8 @@ interface DailyCheckinModalProps {
   cohortStudyStartedAtIso?: string | null
   /** From /api/me `cohortParticipantProductArrivedAt` — cohort modal subtitle (baseline vs active study). */
   cohortParticipantProductArrivedAtYmd?: string | null
+  /** From /api/me `cohortStudyStartPending` — active-study subtitle until first check-in applies. */
+  cohortStudyStartPending?: boolean
 }
 
 // Helper functions
@@ -243,6 +245,7 @@ export default function DailyCheckinModal({
   cohortComplianceDistinctDays,
   cohortStudyStartedAtIso,
   cohortParticipantProductArrivedAtYmd,
+  cohortStudyStartPending,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -998,6 +1001,7 @@ useEffect(() => {
         cohortComplianceDistinctDays={cohortComplianceDistinctDays}
         cohortStudyStartedAtIso={cohortStudyStartedAtIso}
         cohortParticipantProductArrivedAtYmd={cohortParticipantProductArrivedAtYmd}
+        cohortStudyStartPending={cohortStudyStartPending}
       />
     )
   }
