@@ -51,7 +51,7 @@ export type CohortEmailPreviewBranding = {
   /** Seeking Health–style: store credit + Pro; no product-supply reward copy. */
   completionRewardStoreCredit?: boolean
   storeCreditTitle?: string
-  /** e.g. `seeking-health-optimal-focus` — drives arrival dosing line in `study-start` email. */
+  /** e.g. `seeking-health-optimal-focus` — cohort context in transactional shells where applicable. */
   cohortSlug?: string | null
   /** `shipping-day4` / `shipping-day7` / `shipping-day10` — baseline complete + waiting for product copy + dashboard CTA. */
   shippingNurturePostBaseline?: boolean
@@ -122,7 +122,7 @@ export function renderCohortEmailPreviewHtml(
       return buildCohortStudyStartTransactionalEmailHtml({
         productName: prod,
         partnerBrandName,
-        checkinHref: placeholderCheckin,
+        dashboardHref: placeholderDashboard,
         cohortSlug: branding.cohortSlug ?? null,
       })
     case 'study-completion':
