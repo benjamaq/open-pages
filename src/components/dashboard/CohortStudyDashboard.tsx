@@ -706,6 +706,9 @@ export default function CohortStudyDashboard({
       cohortParticipantConfirmedAtIso.trim() !== '' &&
       localTodayYmd === localYmdFromParticipantIso(cohortParticipantConfirmedAtIso.trim()),
   )
+  /** Post-confirm baseline done (3 of 3); still waiting on product / study start. */
+  const baselineWaitForProductOnly =
+    awaitingProductHolding && !pendingFirstStudyNight && canStartStudyFromProduct
 
   const startStudyApi = async (body: CohortStartStudyBody) => {
     const res = await fetch('/api/cohort/start-study', {
@@ -777,81 +780,115 @@ export default function CohortStudyDashboard({
               </>
             ) : (
               <div role="region" aria-label="While you wait for your product">
-                {showPostConfirmConfirmationDayHero ? (
+                {baselineWaitForProductOnly ? (
                   <>
                     <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
-                      You&apos;re in — your spot is confirmed
+                      Baseline complete
                     </h2>
                     <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
-                      Nice work — you&apos;re now part of the study.
+                      Nice work — you&apos;ve finished your baseline.
                     </p>
-                    <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
-                      While you wait for your product, keep checking in each day so we can capture how you feel right now.
+                    <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                      Your product is on the way.
                     </p>
                     <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                      Once your product arrives, we&rsquo;ll measure what changes.
+                      As soon as it arrives, start checking in again so we can measure what changes.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => setProductArrivedOpen(true)}
+                      className="mt-8 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                    >
+                      Product arrived? Start your study
+                    </button>
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                      <p className="text-sm font-semibold text-gray-900">{productName}</p>
+                      <p className="mt-2 text-[14px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
+                      <p className="mt-2 text-xs leading-snug text-gray-500">
+                        If anything feels off, follow the product guidance.
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
-                      Baseline check-ins
-                    </h2>
-                    <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
-                      Complete your daily check-ins while your product is on the way so we have a clear before picture.
-                    </p>
+                    {showPostConfirmConfirmationDayHero ? (
+                      <>
+                        <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+                          You&apos;re in — your spot is confirmed
+                        </h2>
+                        <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                          Nice work — you&apos;re now part of the study.
+                        </p>
+                        <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
+                          While you wait for your product, keep checking in each day so we can capture how you feel right
+                          now.
+                        </p>
+                        <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                          Once your product arrives, we&rsquo;ll measure what changes.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+                          Baseline check-ins
+                        </h2>
+                        <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                          Complete your daily check-ins while your product is on the way so we have a clear before picture.
+                        </p>
+                      </>
+                    )}
+                    <div className="mt-6">
+                      <h3 className="text-base font-bold text-gray-950">Next steps</h3>
+                      <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed font-medium text-gray-950">
+                        <li>Check in for 3 more days so we have your baseline before your product arrives</li>
+                        <li>Your product will arrive, and you&apos;ll start taking it</li>
+                        <li>We&apos;ll compare your results before and after</li>
+                      </ol>
+                    </div>
+                    {hasCheckedInToday ? (
+                      <div
+                        className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
+                        role="status"
+                      >
+                        <span className="font-semibold text-emerald-900">
+                          <span className="text-emerald-600" aria-hidden>
+                            {'\u2713'}{' '}
+                          </span>
+                          You&apos;ve checked in today.
+                        </span>{' '}
+                        <span className="text-emerald-900/95">Come back tomorrow for your next baseline check-in.</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={onOpenCheckin}
+                        className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                      >
+                        Check in now
+                      </button>
+                    )}
+                    {canStartStudyFromProduct ? (
+                      <button
+                        type="button"
+                        onClick={() => setProductArrivedOpen(true)}
+                        className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                      >
+                        Product arrived? Start your study
+                      </button>
+                    ) : (
+                      <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-gray-600">
+                        Your product is on the way
+                      </p>
+                    )}
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
+                      <p className="text-sm font-semibold text-gray-900">{productName}</p>
+                      <p className="mt-2 text-[14px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
+                      <p className="mt-2 text-xs leading-snug text-gray-500">
+                        If anything feels off, follow the product guidance.
+                      </p>
+                    </div>
                   </>
                 )}
-                <div className="mt-6">
-                  <h3 className="text-base font-bold text-gray-950">Next steps</h3>
-                  <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed font-medium text-gray-950">
-                    <li>Check in for 3 more days so we have your baseline before your product arrives</li>
-                    <li>Your product will arrive, and you&apos;ll start taking it</li>
-                    <li>We&apos;ll compare your results before and after</li>
-                  </ol>
-                </div>
-                {hasCheckedInToday ? (
-                  <div
-                    className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
-                    role="status"
-                  >
-                    <span className="font-semibold text-emerald-900">
-                      <span className="text-emerald-600" aria-hidden>
-                        {'\u2713'}{' '}
-                      </span>
-                      You&apos;ve checked in today.
-                    </span>{' '}
-                    <span className="text-emerald-900/95">Come back tomorrow for your next baseline check-in.</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onOpenCheckin}
-                    className="mt-8 w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
-                  >
-                    Check in now
-                  </button>
-                )}
-                {canStartStudyFromProduct ? (
-                  <button
-                    type="button"
-                    onClick={() => setProductArrivedOpen(true)}
-                    className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
-                  >
-                    Product arrived? Start your study
-                  </button>
-                ) : (
-                  <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-gray-600">
-                    Your product is on the way
-                  </p>
-                )}
-                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
-                  <p className="text-sm font-semibold text-gray-900">{productName}</p>
-                  <p className="mt-2 text-[14px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
-                  <p className="mt-2 text-xs leading-snug text-gray-500">
-                    If anything feels off, follow the product guidance.
-                  </p>
-                </div>
               </div>
             )
         ) : cohortConfirmed ? (
@@ -979,7 +1016,9 @@ export default function CohortStudyDashboard({
             Baseline progress: {baselineCheckinsComplete} of {BASELINE_REQUIRED_CHECKINS} check-ins complete
           </p>
           <p className="mt-1.5 text-[12px] leading-snug text-gray-500">
-            Complete your baseline before starting the study.
+            {baselineCheckinsComplete >= BASELINE_REQUIRED_CHECKINS
+              ? 'When your product arrives, start your study with the button above.'
+              : 'Complete your baseline before starting the study.'}
           </p>
         </section>
       ) : null}

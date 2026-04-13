@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
 import {
   cohortCheckinFieldDescription,
@@ -206,6 +207,17 @@ export default function CohortCheckinLayout({
           window.dispatchEvent(new Event('dashboard:refresh'))
         }
       } catch {}
+      if (
+        cohortSpotConfirmed === true &&
+        typeof complianceDistinctDaysAtOpen === 'number' &&
+        complianceDistinctDaysAtOpen >= 2
+      ) {
+        try {
+          toast.success('Baseline complete.', {
+            description: "We'll notify you when your product arrives.",
+          })
+        } catch {}
+      }
       setSaved(true)
     } catch {
       setMessage('Failed to save check-in. Please try again.')
@@ -266,6 +278,21 @@ export default function CohortCheckinLayout({
                     ? 'First check-in complete. Come back tomorrow morning to confirm your place.'
                     : 'First check-in complete. Come back tomorrow to confirm your place.'}
                 </p>
+              ) : cohortSpotConfirmed === true &&
+                typeof complianceDistinctDaysAtOpen === 'number' &&
+                complianceDistinctDaysAtOpen >= 2 ? (
+                <>
+                  <h3 className="mt-3 text-base font-semibold text-gray-900">Baseline complete</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-700 leading-snug max-w-[300px]">
+                    Nice work — you&apos;ve finished your baseline.
+                  </p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-700 leading-snug max-w-[300px]">
+                    Your product is on the way.
+                  </p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-snug max-w-[300px]">
+                    As soon as it arrives, start checking in again so we can measure what changes.
+                  </p>
+                </>
               ) : (
                 <>
                   <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
