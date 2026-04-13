@@ -99,6 +99,8 @@ interface DailyCheckinModalProps {
   cohortSpotConfirmed?: boolean
   /** From /api/me `cohortCheckinCount` during compliance (distinct days); omit when spot already confirmed. */
   cohortComplianceDistinctDays?: number | null
+  /** From /api/me `cohortStudyStartedAtIso` — distinguishes study-phase vs post-confirm baseline toasts/copy. */
+  cohortStudyStartedAtIso?: string | null
 }
 
 // Helper functions
@@ -237,6 +239,7 @@ export default function DailyCheckinModal({
   cohortCheckinBranch,
   cohortSpotConfirmed,
   cohortComplianceDistinctDays,
+  cohortStudyStartedAtIso,
 }: DailyCheckinModalProps) {
   // Minimal, analytical UI per brief
   
@@ -990,6 +993,7 @@ useEffect(() => {
         cohortStudyProductName={cohortStudyProductName}
         cohortSpotConfirmed={cohortSpotConfirmed}
         cohortComplianceDistinctDays={cohortComplianceDistinctDays}
+        cohortStudyStartedAtIso={cohortStudyStartedAtIso}
       />
     )
   }

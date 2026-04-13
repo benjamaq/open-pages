@@ -52,6 +52,10 @@ export function CheckinLauncher({
   const [asyncCohortConfirmed, setAsyncCohortConfirmed] = useState<boolean | undefined>(undefined)
   /** Mirrors /api/me `cohortCheckinCount` when mePayload is not passed in. */
   const [asyncCohortCheckinCount, setAsyncCohortCheckinCount] = useState<number | undefined>(undefined)
+  /** Mirrors /api/me `cohortStudyStartedAtIso` when mePayload is not passed in. */
+  const [asyncCohortStudyStartedAtIso, setAsyncCohortStudyStartedAtIso] = useState<string | null | undefined>(
+    undefined,
+  )
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -101,6 +105,7 @@ export function CheckinLauncher({
       setAsyncCohortHasCheckedInToday(undefined)
       setAsyncCohortConfirmed(undefined)
       setAsyncCohortCheckinCount(undefined)
+      setAsyncCohortStudyStartedAtIso(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -136,6 +141,10 @@ export function CheckinLauncher({
         setAsyncCohortConfirmed(typeof cohortConfirmedRaw === 'boolean' ? cohortConfirmedRaw : undefined)
         const cc = (data as any)?.cohortCheckinCount
         setAsyncCohortCheckinCount(typeof cc === 'number' && Number.isFinite(cc) ? cc : undefined)
+        const css = (data as any)?.cohortStudyStartedAtIso
+        setAsyncCohortStudyStartedAtIso(
+          typeof css === 'string' && String(css).trim() !== '' ? String(css).trim() : null,
+        )
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -146,6 +155,7 @@ export function CheckinLauncher({
           setAsyncCohortHasCheckedInToday(undefined)
           setAsyncCohortConfirmed(undefined)
           setAsyncCohortCheckinCount(undefined)
+          setAsyncCohortStudyStartedAtIso(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -335,6 +345,14 @@ export function CheckinLauncher({
         ? asyncCohortCheckinCount
         : null
 
+  const cohortStudyStartedAtIso: string | null | undefined =
+    mePayload !== undefined
+      ? typeof (mePayload as { cohortStudyStartedAtIso?: unknown }).cohortStudyStartedAtIso === 'string' &&
+          String((mePayload as { cohortStudyStartedAtIso: string }).cohortStudyStartedAtIso).trim() !== ''
+        ? String((mePayload as { cohortStudyStartedAtIso: string }).cohortStudyStartedAtIso).trim()
+        : null
+      : asyncCohortStudyStartedAtIso
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -365,6 +383,7 @@ export function CheckinLauncher({
           cohortCheckinBranch={cohortCheckinBranchProp}
           cohortSpotConfirmed={cohortSpotConfirmed}
           cohortComplianceDistinctDays={cohortComplianceDistinctDays}
+          cohortStudyStartedAtIso={cohortStudyStartedAtIso}
         />
       )}
     </>

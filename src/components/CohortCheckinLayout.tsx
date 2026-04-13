@@ -11,6 +11,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { getLocalDateYmd } from '@/lib/utils/localDateYmd'
+
+const BASELINE_REQUIRED_DISTINCT_DAYS = 3
+/** Last zero-based “open” count before the save that completes the 3rd baseline day. */
+const BASELINE_FINAL_OPEN_COUNT = BASELINE_REQUIRED_DISTINCT_DAYS - 1
+
+function cohortStudyClockHasBegunForUi(studyStartedAtIso: string | null | undefined): boolean {
+  if (studyStartedAtIso == null) return false
+  const raw = String(studyStartedAtIso).trim()
+  if (!raw) return false
+  const studyYmd = raw.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(studyYmd)) return false
+  return studyYmd <= getLocalDateYmd()
+}
 import {
   cohortCheckinFieldDescription,
   cohortCheckinSliderHeading,
@@ -50,6 +63,8 @@ export type CohortCheckinLayoutProps = {
    * Used only with `cohortSpotConfirmed === false` for intro + first-save success messaging.
    */
   cohortComplianceDistinctDays?: number | null
+  /** From /api/me `cohortStudyStartedAtIso`. When the study clock has begun (local calendar), check-ins are study-phase. */
+  cohortStudyStartedAtIso?: string | null
 }
 
 const ONSET_OPTIONS = [
@@ -94,8 +109,10 @@ export default function CohortCheckinLayout({
   cohortStudyProductName,
   cohortSpotConfirmed,
   cohortComplianceDistinctDays,
+  cohortStudyStartedAtIso,
 }: CohortCheckinLayoutProps) {
   void _userId
+  const studyClockHasBegun = cohortStudyClockHasBegunForUi(cohortStudyStartedAtIso)
 
   const modalTitleProduct = String(cohortStudyProductName || '').trim() || 'Study'
   const modalTitle = `${modalTitleProduct} · Daily Check-in`
@@ -207,17 +224,31 @@ export default function CohortCheckinLayout({
           window.dispatchEvent(new Event('dashboard:refresh'))
         }
       } catch {}
-      if (
-        cohortSpotConfirmed === true &&
-        typeof complianceDistinctDaysAtOpen === 'number' &&
-        complianceDistinctDaysAtOpen >= 2
-      ) {
-        try {
-          toast.success('Baseline complete.', {
-            description: "We'll notify you when your product arrives.",
-          })
-        } catch {}
-      }
+      try {
+        if (cohortSpotConfirmed === true) {
+          if (studyClockHasBegun) {
+            toast.success('Done for today.', {
+              description: 'Come back tomorrow morning for your next check-in.',
+            })
+          } else if (
+            typeof complianceDistinctDaysAtOpen === 'number' &&
+            complianceDistinctDaysAtOpen === BASELINE_FINAL_OPEN_COUNT
+          ) {
+            toast.success('Baseline complete.', {
+              description: "Nice work — you've finished your baseline.",
+            })
+          } else if (
+            typeof complianceDistinctDaysAtOpen === 'number' &&
+            (complianceDistinctDaysAtOpen === 0 || complianceDistinctDaysAtOpen === 1)
+          ) {
+            toast.success('Done for today.', {
+              description: 'Come back tomorrow for your next baseline check-in.',
+            })
+          } else if (!studyClockHasBegun) {
+            toast.success('Done for today.', { description: 'Your check-in has been saved.' })
+          }
+        }
+      } catch {}
       setSaved(true)
     } catch {
       setMessage('Failed to save check-in. Please try again.')
@@ -278,9 +309,16 @@ export default function CohortCheckinLayout({
                     ? 'First check-in complete. Come back tomorrow morning to confirm your place.'
                     : 'First check-in complete. Come back tomorrow to confirm your place.'}
                 </p>
+              ) : cohortSpotConfirmed === true && studyClockHasBegun ? (
+                <>
+                  <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-gray-700 leading-snug max-w-[300px]">
+                    Come back tomorrow morning for your next check-in.
+                  </p>
+                </>
               ) : cohortSpotConfirmed === true &&
                 typeof complianceDistinctDaysAtOpen === 'number' &&
-                complianceDistinctDaysAtOpen >= 2 ? (
+                complianceDistinctDaysAtOpen === BASELINE_FINAL_OPEN_COUNT ? (
                 <>
                   <h3 className="mt-3 text-base font-semibold text-gray-900">Baseline complete</h3>
                   <p className="mt-2 text-xs sm:text-sm text-gray-700 leading-snug max-w-[300px]">
@@ -291,6 +329,15 @@ export default function CohortCheckinLayout({
                   </p>
                   <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-snug max-w-[300px]">
                     As soon as it arrives, start checking in again so we can measure what changes.
+                  </p>
+                </>
+              ) : cohortSpotConfirmed === true &&
+                typeof complianceDistinctDaysAtOpen === 'number' &&
+                (complianceDistinctDaysAtOpen === 0 || complianceDistinctDaysAtOpen === 1) ? (
+                <>
+                  <h3 className="mt-3 text-base font-semibold text-gray-900">Done for today.</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-gray-700 leading-snug max-w-[300px]">
+                    Come back tomorrow for your next baseline check-in.
                   </p>
                 </>
               ) : (
