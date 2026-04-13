@@ -51,7 +51,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
     `<p style="margin:0 0 16px;">Welcome to the <strong>${brandLineEsc}</strong> study.</p>` +
     `<p style="margin:0 0 6px;"><strong>To confirm your place:</strong></p>` +
     `<p style="margin:0 0 16px;line-height:1.55;color:#374151;">` +
-    `• Complete your first check-in today<br />` +
+    `• If you haven&apos;t already, complete your first check-in today<br />` +
     `• Complete your second check-in ${secondCheckinWhen}` +
     `</p>` +
     `<p style="margin:0 0 8px;">Once both check-ins are complete, your place in the study is confirmed.</p>` +

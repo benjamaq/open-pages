@@ -172,9 +172,11 @@ export async function POST(request: NextRequest) {
       confirmedAt != null && String(confirmedAt).trim() !== ''
         ? String(confirmedAt).trim()
         : ''
+    const confirmYmd = confirmedAtIso.slice(0, 10)
     const baselineDistinctDays = await countDistinctDailyEntriesSinceForUserIds(
       cpUserIds,
       confirmedAtIso || enrolledAt,
+      { excludeLocalDatesOnOrBeforeYmd: confirmYmd },
     )
     if (baselineDistinctDays < 3) {
       return NextResponse.json(

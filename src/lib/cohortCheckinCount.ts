@@ -29,6 +29,12 @@ export type FetchCohortCheckinYmdsOptions = {
    * submitted earlier the same calendar day before the study clock starts.
    */
   minCreatedAtIso?: string
+  /**
+   * When set (YYYY-MM-DD), rows whose effective `local_date` is on or before this day are ignored.
+   * Post-confirmation baseline: use the UTC calendar date of `confirmed_at` so the second compliance
+   * check-in (same calendar day as confirmation) does not count toward the 3 baseline-only days.
+   */
+  excludeLocalDatesOnOrBeforeYmd?: string
 }
 
 /**
@@ -46,6 +52,9 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(enrollYmd)) return []
   const minCreated = String(options?.minCreatedAtIso || '').trim()
   const createdLower = minCreated || enrolledIso
+  const excludeYmdOnOrBefore = String(
+    options?.excludeLocalDatesOnOrBeforeYmd || '',
+  ).trim()
 
   const byCreatedQ = supabaseAdmin
     .from('daily_entries')
@@ -75,6 +84,13 @@ export async function fetchCohortCheckinYmdsSinceEnrollForUserIds(
   const addRow = (r: { local_date?: string | null; created_at?: string | null }) => {
     const ymd = effectiveDailyEntryYmd(r)
     if (!ymd) return
+    if (
+      excludeYmdOnOrBefore &&
+      /^\d{4}-\d{2}-\d{2}$/.test(excludeYmdOnOrBefore) &&
+      ymd <= excludeYmdOnOrBefore
+    ) {
+      return
+    }
     const ca = r.created_at != null ? String(r.created_at) : ''
 
     if (minCreated) {

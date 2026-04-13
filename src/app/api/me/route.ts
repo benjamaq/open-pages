@@ -99,6 +99,8 @@ export async function GET(request: Request) {
     let cohortStoreCreditTitle: string | null = null;
     /** Matches POST /api/checkin cohort path (`shouldUseCohortCheckinBranch`) — use for check-in modal UI. */
     let cohortCheckinBranch = false;
+    /** DB `cohort_participants.confirmed_at` (ISO) when loaded — UI uses local calendar vs this for confirmation-day hero. */
+    let cohortParticipantConfirmedAtIso: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -345,6 +347,11 @@ export async function GET(request: Request) {
                   const confirmedAtRaw = (
                     part as { confirmed_at?: string | null } | null
                   )?.confirmed_at;
+                  cohortParticipantConfirmedAtIso =
+                    confirmedAtRaw != null &&
+                    String(confirmedAtRaw).trim() !== ""
+                      ? String(confirmedAtRaw).trim()
+                      : null;
                   const participantStatus = String(
                     (part as { status?: string | null } | null)?.status || "",
                   )
@@ -477,14 +484,20 @@ export async function GET(request: Request) {
                           ? String(confirmedAtRaw).trim()
                           : null;
                       if (confirmedIso) {
+                        const confirmYmd = confirmedIso.slice(0, 10);
+                        const postConfirmBaselineOpts = {
+                          excludeLocalDatesOnOrBeforeYmd: confirmYmd,
+                        } as const;
                         const [cntPost, ymdsPost] = await Promise.all([
                           countDistinctDailyEntriesSinceForUserIds(
                             cpUserIds,
                             confirmedIso,
+                            postConfirmBaselineOpts,
                           ),
                           fetchCohortCheckinYmdsSinceEnrollForUserIds(
                             cpUserIds,
                             confirmedIso,
+                            postConfirmBaselineOpts,
                           ),
                         ]);
                         cohortCheckinCount = cntPost;
@@ -787,6 +800,7 @@ export async function GET(request: Request) {
       cohortCompletionRewardStoreCredit,
       cohortStoreCreditTitle,
       cohortCheckinBranch,
+      cohortParticipantConfirmedAtIso,
     });
   } catch (e: any) {
     return NextResponse.json(

@@ -231,6 +231,11 @@ export function DashboardPageClient() {
                     : null
                 }
                 cohortConfirmed={Boolean(me?.cohortConfirmed)}
+                cohortParticipantConfirmedAtIso={
+                  typeof me?.cohortParticipantConfirmedAtIso === 'string'
+                    ? me.cohortParticipantConfirmedAtIso
+                    : null
+                }
                 cohortAwaitingStudyStart={Boolean(me?.cohortAwaitingStudyStart)}
                 cohortStudyStartedAtIso={
                   typeof me?.cohortStudyStartedAtIso === 'string' ? me.cohortStudyStartedAtIso : null

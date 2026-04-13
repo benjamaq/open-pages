@@ -45,6 +45,8 @@ export interface CohortStudyDashboardProps {
   welcomeFirstName?: string | null
   /** True when cohort_participants.status is `confirmed` and confirmed_at is set (compliance gate cleared in DB). */
   cohortConfirmed: boolean
+  /** From `/api/me` `cohortParticipantConfirmedAtIso` — confirmation-day hero vs ongoing baseline copy. */
+  cohortParticipantConfirmedAtIso?: string | null
   /** Confirmed participant only: waiting for product / first study night (not for `applied` / gate). */
   cohortAwaitingStudyStart?: boolean
   /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
@@ -562,6 +564,7 @@ export default function CohortStudyDashboard({
   cohortStoreCreditTitle = null,
   welcomeFirstName = null,
   cohortConfirmed,
+  cohortParticipantConfirmedAtIso = null,
   cohortAwaitingStudyStart = false,
   cohortStudyStartedAtIso = null,
   onAfterStudyStarted,
@@ -688,6 +691,21 @@ export default function CohortStudyDashboard({
       ? String(cohortStudyStartedAtIso).trim().slice(0, 10)
       : null
   const pendingFirstStudyNight = Boolean(studyStartYmd && studyStartYmd > localTodayYmd)
+  const localYmdFromParticipantIso = (iso: string): string => {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ''
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+  const showPostConfirmConfirmationDayHero = Boolean(
+    awaitingProductHolding &&
+      !pendingFirstStudyNight &&
+      typeof cohortParticipantConfirmedAtIso === 'string' &&
+      cohortParticipantConfirmedAtIso.trim() !== '' &&
+      localTodayYmd === localYmdFromParticipantIso(cohortParticipantConfirmedAtIso.trim()),
+  )
 
   const startStudyApi = async (body: CohortStartStudyBody) => {
     const res = await fetch('/api/cohort/start-study', {
@@ -759,18 +777,31 @@ export default function CohortStudyDashboard({
               </>
             ) : (
               <div role="region" aria-label="While you wait for your product">
-                <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
-                  You&apos;re in — your spot is confirmed
-                </h2>
-                <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
-                  Nice work — you&apos;re now part of the study.
-                </p>
-                <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
-                  While you wait for your product, keep checking in each day so we can capture how you feel right now.
-                </p>
-                <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                  Once your product arrives, we&rsquo;ll measure what changes.
-                </p>
+                {showPostConfirmConfirmationDayHero ? (
+                  <>
+                    <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+                      You&apos;re in — your spot is confirmed
+                    </h2>
+                    <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                      Nice work — you&apos;re now part of the study.
+                    </p>
+                    <p className="mt-5 text-[15px] leading-relaxed text-gray-800">
+                      While you wait for your product, keep checking in each day so we can capture how you feel right now.
+                    </p>
+                    <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
+                      Once your product arrives, we&rsquo;ll measure what changes.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+                      Baseline check-ins
+                    </h2>
+                    <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+                      Complete your daily check-ins while your product is on the way so we have a clear before picture.
+                    </p>
+                  </>
+                )}
                 <div className="mt-6">
                   <h3 className="text-base font-bold text-gray-950">Next steps</h3>
                   <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed font-medium text-gray-950">
