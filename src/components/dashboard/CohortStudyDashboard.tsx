@@ -601,6 +601,11 @@ export default function CohortStudyDashboard({
   const BASELINE_REQUIRED_CHECKINS = 3
   const baselineCheckinsComplete = Math.min(checkinCount, BASELINE_REQUIRED_CHECKINS)
   const canStartStudyFromProduct = checkinCount >= BASELINE_REQUIRED_CHECKINS
+  const remainingBaselineDays = Math.max(0, BASELINE_REQUIRED_CHECKINS - baselineCheckinsComplete)
+  const baselineRemainingDaysListCopy =
+    remainingBaselineDays === 1
+      ? 'Check in for 1 more day so we have your baseline before your product arrives'
+      : `Check in for ${remainingBaselineDays} more days so we have your baseline before your product arrives`
 
   /** While awaiting product (confirmed only), hero gate shows 2/2; `checkinCount` still reflects ongoing pre-study check-ins. */
   const gateComplete = awaitingProductHolding
@@ -840,7 +845,7 @@ export default function CohortStudyDashboard({
                     <div className="mt-6">
                       <h3 className="text-base font-bold text-gray-950">Next steps</h3>
                       <ol className="mt-3 list-decimal space-y-2 pl-5 text-[15px] leading-relaxed font-medium text-gray-950">
-                        <li>Check in for 3 more days so we have your baseline before your product arrives</li>
+                        {remainingBaselineDays > 0 ? <li>{baselineRemainingDaysListCopy}</li> : null}
                         <li>Your product will arrive, and you&apos;ll start taking it</li>
                         <li>We&apos;ll compare your results before and after</li>
                       </ol>
