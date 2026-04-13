@@ -775,14 +775,14 @@ export default function CohortStudyDashboard({
       >
         {awaitingProductHolding ? (
           pendingFirstStudyNight ? (
-              <>
-                <h2 className="text-[26px] font-bold leading-snug text-gray-900">First study day</h2>
-                <p className="mt-5 text-base font-semibold text-gray-900">{productName}</p>
-                <p className="mt-3 text-[15px] leading-relaxed text-gray-800">{arrivalDosingParagraph}</p>
-                <p className="mt-3 text-sm text-gray-500">
-                  If anything feels off, follow the product guidance.
-                </p>
-              </>
+              <div
+                className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
+                role="status"
+              >
+                <p className="m-0 text-emerald-950">You&apos;re ready to start your study.</p>
+                <p className="m-0 mt-3 text-emerald-950">Take your supplement today.</p>
+                <p className="m-0 mt-3 text-emerald-900/95">Come back tomorrow morning for your first check-in.</p>
+              </div>
             ) : (
               <div role="region" aria-label="While you wait for your product">
                 {baselineWaitForProductOnly ? (
