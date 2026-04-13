@@ -82,11 +82,15 @@ function cohortEmailBioStackrHeaderCellHtml(appBase: string): string {
 }
 
 /** Shared CTA for simple (non-shell) cohort emails (legacy magic-link dashboards — prefer `cohortEmailCheckInCtaHtml`). */
-export function cohortEmailDashboardCtaHtml(dashboardHref: string): string {
+export function cohortEmailDashboardCtaHtml(
+  dashboardHref: string,
+  ctaLabel: string = 'View your study dashboard →',
+): string {
   const href = escapeHtml(dashboardHref)
+  const label = escapeHtml(ctaLabel)
   return (
     `<p style="margin:28px 0 0;text-align:center;">` +
-    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">View your study dashboard →</a>` +
+    `<a href="${href}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">${label}</a>` +
     `</p>` +
     `<p style="margin:12px 0 0;text-align:center;font-size:12px;line-height:1.45;color:#6b7280;">` +
     escapeHtml(COHORT_EMAIL_MAGIC_LINK_HINT) +

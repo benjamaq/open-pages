@@ -53,6 +53,8 @@ export type CohortEmailPreviewBranding = {
   storeCreditTitle?: string
   /** e.g. `seeking-health-optimal-focus` — drives arrival dosing line in `study-start` email. */
   cohortSlug?: string | null
+  /** `shipping-day4` / `shipping-day7` / `shipping-day10` — baseline complete + waiting for product copy + dashboard CTA. */
+  shippingNurturePostBaseline?: boolean
 }
 
 function shippingStepFromTemplate(
@@ -167,12 +169,15 @@ export function renderCohortEmailPreviewHtml(
     case 'shipping-day7':
     case 'shipping-day10': {
       const step = shippingStepFromTemplate(template)!
+      const postBaseline = branding.shippingNurturePostBaseline === true
       const html = shippingNurtureBodyHtml(step, {
         studyName,
         brandName: partnerBrandName,
         productName: prod,
         cohortSlug: previewCohortSlug,
+        postBaselineWait: postBaseline,
         checkInHref: placeholderCheckin,
+        dashboardHref: placeholderDashboard,
       })
       return { subject: shippingNurtureSubject(step), html }
     }

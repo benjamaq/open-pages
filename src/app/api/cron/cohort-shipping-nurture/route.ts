@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { daysBetweenInclusiveUtcYmd } from '@/lib/cohortCheckinCount'
+import {
+  countDistinctDailyEntriesSinceForUserIds,
+  daysBetweenInclusiveUtcYmd,
+} from '@/lib/cohortCheckinCount'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 import { isSleepShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 import { sendShippingNurtureEmail, type ShippingNurtureStep } from '@/lib/cohortShippingNurture'
-import { authUserIdFromCohortParticipantProfileMap, fetchProfilesByCohortParticipantUserIds } from '@/lib/cohortParticipantUserId'
+import {
+  authUserIdFromCohortParticipantProfileMap,
+  cohortParticipantUserIdCandidatesSync,
+  fetchProfilesByCohortParticipantUserIds,
+} from '@/lib/cohortParticipantUserId'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -152,6 +159,24 @@ export async function GET(request: NextRequest) {
         continue
       }
 
+      const profRow = profMap.get(p.user_id)
+      const cpUserIds = profRow
+        ? cohortParticipantUserIdCandidatesSync(profRow.id, profRow.user_id)
+        : []
+      const confirmedIso = String(p.confirmed_at || '').trim()
+      const confirmYmd = confirmedIso.slice(0, 10)
+      let postBaselineWait = false
+      if (
+        cpUserIds.length > 0 &&
+        confirmedIso &&
+        /^\d{4}-\d{2}-\d{2}$/.test(confirmYmd)
+      ) {
+        const n = await countDistinctDailyEntriesSinceForUserIds(cpUserIds, confirmedIso, {
+          excludeLocalDatesOnOrBeforeYmd: confirmYmd,
+        })
+        postBaselineWait = n >= 3
+      }
+
       const cohortRow = cohortById[p.cohort_id]
       const { studyName, productName } = studyAndProductNamesFromCohortRow(cohortRow || null)
       const brandName =
@@ -192,6 +217,7 @@ export async function GET(request: NextRequest) {
         productName,
         sleepShapedCohort,
         cohortSlug,
+        postBaselineWait,
       })
 
       if (!result.success) {

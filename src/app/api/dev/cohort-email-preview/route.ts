@@ -27,7 +27,8 @@ function assertPreviewAuth(request: NextRequest): NextResponse | null {
  *
  * `GET /api/dev/cohort-email-preview?secret=$COHORT_EMAIL_PREVIEW_SECRET&template=enrollment&partnerBrandName=DoNotAge&productName=SureSleep`
  *
- * Optional: `firstName`, `studyDurationDays`, `resultReadyRewardVariant` (`claim`|`default`|`claimed`).
+ * Optional: `firstName`, `studyDurationDays`, `resultReadyRewardVariant` (`claim`|`default`|`claimed`),
+ * `shippingNurturePostBaseline=1` for shipping templates (baseline complete / dashboard CTA).
  * Response: `text/html` with full email document.
  */
 export async function GET(request: NextRequest) {
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
     | 'default'
     | 'claimed'
     | undefined
+  const shippingNurturePostBaseline =
+    sp.get('shippingNurturePostBaseline') === '1' || sp.get('shippingPostBaseline') === '1'
 
   const { html } = renderCohortEmailPreviewHtml(template, {
     partnerBrandName,
@@ -74,6 +77,7 @@ export async function GET(request: NextRequest) {
       resultReadyRewardVariant === 'claimed'
         ? resultReadyRewardVariant
         : undefined,
+    shippingNurturePostBaseline: shippingNurturePostBaseline || undefined,
   })
 
   return new NextResponse(html, {
