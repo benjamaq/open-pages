@@ -13,7 +13,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirmed'
 import {
   cohortUsesStoreCreditPartnerReward,
-  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
   storeCreditTitleFromCohortRow,
 } from '@/lib/cohortStudyLandingRewards'
 
@@ -36,37 +35,32 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
   const studyEsc = escapeHtml(params.studyName)
-  const productLabel = escapeHtml(params.productName)
   const partnerBrand = escapeHtml(
     String(params.partnerBrandName || 'Study partner').trim() || 'Study partner',
   )
   const partnerBrandPlain = String(params.partnerBrandName || 'Study partner').trim() || 'Study partner'
   const checkInHref = String(params.checkInHref || '').trim()
   const storeCredit = params.storeCreditPartnerReward === true
-  const creditTitleEsc = escapeHtml(
-    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
-      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
-  )
 
   const appBase = cohortEmailPublicOrigin()
 
-  const logisticsLi = storeCredit
+  const shipmentLi = storeCredit
     ? `<li style="margin:0 0 8px;">You&apos;ll receive study and shipping updates from <strong>${partnerBrand}</strong> by email</li>`
-    : `<li style="margin:0 0 8px;"><strong>${partnerBrand}</strong> will dispatch your ${productLabel} supply</li>`
-
-  const rewardLi = storeCredit
-    ? `<li style="margin:0;">Your completion rewards are locked in — <strong>${creditTitleEsc}</strong> from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro (per study terms)</li>`
-    : `<li style="margin:0;">Your completion reward is locked in — a 3-month supply of ${productLabel} from <strong>${partnerBrand}</strong>, plus three months of BioStackr Pro</li>`
+    : `<li style="margin:0 0 8px;">Your product will be shipped</li>`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-    `<p style="margin:0 0 16px;">You've completed your first baseline check-in for the <strong>${studyEsc}</strong> study on <strong>BioStackr</strong> — one step away from securing your place with <strong>${partnerBrand}</strong>.</p>` +
-    `<p style="margin:0 0 12px;">Complete your second check-in tomorrow and you'll be fully confirmed. From there:</p>` +
+    `<p style="margin:0 0 16px;">You&apos;ve completed your first check-in for the <strong>${studyEsc}</strong> study.</p>` +
+    `<p style="margin:0 0 8px;"><strong>To confirm your place:</strong></p>` +
+    `<ul style="margin:0 0 16px;padding-left:20px;">` +
+    `<li style="margin:0 0 8px;">Complete one more check-in tomorrow</li>` +
+    `</ul>` +
+    `<p style="margin:0 0 16px;">Once that&apos;s done, you&apos;ll be fully confirmed.</p>` +
+    `<p style="margin:0 0 8px;"><strong>After confirmation:</strong></p>` +
     `<ul style="margin:0 0 20px;padding-left:20px;">` +
-    logisticsLi +
-    `<li style="margin:0 0 8px;">Your 21-day tracking starts</li>` +
-    `<li style="margin:0 0 8px;">You'll receive your personal results at the end</li>` +
-    rewardLi +
+    `<li style="margin:0 0 8px;">Check in for 3 more days so we have your baseline before your product arrives</li>` +
+    shipmentLi +
+    `<li style="margin:0;">Once it arrives, you&apos;ll start the 21-day study</li>` +
     `</ul>` +
     `<p style="margin:28px 0 8px;text-align:center;">` +
     `<a href="${escapeHtml(checkInHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your next check-in →</a>` +
