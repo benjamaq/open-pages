@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
-import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
+import { countCohortBaselineCheckinDistinctDaysForUserIds } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortStudyStartEmail } from '@/lib/cohortStudyStartEmail'
 import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, status, confirmed_at, study_started_at, enrolled_at')
+      .select('id, status, confirmed_at, study_started_at, enrolled_at, product_arrived_at')
       .in('user_id', cpUserIds)
       .eq('cohort_id', cohortUuid)
       .maybeSingle()
@@ -172,11 +172,11 @@ export async function POST(request: NextRequest) {
       confirmedAt != null && String(confirmedAt).trim() !== ''
         ? String(confirmedAt).trim()
         : ''
-    const confirmYmd = confirmedAtIso.slice(0, 10)
-    const baselineDistinctDays = await countDistinctDailyEntriesSinceForUserIds(
+    const productArrivedAtRaw = (part as { product_arrived_at?: string | null }).product_arrived_at
+    const baselineDistinctDays = await countCohortBaselineCheckinDistinctDaysForUserIds(
       cpUserIds,
-      confirmedAtIso || enrolledAt,
-      { excludeLocalDatesOnOrBeforeYmd: confirmYmd },
+      confirmedAtIso,
+      productArrivedAtRaw,
     )
     if (baselineDistinctDays < 3) {
       return NextResponse.json(

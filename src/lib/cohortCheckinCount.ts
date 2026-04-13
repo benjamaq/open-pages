@@ -167,3 +167,64 @@ export async function countDistinctDailyEntriesSince(
   if (!uid || !enrolledIso) return 0
   return countDistinctDailyEntriesSinceForUserIds([uid], enrolledIso, options)
 }
+
+function participantDateColumnToYmd(raw: unknown): string | null {
+  if (raw == null) return null
+  const s = String(raw).trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null
+}
+
+/**
+ * Baseline-only window: distinct `daily_entries.local_date` strictly after `confirmed_at::date`
+ * and strictly before `product_arrived_at` when set (DATE column). If product not marked arrived yet,
+ * there is no upper bound.
+ *
+ * Intentionally ignores `created_at` vs `confirmed_at` so a check-in on the first baseline calendar day
+ * still counts when `confirmed_at` is backfilled after the row is written.
+ */
+export async function fetchCohortBaselineCheckinYmdsForUserIds(
+  userIds: string[],
+  confirmedAtIso: string,
+  productArrivedAtRaw: unknown,
+): Promise<string[]> {
+  const uids = uniqueNonEmptyUserIds(userIds)
+  const confirmYmd = String(confirmedAtIso || '').trim().slice(0, 10)
+  if (uids.length === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(confirmYmd)) return []
+
+  const arrivedYmd = participantDateColumnToYmd(productArrivedAtRaw)
+
+  let q = supabaseAdmin
+    .from('daily_entries')
+    .select('local_date')
+    .in('user_id', uids)
+    .gt('local_date', confirmYmd)
+
+  if (arrivedYmd) {
+    q = q.lt('local_date', arrivedYmd)
+  }
+
+  const { data, error } = await q
+  if (error) {
+    console.error('[fetchCohortBaselineCheckinYmdsForUserIds]', error.message)
+    return []
+  }
+  const ymds = new Set<string>()
+  for (const r of data || []) {
+    const ymd = r.local_date != null ? String(r.local_date).slice(0, 10) : ''
+    if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) ymds.add(ymd)
+  }
+  return Array.from(ymds)
+}
+
+export async function countCohortBaselineCheckinDistinctDaysForUserIds(
+  userIds: string[],
+  confirmedAtIso: string,
+  productArrivedAtRaw: unknown,
+): Promise<number> {
+  const ymds = await fetchCohortBaselineCheckinYmdsForUserIds(
+    userIds,
+    confirmedAtIso,
+    productArrivedAtRaw,
+  )
+  return ymds.length
+}

@@ -8,9 +8,11 @@ import {
 } from "@/lib/cohortStudyLandingRewards";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
+  countCohortBaselineCheckinDistinctDaysForUserIds,
   countDistinctDailyEntriesSinceForUserIds,
   consecutiveCheckinStreakFromYmds,
   daysBetweenInclusiveUtcYmd,
+  fetchCohortBaselineCheckinYmdsForUserIds,
   fetchCohortCheckinYmdsSinceEnrollForUserIds,
 } from "@/lib/cohortCheckinCount";
 import { cohortParticipantUserIdCandidatesSync } from "@/lib/cohortParticipantUserId";
@@ -330,7 +332,7 @@ export async function GET(request: Request) {
                   const { data: part, error: partErr } = await supabaseAdmin
                     .from("cohort_participants")
                     .select(
-                      "enrolled_at, confirmed_at, study_started_at, study_completed_at, status",
+                      "enrolled_at, confirmed_at, study_started_at, study_completed_at, status, product_arrived_at",
                     )
                     .in("user_id", cpUserIds)
                     .eq("cohort_id", cohortUuid)
@@ -385,6 +387,9 @@ export async function GET(request: Request) {
                   const studyCompletedRaw = (
                     part as { study_completed_at?: string | null } | null
                   )?.study_completed_at;
+                  const productArrivedAtRaw = (
+                    part as { product_arrived_at?: string | null } | null
+                  )?.product_arrived_at;
                   const cohortUi = resolveCohortDashboardParticipantUi({
                     participantStatus,
                     confirmedAtRaw,
@@ -475,8 +480,8 @@ export async function GET(request: Request) {
                       );
                     } else if (cohortConfirmed && cohortAwaitingStudyStart) {
                       /**
-                       * Post-confirmation baseline (product holding): count distinct check-in days only after
-                       * `confirmed_at`, not enrollment-era compliance check-ins.
+                       * Post-confirmation baseline: distinct `local_date` after confirmed_at::date and before
+                       * product_arrived_at (when set). Not enrollment-era compliance; not active-study rows.
                        */
                       const confirmedIso =
                         confirmedAtRaw != null &&
@@ -484,20 +489,16 @@ export async function GET(request: Request) {
                           ? String(confirmedAtRaw).trim()
                           : null;
                       if (confirmedIso) {
-                        const confirmYmd = confirmedIso.slice(0, 10);
-                        const postConfirmBaselineOpts = {
-                          excludeLocalDatesOnOrBeforeYmd: confirmYmd,
-                        } as const;
                         const [cntPost, ymdsPost] = await Promise.all([
-                          countDistinctDailyEntriesSinceForUserIds(
+                          countCohortBaselineCheckinDistinctDaysForUserIds(
                             cpUserIds,
                             confirmedIso,
-                            postConfirmBaselineOpts,
+                            productArrivedAtRaw,
                           ),
-                          fetchCohortCheckinYmdsSinceEnrollForUserIds(
+                          fetchCohortBaselineCheckinYmdsForUserIds(
                             cpUserIds,
                             confirmedIso,
-                            postConfirmBaselineOpts,
+                            productArrivedAtRaw,
                           ),
                         ]);
                         cohortCheckinCount = cntPost;

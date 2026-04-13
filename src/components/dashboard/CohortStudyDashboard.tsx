@@ -595,8 +595,8 @@ export default function CohortStudyDashboard({
   const awaitingProductHolding = Boolean(cohortConfirmed && cohortAwaitingStudyStart)
 
   /**
-   * Pre-study baseline: distinct check-in days since enrollment (`cohortCheckinCount` from /api/me).
-   * UI-only threshold before the product-arrival flow is offered as a primary action.
+   * Pre-study baseline: distinct `daily_entries.local_date` in the confirmed→product-arrival window
+   * (`cohortCheckinCount` from /api/me while awaiting study start).
    */
   const BASELINE_REQUIRED_CHECKINS = 3
   const baselineCheckinsComplete = Math.min(checkinCount, BASELINE_REQUIRED_CHECKINS)
