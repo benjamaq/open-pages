@@ -13,7 +13,6 @@ import { studyAndProductNamesFromCohortRow } from '@/lib/cohortComplianceConfirm
 import { isSleepShapedCheckinFields, normalizeCohortCheckinFields } from '@/lib/cohortCheckinFields'
 import {
   cohortUsesStoreCreditPartnerReward,
-  NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
   storeCreditTitleFromCohortRow,
 } from '@/lib/cohortStudyLandingRewards'
 
@@ -32,9 +31,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const firstEsc = escapeHtml(params.firstName)
-  const productLabel = String(params.productLabel || 'your study product').trim() || 'your study product'
   const partnerBrandName = String(params.partnerBrandName || 'Study partner').trim() || 'Study partner'
-  const productEsc = escapeHtml(productLabel)
   const brandLineEsc = escapeHtml(cohortEmailPartnerXBioStackrLine(partnerBrandName))
 
   const appBase = cohortEmailPublicOrigin()
@@ -44,13 +41,10 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
   const secondCheckinWhen = sleepShaped ? 'tomorrow morning' : 'tomorrow'
 
   const storeCredit = params.storeCreditPartnerReward === true
-  const creditTitleEsc = escapeHtml(
-    String(params.storeCreditTitle || NEUTRAL_STORE_CREDIT_DISPLAY_TITLE).trim() ||
-      NEUTRAL_STORE_CREDIT_DISPLAY_TITLE,
-  )
-  const confirmNextSteps = storeCredit
-    ? `Once both check-ins are complete, your place in the study is confirmed. We&apos;ll follow up by email with next steps — including your <strong>${creditTitleEsc}</strong> and 3 months of BioStackr Pro when you complete the study.`
-    : `Once both check-ins are complete, your place in the study is confirmed and your <strong>${productEsc}</strong> is shipped to you.`
+  const partnerEsc = escapeHtml(partnerBrandName)
+  const shipmentLi = storeCredit
+    ? `<li style="margin:0 0 8px;">You&apos;ll receive study and shipping updates from <strong>${partnerEsc}</strong> by email</li>`
+    : `<li style="margin:0 0 8px;">Your product will be shipped</li>`
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${firstEsc},</p>` +
@@ -60,8 +54,13 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
     `• Complete your first check-in today<br />` +
     `• Complete your second check-in ${secondCheckinWhen}` +
     `</p>` +
-    `<p style="margin:0 0 16px;">This starts building your baseline.</p>` +
-    `<p style="margin:0 0 22px;">${confirmNextSteps}</p>` +
+    `<p style="margin:0 0 8px;">Once both check-ins are complete, your place in the study is confirmed.</p>` +
+    `<p style="margin:0 0 8px;"><strong>After that:</strong></p>` +
+    `<ul style="margin:0 0 22px;padding-left:20px;line-height:1.55;color:#374151;">` +
+    `<li style="margin:0 0 8px;">Check in for 3 more days to build your baseline</li>` +
+    shipmentLi +
+    `<li style="margin:0;">Once it arrives, you&apos;ll start the 21-day study</li>` +
+    `</ul>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(checkinHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
     `</p>`
