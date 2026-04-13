@@ -168,7 +168,14 @@ export async function POST(request: NextRequest) {
     if (!enrolledAt) {
       return NextResponse.json({ error: 'Enrollment not found' }, { status: 400 })
     }
-    const baselineDistinctDays = await countDistinctDailyEntriesSinceForUserIds(cpUserIds, enrolledAt)
+    const confirmedAtIso =
+      confirmedAt != null && String(confirmedAt).trim() !== ''
+        ? String(confirmedAt).trim()
+        : ''
+    const baselineDistinctDays = await countDistinctDailyEntriesSinceForUserIds(
+      cpUserIds,
+      confirmedAtIso || enrolledAt,
+    )
     if (baselineDistinctDays < 3) {
       return NextResponse.json(
         { error: 'You must complete 3 baseline check-ins before starting the study' },

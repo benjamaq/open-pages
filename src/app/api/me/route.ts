@@ -467,15 +467,47 @@ export async function GET(request: Request) {
                         todayYmd,
                       );
                     } else if (cohortConfirmed && cohortAwaitingStudyStart) {
-                      /** Pre–study-started: still writing cohort check-ins (shipping / baseline window). Same anchor as compliance gate. */
-                      cohortCheckinCount = cntCompliance;
-                      cohortCurrentStreak = consecutiveCheckinStreakFromYmds(
-                        ymdsCompliance,
-                        todayYmd,
-                      );
-                      cohortHasCheckedInToday = new Set(ymdsCompliance).has(
-                        todayYmd,
-                      );
+                      /**
+                       * Post-confirmation baseline (product holding): count distinct check-in days only after
+                       * `confirmed_at`, not enrollment-era compliance check-ins.
+                       */
+                      const confirmedIso =
+                        confirmedAtRaw != null &&
+                        String(confirmedAtRaw).trim() !== ""
+                          ? String(confirmedAtRaw).trim()
+                          : null;
+                      if (confirmedIso) {
+                        const [cntPost, ymdsPost] = await Promise.all([
+                          countDistinctDailyEntriesSinceForUserIds(
+                            cpUserIds,
+                            confirmedIso,
+                          ),
+                          fetchCohortCheckinYmdsSinceEnrollForUserIds(
+                            cpUserIds,
+                            confirmedIso,
+                          ),
+                        ]);
+                        cohortCheckinCount = cntPost;
+                        cohortCurrentStreak =
+                          consecutiveCheckinStreakFromYmds(
+                            ymdsPost,
+                            todayYmd,
+                          );
+                        cohortHasCheckedInToday = new Set(ymdsPost).has(
+                          todayYmd,
+                        );
+                      } else {
+                        /** Rare: awaiting with no `confirmed_at` (e.g. future `study_started_at` only). */
+                        cohortCheckinCount = cntCompliance;
+                        cohortCurrentStreak =
+                          consecutiveCheckinStreakFromYmds(
+                            ymdsCompliance,
+                            todayYmd,
+                          );
+                        cohortHasCheckedInToday = new Set(
+                          ymdsCompliance,
+                        ).has(todayYmd);
+                      }
                     } else {
                       cohortHasCheckedInToday = new Set(ymdsCompliance).has(
                         todayYmd,
