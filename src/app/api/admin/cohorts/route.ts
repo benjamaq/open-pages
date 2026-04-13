@@ -109,69 +109,85 @@ export async function GET(request: NextRequest) {
     }
 
     const list = parts || []
-    if (list.length === 0) {
-      return NextResponse.json({ participants: [] })
+
+    type ParticipantRow = {
+      display_name: string | null
+      email: string
+      enrolled_at: string
+      confirmed_at: string | null
+      qualification_short: boolean
+      at_risk: boolean
+      shipping_address_line1: string | null
+      shipping_address_line2: string | null
+      shipping_city: string | null
+      shipping_region: string | null
+      shipping_postal_code: string | null
+      shipping_country: string | null
     }
 
-    const participantUserIds = list.map((p: { user_id: string }) => p.user_id)
-    const { map: profByParticipantId, error: profLookupErr } =
-      await fetchProfilesForCohortParticipantUserIds(participantUserIds)
-    if (profLookupErr) {
-      console.error('[admin/cohorts] profiles:', profLookupErr)
-      return NextResponse.json({ error: profLookupErr.message }, { status: 500 })
-    }
+    /** Confirmed rows may be empty while applied rows exist — still load applied list below. */
+    let participants: ParticipantRow[] = []
+    if (list.length > 0) {
+      const participantUserIds = list.map((p: { user_id: string }) => p.user_id)
+      const { map: profByParticipantId, error: profLookupErr } =
+        await fetchProfilesForCohortParticipantUserIds(participantUserIds)
+      if (profLookupErr) {
+        console.error('[admin/cohorts] profiles:', profLookupErr)
+        return NextResponse.json({ error: profLookupErr.message }, { status: 500 })
+      }
 
-    const participants = await Promise.all(
-      list.map(
-        async (p: {
-          enrolled_at: string
-          confirmed_at: string | null
-          study_started_at?: string | null
-          user_id: string
-          qualification_response?: string | null
-        }) => {
-          const prof = profByParticipantId.get(p.user_id)
-          const authUid = authUserIdForParticipant(prof, p.user_id)
-          let email = ''
-          if (authUid) {
-            try {
-              const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
-              if (!auErr && data?.user?.email) email = String(data.user.email)
-            } catch {
-              /* ignore */
+      participants = await Promise.all(
+        list.map(
+          async (p: {
+            enrolled_at: string
+            confirmed_at: string | null
+            study_started_at?: string | null
+            user_id: string
+            qualification_response?: string | null
+          }) => {
+            const prof = profByParticipantId.get(p.user_id)
+            const authUid = authUserIdForParticipant(prof, p.user_id)
+            let email = ''
+            if (authUid) {
+              try {
+                const { data, error: auErr } = await supabaseAdmin.auth.admin.getUserById(authUid)
+                if (!auErr && data?.user?.email) email = String(data.user.email)
+              } catch {
+                /* ignore */
+              }
             }
-          }
-          const q = p.qualification_response != null ? String(p.qualification_response) : ''
-          let atRisk = false
-          const studyAnchor =
-            p.study_started_at != null && String(p.study_started_at).trim() !== ''
-              ? String(p.study_started_at).trim()
-              : null
-          if (authUid && studyAnchor) {
-            atRisk = await cohortConfirmedParticipantAtRisk({
-              authUserId: String(authUid),
-              confirmedAtIso: studyAnchor,
-              studyDays: studyDaysN,
-              cohortEndYmd,
-            })
-          }
-          return {
-            display_name: prof?.display_name ?? null,
-            email,
-            enrolled_at: p.enrolled_at,
-            confirmed_at: p.confirmed_at,
-            qualification_short: isQualificationResponseVisuallyShort(q),
-            at_risk: atRisk,
-            shipping_address_line1: prof?.shipping_address_line1 ?? null,
-            shipping_address_line2: prof?.shipping_address_line2 ?? null,
-            shipping_city: prof?.shipping_city ?? null,
-            shipping_region: prof?.shipping_region ?? null,
-            shipping_postal_code: prof?.shipping_postal_code ?? null,
-            shipping_country: prof?.shipping_country ?? null,
-          }
-        },
-      ),
-    )
+            const q = p.qualification_response != null ? String(p.qualification_response) : ''
+            let atRisk = false
+            const studyAnchor =
+              p.study_started_at != null && String(p.study_started_at).trim() !== ''
+                ? String(p.study_started_at).trim()
+                : null
+            if (authUid && studyAnchor) {
+              atRisk = await cohortConfirmedParticipantAtRisk({
+                authUserId: String(authUid),
+                confirmedAtIso: studyAnchor,
+                studyDays: studyDaysN,
+                cohortEndYmd,
+              })
+            }
+            return {
+              display_name: prof?.display_name ?? null,
+              email,
+              enrolled_at: p.enrolled_at,
+              confirmed_at: p.confirmed_at,
+              qualification_short: isQualificationResponseVisuallyShort(q),
+              at_risk: atRisk,
+              shipping_address_line1: prof?.shipping_address_line1 ?? null,
+              shipping_address_line2: prof?.shipping_address_line2 ?? null,
+              shipping_city: prof?.shipping_city ?? null,
+              shipping_region: prof?.shipping_region ?? null,
+              shipping_postal_code: prof?.shipping_postal_code ?? null,
+              shipping_country: prof?.shipping_country ?? null,
+            }
+          },
+        ),
+      )
+    }
 
     const { data: appliedRows, error: aErr } = await supabaseAdmin
       .from('cohort_participants')
@@ -186,7 +202,7 @@ export async function GET(request: NextRequest) {
     }
 
     const appliedList = appliedRows || []
-    let applied_participants: typeof participants = []
+    let applied_participants: ParticipantRow[] = []
     if (appliedList.length > 0) {
       const appliedUserIds = appliedList.map((r: { user_id: string }) => r.user_id)
       const { map: appliedProfMap, error: apErr } =
