@@ -34,7 +34,6 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
   storeCreditTitle?: string | null
 }): { subject: string; html: string } {
   const first = escapeHtml(params.firstNameForGreeting)
-  const studyEsc = escapeHtml(params.studyName)
   const partnerBrand = escapeHtml(
     String(params.partnerBrandName || 'Study partner').trim() || 'Study partner',
   )
@@ -50,7 +49,7 @@ export function buildCohortPostFirstCheckinTransactionalEmailHtml(params: {
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${first},</p>` +
-    `<p style="margin:0 0 16px;">You&apos;ve completed your first check-in for the <strong>${studyEsc}</strong> study.</p>` +
+    `<p style="margin:0 0 16px;">You&apos;ve completed your first check-in.</p>` +
     `<p style="margin:0 0 8px;"><strong>To confirm your place:</strong></p>` +
     `<ul style="margin:0 0 16px;padding-left:20px;">` +
     `<li style="margin:0 0 8px;">Complete one more check-in tomorrow</li>` +

@@ -60,7 +60,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
     `• Complete your first check-in today<br />` +
     `• Complete your second check-in ${secondCheckinWhen}` +
     `</p>` +
-    `<p style="margin:0 0 16px;">This gives us your baseline.</p>` +
+    `<p style="margin:0 0 16px;">This starts building your baseline.</p>` +
     `<p style="margin:0 0 22px;">${confirmNextSteps}</p>` +
     `<p style="margin:28px 0 0;text-align:center;">` +
     `<a href="${escapeHtml(checkinHref)}"${COHORT_EMAIL_CTA_LINK_ATTRS} style="display:inline-block;background:#C84B2F;color:#ffffff !important;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:8px;font-size:16px;">Complete your first check-in →</a>` +
