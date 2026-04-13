@@ -302,7 +302,9 @@ async function handler(req: NextRequest) {
         console.warn('[daily-cron] Pref filter skipped due to error:', (e as any)?.message)
       }
 
-      // Cohort participants waiting for product: no daily study reminders until they start on dashboard.
+      // Cohort compliance gate only: exclude `applied` users from this daily baseline reminder flow.
+      // Confirmed users (including pre-study / study_started_at NULL, baseline-building) stay IN.
+      // Study-completed users are excluded later via study_completed_at filter.
       try {
         const pidList = scopedProfiles
           .map((p) => p.profile_id)
@@ -318,36 +320,34 @@ async function handler(req: NextRequest) {
             cpUserIdKeys.add(r.id)
             cpUserIdKeys.add(r.user_id)
           }
-          const { data: awaitingRows, error: awErr } = await supabaseAdmin
+          const { data: appliedRows, error: apErr } = await supabaseAdmin
             .from('cohort_participants')
             .select('user_id')
-            .eq('status', 'confirmed')
-            .not('confirmed_at', 'is', null)
-            .is('study_started_at', null)
+            .eq('status', 'applied')
             .in('user_id', [...cpUserIdKeys])
-          if (awErr) {
-            console.warn('[daily-cron] cohort awaiting skip lookup:', awErr.message)
+          if (apErr) {
+            console.warn('[daily-cron] cohort applied-participant lookup:', apErr.message)
           } else {
-            const awaitingCpUserIds = new Set(
-              ((awaitingRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
+            const appliedCpUserIds = new Set(
+              ((appliedRows as { user_id: string }[]) || []).map((r) => String(r.user_id)),
             )
-            const beforeAwait = scopedProfiles.length
+            const beforeApplied = scopedProfiles.length
             scopedProfiles = scopedProfiles.filter((p) => {
               if (!p.profile_id) return true
               const pid = String(p.profile_id)
               const uid = String((p as { user_id?: string }).user_id || '')
-              if (awaitingCpUserIds.has(pid) || (uid && awaitingCpUserIds.has(uid))) return false
+              if (appliedCpUserIds.has(pid) || (uid && appliedCpUserIds.has(uid))) return false
               return true
             })
             // eslint-disable-next-line no-console
-            console.log('[daily-cron] Cohort awaiting product filter:', {
-              before: beforeAwait,
+            console.log('[daily-cron] Cohort applied (pre-confirmation) filter:', {
+              before: beforeApplied,
               after: scopedProfiles.length,
             })
           }
         }
       } catch (e) {
-        console.warn('[daily-cron] cohort awaiting filter skipped:', (e as any)?.message)
+        console.warn('[daily-cron] cohort applied filter skipped:', (e as any)?.message)
       }
     }
 
@@ -422,6 +422,10 @@ async function handler(req: NextRequest) {
     const reply_to = process.env.REPLY_TO_EMAIL || undefined
 
     // Time window filter: send when user's local time matches their reminder_time.
+    // vercel.json: `0 * * * *` → this route runs at :00 UTC each hour. Example: reminder 07:00
+    // Europe/Copenhagen in April (CEST, UTC+2) matches the 05:00 UTC invocation (not 06:00 UTC).
+    // Slack below absorbs cold-start delay so a 05:00 UTC run that starts at 05:02 UTC still qualifies.
+    const REMINDER_MATCH_SLACK_MINUTES = 10
     const now = new Date()
     const profilesInWindow = scopedProfiles.filter(p => {
       if (bypassAll) return true // bypass hour gate for targeted dry/force
@@ -436,14 +440,13 @@ async function handler(req: NextRequest) {
         const curH = parseInt(parts.find(x => x.type === 'hour')?.value || '0', 10)
         const curM = parseInt(parts.find(x => x.type === 'minute')?.value || '0', 10)
         const diff = Math.abs((curH * 60 + curM) - (targetH * 60 + targetM))
-        // Cron runs hourly; still allow a small window to tolerate runtime drift.
-        return diff <= 5
+        return diff <= REMINDER_MATCH_SLACK_MINUTES
       } catch {
         // Fallback: treat as UTC.
         const curH = now.getUTCHours()
         const curM = now.getUTCMinutes()
         const diff = Math.abs((curH * 60 + curM) - (targetH * 60 + targetM))
-        return diff <= 5
+        return diff <= REMINDER_MATCH_SLACK_MINUTES
       }
   })
 
