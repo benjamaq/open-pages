@@ -493,9 +493,14 @@ export async function GET(request: Request) {
                             ymdsPost,
                             todayYmd,
                           );
-                        cohortHasCheckedInToday = new Set(ymdsPost).has(
-                          todayYmd,
-                        );
+                        /**
+                         * Same-day confirm: the qualifying check-in is persisted before `confirmed_at` is set,
+                         * so post-confirmation YMDs omit today even though the user already checked in.
+                         * "Checked in today" must match enrollment-era semantics (any qualifying row for this local day).
+                         */
+                        cohortHasCheckedInToday = new Set(
+                          ymdsCompliance,
+                        ).has(todayYmd);
                       } else {
                         /** Rare: awaiting with no `confirmed_at` (e.g. future `study_started_at` only). */
                         cohortCheckinCount = cntCompliance;
