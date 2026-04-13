@@ -780,9 +780,18 @@ export default function CohortStudyDashboard({
                   </ol>
                 </div>
                 {hasCheckedInToday ? (
-                  <p className="mt-8 text-[15px] leading-relaxed text-gray-800">
-                    You&apos;ve checked in today. Come back tomorrow for your next baseline check-in.
-                  </p>
+                  <div
+                    className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
+                    role="status"
+                  >
+                    <span className="font-semibold text-emerald-900">
+                      <span className="text-emerald-600" aria-hidden>
+                        {'\u2713'}{' '}
+                      </span>
+                      You&apos;ve checked in today.
+                    </span>{' '}
+                    <span className="text-emerald-900/95">Come back tomorrow for your next baseline check-in.</span>
+                  </div>
                 ) : (
                   <button
                     type="button"
