@@ -103,6 +103,8 @@ export async function GET(request: Request) {
     let cohortCheckinBranch = false;
     /** DB `cohort_participants.confirmed_at` (ISO) when loaded — UI uses local calendar vs this for confirmation-day hero. */
     let cohortParticipantConfirmedAtIso: string | null = null;
+    /** DB `cohort_participants.product_arrived_at` (DATE as YYYY-MM-DD) when set — cohort check-in modal subtitle. */
+    let cohortParticipantProductArrivedAt: string | null = null;
 
     if (!authError && user) {
       email = user.email || null;
@@ -390,6 +392,15 @@ export async function GET(request: Request) {
                   const productArrivedAtRaw = (
                     part as { product_arrived_at?: string | null } | null
                   )?.product_arrived_at;
+                  {
+                    const y =
+                      productArrivedAtRaw != null &&
+                      String(productArrivedAtRaw).trim() !== ""
+                        ? String(productArrivedAtRaw).trim().slice(0, 10)
+                        : "";
+                    cohortParticipantProductArrivedAt =
+                      /^\d{4}-\d{2}-\d{2}$/.test(y) ? y : null;
+                  }
                   const cohortUi = resolveCohortDashboardParticipantUi({
                     participantStatus,
                     confirmedAtRaw,
@@ -802,6 +813,7 @@ export async function GET(request: Request) {
       cohortStoreCreditTitle,
       cohortCheckinBranch,
       cohortParticipantConfirmedAtIso,
+      cohortParticipantProductArrivedAt,
     });
   } catch (e: any) {
     return NextResponse.json(

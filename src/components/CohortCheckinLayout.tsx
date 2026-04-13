@@ -65,6 +65,8 @@ export type CohortCheckinLayoutProps = {
   cohortComplianceDistinctDays?: number | null
   /** From /api/me `cohortStudyStartedAtIso`. When the study clock has begun (local calendar), check-ins are study-phase. */
   cohortStudyStartedAtIso?: string | null
+  /** From /api/me `cohortParticipantProductArrivedAt` (YYYY-MM-DD). When set, modal subtitle uses active-study copy. */
+  cohortParticipantProductArrivedAtYmd?: string | null
 }
 
 const ONSET_OPTIONS = [
@@ -110,6 +112,7 @@ export default function CohortCheckinLayout({
   cohortSpotConfirmed,
   cohortComplianceDistinctDays,
   cohortStudyStartedAtIso,
+  cohortParticipantProductArrivedAtYmd = null,
 }: CohortCheckinLayoutProps) {
   void _userId
   const studyClockHasBegun = cohortStudyClockHasBegunForUi(cohortStudyStartedAtIso)
@@ -371,7 +374,11 @@ export default function CohortCheckinLayout({
                 </p>
               ) : null}
               <p className="mb-8 text-sm leading-relaxed text-gray-700">
-                Answer as accurately as possible — this is your baseline before starting the supplement.
+                Answer as accurately as possible —{' '}
+                {cohortParticipantProductArrivedAtYmd != null &&
+                String(cohortParticipantProductArrivedAtYmd).trim() !== ''
+                  ? "you're now in the active study phase."
+                  : 'this is your baseline before starting the supplement.'}
               </p>
 
               {fields.map((fieldKey) => {

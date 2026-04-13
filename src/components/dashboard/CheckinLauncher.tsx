@@ -15,6 +15,12 @@ function trimCohortId(raw: unknown): string | null {
   return s !== '' ? s : null
 }
 
+function cohortProductArrivedYmdFromMe(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  const y = raw.trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(y) ? y : null
+}
+
 export function CheckinLauncher({
   mePayload,
   supplementsPayload,
@@ -56,6 +62,9 @@ export function CheckinLauncher({
   const [asyncCohortStudyStartedAtIso, setAsyncCohortStudyStartedAtIso] = useState<string | null | undefined>(
     undefined,
   )
+  const [asyncCohortParticipantProductArrivedAtYmd, setAsyncCohortParticipantProductArrivedAtYmd] = useState<
+    string | null | undefined
+  >(undefined)
   const [asyncMeDone, setAsyncMeDone] = useState(false)
 
   useEffect(() => {
@@ -106,6 +115,7 @@ export function CheckinLauncher({
       setAsyncCohortConfirmed(undefined)
       setAsyncCohortCheckinCount(undefined)
       setAsyncCohortStudyStartedAtIso(undefined)
+      setAsyncCohortParticipantProductArrivedAtYmd(undefined)
       setAsyncMeDone(false)
       return () => {
         cancelled = true
@@ -145,6 +155,8 @@ export function CheckinLauncher({
         setAsyncCohortStudyStartedAtIso(
           typeof css === 'string' && String(css).trim() !== '' ? String(css).trim() : null,
         )
+        const pa = (data as any)?.cohortParticipantProductArrivedAt
+        setAsyncCohortParticipantProductArrivedAtYmd(cohortProductArrivedYmdFromMe(pa))
       } catch {
         if (!cancelled) {
           setAsyncCohortHint(null)
@@ -156,6 +168,7 @@ export function CheckinLauncher({
           setAsyncCohortConfirmed(undefined)
           setAsyncCohortCheckinCount(undefined)
           setAsyncCohortStudyStartedAtIso(undefined)
+          setAsyncCohortParticipantProductArrivedAtYmd(undefined)
         }
       } finally {
         if (!cancelled) setAsyncMeDone(true)
@@ -353,6 +366,13 @@ export function CheckinLauncher({
         : null
       : asyncCohortStudyStartedAtIso
 
+  const cohortParticipantProductArrivedAtYmd: string | null | undefined =
+    mePayload !== undefined
+      ? cohortProductArrivedYmdFromMe(
+          (mePayload as { cohortParticipantProductArrivedAt?: unknown }).cohortParticipantProductArrivedAt,
+        )
+      : asyncCohortParticipantProductArrivedAtYmd
+
   useEffect(() => {
     try {
       console.log('[CheckinLauncher] cohortIdHint=', cohortIdHint, 'userId=', userId, 'modalOpen=', open)
@@ -384,6 +404,7 @@ export function CheckinLauncher({
           cohortSpotConfirmed={cohortSpotConfirmed}
           cohortComplianceDistinctDays={cohortComplianceDistinctDays}
           cohortStudyStartedAtIso={cohortStudyStartedAtIso}
+          cohortParticipantProductArrivedAtYmd={cohortParticipantProductArrivedAtYmd}
         />
       )}
     </>
