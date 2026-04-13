@@ -40,6 +40,51 @@ function utcTodayYmd(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** PostgREST defaults to a max page size (~1000); paginate or later rows are silently omitted. */
+const REWARD_CLAIM_BACKFILL_PAGE = 1000
+
+async function fetchCompletedParticipantIdsForRewardBackfill(): Promise<string[]> {
+  const out: string[] = []
+  for (let from = 0; ; from += REWARD_CLAIM_BACKFILL_PAGE) {
+    const { data, error } = await supabaseAdmin
+      .from('cohort_participants')
+      .select('id')
+      .eq('status', 'completed')
+      .not('study_completed_at', 'is', null)
+      .order('id', { ascending: true })
+      .range(from, from + REWARD_CLAIM_BACKFILL_PAGE - 1)
+
+    if (error) throw new Error(error.message)
+    const rows = (data || []) as Array<{ id?: string }>
+    for (const r of rows) {
+      const id = String(r.id || '').trim()
+      if (id) out.push(id)
+    }
+    if (rows.length < REWARD_CLAIM_BACKFILL_PAGE) break
+  }
+  return out
+}
+
+async function fetchClaimedCohortParticipantIds(): Promise<Set<string>> {
+  const set = new Set<string>()
+  for (let from = 0; ; from += REWARD_CLAIM_BACKFILL_PAGE) {
+    const { data, error } = await supabaseAdmin
+      .from('cohort_reward_claims')
+      .select('cohort_participant_id')
+      .order('cohort_participant_id', { ascending: true })
+      .range(from, from + REWARD_CLAIM_BACKFILL_PAGE - 1)
+
+    if (error) throw new Error(error.message)
+    const rows = (data || []) as Array<{ cohort_participant_id?: string }>
+    for (const r of rows) {
+      const id = String(r.cohort_participant_id || '').trim()
+      if (id) set.add(id)
+    }
+    if (rows.length < REWARD_CLAIM_BACKFILL_PAGE) break
+  }
+  return set
+}
+
 type CohortMeta = {
   slug: string | null
   study_days: number | null
@@ -335,48 +380,55 @@ async function processCompletionEmailBackfillPass(dry: boolean) {
 }
 
 /**
- * Repair: `status = completed` but no `cohort_reward_claims` row (e.g. legacy ordering bug or insert failure).
- * Idempotent; does not send email.
+ * Repair: `status = completed` and `study_completed_at` set, but no `cohort_reward_claims` row.
+ * Uses full-table pagination (not an SQL JOIN): load all completed participant ids, load all claimed
+ * `cohort_participant_id`s, then set difference. Idempotent; does not send email.
  */
 async function processMissingRewardClaimBackfillPass(dry: boolean) {
   let created = 0
   const errors: string[] = []
 
-  const { data: parts, error: pErr } = await supabaseAdmin
-    .from('cohort_participants')
-    .select('id')
-    .eq('status', 'completed')
-    .not('study_completed_at', 'is', null)
-
-  if (pErr) {
-    console.error('[cohort-study-completion] reward-claim backfill load participants:', pErr)
-    return { ok: false as const, error: pErr.message, created: 0, errors }
+  let partIds: string[] = []
+  try {
+    partIds = await fetchCompletedParticipantIdsForRewardBackfill()
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'reward-claim backfill: load participants failed'
+    console.error('[cohort-study-completion]', msg, e)
+    return { ok: false as const, error: msg, created: 0, errors }
   }
 
-  const partList = (parts || []) as Array<{ id: string }>
-  if (partList.length === 0) {
-    return { ok: true as const, created: 0, errors }
+  let claimed: Set<string>
+  try {
+    claimed = await fetchClaimedCohortParticipantIds()
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'reward-claim backfill: load claims failed'
+    console.error('[cohort-study-completion]', msg, e)
+    return { ok: false as const, error: msg, created: 0, errors }
   }
 
-  const { data: claimRows, error: cErr } = await supabaseAdmin
-    .from('cohort_reward_claims')
-    .select('cohort_participant_id')
+  const missing = partIds.filter((id) => !claimed.has(id))
 
-  if (cErr) {
-    console.error('[cohort-study-completion] reward-claim backfill load claims:', cErr)
-    return { ok: false as const, error: cErr.message, created: 0, errors }
+  const stats = {
+    completedParticipantsScanned: partIds.length,
+    claimParticipantIdsLoaded: claimed.size,
+    missingEligible: missing.length,
   }
 
-  const claimed = new Set(
-    (claimRows || [])
-      .map((r) => String((r as { cohort_participant_id?: string }).cohort_participant_id || '').trim())
-      .filter(Boolean),
+  console.log(
+    '[cohort-study-completion] reward-claim backfill scan',
+    JSON.stringify({
+      query: {
+        participants:
+          "cohort_participants where status='completed' and study_completed_at is not null (all pages)",
+        claims: 'cohort_reward_claims cohort_participant_id (all pages)',
+        missing: 'participant ids not in claims set',
+      },
+      ...stats,
+      missingSampleParticipantIds: missing.slice(0, 20),
+    }),
   )
 
-  for (const p of partList) {
-    const pid = String(p.id || '').trim()
-    if (!pid || claimed.has(pid)) continue
-
+  for (const pid of missing) {
     if (dry) {
       created++
       continue
@@ -393,7 +445,12 @@ async function processMissingRewardClaimBackfillPass(dry: boolean) {
     created++
   }
 
-  return { ok: true as const, created, errors }
+  return {
+    ok: true as const,
+    created,
+    errors,
+    stats,
+  }
 }
 
 async function processResultReadyEmails(dry: boolean) {
@@ -541,6 +598,10 @@ export async function GET(request: NextRequest) {
       completionEmails: completion.completionEmails,
       completionEmailBackfillSent: backfill.sent,
       rewardClaimRowsRepaired: rewardClaimRepair.created,
+      rewardClaimBackfill: {
+        repaired: rewardClaimRepair.created,
+        ...rewardClaimRepair.stats,
+      },
       resultReadyEmails: ready.sent,
       errors: [...completion.errors, ...backfill.errors, ...rewardClaimRepair.errors, ...ready.errors],
     })
