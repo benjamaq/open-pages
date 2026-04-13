@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cohortStudyWindowElapsed } from '@/lib/cohortStudyCompletion'
+import {
+  cohortStudyDistinctCheckinDaysSinceStart,
+  cohortStudyWindowElapsed,
+  MIN_STUDY_CHECKINS_FOR_COMPLETION,
+} from '@/lib/cohortStudyCompletion'
 import { sendCohortResultReadyEmail } from '@/lib/cohortResultReadyEmail'
 import { sendCohortStudyCompletionEmail } from '@/lib/cohortStudyCompletionEmail'
 import {
@@ -104,6 +108,16 @@ async function processCompletionPass(dry: boolean) {
     const studyDays =
       cdef && typeof cdef.study_days === 'number' && cdef.study_days > 0 ? cdef.study_days : 21
     if (!cohortStudyWindowElapsed(todayYmd, row.study_started_at, studyDays)) continue
+
+    const profRow = profMap.get(row.user_id)
+    const entryUserIds = profRow
+      ? cohortParticipantUserIdCandidatesSync(profRow.id, profRow.user_id)
+      : [row.user_id]
+    const checkinDaysSinceStart = await cohortStudyDistinctCheckinDaysSinceStart(
+      entryUserIds,
+      row.study_started_at,
+    )
+    if (checkinDaysSinceStart < MIN_STUDY_CHECKINS_FOR_COMPLETION) continue
 
     if (dry) {
       completed++

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUserId'
+import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortStudyStartEmail } from '@/lib/cohortStudyStartEmail'
 import { cohortUsesStoreCreditPartnerReward, storeCreditTitleFromCohortRow } from '@/lib/cohortStudyLandingRewards'
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, status, confirmed_at, study_started_at')
+      .select('id, status, confirmed_at, study_started_at, enrolled_at')
       .in('user_id', cpUserIds)
       .eq('cohort_id', cohortUuid)
       .maybeSingle()
@@ -160,6 +161,19 @@ export async function POST(request: NextRequest) {
     }
     if (startedAt != null && String(startedAt).trim() !== '') {
       return NextResponse.json({ error: 'Study already started' }, { status: 400 })
+    }
+
+    const enrolledAtRaw = (part as { enrolled_at?: string | null }).enrolled_at
+    const enrolledAt = enrolledAtRaw != null && String(enrolledAtRaw).trim() !== '' ? String(enrolledAtRaw).trim() : ''
+    if (!enrolledAt) {
+      return NextResponse.json({ error: 'Enrollment not found' }, { status: 400 })
+    }
+    const baselineDistinctDays = await countDistinctDailyEntriesSinceForUserIds(cpUserIds, enrolledAt)
+    if (baselineDistinctDays < 3) {
+      return NextResponse.json(
+        { error: 'You must complete 3 baseline check-ins before starting the study' },
+        { status: 400 },
+      )
     }
 
     let studyStartedIso: string

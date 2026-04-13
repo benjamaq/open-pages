@@ -1,4 +1,24 @@
-import { daysBetweenInclusiveUtcYmd } from '@/lib/cohortCheckinCount'
+import {
+  countDistinctDailyEntriesSinceForUserIds,
+  daysBetweenInclusiveUtcYmd,
+} from '@/lib/cohortCheckinCount'
+
+/** Minimum distinct check-in days on/after `study_started_at` required before auto-completion (cron). */
+export const MIN_STUDY_CHECKINS_FOR_COMPLETION = 15
+
+/**
+ * Distinct `daily_entries` calendar days since study clock start, aligned with /api/me study-phase counting * (`minCreatedAtIso: study_started_at`).
+ */
+export async function cohortStudyDistinctCheckinDaysSinceStart(
+  userIds: string[],
+  studyStartedAtIso: string,
+): Promise<number> {
+  const anchor = String(studyStartedAtIso || '').trim()
+  if (!anchor) return 0
+  return countDistinctDailyEntriesSinceForUserIds(userIds, anchor, {
+    minCreatedAtIso: anchor,
+  })
+}
 
 /** Study day index (1-based), aligned with /api/me cohort block (inclusive span from study start YMD). */
 export function cohortStudyCurrentDayFromAnchors(
