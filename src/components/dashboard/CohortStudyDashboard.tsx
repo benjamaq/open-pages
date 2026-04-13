@@ -797,9 +797,9 @@ export default function CohortStudyDashboard({
                     <button
                       type="button"
                       onClick={() => setProductArrivedOpen(true)}
-                      className="mt-8 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                      className="mt-8 w-full rounded-xl bg-[#C84B2F] px-4 py-3.5 text-base font-semibold text-white shadow-sm hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C84B2F] focus-visible:ring-offset-2"
                     >
-                      Product arrived? Start your study
+                      My product has arrived
                     </button>
                     <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4 text-left sm:px-5">
                       <p className="text-sm font-semibold text-gray-900">{productName}</p>
@@ -871,9 +871,9 @@ export default function CohortStudyDashboard({
                       <button
                         type="button"
                         onClick={() => setProductArrivedOpen(true)}
-                        className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-slate-50"
+                        className="mt-4 w-full rounded-xl bg-[#C84B2F] px-4 py-3.5 text-base font-semibold text-white shadow-sm hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C84B2F] focus-visible:ring-offset-2"
                       >
-                        Product arrived? Start your study
+                        My product has arrived
                       </button>
                     ) : (
                       <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-gray-600">
