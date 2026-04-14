@@ -6,6 +6,7 @@ import {
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendCohortGateReminderEmail } from '@/lib/cohortGateReminderEmail'
 import { countDistinctDailyEntriesSinceForUserIds } from '@/lib/cohortCheckinCount'
+import { runCohortGateCheckin2Reminders } from '@/lib/cohortGateCheckin2Reminder'
 
 export const dynamic = 'force-dynamic'
 
@@ -190,7 +191,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true, sent, dry, scanned: list.length })
+    const gateCheckin2Reminder = await runCohortGateCheckin2Reminders({ dry })
+    return NextResponse.json({
+      ok: true,
+      sent,
+      dry,
+      scanned: list.length,
+      gate_checkin2_reminder: gateCheckin2Reminder,
+    })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Failed'
     console.error('[cohort-gate-reminder]', e)
