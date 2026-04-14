@@ -108,6 +108,8 @@ export async function GET(request: Request) {
     let cohortParticipantProductArrivedAt: string | null = null;
     /** True when `study_start_pending` holds a valid payload (product-arrival flow done; clock applies on first check-in). */
     let cohortStudyStartPending = false;
+    /** Applied user, compliance n≥2, and cohort confirmed+completed count ≥ max_confirmed_participants (when cap set). */
+    let cohortAdmissionBlockedByCap = false;
 
     if (!authError && user) {
       email = user.email || null;
@@ -244,7 +246,7 @@ export async function GET(request: Request) {
             const todayYmd = todayYmdForCohort(request);
             const cohortLookupKey = String(cohortId).trim();
             const cohortSelect =
-              "id, slug, checkin_fields, product_name, brand_name, study_days, start_date, end_date, study_landing_reward_config";
+              "id, slug, checkin_fields, product_name, brand_name, study_days, start_date, end_date, study_landing_reward_config, max_confirmed_participants";
             let { data: cdef, error: cdefErr } = await supabaseAdmin
               .from("cohorts")
               .select(cohortSelect)
@@ -556,6 +558,39 @@ export async function GET(request: Request) {
                         todayYmd,
                       );
                     }
+
+                    const maxCapRaw = (
+                      cdef as { max_confirmed_participants?: unknown }
+                    ).max_confirmed_participants;
+                    const maxConfirmedCap =
+                      typeof maxCapRaw === "number" &&
+                      Number.isFinite(maxCapRaw) &&
+                      maxCapRaw >= 1
+                        ? Math.floor(maxCapRaw)
+                        : maxCapRaw != null &&
+                            Number.isFinite(Number(maxCapRaw)) &&
+                            Number(maxCapRaw) >= 1
+                          ? Math.floor(Number(maxCapRaw))
+                          : null;
+                    if (
+                      participantStatus === "applied" &&
+                      maxConfirmedCap != null &&
+                      cntCompliance >= 2
+                    ) {
+                      const { count: admissionCount, error: capCountErr } =
+                        await supabaseAdmin
+                          .from("cohort_participants")
+                          .select("id", { count: "exact", head: true })
+                          .eq("cohort_id", cohortUuid)
+                          .in("status", ["confirmed", "completed"]);
+                      if (
+                        !capCountErr &&
+                        typeof admissionCount === "number" &&
+                        admissionCount >= maxConfirmedCap
+                      ) {
+                        cohortAdmissionBlockedByCap = true;
+                      }
+                    }
                   }
 
                   if (
@@ -831,6 +866,7 @@ export async function GET(request: Request) {
       cohortParticipantConfirmedAtIso,
       cohortParticipantProductArrivedAt,
       cohortStudyStartPending,
+      cohortAdmissionBlockedByCap,
     });
   } catch (e: any) {
     return NextResponse.json(

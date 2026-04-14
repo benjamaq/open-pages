@@ -47,6 +47,8 @@ export interface CohortStudyDashboardProps {
   cohortConfirmed: boolean
   /** From `/api/me` `cohortParticipantConfirmedAtIso` — confirmation-day hero vs ongoing baseline copy. */
   cohortParticipantConfirmedAtIso?: string | null
+  /** From `/api/me` when applied, gate satisfied, and cohort confirmed+completed count ≥ cap. */
+  cohortAdmissionBlockedByCap?: boolean
   /** Confirmed participant only: waiting for product / first study night (not for `applied` / gate). */
   cohortAwaitingStudyStart?: boolean
   /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
@@ -567,6 +569,7 @@ export default function CohortStudyDashboard({
   welcomeFirstName = null,
   cohortConfirmed,
   cohortParticipantConfirmedAtIso = null,
+  cohortAdmissionBlockedByCap = false,
   cohortAwaitingStudyStart = false,
   cohortStudyStartedAtIso = null,
   cohortStudyStartPending = false,
@@ -616,6 +619,7 @@ export default function CohortStudyDashboard({
     : Math.min(2, Math.max(0, checkinCount))
   /** Two qualifying check-ins done; cron may not have set confirmed_at yet. */
   const complianceGateSatisfied = gateComplete >= 2
+  const capBlocked = Boolean(cohortAdmissionBlockedByCap)
   const brandDisplay = String(brandName || '').trim() || 'Study partner'
   const isSleepShapedCohort = useMemo(() => {
     const raw =
@@ -691,7 +695,8 @@ export default function CohortStudyDashboard({
     }
   })()
 
-  const showInterimSpotConfirmed = complianceGateSatisfied && !cohortConfirmed
+  const showInterimSpotConfirmed =
+    complianceGateSatisfied && !cohortConfirmed && !capBlocked
 
   const localTodayYmd = getLocalDateYmd()
   const studyStartYmd =
@@ -931,6 +936,36 @@ export default function CohortStudyDashboard({
                 )}
               </div>
             )
+        ) : capBlocked ? (
+          <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-5 sm:px-5">
+            <h2 className="text-[22px] sm:text-[24px] font-bold leading-snug tracking-tight text-gray-900">
+              We couldn&apos;t confirm a spot this time
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+              Thanks for completing the check-ins. This cohort has already reached the number of participants we can move
+              forward for this round.
+            </p>
+            <p className="mt-3 text-[15px] leading-relaxed text-gray-800">
+              We&apos;ve placed you on a reserve list in case space opens up or we need additional participants. You have
+              not been confirmed for product shipment at this stage.
+            </p>
+            <p className="mt-4 text-[14px] leading-relaxed text-gray-700">
+              Support:{' '}
+              <a
+                href="mailto:support@biostackr.io"
+                className="font-medium text-[#C84B2F] underline underline-offset-2 hover:opacity-90"
+              >
+                support@biostackr.io
+              </a>{' '}
+              ·{' '}
+              <a
+                href="/contact"
+                className="font-medium text-[#C84B2F] underline underline-offset-2 hover:opacity-90"
+              >
+                biostackr.io/contact
+              </a>
+            </p>
+          </div>
         ) : cohortConfirmed ? (
           studyComplete ? (
             <div>
@@ -1066,7 +1101,10 @@ export default function CohortStudyDashboard({
         </section>
       ) : null}
 
-      {!cohortConfirmed && !showInterimSpotConfirmed && !awaitingProductHolding ? (
+      {!cohortConfirmed &&
+      !showInterimSpotConfirmed &&
+      !awaitingProductHolding &&
+      !capBlocked ? (
         <section className="text-center px-1 space-y-3">
           <div>
             <p className="text-sm text-gray-800">
