@@ -36,7 +36,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
 
   const appBase = cohortEmailPublicOrigin()
   const checkinHref = String(params.firstCheckInHref || '').trim()
-  const subject = "You're in — complete your first check-in"
+  const subject = 'Confirm your place — complete your first check-in'
   const sleepShaped = params.sleepShapedCohort !== false
   const secondCheckinWhen = sleepShaped ? 'tomorrow morning' : 'tomorrow'
 
@@ -48,7 +48,7 @@ export function buildCohortEnrollmentTransactionalEmailHtml(params: {
 
   const innerHtml =
     `<p style="margin:0 0 16px;">Hi ${firstEsc},</p>` +
-    `<p style="margin:0 0 16px;">Welcome to the <strong>${brandLineEsc}</strong> study.</p>` +
+    `<p style="margin:0 0 16px;">You&apos;ve started the <strong>${brandLineEsc}</strong> study &mdash; now confirm your place.</p>` +
     `<p style="margin:0 0 6px;"><strong>To confirm your place:</strong></p>` +
     `<p style="margin:0 0 16px;line-height:1.55;color:#374151;">` +
     `• If you haven&apos;t already, complete your first check-in today<br />` +

@@ -323,7 +323,8 @@ export function DashboardPageClient() {
                     : 'under an hour'}
               </div>
               <p className="mt-2 text-neutral-700 leading-snug">
-                Once your second check-in is done, your spot is confirmed and your product will be on its way.
+                Once your second check-in is done and your place is confirmed in our system, we&apos;ll email you next
+                steps. You aren&apos;t confirmed until then.
               </p>
             </div>
           )}

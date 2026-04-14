@@ -1004,15 +1004,11 @@ export default function CohortStudyDashboard({
           )
         ) : showInterimSpotConfirmed ? (
           <div>
-            <h2 className="text-[26px] font-bold leading-snug text-gray-900">Your spot is confirmed</h2>
+            <h2 className="text-[26px] font-bold leading-snug text-gray-900">Both check-ins are done</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-              You are in the study. Your product will be dispatched shortly. Your daily check-ins start when it arrives. You
-              {isSleepShapedCohort ? (
-                <> will receive a reminder each morning. </>
-              ) : (
-                <> will receive a daily reminder. </>
-              )}
-              Keep your supplement routine as it is until then.
+              You&apos;ve finished the two check-ins we ask for to qualify. Your place isn&apos;t official until this page
+              shows you&apos;re confirmed and you get the confirmation email &mdash; that usually updates soon. Until then,
+              don&apos;t assume product will ship; next steps come after confirmation.
             </p>
           </div>
         ) : phase1Hero ? (
