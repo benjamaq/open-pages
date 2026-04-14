@@ -231,6 +231,9 @@ export function DashboardPageClient() {
                     : null
                 }
                 cohortConfirmed={Boolean(me?.cohortConfirmed)}
+                cohortAdmissionBlockedByCap={Boolean(
+                  (me as { cohortAdmissionBlockedByCap?: unknown })?.cohortAdmissionBlockedByCap,
+                )}
                 cohortParticipantConfirmedAtIso={
                   typeof me?.cohortParticipantConfirmedAtIso === 'string'
                     ? me.cohortParticipantConfirmedAtIso
