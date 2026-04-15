@@ -626,6 +626,37 @@ async function handler(req: NextRequest) {
           }
         }
 
+        // Do not remind if they already saved a check-in for this local calendar day (e.g. morning
+        // compliance/baseline before evening reminder_time). Dedupe above only gates on email_sends.
+        if (!bypassAll) {
+          const tzToday = (p.reminder_timezone || p.timezone || 'UTC').toString()
+          const localTodayStr = formatInTimeZone(new Date(), tzToday, 'yyyy-MM-dd')
+          const entryUidKeys = cohortParticipantUserIdCandidatesSync(String(p.profile_id || ''), p.user_id)
+          const keysForEntry = entryUidKeys.length > 0 ? entryUidKeys : [p.user_id]
+          const { data: entryToday } = await supabaseAdmin
+            .from('daily_entries')
+            .select('id')
+            .in('user_id', keysForEntry)
+            .eq('local_date', localTodayStr)
+            .limit(1)
+          if (entryToday && entryToday.length > 0) {
+            logCandidate('branch', {
+              user_id: p.user_id,
+              email,
+              branch: 'skip_already_checked_in_local_today',
+              local_date: localTodayStr,
+            })
+            recordSkip({
+              user_id: p.user_id,
+              email,
+              skip: 'already_checked_in_local_today',
+              skip_reason: 'already_checked_in_local_today',
+              local_date: localTodayStr,
+            })
+            continue
+          }
+        }
+
         logCandidate('branch', { user_id: p.user_id, email, branch: 'post_gates_building_email' })
 
         // Pull yesterday metrics based on user's LOCAL date (use local_date column)
