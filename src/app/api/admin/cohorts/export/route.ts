@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { denyUnlessAdminApi } from '@/lib/adminApiAuth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { authUserIdForParticipant, fetchProfilesForCohortParticipantUserIds } from '@/lib/adminCohortParticipantProfiles'
+import { namesFromAuthAndProfileForShippingCsv } from '@/lib/cohortShippingExportNames'
 
 const CSV_HEADERS = [
   'First Name',
@@ -20,23 +21,6 @@ function csvCell(value: string | null | undefined): string {
   const s = value == null ? '' : String(value)
   if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
   return s
-}
-
-function namesFromAuthAndProfile(
-  meta: Record<string, unknown> | null | undefined,
-  displayName: string | null | undefined,
-): { first: string; last: string } {
-  const m = meta || {}
-  const metaFirst = typeof m.first_name === 'string' ? m.first_name.trim() : ''
-  const metaLast = typeof m.last_name === 'string' ? m.last_name.trim() : ''
-  if (metaFirst || metaLast) return { first: metaFirst, last: metaLast }
-  const combined =
-    (typeof m.name === 'string' ? m.name.trim() : '') ||
-    (displayName != null ? String(displayName).trim() : '')
-  if (!combined) return { first: '', last: '' }
-  const parts = combined.split(/\s+/).filter(Boolean)
-  if (parts.length === 1) return { first: parts[0], last: '' }
-  return { first: parts[0], last: parts.slice(1).join(' ') }
 }
 
 /** GET /api/admin/cohorts/export?cohort_uuid= — CSV shipping list for confirmed participants */
@@ -103,7 +87,11 @@ export async function GET(request: NextRequest) {
           /* ignore */
         }
       }
-      const { first, last } = namesFromAuthAndProfile(meta, prof?.display_name ?? null)
+      const { first, last } = namesFromAuthAndProfileForShippingCsv(
+        meta,
+        prof?.display_name ?? null,
+        prof?.first_name ?? null,
+      )
       rows.push(
         [
           csvCell(first),
