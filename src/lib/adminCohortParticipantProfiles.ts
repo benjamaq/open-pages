@@ -5,11 +5,12 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
  * auth.users.id (some deployments). Load profiles by both keys and map by either UUID.
  */
 export const ADMIN_COHORT_PROFILE_COLUMNS =
-  'id, display_name, user_id, shipping_address_line1, shipping_address_line2, shipping_city, shipping_region, shipping_postal_code, shipping_country'
+  'id, display_name, first_name, user_id, shipping_address_line1, shipping_address_line2, shipping_city, shipping_region, shipping_postal_code, shipping_country'
 
 export type AdminCohortProfileRow = {
   id: string
   display_name: string | null
+  first_name?: string | null
   user_id: string
   shipping_address_line1?: string | null
   shipping_address_line2?: string | null

@@ -4,7 +4,7 @@ import { cohortParticipantUserIdCandidatesSync } from '@/lib/cohortParticipantUs
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 
-const SUPPORT_TO = 'ben@biostackr.io'
+const SUPPORT_TO = 'benm@biostackr.io'
 
 const REASONS = ['missed_checkin', 'next_steps', 'study_question'] as const
 type Reason = (typeof REASONS)[number]
