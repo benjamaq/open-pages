@@ -491,6 +491,35 @@ async function handler(req: NextRequest) {
       }
     }
 
+    /** `cohort_participants.user_id` values (auth or profile id) for confirmed users still in baseline. */
+    const cohortBaselineCpUserIds = new Set<string>()
+    if (profilesInWindow.length > 0) {
+      const windowKeys = new Set<string>()
+      for (const p of profilesInWindow) {
+        if (p.user_id) windowKeys.add(String(p.user_id))
+        if (p.profile_id) windowKeys.add(String(p.profile_id))
+      }
+      const keysArr = [...windowKeys]
+      if (keysArr.length > 0) {
+        const { data: blRows, error: blErr } = await supabaseAdmin
+          .from('cohort_participants')
+          .select('user_id')
+          .eq('status', 'confirmed')
+          .is('study_started_at', null)
+          .in('user_id', keysArr)
+        if (blErr) {
+          console.warn('[daily-cron] cohort baseline engagement exempt lookup:', blErr.message)
+        } else {
+          for (const r of (blRows || []) as { user_id?: string }[]) {
+            if (r?.user_id) cohortBaselineCpUserIds.add(String(r.user_id))
+          }
+          try {
+            console.log('[daily-cron] Cohort baseline engagement exempt cp.user_id count:', cohortBaselineCpUserIds.size)
+          } catch {}
+        }
+      }
+    }
+
     for (const p of profilesInWindow) {
       try {
         const emailEarly = emailMap.get(p.user_id) ?? null
@@ -541,32 +570,41 @@ async function handler(req: NextRequest) {
           }
         }
 
-        // Engagement filter: Only send to active users (recent activity OR at least 1 active supplement)
+        // Engagement filter: Only send to active users (recent activity OR at least 1 active supplement).
+        // Exempt: confirmed cohort participants still in baseline (study_started_at null) — cohort-only users
+        // often have no supplements and no prior daily_entries on day one.
         if (!bypassAll) {
-          // Count supplements (active OR legacy-null)
-          let supplementCount = 0
-          try {
-            const { count: suppCount } = await supabaseAdmin
-              .from('user_supplement')
-              .select('id', { count: 'exact', head: true })
-              .eq('user_id', p.user_id)
-              .or('is_active.eq.true,is_active.is.null')
-            supplementCount = Number(suppCount || 0)
-          } catch {}
-          // Any daily entry in the last 30 days (based on local_date)
-          let recentActive = false
-          try {
-            const { count: recentCount } = await supabaseAdmin
-              .from('daily_entries')
-              .select('id', { count: 'exact', head: true })
-              .eq('user_id', p.user_id)
-              .gte('local_date', cutoffYmd)
-            recentActive = Number(recentCount || 0) > 0
-          } catch {}
-          if (!recentActive && supplementCount === 0) {
-            logCandidate('branch', { user_id: p.user_id, email, branch: 'skip_inactive_30d_and_no_supplements' })
-            recordSkip({ user_id: p.user_id, email, skip: 'inactive_30d_and_no_supplements', skip_reason: 'inactive_30d_and_no_supplements' })
-            continue
+          const baselineKeys = cohortParticipantUserIdCandidatesSync(
+            String(p.profile_id || ''),
+            p.user_id,
+          )
+          const exemptCohortBaseline = baselineKeys.some((k) => cohortBaselineCpUserIds.has(String(k)))
+          if (!exemptCohortBaseline) {
+            // Count supplements (active OR legacy-null)
+            let supplementCount = 0
+            try {
+              const { count: suppCount } = await supabaseAdmin
+                .from('user_supplement')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', p.user_id)
+                .or('is_active.eq.true,is_active.is.null')
+              supplementCount = Number(suppCount || 0)
+            } catch {}
+            // Any daily entry in the last 30 days (based on local_date)
+            let recentActive = false
+            try {
+              const { count: recentCount } = await supabaseAdmin
+                .from('daily_entries')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', p.user_id)
+                .gte('local_date', cutoffYmd)
+              recentActive = Number(recentCount || 0) > 0
+            } catch {}
+            if (!recentActive && supplementCount === 0) {
+              logCandidate('branch', { user_id: p.user_id, email, branch: 'skip_inactive_30d_and_no_supplements' })
+              recordSkip({ user_id: p.user_id, email, skip: 'inactive_30d_and_no_supplements', skip_reason: 'inactive_30d_and_no_supplements' })
+              continue
+            }
           }
         }
 
