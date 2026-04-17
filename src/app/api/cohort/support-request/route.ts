@@ -5,9 +5,14 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 
 const SUPPORT_TO = 'benm@biostackr.io'
+const MAX_MESSAGE_CHARS = 8000
 
 const REASONS = ['missed_checkin', 'next_steps', 'study_question'] as const
 type Reason = (typeof REASONS)[number]
+
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 
 function labelForReason(r: string): string {
   switch (r) {
@@ -23,8 +28,8 @@ function labelForReason(r: string): string {
 }
 
 /**
- * Framed study support: tagged email only (no chat, no free text).
- * Body: { reason: 'missed_checkin' | 'next_steps' | 'study_question' }
+ * Study support: reason tag + required free-text message in email (no DB).
+ * Body: { reason, message }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +47,19 @@ export async function POST(request: NextRequest) {
     const reason = typeof reasonRaw === 'string' ? reasonRaw.trim().toLowerCase() : ''
     if (!REASONS.includes(reason as Reason)) {
       return NextResponse.json({ error: 'Invalid reason' }, { status: 400 })
+    }
+
+    const messageRaw = body?.message
+    const message =
+      typeof messageRaw === 'string' ? messageRaw.replace(/\r\n/g, '\n').trim() : ''
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
+    if (message.length > MAX_MESSAGE_CHARS) {
+      return NextResponse.json(
+        { error: `Message must be ${MAX_MESSAGE_CHARS} characters or less` },
+        { status: 400 },
+      )
     }
 
     const email = String(user.email || '').trim() || 'unknown'
@@ -75,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     const subject = `[Study support] ${labelForReason(reason)} · ${email}`
-    const textLines = [
+    const metaLines = [
       `Reason: ${labelForReason(reason)}`,
       `Auth user id: ${user.id}`,
       profileId ? `Profile id: ${profileId}` : '',
@@ -85,9 +103,16 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join('\n')
 
-    const html = `<pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;line-height:1.5">${textLines
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')}</pre>`
+    const preStyle =
+      'font-family:system-ui,sans-serif;white-space:pre-wrap;line-height:1.5;margin:0'
+    const html = `<div style="font-family:system-ui,sans-serif;line-height:1.5;color:#111827">
+  <p style="margin:0 0 8px 0;font-weight:600;font-size:14px">Participant message</p>
+  <pre style="${preStyle};padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:20px">${escHtml(
+    message,
+  )}</pre>
+  <p style="margin:0 0 8px 0;font-weight:600;font-size:14px">Account details</p>
+  <pre style="${preStyle}">${escHtml(metaLines)}</pre>
+</div>`
 
     const r = await sendEmail({
       to: SUPPORT_TO,

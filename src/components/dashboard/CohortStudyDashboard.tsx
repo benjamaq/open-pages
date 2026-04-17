@@ -453,6 +453,7 @@ function StudySupportModal({
   onClose: () => void
 }) {
   const [reason, setReason] = useState<'missed_checkin' | 'next_steps' | 'study_question' | ''>('')
+  const [supportMessage, setSupportMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -460,6 +461,7 @@ function StudySupportModal({
   // Reset whenever visibility changes so a stale `done` from a prior open cannot skip the form.
   useEffect(() => {
     setReason('')
+    setSupportMessage('')
     setBusy(false)
     setDone(false)
     setErr(null)
@@ -472,13 +474,18 @@ function StudySupportModal({
       setErr('Choose an option.')
       return
     }
+    const trimmed = supportMessage.trim()
+    if (!trimmed) {
+      setErr('Please add a short message so we know how to help.')
+      return
+    }
     setBusy(true)
     setErr(null)
     try {
       const res = await fetch('/api/cohort/support-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason, message: trimmed }),
       })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -516,7 +523,8 @@ function StudySupportModal({
         ) : (
           <>
             <p className="mt-2 text-sm text-gray-600">
-              Choose one option. We email the study team with your account details.
+              Choose one option, then tell us what you need. We email the study team with your message and account
+              details.
             </p>
             <div className="mt-4 space-y-2">
               {(
@@ -545,6 +553,21 @@ function StudySupportModal({
                 </label>
               ))}
             </div>
+            <label className="mt-4 block">
+              <span className="text-sm font-medium text-gray-900">What&apos;s your question?</span>
+              <textarea
+                required
+                value={supportMessage}
+                onChange={(e) => {
+                  setSupportMessage(e.target.value)
+                  setErr(null)
+                }}
+                rows={4}
+                maxLength={8000}
+                placeholder="Describe the issue or question in a sentence or two."
+                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              />
+            </label>
             {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
             <button
               type="button"
