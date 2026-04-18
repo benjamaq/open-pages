@@ -828,24 +828,33 @@ export default function CohortStudyDashboard({
       >
         {awaitingProductHolding ? (
           pendingFirstStudyNight ? (
-              <div
-                className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
-                role="status"
-              >
-                <p className="m-0 text-emerald-950">
-                  Perfect.{' '}
-                  {isSleepShapedCohort ? (
-                    <>
-                      Take <span className="font-semibold">{productName}</span> tonight about 45 minutes before bed.
-                      Come back tomorrow morning for your first check-in.
-                    </>
-                  ) : (
-                    <>
-                      Take <span className="font-semibold">{productName}</span> as directed tonight. Come back tomorrow
-                      morning for your first check-in.
-                    </>
-                  )}
-                </p>
+              <div role="status">
+                <p className="text-xs font-medium text-gray-500">Your study starts tomorrow</p>
+                <div className="mt-3 border-t border-slate-200" />
+                <h2 className="mt-4 text-[26px] font-bold leading-snug text-gray-900">
+                  {isSleepShapedCohort
+                    ? 'Come back tomorrow morning to check in'
+                    : 'Come back tomorrow to check in'}
+                </h2>
+                <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-left">
+                  <div className="text-sm font-semibold text-emerald-900">
+                    <span className="text-emerald-700" aria-hidden>
+                      ✓{' '}
+                    </span>
+                    Perfect — you&apos;re all set for tonight.
+                  </div>
+                  <p className="mt-1 text-[14px] text-emerald-900/90 leading-snug">
+                    {isSleepShapedCohort ? (
+                      <>
+                        Take <span className="font-semibold">{productName}</span> about 45 minutes before bed.
+                      </>
+                    ) : (
+                      <>
+                        Take <span className="font-semibold">{productName}</span> as directed tonight.
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
             ) : (
               <div role="region" aria-label="While you wait for your product">
