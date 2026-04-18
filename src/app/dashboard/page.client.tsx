@@ -243,6 +243,13 @@ export function DashboardPageClient() {
                 cohortStudyStartedAtIso={
                   typeof me?.cohortStudyStartedAtIso === 'string' ? me.cohortStudyStartedAtIso : null
                 }
+                cohortStudyPendingAnchorIso={
+                  typeof (me as { cohortStudyPendingAnchorIso?: unknown })?.cohortStudyPendingAnchorIso ===
+                    'string' &&
+                  String((me as { cohortStudyPendingAnchorIso: string }).cohortStudyPendingAnchorIso).trim() !== ''
+                    ? String((me as { cohortStudyPendingAnchorIso: string }).cohortStudyPendingAnchorIso).trim()
+                    : null
+                }
                 cohortStudyStartPending={Boolean(me?.cohortStudyStartPending)}
                 onAfterStudyStarted={({ openCheckin } = {}) => {
                   try {

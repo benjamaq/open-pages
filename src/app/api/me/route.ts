@@ -108,6 +108,11 @@ export async function GET(request: Request) {
     let cohortParticipantProductArrivedAt: string | null = null;
     /** True when `study_start_pending` holds a valid payload (product-arrival flow done; clock applies on first check-in). */
     let cohortStudyStartPending = false;
+    /**
+     * UI only: `study_start_pending.studyStartedIso` while `study_started_at` is still null (e.g. “today” defer).
+     * Do not use for cron, eligibility, or persisted study clock — use `cohortStudyStartedAtIso` only there.
+     */
+    let cohortStudyPendingAnchorIso: string | null = null;
     /** Applied user, compliance n≥2, and cohort confirmed+completed count ≥ max_confirmed_participants (when cap set). */
     let cohortAdmissionBlockedByCap = false;
 
@@ -406,11 +411,18 @@ export async function GET(request: Request) {
                     cohortParticipantProductArrivedAt =
                       /^\d{4}-\d{2}-\d{2}$/.test(y) ? y : null;
                   }
-                  cohortStudyStartPending =
-                    parseStudyStartPending(
-                      (part as { study_start_pending?: unknown } | null)
-                        ?.study_start_pending,
-                    ) != null;
+                  const studyStartPendingParsed = parseStudyStartPending(
+                    (part as { study_start_pending?: unknown } | null)
+                      ?.study_start_pending,
+                  );
+                  cohortStudyStartPending = studyStartPendingParsed != null;
+                  cohortStudyPendingAnchorIso =
+                    studyStartedAtIso == null &&
+                    studyStartPendingParsed != null &&
+                    String(studyStartPendingParsed.studyStartedIso || "").trim() !==
+                      ""
+                      ? String(studyStartPendingParsed.studyStartedIso).trim()
+                      : null;
                   const cohortUi = resolveCohortDashboardParticipantUi({
                     participantStatus,
                     confirmedAtRaw,
@@ -866,6 +878,7 @@ export async function GET(request: Request) {
       cohortParticipantConfirmedAtIso,
       cohortParticipantProductArrivedAt,
       cohortStudyStartPending,
+      cohortStudyPendingAnchorIso,
       cohortAdmissionBlockedByCap,
     });
   } catch (e: any) {

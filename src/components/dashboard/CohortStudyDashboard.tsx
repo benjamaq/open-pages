@@ -53,6 +53,11 @@ export interface CohortStudyDashboardProps {
   cohortAwaitingStudyStart?: boolean
   /** Set when study_started_at is stored but the first study day is still in the future (e.g. product arrived today). */
   cohortStudyStartedAtIso?: string | null
+  /**
+   * From `/api/me` `cohortStudyPendingAnchorIso` — pending clock anchor while DB `study_started_at` is still null.
+   * Dashboard defer UI only; check-in modal should keep using `cohortStudyStartedAtIso` for study-phase detection.
+   */
+  cohortStudyPendingAnchorIso?: string | null
   /** From `/api/me` `cohortStudyStartPending` — product-arrival flow saved; study clock starts after first check-in. */
   cohortStudyStartPending?: boolean
   /** After successful start-study API: refresh already fired from caller; optionally open check-in. */
@@ -595,6 +600,7 @@ export default function CohortStudyDashboard({
   cohortAdmissionBlockedByCap = false,
   cohortAwaitingStudyStart = false,
   cohortStudyStartedAtIso = null,
+  cohortStudyPendingAnchorIso = null,
   cohortStudyStartPending = false,
   onAfterStudyStarted,
   complianceDeadlineIso,
@@ -722,11 +728,18 @@ export default function CohortStudyDashboard({
     complianceGateSatisfied && !cohortConfirmed && !capBlocked
 
   const localTodayYmd = getLocalDateYmd()
-  const studyStartYmd =
+  const persistedStudyStartYmd =
     cohortStudyStartedAtIso != null && String(cohortStudyStartedAtIso).trim() !== ''
       ? String(cohortStudyStartedAtIso).trim().slice(0, 10)
       : null
-  const pendingFirstStudyNight = Boolean(studyStartYmd && studyStartYmd > localTodayYmd)
+  const pendingAnchorYmd =
+    cohortStudyPendingAnchorIso != null && String(cohortStudyPendingAnchorIso).trim() !== ''
+      ? String(cohortStudyPendingAnchorIso).trim().slice(0, 10)
+      : null
+  const studyStartYmdForDefer = persistedStudyStartYmd ?? pendingAnchorYmd
+  const pendingFirstStudyNight = Boolean(
+    studyStartYmdForDefer && studyStartYmdForDefer > localTodayYmd,
+  )
   const localYmdFromParticipantIso = (iso: string): string => {
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ''
@@ -819,9 +832,20 @@ export default function CohortStudyDashboard({
                 className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[15px] leading-relaxed text-emerald-950"
                 role="status"
               >
-                <p className="m-0 text-emerald-950">You&apos;re ready to start your study.</p>
-                <p className="m-0 mt-3 text-emerald-950">Take your supplement today.</p>
-                <p className="m-0 mt-3 text-emerald-900/95">Come back tomorrow morning for your first check-in.</p>
+                <p className="m-0 text-emerald-950">
+                  Perfect.{' '}
+                  {isSleepShapedCohort ? (
+                    <>
+                      Take <span className="font-semibold">{productName}</span> tonight about 45 minutes before bed.
+                      Come back tomorrow morning for your first check-in.
+                    </>
+                  ) : (
+                    <>
+                      Take <span className="font-semibold">{productName}</span> as directed tonight. Come back tomorrow
+                      morning for your first check-in.
+                    </>
+                  )}
+                </p>
               </div>
             ) : (
               <div role="region" aria-label="While you wait for your product">
