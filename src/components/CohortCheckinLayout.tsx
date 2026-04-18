@@ -334,7 +334,8 @@ export default function CohortCheckinLayout({
                     Your product is on the way.
                   </p>
                   <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-snug max-w-[300px]">
-                    As soon as it arrives, start checking in again so we can measure what changes.
+                    Keep checking in each morning while you wait — it builds a stronger baseline. When your product
+                    arrives, tap the button below.
                   </p>
                 </>
               ) : cohortSpotConfirmed === true &&

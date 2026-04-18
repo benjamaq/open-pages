@@ -837,7 +837,8 @@ export default function CohortStudyDashboard({
                       Your product is on the way.
                     </p>
                     <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-                      As soon as it arrives, start checking in again so we can measure what changes.
+                      Keep checking in each morning while you wait — it builds a stronger baseline. When your product
+                      arrives, tap the button below.
                     </p>
                     <button
                       type="button"
