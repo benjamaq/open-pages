@@ -5,6 +5,7 @@ import { countCohortBaselineCheckinDistinctDaysForUserIds } from '@/lib/cohortCh
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   STUDY_START_PENDING_SCHEMA_V,
+  parseStudyStartPending,
   type StudyStartPendingV1,
 } from '@/lib/cohortStudyStartPending'
 
@@ -54,12 +55,24 @@ function productArrivedAtForChoice(choice: ArrivalChoice, todayYmd: string, firs
   }
 }
 
+/** Match `openCheckin` when returning idempotently for an existing `study_start_pending` payload. */
+function inferOpenCheckinFromPending(parsed: StudyStartPendingV1, todayYmd: string): boolean {
+  const iso = String(parsed.studyStartedIso || '').trim()
+  const todayStart = utcStartOfDayIso(todayYmd)
+  const tomorrowStart = utcStartOfDayIso(ymdAddDays(todayYmd, 1))
+  if (iso === todayStart) return true
+  if (iso === tomorrowStart) return false
+  if (iso.endsWith('T12:00:00.000Z')) return true
+  return true
+}
+
 /**
  * Confirmed participant: product arrived → start 21-day study clock (+ optional first check-in).
  * Body: {
  *   productArrived?: 'today' | 'yesterday' | 'few_days_ago' | 'skip'
  *   tookProductLastNight?: boolean  // required when productArrived === 'yesterday'
  *   firstDoseYmd?: string          // YYYY-MM-DD, required when productArrived === 'few_days_ago'
+ *   calendarTodayYmd: string       // YYYY-MM-DD, required — participant local calendar date (no UTC fallback)
  * }
  */
 export async function POST(request: NextRequest) {
@@ -74,13 +87,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
+    const calRaw = typeof body?.calendarTodayYmd === 'string' ? String(body.calendarTodayYmd).trim() : ''
+    if (!calRaw || !/^\d{4}-\d{2}-\d{2}$/.test(calRaw)) {
+      return NextResponse.json(
+        { error: 'calendarTodayYmd is required and must be a valid YYYY-MM-DD string' },
+        { status: 400 },
+      )
+    }
+    const todayYmd = calRaw
+
     const raw = body?.productArrived
     const choice: ArrivalChoice =
       raw === 'today' || raw === 'yesterday' || raw === 'few_days_ago' || raw === 'skip' ? raw : 'skip'
-
-    const calRaw = typeof body?.calendarTodayYmd === 'string' ? String(body.calendarTodayYmd).trim() : ''
-    const todayYmd =
-      calRaw && /^\d{4}-\d{2}-\d{2}$/.test(calRaw) ? calRaw : new Date().toISOString().slice(0, 10)
     const tookLastNight = body?.tookProductLastNight
     const firstDoseRaw =
       typeof body?.firstDoseYmd === 'string' ? String(body.firstDoseYmd).trim().slice(0, 10) : ''
@@ -127,7 +145,9 @@ export async function POST(request: NextRequest) {
 
     const { data: part, error: partErr } = await supabaseAdmin
       .from('cohort_participants')
-      .select('id, status, confirmed_at, study_started_at, enrolled_at, product_arrived_at')
+      .select(
+        'id, status, confirmed_at, study_started_at, enrolled_at, product_arrived_at, study_start_pending',
+      )
       .in('user_id', cpUserIds)
       .eq('cohort_id', cohortUuid)
       .maybeSingle()
@@ -144,6 +164,16 @@ export async function POST(request: NextRequest) {
     }
     if (startedAt != null && String(startedAt).trim() !== '') {
       return NextResponse.json({ error: 'Study already started' }, { status: 400 })
+    }
+
+    const existingPending = parseStudyStartPending(
+      (part as { study_start_pending?: unknown }).study_start_pending,
+    )
+    if (existingPending) {
+      return NextResponse.json({
+        ok: true,
+        openCheckin: inferOpenCheckinFromPending(existingPending, todayYmd),
+      })
     }
 
     const enrolledAtRaw = (part as { enrolled_at?: string | null }).enrolled_at
