@@ -831,7 +831,7 @@ export default function CohortStudyDashboard({
               <div role="status">
                 <p className="text-xs font-medium text-gray-500">Your study starts tomorrow</p>
                 <div className="mt-3 border-t border-slate-200" />
-                <h2 className="mt-4 text-[26px] font-bold leading-snug text-gray-900">
+                <h2 className="mt-4 text-[20px] sm:text-[22px] md:text-[24px] font-bold leading-tight tracking-tight text-gray-900">
                   {isSleepShapedCohort
                     ? 'Come back tomorrow morning to check in'
                     : 'Come back tomorrow to check in'}
